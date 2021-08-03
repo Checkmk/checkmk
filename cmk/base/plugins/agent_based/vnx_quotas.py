@@ -5,10 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple
 
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .agent_based_api.v1 import get_value_store, regex, register, Result, Service
-
-from .utils.df import FILESYSTEM_DEFAULT_LEVELS, df_check_filesystem_single
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
 
 _MEGA = 1024.0**2
 

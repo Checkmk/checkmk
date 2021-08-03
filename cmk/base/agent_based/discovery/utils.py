@@ -9,11 +9,11 @@ import signal
 import time
 from types import FrameType, TracebackType
 from typing import (
-    Final,
     Callable,
+    Final,
+    Generic,
     Hashable,
     Iterable,
-    Generic,
     NoReturn,
     Optional,
     Sequence,

@@ -6,6 +6,7 @@
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from .temperature import check_temperature
+
 # suggested by customer
 PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS = {"levels": (35, 40)}
 

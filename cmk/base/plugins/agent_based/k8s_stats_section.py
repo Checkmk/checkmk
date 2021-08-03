@@ -3,20 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Dict, List, Any
 import json
+from typing import Any, Dict, List
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 from .agent_based_api.v1 import register
-
-from .utils.k8s import (
-    Section,
-    Filesystem,
-    Interface,
-    to_interface,
-    to_filesystem,
-)
+from .utils.k8s import Filesystem, Interface, Section, to_filesystem, to_interface
 
 
 def parse_k8s(string_table: StringTable) -> Section:

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, List, Mapping, Optional, Tuple, Union
+
 from ..agent_based_api.v1 import check_levels, render, type_defs
 
 CheckParams = Union[None, Mapping[str, Any], Optional[List[float]], Tuple[float, float, float,

@@ -8,23 +8,10 @@
 
 from typing import List, Mapping, Optional
 
-from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    State as state,
-    all_of,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
-from .utils.f5_bigip import (
-    F5_BIGIP,
-    VERSION_V11_2_PLUS,
-)
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.f5_bigip import F5_BIGIP, VERSION_V11_2_PLUS
 
 Section = Mapping[str, str]
 

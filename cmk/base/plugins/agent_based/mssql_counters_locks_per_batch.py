@@ -4,24 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, MutableMapping
 import time
+from typing import Any, Mapping, MutableMapping
 
 from .agent_based_api.v1 import (
-    Service,
+    check_levels,
+    get_value_store,
     IgnoreResults,
     IgnoreResultsError,
     register,
-    check_levels,
-    get_value_store,
+    Service,
 )
-
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-)
-
-from .utils.mssql_counters import Section, get_rate_or_none, get_int
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.mssql_counters import get_int, get_rate_or_none, Section
 
 
 def discovery_mssql_counters_locks_per_batch(section: Section) -> DiscoveryResult:

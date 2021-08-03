@@ -7,6 +7,7 @@
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from .fan import check_fan
 from .temperature import check_temperature
+
 #   .--CPU-----------------------------------------------------------------.
 #   |                           ____ ____  _   _                           |
 #   |                          / ___|  _ \| | | |                          |

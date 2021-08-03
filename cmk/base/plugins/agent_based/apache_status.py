@@ -4,11 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Final, Mapping
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-
-import time
 import collections
+import time
+from typing import Any, Dict, Final, Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -21,6 +19,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
+
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Dict[str, Dict[str, float]]
 

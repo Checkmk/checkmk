@@ -12,7 +12,7 @@ from the configuration.
 from typing import Dict
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
-from cmk.utils.type_defs import HostName, Item, CheckPluginNameStr, CheckPluginName, ServiceName
+from cmk.utils.type_defs import CheckPluginName, CheckPluginNameStr, HostName, Item, ServiceName
 
 import cmk.base.config as config
 

@@ -20,21 +20,22 @@ handeled somewhere else entirely.
 import os
 from typing import Any, Callable, Dict, Sequence, Set
 
-import cmk.utils.paths
 import cmk.utils.debug
+import cmk.utils.paths
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import SectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.config as config
 import cmk.base.check_utils
-
+import cmk.base.config as config
 from cmk.base.api.agent_based.register.inventory_plugins_legacy import (
-    create_inventory_plugin_from_legacy,)
+    create_inventory_plugin_from_legacy,  # yapf: disable
+)
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
-    create_snmp_section_plugin_from_legacy,)
+    create_snmp_section_plugin_from_legacy,  # yapf: disable
+)
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 
 InventoryInfo = Dict[str, Any]

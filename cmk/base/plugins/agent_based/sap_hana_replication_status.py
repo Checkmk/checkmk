@@ -4,15 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Final
+from typing import Any, Final, Mapping
 
+from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
-from .agent_based_api.v1 import register, Service, Result, State, IgnoreResultsError
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-)
 
 SAP_HANA_REPL_STATUS_MAP: Final = {
     "0": (State.UNKNOWN, "unknown status from replication script", "state_unknown"),

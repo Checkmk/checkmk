@@ -35,19 +35,20 @@ table columns longer than their validity period.
 #        from plugins: In later case: do not show 'x left'.
 
 from __future__ import annotations
-from typing import Optional, Tuple, NamedTuple, Dict, Union, List
+
+from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
 from cmk.utils.structured_data import (
-    SDPath,
-    SDNodePath,
-    SDFilterFunc,
-    RawIntervalsFromConfig,
-    RetentionIntervals,
-    StructuredDataNode,
     ATTRIBUTES_KEY,
-    TABLE_KEY,
     make_filter_from_choice,
     parse_visible_raw_path,
+    RawIntervalsFromConfig,
+    RetentionIntervals,
+    SDFilterFunc,
+    SDNodePath,
+    SDPath,
+    StructuredDataNode,
+    TABLE_KEY,
     UpdateResult,
 )
 

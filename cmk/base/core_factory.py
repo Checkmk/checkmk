@@ -9,7 +9,9 @@ from cmk.base.core_config import MonitoringCore
 
 def create_core(core_name: str) -> MonitoringCore:
     if core_name == "cmc":
-        from cmk.base.cee.core_cmc import CMC  # pylint: disable=no-name-in-module,import-outside-toplevel
+        from cmk.base.cee.core_cmc import (
+            CMC,  # pylint: disable=no-name-in-module,import-outside-toplevel
+        )
         return CMC()
 
     if core_name == "nagios":

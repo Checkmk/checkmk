@@ -4,25 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Iterable,
-    List,
-    Mapping,
-    Sequence,
-    Tuple,
-    TypedDict,
-)
-from .agent_based_api.v1 import (
-    check_levels,
-    register,
-    render,
-    Result,
-    Service,
-    SNMPTree,
-    State as state,
-    type_defs,
-)
+from typing import Any, Iterable, List, Mapping, Sequence, Tuple, TypedDict
+
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 from .utils.netscaler import SNMP_DETECT
 
 netscaler_vserver_states = {

@@ -3,27 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Mapping
 from contextlib import suppress
-from .utils import (
-    sap_hana,
-    df,
-)
+from typing import Any, Mapping
 
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    State as state,
-    get_value_store,
-    IgnoreResultsError,
-)
-
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-)
+from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import df, sap_hana
 
 
 def parse_sap_hana_data_volume(string_table: StringTable) -> sap_hana.ParsedSection:

@@ -4,17 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    TypedDict,
-    Union,
-)
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, TypedDict, Union
+
 from .agent_based_api.v1 import (
     get_value_store,
     Metric,
@@ -24,13 +15,10 @@ from .agent_based_api.v1 import (
     Service,
     SNMPTree,
     startswith,
-    State as state,
-    type_defs,
 )
-from .utils import (
-    interfaces,
-    temperature,
-)
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
+from .utils import interfaces, temperature
 
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.1  41.4960 C: Normal
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.2  50.9531 C: Normal

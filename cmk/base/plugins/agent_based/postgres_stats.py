@@ -6,18 +6,18 @@
 
 import time
 
+from cmk.base.plugins.agent_based.utils import postgres
+
 from .agent_based_api.v1 import (
     check_levels,
-    IgnoreResults,
     get_value_store,
+    IgnoreResults,
     register,
     render,
     Result,
     Service,
     State,
 )
-
-from cmk.base.plugins.agent_based.utils import postgres
 
 # <<<postgres_stats>>>
 # [databases_start]

@@ -10,30 +10,22 @@ In the future all inventory code should be moved to this module."""
 
 import time
 from pathlib import Path
-from typing import (
-    Container,
-    Dict,
-    List,
-    NamedTuple,
-    Optional,
-    Sequence,
-    Tuple,
-)
+from typing import Container, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
-from cmk.utils.check_utils import ActiveCheckResult
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.log import console
-from cmk.utils.structured_data import StructuredDataStore, StructuredDataNode
+from cmk.utils.structured_data import StructuredDataNode, StructuredDataStore
 from cmk.utils.type_defs import (
     EVERYTHING,
     HostAddress,
-    HostName,
     HostKey,
+    HostName,
     InventoryPluginName,
     result,
     ServiceState,
@@ -41,19 +33,19 @@ from cmk.utils.type_defs import (
     state_markers,
 )
 
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 from cmk.core_helpers.host_sections import HostSections
+from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
-import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.agent_based.decorator as decorator
-from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
-from cmk.base.agent_based.utils import get_section_kwargs, check_sources, check_parsing_errors
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.section as section
+from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
+from cmk.base.agent_based.utils import check_parsing_errors, check_sources, get_section_kwargs
 from cmk.base.sources import Source
 
-from ._tree_aggregator import TreeAggregator, InventoryTrees
-from ._retentions import RetentionsTracker, Retentions
+from ._retentions import Retentions, RetentionsTracker
+from ._tree_aggregator import InventoryTrees, TreeAggregator
 
 
 class ActiveInventoryResult(NamedTuple):

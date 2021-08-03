@@ -8,12 +8,12 @@
 # <<<uptime>>>
 # 15876.96 187476.72
 
-from typing import Optional
-import re
 import datetime
+import re
+from typing import Optional
 
-from .agent_based_api.v1.type_defs import StringTable
 from .agent_based_api.v1 import register
+from .agent_based_api.v1.type_defs import StringTable
 from .utils import uptime
 
 

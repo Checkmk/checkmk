@@ -5,16 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, List, Mapping
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    SNMPTree,
-)
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+
+from .agent_based_api.v1 import register, Service, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import huawei_osn, interfaces
 
 Section = Mapping[str, interfaces.Interface]

@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Optional, Iterable, Union, Tuple, Sequence, Literal, List, NamedTuple
+from typing import Iterable, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
 
 import cmk.utils.debug
-from cmk.utils.structured_data import StructuredDataNode, ATTRIBUTES_KEY, TABLE_KEY
+from cmk.utils.structured_data import ATTRIBUTES_KEY, StructuredDataNode, TABLE_KEY
 
 from cmk.base.api.agent_based.inventory_classes import (
     AttrDict,
@@ -17,7 +17,7 @@ from cmk.base.api.agent_based.inventory_classes import (
     TableRow,
 )
 
-from ._retentions import RetentionsTracker, RawCacheInfo
+from ._retentions import RawCacheInfo, RetentionsTracker
 
 
 class InventoryTrees(NamedTuple):

@@ -5,14 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-import time
-from cmk.base.check_api import get_age_human_readable
-from cmk.base.check_api import get_average
-from cmk.base.check_api import get_rate
-from cmk.base.check_api import set_item_state, get_item_state
-from cmk.base.check_api import check_levels
-import json
+
 import calendar
+import json
+import time
+
+from cmk.base.check_api import (
+    check_levels,
+    get_age_human_readable,
+    get_average,
+    get_item_state,
+    get_rate,
+    set_item_state,
+)
 
 
 def parse_graylog_agent_data(info):

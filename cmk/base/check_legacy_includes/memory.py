@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_api import get_percent_human_readable
+from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
 
 
 # DEPRECATED: Please use check_memory_element from mem.inlude!

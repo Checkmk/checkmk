@@ -8,10 +8,10 @@ from typing import Optional, Tuple
 
 from .agent_based_api.v1 import get_value_store, register, Result, State, type_defs
 from .utils.cmciii import (
+    discovery_default_parameters,
     DiscoveryParams,
     get_item,
     get_sensor,
-    discovery_default_parameters,
     Section,
     Sensor,
     Service,

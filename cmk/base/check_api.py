@@ -81,6 +81,7 @@ Global variables:
 # We import several modules here for the checks
 
 import calendar
+
 # TODO: Move imports directly to checks?
 import collections  # noqa: F401 # pylint: disable=unused-import
 import enum  # noqa: F401 # pylint: disable=unused-import
@@ -88,6 +89,7 @@ import fnmatch  # noqa: F401 # pylint: disable=unused-import
 import functools
 import math  # noqa: F401 # pylint: disable=unused-import
 import os
+
 # NOTE: We do not use pprint in this module, but it is part of the check API.
 import pprint  # noqa: F401 # pylint: disable=unused-import
 import re  # noqa: F401 # pylint: disable=unused-import
@@ -104,21 +106,16 @@ import cmk.utils.defines as _defines
 import cmk.utils.log.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.paths as _paths
 import cmk.utils.render as render
+
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
 # check context.
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
-from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
-    get_rule_options, hosttags_match_taglist, in_extraconf_hostlist,
-)
-# The class 'as_float' has been moved; import it here under the old name
-from cmk.utils.type_defs import EvalableFloat as as_float  # noqa: F401 # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, MetricName
+from cmk.utils.type_defs import Ruleset as _Ruleset
+from cmk.utils.type_defs import SectionName as _SectionName
 from cmk.utils.type_defs import (
-    HostName,
-    MetricName,
-    Ruleset as _Ruleset,
-    SectionName as _SectionName,
     ServiceCheckResult,
     ServiceDetails,
     ServiceName,
@@ -128,26 +125,36 @@ from cmk.utils.type_defs import (
 
 from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
 
-from cmk.base.api.agent_based.section_classes import (
-    OIDBytes as _OIDBytes,
-    OIDCached as _OIDCached,
-)
-
 import cmk.base.api.agent_based.register as _agent_based_register
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
-
-from cmk.base.plugin_contexts import (  # noqa: F401 # pylint: disable=unused-import
-    check_type, host_name, service_description,
-)
-from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import
-    HOST_ONLY,  # Check is only executed for real SNMP host (e.g. interfaces),
-    HOST_PRECEDENCE,  # Check is only executed for mgmt board (e.g. Managegment Uptime),
-    MGMT_ONLY,  # Use host address/credentials when it's a SNMP HOST,
-)
+from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
+from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
 from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels
 from cmk.base.discovered_labels import ServiceLabel  # noqa: F401 # pylint: disable=unused-import
+
+from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    HOST_ONLY,  # Check is only executed for real SNMP host (e.g. interfaces),
+)
+from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    HOST_PRECEDENCE,  # Check is only executed for mgmt board (e.g. Managegment Uptime),
+)
+
+from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import; Use host address/credentials when it's a SNMP HOST, # isort: skip
+    MGMT_ONLY,)
+
+# The class 'as_float' has been moved; import it here under the old name
+from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    EvalableFloat as as_float,)
+
+from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # isort: skip # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
+    get_rule_options, hosttags_match_taglist, in_extraconf_hostlist,
+)
+
+from cmk.base.plugin_contexts import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    check_type, host_name, service_description,
+)
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]

@@ -4,10 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import (
-    register,
-    type_defs,
-)
+from .agent_based_api.v1 import register, type_defs
 from .utils import if64, interfaces
 
 _HPUX_FIELDS_TO_IF_FIELDS = {

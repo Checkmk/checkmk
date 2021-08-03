@@ -5,9 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Literal, Mapping, Optional, Tuple, TypedDict, Union
-from ..agent_based_api.v1.type_defs import CheckResult
 
-from ..agent_based_api.v1 import Metric, render, Result, State as state
+from ..agent_based_api.v1 import Metric, render, Result
+from ..agent_based_api.v1 import State as state
+from ..agent_based_api.v1.type_defs import CheckResult
 
 SectionMem = Mapping[str, int]
 

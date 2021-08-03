@@ -7,9 +7,9 @@
 from .agent_based_api.v1 import register, Result, State, type_defs
 from .utils.cmciii import (
     CheckParams,
-    DiscoveryParams,
-    discovery_default_parameters,
     discover_cmciii_sensors,
+    discovery_default_parameters,
+    DiscoveryParams,
     get_sensor,
     Section,
 )

@@ -6,10 +6,9 @@
 
 from typing import List
 
-from .agent_based_api.v1 import SNMPTree, register, startswith, OIDEnd
+from .agent_based_api.v1 import OIDEnd, register, SNMPTree, startswith
 from .agent_based_api.v1.type_defs import StringTable
-
-from .utils.wlc_clients import WlcClientsSection, ClientsTotal
+from .utils.wlc_clients import ClientsTotal, WlcClientsSection
 
 
 def parse_aruba_wlc_clients(string_table: List[StringTable]) -> WlcClientsSection[ClientsTotal]:

@@ -4,15 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Container,
-    Generator,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Sequence,
-)
+from typing import Container, Generator, Iterator, List, Optional, Sequence, Set
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -25,8 +17,8 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     EVERYTHING,
     HostAddress,
-    HostName,
     HostKey,
+    HostName,
     ParsedSectionName,
     SourceType,
 )
@@ -42,10 +34,7 @@ from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.agent_based.utils import get_section_kwargs
 from cmk.base.api.agent_based import checking_classes
 from cmk.base.check_utils import CheckTable, Service
-from cmk.base.discovered_labels import (
-    DiscoveredServiceLabels,
-    ServiceLabel,
-)
+from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 from .utils import QualifiedDiscovery
 

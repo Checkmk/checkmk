@@ -4,12 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict, List, Generator, Mapping, Optional, Tuple, Union
-from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-
 import time
+from typing import Callable, Dict, Generator, List, Mapping, Optional, Tuple, Union
 
 from .agent_based_api.v1 import Attributes, register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
 Section = List[Tuple[str, StringTable]]
 

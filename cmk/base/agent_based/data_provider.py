@@ -20,14 +20,14 @@ from typing import (
     TYPE_CHECKING,
 )
 
-from cmk.utils.exceptions import OnError
-from cmk.utils.log import console
 import cmk.utils.piggyback
 import cmk.utils.tty as tty
+from cmk.utils.exceptions import OnError
+from cmk.utils.log import console
 from cmk.utils.type_defs import (
     HostAddress,
-    HostName,
     HostKey,
+    HostName,
     ParsedSectionName,
     result,
     SectionName,
@@ -44,10 +44,11 @@ from cmk.base.sources import fetch_all, make_nodes, make_sources
 from cmk.base.sources.agent import AgentHostSections
 
 if TYPE_CHECKING:
-    from cmk.base.sources import Source
-    from cmk.base.config import ConfigCache, HostConfig
     from cmk.core_helpers.protocol import FetcherMessage
     from cmk.core_helpers.type_defs import Mode, SectionNameCollection
+
+    from cmk.base.config import ConfigCache, HostConfig
+    from cmk.base.sources import Source
 
 CacheInfo = Optional[Tuple[int, int]]
 

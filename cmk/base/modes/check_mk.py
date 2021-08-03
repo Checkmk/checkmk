@@ -33,12 +33,12 @@ import cmk.utils.version as cmk_version
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import (
     DiagnosticsModesParameters,
+    OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
-    OPT_CHECKMK_CONFIG_FILES,
-    OPT_CHECKMK_LOG_FILES,
 )
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
@@ -55,28 +55,28 @@ from cmk.utils.type_defs import (
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
-import cmk.core_helpers.factory as snmp_factory
 import cmk.core_helpers.cache
+import cmk.core_helpers.factory as snmp_factory
 from cmk.core_helpers.type_defs import Mode as FetchMode
 from cmk.core_helpers.type_defs import NO_SELECTION, SectionNameCollection
 
+import cmk.base.agent_based.discovery as discovery
+import cmk.base.agent_based.inventory as inventory
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.backup
 import cmk.base.check_utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.core_nagios
-import cmk.base.sources as sources
 import cmk.base.diagnostics
-import cmk.base.agent_based.discovery as discovery
 import cmk.base.dump_host
-import cmk.base.agent_based.inventory as inventory
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.localize
 import cmk.base.obsolete_output as out
 import cmk.base.packaging
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
+import cmk.base.sources as sources
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.core_factory import create_core
 from cmk.base.modes import keepalive_option, Mode, modes, Option

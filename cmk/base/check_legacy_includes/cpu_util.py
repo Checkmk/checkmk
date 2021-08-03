@@ -7,14 +7,19 @@
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 import time
 
-from cmk.base.check_api import clear_item_state
-from cmk.base.check_api import MKCounterWrapped
-from cmk.base.check_api import get_age_human_readable
-from cmk.base.check_api import get_percent_human_readable
-from cmk.base.check_api import get_average
-from cmk.base.check_api import get_rate
-from cmk.base.check_api import set_item_state, get_item_state
-from cmk.base.check_api import check_levels
+import cmk.base.plugins.agent_based.utils.cpu_util as cpu_util
+from cmk.base.check_api import (
+    check_levels,
+    clear_item_state,
+    get_age_human_readable,
+    get_average,
+    get_item_state,
+    get_percent_human_readable,
+    get_rate,
+    MKCounterWrapped,
+    set_item_state,
+)
+
 # Common file for all (modern) checks that check CPU utilization (not load!)
 
 # Example for check parameters:
@@ -36,8 +41,6 @@ from cmk.base.check_api import check_levels
 #     PLEASE TAKE A LOOK AT THOSE BEFOR MODIFYING ANY CODE IN THIS FILE                  #
 #     THERE ARE MORE FUNCTIONS IN IT THAT THE ONES USED BELOW!                           #
 #                                                                                        #
-
-import cmk.base.plugins.agent_based.utils.cpu_util as cpu_util
 
 cpu_util_core_name = cpu_util.core_name
 CPUInfo = cpu_util.CPUInfo

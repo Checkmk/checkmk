@@ -3,23 +3,17 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import (
-    List,
-    NamedTuple,
-    Optional,
-    Mapping,
-    Any,
-    Literal,
-)
+from typing import Any, List, Literal, Mapping, NamedTuple, Optional
+
 from .agent_based_api.v1 import (
-    register,
-    SNMPTree,
+    any_of,
     contains,
-    Service,
+    register,
     Result,
+    Service,
+    SNMPTree,
     State,
     type_defs,
-    any_of,
 )
 
 _EA12x12_BASE = ".1.3.6.1.4.1.5040.1.2.4"

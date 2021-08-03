@@ -4,16 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.check_api import set_item_state, get_item_state
-from cmk.base.check_api import check_levels
-from typing import (  #
-    Generator, Optional, Tuple,
-)
 import time
+from typing import Generator, Optional, Tuple
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (  #
-    render,)
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+from cmk.base.check_api import check_levels, get_item_state, set_item_state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
 # ==================================================================================================

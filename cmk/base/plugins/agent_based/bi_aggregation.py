@@ -3,13 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict
 import ast
+from typing import Any, Dict
 
 from cmk.utils.type_defs import state_markers  # pylint: disable=cmk-module-layer-violation
 
+from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .agent_based_api.v1 import register, Result, State, Service
 
 Section = Dict[str, Any]
 

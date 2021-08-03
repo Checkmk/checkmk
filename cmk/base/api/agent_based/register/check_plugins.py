@@ -10,7 +10,6 @@ from typing import Any, Callable, Generator, List, Optional
 
 from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
-from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     CheckPlugin,
@@ -24,10 +23,11 @@ from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     ITEM_VARIABLE,
     RuleSetType,
-    validate_function_arguments,
     validate_default_parameters,
+    validate_function_arguments,
     validate_ruleset_type,
 )
+from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 

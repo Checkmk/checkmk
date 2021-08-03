@@ -4,13 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from .agent_based_api.v1 import IgnoreResultsError, Metric, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
-from .agent_based_api.v1 import register, Service, Result, Metric, State, IgnoreResultsError
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-)
 
 
 def parse_sap_hana_ess(string_table: StringTable) -> sap_hana.ParsedSection:

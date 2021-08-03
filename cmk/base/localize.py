@@ -8,16 +8,16 @@ import logging
 import os
 import subprocess
 import sys
-from typing import Optional, List
 from pathlib import Path
+from typing import List, Optional
 
 from six import ensure_str
 
-from cmk.utils.log import VERBOSE
-import cmk.utils.tty as tty
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKException
+from cmk.utils.log import VERBOSE
 
 logger = logging.getLogger("cmk.base.localize")
 

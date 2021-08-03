@@ -4,28 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Dict,
-    Optional,
-    TypedDict,
-    Mapping,
-)
+from typing import Any, Dict, Mapping, Optional, TypedDict
+
+from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import oracle
-from .agent_based_api.v1 import (
-    IgnoreResultsError,
-    check_levels,
-    register,
-    render,
-    Result,
-    Service,
-    State as state,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    DiscoveryResult,
-    CheckResult,
-)
 
 # actual format
 # <<<oracle_rman>>>

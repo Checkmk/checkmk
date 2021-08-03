@@ -4,15 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple
 
-from .agent_based_api.v1 import (
-    get_value_store,
-    OIDEnd,
-    register,
-    Result,
-    Service,
-    SNMPTree,
-    State,
-)
+from .agent_based_api.v1 import get_value_store, OIDEnd, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.df import (
     df_check_filesystem_list,
@@ -20,11 +12,7 @@ from .utils.df import (
     FILESYSTEM_DEFAULT_LEVELS,
     mountpoints_in_group,
 )
-from .utils.hitachi_hnas import (
-    DETECT,
-    parse_physical_volumes,
-    parse_virtual_volumes,
-)
+from .utils.hitachi_hnas import DETECT, parse_physical_volumes, parse_virtual_volumes
 
 STATE_MAP = {
     "mounted": State.OK,

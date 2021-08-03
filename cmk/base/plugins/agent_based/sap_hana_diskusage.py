@@ -4,22 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Dict
+from typing import Any, Dict, Mapping
 
-from .utils import sap_hana, df
 from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    State,
     get_value_store,
     IgnoreResultsError,
+    register,
+    Result,
+    Service,
+    State,
 )
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import df, sap_hana
 
 
 def parse_sap_hana_diskusage(string_table: StringTable) -> sap_hana.ParsedSection:

@@ -13,10 +13,10 @@ import shutil
 import subprocess
 import sys
 import time
-from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Sequence, Union, cast
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import redirect_stderr, redirect_stdout
 from itertools import islice
+from pathlib import Path
+from typing import Any, cast, Dict, List, Optional, Sequence, Tuple, Union
 
 from six import ensure_binary
 
@@ -26,15 +26,15 @@ import cmk.utils.man_pages as man_pages
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
-from cmk.utils.exceptions import MKGeneralException, MKBailOut, OnError
+from cmk.utils.exceptions import MKBailOut, MKGeneralException, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import (
     autochecks_dir,
-    local_agent_based_plugins_dir,
     counters_dir,
     data_source_cache_dir,
     discovered_host_labels_dir,
+    local_agent_based_plugins_dir,
     local_checks_dir,
     logwatch_dir,
     nagios_startscript,
@@ -46,52 +46,56 @@ from cmk.utils.paths import (
     var_dir,
 )
 from cmk.utils.type_defs import (
+    AutomationDiscoveryResponse,
     CheckPluginName,
     CheckPluginNameStr,
+    DiscoveryResult,
     HostAddress,
     HostName,
+    LegacyCheckParameters,
     ServiceDetails,
     ServiceState,
     SetAutochecksTable,
     SetAutochecksTablePre20,
-    AutomationDiscoveryResponse,
-    DiscoveryResult,
-    LegacyCheckParameters,
 )
 
 import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import SNMPCredentials, SNMPHostConfig, BackendSNMPTree, BackendOIDSpec
+from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPCredentials, SNMPHostConfig
 
 import cmk.core_helpers.cache
 from cmk.core_helpers import factory
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
-import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.agent_based.checking as checking
 import cmk.base.agent_based.discovery as discovery
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_api as check_api
 import cmk.base.check_table as check_table
 import cmk.base.check_utils
-from cmk.base.check_utils import Service
 import cmk.base.config as config
 import cmk.base.core
-from cmk.base.core import CoreAction, do_restart
-from cmk.base.core_config import HostsToActivate
 import cmk.base.core_config as core_config
-import cmk.base.sources as sources
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.plugin_contexts as plugin_contexts
-
-from cmk.base.automations import Automation, automations, MKAutomationError
+import cmk.base.sources as sources
 from cmk.base.autochecks import ServiceWithNodes
+from cmk.base.automations import Automation, automations, MKAutomationError
+from cmk.base.check_utils import Service
+from cmk.base.core import CoreAction, do_restart
+from cmk.base.core_config import HostsToActivate
 from cmk.base.core_factory import create_core
 from cmk.base.diagnostics import DiagnosticsDump
-from cmk.base.discovered_labels import (DiscoveredHostLabels, DiscoveredHostLabelsDict,
-                                        DiscoveredServiceLabels, ServiceLabel, HostLabel)
+from cmk.base.discovered_labels import (
+    DiscoveredHostLabels,
+    DiscoveredHostLabelsDict,
+    DiscoveredServiceLabels,
+    HostLabel,
+    ServiceLabel,
+)
 
 HistoryFile = str
 HistoryFilePair = Tuple[HistoryFile, HistoryFile]

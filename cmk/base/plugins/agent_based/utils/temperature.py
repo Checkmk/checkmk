@@ -4,21 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union, Tuple, Optional, TypedDict, Generator, MutableMapping, Any
 import time
-from ..agent_based_api.v1 import (
-    check_levels,
-    get_rate,
-    get_average,
-)
-from ..agent_based_api.v1.render import (
-    timespan,)
-from ..agent_based_api.v1 import (
-    Result,
-    State as state,
-)
-from ..agent_based_api.v1.type_defs import (
-    CheckResult,)
+from typing import Any, Generator, MutableMapping, Optional, Tuple, TypedDict, Union
+
+from ..agent_based_api.v1 import check_levels, get_average, get_rate, Result
+from ..agent_based_api.v1 import State as state
+from ..agent_based_api.v1.render import timespan
+from ..agent_based_api.v1.type_defs import CheckResult
 
 StatusType = int
 TempUnitType = str

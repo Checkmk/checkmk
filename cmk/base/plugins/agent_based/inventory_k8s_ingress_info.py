@@ -6,8 +6,8 @@
 
 import typing as t
 
-from .agent_based_api.v1.type_defs import InventoryResult
 from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult
 
 #
 # There will be a new concept of kubernetes services which will

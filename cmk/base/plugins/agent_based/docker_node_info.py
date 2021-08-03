@@ -4,20 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,)
 from itertools import zip_longest
+from typing import Dict
+
+from .agent_based_api.v1 import HostLabel, register
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 from .utils import docker
-
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    HostLabelGenerator,
-)
-
-from .agent_based_api.v1 import (
-    register,
-    HostLabel,
-)
 
 Section = Dict
 

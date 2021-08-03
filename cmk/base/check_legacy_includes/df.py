@@ -7,19 +7,18 @@
 # pylint: disable=chained-comparison
 
 from typing import Any, Dict, List
-from cmk.base.config import factory_settings, Ruleset
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_api import get_percent_human_readable
 
 from cmk.base.api.agent_based.checking_classes import Metric, Result
-from cmk.base.plugins.agent_based.utils.df import (
-    _check_inodes,
-    get_filesystem_levels as _get_filesystem_levels,
-    mountpoints_in_group,
-    FILESYSTEM_DEFAULT_LEVELS as _FILESYSTEM_DEFAULT_LEVELS,
-)
+from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
+from cmk.base.config import factory_settings, Ruleset
+from cmk.base.plugins.agent_based.utils.df import _check_inodes
+from cmk.base.plugins.agent_based.utils.df import get_filesystem_levels as _get_filesystem_levels
+from cmk.base.plugins.agent_based.utils.df import mountpoints_in_group
 
 from .size_trend import size_trend  # type: ignore[attr-defined]
+
+from cmk.base.plugins.agent_based.utils.df import (  # isort: skip
+    FILESYSTEM_DEFAULT_LEVELS as _FILESYSTEM_DEFAULT_LEVELS,)
 
 # Common include file for all filesystem checks (df, df_netapp, hr_fs, ...)
 

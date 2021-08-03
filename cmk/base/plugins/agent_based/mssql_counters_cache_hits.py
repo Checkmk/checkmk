@@ -6,18 +6,9 @@
 
 from typing import Any, Mapping
 
-from .agent_based_api.v1 import (
-    Service,
-    register,
-    render,
-    check_levels,
-)
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-)
-
-from .utils.mssql_counters import accumulate_node_results, Section, get_int, get_item
+from .agent_based_api.v1 import check_levels, register, render, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.mssql_counters import accumulate_node_results, get_int, get_item, Section
 
 
 def discovery_mssql_counters_cache_hits(

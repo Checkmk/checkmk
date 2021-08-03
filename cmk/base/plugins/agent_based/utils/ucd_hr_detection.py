@@ -7,14 +7,14 @@
 from ..agent_based_api.v1 import (
     all_of,
     any_of,
-    exists,
-    not_exists,
-    equals,
-    not_equals,
     contains,
+    equals,
+    exists,
     not_contains,
-    startswith,
+    not_equals,
+    not_exists,
     not_startswith,
+    startswith,
 )
 
 # We are not sure how to safely detect the UCD SNMP Daemon. We know that

@@ -8,24 +8,14 @@
 
 from typing import Any, List, Mapping, Optional
 
-from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    State as state,
-    all_of,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.f5_bigip import (
     F5_BIGIP,
+    F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
     VERSION_PRE_V11_2,
     VERSION_V11_2_PLUS,
-    F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS,
 )
 
 NodeState = int

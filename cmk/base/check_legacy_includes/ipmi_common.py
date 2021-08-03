@@ -11,7 +11,9 @@
 
 # pylint: disable=no-else-return
 
+import cmk.base.plugins.agent_based.utils.ipmi as ipmi
 from cmk.base.check_api import check_levels
+
 # ==================================================================================================
 # ==================================================================================================
 # THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
@@ -20,8 +22,6 @@ from cmk.base.check_api import check_levels
 # cmk/base/plugins/agent_based/utils/ipmi.py
 # ==================================================================================================
 # ==================================================================================================
-
-import cmk.base.plugins.agent_based.utils.ipmi as ipmi
 
 #TODO Cleanup the whole status text mapping in
 # ipmi_common.include, ipmi_sensors.include, ipmi

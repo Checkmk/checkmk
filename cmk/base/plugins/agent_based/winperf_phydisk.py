@@ -40,23 +40,10 @@
 # 1248 2664021277 2664021277 type(40030500)
 # 1250 1330 1330 counter
 
-from typing import (
-    Any,
-    Dict,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Sequence,
-)
 import time
+from typing import Any, Dict, Mapping, MutableMapping, Optional, Sequence
 
-from .agent_based_api.v1 import (
-    get_rate,
-    get_value_store,
-    IgnoreResultsError,
-    register,
-    type_defs,
-)
+from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
 from .utils import diskstat
 
 _LINE_TO_METRIC = {

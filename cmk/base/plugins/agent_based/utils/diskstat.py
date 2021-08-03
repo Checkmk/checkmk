@@ -4,14 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import defaultdict
 import re
+from collections import defaultdict
 from typing import (
     Any,
     Callable,
     DefaultDict,
+    Dict,
     Generator,
     Iterable,
+    Iterator,
     Mapping,
     MutableMapping,
     Optional,
@@ -19,13 +21,13 @@ from typing import (
     Tuple,
     TypedDict,
     Union,
-    Dict,
-    Iterator,
 )
+
 from ..agent_based_api.v1 import (
     check_levels,
     check_levels_predictive,
     get_average,
+    get_rate,
     IgnoreResultsError,
     Metric,
     render,
@@ -33,7 +35,6 @@ from ..agent_based_api.v1 import (
     Service,
     State,
     type_defs,
-    get_rate,
 )
 
 Disk = Mapping[str, float]

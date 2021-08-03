@@ -5,16 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    TypedDict,
-    Tuple,
-)
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple, TypedDict
+
 from .agent_based_api.v1 import (
     check_levels,
     Metric,

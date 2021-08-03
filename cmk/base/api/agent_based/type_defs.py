@@ -7,6 +7,7 @@
 
 Some of these are exposed in the API, some are not.
 """
+import pprint
 from typing import (
     Any,
     Callable,
@@ -20,14 +21,8 @@ from typing import (
     Set,
     Union,
 )
-import pprint
 
-from cmk.utils.type_defs import (
-    ParsedSectionName,
-    RuleSetName,
-    SectionName,
-    SNMPDetectBaseType,
-)
+from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName, SNMPDetectBaseType
 
 
 class PluginSuppliedLabel(NamedTuple("_LabelTuple", [("name", str), ("value", str)])):

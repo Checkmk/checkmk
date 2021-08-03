@@ -5,23 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from typing import (
-    Any,
-    Dict,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
-from .agent_based_api.v1 import (
-    register,
-    Result,
-    State as state,
-    type_defs,
-)
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
+
+from .agent_based_api.v1 import register, Result
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 from .utils import interfaces
 
 # Example output from agent

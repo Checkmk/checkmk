@@ -6,10 +6,8 @@
 
 from typing import Any, Dict, List, Type
 
-from ..agent_based_api.v1 import (
-    startswith,)
-from ..agent_based_api.v1.type_defs import (
-    StringTable,)
+from ..agent_based_api.v1 import startswith
+from ..agent_based_api.v1.type_defs import StringTable
 
 ParsedStringSection = Dict[str, str]
 ParsedAnySection = Dict[str, Any]

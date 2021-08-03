@@ -4,10 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Any
+from typing import Any, Mapping
 
-from .agent_based_api.v1 import register, Service, Result, State, check_levels, check_levels_predictive, Metric
-from .agent_based_api.v1.type_defs import DiscoveryResult, CheckResult
+from .agent_based_api.v1 import (
+    check_levels,
+    check_levels_predictive,
+    Metric,
+    register,
+    Result,
+    Service,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.cpu import Section
 
 

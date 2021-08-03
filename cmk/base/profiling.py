@@ -7,8 +7,9 @@
 import sys
 from pathlib import Path
 
-import cmk.base.obsolete_output as out
 from cmk.utils.log import console
+
+import cmk.base.obsolete_output as out
 
 _profile = None
 _profile_path = Path("profile.out")

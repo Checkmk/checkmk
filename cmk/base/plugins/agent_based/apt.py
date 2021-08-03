@@ -6,9 +6,8 @@
 
 from typing import NamedTuple, Optional, Sequence
 
-from .agent_based_api.v1 import register, regex
+from .agent_based_api.v1 import regex, register
 from .agent_based_api.v1.type_defs import StringTable
-
 from .utils.apt import NOTHING_PENDING_FOR_INSTALLATION
 
 _SEC_REGEX = regex("^[^\\(]*\\(.* (Debian-Security:|Ubuntu:[^/]*/[^-]*-security)")

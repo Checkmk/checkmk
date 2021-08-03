@@ -4,27 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Mapping,
-    Optional,
-)
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    State as state,
-    type_defs,
-)
-from .utils import ipmi
+from typing import Any, Mapping, Optional
 
 # NOTE: THIS AN API VIOLATION, DO NOT REPLICATE THIS
 # This is needed because inventory_ipmi_rules was once not a dict, which is not allowed by the API
 # for discovery rulesets
 # ==================================================================================================
 from cmk.utils.type_defs import RuleSetName  # pylint: disable=cmk-module-layer-violation
-from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer-violation
+
 from cmk.base.check_api import host_name  # pylint: disable=cmk-module-layer-violation
-from cmk.base.api.agent_based.register import add_discovery_ruleset, get_discovery_ruleset  # pylint: disable=cmk-module-layer-violation
+from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer-violation
+
+from .agent_based_api.v1 import register, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
+from .utils import ipmi
+
+from cmk.base.api.agent_based.register import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    add_discovery_ruleset, get_discovery_ruleset,
+)
+
 # ==================================================================================================
 
 # Example of output from ipmi:

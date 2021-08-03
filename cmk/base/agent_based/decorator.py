@@ -6,9 +6,9 @@
 
 from typing import Any, Callable, Tuple
 
-from cmk.utils.check_utils import ActiveCheckResult
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
+from cmk.utils.check_utils import ActiveCheckResult
 from cmk.utils.exceptions import (
     MKAgentError,
     MKFetcherError,
@@ -18,12 +18,7 @@ from cmk.utils.exceptions import (
     MKTimeout,
 )
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
-    CheckPluginNameStr,
-    HostName,
-    ServiceName,
-    ServiceState,
-)
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, ServiceName, ServiceState
 
 import cmk.base.config as config
 import cmk.base.crash_reporting

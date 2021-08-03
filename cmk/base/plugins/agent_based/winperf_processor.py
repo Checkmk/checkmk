@@ -3,15 +3,14 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Final, List, Mapping, MutableMapping, NamedTuple, Tuple, Optional
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from typing import Any, Final, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple
 
 from .agent_based_api.v1 import (
     check_levels,
     get_rate,
     get_value_store,
-    IgnoreResultsError,
     IgnoreResults,
+    IgnoreResultsError,
     Metric,
     register,
     render,
@@ -19,6 +18,7 @@ from .agent_based_api.v1 import (
     Service,
     State,
 )
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.cpu_util import check_cpu_util
 
 

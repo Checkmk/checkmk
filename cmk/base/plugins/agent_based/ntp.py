@@ -18,7 +18,16 @@
 # % 127.127.1.0     .LOCL.          10 l   40   64  377    0.000    0.000   0.001
 import time
 from typing import Any, Dict, Final, Mapping, NamedTuple, Optional
-from .agent_based_api.v1 import check_levels, get_value_store, register, render, Result, Service, State
+
+from .agent_based_api.v1 import (
+    check_levels,
+    get_value_store,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.timesync import tolerance_check
 

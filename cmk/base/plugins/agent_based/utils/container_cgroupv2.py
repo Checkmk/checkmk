@@ -4,11 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from typing import Any, Mapping, NamedTuple
 
-from typing import NamedTuple
-from ..agent_based_api.v1.type_defs import StringTable, DiscoveryResult, CheckResult
-from ..agent_based_api.v1 import get_value_store, get_rate, Service
+from ..agent_based_api.v1 import get_rate, get_value_store, Service
+from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from ..utils.cpu_util import check_cpu_util
 
 

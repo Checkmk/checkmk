@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
+import time
+
 # Example output from agent:
 # 0 Service_FOO V=1 This Check is OK
 # 1 Bar_Service - This is WARNING and has no performance data
@@ -13,35 +16,11 @@
 # P Some_yet_other_Service temp=40;30;50|humidity=28;50:100;0:50;0;100
 # P Has-no-var - This has no variable
 # P No-Text hirn=-8;-20
-from typing import (
-    Any,
-    Dict,
-    List,
-    Mapping,
-    NamedTuple,
-    Optional,
-    Tuple,
-    Union,
-    Iterable,
-    Sequence,
-)
+from typing import Any, Dict, Iterable, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
 
-import re
-import time
-
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-)
-from .agent_based_api.v1 import (
-    Result,
-    Metric,
-    Service,
-    State,
-    check_levels,
-    register,
-)
+from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
 from .agent_based_api.v1.clusterize import make_node_notice_results
+from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from .utils.cache_helper import CacheInfo, render_cache_info
 
 # we don't have IgnoreResults and thus don't want to handle them

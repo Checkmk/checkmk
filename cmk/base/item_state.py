@@ -19,12 +19,8 @@ Do not store long-time things here. Also do not store complex
 structures like log files or stuff.
 """
 
-from typing import (
-    Any,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Any, Optional, Tuple, Union
+
 from cmk.utils.exceptions import MKException
 
 from cmk.base.api.agent_based.value_store import get_value_store

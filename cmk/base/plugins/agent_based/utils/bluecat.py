@@ -6,13 +6,10 @@
 
 from collections import namedtuple
 from typing import Any, Dict, Mapping, Optional, Tuple
-from ..agent_based_api.v1 import (
-    equals,
-    Metric,
-    Result,
-    State as state,
-    type_defs,
-)
+
+from ..agent_based_api.v1 import equals, Metric, Result
+from ..agent_based_api.v1 import State as state
+from ..agent_based_api.v1 import type_defs
 from ..agent_based_api.v1.clusterize import make_node_notice_results
 
 Section = Mapping[str, int]

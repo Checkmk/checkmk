@@ -5,14 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Sequence
 
-from marshmallow import Schema, fields, post_load
+from marshmallow import fields, post_load, Schema
 
-from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 from .agent_based_api.v1 import HostLabel, register
-
-from .utils.k8s import Address, Port, Subset
-
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 from .utils import k8s
+from .utils.k8s import Address, Port, Subset
 
 
 def host_labels(section: Sequence[k8s.Subset]) -> HostLabelGenerator:

@@ -5,27 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Caring about persistance of the discovered services (aka autochecks)"""
 
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Tuple, Union, NamedTuple
 import logging
 from pathlib import Path
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Sequence, Set, Tuple, Union
 
 from six import ensure_str
 
-from cmk.utils.check_utils import maincheckify
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    CheckVariables,
-    HostName,
-    Item,
-    ServiceName,
-)
+from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item, ServiceName
 
-from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 from cmk.base.check_utils import LegacyCheckParameters, Service
+from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 ComputeCheckParameters = Callable[[HostName, CheckPluginName, Item, LegacyCheckParameters],
                                   Optional[LegacyCheckParameters]]

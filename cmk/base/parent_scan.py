@@ -5,23 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import sys
+import pprint
 import socket
 import subprocess
+import sys
 import time
-import pprint
-from typing import Union, Tuple, Optional, Set, Dict, List
+from typing import Dict, List, Optional, Set, Tuple, Union
 
-import cmk.utils.tty as tty
-import cmk.utils.paths
 import cmk.utils.debug
+import cmk.utils.paths
+import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.type_defs import HostAddress, HostName
 
-import cmk.base.obsolete_output as out
 import cmk.base.config as config
-from cmk.utils.type_defs import HostName, HostAddress
+import cmk.base.obsolete_output as out
 
 Gateways = List[Tuple[Optional[Tuple[Optional[HostName], HostAddress, Optional[HostName]]], str,
                       int, str]]

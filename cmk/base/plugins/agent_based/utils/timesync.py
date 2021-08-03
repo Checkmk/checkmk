@@ -1,4 +1,5 @@
 from typing import Any, MutableMapping, Optional, Tuple
+
 from ..agent_based_api.v1 import check_levels, render, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult
 

@@ -4,15 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, Final, NamedTuple
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    InventoryResult,
-    StringTable,
-)
 
 from .agent_based_api.v1 import register, render, Result, Service, SNMPTree, State, TableRow
-from .utils.hp_proliant import MAP_TYPES_MEMORY, DETECT
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
+from .utils.hp_proliant import DETECT, MAP_TYPES_MEMORY
 
 _STATUS_MAP: Final = {
     '1': "other",

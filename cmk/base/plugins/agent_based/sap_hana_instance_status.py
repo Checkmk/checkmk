@@ -5,15 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from datetime import datetime, timedelta
-from typing import List, NamedTuple, Final, Dict
+from typing import Dict, Final, List, NamedTuple
 
+from .agent_based_api.v1 import register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
-from .agent_based_api.v1 import register, Service, Result, State, render
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-)
 
 
 class InstanceProcess(NamedTuple):

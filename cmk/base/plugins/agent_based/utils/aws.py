@@ -4,21 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
 import json
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    Mapping,
-    Optional,
-    Sequence,
-)
-from ..agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-)
+from dataclasses import dataclass
+from typing import Any, Dict, Iterable, Mapping, Optional, Sequence
+
 from ..agent_based_api.v1 import Service
+from ..agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 
 GenericAWSSection = Sequence[Mapping[str, Any]]
 AWSSectionMetrics = Mapping[str, Mapping[str, Any]]

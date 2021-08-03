@@ -6,10 +6,10 @@
 
 from .agent_based_api.v1 import get_value_store, register, type_defs
 from .utils.cmciii import (
-    DiscoveryParams,
     discover_cmciii_sensors,
-    get_sensor,
     discovery_default_parameters,
+    DiscoveryParams,
+    get_sensor,
     Section,
 )
 from .utils.temperature import check_temperature, TempParamDict

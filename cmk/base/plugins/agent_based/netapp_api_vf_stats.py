@@ -6,19 +6,20 @@
 
 import time
 from typing import Any, Mapping, Optional
+
 from .agent_based_api.v1 import (
     check_levels,
-    GetRateError,
     get_rate,
     get_value_store,
+    GetRateError,
     IgnoreResultsError,
     register,
     render,
     Result,
     Service,
-    State as state,
-    type_defs,
 )
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 from .utils import cpu_util, netapp_api
 
 # <<<netapp_api_vf_stats:sep(9)>>>

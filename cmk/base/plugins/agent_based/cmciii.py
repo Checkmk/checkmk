@@ -16,13 +16,7 @@ from .agent_based_api.v1 import (
     State,
     type_defs,
 )
-from .utils.cmciii import (
-    Devices,
-    Section,
-    SensorType,
-    Sensors,
-    Variable,
-)
+from .utils.cmciii import Devices, Section, Sensors, SensorType, Variable
 
 MAP_STATES = {
     '1': (State.UNKNOWN, "not available"),

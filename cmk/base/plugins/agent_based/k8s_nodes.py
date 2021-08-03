@@ -5,13 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Dict, Mapping
 
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    HostLabelGenerator,
-)
 from .agent_based_api.v1 import check_levels, HostLabel, register, Service
-
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, HostLabelGenerator
 from .utils import k8s
 
 

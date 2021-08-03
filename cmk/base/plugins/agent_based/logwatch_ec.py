@@ -27,18 +27,20 @@ from cmk.utils.type_defs import CheckPluginName  # pylint: disable=cmk-module-la
 
 # from cmk.base.config import logwatch_rules will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-# import from legacy API until we come up with something better
-from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
-    host_name, service_extra_conf,
-)
-from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
-    SyslogForwarderUnixSocket, SyslogMessage,
-)
 
 from .agent_based_api.v1 import Metric, register, Result, Service
 from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import logwatch
+
+# import from legacy API until we come up with something better
+from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    host_name, service_extra_conf,
+)
+
+from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    SyslogForwarderUnixSocket, SyslogMessage,
+)
 
 ClusterSection = Dict[Optional[str], logwatch.Section]
 

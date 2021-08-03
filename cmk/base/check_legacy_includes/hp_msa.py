@@ -6,10 +6,12 @@
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 import time
-from cmk.base.check_api import get_rate
-import cmk.base.plugins.agent_based.utils.hp_msa as hp_msa
 
-from .diskstat import inventory_diskstat_generic, check_diskstat_dict
+import cmk.base.plugins.agent_based.utils.hp_msa as hp_msa
+from cmk.base.check_api import get_rate
+
+from .diskstat import check_diskstat_dict, inventory_diskstat_generic
+
 #TODO
 # Use 'status-numeric' instead of 'status' field regardless of language.
 # See for state mapping: https://support.hpe.com/hpsc/doc/public/display?docId=emr_na-a00017709en_us

@@ -6,21 +6,10 @@
 
 import json
 from typing import Mapping
-from .agent_based_api.v1 import (
-    Metric,
-    Result,
-    Service,
-    register,
-)
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
-from .utils.interfaces import (
-    Interface,
-    check_single_interface,
-)
+
+from .agent_based_api.v1 import Metric, register, Result, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.interfaces import check_single_interface, Interface
 
 Section = Mapping[str, float]
 

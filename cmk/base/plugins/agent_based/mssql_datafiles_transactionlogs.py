@@ -4,23 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
 from contextlib import suppress
+from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
 
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
-from .agent_based_api.v1 import (
-    check_levels,
-    IgnoreResultsError,
-    register,
-    render,
-    Result,
-    Service,
-    State as state,
-)
+from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.mssql_counters import accumulate_node_results
 
 

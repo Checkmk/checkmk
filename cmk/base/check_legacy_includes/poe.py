@@ -8,10 +8,7 @@
 import collections
 import enum
 
-from cmk.base.check_api import (
-    check_levels,
-    get_percent_human_readable,
-)
+from cmk.base.check_api import check_levels, get_percent_human_readable
 
 poe_default_levels = (90.0, 95.0)
 

@@ -8,6 +8,7 @@
 # pylint: disable=no-else-return
 
 from cmk.base.plugins.agent_based.utils.temperature import render_temp
+
 from .temperature import check_temperature
 
 

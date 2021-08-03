@@ -7,9 +7,9 @@
 
 These are meant to be exposed in the API
 """
-from typing import Iterable, Optional, Tuple
 import math
 import time
+from typing import Iterable, Optional, Tuple
 
 _DATE_FORMAT = "%b %d %Y"
 

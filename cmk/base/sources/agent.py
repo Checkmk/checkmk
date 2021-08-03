@@ -10,11 +10,12 @@ from typing import Final, Optional
 import cmk.utils.misc
 from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SourceType
 
-import cmk.base.config as config
 from cmk.core_helpers.agent import AgentHostSections, AgentParser
 from cmk.core_helpers.cache import SectionStore
 from cmk.core_helpers.controller import FetcherType
 from cmk.core_helpers.type_defs import AgentRawDataSection
+
+import cmk.base.config as config
 
 from ._abstract import Source
 

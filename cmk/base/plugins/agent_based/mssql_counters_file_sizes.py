@@ -6,17 +6,8 @@
 
 from typing import Any, Mapping
 
-from .agent_based_api.v1 import (
-    Metric,
-    register,
-    render,
-    check_levels,
-)
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-)
-
+from .agent_based_api.v1 import check_levels, Metric, register, render
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.mssql_counters import (
     accumulate_node_results,
     discovery_mssql_counters_generic,

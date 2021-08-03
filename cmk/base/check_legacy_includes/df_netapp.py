@@ -5,9 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.check_api import saveint, host_extra_conf, host_name
-from .df import df_check_filesystem_list, filesystem_groups
+from cmk.base.check_api import host_extra_conf, host_name, saveint
 from cmk.base.plugins.agent_based.utils.df import df_discovery
+
+from .df import df_check_filesystem_list, filesystem_groups
 
 
 def inventory_df_netapp(info):

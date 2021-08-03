@@ -4,25 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-)
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-
 import time
-from .agent_based_api.v1 import (
-    get_value_store,
-    IgnoreResultsError,
-    register,
-    Service,
-)
-from .utils import interfaces, diskstat
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+
+from .agent_based_api.v1 import get_value_store, IgnoreResultsError, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import diskstat, interfaces
 
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>

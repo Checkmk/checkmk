@@ -4,47 +4,47 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import traceback
-import errno
 import abc
-from typing import List, Optional, Dict, Any, Iterator
-import uuid
-import tarfile
+import errno
 import json
-from pathlib import Path
-import tempfile
 import platform
-import urllib.parse
-import textwrap
 import shutil
-import requests
+import tarfile
+import tempfile
+import textwrap
+import traceback
+import urllib.parse
+import uuid
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional
+
+import requests
 
 import livestatus
 
-import cmk.utils.tty as tty
-from cmk.utils.i18n import _
-import cmk.utils.paths
-import cmk.utils.version as cmk_version
-import cmk.utils.store as store
-from cmk.utils.log import console
 import cmk.utils.packaging as packaging
+import cmk.utils.paths
 import cmk.utils.site as site
-from cmk.utils.structured_data import StructuredDataStore
-from cmk.utils.site import omd_site
-
+import cmk.utils.store as store
+import cmk.utils.tty as tty
+import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import (
+    CheckmkFilesMap,
+    DiagnosticsOptionalParameters,
+    get_checkmk_config_files_map,
+    get_checkmk_log_files_map,
+    OPT_CHECKMK_CONFIG_FILES,
+    OPT_CHECKMK_LOG_FILES,
+    OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
-    OPT_CHECKMK_OVERVIEW,
-    OPT_CHECKMK_CONFIG_FILES,
-    OPT_CHECKMK_LOG_FILES,
-    DiagnosticsOptionalParameters,
-    CheckmkFilesMap,
-    get_checkmk_config_files_map,
-    get_checkmk_log_files_map,
 )
+from cmk.utils.i18n import _
+from cmk.utils.log import console
+from cmk.utils.site import omd_site
+from cmk.utils.structured_data import StructuredDataStore
 
 import cmk.base.section as section
 

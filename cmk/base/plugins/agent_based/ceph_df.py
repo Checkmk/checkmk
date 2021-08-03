@@ -4,10 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from .agent_based_api.v1 import (
-    register,)
-from .agent_based_api.v1.type_defs import (
-    StringTable,)
+
+from .agent_based_api.v1 import register
+from .agent_based_api.v1.type_defs import StringTable
 from .utils.df import FSBlocks
 
 

@@ -7,10 +7,9 @@
 import re
 from typing import List
 
-from .agent_based_api.v1 import SNMPTree, register, matches
+from .agent_based_api.v1 import matches, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
-
-from .utils.wlc_clients import WlcClientsSection, ClientsPerInterface, ClientsTotal
+from .utils.wlc_clients import ClientsPerInterface, ClientsTotal, WlcClientsSection
 
 OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
 CISCO_WLC_CLIENTS_PATTERN = "|".join(

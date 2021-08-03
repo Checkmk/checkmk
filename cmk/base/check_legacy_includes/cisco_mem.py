@@ -6,7 +6,7 @@
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 
-from .mem import get_levels_mode_from_value, check_memory_element
+from .mem import check_memory_element, get_levels_mode_from_value
 from .size_trend import size_trend
 
 CISCO_MEM_CHECK_DEFAULT_PARAMETERS = {

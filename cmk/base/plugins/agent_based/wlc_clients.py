@@ -6,9 +6,9 @@
 
 from typing import Union
 
-from .agent_based_api.v1 import register, Service, check_levels, Result, State
-from .agent_based_api.v1.type_defs import DiscoveryResult, CheckResult
-from .utils.wlc_clients import WlcClientsSection, ClientsPerInterface, ClientsTotal, VsResult
+from .agent_based_api.v1 import check_levels, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.wlc_clients import ClientsPerInterface, ClientsTotal, VsResult, WlcClientsSection
 
 
 def discover_wlc_clients(

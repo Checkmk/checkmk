@@ -7,9 +7,9 @@
 import textwrap
 from typing import Callable, Dict, List, Optional, Set, Tuple, Union
 
+from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import load_plugins
-from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config

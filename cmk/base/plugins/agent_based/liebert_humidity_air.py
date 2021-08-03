@@ -12,24 +12,12 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5028 21.0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5028 % RH
 
-from typing import Any, Dict, List, Mapping, Tuple, Optional
-from .utils.liebert import (
-    DETECT_LIEBERT,
-    parse_liebert,
-)
-from .agent_based_api.v1 import (
-    check_levels,
-    register,
-    SNMPTree,
-    Service,
-    Result,
-    State as state,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
+from typing import Any, Dict, List, Mapping, Optional, Tuple
+
+from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.liebert import DETECT_LIEBERT, parse_liebert
 
 LIEBERT_HUMIDITY_AIR_DEFAULT_PARAMETERS = {
     'levels': (50, 55),

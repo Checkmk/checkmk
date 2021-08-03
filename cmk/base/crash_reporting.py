@@ -8,13 +8,13 @@
 import os
 import sys
 import traceback
-from typing import Any, Dict, Mapping, Optional, Union
 from pathlib import Path
+from typing import Any, Dict, Mapping, Optional, Union
 
-import cmk.utils.debug
-import cmk.utils.paths
-import cmk.utils.encoding
 import cmk.utils.crash_reporting as crash_reporting
+import cmk.utils.debug
+import cmk.utils.encoding
+import cmk.utils.paths
 from cmk.utils.type_defs import (
     AgentRawData,
     CheckPluginName,

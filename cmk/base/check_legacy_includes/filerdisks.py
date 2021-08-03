@@ -6,6 +6,7 @@
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.check_api import get_bytes_human_readable
+
 # disks = [
 #     { "state" : "failed",
 #       "identifier" : "Enclosure: 2, Slot: 1, Type: SATA",

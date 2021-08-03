@@ -25,10 +25,10 @@ import cmk.base.ip_lookup as ip_lookup
 from cmk.base.config import HostConfig
 
 from ._abstract import Mode, Source
-from .push_agent import PushAgentSource
 from .ipmi import IPMISource
 from .piggyback import PiggybackSource
 from .programs import DSProgramSource, SpecialAgentSource
+from .push_agent import PushAgentSource
 from .snmp import SNMPSource
 from .tcp import TCPSource
 

@@ -17,8 +17,8 @@ from typing import Any, Dict, IO, Iterable, List, Optional, Set, Tuple, Union
 from six import ensure_binary, ensure_str
 
 import cmk.utils.paths
-import cmk.utils.tty as tty
 import cmk.utils.store as store
+import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
@@ -40,14 +40,13 @@ import cmk.core_helpers.config_path
 from cmk.core_helpers.config_path import VersionedConfigPath
 
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.utils
-import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.core_config as core_config
+import cmk.base.ip_lookup as ip_lookup
+import cmk.base.obsolete_output as out
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.sources as sources
-import cmk.base.ip_lookup as ip_lookup
-
+import cmk.base.utils
 from cmk.base.check_utils import ServiceID
 from cmk.base.config import ConfigCache, HostConfig, ObjectAttributes
 from cmk.base.core_config import CoreCommand, CoreCommandName

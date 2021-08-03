@@ -3,30 +3,14 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Mapping, MutableMapping
 import collections
 from contextlib import suppress
+from typing import Any, Mapping, MutableMapping
 
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    GetRateError,
-    get_value_store,
-)
-
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    CheckResult,
-)
-from .utils.k8s import (
-    Section,
-    Filesystem,
-    to_filesystem,
-)
-from .utils.df import (
-    df_check_filesystem_single,
-    FILESYSTEM_DEFAULT_LEVELS,
-)
+from .agent_based_api.v1 import get_value_store, GetRateError, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_LEVELS
+from .utils.k8s import Filesystem, Section, to_filesystem
 
 
 def discover_k8s_stats_fs(section: Section) -> DiscoveryResult:

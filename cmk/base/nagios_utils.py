@@ -7,10 +7,11 @@
 import subprocess
 import sys
 
-import cmk.base.obsolete_output as out
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.log import console
+
+import cmk.base.obsolete_output as out
 
 
 def do_check_nagiosconfig() -> bool:

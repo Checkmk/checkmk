@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for section plugins
 """
-from typing import List, Sequence, Union
 import string
+from typing import List, Sequence, Union
 
 from cmk.utils.type_defs import SNMPDetectBaseType
+
 from cmk.base.api.agent_based.type_defs import OIDSpecTuple, SNMPTreeTuple
 
 

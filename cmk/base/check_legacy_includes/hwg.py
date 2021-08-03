@@ -3,11 +3,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# type: ignore[list-item,import,assignment,misc,operator,attr-defined]  # TODO: see which are needed in this file
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.config import factory_settings
-from .humidity import check_humidity
 from cmk.base.check_api import get_parsed_item_data
+from cmk.base.config import factory_settings
+
+from .humidity import check_humidity
 from .temperature import check_temperature
 
 map_units = {"1": "c", "2": "f", "3": "k", "4": "%"}

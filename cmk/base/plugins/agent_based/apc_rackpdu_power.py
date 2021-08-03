@@ -31,14 +31,8 @@
 #                           3/0     => parsed = device phase + 3 phases
 
 from typing import Dict, List, Optional, Tuple, Union
-from .agent_based_api.v1 import (
-    all_of,
-    exists,
-    register,
-    SNMPTree,
-    startswith,
-    type_defs,
-)
+
+from .agent_based_api.v1 import all_of, exists, register, SNMPTree, startswith, type_defs
 
 StatusInfo = Tuple[float, Tuple[int, str]]
 Parsed = Dict[str, Dict[str, Union[float, StatusInfo]]]

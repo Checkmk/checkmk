@@ -16,22 +16,10 @@
 
 from typing import Dict, List
 
-from .utils.liebert import (
-    DETECT_LIEBERT,
-    parse_liebert_without_unit,
-)
-from .agent_based_api.v1 import (
-    register,
-    SNMPTree,
-    Service,
-    Result,
-    State as state,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
+from .agent_based_api.v1 import register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.liebert import DETECT_LIEBERT, parse_liebert_without_unit
 
 ParsedSection = Dict[str, str]
 

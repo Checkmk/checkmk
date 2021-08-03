@@ -3,19 +3,22 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# type: ignore[list-item,import,assignment,misc,operator,arg-type]  # TODO: see which are needed in this file
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.check_api import get_number_with_precision
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_api import MKCounterWrapped
-from cmk.base.check_api import get_percent_human_readable
-from cmk.base.check_api import check_levels
-from cmk.base.check_api import state_markers
-from cmk.base.check_api import ServiceCheckResult
-from typing import Dict, List, Union, Optional, Tuple, Callable, Iterable
 import functools
+from typing import Callable, Dict, Iterable, List, Optional, Tuple, Union
+
 import cmk.utils.aws_constants as agent_aws_types
 
+from cmk.base.check_api import (
+    check_levels,
+    get_bytes_human_readable,
+    get_number_with_precision,
+    get_percent_human_readable,
+    MKCounterWrapped,
+    ServiceCheckResult,
+    state_markers,
+)
 from cmk.base.plugins.agent_based.utils.aws import parse_aws
 
 AWSRegions = dict(agent_aws_types.AWSRegions)

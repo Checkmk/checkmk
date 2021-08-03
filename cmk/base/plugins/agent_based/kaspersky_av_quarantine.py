@@ -13,7 +13,7 @@
 
 from typing import Dict
 
-from .agent_based_api.v1 import register, Service, Result, Metric, State
+from .agent_based_api.v1 import Metric, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Dict[str, str]

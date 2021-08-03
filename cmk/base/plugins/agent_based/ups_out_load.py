@@ -4,11 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, NamedTuple, Mapping, Any, List
+from typing import Any, Dict, List, Mapping, NamedTuple
 
-from .agent_based_api.v1 import (OIDEnd, register, SNMPTree, Service, check_levels, render, Result,
-                                 State)
-from .agent_based_api.v1.type_defs import StringTable, DiscoveryResult, CheckResult
+from .agent_based_api.v1 import (
+    check_levels,
+    OIDEnd,
+    register,
+    render,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.ups import DETECT_UPS_GENERIC
 
 

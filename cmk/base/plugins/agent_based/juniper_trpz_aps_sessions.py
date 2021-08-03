@@ -11,30 +11,26 @@
 #juniper-trpz-wlc-800-2 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.13
 #juniper-trpz-wlc-800-3 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.3.4
 
-from typing import Any, Dict, List, Mapping, MutableMapping, Tuple, TypedDict
 import time
 from contextlib import suppress
+from typing import Any, Dict, List, Mapping, MutableMapping, Tuple, TypedDict
 
 from .agent_based_api.v1 import (
-    SNMPTree,
-    OIDEnd,
-    Service,
-    Metric,
-    Result,
-    State as state,
-    register,
     any_of,
-    startswith,
     get_rate,
     get_value_store,
     GetRateError,
+    Metric,
+    OIDEnd,
+    register,
     render,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
 )
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    DiscoveryResult,
-    CheckResult,
-)
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 RadioCounters = List[float]
 

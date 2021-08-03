@@ -7,15 +7,10 @@
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 # pylint: disable=no-else-return
 
-from cmk.base.check_api import saveint, host_extra_conf, host_name
-
-from .df import (
-    df_check_filesystem_list,
-    inventory_df_exclude_mountpoints,
-    filesystem_groups,
-)
-
+from cmk.base.check_api import host_extra_conf, host_name, saveint
 from cmk.base.plugins.agent_based.utils.df import df_discovery
+
+from .df import df_check_filesystem_list, filesystem_groups, inventory_df_exclude_mountpoints
 
 # .1.3.6.1.2.1.25.2.3.1.2.1 .1.3.6.1.2.1.25.2.1.2 --> HOST-RESOURCES-MIB::hrStorageType.1
 # .1.3.6.1.2.1.25.2.3.1.2.3 .1.3.6.1.2.1.25.2.1.3 --> HOST-RESOURCES-MIB::hrStorageType.3

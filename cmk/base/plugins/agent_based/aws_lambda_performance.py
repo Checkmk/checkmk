@@ -3,25 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import (
-    Any,
-    Generator,
-    Mapping,
-    Optional,
-    Union,
-)
+from typing import Any, Generator, Mapping, Optional, Union
 
-from .agent_based_api.v1 import (
-    check_levels,
-    Metric,
-    register,
-    render,
-    Result,
-)
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-)
+from .agent_based_api.v1 import check_levels, Metric, register, render, Result
+from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from .utils.aws import (
     discover_lambda_functions,
     extract_aws_metrics_by_labels,

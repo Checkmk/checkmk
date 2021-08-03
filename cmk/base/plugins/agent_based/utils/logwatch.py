@@ -14,6 +14,7 @@
 #                                                                                       #
 #########################################################################################
 
+import re
 from typing import (
     Any,
     Counter,
@@ -28,11 +29,10 @@ from typing import (
     TypedDict,
 )
 
-import re
+from ..agent_based_api.v1 import regex, Result
+from ..agent_based_api.v1 import State as state
 
-from ..agent_based_api.v1 import regex, Result, State as state
-
-from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
+from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation # isort: skip
     get_checkgroup_parameters, host_extra_conf, host_name,
 )
 

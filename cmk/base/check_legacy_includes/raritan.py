@@ -6,6 +6,7 @@
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from .temperature import check_temperature
+
 # For raritan devices which support the PDU2-, EMD-, or LHX-MIB
 
 #   .--Maps----------------------------------------------------------------.

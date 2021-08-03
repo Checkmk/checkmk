@@ -7,21 +7,9 @@
 """
 from typing import Dict, List, Mapping, Tuple
 
-from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    State as state,
-    any_of,
-    startswith,
-    contains,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
+from .agent_based_api.v1 import any_of, contains, register, Result, Service, SNMPTree, startswith
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Dict[str, Tuple[str, str]]
 

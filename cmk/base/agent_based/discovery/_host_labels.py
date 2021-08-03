@@ -11,23 +11,15 @@ This module exposes three functions:
  * analyse_host_labels (dispatching to one of the above based on host_config.is_cluster)
 
 """
-from typing import (
-    Dict,
-    Mapping,
-    Optional,
-    Sequence,
-)
+from typing import Dict, Mapping, Optional, Sequence
+
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
-    HostAddress,
-    HostName,
-    HostKey,
-    SourceType,
-)
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker
+from cmk.utils.type_defs import HostAddress, HostKey, HostName, SourceType
+
 import cmk.base.config as config
+from cmk.base.agent_based.data_provider import ParsedSectionsBroker
 from cmk.base.discovered_labels import HostLabel
 
 from .utils import QualifiedDiscovery

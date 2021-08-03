@@ -6,17 +6,13 @@
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 import time
-from typing import Union, Tuple, Optional, AnyStr, List
+from typing import AnyStr, List, Optional, Tuple, Union
 
-from cmk.base.check_api import check_levels
-from cmk.base.check_api import MKCounterWrapped
-from cmk.base.check_api import get_average
-from cmk.base.check_api import get_rate
-from cmk.base.check_api import state_markers
-from cmk.base.plugins.agent_based.utils.temperature import (  # pylint: disable=unused-import
-    to_celsius, render_temp, fahrenheit_to_celsius,  # reimported from checks!
-    temp_unitsym, _migrate_params,  # See warning below
-    StatusType, TwoLevelsType, TempParamType,
+from cmk.base.check_api import check_levels, get_average, get_rate, MKCounterWrapped, state_markers
+
+from cmk.base.plugins.agent_based.utils.temperature import (  # pylint: disable=unused-import; # isort: skip # reimported from checks!; See warning below
+    _migrate_params, fahrenheit_to_celsius, render_temp, StatusType, temp_unitsym, TempParamType,
+    to_celsius, TwoLevelsType,
 )
 
 Number = Union[int, float]

@@ -15,6 +15,7 @@
 # equipmentIndicatorLed<TAB>dn sys/rack-unit-1/indicator-led-0<TAB>name OVERALL_DIMM_STATUS<TAB>color green<TAB>operState on
 
 from typing import Dict
+
 from .agent_based_api.v1 import register, type_defs
 
 

@@ -5,8 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, List, Mapping, MutableMapping, NamedTuple, Optional, Tuple
 
-from ..agent_based_api.v1.type_defs import CheckResult
-
 from ..agent_based_api.v1 import (
     check_levels,
     check_levels_predictive,
@@ -16,6 +14,7 @@ from ..agent_based_api.v1 import (
     regex,
     render,
 )
+from ..agent_based_api.v1.type_defs import CheckResult
 
 
 class CPUInfo(

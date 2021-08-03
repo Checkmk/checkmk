@@ -4,13 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from time import time
 from enum import Enum
-from typing import Any, Mapping, NamedTuple, Dict, Optional
+from time import time
+from typing import Any, Dict, Mapping, NamedTuple, Optional
 
-from .agent_based_api.v1.type_defs import StringTable, CheckResult, DiscoveryResult
-from .agent_based_api.v1 import (render, register, Result, Service, State, get_value_store,
-                                 get_rate, check_levels)
+from .agent_based_api.v1 import (
+    check_levels,
+    get_rate,
+    get_value_store,
+    register,
+    render,
+    Result,
+    Service,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 
 class HAProxyFrontendStatus(Enum):

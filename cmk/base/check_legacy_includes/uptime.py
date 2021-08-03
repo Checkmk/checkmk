@@ -6,6 +6,7 @@
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 import time
+
 from cmk.base.check_api import check_levels
 
 

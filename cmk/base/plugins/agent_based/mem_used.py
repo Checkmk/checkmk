@@ -7,8 +7,6 @@
 import time
 from typing import List, Mapping, NamedTuple, Optional, Tuple, Union
 
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult
-
 from .agent_based_api.v1 import (
     Attributes,
     get_average,
@@ -20,7 +18,7 @@ from .agent_based_api.v1 import (
     Service,
     State,
 )
-
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult
 from .utils import memory
 
 

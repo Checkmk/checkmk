@@ -5,17 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Sequence, MutableMapping
+from typing import MutableMapping, Sequence
+
 from .agent_based_api.v1 import register
+from .agent_based_api.v1.type_defs import StringTable
 from .utils.aws import (
-    LambdaFunctionConfiguration,
     function_arn_to_item,
-    parse_aws,
-    LambdaSummarySection,
+    LambdaFunctionConfiguration,
     LambdaRegionLimits,
     LambdaRegionLimitsSection,
+    LambdaSummarySection,
+    parse_aws,
 )
-from .agent_based_api.v1.type_defs import StringTable
 
 
 def parse_aws_lambda_summary(string_table: StringTable) -> LambdaSummarySection:

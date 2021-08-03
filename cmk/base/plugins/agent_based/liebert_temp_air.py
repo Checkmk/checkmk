@@ -4,29 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Tuple, Optional, MutableMapping
-from .utils.liebert import (
-    DETECT_LIEBERT,
-    parse_liebert,
-)
-from .utils.temperature import (
-    check_temperature,
-    TempParamType,
-    to_celsius,
-)
-from .agent_based_api.v1 import (
-    register,
-    SNMPTree,
-    Service,
-    Result,
-    get_value_store,
-    State as state,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
+from typing import Any, Dict, List, MutableMapping, Optional, Tuple
+
+from .agent_based_api.v1 import get_value_store, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.liebert import DETECT_LIEBERT, parse_liebert
+from .utils.temperature import check_temperature, TempParamType, to_celsius
 
 ParsedSection = Dict[str, Any]
 

@@ -4,23 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    List,
-    Mapping,
-    Optional,
-)
-from .agent_based_api.v1 import (
-    check_levels,
-    register,
-    Service,
-    SNMPTree,
-)
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+from typing import Any, List, Mapping, Optional
+
+from .agent_based_api.v1 import check_levels, register, Service, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.netscaler import SNMP_DETECT
 
 # example SNMP output:

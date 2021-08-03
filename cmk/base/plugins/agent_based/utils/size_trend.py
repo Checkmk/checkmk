@@ -4,17 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, MutableMapping, Optional, Tuple
 import time
+from typing import Any, Mapping, MutableMapping, Optional, Tuple
 
+from ..agent_based_api.v1 import check_levels, get_average, get_rate, Metric, render
 from ..agent_based_api.v1.type_defs import CheckResult
-from ..agent_based_api.v1 import (
-    get_rate,
-    get_average,
-    Metric,
-    render,
-    check_levels,
-)
 
 Levels = Tuple[float, float]
 

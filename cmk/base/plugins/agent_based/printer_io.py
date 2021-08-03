@@ -5,12 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from typing import NamedTuple, Mapping, List, Any, Dict
+from typing import Any, Dict, List, Mapping, NamedTuple
 
+from .agent_based_api.v1 import (
+    check_levels,
+    OIDEnd,
+    register,
+    render,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.printer import DETECT_PRINTER
-from .agent_based_api.v1.type_defs import DiscoveryResult, CheckResult, StringTable
-from .agent_based_api.v1 import (check_levels, register, Result, Service, State, render, SNMPTree,
-                                 OIDEnd)
 
 printer_io_units = {
     "-1": "unknown",

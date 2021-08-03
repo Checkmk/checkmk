@@ -3,11 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict, Optional, NamedTuple, Iterable, List
 import json
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional
 
 from ..agent_based_api.v1.type_defs import StringTable
-
 from .memory import SectionMemUsed
 
 INVENTORY_BASE_PATH = ["software", "applications", "docker"]

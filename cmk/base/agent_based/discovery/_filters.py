@@ -4,15 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    NamedTuple,
-    Optional,
-    Pattern,
-)
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Pattern
 
 from cmk.utils.regex import regex
 from cmk.utils.type_defs import HostName

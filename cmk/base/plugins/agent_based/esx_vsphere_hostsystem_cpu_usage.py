@@ -3,15 +3,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import time
 from typing import Any, Dict, List, Mapping, Optional
 
-import time
-
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-)
-from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State as state
+from .agent_based_api.v1 import get_value_store, register, render, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import cpu_util
 
 

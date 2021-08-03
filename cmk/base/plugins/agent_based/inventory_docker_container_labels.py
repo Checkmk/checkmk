@@ -6,9 +6,9 @@
 
 from typing import Dict
 
-from .utils import docker
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+from .utils import docker
 
 Section = Dict[str, str]
 

@@ -9,35 +9,30 @@ import json
 import logging
 import math
 import time
-from typing import (
-    Callable,
-    Final,
-    List,
-    NamedTuple,
-    Optional,
-    Tuple,
-)
+from typing import Callable, Final, List, NamedTuple, Optional, Tuple
 
 import cmk.utils.debug
 import cmk.utils.defines as defines
-from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName, ServiceName, MetricName
+from cmk.utils.log import VERBOSE
 from cmk.utils.prediction import (
+    ConsolidationFunctionName,
     DataStats,
-    Timestamp,
-    Timegroup,
-    TimeSeriesValues,
-    Seconds,
-    TimeWindow,
-    RRDColumnFunction,
+    EstimatedLevels,
     PredictionData,
     PredictionInfo,
-    PredictionParameters as _PredictionParameters,
-    PredictionStore,
-    ConsolidationFunctionName,
-    EstimatedLevels,
 )
+from cmk.utils.prediction import PredictionParameters as _PredictionParameters
+from cmk.utils.prediction import (
+    PredictionStore,
+    RRDColumnFunction,
+    Seconds,
+    Timegroup,
+    TimeSeriesValues,
+    Timestamp,
+    TimeWindow,
+)
+from cmk.utils.type_defs import HostName, MetricName, ServiceName
 
 logger = logging.getLogger("cmk.prediction")
 

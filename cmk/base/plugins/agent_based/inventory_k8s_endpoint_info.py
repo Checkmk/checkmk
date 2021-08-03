@@ -7,8 +7,8 @@
 import typing as t
 from itertools import product
 
-from .agent_based_api.v1.type_defs import InventoryResult
 from .agent_based_api.v1 import register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult
 from .utils.k8s import Subset
 
 #

@@ -4,33 +4,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import logging
+import os
 import sys
 import tarfile
-from typing import AbstractSet, BinaryIO, cast, List
 from pathlib import Path
+from typing import AbstractSet, BinaryIO, cast, List
 
 from six import ensure_str
 
-from cmk.utils.log import VERBOSE
+import cmk.utils.debug
+import cmk.utils.packaging as packaging
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.werks
-import cmk.utils.debug
-import cmk.utils.packaging as packaging
+from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
-    PackageException,
-    package_dir,
-    read_package_info,
-    write_package_info,
-    parse_package_info,
-    get_package_parts,
-    unpackaged_files,
-    unpackaged_files_in_dir,
     get_config_parts,
     get_initial_package_info,
+    get_package_parts,
+    package_dir,
     PACKAGE_EXTENSION,
+    PackageException,
+    parse_package_info,
+    read_package_info,
+    unpackaged_files,
+    unpackaged_files_in_dir,
+    write_package_info,
 )
 
 logger = logging.getLogger("cmk.base.packaging")

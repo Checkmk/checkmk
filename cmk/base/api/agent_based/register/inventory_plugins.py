@@ -11,15 +11,15 @@ from typing import Any, Callable, Iterable, List, Mapping, Optional
 from cmk.utils.type_defs import InventoryPluginName, RuleSetName
 
 from cmk.base.api.agent_based.inventory_classes import (
+    Attributes,
     InventoryFunction,
     InventoryPlugin,
-    Attributes,
     TableRow,
 )
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
-    validate_function_arguments,
     validate_default_parameters,
+    validate_function_arguments,
 )
 
 

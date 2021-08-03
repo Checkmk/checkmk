@@ -4,13 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, Mapping, List, Any, Dict, Final
+from typing import Any, Dict, Final, List, Mapping, NamedTuple
 
+from .agent_based_api.v1 import (
+    all_of,
+    check_levels,
+    Metric,
+    not_matches,
+    OIDEnd,
+    register,
+    render,
+    Result,
+    Service,
+    SNMPTree,
+    State,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.constants import OID_SYS_OBJ
 from .utils.printer import DETECT_PRINTER
-from .agent_based_api.v1.type_defs import DiscoveryResult, CheckResult, StringTable
-from .agent_based_api.v1 import (all_of, not_matches, check_levels, register, Result, Service,
-                                 State, render, SNMPTree, OIDEnd, Metric)
 
 MAP_UNIT: Final = {
     "3": "ten thousandths of inches",

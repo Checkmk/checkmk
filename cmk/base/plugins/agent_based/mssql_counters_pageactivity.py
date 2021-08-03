@@ -4,24 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, MutableMapping
 import time
+from typing import Any, Mapping, MutableMapping
 
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .agent_based_api.v1 import (
-    IgnoreResults,
-    GetRateError,
-    register,
     check_levels,
-    get_value_store,
     get_rate,
+    get_value_store,
+    GetRateError,
+    IgnoreResults,
+    register,
 )
-
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.mssql_counters import (
     accumulate_node_results,
-    Section,
     discovery_mssql_counters_generic,
     get_item,
+    Section,
 )
 
 

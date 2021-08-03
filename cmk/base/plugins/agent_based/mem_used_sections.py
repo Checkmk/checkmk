@@ -116,11 +116,8 @@
 
 """
 from typing import Dict, Optional
-from .agent_based_api.v1 import (
-    register,
-    type_defs,
-)
 
+from .agent_based_api.v1 import register, type_defs
 from .utils.memory import SectionMemUsed
 
 

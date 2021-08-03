@@ -5,25 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
+from typing import Any, Dict, Mapping, Union
 
-from typing import Any, Mapping, Dict, Union
-
+from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
-from .agent_based_api.v1 import (
-    render,
-    check_levels,
-    register,
-    Service,
-    Result,
-    State as state,
-    IgnoreResultsError,
-)
-
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    DiscoveryResult,
-    CheckResult,
-)
 
 SAP_HANA_MAYBE = namedtuple("SAP_HANA_MAYBE", ["bool", "value"])
 

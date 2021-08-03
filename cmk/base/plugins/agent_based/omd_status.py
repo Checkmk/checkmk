@@ -21,14 +21,11 @@ crontab 1
 OVERALL 2
 """
 
-from typing import Mapping, Dict, Optional, Any
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    State as state,
-)
-from .agent_based_api.v1.type_defs import StringTable, DiscoveryResult, CheckResult
+from typing import Any, Dict, Mapping, Optional
+
+from .agent_based_api.v1 import register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Dict[str, Dict[str, Any]]
 

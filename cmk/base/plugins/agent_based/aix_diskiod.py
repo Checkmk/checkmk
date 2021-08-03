@@ -26,11 +26,8 @@
 
 import time
 from typing import Any, Mapping, Optional
-from .agent_based_api.v1 import (
-    get_value_store,
-    register,
-    type_defs,
-)
+
+from .agent_based_api.v1 import get_value_store, register, type_defs
 from .utils import diskstat
 
 

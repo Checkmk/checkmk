@@ -4,11 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, Mapping, Any
+from typing import Any, Dict, List, Mapping
 
-from .agent_based_api.v1 import (startswith, OIDEnd, register, SNMPTree, Service, check_levels,
-                                 render)
-from .agent_based_api.v1.type_defs import StringTable, DiscoveryResult, CheckResult
+from .agent_based_api.v1 import (
+    check_levels,
+    OIDEnd,
+    register,
+    render,
+    Service,
+    SNMPTree,
+    startswith,
+)
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 OID_SysObjectID = ".1.3.6.1.2.1.1.2.0"
 

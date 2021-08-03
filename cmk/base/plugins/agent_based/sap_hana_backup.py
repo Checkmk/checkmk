@@ -4,19 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-
 from typing import Dict
 
+from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
+from .agent_based_api.v1 import State as state
 from .utils import sap_hana
-from .agent_based_api.v1 import (
-    render,
-    check_levels,
-    register,
-    Service,
-    Result,
-    State as state,
-    IgnoreResultsError,
-)
 
 
 def _get_sap_hana_backup_timestamp(backup_time_readable):

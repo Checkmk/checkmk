@@ -67,26 +67,11 @@
 #  Index 16 -- sectors discarded
 #  Index 17 -- time spent discarding
 
-from typing import (
-    Any,
-    Dict,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Sequence,
-    Tuple,
-)
-
 import re
 import time
+from typing import Any, Dict, Mapping, MutableMapping, Optional, Sequence, Tuple
 
-from .agent_based_api.v1 import (
-    get_rate,
-    get_value_store,
-    IgnoreResultsError,
-    register,
-    type_defs,
-)
+from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
 from .utils import diskstat
 
 SectionMultipath = Mapping[str, Any]

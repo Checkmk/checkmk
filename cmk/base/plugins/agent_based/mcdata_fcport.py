@@ -4,23 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Iterable,
-    List,
-    Sequence,
-    Union,
-)
-from .agent_based_api.v1 import (
-    OIDBytes,
-    register,
-    SNMPTree,
-    startswith,
-    type_defs,
-)
-from .utils import (
-    if64,
-    interfaces,
-)
+from typing import Iterable, List, Sequence, Union
+
+from .agent_based_api.v1 import OIDBytes, register, SNMPTree, startswith, type_defs
+from .utils import if64, interfaces
 
 mcdata_fcport_speedbits = {"2": 1000000000, "3": 2000000000}
 mcdata_fcport_opstatus = {"1": "1", "2": "2", "3": "testing", "4": "faulty"}

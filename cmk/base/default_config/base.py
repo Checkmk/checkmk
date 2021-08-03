@@ -4,7 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict as _Dict, List as _List, Optional as _Optional
+from typing import Dict as _Dict
+from typing import List as _List
+from typing import Optional as _Optional
+
 from cmk.utils.type_defs import TagsOfHosts
 
 # This file contains the defaults settings for almost all configuration

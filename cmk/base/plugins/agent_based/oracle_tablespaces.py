@@ -4,33 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Dict,
-    Tuple,
-    Optional,
-    Mapping,
-)
-from .utils import (
-    oracle,
-    db,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    DiscoveryResult,
-    CheckResult,
-)
+from typing import Any, Dict, Mapping, Optional, Tuple
 
 from .agent_based_api.v1 import (
-    State as state,
-    Service,
-    Result,
+    check_levels,
+    IgnoreResultsError,
     Metric,
     register,
-    IgnoreResultsError,
     render,
-    check_levels,
+    Result,
+    Service,
 )
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils import db, oracle
 
 # no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces

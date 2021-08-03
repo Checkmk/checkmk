@@ -5,13 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Dict, List, NamedTuple, Optional, Sequence, Union, Mapping
-
 import urllib.parse
+from typing import Dict, List, Mapping, NamedTuple, Optional, Sequence, Union
 
-from .agent_based_api.v1.type_defs import StringTable
 from .agent_based_api.v1 import register
-
+from .agent_based_api.v1.type_defs import StringTable
 from .utils import cache_helper
 
 

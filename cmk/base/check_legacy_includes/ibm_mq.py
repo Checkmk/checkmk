@@ -7,8 +7,7 @@
 import re
 from typing import Any, Dict
 
-from cmk.base.check_api import regex
-from cmk.base.check_api import MKCounterWrapped
+from cmk.base.check_api import MKCounterWrapped, regex
 
 
 def parse_runmqsc_display_output(info, group_by_object):

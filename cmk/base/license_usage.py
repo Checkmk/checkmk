@@ -8,17 +8,17 @@ import logging
 import random
 import time
 from datetime import datetime, timedelta
-from typing import Optional, NamedTuple, Tuple
+from typing import NamedTuple, Optional, Tuple
 
 import livestatus
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.license_usage.samples import (
-    LicenseUsageSample,
     LicenseUsageExtensions,
     LicenseUsageHistoryDump,
+    LicenseUsageSample,
     rot47,
 )
 

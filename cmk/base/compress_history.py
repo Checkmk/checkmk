@@ -12,9 +12,9 @@ import io
 import logging
 from typing import Dict, IO, List, Optional, Set, Tuple
 
+import cmk.utils.debug
 from cmk.utils.exceptions import MKBailOut
 from cmk.utils.log import VERBOSE
-import cmk.utils.debug
 
 logger = logging.getLogger("cmk.base.compress_history")
 

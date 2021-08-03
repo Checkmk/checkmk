@@ -24,39 +24,37 @@ import signal
 import subprocess
 import sys
 import time
-from typing import Dict, Tuple, List, Any, Optional, FrozenSet, Set, Union, cast, Mapping
 import traceback
 import uuid
+from typing import Any, cast, Dict, FrozenSet, List, Mapping, Optional, Set, Tuple, Union
 
 from six import ensure_str
 
 import livestatus
+
 import cmk.utils.debug
 import cmk.utils.log as log
+import cmk.utils.paths
+import cmk.utils.store as store
+from cmk.utils.exceptions import MKException, MKGeneralException
+from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.notify import (
     find_wato_folder,
     notification_message,
     notification_result_message,
-    NotificationPluginName,
     NotificationContext,
+    NotificationPluginName,
     NotificationResultCode,
 )
 from cmk.utils.regex import regex
-import cmk.utils.paths
-import cmk.utils.store as store
-from cmk.utils.exceptions import (
-    MKException,
-    MKGeneralException,
-)
-from cmk.utils.log import console
 from cmk.utils.type_defs import EventRule
 
-import cmk.base.utils
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.events as events
 import cmk.base.obsolete_output as out
+import cmk.base.utils
 from cmk.base.events import EventContext
 
 try:

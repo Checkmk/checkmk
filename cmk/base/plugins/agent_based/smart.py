@@ -23,9 +23,9 @@
 #/dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
 
 from typing import Any, Callable, Dict, Final, Mapping, Tuple
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-from .agent_based_api.v1 import Metric, register, render, Result, State, Service
+from .agent_based_api.v1 import Metric, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # TODO: Need to completely rework smart check. Use IDs instead of changing
 # descriptions! But be careful: There is no standard neither for IDs nor for

@@ -6,13 +6,13 @@
 
 from .agent_based_api.v1 import register, Result, State, type_defs
 from .utils.cmciii import (
-    DiscoveryParams,
     CheckParams,
     discover_cmciii_sensors,
-    get_sensor,
     discovery_default_parameters,
-    Sensor,
+    DiscoveryParams,
+    get_sensor,
     Section,
+    Sensor,
 )
 
 

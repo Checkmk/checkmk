@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass, field
-from typing import Mapping, Dict, Union, Literal, Tuple, TypeVar, Generic
+from typing import Dict, Generic, Literal, Mapping, Tuple, TypeVar, Union
 
 VsResult = Mapping[Union[Literal["levels"], Literal["levels_lower"]], Tuple[float, float]]
 

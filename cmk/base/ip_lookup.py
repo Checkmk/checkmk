@@ -4,20 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import socket
 from contextlib import contextmanager
 from pathlib import Path
-import socket
-from typing import (
-    Any,
-    Iterable,
-    Iterator,
-    List,
-    Mapping,
-    MutableMapping,
-    Optional,
-    Protocol,
-    Tuple,
-)
+from typing import Any, Iterable, Iterator, List, Mapping, MutableMapping, Optional, Protocol, Tuple
 
 import cmk.utils.debug
 import cmk.utils.paths

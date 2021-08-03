@@ -36,12 +36,7 @@
 
 from typing import Mapping, NamedTuple, Optional, Sequence
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    register,
-    Result,
-    Service,
-    State,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import register, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,

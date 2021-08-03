@@ -33,13 +33,8 @@
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnPeakConcurrentSessions.0 = Gauge32: 0 Sessions
 
 from typing import Dict, Optional
-from .agent_based_api.v1 import (
-    any_of,
-    contains,
-    register,
-    SNMPTree,
-    type_defs,
-)
+
+from .agent_based_api.v1 import any_of, contains, register, SNMPTree, type_defs
 
 SESSION_TYPES = ['IPsec RA', 'IPsec L2L', 'AnyConnect SVC', 'WebVPN']
 METRICS_PER_SESSION_TYPE = ['active_sessions', 'cumulative_sessions', 'peak_sessions']

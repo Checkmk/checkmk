@@ -12,9 +12,9 @@ from .utils.ups import (
     Battery,
     CHECK_DEFAULT_PARAMETERS,
     check_ups_capacity,
+    DETECT_UPS_GENERIC,
     discover_ups_capacity,
     optional_int,
-    DETECT_UPS_GENERIC,
 )
 
 

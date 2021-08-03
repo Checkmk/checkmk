@@ -5,16 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Mapping
 
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-)
-from .agent_based_api.v1 import (
-    check_levels,
-    register,
-    Service,
-)
+from .agent_based_api.v1 import check_levels, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 ParsedSection = Mapping[int, int]
 

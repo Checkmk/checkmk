@@ -6,12 +6,9 @@
 
 from typing import Any, Dict, Mapping
 
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
-from .agent_based_api.v1 import IgnoreResults, register, Result, Service, State as state
+from .agent_based_api.v1 import IgnoreResults, register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 SectionDatabases = Dict[str, Dict[str, str]]
 

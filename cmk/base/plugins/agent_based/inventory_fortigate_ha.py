@@ -5,15 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Mapping, Optional
-from .agent_based_api.v1 import (
-    Attributes,
-    register,
-    SNMPTree,
-)
-from .agent_based_api.v1.type_defs import (
-    InventoryResult,
-    StringTable,
-)
+
+from .agent_based_api.v1 import Attributes, register, SNMPTree
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 from .utils.fortinet import DETECT_FORTIGATE
 
 Section = Mapping[str, str]

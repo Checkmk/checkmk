@@ -8,15 +8,14 @@
 from typing import Any, Callable, Dict, Generator, List
 
 import cmk.utils.misc
-
 from cmk.utils.check_utils import maincheckify
 
 from cmk.base.api.agent_based.inventory_classes import (
     Attributes,
-    TableRow,
     InventoryFunction,
     InventoryPlugin,
     InventoryResult,
+    TableRow,
 )
 from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
 from cmk.base.api.agent_based.type_defs import Parameters

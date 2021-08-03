@@ -5,31 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import (
-    Iterable,
-    Optional,
-    Mapping,
-    Tuple,
-    TypedDict,
-)
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-)
-from .agent_based_api.v1 import (
-    check_levels,
-    register,
-    render,
-)
+from typing import Iterable, Mapping, Optional, Tuple, TypedDict
+
+from .agent_based_api.v1 import check_levels, register, render
+from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from .utils.aws import (
     CloudwatchInsightsSection,
     discover_lambda_functions,
     function_arn_to_item,
     get_region_from_item,
     LambdaInsightMetrics,
+    LambdaQueryStats,
     LambdaRegionLimitsSection,
     LambdaSummarySection,
-    LambdaQueryStats,
 )
 
 

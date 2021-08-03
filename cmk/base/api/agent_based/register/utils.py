@@ -5,9 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
 import inspect
-import sys
 import pathlib
-
+import sys
 from typing import (
     Callable,
     Dict,
@@ -21,13 +20,8 @@ from typing import (
     Union,
 )
 
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    InventoryPluginName,
-    ParsedSectionName,
-    RuleSetName,
-)
 from cmk.utils.paths import agent_based_plugins_dir
+from cmk.utils.type_defs import CheckPluginName, InventoryPluginName, ParsedSectionName, RuleSetName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias

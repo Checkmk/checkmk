@@ -4,19 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    Mapping,
-    Sequence,
-    Tuple,
-    Union,
-)
-from .agent_based_api.v1 import (
-    register,
-    type_defs,
-)
+from typing import Any, Dict, Iterable, Mapping, Sequence, Tuple, Union
+
+from .agent_based_api.v1 import register, type_defs
 from .utils import interfaces
 
 # Example output from agent:

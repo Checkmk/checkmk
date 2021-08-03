@@ -5,27 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from typing import (
-    Any,
-    Dict,
-    Mapping,
-    Optional,
+from typing import Any, Dict, Mapping, Optional
+
+from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    HostLabelGenerator,
+    StringTable,
 )
 from .utils import docker, uptime
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-    HostLabelGenerator,
-)
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    State as state,
-    HostLabel,
-    IgnoreResults,
-)
 
 RESTART_POLICIES_TO_DISCOVER = ("always",)
 

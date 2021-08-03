@@ -9,27 +9,23 @@
 
 import logging
 import os
-import sys
 import select
 import socket
+import sys
 import time
-from urllib.parse import quote
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
+from urllib.parse import quote
 
 import livestatus
-from cmk.utils.regex import regex
-import cmk.utils.debug
+
 import cmk.utils.daemon
-from cmk.utils.type_defs import EventRule
+import cmk.utils.debug
+from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import EventRule, HostName, ServiceName
 
 import cmk.base.config as config
 import cmk.base.core
-
-from cmk.utils.type_defs import (
-    HostName,
-    ServiceName,
-)
 
 ContactList = List  # TODO Improve this
 EventContext = Dict[str, Any]  # TODO Improve this

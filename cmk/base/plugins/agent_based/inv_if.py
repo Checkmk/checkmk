@@ -4,19 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import dataclass
 import time
+from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Union
 
+from .agent_based_api.v1 import Attributes, exists, OIDBytes, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringByteTable
-from .agent_based_api.v1 import (
-    Attributes,
-    exists,
-    OIDBytes,
-    register,
-    SNMPTree,
-    TableRow,
-)
 from .utils import uptime
 from .utils.interfaces import render_mac_address
 

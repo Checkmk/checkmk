@@ -5,23 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
 """
-from typing import Any, List, Mapping, Optional
 from collections import namedtuple
+from typing import Any, List, Mapping, Optional
 
-from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    State as state,
-    all_of,
-)
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
-
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.f5_bigip import F5_BIGIP, VERSION_PRE_V11, VERSION_V11_PLUS
 
 State = namedtuple("State", ["state", "description"])

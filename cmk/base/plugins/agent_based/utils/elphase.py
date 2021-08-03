@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Mapping, Optional, Tuple
-from ..agent_based_api.v1 import render, check_levels, Result, State, type_defs
+
+from ..agent_based_api.v1 import check_levels, render, Result, State, type_defs
 
 CheckParams = Optional[Mapping[str, Any]]
 Sensor = Mapping[str, Any]

@@ -6,19 +6,8 @@
 
 from typing import Any, Mapping
 
-from .agent_based_api.v1 import (
-    check_levels,
-    register,
-    render,
-    Result,
-    Service,
-    State,
-)
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-)
-
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.mssql_counters import Counters, Section
 
 

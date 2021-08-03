@@ -7,19 +7,18 @@
 import abc
 import signal
 from types import FrameType
-from typing import NoReturn, Dict, Any, List, Optional
+from typing import Any, Dict, List, NoReturn, Optional
 
 import cmk.utils.debug
-from cmk.utils.exceptions import MKTimeout
-from cmk.utils.plugin_loader import load_plugins
-from cmk.utils.exceptions import MKException
 import cmk.utils.python_printer as python_printer
+from cmk.utils.exceptions import MKException, MKTimeout
 from cmk.utils.log import console
+from cmk.utils.plugin_loader import load_plugins
 
-import cmk.base.config as config
-import cmk.base.profiling as profiling
 import cmk.base.check_api as check_api
+import cmk.base.config as config
 import cmk.base.obsolete_output as out
+import cmk.base.profiling as profiling
 
 
 # TODO: Inherit from MKGeneralException

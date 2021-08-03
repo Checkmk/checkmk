@@ -7,10 +7,10 @@
 from .agent_based_api.v1 import register, Result, State, type_defs
 from .utils.cmciii import (
     CheckParams,
-    DiscoveryParams,
     discover_cmciii_sensors,
-    get_sensor,
     discovery_default_parameters,
+    DiscoveryParams,
+    get_sensor,
     Section,
 )
 from .utils.humidity import check_humidity

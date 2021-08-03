@@ -3,11 +3,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# type: ignore[attr-defined]  # TODO: see which are needed in this file
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+from .elphase import check_elphase
 from .humidity import check_humidity
 from .temperature import check_temperature
-from .elphase import check_elphase
 
 
 def scan_didactum(oid):

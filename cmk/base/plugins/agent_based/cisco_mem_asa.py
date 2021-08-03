@@ -25,32 +25,25 @@ True
 False
 """
 
-from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence
 from contextlib import suppress
+from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence
 
-from .utils.size_trend import size_trend
-from .utils.memory import (
-    get_levels_mode_from_value,
-    check_element,
-)
 from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    State as state,
-    startswith,
     all_of,
-    matches,
-    not_matches,
     get_value_store,
     GetRateError,
+    matches,
+    not_matches,
+    register,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
 )
-from .agent_based_api.v1.type_defs import (
-    StringTable,
-    CheckResult,
-    DiscoveryResult,
-)
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.memory import check_element, get_levels_mode_from_value
+from .utils.size_trend import size_trend
 
 Section = Dict[str, Sequence[str]]
 OID_SysDesc = ".1.3.6.1.2.1.1.1.0"

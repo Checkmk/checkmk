@@ -20,7 +20,8 @@
 # 506 Cannot talk to daemon
 from typing import Any, Dict
 
-from .agent_based_api.v1 import check_levels, register, Result, Service, State as state
+from .agent_based_api.v1 import check_levels, register, Result, Service
+from .agent_based_api.v1 import State as state
 
 
 def parse_chrony(string_table):

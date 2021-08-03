@@ -21,13 +21,12 @@ MSSQL_VEEAMSQL2012:Databases|data_file(s)_size_(kb)|tempdb|164928
 MSSQL_VEEAMSQL2012:Databases|log_file(s)_size_(kb)|tempdb|13624
 """
 
-from typing import Sequence
 from contextlib import suppress
 from datetime import datetime, timezone
+from typing import Sequence
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-
 from .utils.mssql_counters import Section
 
 

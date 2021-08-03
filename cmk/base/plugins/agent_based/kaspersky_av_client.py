@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import TypedDict, Generator, Dict, Tuple
+from typing import Dict, Generator, Tuple, TypedDict
 
-from .agent_based_api.v1 import register, Service, State, Result, render, check_levels
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import StringTable
 
 

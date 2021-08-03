@@ -42,14 +42,15 @@ import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 
 # from cmk.base.config import logwatch_rule will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
-    host_extra_conf, host_name,
-)
 
 from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service
 from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import eval_regex, logwatch
+
+from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    host_extra_conf, host_name,
+)
 
 AllParams = Sequence[Mapping[str, Any]]
 

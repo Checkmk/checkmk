@@ -6,12 +6,8 @@
 
 from typing import Optional
 
+from .agent_based_api.v1 import exists, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringTable
-from .agent_based_api.v1 import (
-    exists,
-    register,
-    SNMPTree,
-)
 from .utils import uptime
 
 

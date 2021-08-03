@@ -4,14 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping, Dict, Sequence, MutableMapping, NamedTuple, List
 from contextlib import suppress
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Mapping, MutableMapping, NamedTuple, Sequence
 
-from .agent_based_api.v1.type_defs import StringTable, DiscoveryResult, CheckResult
-from .agent_based_api.v1 import register, get_value_store
-from .utils.df import FILESYSTEM_DEFAULT_LEVELS
+from .agent_based_api.v1 import get_value_store, register
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import diskstat
+from .utils.df import FILESYSTEM_DEFAULT_LEVELS
 
 
 class Device(NamedTuple):

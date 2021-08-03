@@ -3,30 +3,34 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# type: ignore[attr-defined]
 """Helper to register a new-sytyle section based on config.check_info
 """
-from typing import Callable, Dict, List, Optional, Tuple
-from types import CodeType
-import os.path
 import ast
 import inspect
+import os.path
+from types import CodeType
+from typing import Callable, Dict, List, Optional, Tuple
 
+from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
 from cmk.base.api.agent_based.utils import (
     all_of,
     any_of,
     contains,
-    startswith,
     endswith,
-    exists,
-    not_exists,
     equals,
+    exists,
     not_equals,
+    not_exists,
+    startswith,
 )
-from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
-from cmk.base.plugins.agent_based.utils import checkpoint, ucd_hr_detection, printer, pulse_secure  # pylint: disable=cmk-module-layer-violation
 
 from .detect_specs import PRECONVERTED_DETECT_SPECS
+
+from cmk.base.plugins.agent_based.utils import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    checkpoint, printer, pulse_secure, ucd_hr_detection,
+)
 
 DetectSpecKey = Tuple[bytes, Tuple, Tuple]
 

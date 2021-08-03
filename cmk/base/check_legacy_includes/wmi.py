@@ -5,12 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.check_api import regex
-from cmk.base.check_api import MKCounterWrapped
-from cmk.base.check_api import get_age_human_readable
-from cmk.base.check_api import get_percent_human_readable
-from cmk.base.check_api import get_rate
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import (
+    check_levels,
+    get_age_human_readable,
+    get_percent_human_readable,
+    get_rate,
+    MKCounterWrapped,
+    regex,
+)
+
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
 # They also work with performance counters reported through other means

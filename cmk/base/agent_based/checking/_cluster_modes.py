@@ -7,20 +7,11 @@
 
 from collections import defaultdict
 from functools import partial
-from typing import (
-    Any,
-    Callable,
-    Final,
-    Iterable,
-    Mapping,
-    Sequence,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Final, Iterable, Mapping, Sequence, Set, Tuple, Union
 
-from cmk.utils.type_defs import ClusterMode, state_markers as STATE_MARKERS
-from cmk.base.api.agent_based.value_store import load_host_value_store
+from cmk.utils.type_defs import ClusterMode
+from cmk.utils.type_defs import state_markers as STATE_MARKERS
+
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     CheckPlugin,
@@ -31,6 +22,7 @@ from cmk.base.api.agent_based.checking_classes import (
     Result,
     State,
 )
+from cmk.base.api.agent_based.value_store import load_host_value_store
 from cmk.base.check_utils import ServiceID
 
 _Kwargs = Mapping[str, Any]

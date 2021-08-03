@@ -4,18 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,
-    Union,
-)
-from .agent_based_api.v1 import (
-    register,
-    type_defs,
-)
-from .utils import (
-    interfaces,
-    ucs_bladecenter,
-)
+from typing import Dict, Union
+
+from .agent_based_api.v1 import register, type_defs
+from .utils import interfaces, ucs_bladecenter
 
 # <<ucs_bladecenter_if:sep(9)>>>
 # fcStats Dn sys/switch-A/slot-1/switch-fc/port-37/stats  BytesRx 2411057759048   BytesTx 1350394110752   Suspect no

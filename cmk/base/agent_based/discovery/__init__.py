@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from contextlib import suppress
 import itertools
-from pathlib import Path
 import socket
 import time
+from contextlib import suppress
+from pathlib import Path
 from typing import (
     Callable,
     Container,
@@ -51,21 +51,21 @@ import cmk.core_helpers.cache
 from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
-import cmk.base.api.agent_based.register as agent_based_register
+import cmk.base.agent_based.checking as checking
 import cmk.base.agent_based.decorator as decorator
+import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
 import cmk.base.check_table as check_table
 import cmk.base.check_utils
-import cmk.base.agent_based.checking as checking
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.section as section
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
-from cmk.base.agent_based.utils import check_sources, check_parsing_errors
+from cmk.base.agent_based.utils import check_parsing_errors, check_sources
 from cmk.base.api.agent_based import checking_classes
-from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.api.agent_based.type_defs import Parameters
+from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.check_utils import LegacyCheckParameters, Service, ServiceID
 from cmk.base.core_config import MonitoringCore
 from cmk.base.discovered_labels import HostLabel
@@ -73,7 +73,7 @@ from cmk.base.discovered_labels import HostLabel
 from ._discovered_services import analyse_discovered_services
 from ._filters import ServiceFilters as _ServiceFilters
 from ._host_labels import analyse_host_labels, analyse_node_labels
-from .utils import DiscoveryMode, TimeLimitFilter, QualifiedDiscovery
+from .utils import DiscoveryMode, QualifiedDiscovery, TimeLimitFilter
 
 ServicesTableEntry = Tuple[str, Service, List[HostName]]
 ServicesTable = Dict[ServiceID, ServicesTableEntry]

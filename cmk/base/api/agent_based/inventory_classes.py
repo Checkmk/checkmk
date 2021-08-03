@@ -7,21 +7,19 @@
 """
 import string
 from typing import (
+    Callable,
     get_args,
+    Iterable,
     List,
     Mapping,
     NamedTuple,
     NoReturn,
-    Callable,
     Optional,
-    Iterable,
     Union,
 )
-from cmk.utils.type_defs import (
-    InventoryPluginName,
-    ParsedSectionName,
-    RuleSetName,
-)
+
+from cmk.utils.type_defs import InventoryPluginName, ParsedSectionName, RuleSetName
+
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
 _ATTR_DICT_KEY_TYPE = str

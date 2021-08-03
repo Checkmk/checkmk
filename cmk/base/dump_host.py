@@ -12,12 +12,12 @@ import cmk.utils.render
 import cmk.utils.tty as tty
 from cmk.utils.type_defs import HostName
 
-import cmk.base.check_table as check_table
-import cmk.base.sources as sources
 import cmk.base.agent_based.checking as checking
+import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
+import cmk.base.sources as sources
 from cmk.base.check_utils import LegacyCheckParameters
 
 

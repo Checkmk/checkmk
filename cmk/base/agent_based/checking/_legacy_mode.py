@@ -6,23 +6,12 @@
 """Legacy version of running checks on clusters"""
 
 import sys
-from typing import (
-    Any,
-    AnyStr,
-    cast,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Any, AnyStr, Callable, cast, Dict, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.caching
 import cmk.utils.debug
 from cmk.utils.check_utils import section_name_of, worst_service_state
-from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKParseFunctionError
+from cmk.utils.exceptions import MKGeneralException, MKParseFunctionError, MKTimeout
 from cmk.utils.type_defs import (
     HostAddress,
     HostKey,
@@ -36,32 +25,24 @@ from cmk.utils.type_defs import (
     state_markers,
 )
 
+from cmk.core_helpers.cache import ABCRawDataSection
+
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
 import cmk.base.item_state as item_state
 import cmk.base.plugin_contexts as plugin_contexts
-
+from cmk.base.agent_based.data_provider import ParsedSectionContent, ParsedSectionsBroker
 from cmk.base.api.agent_based import register as agent_based_register
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.value_store import ValueStoreManager
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker, ParsedSectionContent
-from cmk.base.check_utils import (
-    LegacyCheckParameters,
-    Service,
-    MGMT_ONLY as LEGACY_MGMT_ONLY,
-    HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE,
-)
+from cmk.base.check_utils import HOST_PRECEDENCE as LEGACY_HOST_PRECEDENCE
+from cmk.base.check_utils import LegacyCheckParameters
+from cmk.base.check_utils import MGMT_ONLY as LEGACY_MGMT_ONLY
+from cmk.base.check_utils import Service
 
-from cmk.core_helpers.cache import ABCRawDataSection
-
-from .utils import (
-    AggregatedResult,
-    CHECK_NOT_IMPLEMENTED,
-    ITEM_NOT_FOUND,
-    RECEIVED_NO_DATA,
-)
+from .utils import AggregatedResult, CHECK_NOT_IMPLEMENTED, ITEM_NOT_FOUND, RECEIVED_NO_DATA
 
 ServiceCheckResultWithOptionalDetails = Tuple[ServiceState, ServiceDetails, List[MetricTuple]]
 

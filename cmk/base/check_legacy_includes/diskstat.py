@@ -11,17 +11,19 @@
 
 # pylint: disable=no-else-return
 
-import time
 import re
+import time
 
-from cmk.base.check_api import host_name
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_api import host_extra_conf
-from cmk.base.check_api import get_age_human_readable
-from cmk.base.check_api import get_percent_human_readable
-from cmk.base.check_api import get_average
-from cmk.base.check_api import get_rate
-from cmk.base.check_api import check_levels
+from cmk.base.check_api import (
+    check_levels,
+    get_age_human_readable,
+    get_average,
+    get_bytes_human_readable,
+    get_percent_human_readable,
+    get_rate,
+    host_extra_conf,
+    host_name,
+)
 
 diskstat_inventory_mode = "rule"  # "summary", "single", "legacy"
 

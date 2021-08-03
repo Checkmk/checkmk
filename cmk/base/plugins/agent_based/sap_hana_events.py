@@ -6,13 +6,9 @@
 
 from typing import Final
 
+from .agent_based_api.v1 import IgnoreResultsError, Metric, register, Result, Service, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
-from .agent_based_api.v1 import register, Service, Result, State, Metric, IgnoreResultsError
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-    CheckResult,
-)
 
 SAP_HANA_EVENTS_MAP: Final = {
     "open_events": (State.CRIT, "Unacknowledged events"),

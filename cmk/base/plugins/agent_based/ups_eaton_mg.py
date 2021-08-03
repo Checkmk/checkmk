@@ -11,11 +11,7 @@ from typing import List, Optional
 
 from .agent_based_api.v1 import register, SNMPTree, startswith
 from .agent_based_api.v1.type_defs import StringTable
-from .utils.ups import (
-    Battery,
-    optional_int,
-    optional_yes_or_no,
-)
+from .utils.ups import Battery, optional_int, optional_yes_or_no
 
 DETECT_UPS_EATON_MG = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705")
 

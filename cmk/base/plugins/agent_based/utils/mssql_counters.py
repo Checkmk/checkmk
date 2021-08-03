@@ -12,10 +12,10 @@
 #  - Rate counters (per second)
 """
 
-from typing import Any, Callable, Dict, Tuple, TypeVar, Set, Mapping, MutableMapping, Optional
 from contextlib import suppress
+from typing import Any, Callable, Dict, Mapping, MutableMapping, Optional, Set, Tuple, TypeVar
 
-from ..agent_based_api.v1 import Service, IgnoreResultsError, get_rate, GetRateError
+from ..agent_based_api.v1 import get_rate, GetRateError, IgnoreResultsError, Service
 from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 Counters = Dict[str, float]

@@ -6,9 +6,8 @@
 
 from typing import Dict, List, Optional, Tuple
 
-from .agent_based_api.v1.type_defs import StringTable
-
 from .agent_based_api.v1 import register
+from .agent_based_api.v1.type_defs import StringTable
 from .utils import ps
 
 # First generation of agents output only the process command line:

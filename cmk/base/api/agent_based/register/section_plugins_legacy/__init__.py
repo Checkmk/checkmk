@@ -11,6 +11,7 @@ from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
     create_snmp_section_plugin,
 )
+from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
@@ -18,9 +19,8 @@ from cmk.base.api.agent_based.type_defs import (
     SNMPSectionPlugin,
     StringTable,
 )
-from cmk.base.api.agent_based.section_classes import SNMPTree
 
-from .convert_scan_functions import create_detect_spec
+from .convert_scan_functions import create_detect_spec  # type: ignore[attr-defined]
 
 LayoutRecoverSuboids = List[Tuple[str]]
 

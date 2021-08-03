@@ -11,8 +11,9 @@
 from contextlib import contextmanager
 from typing import Optional
 
-from cmk.base.check_utils import Service
 from cmk.utils.type_defs import HostName
+
+from cmk.base.check_utils import Service
 
 # Is set before check/discovery function execution
 # Host currently being checked

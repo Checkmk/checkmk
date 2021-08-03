@@ -9,9 +9,9 @@ The "render" namespace adds functions to render values in a human readable way.
 All of the render functions take a single numerical value as an argument, and return
 a string.
 """
-from cmk.base.api.agent_based.render import (  # pylint: disable=redefined-builtin
-    date, datetime, timespan, disksize, bytes, filesize, frequency, networkbandwidth, nicspeed,
-    iobandwidth, percent,
+from cmk.base.api.agent_based.render import (  # pylint: disable=redefined-builtin # isort: skip
+    bytes, date, datetime, disksize, filesize, frequency, iobandwidth, networkbandwidth, nicspeed,
+    percent, timespan,
 )
 
 __all__ = [

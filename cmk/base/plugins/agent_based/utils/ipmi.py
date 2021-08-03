@@ -6,22 +6,11 @@
 
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-)
-from ..agent_based_api.v1 import (
-    check_levels,
-    Metric,
-    Result,
-    State as state,
-    type_defs,
-)
+from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Tuple
+
+from ..agent_based_api.v1 import check_levels, Metric, Result
+from ..agent_based_api.v1 import State as state
+from ..agent_based_api.v1 import type_defs
 
 # TODO: Cleanup the whole status text mapping in utils/ipmi.py, ipmi_sensors.include, ipmi.py
 

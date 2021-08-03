@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, Iterable, List, Optional, Set
 from collections import defaultdict
+from typing import Any, Dict, Iterable, List, Optional, Set
 
 from cmk.utils.type_defs import (
     CheckPluginName,
@@ -17,14 +17,10 @@ from cmk.utils.type_defs import (
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
-from cmk.base.api.agent_based.type_defs import (
-    AgentSectionPlugin,
-    SectionPlugin,
-    SNMPSectionPlugin,
-)
 from cmk.base.api.agent_based.register.check_plugins import management_plugin_factory
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 from cmk.base.api.agent_based.register.utils import validate_check_ruleset_item_consistency
+from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SectionPlugin, SNMPSectionPlugin
 
 registered_agent_sections: Dict[SectionName, AgentSectionPlugin] = {}
 registered_snmp_sections: Dict[SectionName, SNMPSectionPlugin] = {}

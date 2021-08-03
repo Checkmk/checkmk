@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-
 from enum import Enum
 from typing import Any
 
 from cmk.base.check_api import check_levels
+
+# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 
 # Common code for all CPU load checks. Please do not mix this up
 # with CPU utilization. The load is at any time the current number

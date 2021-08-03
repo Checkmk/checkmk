@@ -3,24 +3,17 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Mapping, MutableMapping
 import time
+from typing import Any, Mapping, MutableMapping
 
+from .agent_based_api.v1 import check_levels, get_value_store, IgnoreResults, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .agent_based_api.v1 import (
-    Service,
-    IgnoreResults,
-    register,
-    check_levels,
-    get_value_store,
-)
-
 from .utils.mssql_counters import (
     accumulate_node_results,
-    Section,
-    get_rate_or_none,
-    get_item,
     get_int,
+    get_item,
+    get_rate_or_none,
+    Section,
 )
 
 

@@ -26,31 +26,28 @@ from typing import (
     Callable,
     cast,
     Dict,
+    Final,
     Iterable,
     Iterator,
     List,
     Literal,
-    NamedTuple,
     Mapping,
     MutableMapping,
+    NamedTuple,
     Optional,
     Sequence,
     Set,
     Tuple,
     Union,
-    Final,
 )
 
 from six import ensure_str
 
 import cmk.utils
 import cmk.utils.check_utils
-from cmk.utils.check_utils import (
-    maincheckify,
-    unwrap_parameters,
-)
 import cmk.utils.cleanup
 import cmk.utils.debug
+import cmk.utils.migrated_check_variables
 import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
@@ -59,15 +56,16 @@ import cmk.utils.store as store
 import cmk.utils.tags
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
-from cmk.utils.site import omd_site
 from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.check_utils import section_name_of
-from cmk.utils.exceptions import MKIPAddressLookupError, MKGeneralException, MKTerminate
+from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
+from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate
 from cmk.utils.labels import LabelManager
 from cmk.utils.log import console
-import cmk.utils.migrated_check_variables
 from cmk.utils.regex import regex
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
+from cmk.utils.site import omd_site
+from cmk.utils.structured_data import RawIntervalsFromConfig
+from cmk.utils.type_defs import RulesetName  # alias for str
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
     AgentTargetVersion,
@@ -86,7 +84,6 @@ from cmk.utils.type_defs import (
     Labels,
     LabelSources,
     Ruleset,
-    RulesetName,  # alias for str
     RuleSetName,
     SectionName,
     ServicegroupName,
@@ -97,14 +94,10 @@ from cmk.utils.type_defs import (
     TagIDToTaggroupID,
     TimeperiodName,
 )
-from cmk.utils.structured_data import RawIntervalsFromConfig
-
-from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; these are required in the modules' namespace to load the configuration!
-    SNMPScanFunction, SNMPCredentials, SNMPHostConfig, SNMPTiming, SNMPBackendEnum)
 
 import cmk.core_helpers.cache as cache_file
 import cmk.core_helpers.config_path
-from cmk.core_helpers.config_path import LATEST_CONFIG, ConfigPath
+from cmk.core_helpers.config_path import ConfigPath, LATEST_CONFIG
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -123,9 +116,13 @@ from cmk.base.api.agent_based.type_defs import (
     SectionPlugin,
     SNMPSectionPlugin,
 )
+from cmk.base.autochecks import ServiceWithNodes
 from cmk.base.check_utils import LegacyCheckParameters
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
-from cmk.base.autochecks import ServiceWithNodes
+
+from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import; # isort: skip # these are required in the modules' namespace to load the configuration!
+    SNMPBackendEnum, SNMPCredentials, SNMPHostConfig, SNMPScanFunction, SNMPTiming,
+)
 
 # TODO: Prefix helper functions with "_".
 

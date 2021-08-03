@@ -4,26 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import collections
+import fnmatch
 import re
 import time
-import collections
 import typing
-import fnmatch
-from typing import Dict, List, Tuple, Set, Union, Match, Any
+from typing import Any, Dict, List, Match, Set, Tuple, Union
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
+
+import cmk.base.config as config
 import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
 from cmk.base.check_api import (
+    check_levels,
+    get_age_human_readable,
+    get_filesize_human_readable,
     host_extra_conf,
     host_name,
-    get_filesize_human_readable,
-    get_age_human_readable,
-    check_levels,
     saveint,
     state_markers,
 )
-import cmk.base.config as config
-from cmk.utils.exceptions import MKGeneralException
 
 fileinfo_groups: config.Ruleset = []
 

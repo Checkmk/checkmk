@@ -5,20 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, List, Mapping
-from .agent_based_api.v1 import (
-    equals,
-    Metric,
-    register,
-    Result,
-    Service,
-    SNMPTree,
-    State,
-)
-from .agent_based_api.v1.type_defs import (
-    CheckResult,
-    DiscoveryResult,
-    StringTable,
-)
+
+from .agent_based_api.v1 import equals, Metric, register, Result, Service, SNMPTree, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Mapping[str, Mapping[str, str]]
 

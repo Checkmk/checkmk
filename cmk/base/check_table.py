@@ -5,15 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for computing the table of checks of hosts."""
 
-from typing import Iterable, Iterator, List, Mapping, Set
-from contextlib import suppress
 import enum
+from contextlib import suppress
+from typing import Iterable, Iterator, List, Mapping, Set
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.base.config as config
-
 from cmk.base.check_utils import Service, ServiceID
 
 

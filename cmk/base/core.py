@@ -5,29 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All core related things like direct communication with the running core"""
 
+import enum
 import os
 import subprocess
-from typing import Optional, Iterator
-import enum
 from contextlib import contextmanager
-
-import cmk.utils.paths
-import cmk.utils.cleanup
-import cmk.utils.debug
-import cmk.utils.tty as tty
-import cmk.utils.store as store
-from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKBailOut
-from cmk.utils.type_defs import TimeperiodName
-
-import cmk.base.obsolete_output as out
-import cmk.base.config as config
-import cmk.base.core_config as core_config
-import cmk.base.nagios_utils
-from cmk.base.core_config import MonitoringCore, HostsToActivate
+from typing import Iterator, Optional
 
 # suppress "Cannot find module" error from mypy
 import livestatus
+
+import cmk.utils.cleanup
+import cmk.utils.debug
+import cmk.utils.paths
+import cmk.utils.store as store
+import cmk.utils.tty as tty
+from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout
+from cmk.utils.type_defs import TimeperiodName
+
+import cmk.base.config as config
+import cmk.base.core_config as core_config
+import cmk.base.nagios_utils
+import cmk.base.obsolete_output as out
+from cmk.base.core_config import HostsToActivate, MonitoringCore
 
 #.
 #   .--Control-------------------------------------------------------------.

@@ -11,16 +11,8 @@
 
 from typing import Dict
 
-from ..agent_based_api.v1 import (
-    Service,
-    all_of,
-    any_of,
-    contains,
-    exists,
-    startswith,
-    check_levels,
-)
-from ..agent_based_api.v1.type_defs import DiscoveryResult, CheckResult
+from ..agent_based_api.v1 import all_of, any_of, check_levels, contains, exists, Service, startswith
+from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 Section = Dict[str, int]
 

@@ -7,19 +7,8 @@
 """
 from typing import Callable, List, Optional, overload, Union
 
+from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
-from cmk.base.api.agent_based.checking_classes import (
-    CheckFunction,
-    DiscoveryFunction,
-)
-
-from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name, RuleSetType
-from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
-from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
-from cmk.base.api.agent_based.register.section_plugins import (
-    create_agent_section_plugin,
-    create_snmp_section_plugin,
-)
 from cmk.base.api.agent_based.register import (
     add_check_plugin,
     add_discovery_ruleset,
@@ -29,6 +18,13 @@ from cmk.base.api.agent_based.register import (
     is_registered_inventory_plugin,
     is_registered_section_plugin,
 )
+from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
+from cmk.base.api.agent_based.register.inventory_plugins import create_inventory_plugin
+from cmk.base.api.agent_based.register.section_plugins import (
+    create_agent_section_plugin,
+    create_snmp_section_plugin,
+)
+from cmk.base.api.agent_based.register.utils import get_validated_plugin_module_name, RuleSetType
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification, SNMPTree
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,

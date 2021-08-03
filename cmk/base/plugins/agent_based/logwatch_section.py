@@ -15,10 +15,10 @@
 #########################################################################################
 
 from typing import Dict, Optional, Tuple
-from .agent_based_api.v1.type_defs import StringTable
-from .utils.logwatch import ItemData, Section
 
 from .agent_based_api.v1 import register
+from .agent_based_api.v1.type_defs import StringTable
+from .utils.logwatch import ItemData, Section
 
 
 def _extract_error_message(line: str) -> Optional[str]:

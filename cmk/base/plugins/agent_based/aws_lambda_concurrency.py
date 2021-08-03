@@ -10,27 +10,17 @@ from typing import (
     Mapping,
     MutableMapping,
     MutableSequence,
+    Optional,
     Sequence,
     Tuple,
-    Optional,
     Union,
 )
 
-from .agent_based_api.v1 import (
-    check_levels,
-    register,
-    render,
-    Result,
-    Service,
-    Metric,
-)
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    StringTable,
-)
+from .agent_based_api.v1 import check_levels, Metric, register, render, Result, Service
+from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from .utils.aws import (
-    get_region_from_item,
     function_arn_to_item,
+    get_region_from_item,
     LambdaCloudwatchMetrics,
     LambdaCloudwatchSection,
     LambdaRegionLimits,

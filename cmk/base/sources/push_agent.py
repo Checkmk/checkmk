@@ -5,14 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Final
+
 from cmk.utils.type_defs import HostName, SourceType
 
 from cmk.core_helpers import FetcherType, PushAgentFetcher
 from cmk.core_helpers.agent import AgentSummarizerDefault
-from cmk.core_helpers.push_agent import (
-    PushAgentFileCache,
-    PushAgentFileCacheFactory,
-)
+from cmk.core_helpers.push_agent import PushAgentFileCache, PushAgentFileCacheFactory
 
 import cmk.base.config as config
 

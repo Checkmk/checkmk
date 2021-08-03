@@ -35,8 +35,8 @@ from cmk.utils.type_defs import (
     EVERYTHING,
     ExitSpec,
     HostAddress,
-    HostName,
     HostKey,
+    HostName,
     MetricTuple,
     ServiceCheckResult,
     ServiceName,
@@ -47,36 +47,30 @@ from cmk.utils.type_defs import (
 from cmk.core_helpers.protocol import FetcherMessage, FetcherType
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION, SectionNameCollection
 
+import cmk.base.agent_based.inventory as inventory
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.check_table as check_table
 import cmk.base.config as config
 import cmk.base.core
 import cmk.base.crash_reporting
-import cmk.base.agent_based.inventory as inventory
 import cmk.base.item_state as item_state
 import cmk.base.license_usage as license_usage
 import cmk.base.plugin_contexts as plugin_contexts
 import cmk.base.utils
 from cmk.base.agent_based.data_provider import make_broker, ParsedSectionsBroker
 from cmk.base.agent_based.utils import (
-    check_sources,
-    get_section_kwargs,
-    get_section_cluster_kwargs,
     check_parsing_errors,
+    check_sources,
+    get_section_cluster_kwargs,
+    get_section_kwargs,
 )
-from cmk.base.api.agent_based import checking_classes
+from cmk.base.api.agent_based import checking_classes, value_store
 from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_parameters
-from cmk.base.api.agent_based import value_store
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service
 
 from . import _cluster_modes, _legacy_mode, _submit_to_core
-from .utils import (
-    AggregatedResult,
-    CHECK_NOT_IMPLEMENTED,
-    ITEM_NOT_FOUND,
-    RECEIVED_NO_DATA,
-)
+from .utils import AggregatedResult, CHECK_NOT_IMPLEMENTED, ITEM_NOT_FOUND, RECEIVED_NO_DATA
 
 #.
 #   .--Checking------------------------------------------------------------.

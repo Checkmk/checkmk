@@ -12,8 +12,9 @@
 from typing import Any, Dict, Mapping, Optional, Sequence
 
 import cmk.utils.version as cmk_version  # pylint: disable=cmk-module-layer-violation
-from .agent_based_api.v1.type_defs import InventoryResult
+
 from .agent_based_api.v1 import Attributes, register, TableRow
+from .agent_based_api.v1.type_defs import InventoryResult
 
 
 def _service_status(status: Mapping[str, Sequence[str]], service_name: str):

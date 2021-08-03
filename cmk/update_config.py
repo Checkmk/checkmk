@@ -124,7 +124,7 @@ _MATCH_SINGLE_BACKSLASH = re.compile(r"[^\\]\\[^\\]")
 
 class UpdateConfig:
     def __init__(self, logger: logging.Logger, arguments: argparse.Namespace) -> None:
-        super(UpdateConfig, self).__init__()
+        super().__init__()
         self._arguments = arguments
         self._logger = logger
         # TODO: Fix this cruel hack caused by our funny mix of GUI + console

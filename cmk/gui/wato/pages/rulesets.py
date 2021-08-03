@@ -135,7 +135,7 @@ class ABCRulesetMode(WatoMode):
         return ["rulesets"]
 
     def __init__(self) -> None:
-        super(ABCRulesetMode, self).__init__()
+        super().__init__()
         self._page_type = self._get_page_type(self._search_options)
 
         self._title: str = ""
@@ -616,7 +616,7 @@ class ModeEditRuleset(WatoMode):
             return super().breadcrumb()
 
     def __init__(self):
-        super(ModeEditRuleset, self).__init__()
+        super().__init__()
         store = PredefinedConditionStore()
         self._predefined_conditions = store.filter_usable_entries(store.load_for_reading())
 
@@ -1760,7 +1760,7 @@ class VSExplicitConditions(Transform):
     """Valuespec for editing a set of explicit rule conditions"""
     def __init__(self, rulespec, **kwargs):
         self._rulespec = rulespec
-        super(VSExplicitConditions, self).__init__(
+        super().__init__(
             Dictionary(elements=self._condition_elements(),
                        headers=[
                            (_("Folder"), "condition explicit", ["folder_path"]),

@@ -482,7 +482,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
 class DiscoveryPageRenderer:
     def __init__(self, host: watolib.CREHost, options: DiscoveryOptions) -> None:
-        super(DiscoveryPageRenderer, self).__init__()
+        super().__init__()
         self._host = host
         self._options = options
 

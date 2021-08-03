@@ -243,7 +243,7 @@ def vcrtrace(**vcr_init_kwargs):
             kwargs["help"] = "%s %s" % (help_part, kwargs.get("help", ""))
             # NOTE: There are various mypy issues around the kwargs Kung Fu
             # below, see e.g. https://github.com/python/mypy/issues/6799.
-            super(VcrTraceAction, self).__init__(  # type: ignore[misc]
+            super().__init__(  # type: ignore[misc]
                 *args, nargs=None, default=False, **kwargs)
 
         def __call__(self, _parser, namespace, filename, option_string=None):

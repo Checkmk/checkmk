@@ -177,7 +177,7 @@ class SNMPHostConfig(
 
 class SNMPBackend(metaclass=abc.ABCMeta):
     def __init__(self, snmp_config: SNMPHostConfig, logger: logging.Logger) -> None:
-        super(SNMPBackend, self).__init__()
+        super().__init__()
         self._logger = logger
         self.config = snmp_config
 

@@ -123,7 +123,7 @@ class BackupTarFile(tarfile.TarFile):
         self._sock = None
         self._sites_path = os.path.realpath("/omd/sites")
 
-        super(BackupTarFile, self).__init__(name, mode, fileobj, **kwargs)
+        super().__init__(name, mode, fileobj, **kwargs)
 
     # We override this function to workaround an issue in the builtin add() method in
     # case it is called in recursive mode and a file vanishes between the os.listdir()
@@ -131,7 +131,7 @@ class BackupTarFile(tarfile.TarFile):
     # like this we want to skip those files silently during backup.
     def add(self, name, arcname=None, recursive=True, *, filter=None):  # pylint: disable=redefined-builtin
         try:
-            super(BackupTarFile, self).add(name, arcname, recursive, filter=filter)
+            super().add(name, arcname, recursive, filter=filter)
         except OSError as e:
             if e.errno != errno.ENOENT or arcname == self._site.name:
                 raise
@@ -143,7 +143,7 @@ class BackupTarFile(tarfile.TarFile):
         # In case of a stopped site or stopped rrdcached there is no
         # need to suspend rrd updates
         if self._site_stopped or not os.path.exists(self._rrdcached_socket_path):
-            super(BackupTarFile, self).addfile(tarinfo, fileobj)
+            super().addfile(tarinfo, fileobj)
             return
 
         site_rel_path = tarinfo.name[len(self._site.name) + 1:]
@@ -158,7 +158,7 @@ class BackupTarFile(tarfile.TarFile):
             self._suspend_rrd_update(rrd_file_path)
 
         try:
-            super(BackupTarFile, self).addfile(tarinfo, fileobj)
+            super().addfile(tarinfo, fileobj)
         finally:
             if is_rrd:
                 self._resume_rrd_update(rrd_file_path)
@@ -228,7 +228,7 @@ class BackupTarFile(tarfile.TarFile):
             sys.stdout.write("rrdcached response: %r\n" % (answer))
 
     def close(self) -> None:
-        super(BackupTarFile, self).close()
+        super().close()
 
         if self._sock is not None:
             self._resume_all_rrds()

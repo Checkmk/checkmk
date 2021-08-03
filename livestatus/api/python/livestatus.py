@@ -288,7 +288,7 @@ class Query:
     def __init__(self,
                  query: Union[str, bytes],
                  suppress_exceptions: Optional[Tuple[Type[Exception], ...]] = None) -> None:
-        super(Query, self).__init__()
+        super().__init__()
 
         self._query = _ensure_unicode(query)
 
@@ -374,7 +374,7 @@ class SingleSiteConnection(Helpers):
                  verify: bool = True,
                  ca_file_path: Optional[str] = None) -> None:
         """Create a new connection to a MK Livestatus socket"""
-        super(SingleSiteConnection, self).__init__()
+        super().__init__()
         self.prepend_site = False
         self.site_name = site_name
         self.auth_users: Dict[str, UserId] = {}

@@ -42,7 +42,7 @@ from omdlib.skel_permissions import load_skel_permissions, load_skel_permissions
 class AbstractSiteContext(metaclass=abc.ABCMeta):
     """Object wrapping site specific information"""
     def __init__(self, sitename: Optional[str]) -> None:
-        super(AbstractSiteContext, self).__init__()
+        super().__init__()
         self._sitename = sitename
         self._config_loaded = False
         self._config: Config = {}
@@ -259,7 +259,7 @@ class SiteContext(AbstractSiteContext):
 
 class RootContext(AbstractSiteContext):
     def __init__(self) -> None:
-        super(RootContext, self).__init__(sitename=None)
+        super().__init__(sitename=None)
 
     @property
     def dir(self) -> str:

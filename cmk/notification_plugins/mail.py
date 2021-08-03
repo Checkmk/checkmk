@@ -835,7 +835,7 @@ class BulkEmailContent(EmailContent):
 
         # TODO: cleanup duplicate code with SingleEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
-        super(BulkEmailContent, self).__init__(
+        super().__init__(
             context=context,
             # Assume the same in each context
             mailto=context['CONTACTEMAIL'],
@@ -864,7 +864,7 @@ class SingleEmailContent(EmailContent):
 
         # TODO: cleanup duplicate code with BulkEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
-        super(SingleEmailContent, self).__init__(
+        super().__init__(
             context=escaped_context,
             mailto=escaped_context['CONTACTEMAIL'],
             subject=escaped_context['SUBJECT'],

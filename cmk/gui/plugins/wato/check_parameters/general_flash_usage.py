@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Alternative,
-    Integer,
-    Percentage,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersOperatingSystem,
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+    RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import Alternative, Integer, Percentage, Tuple
 
 
 def _parameter_valuespec_general_flash_usage():

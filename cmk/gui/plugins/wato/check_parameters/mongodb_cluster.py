@@ -7,8 +7,8 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
-    RulespecGroupCheckParametersStorage,
     rulespec_registry,
+    RulespecGroupCheckParametersStorage,
 )
 from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 

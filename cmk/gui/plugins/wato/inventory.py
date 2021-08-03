@@ -4,32 +4,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.paths
 import cmk.utils.defines as defines
+import cmk.utils.paths
 
+from cmk.gui.i18n import _
+from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
+from cmk.gui.plugins.wato import (
+    HostRulespec,
+    rulespec_group_registry,
+    rulespec_registry,
+    RulespecGroup,
+)
 from cmk.gui.valuespec import (
     Age,
+    CascadingDropdown,
     Dictionary,
     DropdownChoice,
     DualListChoice,
+    ListOf,
     ListOfStrings,
     MonitoringState,
     RegExp,
     TextInput,
     Transform,
     ValueSpec,
-    ListOf,
-    CascadingDropdown,
-)
-
-from cmk.gui.i18n import _
-from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
-
-from cmk.gui.plugins.wato import (
-    rulespec_group_registry,
-    RulespecGroup,
-    rulespec_registry,
-    HostRulespec,
 )
 
 

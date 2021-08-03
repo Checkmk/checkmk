@@ -6,6 +6,13 @@
 
 import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+    ServiceRulespec,
+)
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -22,13 +29,6 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
-)
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithoutItem,
-    RulespecGroupCheckParametersApplications,
-    rulespec_registry,
-    HostRulespec,
-    ServiceRulespec,
 )
 
 

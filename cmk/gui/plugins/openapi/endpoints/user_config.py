@@ -4,26 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Users"""
-import json
 import datetime as dt
-from typing import Dict, Tuple, Union, Any, TypedDict, Literal, Optional
+import json
 import time
+from typing import Any, Dict, Literal, Optional, Tuple, TypedDict, Union
 
-from cmk.gui.http import Response
+import cmk.gui.plugins.userdb.htpasswd as htpasswd
+import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.http import Response
+from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.endpoints.utils import update_customer_info, complement_customer
-
-import cmk.gui.userdb as userdb
-import cmk.gui.plugins.userdb.htpasswd as htpasswd
-from cmk.gui.plugins.openapi import fields
-from cmk.gui.watolib.users import edit_users, delete_users
 from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.watolib.users import delete_users, edit_users
 
 USERNAME = {
     'username': fields.String(

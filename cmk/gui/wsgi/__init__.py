@@ -6,10 +6,11 @@
 
 import pathlib
 
-from cmk.gui.wsgi.middleware import apache_env, CallHooks
-from cmk.gui.wsgi.routing import make_router
-from cmk.gui.wsgi.profiling import ProfileSwitcher
 import cmk.utils.paths
+
+from cmk.gui.wsgi.middleware import apache_env, CallHooks
+from cmk.gui.wsgi.profiling import ProfileSwitcher
+from cmk.gui.wsgi.routing import make_router
 
 
 def make_app(debug=False):

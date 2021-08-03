@@ -4,57 +4,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import abc
+import os
 from typing import Dict, Iterator
 
 import cmk.utils.paths
 
-import cmk.gui.watolib as watolib
-import cmk.gui.userdb as userdb
-from cmk.gui.table import table_element
 import cmk.gui.forms as forms
-from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
-from cmk.gui.utils.urls import makeactionuri
-from cmk.gui.valuespec import (
-    CascadingDropdown,
-    ListChoice,
-    ListOf,
-    ListOfStrings,
-    Dictionary,
-)
+import cmk.gui.userdb as userdb
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html, request, transactions
+from cmk.gui.groups import load_host_group_information, load_service_group_information
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
-    make_simple_link,
-    make_simple_form_page_menu,
 )
-
-from cmk.gui.groups import (
-    load_host_group_information,
-    load_service_group_information,
-)
-from cmk.gui.watolib.groups import (
-    load_contact_group_information,
-    GroupType,
-)
-from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
-
 from cmk.gui.plugins.wato import (
-    WatoMode,
     ActionResult,
     make_confirm_link,
-    redirect,
-    mode_url,
     mode_registry,
+    mode_url,
+    redirect,
+    WatoMode,
 )
+from cmk.gui.table import table_element
+from cmk.gui.utils.urls import makeactionuri
+from cmk.gui.valuespec import CascadingDropdown, Dictionary, ListChoice, ListOf, ListOfStrings
+from cmk.gui.watolib.groups import GroupType, load_contact_group_information
 
 
 class ModeGroups(WatoMode, metaclass=abc.ABCMeta):

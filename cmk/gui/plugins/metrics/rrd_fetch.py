@@ -5,20 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Core for getting the actual raw data points via Livestatus from RRD"""
 
-import time
 import collections
-from typing import Any, Callable, Dict, List, Set, Tuple, Union, Optional, Iterator
+import time
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 import livestatus
 
 import cmk.utils.version as cmk_version
-from cmk.gui.plugins.metrics.utils import check_metrics, reverse_translate_metric_name
-import cmk.gui.plugins.metrics.timeseries as ts
 from cmk.utils.prediction import livestatus_lql, TimeSeries
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException
-import cmk.gui.sites as sites
 
+import cmk.gui.plugins.metrics.timeseries as ts
+import cmk.gui.sites as sites
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import check_metrics, reverse_translate_metric_name
 from cmk.gui.type_defs import ColumnName
 
 
@@ -104,7 +104,8 @@ def needed_elements_of_expression(expression):
             yield from needed_elements_of_expression(operand)
     elif expression[0] == "combined" and not cmk_version.is_raw_edition():
         # Suppression is needed to silence pylint in CRE environment
-        from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec  # pylint: disable=no-name-in-module
+        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module # isort: skip
+            resolve_combined_single_metric_spec,)
         metrics = resolve_combined_single_metric_spec(expression[1])
 
         for out in (needed_elements_of_expression(m['expression']) for m in metrics):

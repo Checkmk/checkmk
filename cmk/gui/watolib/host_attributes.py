@@ -15,19 +15,13 @@ import cmk.utils.plugin_registry
 from cmk.utils.type_defs import HostName
 
 from cmk.gui.config import register_post_config_load_hook
-from cmk.gui.globals import config
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import config, html, request
 from cmk.gui.htmllib import HTML
-from cmk.gui.globals import html, request
 from cmk.gui.i18n import _, _u
-from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.valuespec import (
-    TextInput,
-    Transform,
-    Checkbox,
-    DropdownChoice,
-)
-from cmk.gui.watolib.utils import host_attribute_matches
 from cmk.gui.type_defs import Choices
+from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform
+from cmk.gui.watolib.utils import host_attribute_matches
 
 
 class HostAttributeTopic(metaclass=abc.ABCMeta):

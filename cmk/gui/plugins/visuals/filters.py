@@ -4,48 +4,38 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
 import json
-from typing import Any, Dict, Iterable, List, Optional, Union, Callable, Tuple
+import re
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 import livestatus
 
 import cmk.utils.version as cmk_version
 from cmk.utils.prediction import lq_logic
 
-import cmk.gui.utils
-from cmk.gui.utils.labels import encode_labels_for_livestatus
-from cmk.gui.globals import config
-import cmk.gui.sites as sites
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
+import cmk.gui.sites as sites
+import cmk.gui.utils
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.type_defs import Choices, Row, Rows, VisualContext, FilterHTTPVariables, FilterHeader
+from cmk.gui.globals import config, html, request, response, user, user_errors
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, user_errors, request, response, user
+from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
+from cmk.gui.utils.labels import encode_labels_for_livestatus
 from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.valuespec import (
-    DualListChoice,
-    Labels,
-)
+from cmk.gui.valuespec import DualListChoice, Labels
 
 if cmk_version.is_managed_edition():
     from cmk.gui.cme.plugins.visuals.managed import (  # pylint: disable=no-name-in-module
         filter_cme_choices, filter_cme_heading_info,
     )
 
-from cmk.gui.plugins.visuals import (
-    filter_registry,
-    Filter,
-    FilterTristate,
-    FilterTime,
-)
-
+from cmk.gui.plugins.visuals import Filter, filter_registry, FilterTime, FilterTristate
 from cmk.gui.plugins.visuals.utils import (
+    display_filter_radiobuttons,
     filter_cre_choices,
     filter_cre_heading_info,
     get_only_sites_from_context,
-    display_filter_radiobuttons,
 )
 
 

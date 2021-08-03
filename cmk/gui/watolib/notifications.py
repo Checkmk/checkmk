@@ -6,11 +6,12 @@
 """Module for managing the new rule based notifications"""
 
 from typing import Dict, List
-import cmk.utils.store as store
-from cmk.utils.type_defs import UserId, EventRule
 
-from cmk.gui.globals import config
+import cmk.utils.store as store
+from cmk.utils.type_defs import EventRule, UserId
+
 import cmk.gui.userdb as userdb
+from cmk.gui.globals import config
 from cmk.gui.watolib.utils import wato_root_dir
 
 

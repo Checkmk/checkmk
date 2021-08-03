@@ -9,11 +9,10 @@ from typing import Dict
 import cmk.utils.store as store
 from cmk.utils.type_defs import TimeperiodName, TimeperiodSpec
 
-from cmk.gui.globals import config
+from cmk.gui.globals import config, g
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib.utils import wato_root_dir
-from cmk.gui.globals import g
 
 TimeperiodSpecs = Dict[TimeperiodName, TimeperiodSpec]
 

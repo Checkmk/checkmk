@@ -19,29 +19,30 @@ A service group object can have the following relations present in `links`:
  * `urn:org.restfulobject/rels:delete` - An endpoint to delete this service group.
 """
 
+from cmk.utils import version
+
 from cmk.gui import watolib
+from cmk.gui.groups import load_service_group_information
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.endpoints.utils import (
-    serve_group,
-    serialize_group,
-    serialize_group_list,
-    prepare_groups,
     fetch_group,
     fetch_specific_groups,
-    update_groups,
+    prepare_groups,
+    serialize_group,
+    serialize_group_list,
+    serve_group,
     update_customer_info,
+    update_groups,
     updated_group_details,
 )
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
-    response_schemas,
     request_schemas,
+    response_schemas,
 )
-from cmk.gui.groups import load_service_group_information
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.watolib.groups import edit_group, add_group
-from cmk.utils import version
+from cmk.gui.watolib.groups import add_group, edit_group
 
 
 @Endpoint(constructors.collection_href('service_group_config'),

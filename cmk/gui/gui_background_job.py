@@ -4,29 +4,32 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
+
 from typing import Type
+
 from six import ensure_str
 
-import cmk
 import cmk.utils.plugin_registry
-from cmk.utils.exceptions import MKGeneralException
 import cmk.utils.render
+from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.i18n
-import cmk.gui.sites as sites
-import cmk.gui.log as log
 import cmk.gui.background_job as background_job
-from cmk.gui.i18n import _, _l
-from cmk.gui.globals import g, html, request, timeout_manager, transactions, user
-from cmk.gui.utils.html import HTML
+import cmk.gui.i18n
+import cmk.gui.log as log
+import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.globals import g, html, request, timeout_manager, transactions, user
+from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import (
+    Permission,
+    permission_registry,
     permission_section_registry,
     PermissionSection,
-    permission_registry,
-    Permission,
 )
-from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link, makeactionuri
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
+
+import cmk
 
 
 @permission_section_registry.register

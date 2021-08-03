@@ -5,25 +5,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-import cmk.gui.notify as notify
-import cmk.gui.pages
+from typing import Iterator
+
 import cmk.utils.paths
 import cmk.utils.werks
 
+import cmk.gui.notify as notify
+import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.globals import html, request, user
 from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.table import table_element
 from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuEntry,
-    PageMenuDropdown,
-    PageMenuTopic,
     make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
 )
+from cmk.gui.table import table_element
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
-from typing import Iterator
 
 
 @cmk.gui.pages.page_registry.register_page("user_notify")

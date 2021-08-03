@@ -10,33 +10,20 @@ import time
 import cmk.utils.store as store
 
 import cmk.gui.userdb as userdb
-from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, user
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    make_simple_form_page_menu,
-)
-
+from cmk.gui.globals import config, html, user
+from cmk.gui.i18n import _
+from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
+from cmk.gui.plugins.wato import ActionResult, flash, mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.valuespec import (
-    Tuple,
-    FixedValue,
+    AbsoluteDate,
     Alternative,
+    Dictionary,
+    FixedValue,
     ListOf,
     TextAreaUnicode,
-    Dictionary,
-    AbsoluteDate,
-)
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ActionResult,
-    mode_registry,
-    flash,
-    redirect,
-    mode_url,
+    Tuple,
 )
 
 

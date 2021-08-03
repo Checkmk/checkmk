@@ -5,31 +5,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with host tags"""
 
-from typing import Any, Dict, List, Set, Tuple as _Tuple, Union, Optional
-
-import errno
-from pathlib import Path
-
 import abc
+import errno
 from enum import Enum
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Set
+from typing import Tuple as _Tuple
+from typing import Union
 
 from six import ensure_str
 
-from cmk.gui.config import load_config
-import cmk.gui.watolib as watolib
-from cmk.gui.exceptions import (MKAuthException, MKGeneralException)
-
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.i18n import _
-
 import cmk.utils.tags
+from cmk.utils.i18n import _
+from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagGroup
+
+import cmk.gui.watolib as watolib
+from cmk.gui.config import load_config
+from cmk.gui.exceptions import MKAuthException, MKGeneralException
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
-from cmk.gui.watolib.utils import (
-    multisite_dir,
-    wato_root_dir,
-)
-from cmk.utils.tags import TagGroup, TagConfig, BuiltinTagConfig
+from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
 class TagConfigFile(WatoSimpleConfigFile):

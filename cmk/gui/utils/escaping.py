@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from html import escape as html_escape
 import re
+from html import escape as html_escape
 from typing import Union
 from urllib.parse import urlparse
 

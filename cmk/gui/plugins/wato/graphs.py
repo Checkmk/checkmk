@@ -6,20 +6,9 @@
 
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    ListOf,
-    Dictionary,
-    TextInput,
-    Age,
-)
-
-from cmk.gui.plugins.wato import (
-    config_variable_registry,
-    ConfigVariable,
-    ConfigDomainGUI,
-)
-
+from cmk.gui.plugins.wato import config_variable_registry, ConfigDomainGUI, ConfigVariable
 from cmk.gui.plugins.wato.check_mk_configuration import ConfigVariableGroupUserInterface
+from cmk.gui.valuespec import Age, Dictionary, ListOf, TextInput
 
 
 @config_variable_registry.register

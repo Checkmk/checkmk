@@ -7,115 +7,105 @@
 
 # TODO: More feature related splitting up would be better
 
-import os
 import abc
 import json
+import os
 import re
 import subprocess
 from contextlib import nullcontext
-from typing import (
-    Callable,
-    ContextManager,
-    Dict,
-    List,
-    Mapping,
-    Optional as _Optional,
-    Tuple as _Tuple,
-    Type,
-)
+from typing import Callable, ContextManager, Dict, List, Mapping
+from typing import Optional as _Optional
+from typing import Tuple as _Tuple
+from typing import Type
 
 from six import ensure_str
 
-from livestatus import SiteId, SiteConfiguration, SiteConfigurations
+from livestatus import SiteConfiguration, SiteConfigurations, SiteId
+
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import CheckPluginName
 
-import cmk.gui.mkeventd
-from cmk.gui.globals import config
-import cmk.gui.userdb as userdb
 import cmk.gui.backup as backup
+import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
-import cmk.gui.weblib as weblib
-from cmk.gui.sites import get_site_config, get_activation_site_choices
-from cmk.gui.pages import page_registry
-from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, g, transactions, request, user
-from cmk.gui.htmllib import foldable_container, HTML
-from cmk.gui.type_defs import Choices
-from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.utils.escaping import escape_html
-from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
-from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
-from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
-    ABCPageListOfMultipleGetChoice, Alternative, CascadingDropdown, Checkbox, Dictionary,
-    DocumentationURL, DropdownChoice, DualListChoice, ElementSelection, FixedValue, Float, Integer,
-    Labels, ListChoice, ListOf, ListOfMultiple, ListOfStrings, MonitoredHostname,
-    OptionalDropdownChoice, Password, Percentage, RegExp, RuleComment, TextInput,
-    AjaxDropdownChoice, Transform, Tuple, Url, ValueSpec, ValueSpecHelp, rule_option_elements,
-    SingleLabel, autocompleter_registry,
-)
-from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
-    ActionResult, WatoMode, mode_registry, mode_url, redirect,
-)
-from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: disable=unused-import
-    SimpleEditMode, SimpleListMode, SimpleModeType,
-)
-from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: disable=unused-import
-    search_form,)
-from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disable=unused-import
-    MainMenu, ABCMainModule, MenuItem, WatoModule, main_module_registry, register_modules,
-    MainModuleTopic, MainModuleTopicHosts, MainModuleTopicServices, MainModuleTopicBI,
-    MainModuleTopicAgents, MainModuleTopicEvents, MainModuleTopicUsers, MainModuleTopicGeneral,
-    MainModuleTopicMaintenance, MainModuleTopicCustom,
-)
+import cmk.gui.mkeventd
+import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
-from cmk.gui.watolib.password_store import PasswordStore
-from cmk.gui.watolib.timeperiods import TimeperiodSelection  # noqa: F401 # pylint: disable=unused-import
-from cmk.gui.watolib.users import notification_script_title
+import cmk.gui.weblib as weblib
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import config, g, html, request, transactions, user
 from cmk.gui.groups import (
     load_contact_group_information,
     load_host_group_information,
     load_service_group_information,
 )
-from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-import
-    BinaryHostRulespec, BinaryServiceRulespec, CheckParameterRulespecWithItem,
-    CheckParameterRulespecWithoutItem, HostRulespec, ManualCheckParameterRulespec, Rulespec,
-    RulespecGroup, RulespecGroupEnforcedServicesApplications,
-    RulespecGroupEnforcedServicesEnvironment, RulespecGroupEnforcedServicesHardware,
-    RulespecGroupEnforcedServicesNetworking, RulespecGroupEnforcedServicesOperatingSystem,
-    RulespecGroupEnforcedServicesStorage, RulespecGroupEnforcedServicesVirtualization,
-    RulespecSubGroup, ServiceRulespec, TimeperiodValuespec, rulespec_group_registry,
-    rulespec_registry,
+from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.i18n import _, _u
+from cmk.gui.pages import page_registry
+from cmk.gui.permissions import permission_section_registry, PermissionSection
+from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    ActionResult, mode_registry, mode_url, redirect, WatoMode,
 )
-from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=unused-import
-    ABCHostAttributeNagiosText, ABCHostAttributeValueSpec, HostAttributeTopicAddress,
-    HostAttributeTopicBasicSettings, HostAttributeTopicCustomAttributes,
-    HostAttributeTopicDataSources, HostAttributeTopicHostTags, HostAttributeTopicManagementBoard,
-    HostAttributeTopicMetaData, HostAttributeTopicNetworkScan, host_attribute_registry,
-    host_attribute_topic_registry,
+from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: disable=unused-import
+    search_form,)
+from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    ABCMainModule, main_module_registry, MainMenu, MainModuleTopic, MainModuleTopicAgents,
+    MainModuleTopicBI, MainModuleTopicCustom, MainModuleTopicEvents, MainModuleTopicGeneral,
+    MainModuleTopicHosts, MainModuleTopicMaintenance, MainModuleTopicServices, MainModuleTopicUsers,
+    MenuItem, register_modules, WatoModule,
+)
+from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: disable=unused-import
+    SimpleEditMode, SimpleListMode, SimpleModeType,
+)
+from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
+    config_variable_group_registry, config_variable_registry, ConfigVariable, ConfigVariableGroup,
+    register_configvar, sample_config_generator_registry, SampleConfigGenerator,
+)
+from cmk.gui.sites import get_activation_site_choices, get_site_config
+from cmk.gui.type_defs import Choices
+from cmk.gui.utils.escaping import escape_html
+from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
+    ABCPageListOfMultipleGetChoice, AjaxDropdownChoice, Alternative, autocompleter_registry,
+    CascadingDropdown, Checkbox, Dictionary, DocumentationURL, DropdownChoice, DualListChoice,
+    ElementSelection, FixedValue, Float, Integer, Labels, ListChoice, ListOf, ListOfMultiple,
+    ListOfStrings, MonitoredHostname, OptionalDropdownChoice, Password, Percentage, RegExp,
+    rule_option_elements, RuleComment, SingleLabel, TextInput, Transform, Tuple, Url, ValueSpec,
+    ValueSpecHelp,
 )
 from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
-    ABCConfigDomain, ACResult, ACResultCRIT, ACResultOK, ACResultWARN, ACTest, ACTestCategories,
+    ABCConfigDomain, ac_test_registry, ACResult, ACResultCRIT, ACResultOK, ACResultWARN, ACTest,
+    ACTestCategories, add_change, add_replication_paths, config_domain_registry,
     ConfigDomainCACertificates, ConfigDomainCore, ConfigDomainEventConsole, ConfigDomainGUI,
-    ConfigDomainOMD, LivestatusViaTCP, ac_test_registry, add_change, add_replication_paths,
-    config_domain_registry, folder_preserving_link, get_rulegroup, is_wato_slave_site, log_audit,
-    make_action_link, multisite_dir, register_rule, site_neutral_path, user_script_choices,
-    user_script_title, wato_fileheader, wato_root_dir, make_diff_text,
+    ConfigDomainOMD, folder_preserving_link, get_rulegroup, is_wato_slave_site, LivestatusViaTCP,
+    log_audit, make_action_link, make_diff_text, multisite_dir, register_rule, site_neutral_path,
+    user_script_choices, user_script_title, wato_fileheader, wato_root_dir,
 )
 from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused-import
     ReplicationPath,)
-from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
-    ConfigVariable, ConfigVariableGroup, SampleConfigGenerator, config_variable_group_registry,
-    config_variable_registry, register_configvar, sample_config_generator_registry,
+from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=unused-import
+    ABCHostAttributeNagiosText, ABCHostAttributeValueSpec, host_attribute_registry,
+    host_attribute_topic_registry, HostAttributeTopicAddress, HostAttributeTopicBasicSettings,
+    HostAttributeTopicCustomAttributes, HostAttributeTopicDataSources, HostAttributeTopicHostTags,
+    HostAttributeTopicManagementBoard, HostAttributeTopicMetaData, HostAttributeTopicNetworkScan,
 )
-
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob  # noqa: F401 # pylint: disable=unused-import
-
-import cmk.gui.forms as forms
-from cmk.gui.permissions import (
-    PermissionSection,
-    permission_section_registry,
+from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-import
+    BinaryHostRulespec, BinaryServiceRulespec, CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem, HostRulespec, ManualCheckParameterRulespec, Rulespec,
+    rulespec_group_registry, rulespec_registry, RulespecGroup,
+    RulespecGroupEnforcedServicesApplications, RulespecGroupEnforcedServicesEnvironment,
+    RulespecGroupEnforcedServicesHardware, RulespecGroupEnforcedServicesNetworking,
+    RulespecGroupEnforcedServicesOperatingSystem, RulespecGroupEnforcedServicesStorage,
+    RulespecGroupEnforcedServicesVirtualization, RulespecSubGroup, ServiceRulespec,
+    TimeperiodValuespec,
 )
+from cmk.gui.watolib.timeperiods import (  # noqa: F401 # pylint: disable=unused-import
+    TimeperiodSelection,)
+from cmk.gui.watolib.users import notification_script_title
+from cmk.gui.watolib.wato_background_job import (  # noqa: F401 # pylint: disable=unused-import
+    WatoBackgroundJob,)
 
 
 @permission_section_registry.register

@@ -4,28 +4,64 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Dict, Any, Tuple, List, Union, Iterable
 import abc
-from fnmatch import fnmatch
+import io
 import os
 import time
-import io
+from fnmatch import fnmatch
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
-import cmk.utils.paths
-from cmk.utils.render import approx_age
 import cmk.utils.man_pages as man_pages
-from cmk.utils.defines import short_service_state_name, short_host_state_name
-from cmk.utils.type_defs import Timestamp
+import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.defines import short_host_state_name, short_service_state_name
+from cmk.utils.render import approx_age
+from cmk.utils.type_defs import Timestamp
 
-import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import config
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
-from cmk.gui.sites import get_site_config
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.globals import config, g, html, output_funnel, request, response
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html, request, response, output_funnel
+from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
+from cmk.gui.plugins.views import (
+    Cell,
+    format_plugin_output,
+    get_label_sources,
+    get_labels,
+    get_perfdata_nth_value,
+    get_tag_groups,
+    is_stale,
+    paint_age,
+    paint_host_list,
+    paint_nagiosflag,
+    paint_stalified,
+    Painter,
+    painter_option_registry,
+    painter_registry,
+    PainterOption,
+    render_cache_info,
+    render_labels,
+    render_link_to_view,
+    render_tag_groups,
+    replace_action_url_macros,
+    transform_action_url,
+    VisualLinkSpec,
+)
+from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk
+from cmk.gui.plugins.views.icons import (
+    get_icons,
+    IconEntry,
+    IconObjectType,
+    iconpainter_columns,
+    LegacyIconEntry,
+)
+from cmk.gui.sites import get_site_config
+from cmk.gui.type_defs import ColumnName, Row, SorterName
+from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.urls import makeuri_contextless, urlencode
 from cmk.gui.valuespec import (
     DateFormat,
     Dictionary,
@@ -39,51 +75,7 @@ from cmk.gui.valuespec import (
     Timerange,
     Transform,
 )
-from cmk.gui.type_defs import SorterName, ColumnName, Row
 from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
-
-from cmk.gui.plugins.views.icons import (
-    get_icons,
-    iconpainter_columns,
-    IconObjectType,
-    IconEntry,
-    LegacyIconEntry,
-)
-
-from cmk.gui.plugins.views import (
-    painter_registry,
-    Painter,
-    painter_option_registry,
-    PainterOption,
-    transform_action_url,
-    is_stale,
-    paint_stalified,
-    paint_host_list,
-    format_plugin_output,
-    render_link_to_view,
-    VisualLinkSpec,
-    get_perfdata_nth_value,
-    paint_age,
-    paint_nagiosflag,
-    replace_action_url_macros,
-    render_cache_info,
-    render_tag_groups,
-    get_tag_groups,
-    render_labels,
-    get_labels,
-    get_label_sources,
-    Cell,
-)
-
-from cmk.gui.plugins.views.graphs import (
-    paint_time_graph_cmk,
-    cmk_time_graph_params,
-)
-
-from cmk.gui.utils.urls import makeuri_contextless, urlencode
-from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.plugins.metrics.utils import render_color_icon, TranslatedMetrics
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |

@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from contextlib import contextmanager, nullcontext
-import re
 import json
+import re
+from contextlib import contextmanager, nullcontext
 from typing import (
     Any,
+    cast,
+    ContextManager,
     Dict,
     Iterator,
     List,
@@ -16,23 +18,20 @@ from typing import (
     NamedTuple,
     Optional,
     Tuple,
-    Union,
     TYPE_CHECKING,
-    cast,
-    ContextManager,
+    Union,
 )
 
 from six import ensure_str
 
-from cmk.gui.htmllib import HTML, foldable_container
 import cmk.gui.utils as utils
-from cmk.gui.globals import config
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.weblib as weblib
+from cmk.gui.globals import config, html, output_funnel, request, response, transactions, user
+from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, output_funnel, response, user
-from cmk.gui.utils.urls import makeuri, makeactionuri, requested_file_name
 from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.urls import makeactionuri, makeuri, requested_file_name
 
 if TYPE_CHECKING:
     from cmk.gui.htmllib import HTMLContent, HTMLTagAttributes

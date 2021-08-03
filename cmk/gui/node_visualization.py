@@ -4,54 +4,48 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
 import json
 import time
-import itertools
+from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypedDict
-from dataclasses import dataclass, field, asdict
 
 import livestatus
-from cmk.gui.node_vis_lib import BILayoutManagement
-from cmk.gui.plugins.wato import bi_valuespecs
+
 from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
-from cmk.utils.bi.bi_trees import BICompiledRule, BICompiledLeaf
-from cmk.utils.type_defs import HostName
+from cmk.utils.bi.bi_computer import BIAggregationFilter
+from cmk.utils.bi.bi_lib import NodeResultBundle
+from cmk.utils.bi.bi_trees import BICompiledLeaf, BICompiledRule
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import HostName
 
-from cmk.gui import sites
-from cmk.gui.globals import html, theme, request, user
-from cmk.gui.i18n import _
 import cmk.gui.bi as bi
-
-from cmk.gui.globals import config
-from cmk.gui.pages import (
-    page_registry,
-    Page,
-    PageResult,
-    AjaxPage,
-    AjaxPageResult,
-)
-
-from cmk.gui.plugins.views.utils import (
-    get_permitted_views,)
-from cmk.gui.views import ABCAjaxInitialFilters, View
-
 import cmk.gui.visuals
-from cmk.gui.exceptions import MKGeneralException
-
-from cmk.gui.plugins.visuals.utils import (Filter, get_livestatus_filter_headers)
-from cmk.gui.type_defs import FilterHeader
+from cmk.gui import sites
 from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_simple_page_breadcrumb,
     make_topic_breadcrumb,
 )
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import config, html, request, theme, user
+from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.page_menu import (make_display_options_dropdown, PageMenu, PageMenuEntry,
-                               PageMenuSidePopup, PageMenuTopic)
+from cmk.gui.node_vis_lib import BILayoutManagement
+from cmk.gui.page_menu import (
+    make_display_options_dropdown,
+    PageMenu,
+    PageMenuEntry,
+    PageMenuSidePopup,
+    PageMenuTopic,
+)
+from cmk.gui.pages import AjaxPage, AjaxPageResult, Page, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.utils.bi.bi_computer import BIAggregationFilter
-from cmk.utils.bi.bi_lib import NodeResultBundle
+from cmk.gui.plugins.views.utils import get_permitted_views
+from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
+from cmk.gui.plugins.wato import bi_valuespecs
+from cmk.gui.type_defs import FilterHeader
+from cmk.gui.views import ABCAjaxInitialFilters, View
 
 Mesh = Set[HostName]
 Meshes = List[Mesh]

@@ -11,15 +11,17 @@ from unittest import mock
 
 from werkzeug.test import EnvironBuilder
 
+from livestatus import MultiSiteConnection
+
+from cmk.utils.livestatus_helpers.testing import MatchType, MockLiveStatusConnection
+from cmk.utils.site import omd_site
+
 from cmk.gui import http, sites
-from cmk.gui.config import make_config_object, get_default_config
+from cmk.gui.config import get_default_config, make_config_object
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.htmllib import html
 from cmk.gui.utils.output_funnel import OutputFunnel
-from cmk.utils.site import omd_site
-from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection, MatchType
-from livestatus import MultiSiteConnection
 
 
 @contextlib.contextmanager

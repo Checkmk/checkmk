@@ -7,21 +7,21 @@
 from typing import Tuple as _Tuple
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupCheckParametersEnvironment,
+)
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
     FixedValue,
     Float,
+    ListChoice,
     TextInput,
     Tuple,
-    ListChoice,
-)
-from cmk.gui.plugins.wato import (
-    HostRulespec,
-    RulespecGroupCheckParametersDiscovery,
-    RulespecGroupCheckParametersEnvironment,
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
 )
 
 

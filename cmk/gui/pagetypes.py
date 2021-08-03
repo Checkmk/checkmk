@@ -17,14 +17,15 @@
 #   per type to the page_types dictionary. Or add some management object
 #   for this
 
-import os
-import json
 import copy
-from typing import Dict, Any, List, Tuple, Optional as _Optional, Iterator
+import json
+import os
+from typing import Any, Dict, Iterator, List
+from typing import Optional as _Optional
+from typing import Tuple
 
 from six import ensure_str
 
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
@@ -33,68 +34,60 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 import cmk.gui.weblib as weblib
-from cmk.gui.table import table_element, init_rowselect
-from cmk.gui.valuespec import (
-    ID,
-    Dictionary,
-    Checkbox,
-    TextInput,
-    TextAreaUnicode,
-    CascadingDropdown,
-    DualListChoice,
-    Optional,
-    IconSelector,
-    Integer,
-    DropdownChoice,
-    FixedValue,
-    ValueSpec,
-)
-from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
-from cmk.gui.i18n import _l, _u, _
-from cmk.gui.globals import html, request, transactions, user_errors, user
-from cmk.gui.type_defs import HTTPVariables, Icon
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
+from cmk.gui.default_permissions import PermissionSectionGeneral
+from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import html, request, transactions, user, user_errors
+from cmk.gui.i18n import _, _l, _u
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
+    make_confirmed_form_submit_link,
+    make_form_submit_link,
+    make_javascript_link,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
-    make_javascript_link,
-    make_simple_link,
-    make_form_submit_link,
-    make_confirmed_form_submit_link,
 )
-
-from cmk.gui.exceptions import (
-    MKUserError,
-    MKGeneralException,
-    MKAuthException,
-)
-from cmk.gui.default_permissions import PermissionSectionGeneral
 from cmk.gui.permissions import (
-    permission_section_registry,
-    permission_registry,
     declare_permission_section,
     Permission,
+    permission_registry,
+    permission_section_registry,
 )
-from cmk.gui.breadcrumb import (
-    make_main_menu_breadcrumb,
-    Breadcrumb,
-    BreadcrumbItem,
-)
-from cmk.gui.type_defs import (
-    MegaMenu,
-    TopicMenuTopic,
-    TopicMenuItem,
-)
-from cmk.gui.main_menu import mega_menu_registry
-
+from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.type_defs import HTTPVariables, Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils import unique_default_name_suggestion
-from cmk.gui.utils.urls import (makeuri, makeuri_contextless, make_confirm_link, urlencode,
-                                makeactionuri)
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.logged_in import save_user_file
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import user_may
-from cmk.gui.utils.logged_in import save_user_file
+from cmk.gui.utils.urls import (
+    make_confirm_link,
+    makeactionuri,
+    makeuri,
+    makeuri_contextless,
+    urlencode,
+)
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    CascadingDropdownChoice,
+    Checkbox,
+    Dictionary,
+    DictionaryEntry,
+    DropdownChoice,
+    DualListChoice,
+    FixedValue,
+    IconSelector,
+    ID,
+    Integer,
+    Optional,
+    TextAreaUnicode,
+    TextInput,
+    ValueSpec,
+)
 
 SubPagesSpec = List[Tuple[str, str, str]]
 

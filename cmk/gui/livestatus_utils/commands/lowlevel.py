@@ -6,11 +6,12 @@
 import time
 from typing import Any, List, Optional
 
-from cmk.utils.site import omd_site
-from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
-
 # TODO: typing of connection when livestatus.py is on pypi
 from livestatus import SiteId
+
+from cmk.utils.site import omd_site
+
+from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 
 
 def send_command(

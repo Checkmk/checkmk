@@ -7,59 +7,54 @@
 import os
 import re
 import time
-from typing import NamedTuple, Type, Any
 from pathlib import Path
+from typing import Any, NamedTuple, Type
 
 from six import ensure_binary
 
-from livestatus import SiteId, SiteConfigurations
+from livestatus import SiteConfigurations, SiteId
 
-import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
-import cmk.gui.sites
-from cmk.gui.sites import site_is_local, is_wato_slave_site, has_wato_slave_sites
-from cmk.gui.config import prepare_raw_site_config, load_config, default_single_site_configuration
-from cmk.gui.globals import config
-import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import request, transactions
-from cmk.gui.utils.urls import makeactionuri
+import cmk.gui.plugins.userdb.utils as userdb_utils
+import cmk.gui.sites
+import cmk.gui.watolib.activate_changes
+import cmk.gui.watolib.changes
+import cmk.gui.watolib.sidebar_reload
+from cmk.gui.config import default_single_site_configuration, load_config, prepare_raw_site_config
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import config, request, transactions
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
+from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site, site_is_local
+from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
+    Alternative,
     CascadingDropdown,
     Checkbox,
-    TextInput,
-    Float,
-    Integer,
-    Tuple,
     Dictionary,
     FixedValue,
-    Alternative,
-    Transform,
-    ListOfStrings,
-    IPNetwork,
+    Float,
     HostAddress,
+    Integer,
+    IPNetwork,
     ListChoice,
+    ListOfStrings,
+    TextInput,
+    Transform,
+    Tuple,
 )
-
-import cmk.gui.watolib.changes
-import cmk.gui.watolib.activate_changes
-import cmk.gui.watolib.sidebar_reload
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.config_domains import (
-    ConfigDomainLiveproxy,
-    ConfigDomainGUI,
     ConfigDomainCACertificates,
-)
-from cmk.gui.watolib.automation_commands import (
-    AutomationCommand,
-    automation_command_registry,
+    ConfigDomainGUI,
+    ConfigDomainLiveproxy,
 )
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.utils import multisite_dir
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 
 
 class SiteManagement:

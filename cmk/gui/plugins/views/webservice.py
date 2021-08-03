@@ -6,20 +6,20 @@
 
 import json
 import time
-from typing import TYPE_CHECKING, List, Dict, Union
+from typing import Dict, List, TYPE_CHECKING, Union
 
 from six import ensure_str
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.globals import request, response
-from cmk.gui.type_defs import Rows
 from cmk.gui.plugins.views import (
-    exporter_registry,
-    Exporter,
     ExportCellContent,
+    Exporter,
+    exporter_registry,
     join_row,
     output_csv_headers,
 )
+from cmk.gui.type_defs import Rows
 
 if TYPE_CHECKING:
     from cmk.gui.views import View

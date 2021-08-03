@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Percentage,
-    TextInput,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupEnforcedServicesApplications,
-    rulespec_registry,
     ManualCheckParameterRulespec,
+    rulespec_registry,
+    RulespecGroupEnforcedServicesApplications,
 )
+from cmk.gui.valuespec import Integer, Percentage, TextInput, Tuple
 
 
 def _item_spec_wmic_process():

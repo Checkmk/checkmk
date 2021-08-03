@@ -4,48 +4,38 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import traceback
 import json
 import pprint
+import traceback
 import xml.dom.minidom  # type: ignore[import]
 from typing import Any, Callable, Dict, Tuple, Union
 
 import dicttoxml  # type: ignore[import]
 
+import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 
-import cmk.utils.store as store
-
+import cmk.gui.i18n
 import cmk.gui.pages
-import cmk.gui.utils.escaping as escaping
-from cmk.gui.log import logger
+import cmk.gui.plugins.webapi
 import cmk.gui.utils as utils
-from cmk.gui.config import builtin_role_ids
-from cmk.gui.globals import config
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.read_only
-import cmk.gui.i18n
-from cmk.gui.watolib.activate_changes import update_config_generation
+from cmk.gui.config import builtin_role_ids
+from cmk.gui.exceptions import MKAuthException, MKException, MKUserError
+from cmk.gui.globals import config, request, response, user
 from cmk.gui.i18n import _, _l
-from cmk.gui.globals import request, response, user
-from cmk.gui.exceptions import (
-    MKUserError,
-    MKAuthException,
-    MKException,
-)
+from cmk.gui.log import logger
+from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.utils import PermissionSectionWATO
-from cmk.gui.permissions import (
-    permission_registry,
-    Permission,
-)
-
-import cmk.gui.plugins.webapi
+from cmk.gui.watolib.activate_changes import update_config_generation
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.webapi  # pylint: disable=import-error,no-name-in-module
 
 # TODO: Kept for compatibility reasons with legacy plugins
-from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     add_configuration_hash, api_call_collection_registry, check_hostname, validate_config_hash,
     validate_host_attributes,
 )

@@ -5,22 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Tuple, Iterator, Set, List, Optional, Dict
+from typing import Dict, Iterator, List, Optional, Set, Tuple
 
 from cmk.utils.prediction import lq_logic
-import cmk.gui.watolib as watolib
+
 import cmk.gui.sites as sites
-from cmk.gui.globals import config
+import cmk.gui.watolib as watolib
+from cmk.gui.globals import config, html
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.type_defs import Choices, FilterHTTPVariables, FilterHeader
-
+from cmk.gui.plugins.visuals import Filter, filter_registry
+from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables
 from cmk.gui.valuespec import DualListChoice
-
-from cmk.gui.plugins.visuals import (
-    filter_registry,
-    Filter,
-)
 
 
 def _wato_folders_to_lq_regex(path: str) -> str:

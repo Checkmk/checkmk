@@ -8,22 +8,20 @@ automation functions on slaves,"""
 
 import traceback
 
-import cmk.utils.version as cmk_version
-import cmk.utils.store as store
 import cmk.utils.paths
-from cmk.utils.type_defs import UserId
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import UserId
 
-import cmk.gui.utils
-from cmk.gui.globals import config
-import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
-
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.log import logger
-from cmk.gui.globals import response, request, user
-from cmk.gui.i18n import _
+import cmk.gui.utils
+import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKAuthException, MKGeneralException
+from cmk.gui.globals import config, request, response, user
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.utils.logged_in import SuperUserContext
 
 

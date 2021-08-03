@@ -9,10 +9,9 @@
 
 from __future__ import annotations
 
-from functools import partial
 import logging
-
-from typing import Any, TYPE_CHECKING, Optional, List
+from functools import partial
+from typing import Any, List, Optional, TYPE_CHECKING
 
 from werkzeug.local import LocalProxy, LocalStack
 
@@ -26,11 +25,11 @@ from cmk.gui.utils.user_errors import UserErrors
 if TYPE_CHECKING:
     from cmk.gui import htmllib, http, userdb
     from cmk.gui.config import Config
-    from cmk.gui.utils.logged_in import LoggedInUser
-    from cmk.gui.utils.timeout_manager import TimeoutManager
-    from cmk.gui.utils.theme import Theme
     from cmk.gui.display_options import DisplayOptions
+    from cmk.gui.utils.logged_in import LoggedInUser
     from cmk.gui.utils.output_funnel import OutputFunnel
+    from cmk.gui.utils.theme import Theme
+    from cmk.gui.utils.timeout_manager import TimeoutManager
 
 _sentinel = object()
 

@@ -4,20 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
-import json
 import http.client
+import json
+from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Type, Union
 
-from typing import Any, Dict, Literal, Sequence, List, Optional, Type, Union, Tuple
+from cmk.utils import version
+from cmk.utils.version import is_managed_edition
 
+from cmk.gui.groups import GroupSpec, GroupSpecs, load_group_information
 from cmk.gui.http import Response
-from cmk.gui.groups import load_group_information, GroupSpecs, GroupSpec
 from cmk.gui.plugins.openapi.restful_objects import constructors
 from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib import CREFolder
 from cmk.gui.watolib.groups import edit_group, GroupType
-from cmk.utils import version
 
-from cmk.utils.version import is_managed_edition
 if is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 

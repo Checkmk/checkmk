@@ -5,23 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Alternative,
-    Dictionary,
-    Filesize,
-    Integer,
-    ListOf,
-    Percentage,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-
 from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_database_file
+from cmk.gui.valuespec import Alternative, Dictionary, Filesize, Integer, ListOf, Percentage, Tuple
 
 
 def levels_absolute_or_dynamic(name, value):

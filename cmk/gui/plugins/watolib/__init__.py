@@ -14,7 +14,9 @@
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.utils.plugin_loader import load_plugins
+
+from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     ABCConfigDomain, config_domain_registry,
 )
 
@@ -27,7 +29,5 @@ from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unus
 #   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
 #   |                                 |___/                                |
 #   '----------------------------------------------------------------------'
-
-from cmk.utils.plugin_loader import load_plugins
 
 load_plugins(__file__, __package__)

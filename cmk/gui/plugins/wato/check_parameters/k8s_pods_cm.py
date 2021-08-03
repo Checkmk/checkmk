@@ -7,17 +7,12 @@
 # NOTE: The rulesets in this file were deprecated in version 2.0.0p5
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Filesize,
-    Percentage,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Filesize, Percentage, Tuple
 
 
 def _parameter_valuespec_k8s_pods_cpu():

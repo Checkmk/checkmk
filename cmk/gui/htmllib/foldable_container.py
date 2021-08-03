@@ -7,7 +7,7 @@
 
 import json
 from contextlib import contextmanager
-from typing import Union, Optional, Iterator
+from typing import Iterator, Optional, Union
 
 from cmk.gui.globals import html, theme, user
 from cmk.gui.utils.html import HTML

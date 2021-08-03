@@ -5,16 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Checkbox,
-    TextInput,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersNetworking,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersNetworking,
 )
+from cmk.gui.valuespec import Checkbox, Dictionary, TextInput
 
 
 def _parameter_valuespec_brocade_optical():

@@ -35,32 +35,29 @@ import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.memoize import MemoizeCache
 from cmk.utils.prediction import livestatus_lql
-from cmk.utils.type_defs import (
-    HostName,
-    MetricName as _MetricName,
-    ServiceName,
-)
+from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import MetricName as _MetricName
+from cmk.utils.type_defs import ServiceName
 from cmk.utils.werks import parse_check_mk_version
 
-from cmk.gui.globals import config
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import g, html
+from cmk.gui.globals import config, g, html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.utils.html import HTML
 from cmk.gui.type_defs import (
     Choices,
+    Perfdata,
+    PerfometerSpec,
     RenderableRecipe,
     Row,
-    Perfdata,
     TranslatedMetrics,
-    PerfometerSpec,
 )
+from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import (
+    autocompleter_registry,
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
-    autocompleter_registry,
 )
 
 LegacyPerfometer = Tuple[str, Any]

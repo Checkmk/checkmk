@@ -5,31 +5,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import inspect
-from typing import List, Tuple, Type, Optional
+from typing import List, Optional, Tuple, Type
 
-import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 
 import cmk.gui.pages
-from cmk.gui.globals import config
-from cmk.gui.type_defs import PermissionName
+from cmk.gui.breadcrumb import make_main_menu_breadcrumb
+from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import config, display_options, html, request, transactions, user, user_errors
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, display_options, transactions, user_errors, request, user
-from cmk.gui.exceptions import (MKGeneralException, MKAuthException, MKUserError, FinalizeRequest)
-from cmk.gui.utils.flashed_messages import get_flashed_messages
-from cmk.gui.plugins.wato.utils.html_elements import (
-    wato_html_head,
-    wato_html_footer,
-    initialize_wato_html_head,
-)
 from cmk.gui.plugins.wato.utils import mode_registry
-from cmk.gui.wato.pages.not_implemented import ModeNotImplemented
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
+from cmk.gui.plugins.wato.utils.html_elements import (
+    initialize_wato_html_head,
+    wato_html_footer,
+    wato_html_head,
+)
+from cmk.gui.type_defs import PermissionName
+from cmk.gui.utils.flashed_messages import get_flashed_messages
+from cmk.gui.wato.pages.not_implemented import ModeNotImplemented
+from cmk.gui.watolib import init_wato_datastructures
+from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
-from cmk.gui.watolib.activate_changes import update_config_generation
-from cmk.gui.watolib import init_wato_datastructures
-from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

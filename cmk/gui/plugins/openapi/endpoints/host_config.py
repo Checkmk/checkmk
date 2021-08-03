@@ -38,14 +38,14 @@ A host_config object can have the following relations present in `links`:
  * `urn:org.restfulobjects:rels/delete` - The endpoint to delete this host.
 
 """
-from typing import Iterable
-
 import itertools
 import json
 import operator
+from typing import Iterable
 
+import cmk.gui.watolib.activate_changes as activate_changes
 from cmk.gui import watolib
-from cmk.gui.exceptions import MKUserError, MKAuthException
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
@@ -58,10 +58,8 @@ from cmk.gui.plugins.openapi.restful_objects import (
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.plugins.webapi import check_hostname
-from cmk.gui.watolib.utils import try_bake_agents_for_hosts
-
 from cmk.gui.watolib.host_rename import perform_rename_hosts
-import cmk.gui.watolib.activate_changes as activate_changes
+from cmk.gui.watolib.utils import try_bake_agents_for_hosts
 
 
 @Endpoint(constructors.collection_href('host_config'),

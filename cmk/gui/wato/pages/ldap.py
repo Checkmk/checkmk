@@ -5,76 +5,73 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """LDAP configuration and diagnose page"""
 
-from typing import Iterable, Optional, Type, List
-
 import re
+from typing import Iterable, List, Optional, Type
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.globals import config
-import cmk.gui.watolib as watolib
 import cmk.gui.userdb as userdb
-from cmk.gui.table import table_element
-from cmk.gui.plugins.userdb.ldap_connector import (
-    LDAPUserConnector,
-    LDAPAttributePluginGroupsToRoles,
-    ldap_filter_of_connection,
-    ldap_attr_of_connection,
-    ldap_attribute_plugins_elements,
-)
-
-from cmk.gui.plugins.userdb.utils import get_connection
-from cmk.gui.log import logger
-from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
-from cmk.gui.plugins.userdb.utils import load_connection_config, save_connection_config
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.sites import get_login_sites
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, request, transactions
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.page_menu import (
+    make_form_submit_link,
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
-    make_simple_link,
-    make_simple_form_page_menu,
-    make_form_submit_link,
 )
-
+from cmk.gui.plugins.userdb.ldap_connector import (
+    ldap_attr_of_connection,
+    ldap_attribute_plugins_elements,
+    ldap_filter_of_connection,
+    LDAPAttributePluginGroupsToRoles,
+    LDAPUserConnector,
+)
+from cmk.gui.plugins.userdb.utils import (
+    get_connection,
+    load_connection_config,
+    save_connection_config,
+)
 from cmk.gui.plugins.wato import (
-    WatoMode,
     ActionResult,
-    mode_registry,
     add_change,
+    IndividualOrStoredPassword,
     make_action_link,
     make_confirm_link,
+    mode_registry,
     mode_url,
     redirect,
-    IndividualOrStoredPassword,
+    WatoMode,
 )
-
-from cmk.gui.valuespec import (
-    FixedValue,
-    Dictionary,
-    Transform,
-    ListOfStrings,
-    LDAPDistinguishedName,
-    Tuple,
-    DropdownChoice,
-    Integer,
-    Float,
-    CascadingDropdown,
-    Age,
-    rule_option_elements,
-    CascadingDropdownChoice,
-    DictionaryEntry,
-    TextInput,
-)
-
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.sites import get_login_sites
+from cmk.gui.table import table_element
 from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.valuespec import (
+    Age,
+    CascadingDropdown,
+    CascadingDropdownChoice,
+    Dictionary,
+    DictionaryEntry,
+    DropdownChoice,
+    FixedValue,
+    Float,
+    Integer,
+    LDAPDistinguishedName,
+    ListOfStrings,
+    rule_option_elements,
+    TextInput,
+    Transform,
+    Tuple,
+)
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

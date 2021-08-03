@@ -7,10 +7,10 @@
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import (
+    Permission,
+    permission_registry,
     permission_section_registry,
     PermissionSection,
-    permission_registry,
-    Permission,
 )
 
 

@@ -5,17 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.paths
-from cmk.gui.globals import config
+
+from cmk.gui.globals import config, html, user
 from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, user
-from cmk.gui.utils.html import HTML
+from cmk.gui.plugins.sidebar import SidebarSnapin, simplelink, snapin_registry
 from cmk.gui.utils.escaping import escape_html
-from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
-    simplelink,
-)
+from cmk.gui.utils.html import HTML
 
 
 @snapin_registry.register

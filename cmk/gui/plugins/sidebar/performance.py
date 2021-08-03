@@ -5,13 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.sites as sites
-from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
-    snapin_site_choice,
-)
+from cmk.gui.i18n import _
+from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, snapin_site_choice
 
 
 @snapin_registry.register

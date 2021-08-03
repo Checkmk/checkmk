@@ -6,44 +6,39 @@
 """Modes for creating and editing hosts"""
 
 import abc
-from typing import Iterator, Optional, Type, overload, Tuple
+from typing import Iterator, Optional, overload, Tuple, Type
 
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
+import cmk.gui.watolib as watolib
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
 from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError, MKAuthException, MKGeneralException
-from cmk.gui.sites import is_wato_slave_site
-from cmk.gui.valuespec import (
-    ListOfStrings,
-    Hostname,
-    FixedValue,
-)
-from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    make_simple_link,
     make_form_submit_link,
     make_simple_form_page_menu,
+    make_simple_link,
     makeuri_contextless,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
 )
-
 from cmk.gui.plugins.wato.utils import (
-    mode_registry,
-    make_confirm_link,
-    configure_attributes,
     ConfigHostname,
+    configure_attributes,
+    make_confirm_link,
+    mode_registry,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
-from cmk.gui.watolib.hosts_and_folders import CREHost
-from cmk.gui.watolib.changes import make_object_audit_log_url
-from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.urls import makeactionuri
+from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings
+from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.hosts_and_folders import CREHost
 
 
 class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):

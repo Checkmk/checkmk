@@ -4,36 +4,34 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Type, Iterator
-import traceback
 import json
+import traceback
+from typing import Iterator, Optional, Type
 
 import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.globals import html, output_funnel, request
 from cmk.gui.gui_background_job import GUIBackgroundStatusSnapshot
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, output_funnel
 from cmk.gui.log import logger
-from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.pages import page_registry, AjaxPage, AjaxPageResult
 from cmk.gui.page_menu import (
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
+    PageMenuTopic,
 )
-
+from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
 from cmk.gui.plugins.wato import (
-    main_module_registry,
     ABCMainModule,
-    MainModuleTopicMaintenance,
-    WatoMode,
     ActionResult,
+    main_module_registry,
+    MainModuleTopicMaintenance,
     mode_registry,
-    redirect,
     mode_url,
+    redirect,
+    WatoMode,
 )
-
 from cmk.gui.utils.urls import makeuri_contextless
 
 

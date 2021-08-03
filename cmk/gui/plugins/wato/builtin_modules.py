@@ -10,27 +10,24 @@
 
 import time
 from typing import Iterable
+
 import cmk.utils.version as cmk_version
 
 from cmk.gui.breadcrumb import BreadcrumbItem
-from cmk.gui.i18n import _
 from cmk.gui.globals import request
-from cmk.gui.utils.urls import (
-    makeuri_contextless,
-    makeuri_contextless_rulespec_group,
-)
-
+from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    main_module_registry,
     ABCMainModule,
-    MainModuleTopicHosts,
-    MainModuleTopicServices,
-    MainModuleTopicUsers,
+    main_module_registry,
     MainModuleTopicAgents,
     MainModuleTopicEvents,
     MainModuleTopicGeneral,
+    MainModuleTopicHosts,
     MainModuleTopicMaintenance,
+    MainModuleTopicServices,
+    MainModuleTopicUsers,
 )
+from cmk.gui.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
 
 
 @main_module_registry.register

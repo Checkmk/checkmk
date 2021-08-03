@@ -9,30 +9,29 @@
 
 import abc
 import time
-from typing import Dict, Iterable, List, Optional, Tuple, Union, Type, Iterator
+from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Type, Union
 
 from livestatus import SiteId
-
-from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.valuespec import ValueSpec
 
 import cmk.utils.plugin_registry
 
 import cmk.gui.sites as sites
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import html, request, user_errors
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, user_errors, request
-from cmk.gui.view_utils import get_labels
+from cmk.gui.page_menu import PageMenuEntry
+from cmk.gui.sites import get_site_config
 from cmk.gui.type_defs import (
     Choices,
     ColumnName,
+    FilterHeader,
+    FilterHTTPVariables,
     Row,
     Rows,
     VisualContext,
-    FilterHTTPVariables,
-    FilterHeader,
 )
-from cmk.gui.page_menu import PageMenuEntry
-from cmk.gui.sites import get_site_config
+from cmk.gui.valuespec import ValueSpec
+from cmk.gui.view_utils import get_labels
 
 
 class VisualInfo(metaclass=abc.ABCMeta):

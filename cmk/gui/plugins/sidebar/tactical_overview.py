@@ -5,19 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
+from typing import Dict, List, Tuple
 
 import livestatus
 
-from cmk.gui.globals import config
+import cmk.gui.notifications as notifications
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
-import cmk.gui.notifications as notifications
+from cmk.gui.globals import config, html, request, user
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.globals import html, request, user
-from cmk.gui.valuespec import Checkbox, ListOf, CascadingDropdown, Dictionary, TextInput
-from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, snapin_registry, link
+from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, link, snapin_registry
 from cmk.gui.utils.urls import makeuri_contextless
-from typing import List, Dict, Tuple
+from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput
 
 ViewURLParams = namedtuple("ViewURLParams", ["total", "handled", "unhandled", "stale"])
 OverviewRow = namedtuple("OverviewRow", ["what", "title", "context", "stats", "views"])

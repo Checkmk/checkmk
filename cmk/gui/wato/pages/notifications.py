@@ -7,24 +7,47 @@
 
 import abc
 import time
-from typing import (List, NamedTuple, Tuple as _Tuple, Union, Iterator, Dict, Any, Optional, Type,
-                    overload)
+from typing import Any, Dict, Iterator, List, NamedTuple, Optional, overload
+from typing import Tuple as _Tuple
+from typing import Type, Union
 
 import cmk.utils.store as store
 
+import cmk.gui.forms as forms
+import cmk.gui.permissions as permissions
+import cmk.gui.userdb as userdb
 import cmk.gui.view_utils
 import cmk.gui.wato.user_profile
-import cmk.gui.userdb as userdb
-import cmk.gui.permissions as permissions
-from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
-from cmk.gui.sites import has_wato_slave_sites, site_is_local, wato_slave_sites
-from cmk.gui.htmllib import foldable_container
-from cmk.gui.table import table_element
-import cmk.gui.forms as forms
+from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (
+    make_display_options_dropdown,
+    make_simple_form_page_menu,
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
+)
+from cmk.gui.plugins.wato import (
+    ABCEventsMode,
+    add_change,
+    flash,
+    make_action_link,
+    make_confirm_link,
+    mode_registry,
+    notification_parameter_registry,
+)
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect, WatoMode
+from cmk.gui.sites import has_wato_slave_sites, site_is_local, wato_slave_sites
+from cmk.gui.table import table_element
+from cmk.gui.utils.urls import makeactionuri, makeuri
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -41,42 +64,18 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     RegExp,
+    rule_option_elements,
     TextInput,
     Transform,
     Tuple,
-    rule_option_elements,
 )
-
-from cmk.gui.plugins.wato import (
-    ABCEventsMode,
-    mode_registry,
-    make_confirm_link,
-    make_action_link,
-    add_change,
-    notification_parameter_registry,
-    flash,
-)
+from cmk.gui.wato.pages.users import ModeEditUser
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.notifications import (
-    save_notification_rules,
     load_notification_rules,
     load_user_notification_rules,
+    save_notification_rules,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
-from cmk.gui.wato.pages.users import ModeEditUser
-from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuEntry,
-    PageMenuSearch,
-    PageMenuTopic,
-    make_simple_link,
-    make_simple_form_page_menu,
-    make_display_options_dropdown,
-)
-from cmk.gui.utils.urls import makeuri, makeactionuri
 
 NotificationRule = Dict[str, Any]
 

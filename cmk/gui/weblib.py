@@ -6,12 +6,11 @@
 
 import re
 
-import cmk.gui.utils as utils
 import cmk.gui.pages
-from cmk.gui.i18n import _
-from cmk.gui.globals import response, request, user
-
+import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import request, response, user
+from cmk.gui.i18n import _
 
 
 @cmk.gui.pages.register("tree_openclose")

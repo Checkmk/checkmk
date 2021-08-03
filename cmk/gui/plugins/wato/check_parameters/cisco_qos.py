@@ -5,6 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersNetworking,
+)
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
@@ -13,12 +18,6 @@ from cmk.gui.valuespec import (
     Percentage,
     TextInput,
     Tuple,
-)
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersNetworking,
 )
 
 

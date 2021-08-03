@@ -5,29 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import errno
+import io
 import logging
 import multiprocessing
 import os
-from pathlib import Path
 import pprint
 import shutil
 import signal
 import sys
 import time
 import traceback
+from pathlib import Path
 from types import FrameType
-import io
-from typing import Tuple, Callable, Type, List, Optional, Dict, Any, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type
 
 import psutil  # type: ignore[import]
 from six import ensure_binary, ensure_str
 
+import cmk.utils.daemon as daemon
 import cmk.utils.log
 import cmk.utils.render as render
-from cmk.utils.log import VERBOSE
-import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
+from cmk.utils.log import VERBOSE
 
 import cmk.gui.log
 from cmk.gui.i18n import _

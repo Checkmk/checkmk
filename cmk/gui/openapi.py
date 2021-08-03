@@ -15,6 +15,10 @@ from openapi_spec_validator import validate_spec  # type: ignore[import]
 from cmk.utils import version
 from cmk.utils.site import omd_site
 
+# NOTE
+# This import needs to be here, because the decorators populate the
+# ENDPOINT_REGISTRY. If this didn't happen, the SPEC would be incomplete.
+import cmk.gui.plugins.openapi  # pylint: disable=unused-import
 from cmk.gui.plugins.openapi.restful_objects import SPEC
 from cmk.gui.plugins.openapi.restful_objects.decorators import Endpoint
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
@@ -23,11 +27,6 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
 # TODO
 #   Eventually move all of SPEC stuff in here, so we have nothing statically defined.
 #   This removes variation from the code.
-
-# NOTE
-# This import needs to be here, because the decorators populate the
-# ENDPOINT_REGISTRY. If this didn't happen, the SPEC would be incomplete.
-import cmk.gui.plugins.openapi  # pylint: disable=unused-import
 
 if not version.is_raw_edition():
     import cmk.gui.cee.plugins.openapi  # noqa: F401 # pylint: disable=unused-import,no-name-in-module

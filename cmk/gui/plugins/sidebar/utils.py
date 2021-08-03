@@ -6,32 +6,31 @@
 """Module to hold shared code for module internals and the plugins"""
 
 import abc
-import traceback
 import json
-from typing import Optional, Any, Dict, List, Tuple, Type, Union
+import traceback
+from typing import Any, Dict, List, Optional, Tuple, Type, Union
 
 import cmk.utils.plugin_registry
 from cmk.utils.site import url_prefix
 
-from cmk.gui.sites import SiteId, filter_available_site_choices
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
-from cmk.gui.i18n import _
 from cmk.gui.globals import html, user
-from cmk.gui.utils.html import HTML
-from cmk.gui.type_defs import Choices, Icon
-from cmk.gui.type_defs import RoleName, PermissionName, Visual
-from cmk.gui.visuals import visual_title
 from cmk.gui.htmllib import foldable_container
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
-    declare_permission,
-)
+from cmk.gui.i18n import _
+from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
+from cmk.gui.sites import filter_available_site_choices, SiteId
 from cmk.gui.type_defs import (
-    TopicMenuTopic,
+    Choices,
+    Icon,
+    PermissionName,
+    RoleName,
     TopicMenuItem,
+    TopicMenuTopic,
+    Visual,
 )
+from cmk.gui.utils.html import HTML
+from cmk.gui.visuals import visual_title
 
 # TODO: Actually this is cmk.gui.sidebar.CustomSnapins, but we run into a hell
 # of cycles and untyped dependencies. So for now this is just a reminder.

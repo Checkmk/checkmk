@@ -7,14 +7,10 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
-    RulespecGroupCheckParametersNetworking,
     rulespec_registry,
+    RulespecGroupCheckParametersNetworking,
 )
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    Tuple,
-)
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_fortiauthenticator():

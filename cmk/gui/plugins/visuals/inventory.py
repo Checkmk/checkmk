@@ -8,33 +8,23 @@ import re
 import time
 from typing import List, Optional, Tuple, Union
 
-import cmk.gui.utils as utils
-import cmk.gui.inventory as inventory
 import cmk.utils.defines as defines
-from cmk.gui.valuespec import (
-    Age,
-    DualListChoice,
-    ValueSpec,
-)
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.exceptions import MKUserError
 
+import cmk.gui.inventory as inventory
+import cmk.gui.utils as utils
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html
+from cmk.gui.i18n import _
 from cmk.gui.plugins.visuals import (
-    filter_registry,
     Filter,
+    filter_registry,
     FilterTristate,
-    VisualInfo,
     visual_info_registry,
+    VisualInfo,
 )
 from cmk.gui.plugins.visuals.utils import display_filter_radiobuttons
-
-from cmk.gui.type_defs import (
-    Rows,
-    VisualContext,
-    FilterHTTPVariables,
-    FilterHeader,
-)
+from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Rows, VisualContext
+from cmk.gui.valuespec import Age, DualListChoice, ValueSpec
 
 
 class FilterInvtableText(Filter):

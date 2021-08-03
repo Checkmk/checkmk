@@ -6,54 +6,46 @@
 
 import abc
 import copy
-from typing import Type, List, Any, Dict, Union
+from typing import Any, Dict, List, Type, Union
 
-from cmk.gui.globals import user
-import cmk.gui.watolib as watolib
-from cmk.gui.i18n import _
-
-from cmk.gui.valuespec import (
-    Tuple,
-    Transform,
-    Percentage,
-    Integer,
-    Alternative,
-    FixedValue,
-    TextInput,
-    Dictionary,
-    MonitoringState,
-    CascadingDropdown,
-    ListOf,
-    ListOfStrings,
-    DropdownChoice,
-)
-
-from cmk.utils.defines import short_service_state_name
-from cmk.gui.plugins.wato.utils import DictHostTagCondition, LabelCondition
-
-import cmk.utils.plugin_registry as plugin_registry
 import cmk.utils.bi.bi_actions as bi_actions
-from cmk.utils.bi.bi_search import (
-    BIEmptySearch,
-    BIServiceSearch,
-    BIHostSearch,
-    BIFixedArgumentsSearch,
-)
+import cmk.utils.plugin_registry as plugin_registry
 from cmk.utils.bi.bi_aggregation_functions import (
     BIAggregationFunctionBest,
-    BIAggregationFunctionWorst,
     BIAggregationFunctionCountOK,
+    BIAggregationFunctionWorst,
 )
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.bi import get_cached_bi_packs
-
-from cmk.utils.bi.bi_lib import (
-    ABCBISearch,
-    ABCBIAction,
-    ABCBIAggregationFunction,
+from cmk.utils.bi.bi_lib import ABCBIAction, ABCBIAggregationFunction, ABCBISearch
+from cmk.utils.bi.bi_search import (
+    BIEmptySearch,
+    BIFixedArgumentsSearch,
+    BIHostSearch,
+    BIServiceSearch,
 )
+from cmk.utils.defines import short_service_state_name
 
 import cmk.gui.userdb as userdb
+import cmk.gui.watolib as watolib
+from cmk.gui.bi import get_cached_bi_packs
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import user
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.utils import DictHostTagCondition, LabelCondition
+from cmk.gui.valuespec import (
+    Alternative,
+    CascadingDropdown,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    Integer,
+    ListOf,
+    ListOfStrings,
+    MonitoringState,
+    Percentage,
+    TextInput,
+    Transform,
+    Tuple,
+)
 
 #   .--Generic converter---------------------------------------------------.
 #   |                   ____                      _                        |

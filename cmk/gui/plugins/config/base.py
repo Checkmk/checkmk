@@ -6,8 +6,9 @@
 """Default configuration settings for the Check_MK GUI"""
 
 from dataclasses import dataclass, field
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
+
 from livestatus import SiteConfigurations
-from typing import Any, Dict, List, Tuple, Union, Literal, Optional
 
 CustomLinkSpec = Tuple[str, bool, List[Tuple[str, str, Optional[str], str]]]
 

@@ -7,27 +7,18 @@
 
 Cares about the main navigation of our GUI. This is a) the small sidebar and b) the mega menu
 """
-from typing import NamedTuple, List, Optional, Union
+from typing import List, NamedTuple, Optional, Union
 
-from cmk.gui.globals import config
 import cmk.gui.notify as notify
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import html, request, response, output_funnel, user
+from cmk.gui.globals import config, html, output_funnel, request, response, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.main_menu import (
-    mega_menu_registry,
-    any_show_more_items,
-)
-from cmk.gui.pages import page_registry, AjaxPage, register
-from cmk.gui.type_defs import (
-    Icon,
-    MegaMenu,
-    TopicMenuTopic,
-    TopicMenuItem,
-)
+from cmk.gui.main_menu import any_show_more_items, mega_menu_registry
+from cmk.gui.pages import AjaxPage, page_registry, register
+from cmk.gui.type_defs import Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils.popups import MethodInline
-from cmk.gui.werks import num_unacknowledged_incompatible_werks, may_acknowledge
+from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
 
 MainMenuItem = NamedTuple("MainMenuItem", [
     ("name", str),

@@ -11,7 +11,8 @@ simplicity. In case we have such a generic thing, it will be easy to switch to i
 """
 
 from typing import List, Union
-from cmk.gui.globals import session, _request_ctx_stack
+
+from cmk.gui.globals import _request_ctx_stack, session
 from cmk.gui.utils.escaping import escape_text
 from cmk.gui.utils.html import HTML
 

@@ -7,16 +7,15 @@
 from contextlib import nullcontext
 from typing import Any, Dict, List
 
-from cmk.gui.globals import config
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, response, user
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib import HTML, foldable_container
+from cmk.gui.globals import config, html, request, response, user
+from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.check_mk_configuration import transform_virtual_host_trees
 from cmk.gui.utils.urls import makeuri_contextless
 
-from cmk.gui.plugins.wato.check_mk_configuration import transform_virtual_host_trees
 from . import SidebarSnapin, snapin_registry
 
 

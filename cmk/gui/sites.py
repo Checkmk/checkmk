@@ -5,31 +5,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
+
 import os
 from contextlib import contextmanager
-from typing import (Any, cast, Dict, Iterator, List, NewType, Optional, Tuple, Union, NamedTuple,
-                    TYPE_CHECKING)
-
-from livestatus import (
-    MultiSiteConnection,
-    MKLivestatusQueryError,
-    SiteId,
-    SiteConfiguration,
-    SiteConfigurations,
-    lqencode,
-    LivestatusOutputFormat,
+from typing import (
+    Any,
+    cast,
+    Dict,
+    Iterator,
+    List,
+    NamedTuple,
+    NewType,
+    Optional,
+    Tuple,
+    TYPE_CHECKING,
+    Union,
 )
 
-from cmk.utils.version import is_managed_edition
+from livestatus import (
+    LivestatusOutputFormat,
+    lqencode,
+    MKLivestatusQueryError,
+    MultiSiteConnection,
+    SiteConfiguration,
+    SiteConfigurations,
+    SiteId,
+)
 
 import cmk.utils.paths
 from cmk.utils.paths import livestatus_unix_socket
-from cmk.utils.type_defs import UserId
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import UserId
+from cmk.utils.version import is_managed_edition
 
-from cmk.gui.globals import config
+from cmk.gui.globals import config, g, request
+from cmk.gui.globals import user as global_user
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, request, user as global_user
 from cmk.gui.log import logger
 
 if TYPE_CHECKING:

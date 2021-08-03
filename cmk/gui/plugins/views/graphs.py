@@ -4,33 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import copy
+import time
 
-from cmk.gui.globals import config
+from cmk.gui.globals import config, request, response
 from cmk.gui.i18n import _
-from cmk.gui.globals import request, response
-from cmk.gui.valuespec import (
-    DropdownChoice,
-    Transform,
-    Dictionary,
-)
-
-from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.metrics import html_render
-
+from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.views import (
-    painter_registry,
+    get_graph_timerange_from_painter_options,
+    multisite_builtin_views,
     Painter,
     painter_option_registry,
+    painter_registry,
     PainterOption,
     PainterOptions,
-    multisite_builtin_views,
-    get_graph_timerange_from_painter_options,
 )
-
-from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Transform
 
 multisite_builtin_views.update({
     'service_graphs': {

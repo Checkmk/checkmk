@@ -6,71 +6,64 @@
 """Manage the variable config.wato_host_tags -> The set of tags to be assigned
 to hosts and that is the basis of the rules."""
 
-from typing import List, Set, Union, Optional, Type
 import abc
+from typing import List, Optional, Set, Type, Union
 
 import cmk.utils.tags
 
-from cmk.gui.config import load_config
-import cmk.gui.watolib as watolib
-from cmk.gui.table import table_element, Table
 import cmk.gui.forms as forms
-from cmk.gui.exceptions import (MKUserError, MKGeneralException, FinalizeRequest)
-from cmk.gui.i18n import _, _u
-from cmk.gui.globals import html, transactions, request, output_funnel
-from cmk.gui.htmllib import HTML
-from cmk.gui.valuespec import (
-    ListChoice,
-    Foldable,
-    Tuple,
-    ListOf,
-    Dictionary,
-    TextInput,
-    OptionalDropdownChoice,
-    FixedValue,
-    ID,
-    Transform,
-)
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import load_config
+from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
+from cmk.gui.globals import html, output_funnel, request, transactions
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _, _u
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
+    PageMenuTopic,
 )
-from cmk.gui.watolib.tags import TagConfigFile
-from cmk.gui.watolib.rulesets import Ruleset
-from cmk.gui.watolib.hosts_and_folders import CREHost, CREFolder
-from cmk.gui.watolib.tags import (
-    TagCleanupMode,
-    ABCOperation,
-    OperationReplaceGroupedTags,
-    OperationRemoveAuxTag,
-    OperationRemoveTagGroup,
-    identify_modified_tags,
-    change_host_tags_in_folders,
-)
-
-from cmk.gui.plugins.wato.utils.main_menu import (
-    MainMenu,
-    MenuItem,
-)
-
-from cmk.gui.plugins.wato.utils.html_elements import (
-    wato_html_head,)
-
 from cmk.gui.plugins.wato import (
-    WatoMode,
     ActionResult,
-    mode_registry,
+    add_change,
+    flash,
     make_action_link,
     make_confirm_link,
-    add_change,
-    redirect,
+    mode_registry,
     mode_url,
-    flash,
+    redirect,
+    WatoMode,
+)
+from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
+from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
+from cmk.gui.table import Table, table_element
+from cmk.gui.valuespec import (
+    Dictionary,
+    FixedValue,
+    Foldable,
+    ID,
+    ListChoice,
+    ListOf,
+    OptionalDropdownChoice,
+    TextInput,
+    Transform,
+    Tuple,
+)
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
+from cmk.gui.watolib.rulesets import Ruleset
+from cmk.gui.watolib.tags import (
+    ABCOperation,
+    change_host_tags_in_folders,
+    identify_modified_tags,
+    OperationRemoveAuxTag,
+    OperationRemoveTagGroup,
+    OperationReplaceGroupedTags,
+    TagCleanupMode,
+    TagConfigFile,
 )
 
 

@@ -4,21 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
 import json
-from typing import TYPE_CHECKING, Optional, Tuple, Union, List, Any, Dict
+import re
+from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 
 from livestatus import SiteId
 
-from cmk.utils.type_defs import Labels, LabelSources, TagID, TaggroupID, TaggroupIDToTagID
-from cmk.gui.type_defs import HTTPVariables
+from cmk.utils.type_defs import Labels, LabelSources, TaggroupID, TaggroupIDToTagID, TagID
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, theme
+from cmk.gui.i18n import _
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.utils.logged_in import LoggedInUser
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
 
 CSSClass = Optional[str]
 # Dict: The aggr_treestate painters are returning a dictionary data structure (see

@@ -5,26 +5,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
-import re
-import pprint
 import base64
-from typing import Any, Union, List
+import pprint
+import re
+from typing import Any, List, Union
 
 from six import ensure_binary, ensure_str
 
-from cmk.gui.sites import SiteStatus
-from cmk.utils.werks import parse_check_mk_version
-
-from cmk.utils.type_defs import HostName
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
+import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import HostName
+from cmk.utils.werks import parse_check_mk_version
 
-from cmk.gui.globals import user
-from cmk.gui.globals import config
 from cmk.gui.background_job import BackgroundJobAlreadyRunning
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import config, user
+from cmk.gui.i18n import _
+from cmk.gui.sites import SiteStatus
 from cmk.gui.utils.escaping import escape_html_permissive
 
 # TODO: Clean up all call sites in the GUI and only use them in WATO config file loading code

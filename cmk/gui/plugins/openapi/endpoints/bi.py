@@ -17,21 +17,17 @@ You can find an introduction to BI in the
 import http
 import http.client
 
-from cmk.gui.http import Response
-from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    response_schemas,
-)
-from cmk.gui.plugins.openapi.utils import ProblemException
-
-from cmk.utils.bi.bi_lib import ReqString, ReqBoolean, ReqList
+from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
+from cmk.utils.bi.bi_lib import ReqBoolean, ReqList, ReqString
 from cmk.utils.bi.bi_packs import BIAggregationPack
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
-from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
-from cmk.gui.bi import get_cached_bi_packs
 from cmk.utils.bi.bi_schema import Schema
+
+from cmk.gui.bi import get_cached_bi_packs
+from cmk.gui.http import Response
+from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
+from cmk.gui.plugins.openapi.utils import ProblemException
 
 BI_RULE_ID = {
     'rule_id': fields.String(

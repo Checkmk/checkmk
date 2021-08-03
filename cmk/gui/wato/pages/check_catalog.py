@@ -11,7 +11,7 @@ the global settings.
 """
 
 import re
-from typing import Set, List, Dict, Any, Tuple, Optional, Type, overload
+from typing import Any, Dict, List, Optional, overload, Set, Tuple, Type
 
 from six import ensure_str
 
@@ -20,39 +20,26 @@ from cmk.utils.man_pages import ManPageCatalogPath
 from cmk.utils.type_defs import CheckPluginNameStr
 
 import cmk.gui.watolib as watolib
-from cmk.gui.type_defs import PermissionName
-from cmk.gui.table import table_element
-from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
-from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html, request
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuSearch,
-    make_simple_link,
+    PageMenuTopic,
 )
-
-from cmk.gui.valuespec import (
-    ID,)
-
-from cmk.gui.plugins.wato.utils.main_menu import (
-    MainMenu,
-    MenuItem,
-)
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
-    search_form,
-    get_search_expression,
-)
-
+from cmk.gui.plugins.wato import get_search_expression, mode_registry, search_form, WatoMode
+from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
+from cmk.gui.table import table_element
+from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.valuespec import ID
+from cmk.gui.watolib.rulespecs import rulespec_registry
 
 
 @mode_registry.register

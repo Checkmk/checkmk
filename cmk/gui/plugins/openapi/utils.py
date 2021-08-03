@@ -6,8 +6,19 @@
 import collections
 import functools
 import json
-from typing import Literal, Optional, Dict, Any, cast, List, NamedTuple, Type, TypeVar, Callable, \
-    TypedDict
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    List,
+    Literal,
+    NamedTuple,
+    Optional,
+    Type,
+    TypedDict,
+    TypeVar,
+)
 from urllib.parse import quote_plus
 
 import docstring_parser  # type: ignore[import]
@@ -16,14 +27,16 @@ from marshmallow.decorators import post_load
 from marshmallow.exceptions import ValidationError
 from werkzeug.exceptions import HTTPException
 
+from livestatus import SiteId
+
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.tags import BuiltinTagConfig, TagGroup
+
 from cmk.gui import watolib
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi import fields
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.gui.watolib.tags import load_tag_config
 from cmk.gui.sites import sitenames
-from cmk.utils.tags import BuiltinTagConfig, TagGroup
-from livestatus import SiteId
+from cmk.gui.watolib.tags import load_tag_config
 
 
 def problem(

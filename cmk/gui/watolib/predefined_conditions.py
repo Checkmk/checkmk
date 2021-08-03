@@ -6,8 +6,8 @@
 
 from pathlib import Path
 
-from cmk.gui.globals import user
 import cmk.gui.userdb as userdb
+from cmk.gui.globals import user
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 from cmk.gui.watolib.utils import wato_root_dir
 

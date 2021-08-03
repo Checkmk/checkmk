@@ -9,22 +9,24 @@
 # left and top, then a larger top is nearer to the top of the
 # page.
 
-import os
 import io
+import os
 import subprocess
 import tempfile
 from textwrap import wrap
-from typing import Any, List, Union, Tuple, Optional
+from typing import Any, List, Optional, Tuple, Union
 
-from six import ensure_str
 from PIL import PngImagePlugin  # type: ignore[import]
 from reportlab.lib.units import mm  # type: ignore[import]
 from reportlab.lib.utils import ImageReader  # type: ignore[import]
+
 # Import software from reportlab (thanks to them!)
 from reportlab.pdfgen import canvas  # type: ignore[import]
+from six import ensure_str
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.globals import response
 from cmk.gui.i18n import _
@@ -1202,7 +1204,9 @@ class TableRenderer:
         # This import hack is needed because this module is part of the raw edition while
         # the PainterPrinterTimeGraph class is not (also we don't have a base class
         # available in CRE to use instead).
-        from cmk.gui.cee.plugins.reporting.pnp_graphs import PainterPrinterTimeGraph  # pylint: disable=no-name-in-module
+        from cmk.gui.cee.plugins.reporting.pnp_graphs import (
+            PainterPrinterTimeGraph,  # pylint: disable=no-name-in-module
+        )
 
         is_single_dataset = (len(row) == 2 and isinstance(row[0], TitleCell) and
                              isinstance(row[1], PainterPrinterTimeGraph))

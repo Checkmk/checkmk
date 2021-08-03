@@ -9,54 +9,42 @@ by pasting the contents of a CSV file into a textbox."""
 
 import csv
 import time
-from typing import Dict, Type, List, Optional, Any
-from pathlib import Path
-
 from difflib import SequenceMatcher
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Type
 
 import cmk.utils.store as store
 
 import cmk.gui.pages
-import cmk.gui.weblib as weblib
-from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
-
-from cmk.gui.table import table_element
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, request, user
-from cmk.gui.type_defs import PermissionName
+import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_form_submit_link,
+    make_simple_form_page_menu,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_form_page_menu,
-    make_form_submit_link,
+    PageMenuTopic,
+)
+from cmk.gui.plugins.wato import ActionResult, flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.table import table_element
+from cmk.gui.type_defs import PermissionName
+from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    FixedValue,
+    Hostname,
+    TextInput,
+    UploadOrPasteTextFile,
 )
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
-from cmk.gui.utils.escaping import escape_html_permissive
-
-from cmk.gui.valuespec import (
-    Hostname,
-    Checkbox,
-    Dictionary,
-    FixedValue,
-    TextInput,
-    UploadOrPasteTextFile,
-)
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ActionResult,
-    mode_registry,
-    redirect,
-    mode_url,
-    flash,
-)
 
 # Was not able to get determine the type of csv._reader / _csv.reader
 CSVReader = Any

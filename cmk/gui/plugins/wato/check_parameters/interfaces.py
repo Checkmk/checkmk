@@ -4,18 +4,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Tuple as _Tuple, Union, Optional as _Optional
 import copy
+from typing import Any, Dict, List
+from typing import Optional as _Optional
+from typing import Tuple as _Tuple
+from typing import Union
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    BinaryHostRulespec,
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupCheckParametersNetworking,
+)
+from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
+    defines,
     Dictionary,
     DictionaryEntry,
     DropdownChoice,
     DualListChoice,
     FixedValue,
+    Float,
     Integer,
     Labels,
     ListChoice,
@@ -29,18 +44,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
-    defines,
-    Float,
 )
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersDiscovery,
-    RulespecGroupCheckParametersNetworking,
-    rulespec_registry,
-    HostRulespec,
-    BinaryHostRulespec,
-    CheckParameterRulespecWithItem,
-)
-from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 
 
 def transform_if_groups_forth(params):

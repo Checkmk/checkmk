@@ -7,26 +7,27 @@ import urllib.parse
 
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib
-from cmk.gui.plugins.openapi import fields
-from cmk.gui.livestatus_utils.commands.downtimes import (
-    schedule_host_downtime,
-    schedule_service_downtime,
-    schedule_servicegroup_service_downtime,
-    schedule_hostgroup_host_downtime,
-)
-from cmk.gui.livestatus_utils.commands.acknowledgments import (
-    acknowledge_host_problem,
-    acknowledge_service_problem,
-    acknowledge_hostgroup_problem,
-)
-from cmk.gui.plugins.openapi.utils import param_description, BaseSchema
-from cmk.gui.userdb import load_users
-from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
-from cmk.gui.watolib.groups import is_alias_used
-from cmk.gui.watolib.tags import load_aux_tags, tag_group_exists
 from cmk.utils.defines import weekday_ids
 from cmk.utils.livestatus_helpers import tables
+
+from cmk.gui import watolib
+from cmk.gui.livestatus_utils.commands.acknowledgments import (
+    acknowledge_host_problem,
+    acknowledge_hostgroup_problem,
+    acknowledge_service_problem,
+)
+from cmk.gui.livestatus_utils.commands.downtimes import (
+    schedule_host_downtime,
+    schedule_hostgroup_host_downtime,
+    schedule_service_downtime,
+    schedule_servicegroup_service_downtime,
+)
+from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.utils import BaseSchema, param_description
+from cmk.gui.userdb import load_users
+from cmk.gui.watolib.groups import is_alias_used
+from cmk.gui.watolib.tags import load_aux_tags, tag_group_exists
+from cmk.gui.watolib.timeperiods import verify_timeperiod_name_exists
 
 EXISTING_HOST_NAME = fields.HostField(
     description="The hostname or IP address itself.",

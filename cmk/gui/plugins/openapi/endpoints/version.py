@@ -14,8 +14,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
 from cmk.gui.globals import request
-
-from cmk.gui.plugins.openapi.restful_objects import Endpoint, response_schemas, constructors
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
 
 
 @Endpoint('/version', 'cmk/show', method='get', response_schema=response_schemas.InstalledVersions)

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.store as store
+
 import cmk.gui.gui_background_job
 
 

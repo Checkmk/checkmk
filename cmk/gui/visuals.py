@@ -5,11 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
-import os
+
 import copy
+import json
+import os
 import sys
 import traceback
-import json
 from itertools import chain, starmap
 from typing import (
     Any,
@@ -30,23 +31,41 @@ from typing import (
 
 from livestatus import LivestatusTestingError
 
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
-import cmk.utils.version as cmk_version
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
+import cmk.gui.forms as forms
+import cmk.gui.i18n
 import cmk.gui.pages
+import cmk.gui.pagetypes as pagetypes
+import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
+from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import config, g, html, output_funnel, request, transactions, user
+from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
-from cmk.gui.exceptions import (
-    HTTPRedirect,
-    MKGeneralException,
-    MKAuthException,
-    MKUserError,
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (
+    make_javascript_link,
+    make_simple_form_page_menu,
+    make_simple_link,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuLink,
+    PageMenuTopic,
 )
-from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
+from cmk.gui.permissions import declare_permission, permission_registry
+
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    Filter, filter_registry, FilterTime, FilterTristate, get_livestatus_filter_headers,
+    get_only_sites_from_context, visual_info_registry, visual_type_registry,
+)
+from cmk.gui.table import table_element
 from cmk.gui.type_defs import (
     FilterHTTPVariables,
     FilterName,
@@ -54,69 +73,40 @@ from cmk.gui.type_defs import (
     InfoName,
     SingleInfos,
     Visual,
-    VisualName,
     VisualContext,
+    VisualName,
     VisualTypeName,
 )
-from cmk.gui.valuespec import (
-    CascadingDropdown,
-    Dictionary,
-    DualListChoice,
-    ValueSpec,
-    ListOfMultiple,
-    ABCPageListOfMultipleGetChoice,
-    FixedValue,
-    IconSelector,
-    Checkbox,
-    TextInput,
-    TextAreaUnicode,
-    DropdownChoice,
-    Integer,
-    ListOfMultipleChoiceGroup,
-    GroupedListOfMultipleChoices,
-    Transform,
-)
-
-from cmk.gui.globals import config
-import cmk.gui.forms as forms
-from cmk.gui.table import table_element
-import cmk.gui.userdb as userdb
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.i18n
-from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, request, transactions, g, output_funnel, user
-from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
-from cmk.gui.page_menu import (
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    PageMenuLink,
-    make_javascript_link,
-    make_simple_link,
-    make_simple_form_page_menu,
-)
-from cmk.gui.main_menu import mega_menu_registry
-
-from cmk.gui.plugins.visuals.utils import (
-    visual_info_registry,
-    visual_type_registry,
-    filter_registry,
-    get_only_sites_from_context,
-    get_livestatus_filter_headers,
-)
-
 from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import (makeuri, makeuri_contextless, make_confirm_link, urlencode,
-                                makeactionuri)
-from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.logged_in import save_user_file
-
-# Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
-    Filter, FilterTime, FilterTristate,
+from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.urls import (
+    make_confirm_link,
+    makeactionuri,
+    makeuri,
+    makeuri_contextless,
+    urlencode,
 )
-from cmk.gui.permissions import permission_registry
+from cmk.gui.valuespec import (
+    ABCPageListOfMultipleGetChoice,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    DualListChoice,
+    FixedValue,
+    GroupedListOfMultipleChoices,
+    IconSelector,
+    Integer,
+    ListOfMultiple,
+    ListOfMultipleChoiceGroup,
+    TextAreaUnicode,
+    TextInput,
+    Transform,
+    ValueSpec,
+)
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.visuals  # pylint: disable=no-name-in-module

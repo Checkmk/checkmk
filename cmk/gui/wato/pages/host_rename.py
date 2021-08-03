@@ -10,51 +10,42 @@ from typing import Optional, Type
 
 from cmk.utils.regex import regex
 
-import cmk.gui.watolib as watolib
-import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
+import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import (MKUserError, MKGeneralException, MKAuthException, FinalizeRequest)
-from cmk.gui.i18n import _, ungettext
-from cmk.gui.globals import html, request, user
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import html, request, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
+    PageMenuTopic,
 )
-from cmk.gui.watolib.hosts_and_folders import validate_host_uniqueness
+from cmk.gui.plugins.wato import ActionResult, flash, mode_registry, redirect, WatoMode
+from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
+from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.utils.urls import makeuri
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    Hostname,
+    ListOf,
+    RegExp,
+    TextInput,
+    Tuple,
+)
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
-from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.watolib.host_rename import perform_rename_hosts
-
-from cmk.gui.valuespec import (
-    Hostname,
-    Tuple,
-    TextInput,
-    DropdownChoice,
-    RegExp,
-    ListOf,
-    Checkbox,
-    CascadingDropdown,
-    Dictionary,
-)
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ActionResult,
-    mode_registry,
-    redirect,
-    flash,
-)
-
-from cmk.gui.utils.urls import makeuri
-from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.watolib.hosts_and_folders import validate_host_uniqueness
 
 
 @gui_background_job.job_registry.register

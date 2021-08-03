@@ -4,39 +4,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import user
-from cmk.gui.type_defs import UserId
-import cmk.gui.userdb as userdb
-from cmk.gui.plugins.userdb.utils import add_internal_attributes
-from cmk.gui.globals import config
 import cmk.gui.mkeventd
-from cmk.gui.i18n import _
+import cmk.gui.userdb as userdb
+import cmk.gui.watolib.global_settings as global_settings
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, user
+from cmk.gui.i18n import _
+from cmk.gui.plugins.userdb.utils import add_internal_attributes
+from cmk.gui.type_defs import UserId
 from cmk.gui.valuespec import (
-    CascadingDropdown,
-    Foldable,
-    Dictionary,
-    ListOf,
-    DropdownChoice,
-    ListOfStrings,
-    TextInput,
-    UserID,
-    RegExp,
-    ListChoice,
-    Tuple,
-    Integer,
-    Checkbox,
     Age,
-    FixedValue,
     Alternative,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
     EmailAddress,
+    FixedValue,
+    Foldable,
+    Integer,
+    ListChoice,
+    ListOf,
+    ListOfStrings,
+    RegExp,
+    TextInput,
+    Tuple,
+    UserID,
 )
 from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text, ObjectRef, ObjectRefType
-from cmk.gui.watolib.user_scripts import (
-    user_script_title,
-    user_script_choices,
-)
-import cmk.gui.watolib.global_settings as global_settings
+from cmk.gui.watolib.user_scripts import user_script_choices, user_script_title
 
 
 def delete_users(users_to_delete):

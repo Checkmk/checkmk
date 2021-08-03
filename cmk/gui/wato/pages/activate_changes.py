@@ -7,47 +7,44 @@
 remote sites in distributed WATO."""
 
 import ast
-import tarfile
-import os
 import json
-from typing import Dict, NamedTuple, List, Optional, Iterator, Tuple, Union
+import os
+import tarfile
+from typing import Dict, Iterator, List, NamedTuple, Optional, Tuple, Union
 
 from six import ensure_str
 
-from cmk.gui.globals import config
-import cmk.gui.watolib as watolib
-import cmk.gui.forms as forms
-import cmk.gui.weblib as weblib
-from cmk.gui.table import table_element, init_rowselect
 import cmk.utils.render as render
 
-from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult
-from cmk.gui.watolib.changes import ObjectRef, ObjectRefType
-import cmk.gui.watolib.snapshots
-import cmk.gui.watolib.changes
+import cmk.gui.forms as forms
+import cmk.gui.watolib as watolib
 import cmk.gui.watolib.activate_changes
-from cmk.gui.watolib.search import build_index_background
-
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, request, display_options, transactions, user
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError, FinalizeRequest
-from cmk.gui.valuespec import Checkbox, Dictionary, TextAreaUnicode
-from cmk.gui.valuespec import DictionaryEntry
+import cmk.gui.watolib.changes
+import cmk.gui.watolib.snapshots
+import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import FinalizeRequest, MKUserError
+from cmk.gui.globals import config, display_options, html, request, transactions, user
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_checkbox_selection_topic,
+    make_javascript_link,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_checkbox_selection_topic,
-    make_simple_link,
-    make_javascript_link,
+    PageMenuTopic,
 )
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, WatoMode
 from cmk.gui.sites import activation_sites
-from cmk.gui.utils.urls import makeuri_contextless, makeactionuri
+from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
+from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUnicode
+from cmk.gui.watolib.changes import ObjectRef, ObjectRefType
+from cmk.gui.watolib.search import build_index_background
 
 
 @mode_registry.register

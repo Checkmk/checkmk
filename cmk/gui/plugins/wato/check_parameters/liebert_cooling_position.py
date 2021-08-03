@@ -7,8 +7,8 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
-    RulespecGroupCheckParametersEnvironment,
     rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
 )
 from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 

@@ -4,21 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Tuple, Any
+from typing import Any, Dict, Tuple
+
 import cmk.gui.bi as bi
-from cmk.gui.i18n import _
 from cmk.gui.globals import html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.utils.urls import urlencode
-
-from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
-    bulletlink,
-)
-
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.i18n import _
+from cmk.gui.plugins.sidebar import bulletlink, SidebarSnapin, snapin_registry
+from cmk.gui.utils.urls import makeuri_contextless, urlencode
 
 
 @snapin_registry.register

@@ -4,39 +4,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import io
+import os
 
 from PIL import Image, PngImagePlugin  # type: ignore[import]
 
 import cmk.utils.paths
 import cmk.utils.store as store
 
-from cmk.gui.globals import config
-from cmk.gui.table import table_element
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, theme, request
-from cmk.gui.valuespec import (
-    IconSelector,
-    ImageUpload,
-    DropdownChoice,
-    Dictionary,
-)
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    make_simple_form_page_menu,
-)
-
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, request, theme, transactions
+from cmk.gui.i18n import _
+from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato import (
-    WatoMode,
     ActionResult,
-    mode_registry,
     make_action_link,
     make_confirm_link,
+    mode_registry,
     redirect,
+    WatoMode,
 )
+from cmk.gui.table import table_element
+from cmk.gui.valuespec import Dictionary, DropdownChoice, IconSelector, ImageUpload
 
 
 @mode_registry.register

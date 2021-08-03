@@ -24,8 +24,6 @@ from cmk.gui.metrics import (
     metric_info,
     translated_metrics_from_row,
 )
-from cmk.gui.visuals import get_singlecontext_vars
-from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.plugins.dashboard import Dashlet, dashlet_registry
 from cmk.gui.plugins.dashboard.utils import (
     DashboardConfig,
@@ -40,8 +38,10 @@ from cmk.gui.plugins.metrics.html_render import (
     resolve_graph_recipe,
 )
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
+from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import Choices, GraphIdentifier, VisualContext
 from cmk.gui.valuespec import (
+    autocompleter_registry,
     Dictionary,
     DictionaryElements,
     DictionaryEntry,
@@ -49,8 +49,8 @@ from cmk.gui.valuespec import (
     DropdownChoiceValue,
     DropdownChoiceWithHostAndServiceHints,
     ValueSpec,
-    autocompleter_registry,
 )
+from cmk.gui.visuals import get_singlecontext_vars
 
 
 def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:

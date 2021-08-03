@@ -5,15 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    ListChoice,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersEnvironment,
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, ListChoice
 
 bvip_link_states = [
     (0, "No Link"),

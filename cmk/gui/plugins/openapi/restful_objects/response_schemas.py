@@ -10,6 +10,7 @@ from marshmallow import Schema
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.defines import weekday_ids
+
 from cmk.gui.plugins.openapi import fields, plugins
 from cmk.gui.plugins.openapi.utils import BaseSchema
 

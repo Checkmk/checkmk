@@ -5,89 +5,83 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for managing sites"""
 
-import traceback
-import time
-from multiprocessing import JoinableQueue, Process
-import socket
-import contextlib
 import binascii
+import contextlib
 import queue
-from typing import (
-    Dict,
-    List,
-    NamedTuple,
-    Union,
-    Tuple as _Tuple,
-    Optional,
-    Type,
-    Iterable,
-    Iterator,
-    overload,
-)
+import socket
+import time
+import traceback
+from multiprocessing import JoinableQueue, Process
+from typing import Dict, Iterable, Iterator, List, NamedTuple, Optional, overload
+from typing import Tuple as _Tuple
+from typing import Type, Union
 
-from six import ensure_binary, ensure_str
-from OpenSSL import crypto  # type: ignore[import]
-from OpenSSL import SSL  # type: ignore[attr-defined]
-# mypy can't find x509 for some reason (is a c extension involved?)
-from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore[import]
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 
-import cmk.utils.version as cmk_version
+# mypy can't find x509 for some reason (is a c extension involved?)
+from cryptography.x509.oid import ExtensionOID, NameOID  # type: ignore[import]
+from OpenSSL import crypto  # type: ignore[import]
+from OpenSSL import SSL  # type: ignore[attr-defined]
+from six import ensure_binary, ensure_str
+
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
-from cmk.gui.sites import SiteStatus, site_is_local, has_wato_slave_sites, is_wato_slave_site
-import cmk.gui.sites
-from cmk.gui.globals import config
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.log as log
-from cmk.gui.table import table_element
-from cmk.gui.valuespec import (
-    Dictionary,
-    ID,
-    Integer,
-    FixedValue,
-    TextInput,
-    Checkbox,
-    Tuple,
-    Alternative,
-    DropdownChoice,
-    MonitoredHostname,
-    HTTPUrl,
-)
-
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
-from cmk.gui.plugins.watolib.utils import ConfigVariableGroup, config_variable_registry
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
-from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
-from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user_errors, user
-from cmk.gui.exceptions import MKUserError, MKGeneralException, FinalizeRequest
-from cmk.gui.log import logger
+import cmk.gui.sites
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
+from cmk.gui.globals import config, html, request, transactions, user, user_errors
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
-    make_simple_link,
-    make_simple_form_page_menu,
 )
-
-from cmk.gui.watolib.sites import is_livestatus_encrypted, site_globals_editable
-from cmk.gui.watolib.activate_changes import (clear_site_replication_status,
-                                              get_trial_expired_message)
-from cmk.gui.wato.pages.global_settings import ABCGlobalSettingsMode, ABCEditGlobalSettingMode
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
+from cmk.gui.plugins.watolib.utils import config_variable_registry, ConfigVariableGroup
+from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site, site_is_local, SiteStatus
+from cmk.gui.table import table_element
+from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.urls import (
+    make_confirm_link,
+    makeactionuri,
+    makeactionuri_contextless,
+    makeuri_contextless,
+)
+from cmk.gui.valuespec import (
+    Alternative,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    HTTPUrl,
+    ID,
+    Integer,
+    MonitoredHostname,
+    TextInput,
+    Tuple,
+)
+from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
+from cmk.gui.watolib.activate_changes import (
+    clear_site_replication_status,
+    get_trial_expired_message,
+)
 from cmk.gui.watolib.global_settings import load_site_global_settings, save_site_global_settings
-
-from cmk.gui.utils.urls import (makeuri_contextless, make_confirm_link, makeactionuri,
-                                makeactionuri_contextless)
+from cmk.gui.watolib.sites import is_livestatus_encrypted, site_globals_editable
 
 
 @mode_registry.register

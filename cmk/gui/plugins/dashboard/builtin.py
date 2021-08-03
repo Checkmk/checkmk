@@ -5,12 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
+
 from cmk.gui.i18n import _
-from cmk.gui.plugins.dashboard import (
-    builtin_dashboards,
-    GROW,
-    MAX,
-)
+from cmk.gui.plugins.dashboard import builtin_dashboards, GROW, MAX
 
 builtin_dashboards["problems"] = {
     "single_infos": [],

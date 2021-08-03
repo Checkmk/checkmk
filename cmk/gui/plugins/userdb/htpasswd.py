@@ -8,19 +8,18 @@ import os
 from pathlib import Path
 from typing import Dict
 
-from six import ensure_str
-
 # TODO: Import errors from passlib are suppressed right now since now
 # stub files for mypy are not available.
 from passlib.context import CryptContext  # type: ignore[import]
 from passlib.hash import sha256_crypt  # type: ignore[import]
+from six import ensure_str
 
 import cmk.utils.paths
 import cmk.utils.store as store
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.userdb import UserConnector, user_connector_registry, CheckCredentialsResult
+from cmk.gui.plugins.userdb import CheckCredentialsResult, user_connector_registry, UserConnector
 
 crypt_context = CryptContext(schemes=[
     "sha256_crypt",

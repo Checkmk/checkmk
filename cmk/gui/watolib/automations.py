@@ -8,39 +8,38 @@ used for doing inventory, showing the services of a host, deletion of a host
 and similar things."""
 
 import ast
+import logging
 import os
 import re
 import subprocess
 import time
 import uuid
-from typing import Tuple, Dict, Any, Optional, NamedTuple, Sequence
+from typing import Any, Dict, NamedTuple, Optional, Sequence, Tuple
 
-import urllib3  # type: ignore[import]
 import requests
-import logging
+import urllib3  # type: ignore[import]
 from six import ensure_str
 
-from livestatus import SiteId, SiteConfiguration
+from livestatus import SiteConfiguration, SiteId
 
-from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import AutomationDiscoveryResponse, DiscoveryResult
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
+from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import AutomationDiscoveryResponse, DiscoveryResult
 
-from cmk.gui.globals import request
-from cmk.gui.globals import config
+import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.hooks as hooks
-from cmk.gui.utils.urls import urlencode_vars
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.background_job import BackgroundProcessInterface
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import config, request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.sites import site_is_local, get_site_config
-import cmk.gui.utils.escaping as escaping
+from cmk.gui.sites import get_site_config, site_is_local
+from cmk.gui.utils.urls import urlencode_vars
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.sites import SiteManagementFactory
 from cmk.gui.watolib.utils import mk_repr
-from cmk.gui.background_job import BackgroundProcessInterface
-import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.watolib.automation_commands import AutomationCommand, automation_command_registry
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 auto_logger = logger.getChild("automations")

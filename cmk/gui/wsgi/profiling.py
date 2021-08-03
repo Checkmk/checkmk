@@ -4,16 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import pathlib
-from typing import Optional, Union, Literal
-
-from werkzeug.wrappers import Request
-
-import cmk.utils.paths
-import cmk.utils.log
-from cmk.utils import store
+from typing import Literal, Optional, Union
 
 from repoze.profile import ProfileMiddleware  # type: ignore[import]
 from repoze.profile.compat import profile  # type: ignore[import]
+from werkzeug.wrappers import Request
+
+import cmk.utils.log
+import cmk.utils.paths
+from cmk.utils import store
 
 
 class ProfileSwitcher:

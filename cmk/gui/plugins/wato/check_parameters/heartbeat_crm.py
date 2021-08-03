@@ -5,22 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Checkbox,
-    Dictionary,
-    DropdownChoice,
-    Integer,
-    TextInput,
-    Transform,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
+    HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
-    HostRulespec,
 )
+from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, TextInput, Transform
 
 
 def _valuespec_inventory_heartbeat_crm_rules():

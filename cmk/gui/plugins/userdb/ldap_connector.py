@@ -28,6 +28,7 @@
 #   '----------------------------------------------------------------------'
 
 from __future__ import annotations
+
 import abc
 import copy
 import errno
@@ -37,7 +38,9 @@ import shutil
 import sys
 import time
 from pathlib import Path
-from typing import Optional, IO, Union, Dict, List, Set, Type, Tuple as _Tuple, Iterator
+from typing import Dict, IO, Iterator, List, Optional, Set
+from typing import Tuple as _Tuple
+from typing import Type, Union
 
 # docs: http://www.python-ldap.org/doc/html/index.html
 import ldap  # type: ignore[import]
@@ -45,49 +48,48 @@ import ldap.filter  # type: ignore[import]
 from ldap.controls import SimplePagedResultsControl  # type: ignore[import]
 from six import ensure_str
 
+import cmk.utils.password_store as password_store
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.password_store as password_store
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import UserId
 
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import config
 import cmk.gui.log as log
 import cmk.gui.utils.escaping as escaping
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import config
+from cmk.gui.i18n import _
+from cmk.gui.plugins.userdb.utils import (
+    add_internal_attributes,
+    CheckCredentialsResult,
+    cleanup_connection_id,
+    get_connection,
+    get_user_attributes,
+    load_cached_profile,
+    load_connection_config,
+    load_roles,
+    new_user_template,
+    release_users_lock,
+    user_connector_registry,
+    user_sync_config,
+    UserConnector,
+)
 from cmk.gui.sites import has_wato_slave_sites
 from cmk.gui.valuespec import (
-    FixedValue,
+    CascadingDropdown,
     Dictionary,
-    Transform,
+    DictionaryEntry,
+    DropdownChoice,
+    FixedValue,
+    LDAPDistinguishedName,
+    ListChoice,
     ListOf,
     TextInput,
-    LDAPDistinguishedName,
+    Transform,
     Tuple,
-    DropdownChoice,
-    CascadingDropdown,
-    ListChoice,
 )
-from cmk.gui.valuespec import DictionaryEntry
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.plugins.userdb.utils import (
-    UserConnector,
-    user_connector_registry,
-    get_user_attributes,
-    user_sync_config,
-    load_roles,
-    load_connection_config,
-    new_user_template,
-    load_cached_profile,
-    get_connection,
-    cleanup_connection_id,
-    release_users_lock,
-    CheckCredentialsResult,
-    add_internal_attributes,
-)
-
-from cmk.utils.type_defs import UserId
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this

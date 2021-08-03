@@ -25,8 +25,8 @@ from cmk.gui.plugins.openapi.endpoints.utils import may_fail
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
-    response_schemas,
     request_schemas,
+    response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.plugins.openapi.utils import ProblemException

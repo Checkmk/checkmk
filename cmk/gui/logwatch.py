@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import datetime
-from typing import Any, Dict, List, Optional, Iterator
+import time
+from typing import Any, Dict, Iterator, List, Optional
 
 import livestatus
 from livestatus import SiteId
@@ -14,27 +14,30 @@ from livestatus import SiteId
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
-from cmk.gui.globals import config
-from cmk.gui.table import table_element
 import cmk.gui.sites as sites
+from cmk.gui.breadcrumb import (
+    Breadcrumb,
+    BreadcrumbItem,
+    make_current_page_breadcrumb_item,
+    make_simple_page_breadcrumb,
+)
+from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user
-from cmk.gui.exceptions import MKGeneralException, MKUserError, MKAuthException
-from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.breadcrumb import make_simple_page_breadcrumb
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.plugins.views.utils import make_host_breadcrumb
-from cmk.gui.breadcrumb import make_current_page_breadcrumb_item, Breadcrumb, BreadcrumbItem
 from cmk.gui.page_menu import (
+    make_display_options_dropdown,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
-    make_display_options_dropdown,
+    PageMenuTopic,
 )
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link, makeactionuri
+from cmk.gui.plugins.views.utils import make_host_breadcrumb
+from cmk.gui.table import table_element
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
 
 #   .--HTML Output---------------------------------------------------------.
 #   |     _   _ _____ __  __ _        ___        _               _         |

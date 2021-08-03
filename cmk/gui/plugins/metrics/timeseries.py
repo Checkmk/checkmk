@@ -4,21 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import operator
 import functools
-from typing import List, Literal, Optional
+import operator
 from itertools import chain
+from typing import List, Literal, Optional
 
-from cmk.utils.prediction import TimeSeries
 import cmk.utils.version as cmk_version
+from cmk.utils.prediction import TimeSeries
+
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import (
-    fade_color,
-    parse_color,
-    render_color,
-)
+from cmk.gui.plugins.metrics.utils import fade_color, parse_color, render_color
 
 if cmk_version.is_raw_edition():
 
@@ -32,8 +29,12 @@ if cmk_version.is_raw_edition():
         return evaluate_timeseries_transformation(None, None, None)
 else:
     # Suppression is needed to silence pylint in CRE environment
-    from cmk.gui.cee.plugins.metrics.timeseries import evaluate_timeseries_transformation  # type: ignore[no-redef] # pylint: disable=no-name-in-module
-    from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec  # type: ignore[no-redef] # pylint: disable=no-name-in-module
+    from cmk.gui.cee.plugins.metrics.graphs import (
+        resolve_combined_single_metric_spec,  # type: ignore[no-redef] # pylint: disable=no-name-in-module
+    )
+    from cmk.gui.cee.plugins.metrics.timeseries import (
+        evaluate_timeseries_transformation,  # type: ignore[no-redef] # pylint: disable=no-name-in-module
+    )
 
 #.
 #   .--Curves--------------------------------------------------------------.

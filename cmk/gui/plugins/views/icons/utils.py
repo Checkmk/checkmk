@@ -7,21 +7,16 @@
 from __future__ import annotations
 
 import abc
-from typing import List, Optional, Tuple, Type, TYPE_CHECKING, Union, Dict
+from typing import Dict, List, Optional, Tuple, Type, TYPE_CHECKING, Union
 
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import TagID
 
-from cmk.gui.config import register_post_config_load_hook, builtin_role_ids
+from cmk.gui.config import builtin_role_ids, register_post_config_load_hook
 from cmk.gui.globals import config
 from cmk.gui.i18n import _
-
+from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
 from cmk.gui.type_defs import Row
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
-    declare_permission,
-)
 
 if TYPE_CHECKING:
     from cmk.gui.htmllib import HTML

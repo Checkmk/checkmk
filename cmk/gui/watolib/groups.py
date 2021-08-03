@@ -4,46 +4,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
 import copy
-from typing import Any, Dict, List, Tuple, Literal
+import re
+from typing import Any, Dict, List, Literal, Tuple
 
-import cmk.utils.version as cmk_version
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import timeperiod_spec_alias
 
-import cmk.gui.userdb as userdb
-import cmk.gui.plugins.userdb.utils as userdb_utils
-from cmk.gui.groups import load_group_information, load_contact_group_information
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import html, g, request, user
+import cmk.gui.plugins.userdb.utils as userdb_utils
+import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import g, html, request, user
+from cmk.gui.groups import load_contact_group_information, load_group_information
 from cmk.gui.i18n import _
+from cmk.gui.plugins.watolib.utils import config_variable_registry, wato_fileheader
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
-
-from cmk.gui.watolib.utils import convert_cgroups_from_tuple
+from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.utils import format_config_value
-from cmk.gui.watolib.rulesets import AllRulesets
-from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.host_attributes import (
-    host_attribute_registry,
     ABCHostAttribute,
+    host_attribute_registry,
     HostAttributeTopicBasicSettings,
 )
-from cmk.gui.plugins.watolib.utils import (
-    config_variable_registry,
-    wato_fileheader,
-)
-from cmk.gui.watolib.notifications import (
-    load_notification_rules,
-    load_user_notification_rules,
-)
-from cmk.gui.valuespec import DualListChoice
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link
+from cmk.gui.watolib.notifications import load_notification_rules, load_user_notification_rules
+from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.gui.watolib.utils import convert_cgroups_from_tuple, format_config_value
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

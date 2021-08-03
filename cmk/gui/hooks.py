@@ -4,15 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import functools
-
 import sys
 import traceback
-from typing import Any, Callable, Dict, List, NamedTuple, Union, Literal
+from typing import Any, Callable, Dict, List, Literal, NamedTuple, Union
 
-from cmk.gui.globals import config
 import cmk.gui.i18n
+from cmk.gui.globals import config, html
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
 
 Hook = NamedTuple("Hook", [
     ("handler", Callable),

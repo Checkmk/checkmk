@@ -5,45 +5,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for trying out the logwatch patterns"""
 
-from typing import Optional, Type, Iterable, List
 import re
+from typing import Iterable, List, Optional, Type
+
 from six import ensure_str
 
-from cmk.utils.type_defs import CheckPluginNameStr, HostName, ServiceName, Item
-
-import cmk.gui.watolib as watolib
-from cmk.gui.table import table_element
-import cmk.gui.forms as forms
-from cmk.gui.htmllib import HTML, foldable_container
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.wato.pages.rulesets import ModeEditRuleset
-from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    make_simple_link,
-)
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
-    ConfigHostname,
-)
-from cmk.gui.watolib.search import (
-    ABCMatchItemGenerator,
-    MatchItem,
-    MatchItems,
-    match_item_generator_registry,
-)
-from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
+
+import cmk.gui.forms as forms
+import cmk.gui.watolib as watolib
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html, request
+from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.i18n import _
+from cmk.gui.page_menu import (
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
+)
+from cmk.gui.plugins.wato import ConfigHostname, mode_registry, WatoMode
+from cmk.gui.table import table_element
+from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.wato.pages.rulesets import ModeEditRuleset
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    match_item_generator_registry,
+    MatchItem,
+    MatchItems,
+)
 
 
 @mode_registry.register

@@ -7,27 +7,29 @@
 from typing import List, Tuple
 
 import cmk.utils.version as cmk_version
-from cmk.gui.globals import config
-import cmk.gui.views as views
+
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
+import cmk.gui.views as views
+from cmk.gui.globals import config
+
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.reporting as reporting  # pylint: disable=no-name-in-module
 else:
     reporting = None  # type: ignore[assignment]
 from cmk.gui.globals import user
+from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
+from cmk.gui.node_visualization import ParentChildTopologyPage
 from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
     footnotelinks,
     make_topic_menu,
-    show_topic_menu,
     search,
+    show_topic_menu,
+    SidebarSnapin,
+    snapin_registry,
 )
-from cmk.gui.i18n import _, _l
-from cmk.gui.node_visualization import ParentChildTopologyPage
+from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
 
 
 @snapin_registry.register

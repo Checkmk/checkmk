@@ -12,52 +12,52 @@ import pprint
 import tarfile
 import time
 import traceback
-from typing import Dict, Mapping, Optional, Type, Iterator
+from typing import Dict, Iterator, Mapping, Optional, Type
 
 from six import ensure_str
 
 import livestatus
 from livestatus import SiteId
 
-import cmk.utils.version as cmk_version
 import cmk.utils.crash_reporting
+import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
-import cmk.gui.pages
-import cmk.gui.i18n
-import cmk.gui.utils.escaping as escaping
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, response, transactions, user_errors, user
-from cmk.gui.htmllib import HTML
-import cmk.gui.userdb as userdb
-from cmk.gui.log import logger
-from cmk.gui.plugins.views.crash_reporting import CrashReportsRowTable
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.valuespec import (
-    EmailAddress,
-    TextInput,
-    Dictionary,
-)
-from cmk.gui.globals import config
 import cmk.gui.forms as forms
-from cmk.gui.main_menu import mega_menu_registry
+import cmk.gui.i18n
+import cmk.gui.pages
+import cmk.gui.userdb as userdb
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.breadcrumb import (
-    make_topic_breadcrumb,
-    make_current_page_breadcrumb_item,
     Breadcrumb,
     BreadcrumbItem,
+    make_current_page_breadcrumb_item,
+    make_topic_breadcrumb,
 )
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, request, response, transactions, user, user_errors
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
+    PageMenuTopic,
 )
-from cmk.gui.utils.urls import (makeuri, makeuri_contextless, urlencode_vars, urlencode,
-                                requested_file_name)
+from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.plugins.views.crash_reporting import CrashReportsRowTable
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.urls import (
+    makeuri,
+    makeuri_contextless,
+    requested_file_name,
+    urlencode,
+    urlencode_vars,
+)
+from cmk.gui.valuespec import Dictionary, EmailAddress, TextInput
 
 CrashReportStore = cmk.utils.crash_reporting.CrashReportStore
 CrashInfo = Dict

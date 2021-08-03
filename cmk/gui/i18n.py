@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import gettext as gettext_module
-from typing import Dict, NamedTuple, Optional, List, Tuple
 from pathlib import Path
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
 from flask_babel.speaklater import LazyString  # type: ignore[import]
 

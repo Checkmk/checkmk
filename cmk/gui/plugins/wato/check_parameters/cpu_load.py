@@ -5,15 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
-    rulespec_registry,
     Levels,
+    rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-
-from cmk.gui.valuespec import (Transform, Dictionary)
+from cmk.gui.valuespec import Dictionary, Transform
 
 
 def _parameter_valuespec_cpu_load():

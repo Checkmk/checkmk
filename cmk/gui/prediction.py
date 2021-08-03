@@ -4,28 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import json
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-)
+import time
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import livestatus
+
 import cmk.utils.paths
 import cmk.utils.prediction as prediction
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
-from cmk.gui.plugins.views.utils import make_service_breadcrumb
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import html, request
+from cmk.gui.i18n import _
+from cmk.gui.plugins.views.utils import make_service_breadcrumb
 
 graph_size = 2000, 700
 

@@ -5,23 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.utils as utils
-from cmk.gui.utils.theme import theme_choices
+from cmk.gui.i18n import _
+from cmk.gui.plugins.userdb import user_attribute_registry, UserAttribute
 from cmk.gui.utils import show_mode_choices
+from cmk.gui.utils.theme import theme_choices
 from cmk.gui.valuespec import (
+    AbsoluteDate,
+    Alternative,
+    Checkbox,
+    Dictionary,
     DropdownChoice,
     FixedValue,
-    Alternative,
-    Transform,
     TextInput,
-    AbsoluteDate,
+    Transform,
     Tuple,
-    Dictionary,
-    Checkbox,
-)
-from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb import (
-    UserAttribute,
-    user_attribute_registry,
 )
 
 

@@ -8,22 +8,20 @@ import copy
 import json
 import time
 import traceback
-from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Tuple, Union, Sequence
+from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
 
 import livestatus
 
 import cmk.utils.render
 
-from cmk.gui.globals import config
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.globals import html, theme, output_funnel, user
-from cmk.gui.globals import request, response
+from cmk.gui.globals import config, html, output_funnel, request, response, theme, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.plugins.metrics import artwork
 from cmk.gui.plugins.metrics.identification import graph_identification_types
-from cmk.gui.plugins.metrics.utils import render_color_icon, GraphRecipe
+from cmk.gui.plugins.metrics.utils import GraphRecipe, render_color_icon
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
 from cmk.gui.type_defs import GraphIdentifier

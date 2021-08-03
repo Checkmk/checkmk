@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import html
-from typing import Union, Any, Iterable, Optional
+from typing import Any, Iterable, Optional, Union
 
 HTMLInput = Union["HTML", str]
 

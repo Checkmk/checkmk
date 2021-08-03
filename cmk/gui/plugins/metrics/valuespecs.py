@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Optional
 import json
+from typing import List, Optional
 
-from cmk.gui.pages import page_registry, AjaxPage
 from cmk.gui.globals import html
 from cmk.gui.i18n import _
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.metrics import artwork, metric_info, unit_info
 from cmk.gui.valuespec import (
     CascadingDropdown,
     CascadingDropdownChoiceValue,
@@ -24,9 +25,6 @@ from cmk.gui.valuespec import (
     ValueSpecHelp,
     ValueSpecValidateFunc,
 )
-
-from cmk.gui.plugins.metrics import unit_info, metric_info
-from cmk.gui.plugins.metrics import artwork
 
 
 def transform_graph_render_options_title_format(p) -> List[str]:

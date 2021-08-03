@@ -6,34 +6,22 @@
 
 import ast
 import time
-from multiprocessing.pool import ThreadPool
 from multiprocessing import TimeoutError as mp_TimeoutError
-
+from multiprocessing.pool import ThreadPool
 from typing import NamedTuple
 
-import cmk.gui.sites as sites
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import config
+import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
-from cmk.gui.sites import get_site_config, get_login_slave_sites, is_wato_slave_site
-from cmk.gui.utils.urls import urlencode_vars
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException, RequestTimeout
-from cmk.gui.globals import request
+from cmk.gui.globals import config, request
+from cmk.gui.i18n import _
+from cmk.gui.sites import get_login_slave_sites, get_site_config, is_wato_slave_site
+from cmk.gui.utils.urls import urlencode_vars
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automations import do_remote_automation, get_url, MKAutomationException
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.automation_commands import (
-    AutomationCommand,
-    automation_command_registry,
-)
-from cmk.gui.watolib.automations import (
-    MKAutomationException,
-    do_remote_automation,
-    get_url,
-)
-from cmk.gui.watolib.utils import (
-    mk_eval,
-    mk_repr,
-)
+from cmk.gui.watolib.utils import mk_eval, mk_repr
 
 # In case the sync is done on the master of a distributed setup the auth serial
 # is increased on the master, but not on the slaves. The user can not access the

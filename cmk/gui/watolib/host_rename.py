@@ -4,31 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Dict, Tuple as _Tuple
+from typing import Dict, List
+from typing import Tuple as _Tuple
+
 from livestatus import SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.gui.watolib as watolib
-
-from cmk.utils.type_defs import HostName
 from cmk.utils.bi.bi_packs import BIHostRenamer
+from cmk.utils.type_defs import HostName
 
-from cmk.gui.i18n import _
-from cmk.gui.bi import get_cached_bi_packs
-
+import cmk.gui.watolib as watolib
 from cmk.gui import userdb
+from cmk.gui.bi import get_cached_bi_packs
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.watolib.utils import rename_host_in_list
-from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
-from cmk.gui.watolib.changes import log_audit, add_change, make_diff_text
-from cmk.gui.watolib.hosts_and_folders import (
-    CREFolder,
-    Folder,
-    Host,
-    call_hook_hosts_changed,
-)
+from cmk.gui.i18n import _
 from cmk.gui.watolib.automations import check_mk_automation
+from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text
+from cmk.gui.watolib.hosts_and_folders import call_hook_hosts_changed, CREFolder, Folder, Host
+from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
+from cmk.gui.watolib.utils import rename_host_in_list
 
 try:
     import cmk.gui.cee.plugins.wato.alert_handling as alert_handling  # type: ignore[import]

@@ -7,14 +7,14 @@
 import re
 from typing import List
 
-from cmk.gui.i18n import _l
 from cmk.gui.globals import html
+from cmk.gui.i18n import _l
 from cmk.gui.watolib.main_menu import (
     ABCMainModule,
-    MainModuleTopic,
-    MenuItem,
     main_module_registry,
     main_module_topic_registry,
+    MainModuleTopic,
+    MenuItem,
 )
 
 

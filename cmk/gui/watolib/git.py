@@ -7,16 +7,16 @@
 import errno
 import glob
 import os
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 from six import ensure_str
 
 import cmk.utils
 
+from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import g, user
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.log import logger
 
 

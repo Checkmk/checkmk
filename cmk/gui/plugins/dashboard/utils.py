@@ -10,25 +10,38 @@ import copy
 import json
 import time
 import urllib.parse
-from itertools import chain
-from typing import Any, Callable, cast, Dict, Iterable, List, Optional, Set, Tuple, Type, Union, TypedDict, Literal
 from dataclasses import dataclass
 from functools import partial
+from itertools import chain
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    List,
+    Literal,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TypedDict,
+    Union,
+)
 
 import cmk.utils.plugin_registry
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
-from cmk.utils.type_defs import UserId
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import UserId
 
-from cmk.gui.config import builtin_role_ids
-from cmk.gui.globals import config
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.sites as sites
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.visuals as visuals
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKGeneralException, MKMissingDataError, MKTimeout, MKUserError
 from cmk.gui.figures import create_figures_response
-from cmk.gui.globals import g, html, request
+from cmk.gui.globals import config, g, html, request
 from cmk.gui.i18n import _, _u
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.metrics import translate_perf_data
@@ -36,10 +49,10 @@ from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.plugins.metrics.rrd_fetch import merge_multicol
 from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
+from cmk.gui.plugins.views.painters import host_state_short, service_state_short
 from cmk.gui.plugins.views.utils import get_all_views, get_permitted_views, transform_painter_spec
-from cmk.gui.plugins.views.painters import service_state_short, host_state_short
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import HTTPVariables, SingleInfos, VisualContext, Row
+from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars

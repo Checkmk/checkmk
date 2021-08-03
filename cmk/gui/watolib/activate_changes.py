@@ -15,88 +15,69 @@ SnapshotCreator          - Packing the snapshots into snapshot archives
 ActivateChangesSite      - Executes the activation procedure for a single site.
 """
 
-import io
-import errno
+import abc
 import ast
+import errno
+import hashlib
+import io
+import multiprocessing
 import os
 import shutil
-import time
-import abc
-import multiprocessing
-import traceback
 import subprocess
-import hashlib
+import time
+import traceback
 from itertools import filterfalse
 from logging import Logger
 from pathlib import Path
-from typing import Dict, Set, List, Optional, Tuple, Union, NamedTuple, Any, Callable
+from typing import Any, Callable, Dict, List, NamedTuple, Optional, Set, Tuple, Union
 
 import psutil  # type: ignore[import]
 import werkzeug.urls
 from six import ensure_binary, ensure_str
 
-from livestatus import (
-    SiteId,
-    SiteConfiguration,
-)
+from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils
-import cmk.utils.paths
-import cmk.utils.version as cmk_version
 import cmk.utils.daemon as daemon
-import cmk.utils.store as store
-import cmk.utils.render as render
 import cmk.utils.license_usage.samples as license_usage_samples
+import cmk.utils.paths
+import cmk.utils.render as render
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.type_defs import ConfigDomainName, HTTPVariables
-import cmk.gui.utils
-import cmk.gui.hooks as hooks
-from cmk.gui.sites import (
-    SiteStatus,
-    states as sites_states,
-    disconnect as sites_disconnect,
-    activation_sites,
-    allsites,
-    site_is_local,
-    is_single_local_site,
-    get_site_config,
-)
-from cmk.gui.globals import config
-import cmk.gui.log as log
-import cmk.gui.utils.escaping as escaping
-from cmk.gui.utils.ntop import is_ntop_configured
-from cmk.gui.i18n import _
-from cmk.gui.globals import g, request as _request, user
-from cmk.gui.log import logger
-from cmk.gui.exceptions import (
-    MKGeneralException,
-    RequestTimeout,
-    MKUserError,
-    MKAuthException,
-)
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.plugins.userdb.utils import user_sync_default_config
-from cmk.gui.plugins.watolib.utils import wato_fileheader
-
-import cmk.gui.watolib.git
+import cmk.gui.hooks as hooks
+import cmk.gui.log as log
+import cmk.gui.utils
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib.automations
-import cmk.gui.watolib.utils
+import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.snapshots
-from cmk.gui.watolib.config_sync import SnapshotCreator, ReplicationPath
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
-from cmk.gui.watolib.config_sync import extract_from_buffer
-from cmk.gui.watolib.global_settings import save_site_global_settings
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
-
-from cmk.gui.watolib.changes import (
-    SiteChanges,
-    log_audit,
-)
+import cmk.gui.watolib.utils
+from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
+from cmk.gui.globals import config, g
+from cmk.gui.globals import request as _request
+from cmk.gui.globals import user
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.plugins.userdb.utils import user_sync_default_config
 from cmk.gui.plugins.watolib import ABCConfigDomain
+from cmk.gui.plugins.watolib.utils import wato_fileheader
+from cmk.gui.sites import activation_sites, allsites
+from cmk.gui.sites import disconnect as sites_disconnect
+from cmk.gui.sites import get_site_config, is_single_local_site, site_is_local, SiteStatus
+from cmk.gui.sites import states as sites_states
+from cmk.gui.type_defs import ConfigDomainName, HTTPVariables
+from cmk.gui.utils.ntop import is_ntop_configured
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.changes import log_audit, SiteChanges
+from cmk.gui.watolib.config_sync import extract_from_buffer, ReplicationPath, SnapshotCreator
+from cmk.gui.watolib.global_settings import save_site_global_settings
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type

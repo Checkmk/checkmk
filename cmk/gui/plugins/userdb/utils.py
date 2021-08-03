@@ -6,22 +6,21 @@
 
 import abc
 import os
-from typing import List, Optional, Dict, Any, Tuple, Type, Literal, Union
 from contextlib import suppress
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union
 
 from livestatus import SiteId
 
-import cmk.utils.store as store
 import cmk.utils.plugin_registry
-from cmk.utils.type_defs import UserId
+import cmk.utils.store as store
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import UserId
 
-from cmk.gui.type_defs import UserSpec
-from cmk.gui.globals import g, user
-from cmk.gui.i18n import _
-from cmk.gui.globals import config
 from cmk.gui.config import builtin_role_ids
-from cmk.gui.sites import get_site_config, site_is_local, is_wato_slave_site
+from cmk.gui.globals import config, g, user
+from cmk.gui.i18n import _
+from cmk.gui.sites import get_site_config, is_wato_slave_site, site_is_local
+from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.logged_in import LoggedInUser, save_user_file
 
 # count this up, if new user attributes are used or old are marked as

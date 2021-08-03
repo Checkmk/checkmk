@@ -10,18 +10,13 @@ from typing import Optional, Type
 import cmk.utils.paths
 from cmk.utils.site import omd_site
 
-import cmk.gui.watolib as watolib
 import cmk.gui.backup as backup
-from cmk.gui.i18n import _
+import cmk.gui.watolib as watolib
 from cmk.gui.globals import request, user
+from cmk.gui.i18n import _
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.wato import mode_registry, SiteBackupJobs, WatoMode
 from cmk.gui.valuespec import Checkbox
-from cmk.gui.pages import page_registry, AjaxPage
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
-    SiteBackupJobs,
-)
 
 
 class SiteBackupTargets(backup.Targets):

@@ -5,6 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupCheckParametersStorage,
+)
 from cmk.gui.valuespec import (
     Alternative,
     Checkbox,
@@ -16,13 +23,6 @@ from cmk.gui.valuespec import (
     Percentage,
     TextInput,
     Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersDiscovery,
-    RulespecGroupCheckParametersStorage,
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    HostRulespec,
 )
 
 _brocade_fcport_adm_choices = [

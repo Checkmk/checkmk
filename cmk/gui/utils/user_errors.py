@@ -10,7 +10,7 @@ actual HTML page may be stored as user errors and displayed later during page re
 page.
 """
 
-from typing import Dict, Optional, Iterator, Mapping
+from typing import Dict, Iterator, Mapping, Optional
 
 from cmk.gui.exceptions import MKUserError
 

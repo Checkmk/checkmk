@@ -12,26 +12,30 @@ You can find an introduction to time periods in the
 [Checkmk guide](https://docs.checkmk.com/latest/en/timeperiods.html).
 """
 
-import http.client
 import datetime as dt
+import http.client
 import json
-
-from typing import List, Dict, Any, Tuple
+from typing import Any, Dict, List, Tuple
 
 from marshmallow.utils import from_iso_time
 
-from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.plugins.openapi.utils import ProblemException
-from cmk.utils.type_defs import TimeperiodSpec
-from cmk.gui.http import Response
-
 import cmk.utils.defines as defines
-from cmk.gui.watolib.timeperiods import save_timeperiod, load_timeperiod, load_timeperiods, save_timeperiods
+from cmk.utils.type_defs import TimeperiodSpec
+
+from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
     Endpoint,
     request_schemas,
     response_schemas,
-    constructors,
+)
+from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.utils import ProblemException
+from cmk.gui.watolib.timeperiods import (
+    load_timeperiod,
+    load_timeperiods,
+    save_timeperiod,
+    save_timeperiods,
 )
 
 TIME_RANGE = Tuple[str, str]

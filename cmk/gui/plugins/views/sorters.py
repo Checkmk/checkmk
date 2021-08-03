@@ -6,37 +6,32 @@
 
 import abc
 import time
-from typing import Optional, List, Tuple, TYPE_CHECKING
+from typing import List, Optional, Tuple, TYPE_CHECKING
 
-from cmk.gui.globals import config
 import cmk.gui.utils as utils
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
-
 from cmk.gui.plugins.views import (
-    sorter_registry,
-    Sorter,
-    declare_simple_sorter,
-    declare_1to1_sorter,
-    cmp_num_split,
     cmp_custom_variable,
+    cmp_ip_address,
+    cmp_num_split,
+    cmp_service_name_equiv,
     cmp_simple_number,
     cmp_simple_string,
-    cmp_service_name_equiv,
     cmp_string_list,
-    cmp_ip_address,
     compare_ips,
-    get_tag_groups,
+    declare_1to1_sorter,
+    declare_simple_sorter,
     get_labels,
     get_perfdata_nth_value,
+    get_tag_groups,
+    Sorter,
+    sorter_registry,
 )
-from cmk.gui.valuespec import ValueSpec
-from cmk.gui.plugins.views.utils import DerivedColumnsSorter, cmp_insensitive_string
-from cmk.gui.type_defs import Row
+from cmk.gui.plugins.views.utils import cmp_insensitive_string, DerivedColumnsSorter
 from cmk.gui.sites import get_site_config
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-)
+from cmk.gui.type_defs import Row
+from cmk.gui.valuespec import Dictionary, DropdownChoice, ValueSpec
 
 if TYPE_CHECKING:
     from cmk.gui.views import View

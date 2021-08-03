@@ -12,18 +12,20 @@
 # Darin die vertikalen Balken.
 
 import math
-from typing import Dict as _Dict, Tuple, Callable, Optional, List, Literal
-
-import cmk.gui.utils as utils
-import cmk.gui.metrics as metrics
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.view_utils import get_themed_perfometer_bg_color
-from cmk.gui.type_defs import Perfdata, Row
+from typing import Callable
+from typing import Dict as _Dict
+from typing import List, Literal, Optional, Tuple
 
 from cmk.utils.plugin_loader import load_plugins
+
+import cmk.gui.metrics as metrics
+import cmk.gui.utils as utils
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import html
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.type_defs import Perfdata, Row
+from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerData = List[Tuple[float, str]]
 

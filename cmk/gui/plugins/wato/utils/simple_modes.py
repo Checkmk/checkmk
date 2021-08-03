@@ -14,22 +14,30 @@ b) A edit mode which can be used to create and edit an object.
 
 import abc
 import copy
-from typing import (
-    List,
-    Optional,
-    Type,
-    Union,
-)
+from typing import List, Optional, Type, Union
 
 from livestatus import SiteId
-from cmk.gui.table import table_element, Table
-import cmk.gui.watolib as watolib
+
 import cmk.gui.forms as forms
+import cmk.gui.watolib as watolib
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, request, transactions
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.wato.utils.base_modes import (WatoMode, ActionResult, redirect, mode_url)
-from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
+from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
+)
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect, WatoMode
+from cmk.gui.table import Table, table_element
+from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.urls import make_confirm_link, makeuri_contextless
 from cmk.gui.valuespec import (
     Checkbox,
     Dictionary,
@@ -41,19 +49,7 @@ from cmk.gui.valuespec import (
     SetupSiteChoice,
     TextInput,
 )
-from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuEntry,
-    PageMenuTopic,
-    PageMenuSearch,
-    make_simple_link,
-    make_simple_form_page_menu,
-)
-from cmk.gui.utils import unique_default_name_suggestion
-from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
-from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 
 
 class SimpleModeType(metaclass=abc.ABCMeta):

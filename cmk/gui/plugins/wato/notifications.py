@@ -8,10 +8,17 @@ import socket
 
 import cmk.utils.version as cmk_version
 from cmk.utils.site import url_prefix
-import cmk.gui.mkeventd as mkeventd
-from cmk.gui.i18n import _
-from cmk.gui.globals import request
 
+import cmk.gui.mkeventd as mkeventd
+from cmk.gui.globals import request
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    HTTPProxyReference,
+    IndividualOrStoredPassword,
+    notification_parameter_registry,
+    NotificationParameter,
+    PasswordFromStore,
+)
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -32,15 +39,6 @@ from cmk.gui.valuespec import (
     Transform,
     Tuple,
 )
-
-from cmk.gui.plugins.wato import (
-    notification_parameter_registry,
-    NotificationParameter,
-    HTTPProxyReference,
-    IndividualOrStoredPassword,
-    PasswordFromStore,
-)
-
 from cmk.gui.watolib.password_store import passwordstore_choices
 
 

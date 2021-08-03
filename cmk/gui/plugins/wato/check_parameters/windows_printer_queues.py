@@ -7,20 +7,12 @@
 from typing import Any, Dict
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    ListChoice,
-    TextInput,
-    Transform,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersPrinters,
 )
+from cmk.gui.valuespec import Dictionary, Integer, ListChoice, TextInput, Transform, Tuple
 
 
 def windows_printer_queues_forth(old):

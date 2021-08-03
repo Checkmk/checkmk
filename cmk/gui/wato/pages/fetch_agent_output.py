@@ -7,29 +7,25 @@
 import abc
 import ast
 import os
-from typing import Dict
 from pathlib import Path
+from typing import Dict
 
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
 
-import cmk.gui.watolib as watolib
-import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.background_job as background_job
-
-from cmk.gui.globals import html, request, transactions, response, user
-from cmk.gui.i18n import _
-from cmk.gui.pages import page_registry, Page
-from cmk.gui.utils.escaping import escape_attribute
-from cmk.gui.exceptions import MKGeneralException, HTTPRedirect, MKUserError
-from cmk.gui.plugins.views.utils import make_host_breadcrumb
+import cmk.gui.gui_background_job as gui_background_job
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.sites import site_is_local, get_site_config
-from cmk.gui.watolib import (
-    automation_command_registry,
-    AutomationCommand,
-)
+from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKUserError
+from cmk.gui.globals import html, request, response, transactions, user
+from cmk.gui.i18n import _
+from cmk.gui.pages import Page, page_registry
+from cmk.gui.plugins.views.utils import make_host_breadcrumb
+from cmk.gui.sites import get_site_config, site_is_local
+from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.watolib import automation_command_registry, AutomationCommand
 
 #.
 #   .--Agent-Output--------------------------------------------------------.

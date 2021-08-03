@@ -8,44 +8,42 @@ Provides the user with hints about his setup. Performs different
 checks and tells the user what could be improved.
 """
 
-import time
-import multiprocessing
-import traceback
 import ast
-from typing import Any, Dict, Tuple
+import multiprocessing
 import queue
+import time
+import traceback
+from typing import Any, Dict, Tuple
 
 from livestatus import SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
 
-import cmk.gui.watolib as watolib
-import cmk.gui.utils.escaping as escaping
-from cmk.gui.table import table_element
 import cmk.gui.log as log
-from cmk.gui.exceptions import MKUserError, MKGeneralException
+import cmk.gui.utils.escaping as escaping
+import cmk.gui.watolib as watolib
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import html, request, transactions, user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.globals import html, request, transactions, user
-from cmk.gui.sites import activation_sites, site_is_local, get_site_config
-from cmk.gui.utils.urls import makeactionuri
-from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
+    PageMenuTopic,
 )
-
-from cmk.gui.plugins.wato import WatoMode, ActionResult, mode_registry
+from cmk.gui.plugins.wato import ActionResult, mode_registry, WatoMode
 from cmk.gui.plugins.wato.ac_tests import ACTestConnectivity
-
+from cmk.gui.sites import activation_sites, get_site_config, site_is_local
+from cmk.gui.table import table_element
+from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.watolib.analyze_configuration import (
     ACResult,
-    ACResultOK,
     ACResultCRIT,
+    ACResultOK,
     ACTestCategories,
     AutomationCheckAnalyzeConfig,
 )

@@ -4,26 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable
 import functools
+from typing import Callable
 
 import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
 from cmk.utils.site import url_prefix
 
-from cmk.gui import login, pages, modules
+from cmk.gui import login, modules, pages
 from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
-from cmk.gui.exceptions import (
-    MKAuthException,
-    MKUnauthenticatedException,
-    HTTPRedirect,
-)
-from cmk.gui.globals import request, response, g, theme, user
-from cmk.gui.i18n import _
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode, requested_file_name
-from cmk.gui.utils.language_cookie import set_language_cookie
+from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUnauthenticatedException
+from cmk.gui.globals import g, request, response, theme, user
 from cmk.gui.http import Response
+from cmk.gui.i18n import _
+from cmk.gui.utils.language_cookie import set_language_cookie
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
 
 # TODO
 #  * derive all exceptions from werkzeug's http exceptions.

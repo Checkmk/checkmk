@@ -6,32 +6,37 @@
 """Synchronize discovered host labels from remote site to central site"""
 
 from __future__ import annotations
-import ast
-from pathlib import Path
-from dataclasses import dataclass, asdict
-from typing import Dict, Tuple, Any, Optional, List
-from multiprocessing.pool import ThreadPool
 
-from livestatus import SiteId, SiteConfiguration
+import ast
+from dataclasses import asdict, dataclass
+from multiprocessing.pool import ThreadPool
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
+
+from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.labels import (
+    get_host_labels_entry_of_host,
+    get_updated_host_label_files,
+    save_updated_host_label_files,
+    UpdatedHostLabelsEntry,
+)
 from cmk.utils.type_defs import HostName
-from cmk.utils.labels import (get_updated_host_label_files, save_updated_host_label_files,
-                              get_host_labels_entry_of_host, UpdatedHostLabelsEntry)
 
-import cmk.gui.log as log
-from cmk.gui.log import logger
-import cmk.gui.pages
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
+import cmk.gui.log as log
+import cmk.gui.pages
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.watolib.automation_commands import AutomationCommand, automation_command_registry
+from cmk.gui.globals import request
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.sites import get_site_config, has_wato_slave_sites, wato_slave_sites
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.hosts_and_folders import Host
-from cmk.gui.globals import request
-from cmk.gui.sites import get_site_config, has_wato_slave_sites, wato_slave_sites
-from cmk.gui.i18n import _
 
 
 @dataclass

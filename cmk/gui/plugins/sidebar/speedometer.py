@@ -6,12 +6,10 @@
 
 import json
 
-from cmk.gui.plugins.sidebar import snapin_width
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, theme, response, request
 import cmk.gui.sites as sites
-
-from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry
+from cmk.gui.globals import html, request, response, theme
+from cmk.gui.i18n import _
+from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, snapin_width
 
 
 @snapin_registry.register

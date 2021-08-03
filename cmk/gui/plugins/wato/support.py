@@ -5,18 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    HTTPUrl,
-    TextInput,
-)
-
 from cmk.gui.plugins.wato import (
     config_variable_group_registry,
-    ConfigVariableGroup,
     config_variable_registry,
-    ConfigVariable,
     ConfigDomainGUI,
+    ConfigVariable,
+    ConfigVariableGroup,
 )
+from cmk.gui.valuespec import HTTPUrl, TextInput
 
 
 @config_variable_group_registry.register

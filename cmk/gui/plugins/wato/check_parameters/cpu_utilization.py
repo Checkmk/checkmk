@@ -5,21 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    DropdownChoice,
-    Dictionary,
-    Integer,
-    Percentage,
-    Tuple,
-    Transform,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersOperatingSystem,
     CheckParameterRulespecWithoutItem,
-    rulespec_registry,
     Levels,
+    rulespec_registry,
+    RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer, Percentage, Transform, Tuple
 
 cpu_util_common_dict = Dictionary(
     help=_("This rule configures levels for the CPU utilization (not load) for "

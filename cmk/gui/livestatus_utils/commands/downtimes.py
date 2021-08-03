@@ -5,18 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains commands for managing downtimes through LiveStatus."""
 import datetime as dt
-
 from typing import Dict, List, Literal, Optional, Union
+
+from livestatus import SiteId
+
+from cmk.utils.livestatus_helpers import tables
+from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
+from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
+from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
+from cmk.utils.livestatus_helpers.tables.hosts import Hosts
+from cmk.utils.livestatus_helpers.tables.services import Services
+
 from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 from cmk.gui.livestatus_utils.commands.type_defs import LivestatusCommand
 from cmk.gui.livestatus_utils.commands.utils import to_timestamp
-from cmk.utils.livestatus_helpers import tables
-from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
-from cmk.utils.livestatus_helpers.queries import Query, detailed_connection
-from cmk.utils.livestatus_helpers.tables.hosts import Hosts
-from cmk.utils.livestatus_helpers.tables.services import Services
-from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
-from livestatus import SiteId
 
 # TODO: Test duration option
 

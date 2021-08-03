@@ -6,6 +6,7 @@
 """Detect whether or not the client is a mobile client"""
 
 import re
+
 from cmk.gui.http import Request, Response
 
 

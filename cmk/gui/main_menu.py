@@ -9,6 +9,8 @@ Entries of the main_menu_registry must NOT be registered in this module to keep 
 in this module as small as possible.
 """
 
+import time
+from datetime import timedelta
 from typing import List
 
 from cmk.utils.plugin_registry import Registry
@@ -19,10 +21,9 @@ from cmk.utils.version import (
     is_expired_trial,
     is_free_edition,
 )
+
 from cmk.gui.i18n import _, _l
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
-from datetime import timedelta
-import time
+from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 
 
 def any_show_more_items(topics: List[TopicMenuTopic]) -> bool:

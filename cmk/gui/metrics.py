@@ -35,9 +35,9 @@ from cmk.gui.plugins.metrics.html_render import (
     host_service_graph_dashlet_cmk,
     host_service_graph_popup_cmk,
 )
-from cmk.gui.type_defs import PerfometerSpec
+
 # Needed for legacy (pre 1.6) plugins and for cross-module imports (e.g. in dashboards plugin)
-from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     check_metrics, darken_color, evaluate, G, GB, generic_graph_template, get_graph_range,
     get_graph_templates, get_palette_color_by_index, graph_info, hsv_to_hexrgb, indexed_color, K,
     KB, LegacyPerfometer, m, M, MAX_CORES, MB, metric_info, P, parse_color, parse_color_into_hexrgb,
@@ -45,6 +45,7 @@ from cmk.gui.plugins.metrics.utils import (  # noqa: F401 # pylint: disable=unus
     replace_expressions, scalar_colors, scale_symbols, T, TB, translate_metrics,
     translated_metrics_from_row, TranslatedMetrics, unit_info,
 )
+from cmk.gui.type_defs import PerfometerSpec
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = Union[str, int, float]

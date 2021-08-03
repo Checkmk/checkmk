@@ -6,95 +6,76 @@
 
 from __future__ import annotations
 
-import time
 import abc
-from typing import (
-    Dict,
-    List,
-    Tuple,
-    Union,
-    Callable,
-    Any,
-    Optional,
-    Iterable,
-    TYPE_CHECKING,
-)
+import time
 from functools import partial
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TYPE_CHECKING, Union
 
 from six import ensure_str
 
-from livestatus import SiteId, LivestatusResponse, OnlySites
+from livestatus import LivestatusResponse, OnlySites, SiteId
 
-from cmk.utils.regex import regex
 import cmk.utils.defines as defines
 import cmk.utils.render
+from cmk.utils.regex import regex
 from cmk.utils.structured_data import (
-    SDRawPath,
-    SDPath,
-    SDKeys,
-    StructuredDataNode,
-    Table,
     Attributes,
     RetentionIntervals,
+    SDKeys,
+    SDPath,
+    SDRawPath,
+    StructuredDataNode,
+    Table,
 )
 from cmk.utils.type_defs import HostName
 
-import cmk.gui.pages
-from cmk.gui.globals import config
-import cmk.gui.sites as sites
 import cmk.gui.inventory as inventory
-from cmk.gui.inventory import InventoryRows
-from cmk.gui.inventory import InventoryDeltaData
+import cmk.gui.pages
+import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, output_funnel, request, user_errors
+from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, user_errors, output_funnel
-from cmk.gui.htmllib import HTML, foldable_container
-from cmk.gui.valuespec import Dictionary, Checkbox
-from cmk.gui.utils.escaping import escape_text, escape_html
-from cmk.gui.plugins.visuals import (
-    filter_registry,
-    VisualInfo,
-    visual_info_registry,
-)
-
-from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers
-from cmk.gui.plugins.visuals.inventory import (
-    FilterInvText,
-    FilterInvBool,
-    FilterInvFloat,
-    FilterInvtableText,
-    FilterInvtableIDRange,
-)
-
+from cmk.gui.inventory import InventoryDeltaData, InventoryRows
 from cmk.gui.plugins.views import (
-    data_source_registry,
     ABCDataSource,
-    RowTable,
-    painter_registry,
-    Painter,
-    register_painter,
-    register_sorter,
+    Cell,
+    cmp_simple_number,
+    data_source_registry,
+    declare_1to1_sorter,
     display_options,
-    painter_option_registry,
-    PainterOption,
-    PainterOptions,
     inventory_displayhints,
     InventoryHintSpec,
     multisite_builtin_views,
     paint_age,
-    declare_1to1_sorter,
-    cmp_simple_number,
+    Painter,
+    painter_option_registry,
+    painter_registry,
+    PainterOption,
+    PainterOptions,
+    register_painter,
+    register_sorter,
     render_labels,
-    Cell,
+    RowTable,
 )
-
+from cmk.gui.plugins.visuals import filter_registry, visual_info_registry, VisualInfo
+from cmk.gui.plugins.visuals.inventory import (
+    FilterInvBool,
+    FilterInvFloat,
+    FilterInvtableIDRange,
+    FilterInvtableText,
+    FilterInvText,
+)
+from cmk.gui.plugins.visuals.utils import get_livestatus_filter_headers
+from cmk.gui.type_defs import ColumnName, FilterName, Row, Rows
+from cmk.gui.utils.escaping import escape_html, escape_text
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.type_defs import Row, Rows, FilterName, ColumnName
+from cmk.gui.valuespec import Checkbox, Dictionary
 from cmk.gui.view_utils import CellSpec
 
 if TYPE_CHECKING:
-    from cmk.gui.views import View
     from cmk.gui.plugins.visuals.utils import Filter
+    from cmk.gui.views import View
 
 PaintResult = Tuple[str, Union[str, HTML]]
 PaintFunction = Callable[[Any], PaintResult]

@@ -11,18 +11,15 @@ This registry has multiple jobs:
  2. interlinking between endpoints without having to know the specific URL.
 
 """
-from typing import Dict, List, Iterator, Any, Sequence
+from typing import Any, Dict, Iterator, List, Sequence
 
-from cmk.gui.plugins.openapi.restful_objects.params import (
-    fill_out_path_template,
-    path_parameters,
-)
+from cmk.gui.plugins.openapi.restful_objects.params import fill_out_path_template, path_parameters
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
-    EndpointKey,
-    ParameterKey,
     EndpointEntry,
+    EndpointKey,
     LinkRelation,
     OpenAPIParameter,
+    ParameterKey,
 )
 
 

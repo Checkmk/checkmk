@@ -5,46 +5,43 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-
 from typing import Any, Mapping
 
 import cmk.gui.mkeventd as mkeventd
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Tuple,
-    Integer,
-    Float,
-    TextInput,
-    FixedValue,
-    Alternative,
-    ListOfStrings,
-    Age,
-    TextAreaUnicode,
-    DropdownChoice,
-    RegExp,
-    Transform,
-    EmailAddress,
-    ListOf,
-    Checkbox,
-    Password,
-    Percentage,
-    CascadingDropdown,
-    Hostname,
-    Optional,
-)
-
 from cmk.gui.plugins.wato import (
-    rulespec_group_registry,
-    RulespecGroup,
-    rulespec_registry,
     HostRulespec,
-    PluginCommandLine,
     IndividualOrStoredPassword,
     PasswordFromStore,
+    PluginCommandLine,
+    rulespec_group_registry,
+    rulespec_registry,
+    RulespecGroup,
 )
-
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    EmailAddress,
+    FixedValue,
+    Float,
+    Hostname,
+    Integer,
+    ListOf,
+    ListOfStrings,
+    Optional,
+    Password,
+    Percentage,
+    RegExp,
+    TextAreaUnicode,
+    TextInput,
+    Transform,
+    Tuple,
+)
 
 
 @rulespec_group_registry.register

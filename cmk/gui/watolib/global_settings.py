@@ -6,11 +6,8 @@
 
 from typing import Any, Dict
 
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_variable_registry
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_variable_registry,
-)
 
 
 def load_configuration_settings(site_specific=False, custom_site_path=None, full_config=False):

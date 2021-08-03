@@ -12,14 +12,14 @@ from typing import Any, Dict, List, Optional, Type
 
 from six import ensure_str
 
-import cmk.utils.store as store
 import cmk.utils.plugin_registry
+import cmk.utils.store as store
 
-from cmk.gui.type_defs import ConfigDomainName
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.i18n import _
+from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.utils.html import HTML
+from cmk.gui.valuespec import ValueSpec
 
 
 def wato_fileheader() -> str:

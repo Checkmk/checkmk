@@ -7,44 +7,39 @@
 
 import abc
 import re
-from typing import Union, Dict, List, Type, Optional, Any, Callable, Tuple as _Tuple
+from typing import Any, Callable, Dict, List, Optional
+from typing import Tuple as _Tuple
+from typing import Type, Union
 
 import cmk.utils.plugin_registry
 
-from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import html, request
+from cmk.gui.i18n import _
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.html import HTML
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeuri_contextless_rulespec_group
 from cmk.gui.valuespec import (
     Dictionary,
-    Transform,
-    ListOf,
+    DropdownChoice,
     ElementSelection,
     FixedValue,
-    Tuple,
-    DropdownChoice,
+    ListOf,
     OptionalDropdownChoice,
+    Transform,
+    Tuple,
+    ValueSpec,
     ValueSpecText,
 )
-from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.automations import check_mk_local_automation
+from cmk.gui.watolib.main_menu import ABCMainModule, ModuleRegistry
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
+    match_item_generator_registry,
     MatchItem,
     MatchItems,
-    match_item_generator_registry,
 )
-from cmk.gui.watolib.main_menu import (
-    ABCMainModule,
-    ModuleRegistry,
-)
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.utils.urls import (
-    makeuri,
-    makeuri_contextless,
-    makeuri_contextless_rulespec_group,
-)
+from cmk.gui.watolib.timeperiods import TimeperiodSelection
 
 
 class RulespecBaseGroup(metaclass=abc.ABCMeta):

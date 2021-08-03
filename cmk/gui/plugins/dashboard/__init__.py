@@ -6,6 +6,11 @@
 
 from cmk.utils.plugin_loader import load_plugins
 
+from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    ABCFigureDashlet, builtin_dashboards, Dashlet, dashlet_registry, dashlet_types, GROW,
+    IFrameDashlet, MAX,
+)
+
 #.
 #   .--Plugin API----------------------------------------------------------.
 #   |           ____  _             _            _    ____ ___             |
@@ -15,11 +20,6 @@ from cmk.utils.plugin_loader import load_plugins
 #   |          |_|   |_|\__,_|\__, |_|_| |_| /_/   \_\_|  |___|            |
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
-
-from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
-    builtin_dashboards, dashlet_types, dashlet_registry, IFrameDashlet, Dashlet, GROW, MAX,
-    ABCFigureDashlet,
-)
 
 #.
 #   .--Plugins-------------------------------------------------------------.

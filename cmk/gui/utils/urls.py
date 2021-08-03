@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Mapping, Optional, Sequence, Tuple
 import urllib.parse
-from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.http import Request
+from typing import Mapping, Optional, Sequence, Tuple
 
-from cmk.gui.utils.transaction_manager import TransactionManager
+from cmk.gui.http import Request
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.utils.escaping import escape_text
+from cmk.gui.utils.transaction_manager import TransactionManager
 
 QueryVars = Mapping[str, Sequence[str]]
 

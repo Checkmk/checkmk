@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-    Alternative,
-    FixedValue,
-)
-
 from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
-    CheckParameterRulespecWithItem,
 )
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, MonitoringState
 
 # Duplicated code from checkplugin... one bright day we may import from there?
 STATE_EVAL_KEY = "evaluation_mode"

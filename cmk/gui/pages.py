@@ -13,9 +13,8 @@ from typing import Any, Callable, Dict, Mapping, Optional, Type
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException
 
-from cmk.gui.globals import config
 from cmk.gui.exceptions import MKMissingDataError
-from cmk.gui.globals import g, html, request, response
+from cmk.gui.globals import config, g, html, request, response
 from cmk.gui.log import logger
 
 PageHandlerFunc = Callable[[], None]

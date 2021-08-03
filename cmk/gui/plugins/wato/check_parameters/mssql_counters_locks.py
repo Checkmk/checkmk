@@ -5,22 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Checkbox,
-    Dictionary,
-    Float,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
+    HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
 )
-
 from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_tablespace
+from cmk.gui.valuespec import Checkbox, Dictionary, Float, Tuple
 
 
 def _valuespec_inventory_mssql_counters_rules():

@@ -13,26 +13,26 @@ entering the password.
 import json
 from typing import cast
 
-from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.utils import problem
-from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
-from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
-from cmk.gui.watolib.passwords import (
-    save_password,
-    load_password_to_modify,
-    load_password,
-    load_passwords,
-    remove_password,
-    Password,
-)
+from cmk.utils import version
 
+from cmk.gui.http import Response
+from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
     Endpoint,
     request_schemas,
     response_schemas,
-    constructors,
 )
-from cmk.utils import version
+from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.watolib.passwords import (
+    load_password,
+    load_password_to_modify,
+    load_passwords,
+    Password,
+    remove_password,
+    save_password,
+)
 
 
 @Endpoint(constructors.collection_href('password'),

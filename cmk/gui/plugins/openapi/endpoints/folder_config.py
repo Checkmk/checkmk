@@ -47,7 +47,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.utils import ProblemException, problem
+from cmk.gui.plugins.openapi.utils import problem, ProblemException
 from cmk.gui.watolib import CREFolder
 
 # TODO: Remove all hard-coded response creation in favour of a generic one

@@ -20,13 +20,11 @@ from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[impo
 from marshmallow import Schema  # type: ignore[import]
 
 from cmk.utils.site import omd_site
+
 from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.restful_objects.params import to_openapi, fill_out_path_template
+from cmk.gui.plugins.openapi.restful_objects.params import fill_out_path_template, to_openapi
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
-from cmk.gui.plugins.openapi.restful_objects.type_defs import (
-    CodeSample,
-    OpenAPIParameter,
-)
+from cmk.gui.plugins.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
 
 CODE_TEMPLATE_MACROS = """
 {%- macro comments(comment_format="# ", request_schema_multiple=False) %}

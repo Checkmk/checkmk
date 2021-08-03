@@ -11,50 +11,43 @@ import itertools
 import os
 import re
 import time
-from typing import Any, Dict, Union, Iterator, List
+from typing import Any, Dict, Iterator, List, Union
 
 from six import ensure_str
 
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
-import cmk.utils.store as store
 import cmk.utils.paths
-from cmk.utils.version import __version__
+import cmk.utils.store as store
 import cmk.utils.werks
+from cmk.utils.version import __version__
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
-from cmk.gui.table import table_element
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, theme, output_funnel, user
-from cmk.gui.htmllib import HTML
-from cmk.gui.valuespec import (
-    ListChoice,
-    Timerange,
-    TextInput,
-    DropdownChoice,
-    Tuple,
-    Integer,
-)
 from cmk.gui.breadcrumb import (
-    make_main_menu_breadcrumb,
-    make_current_page_breadcrumb_item,
-    BreadcrumbItem,
     Breadcrumb,
+    BreadcrumbItem,
+    make_current_page_breadcrumb_item,
+    make_main_menu_breadcrumb,
 )
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html, output_funnel, request, theme, transactions, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
+    make_display_options_dropdown,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuSidePopup,
-    make_simple_link,
-    make_display_options_dropdown,
+    PageMenuTopic,
 )
 from cmk.gui.page_state import PageState
+from cmk.gui.table import table_element
 from cmk.gui.utils.escaping import escape_html, escape_html_permissive
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link, makeactionuri
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.valuespec import DropdownChoice, Integer, ListChoice, TextInput, Timerange, Tuple
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 

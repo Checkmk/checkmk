@@ -8,7 +8,7 @@
 Cares about rendering the breadcrumb which is shown at the top of all pages
 """
 
-from typing import NamedTuple, MutableSequence, List, Iterable, Optional, TYPE_CHECKING
+from typing import Iterable, List, MutableSequence, NamedTuple, Optional, TYPE_CHECKING
 
 from cmk.gui.globals import html
 from cmk.gui.type_defs import MegaMenu

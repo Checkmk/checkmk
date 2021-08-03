@@ -5,14 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-
 from cmk.gui.plugins.views import (
-    data_source_registry,
     ABCDataSource,
+    data_source_registry,
     DataSourceLivestatus,
+    query_livestatus,
     RowTable,
     RowTableLivestatus,
-    query_livestatus,
 )
 
 

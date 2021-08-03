@@ -5,51 +5,47 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import json
 import re
 import traceback
 from dataclasses import dataclass
-from typing import Dict, Iterable, List, Optional, Set, Tuple
 from enum import Enum, unique
+from typing import Dict, Iterable, List, Optional, Set, Tuple
 
 import livestatus
-import json
 
 import cmk.utils.plugin_registry
-from cmk.utils.exceptions import (
-    MKException,
-    MKGeneralException,
-)
+from cmk.utils.exceptions import MKException, MKGeneralException
 
-from cmk.gui.type_defs import ABCMegaMenuSearch
-import cmk.gui.utils
-from cmk.gui.globals import config
 import cmk.gui.sites as sites
-from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.plugins.wato import main_module_registry
-from cmk.gui.log import logger
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, output_funnel, user
+import cmk.gui.utils
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, PageHandlers
+from cmk.gui.globals import config, html, output_funnel, request, user
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.sidebar import PageHandlers, SidebarSnapin, snapin_registry
+from cmk.gui.plugins.wato import main_module_registry
 from cmk.gui.type_defs import (
+    ABCMegaMenuSearch,
     HTTPVariables,
+    Icon,
+    Row,
+    Rows,
     SearchQuery,
     SearchResult,
     SearchResultsByTopic,
-    Row,
-    Rows,
     ViewName,
-    Icon,
 )
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher
-from cmk.gui.utils.urls import makeuri
 from cmk.gui.utils.labels import (
-    Labels,
     encode_labels_for_http,
     encode_labels_for_livestatus,
     label_help_text,
+    Labels,
 )
+from cmk.gui.utils.urls import makeuri
+from cmk.gui.watolib.search import IndexNotFoundException, IndexSearcher
 
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |

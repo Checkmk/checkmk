@@ -4,17 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.plugins.views import Layout, layout_registry, multisite_builtin_views, PainterOptions
 from cmk.gui.utils.mobile import is_mobile
-
-from cmk.gui.plugins.views import (
-    multisite_builtin_views,
-    layout_registry,
-    Layout,
-    PainterOptions,
-)
 
 #   .--Views---------------------------------------------------------------.
 #   |                    __     ___                                        |

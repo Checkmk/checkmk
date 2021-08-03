@@ -8,27 +8,26 @@ cleanup is implemented here: the bulk removal of explicit attribute
 values."""
 
 from hashlib import sha256
-from typing import Type, Optional
+from typing import Optional, Type
 
 from six import ensure_binary
 
-from cmk.gui.globals import html, transactions, request, user
-from cmk.gui.i18n import _
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.wato.pages.folders import ModeFolder
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
-
+from cmk.gui.globals import html, request, transactions, user
+from cmk.gui.i18n import _
+from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
 from cmk.gui.plugins.wato.utils import (
-    mode_registry,
     configure_attributes,
     get_hostnames_from_checkboxes,
     get_hosts_from_checkboxes,
+    mode_registry,
 )
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect
-from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, redirect, WatoMode
 from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 
 @mode_registry.register

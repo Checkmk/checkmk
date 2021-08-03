@@ -4,36 +4,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
+import copy
 import errno
 import os
-import copy
+import sys
+from dataclasses import asdict, dataclass, field, fields, make_dataclass
+from functools import partial
+from pathlib import Path
 from types import ModuleType
 from typing import Any, Callable, Dict, List, Tuple, Union
-from pathlib import Path
-from functools import partial
-from dataclasses import dataclass, fields, field, make_dataclass, asdict
 
 from livestatus import SiteConfigurations
 
-import cmk.utils.version as cmk_version
-from cmk.utils.site import omd_site, url_prefix
-import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.tags
+import cmk.utils.version as cmk_version
+from cmk.utils.site import omd_site, url_prefix
 
-from cmk.gui.globals import config, local
-import cmk.gui.utils as utils
 import cmk.gui.i18n
-from cmk.gui.i18n import _
 import cmk.gui.log as log
+import cmk.gui.plugins.config
+import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKConfigError
+from cmk.gui.globals import config, local
+from cmk.gui.i18n import _
 
 # Kept for compatibility with pre 1.6 GUI plugins
-from cmk.gui.permissions import declare_permission, declare_permission_section  # noqa: F401 # pylint: disable=unused-import
-
-import cmk.gui.plugins.config
-
+from cmk.gui.permissions import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    declare_permission, declare_permission_section,
+)
 from cmk.gui.plugins.config.base import CREConfig
 
 if not cmk_version.is_raw_edition():

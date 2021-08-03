@@ -6,37 +6,28 @@
 
 from typing import Optional, Tuple
 
-from cmk.gui.globals import config
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.metrics as metrics
-from cmk.gui.i18n import _
-
-from cmk.gui.globals import html
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.globals import config, html
 from cmk.gui.htmllib import HTML
-
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
-
-from cmk.gui.plugins.views.perfometers import (
-    perfometers,
-    render_metricometer,
-)
-
 from cmk.gui.plugins.views import (
-    painter_registry,
-    Painter,
-    sorter_registry,
-    Sorter,
-    is_stale,
-    display_options,
-    Row,
     Cell,
     CellSpec,
+    display_options,
+    is_stale,
+    Painter,
+    painter_registry,
     Perfdata,
-    TranslatedMetrics,
     PerfometerSpec,
+    Row,
+    Sorter,
+    sorter_registry,
+    TranslatedMetrics,
 )
-
 from cmk.gui.plugins.views.graphs import cmk_graph_url
+from cmk.gui.plugins.views.perfometers import perfometers, render_metricometer
 
 
 class Perfometer:

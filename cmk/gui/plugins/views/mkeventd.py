@@ -4,52 +4,44 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Optional, TypeVar, Union
 import urllib.parse
+from typing import Callable, Optional, TypeVar, Union
 
 from livestatus import SiteId
 
 from cmk.utils.defines import short_service_state_name
 
-import cmk.gui.utils.escaping as escaping
-from cmk.gui.globals import config
-from cmk.gui.config import builtin_role_ids
-import cmk.gui.sites as sites
-from cmk.gui.type_defs import HTTPVariables, Row
-
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.valuespec import MonitoringState
-from cmk.gui.i18n import _, _l, ungettext
-
-from cmk.gui.globals import html, request, transactions, user
-from cmk.gui.utils.urls import makeactionuri
+import cmk.gui.sites as sites
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.config import builtin_role_ids
+from cmk.gui.globals import config, html, request, transactions, user
 from cmk.gui.htmllib import HTML
-from cmk.gui.utils.urls import urlencode_vars
-
+from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.views import (
-    get_permitted_views,
-    command_registry,
+    ABCDataSource,
+    cmp_num_split,
+    cmp_simple_number,
+    cmp_simple_string,
     Command,
+    command_registry,
     CommandActionResult,
     CommandSpec,
     data_source_registry,
-    ABCDataSource,
-    RowTableLivestatus,
-    painter_registry,
-    Painter,
+    declare_1to1_sorter,
+    get_permitted_views,
     multisite_builtin_views,
     paint_age,
     paint_nagiosflag,
+    Painter,
+    painter_registry,
     row_id,
-    declare_1to1_sorter,
-    cmp_simple_number,
-    cmp_simple_string,
-    cmp_num_split,
+    RowTableLivestatus,
 )
-from cmk.gui.permissions import (
-    permission_registry,
-    Permission,
-)
+from cmk.gui.type_defs import HTTPVariables, Row
+from cmk.gui.utils.urls import makeactionuri, urlencode_vars
+from cmk.gui.valuespec import MonitoringState
 
 #   .--Datasources---------------------------------------------------------.
 #   |       ____        _                                                  |

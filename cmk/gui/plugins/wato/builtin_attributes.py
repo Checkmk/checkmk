@@ -6,56 +6,55 @@
 import time
 
 import cmk.utils.tags
-import cmk.gui.watolib as watolib
+
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
-from cmk.gui.i18n import _
+import cmk.gui.watolib as watolib
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, user
-from cmk.gui.utils.urls import urlencode_vars
-from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site
-
 from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    ABCHostAttributeNagiosText,
+    ABCHostAttributeValueSpec,
+    ConfigHostname,
+    host_attribute_registry,
+    HostAttributeTopicAddress,
+    HostAttributeTopicBasicSettings,
+    HostAttributeTopicCustomAttributes,
+    HostAttributeTopicDataSources,
+    HostAttributeTopicManagementBoard,
+    HostAttributeTopicMetaData,
+    HostAttributeTopicNetworkScan,
+    HostnameTranslation,
+    IPMIParameters,
+    SNMPCredentials,
+)
+from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site
+from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.valuespec import (
+    AbsoluteDate,
+    Age,
+    Alternative,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
     HostAddress,
+    ID,
+    Integer,
+    IPv4Address,
+    Labels,
     ListOf,
     ListOfStrings,
-    Dictionary,
-    Age,
-    TimeofdayRange,
-    Checkbox,
-    DropdownChoice,
-    Integer,
-    CascadingDropdown,
-    Tuple,
-    IPv4Address,
     RegExp,
-    Alternative,
-    FixedValue,
-    AbsoluteDate,
-    TextInput,
     SetupSiteChoice,
-    ID,
+    TextInput,
+    TimeofdayRange,
     Transform,
-    Labels,
+    Tuple,
     ValueSpecText,
-)
-from cmk.gui.exceptions import MKUserError
-
-from cmk.gui.plugins.wato import (
-    HostAttributeTopicBasicSettings,
-    HostAttributeTopicNetworkScan,
-    HostAttributeTopicAddress,
-    HostAttributeTopicManagementBoard,
-    HostAttributeTopicCustomAttributes,
-    HostAttributeTopicMetaData,
-    HostAttributeTopicDataSources,
-    ABCHostAttributeValueSpec,
-    ABCHostAttributeNagiosText,
-    host_attribute_registry,
-    SNMPCredentials,
-    IPMIParameters,
-    HostnameTranslation,
-    ConfigHostname,
 )
 
 

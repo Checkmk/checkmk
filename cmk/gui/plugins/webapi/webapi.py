@@ -7,53 +7,41 @@
 # TODO CLEANUP: Replace MKUserError by MKAPIError or something like that
 
 import copy
-from functools import partial
 import os
+from functools import partial
 from typing import Any, Dict, List
 
 from six import ensure_str
 
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+import cmk.utils.tags
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.type_defs import DiscoveryResult
 
-import cmk.utils.tags
-from cmk.gui.globals import config
-from cmk.gui.config import prepare_raw_site_config
+import cmk.gui.bi as bi
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
-
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.exceptions import (
-    MKException,
-    MKGeneralException,
-)
-
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import (
-    MKUserError,)
-from cmk.gui.plugins.userdb.htpasswd import hash_password
 import cmk.gui.watolib.users
-from cmk.gui.watolib.tags import (
-    TagConfigFile,)
-from cmk.gui.groups import (
-    load_host_group_information,
-    load_service_group_information,
-)
-from cmk.gui.watolib.groups import load_contact_group_information
-from cmk.gui.watolib.utils import try_bake_agents_for_hosts
-from cmk.gui.watolib.automations import execute_automation_discovery
-
-import cmk.gui.bi as bi
-
+from cmk.gui.config import prepare_raw_site_config
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config
+from cmk.gui.groups import load_host_group_information, load_service_group_information
+from cmk.gui.i18n import _
+from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.webapi import (
-    APICallCollection,
-    api_call_collection_registry,
-    validate_host_attributes,
-    validate_config_hash,
-    check_hostname,
     add_configuration_hash,
+    api_call_collection_registry,
+    APICallCollection,
+    check_hostname,
     compute_config_hash,
+    validate_config_hash,
+    validate_host_attributes,
 )
+from cmk.gui.watolib.automations import execute_automation_discovery
+from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.tags import TagConfigFile
+from cmk.gui.watolib.utils import try_bake_agents_for_hosts
 
 #.
 #   .--Folders-------------------------------------------------------------.

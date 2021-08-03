@@ -10,27 +10,26 @@
 
 import cmk.utils.paths
 
-from cmk.gui.valuespec import (
-    Age,
-    TextInput,
-    Integer,
-    Tuple,
-    ListOf,
-    DropdownChoice,
-    Transform,
-    EmailAddress,
-    Checkbox,
-)
 from cmk.gui.i18n import _
-
 from cmk.gui.plugins.wato import (
     config_variable_group_registry,
-    ConfigVariableGroup,
     config_variable_registry,
-    ConfigVariable,
     ConfigDomainCore,
     ConfigDomainGUI,
+    ConfigVariable,
+    ConfigVariableGroup,
     site_neutral_path,
+)
+from cmk.gui.valuespec import (
+    Age,
+    Checkbox,
+    DropdownChoice,
+    EmailAddress,
+    Integer,
+    ListOf,
+    TextInput,
+    Transform,
+    Tuple,
 )
 
 

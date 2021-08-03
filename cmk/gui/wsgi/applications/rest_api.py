@@ -12,7 +12,7 @@ import os
 import re
 import urllib.parse
 from base64 import b64decode
-from typing import Any, Callable, Dict, Optional, Tuple, Type, List, Literal
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type
 
 from apispec.yaml_utils import dict_to_yaml  # type: ignore[import]
 from swagger_ui_bundle import swagger_ui_3_path  # type: ignore[import]
@@ -22,17 +22,17 @@ from werkzeug.routing import Map, Rule, Submount
 
 from cmk.utils import crash_reporting
 from cmk.utils.exceptions import MKException
-from cmk.utils.type_defs import UserId
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb
-from cmk.gui.exceptions import MKUserError, MKAuthException
+from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.login import check_parsed_auth_cookie, user_from_cookie
-from cmk.gui.openapi import ENDPOINT_REGISTRY, generate_data, add_once
+from cmk.gui.openapi import add_once, ENDPOINT_REGISTRY, generate_data
 from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.wsgi.auth import automation_auth, gui_user_auth, rfc7662_subject, set_user_context
-from cmk.gui.wsgi.middleware import with_context_middleware, OverrideRequestMethod
+from cmk.gui.wsgi.middleware import OverrideRequestMethod, with_context_middleware
 from cmk.gui.wsgi.type_defs import RFC7662
 from cmk.gui.wsgi.wrappers import ParameterDict
 

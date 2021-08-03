@@ -6,12 +6,8 @@
 
 import cmk.gui.visuals as visuals
 from cmk.gui.i18n import _
-from cmk.gui.plugins.sidebar import (
-    CustomizableSidebarSnapin,
-    snapin_registry,
-    snapin_width,
-)
 from cmk.gui.matrix_visualization import HostMatrixVisualization
+from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, snapin_registry, snapin_width
 
 
 @snapin_registry.register

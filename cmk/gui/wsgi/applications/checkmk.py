@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Callable, Dict
 import functools
 import http.client as http_client
-import traceback
 import json
+import traceback
+from typing import Callable, Dict
 
 import livestatus
 
@@ -16,27 +16,28 @@ import cmk.utils.paths
 import cmk.utils.profile
 import cmk.utils.store
 
-from cmk.gui import config as config_module, pages, http, htmllib, sites
+from cmk.gui import config as config_module
+from cmk.gui import htmllib, http, pages, sites
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import (
-    MKUserError,
-    MKConfigError,
-    MKGeneralException,
-    MKAuthException,
-    MKUnauthenticatedException,
     FinalizeRequest,
     HTTPRedirect,
+    MKAuthException,
+    MKConfigError,
+    MKGeneralException,
+    MKUnauthenticatedException,
+    MKUserError,
 )
-from cmk.gui.globals import html, RequestContext, AppContext, request, response, config
+from cmk.gui.globals import AppContext, config, html, request, RequestContext, response
+from cmk.gui.http import Response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.http import Response
+from cmk.gui.utils.json import patch_json
+from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.gui.utils.theme import Theme
 from cmk.gui.utils.timeout_manager import TimeoutManager
 from cmk.gui.utils.urls import requested_file_name
-from cmk.gui.utils.theme import Theme
-from cmk.gui.utils.output_funnel import OutputFunnel
-from cmk.gui.utils.json import patch_json
 from cmk.gui.wsgi.applications.utils import (
     ensure_authentication,
     fail_silently,

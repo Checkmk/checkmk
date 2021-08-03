@@ -5,9 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersStorage,
+)
 from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
-from cmk.gui.plugins.wato import (CheckParameterRulespecWithItem,
-                                  RulespecGroupCheckParametersStorage, rulespec_registry)
 
 STATES_CHECK_RES = [("deleted", 2), ("read-only", 1), ("read-write", 0),
                     ("replication destination", 0), ("retention lock disabled", 0),

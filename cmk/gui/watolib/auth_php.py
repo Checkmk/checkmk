@@ -40,12 +40,12 @@ from pathlib import Path
 
 from six import ensure_str
 
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
 
-from cmk.gui.globals import config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
+from cmk.gui.globals import config
 from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib.groups import load_contact_group_information
 

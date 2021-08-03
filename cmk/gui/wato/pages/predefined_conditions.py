@@ -9,34 +9,32 @@ from typing import List, Optional, Type
 
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
 from cmk.gui.globals import html, request, user
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    ConfigDomainCore,
+    mode_registry,
+    SimpleEditMode,
+    SimpleListMode,
+    SimpleModeType,
+    WatoMode,
+)
+from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupMonitoringConfiguration
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
-    FixedValue,
     Alternative,
     DropdownChoice,
     DualListChoice,
+    FixedValue,
     Transform,
+    ValueSpec,
 )
-
-from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupMonitoringConfiguration
-from cmk.gui.wato.pages.rulesets import VSExplicitConditions, RuleConditions
-from cmk.gui.watolib.rulesets import AllRulesets, SearchedRulesets, FolderRulesets
-from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.watolib.rulespecs import ServiceRulespec
+from cmk.gui.wato.pages.rulesets import RuleConditions, VSExplicitConditions
 from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ConfigDomainCore,
-    SimpleModeType,
-    SimpleListMode,
-    SimpleEditMode,
-    mode_registry,
-)
-
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, SearchedRulesets
+from cmk.gui.watolib.rulespecs import ServiceRulespec
 
 
 def dummy_rulespec() -> ServiceRulespec:

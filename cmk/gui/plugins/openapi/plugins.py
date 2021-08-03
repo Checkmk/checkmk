@@ -3,10 +3,11 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Type, Any, Union
-from marshmallow import Schema, fields, ValidationError
+from typing import Any, Type, Union
+
 from apispec.ext import marshmallow  # type: ignore[import]
 from apispec.ext.marshmallow import common  # type: ignore[import]
+from marshmallow import fields, Schema, ValidationError
 
 
 class ValueTypedDictOpenAPIConverter(marshmallow.OpenAPIConverter):

@@ -13,31 +13,24 @@ import traceback
 
 import livestatus
 
-import cmk.utils.render
 import cmk.utils
+import cmk.utils.render
 
-from cmk.gui.globals import config
 import cmk.gui.pdf as pdf
-from cmk.gui.exceptions import (
-    MKGeneralException,
-    MKUnauthenticatedException,
-    MKUserError,
-)
-from cmk.gui.utils.logged_in import SuperUserContext
-from cmk.gui.log import logger
+from cmk.gui.exceptions import MKGeneralException, MKUnauthenticatedException, MKUserError
+from cmk.gui.globals import config, request, response
 from cmk.gui.i18n import _
-from cmk.gui.globals import response, request
-from cmk.gui.plugins.metrics.utils import get_graph_data_from_livestatus
-from cmk.gui.plugins.metrics.identification import graph_identification_types
+from cmk.gui.log import logger
+from cmk.gui.plugins.metrics import artwork, html_render
 from cmk.gui.plugins.metrics.graph_pdf import (
+    compute_pdf_graph_data_range,
     get_mm_per_ex,
     graph_legend_height,
     render_graph_pdf,
-    compute_pdf_graph_data_range,
 )
-
-from cmk.gui.plugins.metrics import artwork
-from cmk.gui.plugins.metrics import html_render
+from cmk.gui.plugins.metrics.identification import graph_identification_types
+from cmk.gui.plugins.metrics.utils import get_graph_data_from_livestatus
+from cmk.gui.utils.logged_in import SuperUserContext
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs

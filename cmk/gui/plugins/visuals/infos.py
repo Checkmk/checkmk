@@ -5,18 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import List, Tuple
+
 from cmk.gui.i18n import _
+from cmk.gui.plugins.visuals import visual_info_registry, VisualInfo
 from cmk.gui.valuespec import (
-    TextInput,
     Integer,
     MonitoredHostname,
     MonitoredServiceDescription,
+    TextInput,
     ValueSpec,
-)
-
-from cmk.gui.plugins.visuals import (
-    VisualInfo,
-    visual_info_registry,
 )
 
 

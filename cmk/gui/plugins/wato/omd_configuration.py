@@ -5,45 +5,43 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from pathlib import Path
 import subprocess
 import traceback
-from typing import Dict, Any
+from pathlib import Path
+from typing import Any, Dict
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 
-from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Age,
-    Dictionary,
-    Tuple,
-    Filesize,
-    Optional,
-    ListChoice,
-    DropdownChoice,
-    Checkbox,
-)
-
+from cmk.gui.log import logger
 from cmk.gui.plugins.wato import (
-    config_variable_group_registry,
-    ConfigVariableGroup,
-    config_domain_registry,
     ABCConfigDomain,
-    ConfigDomainOMD,
-    LivestatusViaTCP,
-    config_variable_registry,
-    ConfigVariable,
-    site_neutral_path,
     add_replication_paths,
+    config_domain_registry,
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigDomainOMD,
+    ConfigVariable,
+    ConfigVariableGroup,
+    LivestatusViaTCP,
     ReplicationPath,
+    site_neutral_path,
     wato_fileheader,
 )
-
 from cmk.gui.type_defs import ConfigDomainName
+from cmk.gui.valuespec import (
+    Age,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    Filesize,
+    Integer,
+    ListChoice,
+    Optional,
+    Tuple,
+)
 
 
 @config_variable_group_registry.register

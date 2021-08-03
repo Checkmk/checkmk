@@ -4,18 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 import cmk.utils.render
-from cmk.gui.i18n import _
 
+from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import (
-    metric_info,
     graph_info,
-    m,
-    parse_color_into_hexrgb,
     indexed_color,
+    m,
     MAX_NUMBER_HOPS,
+    metric_info,
+    parse_color_into_hexrgb,
 )
 
 # .

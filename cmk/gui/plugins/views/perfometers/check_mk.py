@@ -5,22 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.render
+
 import cmk.gui.utils as utils
 from cmk.gui.globals import html
-from cmk.gui.utils.html import HTML
-from cmk.gui.view_utils import get_themed_perfometer_bg_color
-
 from cmk.gui.plugins.views.perfometers import (
-    perfometers,
-    render_perfometer,
+    LegacyPerfometerResult,
+    Perfdata,
     perfometer_linear,
     perfometer_logarithmic,
     perfometer_logarithmic_dual,
     perfometer_logarithmic_dual_independent,
+    perfometers,
+    render_perfometer,
     Row,
-    Perfdata,
-    LegacyPerfometerResult,
 )
+from cmk.gui.utils.html import HTML
+from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 # Perf-O-Meters for Checkmk's checks
 #

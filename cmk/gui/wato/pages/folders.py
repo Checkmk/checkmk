@@ -8,61 +8,54 @@
 import abc
 import json
 import operator
-from typing import List, Tuple, Dict, Optional, Type, Iterator
+from typing import Dict, Iterator, List, Optional, Tuple, Type
 
 from cmk.utils.type_defs import HostName
 
-from cmk.gui.globals import config
-import cmk.gui.watolib as watolib
-import cmk.gui.utils as utils
-from cmk.gui.table import table_element, init_rowselect
-import cmk.gui.weblib as weblib
 import cmk.gui.forms as forms
+import cmk.gui.utils as utils
 import cmk.gui.view_utils
-
-from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.watolib.host_attributes import host_attribute_registry
-from cmk.gui.watolib.groups import load_contact_group_information
-from cmk.gui.watolib.changes import make_object_audit_log_url
-from cmk.gui.plugins.wato.utils import (
-    mode_registry,
-    configure_attributes,
-    get_hostnames_from_checkboxes,
-)
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
-from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
-from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
-
+import cmk.gui.watolib as watolib
+import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, request, transactions, output_funnel, user
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, output_funnel, request, transactions, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.valuespec import (
-    DropdownChoice,
-    TextInput,
-    ValueSpec,
-)
 from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    PageMenuSearch,
-    PageMenuPopup,
     make_checkbox_selection_json_text,
-    make_simple_link,
     make_checkbox_selection_topic,
-    make_simple_form_page_menu,
+    make_confirmed_form_submit_link,
     make_display_options_dropdown,
     make_form_submit_link,
-    make_confirmed_form_submit_link,
+    make_simple_form_page_menu,
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuPopup,
+    PageMenuSearch,
+    PageMenuTopic,
 )
-from cmk.gui.utils.urls import makeuri, make_confirm_link, makeuri_contextless, makeactionuri
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.wato.utils import (
+    configure_attributes,
+    get_hostnames_from_checkboxes,
+    mode_registry,
+)
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect, WatoMode
+from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
+from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
+from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec
+from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 
 def make_folder_breadcrumb(folder: watolib.CREFolder) -> Breadcrumb:

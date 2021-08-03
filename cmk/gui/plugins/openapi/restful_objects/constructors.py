@@ -8,15 +8,14 @@ import hashlib
 import json
 import re
 from http import HTTPStatus
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import quote
 
 from werkzeug.datastructures import ETags
 
 from cmk.utils.site import omd_site
 
-from cmk.gui.globals import config
-from cmk.gui.globals import request
+from cmk.gui.globals import config, request
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
@@ -24,8 +23,8 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     CollectionObject,
     DomainObject,
     DomainType,
-    LinkRelation,
     HTTPMethod,
+    LinkRelation,
     LinkType,
     ObjectProperty,
     PropertyFormat,
@@ -38,8 +37,10 @@ from cmk.gui.plugins.openapi.utils import ProblemException
 @contextlib.contextmanager
 def _request_context(secure=True):
     import os
+
     import mock
     from werkzeug.test import create_environ
+
     from cmk.gui.utils.script_helpers import request_context
     if secure:
         protocol = 'https'

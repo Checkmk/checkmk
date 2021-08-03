@@ -10,40 +10,32 @@ from typing import List, Optional, Type
 
 from six import ensure_str
 
+import cmk.gui.forms as forms
 import cmk.gui.pages
 import cmk.gui.watolib as watolib
-import cmk.gui.forms as forms
-from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, user_errors, request, user
-from cmk.gui.valuespec import (
-    DropdownChoice,
-    Integer,
-    Float,
-    Dictionary,
-    Password,
-    HostAddress,
-    FixedValue,
-)
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import html, request, transactions, user, user_errors
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_form_submit_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_form_submit_link,
+    PageMenuTopic,
 )
-from cmk.gui.pages import page_registry, AjaxPage
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.wato import ActionResult, flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    Float,
+    HostAddress,
+    Integer,
+    Password,
+)
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ActionResult,
-    mode_registry,
-    flash,
-    mode_url,
-    redirect,
-)
 
 
 @mode_registry.register

@@ -11,9 +11,9 @@ from typing import Optional
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb
-from cmk.gui.utils.logged_in import UserContext
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.login import set_auth_type, verify_automation_secret
+from cmk.gui.utils.logged_in import UserContext
 from cmk.gui.wsgi.type_defs import AuthType, RFC7662
 
 

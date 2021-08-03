@@ -5,13 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Dictionary, FixedValue, Alternative, MonitoringState, TextInput
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, MonitoringState, TextInput
 
 # these default values were suggested by Aldi Sued
 VM_STATES_DEFVALS = [('FastSaved', 0), ('FastSavedCritical', 2), ('FastSaving', 0),

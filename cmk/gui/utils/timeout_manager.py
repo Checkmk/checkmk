@@ -7,6 +7,7 @@
 import signal
 from types import FrameType
 from typing import Optional
+
 from cmk.gui.exceptions import RequestTimeout
 from cmk.gui.i18n import _
 

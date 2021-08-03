@@ -4,8 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple as _Tuple
+from typing import List
+from typing import Tuple as _Tuple
+
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersStorage,
+)
 from cmk.gui.valuespec import (
     Age,
     Checkbox,
@@ -17,12 +24,6 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
     ValueSpec,
-)
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersStorage,
 )
 
 file_size_age_elements: List[_Tuple[str, ValueSpec]] = [

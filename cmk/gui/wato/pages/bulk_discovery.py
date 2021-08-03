@@ -7,32 +7,30 @@
 this mode is used."""
 
 import copy
-from typing import List, Tuple, cast, Type, Optional
+from typing import cast, List, Optional, Tuple, Type
 
-from cmk.gui.globals import config
-import cmk.gui.sites as sites
 import cmk.gui.forms as forms
-from cmk.gui.log import logger
-from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, request, user
+import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
+from cmk.gui.plugins.wato import (
+    ActionResult,
+    get_hostnames_from_checkboxes,
+    mode_registry,
+    WatoMode,
+)
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
-    vs_bulk_discovery,
     DiscoveryHost,
     get_tasks,
+    vs_bulk_discovery,
 )
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ActionResult,
-    mode_registry,
-    get_hostnames_from_checkboxes,
-)
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 
 @mode_registry.register

@@ -9,8 +9,8 @@ from __future__ import annotations
 from typing import Optional, TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from cmk.gui.http import Request
     import cmk.gui.htmllib as htmllib
+    from cmk.gui.http import Request
 
 #.
 #   .--Display Opts.-------------------------------------------------------.

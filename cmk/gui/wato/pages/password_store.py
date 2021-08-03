@@ -6,28 +6,28 @@
 
 from typing import List, Optional, Type
 
-from cmk.gui.i18n import _
 from cmk.gui.globals import html, user
-from cmk.gui.valuespec import ValueSpec, DictionaryEntry
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    ConfigDomainCore,
+    mode_registry,
+    SimpleEditMode,
+    SimpleListMode,
+    SimpleModeType,
+    WatoMode,
+)
 from cmk.gui.valuespec import (
-    FixedValue,
-    Password,
     Alternative,
+    DictionaryEntry,
     DropdownChoice,
     DualListChoice,
+    FixedValue,
+    Password,
+    ValueSpec,
 )
-
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
 from cmk.gui.watolib.passwords import sorted_contact_group_choices
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ConfigDomainCore,
-    SimpleModeType,
-    SimpleListMode,
-    SimpleEditMode,
-    mode_registry,
-)
 
 
 class PasswordStoreModeType(SimpleModeType):

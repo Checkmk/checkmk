@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Basic functions for cmk_figures"""
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 FigureResponse = Dict[str, Any]
 

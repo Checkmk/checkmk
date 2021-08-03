@@ -5,21 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper layer between WSGI and GUI application code"""
 
-from typing import Optional, Any, Iterator, Union, Dict, Tuple, TypeVar, Mapping, List
 import ast
 import json
+import urllib.parse
 from contextlib import contextmanager
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Tuple, TypeVar, Union
 
-from six import ensure_binary, ensure_str
 import werkzeug.wrappers
+
 # NOTE: 'JSONMixin' is deprecated and will be removed in Werkzeug 2.1. 'Request' now includes the functionality directly.
 import werkzeug.wrappers.json  # type: ignore[import]
+from six import ensure_binary, ensure_str
 from werkzeug.utils import get_content_type
-import urllib.parse
 
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError, MKGeneralException
 import cmk.gui.utils as utils
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.i18n import _
 
 UploadedFile = Tuple[str, str, bytes]
 T = TypeVar('T')

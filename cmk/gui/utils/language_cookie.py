@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Optional
+
 from cmk.gui.http import Request, Response
 
 

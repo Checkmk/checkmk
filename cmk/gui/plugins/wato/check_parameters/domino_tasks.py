@@ -5,6 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    HostRulespec,
+    ManualCheckParameterRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupEnforcedServicesApplications,
+)
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
@@ -14,13 +21,6 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupEnforcedServicesApplications,
-    RulespecGroupCheckParametersDiscovery,
-    rulespec_registry,
-    HostRulespec,
-    ManualCheckParameterRulespec,
 )
 
 

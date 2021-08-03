@@ -18,7 +18,7 @@ from typing import (
     Union,
 )
 
-from marshmallow import Schema, fields
+from marshmallow import fields, Schema
 
 URL = str
 

@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    ListOf,
-    Percentage,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupEnforcedServicesNetworking,
-    rulespec_registry,
     ManualCheckParameterRulespec,
+    rulespec_registry,
+    RulespecGroupEnforcedServicesNetworking,
 )
+from cmk.gui.valuespec import Integer, ListOf, Percentage, Tuple
 
 
 # TODO: Why is this only a manual check rulespec?

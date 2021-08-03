@@ -6,47 +6,55 @@
 
 from __future__ import annotations
 
-import time
-import os
 import functools
+import os
+import time
+from typing import Any, Callable, Dict, Iterator, List, Literal, NamedTuple
+from typing import Optional as _Optional
+from typing import Set
+from typing import Tuple as _Tuple
+from typing import Union
 
-from typing import (Callable, Set, Dict, Any, Union, List, NamedTuple, Literal, Tuple as _Tuple,
-                    Optional as _Optional, Iterator)
+from livestatus import LivestatusOutputFormat, OnlySites, SiteId
 
-from livestatus import SiteId, OnlySites, LivestatusOutputFormat
-
-import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.type_defs import HostName, ServiceName
-from cmk.utils.prediction import lq_logic
-from cmk.utils.cpu_tracking import CPUTracker
+import cmk.utils.version as cmk_version
 from cmk.utils.bi.bi_lib import NodeComputeResult, NodeResultBundle
+from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
+from cmk.utils.cpu_tracking import CPUTracker
+from cmk.utils.prediction import lq_logic
+from cmk.utils.type_defs import HostName, ServiceName
 
-import cmk.gui.utils as utils
 import cmk.gui.sites as sites
-from cmk.gui.view_utils import CSSClass
-from cmk.gui.type_defs import (Rows, Row, FilterHeader, ViewProcessTracking, VisualContext,
-                               HTTPVariables)
+import cmk.gui.utils as utils
+from cmk.gui.globals import request
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.type_defs import (
+    FilterHeader,
+    HTTPVariables,
+    Row,
+    Rows,
+    ViewProcessTracking,
+    VisualContext,
+)
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
 from cmk.gui.valuespec import (
-    Integer,
     Age,
     Checkbox,
-    DropdownChoice,
     Dictionary,
-    Percentage,
-    Tuple,
+    DropdownChoice,
+    Integer,
     ListChoice,
     Optional,
+    Percentage,
     Timerange,
+    Tuple,
 )
-from cmk.gui.i18n import _
-from cmk.gui.globals import request
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
-from cmk.gui.utils.html import HTML
-from cmk.gui.log import logger
-from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule
+from cmk.gui.view_utils import CSSClass
 
 AVMode = str  # TODO: Improve this type
 AVObjectType = Literal["host", "service", "bi"]  # TODO: Improve this type
@@ -95,10 +103,10 @@ AVTimelineStatistics = Dict[AVTimelineStateName, _Tuple[int, int, int]]
 AVTimelineStyle = str
 
 from cmk.utils.bi.bi_data_fetcher import (
-    BIServiceWithFullState,
-    BIHostStatusInfoRow,
-    BIStatusInfo,
     BIHostSpec,
+    BIHostStatusInfoRow,
+    BIServiceWithFullState,
+    BIStatusInfo,
 )
 
 from cmk.gui.bi import BIManager

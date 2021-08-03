@@ -7,20 +7,16 @@
 import copy
 from typing import Any, Dict, List
 
-from cmk.gui.globals import config
-from cmk.gui.log import logger
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.webapi import (
-    APICallCollection,
-    api_call_collection_registry,
-)
-
+from cmk.gui.globals import config
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.plugins.webapi import api_call_collection_registry, APICallCollection
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
     DiscoveryHost,
-    vs_bulk_discovery,
     get_tasks,
+    vs_bulk_discovery,
 )
 from cmk.gui.watolib.hosts_and_folders import Host
 

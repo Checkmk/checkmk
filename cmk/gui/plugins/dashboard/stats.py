@@ -4,18 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, List, NamedTuple, Tuple
 from dataclasses import asdict, dataclass
+from typing import Dict, List, NamedTuple, Tuple
+
 from livestatus import MKLivestatusNotFoundError
 
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
-
-from cmk.gui.i18n import _
 from cmk.gui.globals import request, user
-from cmk.gui.plugins.dashboard import (ABCFigureDashlet, dashlet_registry)
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard import ABCFigureDashlet, dashlet_registry
 from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 def view_url(url_vars: HTTPVariables) -> str:

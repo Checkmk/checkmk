@@ -13,7 +13,7 @@ import functools
 import hashlib
 import http.client
 from types import FunctionType
-from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, Union, TypeVar
+from typing import Any, Dict, List, Literal, Optional, Sequence, Set, Tuple, Type, TypeVar, Union
 
 import apispec  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
@@ -22,8 +22,9 @@ from marshmallow.schema import SchemaMeta
 from werkzeug.datastructures import MultiDict
 from werkzeug.utils import import_string
 
-from cmk.gui.globals import config
-from cmk.gui.globals import request
+from cmk.utils import store
+
+from cmk.gui.globals import config, request
 from cmk.gui.plugins.openapi import fields
 from cmk.gui.plugins.openapi.restful_objects.code_examples import code_samples
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
@@ -45,16 +46,15 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     OpenAPIParameter,
     OpenAPITag,
     OperationSpecType,
+    PathItem,
     RawParameter,
     ResponseType,
     SchemaParameter,
     StatusCodeInt,
-    PathItem,
 )
 from cmk.gui.plugins.openapi.utils import problem
 from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
-from cmk.utils import store
 
 _SEEN_ENDPOINTS: Set[FunctionType] = set()
 

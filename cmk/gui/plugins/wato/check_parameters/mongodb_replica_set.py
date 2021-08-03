@@ -7,10 +7,10 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
-    RulespecGroupCheckParametersStorage,
     rulespec_registry,
+    RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple, Age
+from cmk.gui.valuespec import Age, Dictionary, Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_mongodb_replication_lag():

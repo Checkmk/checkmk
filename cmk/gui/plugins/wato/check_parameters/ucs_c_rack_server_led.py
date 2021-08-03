@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
-    RulespecGroupCheckParametersHardware,
     rulespec_registry,
+    RulespecGroupCheckParametersHardware,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 COLORS_DEF_STATES = [
     ("amber", 1),

@@ -12,9 +12,22 @@ import json
 import pprint
 import time
 from itertools import chain
-from typing import Any, Callable, cast, Dict, Iterable, Iterator, List, Optional, Sequence, Set, Mapping
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    overload,
+    Sequence,
+    Set,
+)
 from typing import Tuple as _Tuple
-from typing import Type, Union, overload
+from typing import Type, Union
 
 import livestatus
 from livestatus import SiteId
@@ -23,12 +36,10 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.prediction import livestatus_lql
+from cmk.utils.site import omd_site
 from cmk.utils.structured_data import StructuredDataNode
 from cmk.utils.type_defs import HostName, ServiceName
-from cmk.utils.site import omd_site
 
-from cmk.gui.config import register_post_config_load_hook, builtin_role_ids
-from cmk.gui.globals import config
 import cmk.gui.forms as forms
 import cmk.gui.i18n
 import cmk.gui.inventory as inventory
@@ -44,9 +55,21 @@ import cmk.gui.visuals as visuals
 import cmk.gui.weblib as weblib
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.config import builtin_role_ids, register_post_config_load_hook
 from cmk.gui.exceptions import HTTPRedirect, MKGeneralException, MKInternalError, MKUserError
-from cmk.gui.globals import (display_options, g, html, transactions, user_errors, output_funnel,
-                             request, response, user)
+from cmk.gui.globals import (
+    config,
+    display_options,
+    g,
+    html,
+    output_funnel,
+    request,
+    response,
+    transactions,
+    user,
+    user_errors,
+)
+
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.htmllib import HTML  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.i18n import _, _u
@@ -54,9 +77,9 @@ from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
     make_display_options_dropdown,
+    make_external_link,
     make_simple_form_page_menu,
     make_simple_link,
-    make_external_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
@@ -65,31 +88,36 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     toggle_page_menu_entries,
 )
-from cmk.gui.pages import AjaxPage, page_registry, AjaxPageResult
-from cmk.gui.permissions import (declare_permission, permission_section_registry, PermissionSection,
-                                 declare_dynamic_permissions)
+from cmk.gui.pages import AjaxPage, AjaxPageResult, page_registry
+from cmk.gui.permissions import (
+    declare_dynamic_permissions,
+    declare_permission,
+    permission_section_registry,
+    PermissionSection,
+)
+
 # Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import
-    get_icons, get_multisite_icons, iconpainter_columns, multisite_icons_and_actions,
-    IconObjectType, LegacyIconEntry, IconEntry,
+from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import # isort: skip
+    get_icons, get_multisite_icons, IconEntry, IconObjectType, iconpainter_columns, LegacyIconEntry,
+    multisite_icons_and_actions,
 )
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
-from cmk.gui.plugins.views.perfometers import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.plugins.views.perfometers import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     perfometers,)
-from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     _parse_url_sorters, ABCDataSource, Cell, cmp_custom_variable, cmp_insensitive_string,
     cmp_ip_address, cmp_num_split, cmp_service_name_equiv, cmp_simple_number, cmp_simple_string,
-    cmp_string_list, Command, command_registry, CommandGroup, compare_ips, data_source_registry,
-    declare_1to1_sorter, declare_simple_sorter, DerivedColumnsSorter, exporter_registry,
-    format_plugin_output, get_all_views, get_custom_var, get_linked_visual_request_vars,
-    get_perfdata_nth_value, get_permitted_views, get_tag_groups, get_view_infos, group_value,
-    inventory_displayhints, is_stale, join_row, JoinCell, Layout, layout_registry,
-    make_host_breadcrumb, make_linked_visual_url, make_service_breadcrumb, multisite_builtin_views,
-    paint_age, paint_host_list, paint_stalified, Painter, painter_exists, painter_registry,
-    PainterOptions, register_command_group, register_legacy_command, register_painter,
-    register_sorter, replace_action_url_macros, row_id, Sorter, sorter_registry, SorterEntry,
-    SorterSpec, transform_action_url, view_hooks, view_is_enabled, view_title, CommandExecutor,
-    CommandSpec, PainterRegistry, SorterRegistry, SorterListEntry,
+    cmp_string_list, Command, command_registry, CommandExecutor, CommandGroup, CommandSpec,
+    compare_ips, data_source_registry, declare_1to1_sorter, declare_simple_sorter,
+    DerivedColumnsSorter, exporter_registry, format_plugin_output, get_all_views, get_custom_var,
+    get_linked_visual_request_vars, get_perfdata_nth_value, get_permitted_views, get_tag_groups,
+    get_view_infos, group_value, inventory_displayhints, is_stale, join_row, JoinCell, Layout,
+    layout_registry, make_host_breadcrumb, make_linked_visual_url, make_service_breadcrumb,
+    multisite_builtin_views, paint_age, paint_host_list, paint_stalified, Painter, painter_exists,
+    painter_registry, PainterOptions, PainterRegistry, register_command_group,
+    register_legacy_command, register_painter, register_sorter, replace_action_url_macros, row_id,
+    Sorter, sorter_registry, SorterEntry, SorterListEntry, SorterRegistry, SorterSpec,
+    transform_action_url, view_hooks, view_is_enabled, view_title,
 )
 from cmk.gui.plugins.visuals.utils import (
     Filter,
@@ -142,8 +170,8 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
+from cmk.gui.utils.ntop import get_ntop_connection, is_ntop_configured
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
-from cmk.gui.utils.ntop import is_ntop_configured, get_ntop_connection
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -1917,6 +1945,7 @@ def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
 
 def _add_rest_api_menu_entries(view_renderer, queries):
     from cmk.utils.livestatus_helpers.queries import Query
+
     from cmk.gui.plugins.openapi.utils import create_url
     entries = []
     for text_query in queries:

@@ -6,18 +6,17 @@
 
 from typing import List
 
-from cmk.gui.globals import config
 import cmk.gui.dashboard as dashboard
-from cmk.gui.globals import user
+from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import TopicMenuTopic
 from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
     footnotelinks,
     make_topic_menu,
     show_topic_menu,
+    SidebarSnapin,
+    snapin_registry,
 )
+from cmk.gui.type_defs import TopicMenuTopic
 
 
 @snapin_registry.register

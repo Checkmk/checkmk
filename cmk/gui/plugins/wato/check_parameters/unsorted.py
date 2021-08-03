@@ -4,27 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.wato.active_checks import check_icmp_params
-
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Tuple,
-    Integer,
-    TextInput,
-    RegExp,
-    Alternative,
-    Transform,
-    ListOf,
-    ListOfStrings,
-    FixedValue,
-    DualListChoice,
-)
 from cmk.gui.plugins.wato import (
+    HostRulespec,
+    rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersNetworking,
-    rulespec_registry,
-    HostRulespec,
+)
+from cmk.gui.plugins.wato.active_checks import check_icmp_params
+from cmk.gui.valuespec import (
+    Alternative,
+    Dictionary,
+    DualListChoice,
+    FixedValue,
+    Integer,
+    ListOf,
+    ListOfStrings,
+    RegExp,
+    TextInput,
+    Transform,
+    Tuple,
 )
 
 # TODO: Sort all rules and check parameters into the figlet header sections.

@@ -4,6 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.bi.bi_lib import (
+    ABCBIAction,
+    ABCBIAggregationFunction,
+    ABCBICompiledNode,
+    ABCBISearch,
+    bi_action_registry,
+    bi_aggregation_function_registry,
+    bi_search_registry,
+    replace_macros,
+)
 from cmk.utils.plugin_loader import load_plugins
 
 #.
@@ -15,17 +25,6 @@ from cmk.utils.plugin_loader import load_plugins
 #   |          |_|   |_|\__,_|\__, |_|_| |_| /_/   \_\_|  |___|            |
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
-
-from cmk.utils.bi.bi_lib import (
-    replace_macros,
-    ABCBIAction,
-    ABCBISearch,
-    ABCBIAggregationFunction,
-    ABCBICompiledNode,
-    bi_action_registry,
-    bi_search_registry,
-    bi_aggregation_function_registry,
-)
 
 #.
 #   .--Plugins-------------------------------------------------------------.

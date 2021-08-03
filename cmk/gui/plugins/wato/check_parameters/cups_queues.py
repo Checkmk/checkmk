@@ -5,19 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    MonitoringState,
-    TextInput,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersPrinters,
 )
+from cmk.gui.valuespec import Dictionary, Integer, MonitoringState, TextInput, Tuple
 
 
 def _parameter_valuespec_cups_queues():

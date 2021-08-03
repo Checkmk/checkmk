@@ -5,101 +5,103 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """WATO-Module for the rules and aggregations of Check_MK BI"""
 
-import json
 import copy
-from typing import Dict, Any, List, Type, Tuple as _Tuple, Optional as _Optional, overload
+import json
+from typing import Any, Dict, List
+from typing import Optional as _Optional
+from typing import overload
+from typing import Tuple as _Tuple
+from typing import Type
 
 import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.pages import page_registry, AjaxPage
+from cmk.gui.pages import AjaxPage, page_registry
 
 try:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 except ImportError:
     managed = None  # type: ignore[assignment]
 
-from cmk.gui.globals import config
-from cmk.gui.table import table_element, init_rowselect
+from cmk.utils.bi.bi_actions import BICallARuleAction
+from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
+from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
+from cmk.utils.bi.bi_compiler import BICompiler
+from cmk.utils.bi.bi_lib import SitesCallback
+from cmk.utils.bi.bi_packs import BIAggregationPack
+from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
+
 import cmk.gui.forms as forms
+
+# TODO: forbidden import, integrate into bi_config... ?
+import cmk.gui.plugins.wato.bi_valuespecs as bi_valuespecs
+import cmk.gui.sites
 import cmk.gui.watolib as watolib
 import cmk.gui.weblib as weblib
-from cmk.gui.exceptions import MKUserError, MKGeneralException, MKAuthException
-from cmk.gui.valuespec import (
-    ValueSpec,
-    Transform,
-    Alternative,
-    FixedValue,
-    TextInput,
-    Dictionary,
-    IconSelector,
-    ListOf,
-    ListOfStrings,
-    Checkbox,
-    TextAreaUnicode,
-    Optional,
-    ID,
-    DropdownChoice,
-)
-
-from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request, transactions, output_funnel, user
-from cmk.gui.htmllib import HTML, foldable_container
-from cmk.gui.type_defs import Choices
-from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.bi import bi_livestatus_query, BIManager, get_cached_bi_packs
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ActionResult,
-    mode_registry,
-    ContactGroupSelection,
-    MainMenu,
-    MenuItem,
-    main_module_registry,
-    ABCMainModule,
-    MainModuleTopicBI,
-    add_change,
-    PermissionSectionWATO,
-    redirect,
-    mode_url,
-)
-
+from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import config, html, output_funnel, request, transactions, user
+from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.i18n import _, _l
+from cmk.gui.node_vis_lib import BILayoutManagement
 from cmk.gui.page_menu import (
+    make_checkbox_selection_json_text,
+    make_checkbox_selection_topic,
+    make_confirmed_form_submit_link,
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuPopup,
     PageMenuSearch,
     PageMenuTopic,
-    make_checkbox_selection_json_text,
-    make_simple_link,
-    make_simple_form_page_menu,
-    make_confirmed_form_submit_link,
-    make_checkbox_selection_topic,
 )
-
-from cmk.gui.node_vis_lib import BILayoutManagement
-from cmk.utils.bi.bi_aggregation_functions import BIAggregationFunctionSchema
-from cmk.utils.bi.bi_packs import BIAggregationPack
-from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
-from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
-from cmk.gui.permissions import (
-    permission_registry,
-    Permission,
+from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.plugins.wato import (
+    ABCMainModule,
+    ActionResult,
+    add_change,
+    ContactGroupSelection,
+    main_module_registry,
+    MainMenu,
+    MainModuleTopicBI,
+    MenuItem,
+    mode_registry,
+    mode_url,
+    PermissionSectionWATO,
+    redirect,
+    WatoMode,
 )
-from cmk.gui.bi import get_cached_bi_packs, BIManager, bi_livestatus_query
-
-# TODO: forbidden import, integrate into bi_config... ?
-import cmk.gui.plugins.wato.bi_valuespecs as bi_valuespecs
-import cmk.gui.sites
 from cmk.gui.sites import wato_slave_sites
-from cmk.utils.bi.bi_actions import BICallARuleAction
-from cmk.utils.bi.bi_lib import SitesCallback
-from cmk.utils.bi.bi_compiler import BICompiler
-
-from cmk.gui.utils.urls import (makeuri, makeuri_contextless, make_confirm_link, makeactionuri,
-                                makeactionuri_contextless)
+from cmk.gui.table import init_rowselect, table_element
+from cmk.gui.type_defs import Choices
+from cmk.gui.utils.urls import (
+    make_confirm_link,
+    makeactionuri,
+    makeactionuri_contextless,
+    makeuri,
+    makeuri_contextless,
+)
+from cmk.gui.valuespec import (
+    Alternative,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    IconSelector,
+    ID,
+    ListOf,
+    ListOfStrings,
+    Optional,
+    TextAreaUnicode,
+    TextInput,
+    Transform,
+    ValueSpec,
+)
+from cmk.gui.watolib.groups import load_contact_group_information
 
 
 @main_module_registry.register

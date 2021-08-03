@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-
 from typing import Optional
 
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.globals import html
+from cmk.gui.i18n import _
+
 # TODO: Change all call sites to directly import from cmk.gui.page_menu
 from cmk.gui.page_menu import PageMenu, search_form  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.page_state import PageState

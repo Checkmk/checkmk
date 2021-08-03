@@ -7,9 +7,9 @@
 
 import ast
 import json
-import traceback
 import pprint
-from typing import Any, Dict, NamedTuple, List, Optional, Type, Iterator
+import traceback
+from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Type
 
 import six
 
@@ -18,55 +18,52 @@ from cmk.utils.defines import short_service_state_name
 from cmk.utils.python_printer import PythonPrinter
 from cmk.utils.site import omd_site
 
-from cmk.gui.utils.escaping import escape_html
-from cmk.gui.htmllib import HTML, foldable_container
-from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
-from cmk.gui.table import table_element
 from cmk.gui.background_job import JobStatusStates
-from cmk.gui.view_utils import render_labels, format_plugin_output
-from cmk.gui.sites import sitenames
-
-from cmk.gui.pages import page_registry, AjaxPage
-from cmk.gui.globals import html, transactions, request, output_funnel, user
-from cmk.gui.i18n import _, ungettext
-from cmk.gui.exceptions import MKUserError, MKGeneralException
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import config, html, output_funnel, request, transactions, user
+from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.i18n import _, ungettext
 from cmk.gui.page_menu import (
+    disable_page_menu_entry,
+    enable_page_menu_entry,
+    make_display_options_dropdown,
+    make_javascript_action,
+    make_javascript_link,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuRenderer,
-    enable_page_menu_entry,
-    disable_page_menu_entry,
-    make_display_options_dropdown,
-    make_simple_link,
-    make_javascript_link,
-    make_javascript_action,
+    PageMenuTopic,
 )
-
-from cmk.gui.watolib import (
-    automation_command_registry,
-    AutomationCommand,
-)
-from cmk.gui.watolib.automations import (
-    check_mk_automation,)
-from cmk.gui.watolib.rulespecs import rulespec_registry
-from cmk.gui.watolib.services import (DiscoveryState, Discovery, checkbox_id, execute_discovery_job,
-                                      get_check_table, DiscoveryAction, CheckTable, CheckTableEntry,
-                                      DiscoveryResult, DiscoveryOptions, StartDiscoveryRequest)
-from cmk.gui.wato.pages.hosts import ModeEditHost
-from cmk.gui.watolib.activate_changes import get_pending_changes_info
-from cmk.gui.watolib.changes import make_object_audit_log_url
-
-from cmk.gui.plugins.wato import (
-    mode_registry,
-    WatoMode,
-)
-
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.wato import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
-
+from cmk.gui.sites import sitenames
+from cmk.gui.table import table_element
+from cmk.gui.utils.escaping import escape_html
+from cmk.gui.view_utils import format_plugin_output, render_labels
+from cmk.gui.wato.pages.hosts import ModeEditHost
+from cmk.gui.watolib import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.activate_changes import get_pending_changes_info
+from cmk.gui.watolib.automations import check_mk_automation
+from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.gui.watolib.services import (
+    checkbox_id,
+    CheckTable,
+    CheckTableEntry,
+    Discovery,
+    DiscoveryAction,
+    DiscoveryOptions,
+    DiscoveryResult,
+    DiscoveryState,
+    execute_discovery_job,
+    get_check_table,
+    StartDiscoveryRequest,
+)
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 AjaxDiscoveryRequest = Dict[str, Any]

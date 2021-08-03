@@ -8,29 +8,21 @@ usable in all components of the Web GUI of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-import re
-import uuid
-import marshal
 import itertools
-from pathlib import Path
-from typing import (
-    Any,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+import marshal
+import re
 import urllib.parse
+import uuid
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from six import ensure_str
 
 import cmk.utils.paths
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKUserError
 
 
 def num_split(s: str) -> Tuple[Union[int, str], ...]:

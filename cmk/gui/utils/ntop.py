@@ -8,8 +8,9 @@
 Needs to be part of the generic code, not packed into NTOP addon.
 """
 
-from typing import Optional, Dict
-from cmk.gui.globals import user, config
+from typing import Dict, Optional
+
+from cmk.gui.globals import config, user
 from cmk.gui.i18n import _
 
 

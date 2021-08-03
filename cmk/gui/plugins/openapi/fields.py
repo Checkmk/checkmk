@@ -10,19 +10,25 @@ import re
 import typing
 from typing import Any, Optional, Protocol, Tuple
 
-from marshmallow import fields as _fields, ValidationError, utils
+from marshmallow import fields as _fields
+from marshmallow import utils, ValidationError
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
-from cmk.gui import watolib, valuespec as valuespec, sites
-from cmk.gui.globals import user
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import load_group_information
-from cmk.gui.sites import allsites
-from cmk.utils.livestatus_helpers.expressions import tree_to_expr, QueryExpression, \
-    NothingExpression
+import cmk.utils.version as version
+from cmk.utils.exceptions import MKException
+from cmk.utils.livestatus_helpers.expressions import (
+    NothingExpression,
+    QueryExpression,
+    tree_to_expr,
+)
 from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Hosts, Hostgroups, Servicegroups
-from cmk.utils.livestatus_helpers.types import Table, Column
+from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
+from cmk.utils.livestatus_helpers.types import Column, Table
+
+from cmk.gui import sites, valuespec, watolib
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import user
+from cmk.gui.groups import load_group_information
 from cmk.gui.plugins.openapi.utils import (
     attr_openapi_schema,
     BaseSchema,
@@ -30,9 +36,8 @@ from cmk.gui.plugins.openapi.utils import (
     ObjectContext,
     ObjectType,
 )
-from cmk.gui.watolib.passwords import password_exists, contact_group_choices
-from cmk.utils.exceptions import MKException
-import cmk.utils.version as version
+from cmk.gui.sites import allsites
+from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 
 if version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

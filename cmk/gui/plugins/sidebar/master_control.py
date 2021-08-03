@@ -4,23 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from contextlib import nullcontext
-from typing import Dict, List, Tuple, ContextManager
-
 import time
+from contextlib import nullcontext
+from typing import ContextManager, Dict, List, Tuple
 
 import cmk.gui.sites as sites
-from cmk.gui.log import logger
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, response, user
-from cmk.gui.utils.urls import makeactionuri_contextless
+from cmk.gui.globals import html, request, response, transactions, user
 from cmk.gui.htmllib import foldable_container
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.plugins.sidebar import (
     PageHandlers,
     SidebarSnapin,
     snapin_registry,
     write_snapin_exception,
 )
+from cmk.gui.utils.urls import makeactionuri_contextless
 
 
 @snapin_registry.register

@@ -4,73 +4,63 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
-from collections.abc import Mapping as ABCMapping
+import errno
 import io
-import pickle
 import operator
 import os
-import errno
-import time
+import pickle
 import re
 import shutil
+import time
 import uuid
+from collections.abc import Mapping as ABCMapping
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Type, Union
 
 from livestatus import SiteId
 
-from cmk.gui.log import logger
-from cmk.gui.config import get_storage_format
-from cmk.gui.globals import config
-import cmk.gui.userdb as userdb
-import cmk.gui.hooks as hooks
-import cmk.gui.utils.escaping as escaping
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import (
-    RequestTimeout,
-    MKGeneralException,
-    MKAuthException,
-    MKUserError,
-)
-from cmk.gui.htmllib import HTML
-from cmk.gui.globals import g, html, request, transactions, user
-from cmk.gui.type_defs import HTTPVariables, SetOnceDict
-from cmk.gui.valuespec import Choices
-from cmk.gui.watolib.utils import (
-    wato_root_dir,
-    rename_host_in_list,
-    convert_cgroups_from_tuple,
-    host_attribute_matches,
-    format_config_value,
-    ALL_HOSTS,
-    ALL_SERVICES,
-    try_bake_agents_for_hosts,
-)
-from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
-from cmk.gui.watolib.automations import check_mk_automation
-from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
-from cmk.gui.watolib.host_attributes import (
-    host_attribute_registry,
-    collect_attributes,
-)
-from cmk.gui.plugins.watolib.utils import wato_fileheader
-from cmk.gui.watolib.search import (
-    ABCMatchItemGenerator,
-    MatchItem,
-    MatchItems,
-    match_item_generator_registry,
-)
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.sites import is_wato_slave_site, allsites
-from cmk.gui.utils import urls
-
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-
 from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName
+
+import cmk.gui.hooks as hooks
+import cmk.gui.userdb as userdb
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import get_storage_format
+from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
+from cmk.gui.globals import config, g, html, request, transactions, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.plugins.watolib.utils import wato_fileheader
+from cmk.gui.sites import allsites, is_wato_slave_site
+from cmk.gui.type_defs import HTTPVariables, SetOnceDict
+from cmk.gui.utils import urls
+from cmk.gui.valuespec import Choices
+from cmk.gui.watolib.automations import check_mk_automation
+from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
+from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    match_item_generator_registry,
+    MatchItem,
+    MatchItems,
+)
+from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
+from cmk.gui.watolib.utils import (
+    ALL_HOSTS,
+    ALL_SERVICES,
+    convert_cgroups_from_tuple,
+    format_config_value,
+    host_attribute_matches,
+    rename_host_in_list,
+    try_bake_agents_for_hosts,
+    wato_root_dir,
+)
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

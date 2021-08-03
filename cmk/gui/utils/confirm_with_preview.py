@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Tuple, Union, Optional
-from cmk.gui.utils.html import HTML
+from typing import List, Optional, Tuple, Union
+
 from cmk.gui.globals import html, request, response, transactions
 from cmk.gui.i18n import _
+from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 
 

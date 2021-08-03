@@ -5,20 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import base64
-from typing import Union, Callable, Dict, Optional, Tuple, List, Any, TYPE_CHECKING
+from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
+
 from six import ensure_binary, ensure_str
 
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.utils.html import HTML
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user_errors, theme, user
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib.foldable_container import (foldable_container_id, foldable_container_onclick,
-                                                foldable_container_img_id)
+from cmk.gui.globals import html, request, theme, transactions, user, user_errors
+from cmk.gui.htmllib.foldable_container import (
+    foldable_container_id,
+    foldable_container_img_id,
+    foldable_container_onclick,
+)
+from cmk.gui.i18n import _
+from cmk.gui.utils.html import HTML
 
 if TYPE_CHECKING:
     from typing import Sequence
-    from cmk.gui.valuespec import Dictionary, ValueSpec, Transform
+
+    from cmk.gui.valuespec import Dictionary, Transform, ValueSpec
 
 g_header_open = False
 g_section_open = False

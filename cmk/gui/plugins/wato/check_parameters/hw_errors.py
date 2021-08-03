@@ -6,9 +6,9 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    RulespecGroupEnforcedServicesHardware,
     ManualCheckParameterRulespec,
     rulespec_registry,
+    RulespecGroupEnforcedServicesHardware,
 )
 
 rulespec_registry.register(

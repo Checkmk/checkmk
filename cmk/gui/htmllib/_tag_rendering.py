@@ -6,11 +6,11 @@
 """Internal helper for rendering HTML tags"""
 
 import re
-from typing import Optional, Union, List, Dict, Iterator, cast
+from typing import cast, Dict, Iterator, List, Optional, Union
 
-from cmk.gui.utils.html import HTML
 from cmk.gui.type_defs import CSSSpec
 from cmk.gui.utils import escaping
+from cmk.gui.utils.html import HTML
 
 HTMLTagName = str
 HTMLTagValue = Optional[str]

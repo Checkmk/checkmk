@@ -4,17 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import (
-    TextInput,
-    Checkbox,
-)
-
-from cmk.gui.plugins.dashboard import (
-    IFrameDashlet,
-    dashlet_registry,
-)
+from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard import dashlet_registry, IFrameDashlet
+from cmk.gui.valuespec import Checkbox, TextInput
 
 
 @dashlet_registry.register

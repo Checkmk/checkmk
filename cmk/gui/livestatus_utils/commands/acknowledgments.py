@@ -7,9 +7,10 @@
 """
 from typing import List
 
-from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.livestatus_helpers.queries import Query
+
+from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 
 
 def acknowledge_service_problem(

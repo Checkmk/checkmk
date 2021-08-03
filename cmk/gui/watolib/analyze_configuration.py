@@ -7,23 +7,20 @@
 checks and tells the user what could be improved."""
 
 import traceback
-from typing import Dict, Type, Iterator, Optional, List, Any
+from typing import Any, Dict, Iterator, List, Optional, Type
 
 from livestatus import LocalConnection
+
 import cmk.utils.defines
 from cmk.utils.site import omd_site
 
 import cmk.gui.sites
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.sites import is_wato_slave_site
+from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKGeneralException
-
-from cmk.gui.watolib.automation_commands import (
-    AutomationCommand,
-    automation_command_registry,
-)
+from cmk.gui.sites import is_wato_slave_site
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.sites import get_effective_global_setting
 
 

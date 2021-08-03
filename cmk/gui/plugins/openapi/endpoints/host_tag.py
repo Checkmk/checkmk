@@ -15,26 +15,33 @@ You can find an introduction to hosts including host tags and host tag groups in
 """
 
 import json
+from typing import Any, Dict
 
-from typing import Dict, Any
+from cmk.utils.tags import BuiltinTagConfig, TagGroup
 
 import cmk.gui.watolib as watolib
-
 from cmk.gui.http import Response
-
 from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.utils import problem
-from cmk.gui.plugins.openapi.utils import ProblemException
-from cmk.gui.watolib.tags import (save_tag_group, load_tag_config, edit_tag_group, load_tag_group,
-                                  update_tag_config, tag_group_exists, change_host_tags_in_folders,
-                                  TagCleanupMode, OperationRemoveTagGroup, RepairError, is_builtin)
 from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
     Endpoint,
     request_schemas,
     response_schemas,
-    constructors,
 )
-from cmk.utils.tags import BuiltinTagConfig, TagGroup
+from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.watolib.tags import (
+    change_host_tags_in_folders,
+    edit_tag_group,
+    is_builtin,
+    load_tag_config,
+    load_tag_group,
+    OperationRemoveTagGroup,
+    RepairError,
+    save_tag_group,
+    tag_group_exists,
+    TagCleanupMode,
+    update_tag_config,
+)
 
 
 class HostTagGroupName(fields.String):

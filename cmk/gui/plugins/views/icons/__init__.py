@@ -5,25 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import traceback
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union, Iterator
 from dataclasses import dataclass
+from typing import Any, Dict, Iterator, List, Literal, Optional, Tuple, Union
 
 import cmk.utils.regex
+from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.type_defs import TagID
 
-from cmk.gui.globals import config
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, user
+from cmk.gui.globals import config, html, user
 from cmk.gui.htmllib import HTML
-from cmk.gui.type_defs import Row, ColumnName
-from cmk.gui.utils.escaping import escape_html
-
-from cmk.utils.plugin_loader import load_plugins
+from cmk.gui.i18n import _
 
 # Imported for plugins
-from cmk.gui.plugins.views.icons.utils import (  # noqa: F401
-    Icon, icon_and_action_registry,
-)
+from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry  # noqa: F401
+from cmk.gui.type_defs import ColumnName, Row
+from cmk.gui.utils.escaping import escape_html
 
 IconObjectType = Literal["host", "service"]
 

@@ -6,46 +6,32 @@
 """Status sidebar rendering"""
 
 import copy
-import traceback
 import json
 import textwrap
+import traceback
 from enum import Enum
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    TYPE_CHECKING,
-    Union,
-)
+from typing import Any, Dict, List, Optional, Tuple, Type, TYPE_CHECKING, Union
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 
 import cmk.gui.i18n
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, theme, response, output_funnel, user
-import cmk.gui.utils as utils
-from cmk.gui.globals import config
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.sites as sites
 import cmk.gui.pages
+import cmk.gui.pagetypes as pagetypes
 import cmk.gui.plugins.sidebar
 import cmk.gui.plugins.sidebar.search
-from cmk.gui.valuespec import CascadingDropdown, Dictionary
-from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.log import logger
-from cmk.gui.utils.logged_in import LoggedInUser
+import cmk.gui.sites as sites
+import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import config, html, output_funnel, request, response, theme, user
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-)
+from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
+from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.valuespec import CascadingDropdown, Dictionary
 from cmk.gui.werks import may_acknowledge
 
 if TYPE_CHECKING:
@@ -58,15 +44,15 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.sidebar  # pylint: disable=no-name-in-module
 
 # Helper functions to be used by snapins
+from cmk.gui.plugins.sidebar.main_menu import MainMenuRenderer
+
 # Kept for compatibility with legacy plugins
 # TODO: Drop once we don't support legacy snapins anymore
-from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unused-import
-    snapin_registry, snapin_width, snapin_site_choice, render_link, heading, link, simplelink,
-    bulletlink, iconlink, footnotelinks, begin_footnote_links, end_footnote_links,
+from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    begin_footnote_links, bulletlink, end_footnote_links, footnotelinks, heading, iconlink, link,
+    render_link, simplelink, snapin_registry, snapin_site_choice, snapin_width,
     write_snapin_exception,
 )
-
-from cmk.gui.plugins.sidebar.main_menu import MainMenuRenderer
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False

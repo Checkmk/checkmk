@@ -4,44 +4,57 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import http.client
 import os
 import traceback
-import contextlib
-from hashlib import sha256
-from typing import List, Union, Optional, Tuple, Iterator
-from pathlib import Path
 from contextlib import suppress
+from hashlib import sha256
+from pathlib import Path
+from typing import Iterator, List, Optional, Tuple, Union
 
 from six import ensure_binary, ensure_str
 from werkzeug.local import LocalProxy
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
+from cmk.utils.site import omd_site, url_prefix
 from cmk.utils.type_defs import UserId
-from cmk.utils.site import url_prefix, omd_site
 
-from cmk.gui.globals import config
-import cmk.gui.userdb as userdb
-import cmk.gui.utils as utils
-from cmk.gui.log import logger
 import cmk.gui.i18n
 import cmk.gui.mobile
-from cmk.gui.http import Request
-from cmk.gui.pages import page_registry, Page
-from cmk.gui.i18n import _
-from cmk.gui.globals import (html, local, request, response, transactions, user_errors, theme, user)
-from cmk.gui.htmllib import HTML
+import cmk.gui.userdb as userdb
+import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import (
+    FinalizeRequest,
+    HTTPRedirect,
+    MKAuthException,
+    MKInternalError,
+    MKUserError,
+)
+from cmk.gui.globals import (
+    config,
+    html,
+    local,
+    request,
+    response,
+    theme,
+    transactions,
+    user,
+    user_errors,
+)
+from cmk.gui.htmllib import HTML
+from cmk.gui.http import Request
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.main import get_page_heading
-
-from cmk.gui.exceptions import HTTPRedirect, MKInternalError, MKAuthException, MKUserError, FinalizeRequest
-
-from cmk.gui.utils.urls import makeuri, urlencode, requested_file_name
-from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.utils.language_cookie import del_language_cookie
+from cmk.gui.pages import Page, page_registry
 from cmk.gui.utils.escaping import escape_html
+from cmk.gui.utils.language_cookie import del_language_cookie
 from cmk.gui.utils.logged_in import UserContext
+from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
 
 auth_logger = logger.getChild("auth")
 

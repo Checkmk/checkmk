@@ -6,18 +6,15 @@
 
 import math
 import time
-from typing import List, Tuple, Union, Optional, Callable, Iterable
 from functools import partial
 from itertools import zip_longest
+from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.render
 
-from cmk.gui.i18n import _
 from cmk.gui.globals import request, theme, user
-from cmk.gui.plugins.metrics import unit_info
-
-from cmk.gui.plugins.metrics import timeseries
-from cmk.gui.plugins.metrics import rrd_fetch
+from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics import rrd_fetch, timeseries, unit_info
 
 Label = Tuple[int, Optional[str], int]
 

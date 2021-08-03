@@ -7,31 +7,28 @@
 import ast
 import json
 import os
-import time
 import sys
+import time
 from hashlib import sha256
-from typing import Tuple, List, NamedTuple, Set, Dict, Any
+from typing import Any, Dict, List, NamedTuple, Set, Tuple
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.gui.globals import user
-from cmk.gui.sites import states, SiteStatus, site_is_local, get_site_config
-from cmk.gui.watolib.utils import is_pre_17_remote_site
 from cmk.utils.type_defs import SetAutochecksTable
 
-from cmk.gui.globals import config
-import cmk.gui.watolib as watolib
 import cmk.gui.gui_background_job as gui_background_job
-
-from cmk.gui.i18n import _
+import cmk.gui.watolib as watolib
 from cmk.gui.background_job import BackgroundProcessInterface, JobStatusStates
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
-from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
-
+from cmk.gui.globals import config, user
+from cmk.gui.i18n import _
+from cmk.gui.sites import get_site_config, site_is_local, SiteStatus, states
 from cmk.gui.watolib.automations import (
-    sync_changes_before_remote_automation,
     check_mk_automation,
     execute_automation_discovery,
+    sync_changes_before_remote_automation,
 )
+from cmk.gui.watolib.rulesets import RuleConditions, service_description_to_condition
+from cmk.gui.watolib.utils import is_pre_17_remote_site
+from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 
 # Would rather use an Enum for this, but this information is exported to javascript

@@ -5,43 +5,34 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import io
 import logging
 import os
 import re
-import io
 import time
 import zipfile
-from typing import (
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional as _Optional,
-    TypeVar,
-    Union,
-    Type,
-    Iterator,
-    overload,
-)
 from pathlib import Path
+from typing import Callable, Dict, Iterable, Iterator, List
+from typing import Optional as _Optional
+from typing import overload, Type, TypeVar, Union
 
-from pysmi.compiler import MibCompiler  # type: ignore[import]
-from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore[import]
-from pysmi.searcher.pypackage import PyPackageSearcher  # type: ignore[import]
-from pysmi.searcher.pyfile import PyFileSearcher  # type: ignore[import]
-from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import]
-from pysmi.reader.localfile import FileReader  # type: ignore[import]
 from pysmi.codegen.pysnmp import PySnmpCodeGen  # type: ignore[import]
-from pysmi.reader.callback import CallbackReader  # type: ignore[import]
-from pysmi.searcher.stub import StubSearcher  # type: ignore[import]
+from pysmi.compiler import MibCompiler  # type: ignore[import]
 from pysmi.error import PySmiError  # type: ignore[import]
+from pysmi.parser.smiv1compat import SmiV1CompatParser  # type: ignore[import]
+from pysmi.reader.callback import CallbackReader  # type: ignore[import]
+from pysmi.reader.localfile import FileReader  # type: ignore[import]
+from pysmi.searcher.pyfile import PyFileSearcher  # type: ignore[import]
+from pysmi.searcher.pypackage import PyPackageSearcher  # type: ignore[import]
+from pysmi.searcher.stub import StubSearcher  # type: ignore[import]
+from pysmi.writer.pyfile import PyFileWriter  # type: ignore[import]
 
-import cmk.utils.version as cmk_version
 import cmk.utils.log
-import cmk.utils.paths
-import cmk.utils.store as store
-import cmk.utils.render
 import cmk.utils.packaging
+import cmk.utils.paths
+import cmk.utils.render
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
 # It's OK to import centralized config load logic
@@ -52,120 +43,112 @@ if cmk_version.is_managed_edition():
 else:
     managed = None  # type: ignore[assignment]
 
-from cmk.gui.breadcrumb import BreadcrumbItem
 import cmk.gui.forms as forms
-from cmk.gui.globals import config
-import cmk.gui.sites as sites
-import cmk.gui.mkeventd
-import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
-from cmk.gui.table import table_element
-from cmk.gui.type_defs import Choices
-from cmk.gui.sites import get_event_console_site_choices, allsites
-from cmk.gui.valuespec import CascadingDropdownChoice, DictionaryEntry
-from cmk.gui.valuespec import (
-    DropdownChoice,
-    TextInput,
-    Integer,
-    Tuple,
-    FixedValue,
-    Alternative,
-    ListChoice,
-    RegExp,
-    TextAreaUnicode,
-    Transform,
-    Dictionary,
-    ID,
-    CascadingDropdown,
-    Optional,
-    Checkbox,
-    ListOf,
-    ListOfStrings,
-    Age,
-    IPv4Address,
-    IPv4Network,
-    Foldable,
-    DualListChoice,
-    LogLevelChoice,
-    rule_option_elements,
-)
-from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request, transactions, user
+import cmk.gui.mkeventd
+import cmk.gui.sites as sites
+import cmk.gui.watolib as watolib
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
 from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.permissions import (
-    Permission,
-    permission_registry,
-)
-from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.i18n import _, _l
 from cmk.gui.page_menu import (
+    make_confirmed_form_submit_link,
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuSearch,
-    make_simple_link,
-    make_simple_form_page_menu,
-    make_confirmed_form_submit_link,
+    PageMenuTopic,
 )
-from cmk.gui.wato.pages.global_settings import (
-    ABCGlobalSettingsMode,
-    ABCEditGlobalSettingMode,
-    MatchItemGeneratorSettings,
-)
-
-from cmk.gui.plugins.wato.utils import (
-    config_variable_group_registry,
-    ConfigVariableGroup,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigDomainGUI,
-    WatoMode,
-    ActionResult,
-    mode_registry,
-    SNMPCredentials,
-    HostnameTranslation,
-    ContactGroupSelection,
-    ConfigDomainEventConsole,
-    get_search_expression,
-    add_change,
-    make_action_link,
-    rulespec_group_registry,
-    RulespecGroup,
-    rulespec_registry,
-    HostRulespec,
-    ServiceRulespec,
-    main_module_registry,
-    ABCMainModule,
-    MainModuleTopicEvents,
-    site_neutral_path,
-    SampleConfigGenerator,
-    sample_config_generator_registry,
-    mode_url,
-    redirect,
-    flash,
-)
-
+from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.check_mk_configuration import (
-    RulespecGroupMonitoringConfigurationVarious,
-    RulespecGroupHostsMonitoringRulesVarious,
     ConfigVariableGroupUserInterface,
     ConfigVariableGroupWATO,
+    RulespecGroupHostsMonitoringRulesVarious,
+    RulespecGroupMonitoringConfigurationVarious,
 )
 from cmk.gui.plugins.wato.globals_notification import ConfigVariableGroupNotifications
-
+from cmk.gui.plugins.wato.utils import (
+    ABCMainModule,
+    ActionResult,
+    add_change,
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigDomainEventConsole,
+    ConfigDomainGUI,
+    ConfigVariable,
+    ConfigVariableGroup,
+    ContactGroupSelection,
+    flash,
+    get_search_expression,
+    HostnameTranslation,
+    HostRulespec,
+    main_module_registry,
+    MainModuleTopicEvents,
+    make_action_link,
+    mode_registry,
+    mode_url,
+    redirect,
+    rulespec_group_registry,
+    rulespec_registry,
+    RulespecGroup,
+    sample_config_generator_registry,
+    SampleConfigGenerator,
+    ServiceRulespec,
+    site_neutral_path,
+    SNMPCredentials,
+    WatoMode,
+)
+from cmk.gui.sites import allsites, get_event_console_site_choices
+from cmk.gui.table import table_element
+from cmk.gui.type_defs import Choices
 from cmk.gui.utils.escaping import escape_html, escape_html_permissive
 from cmk.gui.utils.urls import (
+    make_confirm_link,
     makeuri_contextless,
     makeuri_contextless_rulespec_group,
-    make_confirm_link,
 )
-
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    CascadingDropdown,
+    CascadingDropdownChoice,
+    Checkbox,
+    Dictionary,
+    DictionaryEntry,
+    DropdownChoice,
+    DualListChoice,
+    FixedValue,
+    Foldable,
+    ID,
+    Integer,
+    IPv4Address,
+    IPv4Network,
+    ListChoice,
+    ListOf,
+    ListOfStrings,
+    LogLevelChoice,
+    Optional,
+    RegExp,
+    rule_option_elements,
+    TextAreaUnicode,
+    TextInput,
+    Transform,
+    Tuple,
+)
+from cmk.gui.wato.pages.global_settings import (
+    ABCEditGlobalSettingMode,
+    ABCGlobalSettingsMode,
+    MatchItemGeneratorSettings,
+)
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
+    match_item_generator_registry,
     MatchItem,
     MatchItems,
-    match_item_generator_registry,
 )
 
 

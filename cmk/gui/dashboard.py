@@ -5,10 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-from contextlib import contextmanager
-from dataclasses import dataclass
 import json
 import time
+from contextlib import contextmanager
+from dataclasses import dataclass
 from typing import (
     Callable,
     Dict,
@@ -28,7 +28,6 @@ from six import ensure_str
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException
 
-from cmk.gui.config import builtin_role_ids
 import cmk.gui.crash_reporting as crash_reporting
 import cmk.gui.forms as forms
 import cmk.gui.i18n
@@ -42,6 +41,7 @@ from cmk.gui.breadcrumb import (
     make_current_page_breadcrumb_item,
     make_topic_breadcrumb,
 )
+from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import (
     HTTPRedirect,
     MKAuthException,
@@ -49,7 +49,7 @@ from cmk.gui.exceptions import (
     MKMissingDataError,
     MKUserError,
 )
-from cmk.gui.globals import html, request, transactions, output_funnel, response, user
+from cmk.gui.globals import html, output_funnel, request, response, transactions, user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
@@ -67,9 +67,13 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, page_registry, PageResult
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.permissions import (permission_registry, declare_permission,
-                                 permission_section_registry, PermissionSection,
-                                 declare_dynamic_permissions)
+from cmk.gui.permissions import (
+    declare_dynamic_permissions,
+    declare_permission,
+    permission_registry,
+    permission_section_registry,
+    PermissionSection,
+)
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
@@ -92,8 +96,9 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
 from cmk.gui.node_visualization import get_topology_view_and_filters
+
 # Can be used by plugins
-from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     ABCFigureDashlet, builtin_dashboards, copy_view_into_dashlet, dashboard_breadcrumb,
     DashboardConfig, DashboardName, Dashlet, dashlet_registry, dashlet_types,
     dashlet_vs_general_settings, DashletConfig, DashletHandleInputFunc, DashletId, DashletInputFunc,
@@ -102,8 +107,8 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
 )
 from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
 from cmk.gui.plugins.views.utils import data_source_registry
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.utils.ntop import is_ntop_configured
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 
 loaded_with_language: Union[None, bool, str] = False
 

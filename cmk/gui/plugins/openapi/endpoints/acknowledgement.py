@@ -15,23 +15,20 @@ You can find an introduction to the acknowledgement of problems in the
 # TODO: List acknowledgments
 from urllib.parse import unquote
 
+from cmk.utils.livestatus_helpers.expressions import And
+from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables import Hosts, Services
+
+from cmk.gui import http, sites
 from cmk.gui.globals import user
-from cmk.gui import sites, http
-from cmk.gui.plugins.openapi import fields
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
     acknowledge_hostgroup_problem,
     acknowledge_service_problem,
     acknowledge_servicegroup_problem,
 )
-from cmk.utils.livestatus_helpers.expressions import And
-from cmk.utils.livestatus_helpers.queries import Query
-from cmk.utils.livestatus_helpers.tables import Hosts, Services
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    request_schemas,
-)
+from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, request_schemas
 from cmk.gui.plugins.openapi.utils import ProblemException
 
 SERVICE_DESCRIPTION = {

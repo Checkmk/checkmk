@@ -4,15 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.sites import sitenames, wato_slave_sites, get_site_config
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.webapi import (
-    APICallCollection,
-    api_call_collection_registry,
-)
-
 import cmk.gui.watolib.automations
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.i18n import _
+from cmk.gui.plugins.webapi import api_call_collection_registry, APICallCollection
+from cmk.gui.sites import get_site_config, sitenames, wato_slave_sites
 
 
 @api_call_collection_registry.register

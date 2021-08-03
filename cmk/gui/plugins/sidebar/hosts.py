@@ -7,14 +7,10 @@
 import abc
 
 import cmk.gui.sites as sites
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
-from cmk.gui.globals import request, html
+from cmk.gui.plugins.sidebar import link, SidebarSnapin, snapin_registry
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.plugins.sidebar import (
-    link,
-    SidebarSnapin,
-    snapin_registry,
-)
 
 
 class HostSnapin(SidebarSnapin, metaclass=abc.ABCMeta):

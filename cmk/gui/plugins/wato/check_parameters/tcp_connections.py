@@ -5,19 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    ManualCheckParameterRulespec,
+    rulespec_registry,
+    RulespecGroupEnforcedServicesNetworking,
+)
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
-    NetworkPort,
     Integer,
     IPv4Address,
+    NetworkPort,
     TextInput,
     Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupEnforcedServicesNetworking,
-    rulespec_registry,
-    ManualCheckParameterRulespec,
 )
 
 

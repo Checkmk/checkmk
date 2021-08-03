@@ -6,64 +6,57 @@
 
 # TODO: Rework connection management and multiplexing
 
-from typing import cast, Union, Any, Callable, Dict, List, Optional, Tuple, Literal
-import time
-import os
-import traceback
-import copy
 import ast
+import copy
+import os
 import shutil
-from dataclasses import dataclass, asdict, field
-from pathlib import Path
+import time
+import traceback
 from contextlib import suppress
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Any, Callable, cast, Dict, List, Literal, Optional, Tuple, Union
 
 from six import ensure_str
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId, ContactgroupName
+import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import ContactgroupName, UserId
 
-import cmk.gui.pages
-import cmk.gui.utils as utils
-from cmk.gui.config import register_post_config_load_hook
-from cmk.gui.globals import config
-import cmk.gui.hooks as hooks
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.sites import is_wato_slave_site
-from cmk.gui.exceptions import MKUserError, MKInternalError, MKAuthException
-from cmk.gui.log import logger
-from cmk.gui.valuespec import (
-    TextInput,
-    DropdownChoice,
-    ValueSpec,
-)
+import cmk.gui.hooks as hooks
 import cmk.gui.i18n
-from cmk.gui.i18n import _
-from cmk.gui.globals import g, html, request, local, session, response
+import cmk.gui.pages
 import cmk.gui.plugins.userdb
+import cmk.gui.utils as utils
+from cmk.gui.config import register_post_config_load_hook
+from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
+from cmk.gui.globals import config, g, html, local, request, response, session
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.htpasswd import Htpasswd
 from cmk.gui.plugins.userdb.ldap_connector import MKLDAPException
-
 from cmk.gui.plugins.userdb.utils import (
-    user_attribute_registry,
-    get_user_attributes,
-    UserConnector,
-    user_sync_config,
-    UserSpec,
-    new_user_template,
-    load_cached_profile,
-    get_connection,
     active_connections,
+    add_internal_attributes,
+    get_connection,
+    get_user_attributes,
+    load_cached_profile,
+    new_user_template,
     release_users_lock,
     save_cached_profile,
-    add_internal_attributes,
+    user_attribute_registry,
+    user_sync_config,
+    UserConnector,
+    UserSpec,
 )
-
-from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.utils.roles import roles_of_user
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -809,7 +802,7 @@ def load_custom_attr(userid: UserId,
                      default: Any = None,
                      lock: bool = False) -> Any:
     path = Path(custom_attr_path(userid, key))
-    result = store.load_text_from_file(path, default=default, lock=lock)
+    result = store.load_text_from_file(path, default=default, lock=lock)  # type: ignore[arg-type]
     if result == default:
         return result
     return conv_func(result.strip())

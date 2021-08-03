@@ -4,43 +4,31 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-)
+from typing import Callable, Dict, Iterable, List, Optional
 
-from cmk.gui.globals import config
-import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
-import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
-from cmk.gui.htmllib import HTML, foldable_container
+import cmk.gui.views as views
+import cmk.gui.watolib as watolib
+from cmk.gui.globals import config, html, user
+from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuTopic, TopicMenuItem
-from cmk.gui.globals import html, user
-from cmk.gui.watolib.search import (
-    ABCMatchItemGenerator,
-    MatchItem,
-    MatchItems,
-    match_item_generator_registry,
-)
-
 from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
     footnotelinks,
     make_topic_menu,
-    show_topic_menu,
     search,
+    show_topic_menu,
+    SidebarSnapin,
+    snapin_registry,
 )
-
-from cmk.gui.plugins.wato.utils.main_menu import (
-    MainModuleTopic,
-    main_module_registry,
+from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModuleTopic
+from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    match_item_generator_registry,
+    MatchItem,
+    MatchItems,
 )
 
 

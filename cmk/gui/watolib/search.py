@@ -6,7 +6,7 @@
 
 from abc import ABC, abstractmethod
 from contextlib import contextmanager, suppress
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from functools import partial
 from itertools import chain
 from time import sleep
@@ -33,10 +33,10 @@ from cmk.utils.plugin_registry import Registry
 from cmk.utils.redis import get_redis_client
 
 from cmk.gui.background_job import BackgroundJobAlreadyRunning, BackgroundProcessInterface
+from cmk.gui.config import make_config_object
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.globals import g, request, RequestContext, user, config, local
-from cmk.gui.config import make_config_object
+from cmk.gui.globals import config, g, local, request, RequestContext, user
 from cmk.gui.gui_background_job import GUIBackgroundJob, job_registry
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request, Response

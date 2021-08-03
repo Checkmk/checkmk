@@ -4,8 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Tuple as TupleType, Union
+from typing import Tuple as TupleType
+from typing import Union
+
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+)
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
@@ -14,12 +22,6 @@ from cmk.gui.valuespec import (
     MonitoringState,
     TextInput,
     Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
-    CheckParameterRulespecWithItem,
-    CheckParameterRulespecWithoutItem,
-    rulespec_registry,
 )
 
 

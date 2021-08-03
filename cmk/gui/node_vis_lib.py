@@ -5,11 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import Optional, Any
+from typing import Any, Optional
 
-from cmk.gui.globals import config
-from cmk.gui import watolib
 from cmk.utils import store
+
+from cmk.gui import watolib
+from cmk.gui.globals import config
 
 
 class BILayoutManagement:

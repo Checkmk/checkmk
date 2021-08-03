@@ -6,15 +6,14 @@
 
 from typing import List, Optional, Set, Tuple, Union
 
-from cmk.gui.globals import config
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.pages
 import cmk.gui.utils
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html, request, display_options, user
+from cmk.gui.globals import config, display_options, html, request, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

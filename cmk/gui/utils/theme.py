@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from pathlib import Path
-from typing import List, Tuple, Optional
 import os
+from pathlib import Path
+from typing import List, Optional, Tuple
 
 import cmk.utils.paths
 from cmk.utils.version import is_managed_edition

@@ -8,28 +8,26 @@ import ast
 import re
 import socket
 import time
-from typing import Dict, List, Optional, Tuple
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
 import livestatus
 from livestatus import SiteId
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
+
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-from cmk.gui.globals import config, g
 import cmk.gui.sites as sites
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
-)
-from cmk.gui.valuespec import DropdownChoices, DropdownChoiceEntry
+from cmk.gui.globals import config, g
+from cmk.gui.i18n import _
+from cmk.gui.permissions import permission_section_registry, PermissionSection
+from cmk.gui.valuespec import DropdownChoiceEntry, DropdownChoices
 
 
 def _socket_path() -> Path:

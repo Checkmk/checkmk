@@ -5,9 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for check parameter module internals"""
 
-from typing import Any, List, MutableMapping, Tuple as _Tuple, Union
-from cmk.gui.i18n import _
+from typing import Any, List, MutableMapping
+from typing import Tuple as _Tuple
+from typing import Union
+
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import PredictiveLevels
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
@@ -25,7 +29,6 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-from cmk.gui.plugins.wato import PredictiveLevels
 
 
 # Match and transform functions for level configurations like

@@ -6,8 +6,8 @@
 
 import cmk.gui.sites as sites
 import cmk.gui.visuals as visuals
-from cmk.gui.i18n import _
 from cmk.gui.globals import html
+from cmk.gui.i18n import _
 from cmk.gui.utils.urls import urlencode
 
 

@@ -10,46 +10,36 @@ import os
 import shutil
 import time
 import xml.dom.minidom  # type: ignore[import]
-from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 from pathlib import Path
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import dicttoxml  # type: ignore[import]
 
 import livestatus
 
 import cmk.utils.paths
+import cmk.utils.regex
+import cmk.utils.store as store
+from cmk.utils.exceptions import MKException, MKGeneralException
 from cmk.utils.structured_data import (
-    StructuredDataStore,
-    SDRawPath,
-    SDPath,
+    make_filter,
     SDKeys,
+    SDPath,
+    SDRawPath,
     SDRow,
     StructuredDataNode,
-    make_filter,
+    StructuredDataStore,
 )
-from cmk.utils.exceptions import (
-    MKException,
-    MKGeneralException,
-)
-import cmk.utils.store as store
-import cmk.utils.regex
 from cmk.utils.type_defs import HostName
 
-from cmk.gui.type_defs import Row
 import cmk.gui.pages
-from cmk.gui.globals import config
-import cmk.gui.userdb as userdb
 import cmk.gui.sites as sites
+import cmk.gui.userdb as userdb
+from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.globals import config, g, html, request, response, user
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html, request as request, response, user
-from cmk.gui.exceptions import (
-    MKAuthException,
-    MKUserError,
-)
-from cmk.gui.valuespec import (
-    ValueSpec,
-    TextInput,
-)
+from cmk.gui.type_defs import Row
+from cmk.gui.valuespec import TextInput, ValueSpec
 
 # TODO Cleanup variation:
 #   - parse_tree_path parses NOT visible, internal tree paths used in displayhints/views

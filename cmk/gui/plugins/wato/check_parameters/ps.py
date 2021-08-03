@@ -4,12 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import re
 from typing import Any, Dict
-import copy
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    ManualCheckParameterRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupEnforcedServicesApplications,
+    UserIconOrAction,
+)
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -30,16 +40,6 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupEnforcedServicesApplications,
-    RulespecGroupCheckParametersApplications,
-    RulespecGroupCheckParametersDiscovery,
-    UserIconOrAction,
-    rulespec_registry,
-    HostRulespec,
-    ManualCheckParameterRulespec,
-    CheckParameterRulespecWithItem,
 )
 
 # This object indicates that the setting 'CPU rescale maximum load' has not been set, which can only

@@ -5,37 +5,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import List, Optional, NamedTuple
+from typing import List, NamedTuple, Optional
 
-from livestatus import MKLivestatusNotFoundError, LivestatusResponse
+from livestatus import LivestatusResponse, MKLivestatusNotFoundError
+
 import cmk.utils.render
 
-import cmk.gui.sites as sites
-from cmk.gui.table import table_element
-import cmk.gui.watolib as watolib
 import cmk.gui.i18n
 import cmk.gui.pages
-from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, request, transactions, user, config, g
-from cmk.gui.utils.urls import makeactionuri
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
-    declare_permission,
-)
+import cmk.gui.sites as sites
+import cmk.gui.watolib as watolib
+from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.exceptions import MKAuthException
+from cmk.gui.globals import config, g, html, request, transactions, user
+from cmk.gui.i18n import _, _u
+from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
+    PageMenuTopic,
 )
-from cmk.gui.exceptions import MKAuthException
-from cmk.gui.pages import page_registry, Page
+from cmk.gui.pages import Page, page_registry
+from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
+from cmk.gui.table import table_element
 from cmk.gui.utils.flashed_messages import get_flashed_messages
-from cmk.gui.breadcrumb import make_simple_page_breadcrumb, Breadcrumb
-from cmk.gui.utils.urls import make_confirm_link
-from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.page_menu import make_simple_link
+from cmk.gui.utils.urls import make_confirm_link, makeactionuri
 
 FailedNotificationTimes = NamedTuple("FailedNotificationTimes", [
     ("acknowledged_unitl", float),

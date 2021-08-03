@@ -16,55 +16,59 @@ import errno
 import glob
 import json
 import os
-from pathlib import Path
 import shutil
 import signal
 import socket
 import subprocess
 import time
-from typing import Any, List, Optional, Tuple, Iterator, Dict
+from pathlib import Path
+from typing import Any, Dict, Iterator, List, Optional, Tuple
 
-import cmk.utils.version as cmk_version
 import cmk.utils.render as render
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.schedule import next_scheduled_time
 
 import cmk.gui.forms as forms
-from cmk.gui.table import table_element
 import cmk.gui.key_mgmt as key_mgmt
+from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
+from cmk.gui.exceptions import FinalizeRequest, MKGeneralException, MKUserError
+from cmk.gui.globals import html, request, transactions, user_errors
+from cmk.gui.i18n import _
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
+)
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, redirect
+from cmk.gui.table import table_element
+from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.urls import (
+    make_confirm_link,
+    makeactionuri,
+    makeactionuri_contextless,
+    makeuri_contextless,
+)
 from cmk.gui.valuespec import (
-    Password,
-    Dictionary,
-    TextInput,
-    DropdownChoice,
-    Checkbox,
-    Alternative,
-    FixedValue,
-    CascadingDropdown,
-    ID,
     AbsoluteDirname,
-    SchedulePeriod,
+    Alternative,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    ID,
     ListOf,
+    Password,
+    SchedulePeriod,
+    TextInput,
     Timeofday,
     ValueSpec,
 )
-from cmk.gui.exceptions import MKUserError, MKGeneralException, FinalizeRequest
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user_errors
-from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
-)
-from cmk.gui.utils.urls import (makeuri_contextless, make_confirm_link, makeactionuri,
-                                makeactionuri_contextless)
-from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.plugins.wato.utils.base_modes import ActionResult, redirect
 
 #.
 #   .--Config--------------------------------------------------------------.

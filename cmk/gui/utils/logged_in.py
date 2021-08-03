@@ -5,25 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Manage the currently logged in user"""
 
-import os
-import errno
 import contextlib
+import errno
+import os
 import time
-from typing import Optional, Dict, Union, Tuple, Any, Set, Iterator, List, ContextManager
+from typing import Any, ContextManager, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from livestatus import SiteConfigurations, SiteId
-from cmk.utils.type_defs import UserId
+
 import cmk.utils.paths
 import cmk.utils.store as store
+from cmk.utils.type_defs import UserId
 
-from cmk.gui.globals import local
-from cmk.gui.i18n import _
-import cmk.gui.sites as sites
-from cmk.gui.globals import config
-from cmk.gui.exceptions import MKAuthException
-from cmk.gui.utils.roles import may_with_roles, roles_of_user
-from cmk.gui.config import builtin_role_ids
 import cmk.gui.permissions as permissions
+import cmk.gui.sites as sites
+from cmk.gui.config import builtin_role_ids
+from cmk.gui.exceptions import MKAuthException
+from cmk.gui.globals import config, local
+from cmk.gui.i18n import _
+from cmk.gui.utils.roles import may_with_roles, roles_of_user
 
 
 class LoggedInUser:

@@ -6,10 +6,10 @@
 """Managing the available automation calls"""
 
 import abc
-from typing import Dict, Type, Any
+from typing import Any, Dict, Type
 
-import cmk.utils.version as cmk_version
 import cmk.utils.plugin_registry
+import cmk.utils.version as cmk_version
 
 
 class AutomationCommand(metaclass=abc.ABCMeta):

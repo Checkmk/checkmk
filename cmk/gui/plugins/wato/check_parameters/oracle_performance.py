@@ -24,33 +24,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Tuple,
-    FixedValue,
-    TextInput,
-    Integer,
-    Float,
-    ListOf,
-    CascadingDropdown,
-)
-
-from cmk.gui.plugins.wato import (
-    HostRulespec,
-    rulespec_registry,
-    RulespecGroupCheckParametersDiscovery,
-    RulespecGroupCheckParametersApplications,
-    CheckParameterRulespecWithItem,
-)
-
 from cmk.utils.oracle_constants import (
-    oracle_iofiles,
     oracle_io_sizes,
     oracle_io_types,
+    oracle_iofiles,
     oracle_pga_fields,
     oracle_sga_fields,
     oracle_waitclasses,
+)
+
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
+)
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    FixedValue,
+    Float,
+    Integer,
+    ListOf,
+    TextInput,
+    Tuple,
 )
 
 

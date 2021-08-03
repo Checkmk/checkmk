@@ -6,27 +6,26 @@
 
 from typing import Dict, List
 
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import (
-    Dictionary,
-    ListChoice,
-    ListOf,
-    ListOfStrings,
-    Transform,
-    DropdownChoice,
-    TextInput,
-    TextOrRegExp,
-)
-
+from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
+    HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
-    HostRulespec,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    ListChoice,
+    ListOf,
+    ListOfStrings,
+    TextInput,
+    TextOrRegExp,
+    Transform,
+)
 
 
 def _validate_discovery_filesystem_params(value, varprefix):

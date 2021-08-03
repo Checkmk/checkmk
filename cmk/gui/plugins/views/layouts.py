@@ -11,22 +11,20 @@ from typing import Any, Dict, List, Optional, Tuple
 from six import ensure_str
 
 import cmk.gui.utils as utils
-from cmk.gui.globals import config
-from cmk.gui.table import table_element, init_rowselect
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, theme, user
 from cmk.gui.exceptions import MKGeneralException
-
+from cmk.gui.globals import config, html, theme, user
+from cmk.gui.i18n import _
 from cmk.gui.plugins.views import (
-    PainterOptions,
-    is_stale,
-    row_id,
-    layout_registry,
-    Layout,
-    group_value,
     EmptyCell,
+    group_value,
+    is_stale,
+    Layout,
+    layout_registry,
     output_csv_headers,
+    PainterOptions,
+    row_id,
 )
+from cmk.gui.table import init_rowselect, table_element
 
 
 def render_checkbox(view, row, num_tds):

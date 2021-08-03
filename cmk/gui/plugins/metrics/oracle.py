@@ -4,20 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-    indexed_color,
-)
 from cmk.utils.oracle_constants import (
-    oracle_iofiles,
     oracle_io_sizes,
     oracle_io_types,
+    oracle_iofiles,
     oracle_sga_fields,
     oracle_waitclasses,
 )
+
+from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics import graph_info, indexed_color, metric_info
 
 #.
 #   .--Metrics-------------------------------------------------------------.

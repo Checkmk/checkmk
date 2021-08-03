@@ -5,12 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    DropdownChoice,
-    MonitoringState,
-    Tuple,
-)
+from cmk.gui.valuespec import Age, DropdownChoice, MonitoringState, Tuple
 
 run_duration = Tuple(
     title=_("Maximum run duration for last execution"),

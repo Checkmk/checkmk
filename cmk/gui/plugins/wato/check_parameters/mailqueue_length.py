@@ -5,20 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import typing
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    Transform,
-    Tuple,
-    ValueSpec,
-)
 
+from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Transform, Tuple, ValueSpec
 
 mailqueue_elements: typing.List[typing.Tuple[str, ValueSpec]] = [
     (

@@ -5,23 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Alternative,
-    Tuple,
-    Age,
-    FixedValue,
-    TextInput,
-    Filesize,
-    Percentage,
-    CascadingDropdown,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithItem,
-    rulespec_registry,
     ManualCheckParameterRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
     RulespecGroupEnforcedServicesApplications,
+)
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    CascadingDropdown,
+    Dictionary,
+    Filesize,
+    FixedValue,
+    Percentage,
+    TextInput,
+    Tuple,
 )
 
 

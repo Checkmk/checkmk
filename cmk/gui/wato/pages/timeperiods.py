@@ -6,58 +6,59 @@
 """Modes for managing timeperiod definitions for the core"""
 
 import time
-from typing import Any, Dict, List, Optional as _Optional, Tuple as _Tuple, Type
+from typing import Any, Dict, List
+from typing import Optional as _Optional
+from typing import Tuple as _Tuple
+from typing import Type
 
-import cmk.utils.version as cmk_version
 import cmk.utils.defines as defines
-from cmk.utils.type_defs import EventRule, UserId, timeperiod_spec_alias
+import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import EventRule, timeperiod_spec_alias, UserId
 
-from cmk.gui.globals import config
-import cmk.gui.watolib as watolib
-import cmk.gui.userdb as userdb
-from cmk.gui.table import table_element
 import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.utils
+import cmk.gui.userdb as userdb
 import cmk.gui.wato.mkeventd
-from cmk.gui.utils import unique_default_name_suggestion
-from cmk.gui.watolib.notifications import load_notification_rules
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, request
-from cmk.gui.valuespec import (
-    ValueSpec,
-    FixedValue,
-    Dictionary,
-    Optional,
-    Integer,
-    FileUpload,
-    TextInput,
-    ListOf,
-    Tuple,
-    ListChoice,
-    CascadingDropdown,
-    ListOfTimeRanges,
-)
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, request, transactions
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
-    make_simple_link,
-    make_simple_form_page_menu,
 )
-
 from cmk.gui.plugins.wato import (
-    WatoMode,
     ActionResult,
-    mode_registry,
     make_action_link,
     make_confirm_link,
+    mode_registry,
     mode_url,
     redirect,
+    WatoMode,
 )
+from cmk.gui.table import table_element
+from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    FileUpload,
+    FixedValue,
+    Integer,
+    ListChoice,
+    ListOf,
+    ListOfTimeRanges,
+    Optional,
+    TextInput,
+    Tuple,
+    ValueSpec,
+)
+from cmk.gui.watolib.notifications import load_notification_rules
 
 TimeperiodUsage = _Tuple[str, str]
 

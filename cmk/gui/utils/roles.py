@@ -9,8 +9,8 @@ from typing import Dict, List, Optional
 import cmk.utils.paths
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.globals import config
 import cmk.gui.permissions as permissions
+from cmk.gui.globals import config
 
 
 def user_may(user_id: Optional[UserId], pname: str) -> bool:

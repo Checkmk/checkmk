@@ -29,16 +29,15 @@ import errno
 import os
 import sys
 from types import ModuleType
-from typing import Optional, Iterator, Any, Dict, List
+from typing import Any, Dict, Iterator, List, Optional
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 
-import cmk.gui.utils as utils
 import cmk.gui.pages
-from cmk.gui.globals import g
-
 import cmk.gui.plugins.main_modules
+import cmk.gui.utils as utils
+from cmk.gui.globals import g
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module

@@ -5,10 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+)
 from cmk.gui.valuespec import Dictionary, MonitoringState
-from cmk.gui.plugins.wato import (RulespecGroupCheckParametersApplications, rulespec_registry,
-                                  CheckParameterRulespecWithoutItem)
 
 FRONTEND_STATES = [("OPEN", 0), ("STOP", 2)]
 SERVER_STATES = [("UP", 0), ("DOWN", 2), ("NOLB", 2), ("MAINT", 2), ("DRAIN", 2), ("no check", 2)]

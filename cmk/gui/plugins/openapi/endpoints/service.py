@@ -21,18 +21,15 @@ which you can look up in the Checkmk documentation.
 For a detailed list of columns have a look at the [services table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/services.py)
 definition on GitHub.
 """
-from cmk.gui import sites
-from cmk.gui.plugins.openapi import fields
 from cmk.utils.livestatus_helpers.expressions import And
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Services
-from cmk.gui.plugins.openapi.restful_objects import (
-    Endpoint,
-    constructors,
-    response_schemas,
-)
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTIONAL_HOST_NAME
+
+from cmk.gui import sites
+from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, response_schemas
 from cmk.gui.plugins.openapi.restful_objects.constructors import object_action_href
+from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTIONAL_HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem
 
 PARAMETERS = [{

@@ -8,40 +8,32 @@ import errno
 import logging
 import os
 import re
-from pathlib import Path
 import signal
 import subprocess
 import traceback
-from typing import Any, Dict, List, Tuple, Set
+from pathlib import Path
+from typing import Any, Dict, List, Set, Tuple
 
 from six import ensure_binary, ensure_str
 
-import cmk.utils.version as cmk_version
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.hooks as hooks
-from cmk.gui.config import get_default_config
-from cmk.gui.globals import config
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.log import logger
-from cmk.gui.i18n import _
+from cmk.gui.config import get_default_config
 from cmk.gui.exceptions import MKGeneralException
-
-from cmk.gui.watolib.changes import log_audit
-from cmk.gui.watolib.utils import (
-    wato_root_dir,
-    liveproxyd_config_dir,
-    multisite_dir,
-)
-from cmk.gui.plugins.watolib import (
-    config_domain_registry,
-    ABCConfigDomain,
-)
+from cmk.gui.globals import config
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.plugins.watolib import ABCConfigDomain, config_domain_registry
 from cmk.gui.type_defs import ConfigDomainName
+from cmk.gui.watolib.changes import log_audit
+from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
 
 
 @config_domain_registry.register

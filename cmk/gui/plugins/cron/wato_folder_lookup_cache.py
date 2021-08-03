@@ -6,8 +6,9 @@
 
 import time
 from pathlib import Path
-from cmk.gui.watolib.hosts_and_folders import Folder
+
 from cmk.gui.plugins.cron import register_job
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 
 def rebuild_folder_lookup_cache():

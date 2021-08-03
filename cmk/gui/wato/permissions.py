@@ -5,11 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _l
+from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.wato.utils import PermissionSectionWATO
-from cmk.gui.permissions import (
-    permission_registry,
-    Permission,
-)
 
 permission_registry.register(
     Permission(

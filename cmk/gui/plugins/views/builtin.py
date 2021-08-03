@@ -7,6 +7,7 @@
 from typing import Any, List, Optional, Tuple
 
 import cmk.utils.version as cmk_version
+
 from cmk.gui.i18n import _
 
 from . import multisite_builtin_views

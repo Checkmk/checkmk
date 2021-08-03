@@ -9,36 +9,44 @@ import abc
 import os
 import pprint
 import re
-from typing import Dict, Any, Optional, Type, Iterable
+from typing import Any, Dict, Iterable, Optional, Type
 
-from cmk.gui.config import load_config
+import cmk.utils.store as store
+
 import cmk.gui.forms as forms
-from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
-import cmk.utils.store as store
+from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, request, transactions
 from cmk.gui.i18n import _
-from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
-    make_simple_link,
-    make_simple_form_page_menu,
 )
+from cmk.gui.plugins.wato import (
+    ActionResult,
+    add_change,
+    make_confirm_link,
+    mode_registry,
+    mode_url,
+    redirect,
+    WatoMode,
+)
+from cmk.gui.table import table_element
 from cmk.gui.type_defs import Choices
+from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.watolib.host_attributes import (
     host_attribute_topic_registry,
     transform_pre_16_host_topics,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.plugins.wato import (WatoMode, ActionResult, add_change, mode_registry,
-                                  make_confirm_link, redirect, mode_url)
-from cmk.gui.utils.urls import makeuri_contextless, makeactionuri
 
 
 def update_user_custom_attrs():

@@ -7,108 +7,96 @@
 
 import abc
 import itertools
+import json
 import pprint
 import re
-import json
-from enum import Enum, auto
-from typing import (
-    cast,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    overload,
-    Tuple as _Tuple,
-    Type,
-    Union,
-)
+from enum import auto, Enum
+from typing import cast, Dict, Iterable, List, Optional, overload
+from typing import Tuple as _Tuple
+from typing import Type, Union
 
 from six import ensure_str
 
-from cmk.utils.regex import escape_regex_chars
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.regex import escape_regex_chars
 from cmk.utils.tags import GroupedTag
 from cmk.utils.type_defs import (
-    HostNameConditions,
-    ServiceNameConditions,
     HostName,
+    HostNameConditions,
     ServiceName,
+    ServiceNameConditions,
     TagConditionNE,
     TagConditionNOR,
     TagConditionOR,
+    TaggroupID,
     TaggroupIDToTagCondition,
     TagID,
-    TaggroupID,
 )
 
-from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.utils.escaping import strip_tags, escape_html_permissive
-from cmk.gui.globals import config
-import cmk.gui.watolib as watolib
-import cmk.gui.view_utils
-from cmk.gui.table import table_element
 import cmk.gui.forms as forms
-from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError, MKAuthException
-from cmk.gui.i18n import _
-from cmk.gui.globals import g, html, request, transactions, output_funnel, user
-from cmk.gui.sites import wato_slave_sites
-from cmk.gui.valuespec import (
-    FixedValue,
-    Transform,
-    Checkbox,
-    ListChoice,
-    Tuple,
-    ListOfStrings,
-    Dictionary,
-    RegExp,
-    DropdownChoice,
-    rule_option_elements,
-)
+import cmk.gui.view_utils
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.globals import config, g, html, output_funnel, request, transactions, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    PageMenuSearch,
-    make_simple_link,
     make_form_submit_link,
     make_simple_form_page_menu,
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuSearch,
+    PageMenuTopic,
 )
+from cmk.gui.plugins.wato import (
+    ActionResult,
+    add_change,
+    ConfigHostname,
+    DictHostTagCondition,
+    flash,
+    HostTagCondition,
+    make_action_link,
+    make_confirm_link,
+    make_diff_text,
+    mode_registry,
+    mode_url,
+    redirect,
+    search_form,
+    WatoMode,
+)
+from cmk.gui.plugins.wato.utils import LabelCondition
+from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
+from cmk.gui.sites import wato_slave_sites
+from cmk.gui.table import table_element
+from cmk.gui.type_defs import HTTPVariables
+from cmk.gui.utils.escaping import escape_html_permissive, strip_tags
+from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.valuespec import (
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    ListChoice,
+    ListOfStrings,
+    RegExp,
+    rule_option_elements,
+    Transform,
+    Tuple,
+)
+from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.host_label_sync import execute_host_label_sync
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import RuleConditions, SearchOptions
 from cmk.gui.watolib.rulespecs import (
     main_module_from_rulespec_group_name,
+    Rulespec,
     rulespec_group_registry,
     rulespec_registry,
-    Rulespec,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.watolib.host_label_sync import execute_host_label_sync
-from cmk.gui.watolib.changes import make_object_audit_log_url
-from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ActionResult,
-    mode_registry,
-    make_action_link,
-    make_confirm_link,
-    add_change,
-    make_diff_text,
-    search_form,
-    ConfigHostname,
-    HostTagCondition,
-    DictHostTagCondition,
-    mode_url,
-    flash,
-    redirect,
-)
-
-from cmk.gui.plugins.wato.utils import LabelCondition
-
-from cmk.gui.utils.urls import makeuri, makeuri_contextless
-
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 if watolib.has_agent_bakery():

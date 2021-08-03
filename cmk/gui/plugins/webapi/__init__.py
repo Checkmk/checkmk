@@ -6,6 +6,11 @@
 
 from cmk.utils.plugin_loader import load_plugins
 
+from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    add_configuration_hash, api_call_collection_registry, APICallCollection, check_hostname,
+    compute_config_hash, validate_config_hash, validate_host_attributes,
+)
+
 #.
 #   .--Plugin API----------------------------------------------------------.
 #   |           ____  _             _            _    ____ ___             |
@@ -15,11 +20,6 @@ from cmk.utils.plugin_loader import load_plugins
 #   |          |_|   |_|\__,_|\__, |_|_| |_| /_/   \_\_|  |___|            |
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
-
-from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import
-    APICallCollection, api_call_collection_registry, validate_host_attributes, validate_config_hash,
-    check_hostname, add_configuration_hash, compute_config_hash,
-)
 
 #.
 #   .--Plugins-------------------------------------------------------------.

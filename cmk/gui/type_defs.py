@@ -21,8 +21,8 @@ from typing import (
     Union,
 )
 
-from cmk.utils.type_defs import UserId
 from cmk.utils.cpu_tracking import Snapshot
+from cmk.utils.type_defs import UserId
 
 HTTPVariables = List[Tuple[str, Union[None, int, str]]]
 LivestatusQuery = str

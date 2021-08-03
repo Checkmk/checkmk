@@ -5,77 +5,65 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing users and contacts"""
 
-from typing import Iterator, Optional, Type, overload, Union, List, Tuple
 import base64
-import traceback
 import time
+import traceback
+from typing import Iterator, List, Optional, overload, Tuple, Type, Union
 
 from six import ensure_str
 
-import cmk.utils.version as cmk_version
 import cmk.utils.render as render
-from cmk.utils.type_defs import UserId, timeperiod_spec_alias
+import cmk.utils.version as cmk_version
+from cmk.utils.type_defs import timeperiod_spec_alias, UserId
 
-import cmk.gui.userdb as userdb
-import cmk.gui.plugins.userdb.utils as userdb_utils
-from cmk.gui.globals import config
-import cmk.gui.watolib as watolib
-from cmk.gui.table import table_element
-import cmk.gui.forms as forms
 import cmk.gui.background_job as background_job
+import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.htmllib import HTML
-from cmk.gui.sites import get_configured_site_choices
-from cmk.gui.plugins.userdb.htpasswd import hash_password
-from cmk.gui.plugins.userdb.utils import (
-    cleanup_connection_id,
-    get_connection,
-    UserAttribute,
-)
-from cmk.gui.log import logger
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _, _u, get_languages, get_language_alias
-from cmk.gui.globals import html, request, transactions, user
-from cmk.gui.valuespec import (
-    UserID,
-    EmailAddress,
-    Alternative,
-    DualListChoice,
-    FixedValue,
-)
+import cmk.gui.plugins.userdb.utils as userdb_utils
+import cmk.gui.userdb as userdb
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _, _u, get_language_alias, get_languages
+from cmk.gui.log import logger
 from cmk.gui.page_menu import (
+    make_checkbox_selection_json_text,
+    make_checkbox_selection_topic,
+    make_confirmed_form_submit_link,
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
-    make_checkbox_selection_json_text,
-    make_checkbox_selection_topic,
-    make_simple_link,
-    make_simple_form_page_menu,
-    make_confirmed_form_submit_link,
 )
-from cmk.gui.watolib.users import delete_users, edit_users, make_user_object_ref
-from cmk.gui.watolib.groups import load_contact_group_information
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
-from cmk.gui.watolib.changes import make_object_audit_log_url
-
+from cmk.gui.plugins.userdb.htpasswd import hash_password
+from cmk.gui.plugins.userdb.utils import cleanup_connection_id, get_connection, UserAttribute
 from cmk.gui.plugins.wato import (
-    WatoMode,
     ActionResult,
-    mode_registry,
-    make_confirm_link,
-    make_action_link,
     flash,
-    redirect,
+    make_action_link,
+    make_confirm_link,
+    mode_registry,
     mode_url,
+    redirect,
+    WatoMode,
 )
+from cmk.gui.sites import get_configured_site_choices
+from cmk.gui.table import table_element
 from cmk.gui.type_defs import Choices, UserSpec
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeactionuri
 from cmk.gui.utils.escaping import escape_html_permissive
-from cmk.gui.utils.ntop import is_ntop_available, get_ntop_connection_mandatory
+from cmk.gui.utils.ntop import get_ntop_connection_mandatory, is_ntop_available
 from cmk.gui.utils.roles import user_may
+from cmk.gui.utils.urls import makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.valuespec import Alternative, DualListChoice, EmailAddress, FixedValue, UserID
+from cmk.gui.watolib.changes import make_object_audit_log_url
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.users import delete_users, edit_users, make_user_object_ref
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

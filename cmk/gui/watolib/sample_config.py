@@ -6,21 +6,22 @@
 """Create an initial Checkmk configuration for new sites"""
 
 import os
-from cmk.utils import store
-from cmk.utils.version import is_free_edition
-from cmk.utils.tags import TagConfig, sample_tag_config
 
-from cmk.gui.userdb import create_cmk_automation_user
+from cmk.utils import store
+from cmk.utils.tags import sample_tag_config, TagConfig
+from cmk.utils.version import is_free_edition
+
 from cmk.gui.log import logger
-from cmk.gui.watolib.tags import TagConfigFile
+from cmk.gui.plugins.watolib.utils import sample_config_generator_registry, SampleConfigGenerator
+from cmk.gui.userdb import create_cmk_automation_user
+from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
+from cmk.gui.watolib.global_settings import save_global_settings
+from cmk.gui.watolib.groups import save_group_information
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.notifications import save_notification_rules
 from cmk.gui.watolib.rulesets import FolderRulesets
-from cmk.gui.watolib.groups import save_group_information
-from cmk.gui.watolib.global_settings import save_global_settings
-from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
-from cmk.gui.watolib.utils import wato_root_dir, multisite_dir
-from cmk.gui.plugins.watolib.utils import SampleConfigGenerator, sample_config_generator_registry
+from cmk.gui.watolib.tags import TagConfigFile
+from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
 
 
 # TODO: Must only be unlocked when it was not locked before. We should find a more

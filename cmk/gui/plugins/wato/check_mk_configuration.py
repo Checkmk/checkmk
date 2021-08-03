@@ -6,7 +6,8 @@
 
 import logging
 import re
-from typing import Any, Dict, List, Tuple as _Tuple
+from typing import Any, Dict, List
+from typing import Tuple as _Tuple
 
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup

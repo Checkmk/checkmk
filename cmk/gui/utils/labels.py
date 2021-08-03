@@ -5,30 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from typing import Dict, Iterable, List, Mapping, Set, Tuple, TYPE_CHECKING
+
 from redis.client import Pipeline
-from typing import (
-    Dict,
-    Iterable,
-    List,
-    Mapping,
-    Set,
-    Tuple,
-    TYPE_CHECKING,
-)
+
+from livestatus import lqencode, quote_dict, SiteId
+
+from cmk.utils.redis import get_redis_client, IntegrityCheckResponse, query_redis
+from cmk.utils.type_defs import Labels as _Labels
+
 import cmk.gui.sites as sites
-from livestatus import (
-    lqencode,
-    quote_dict,
-    SiteId,
-)
 from cmk.gui.globals import g, user
 from cmk.gui.i18n import _
-from cmk.utils.redis import (
-    get_redis_client,
-    query_redis,
-    IntegrityCheckResponse,
-)
-from cmk.utils.type_defs import Labels as _Labels
 
 if TYPE_CHECKING:
     from cmk.utils.redis import RedisDecoded

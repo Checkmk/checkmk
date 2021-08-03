@@ -7,7 +7,7 @@
 import json
 
 import cmk.gui.pages
-from cmk.gui.globals import response, request, user
+from cmk.gui.globals import request, response, user
 
 
 @cmk.gui.pages.register("ajax_switch_help")

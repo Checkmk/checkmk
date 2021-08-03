@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    defines,
-    Dictionary,
-    ListOfTimeRanges,
-    TextInput,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import defines, Dictionary, ListOfTimeRanges, TextInput
 
 
 def _item_spec_motion():

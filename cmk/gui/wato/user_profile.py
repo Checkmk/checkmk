@@ -5,49 +5,47 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Page user can change several aspects of it's own profile"""
 
-import time
 import abc
 import json
+import time
 from typing import Iterator, List, Optional, Union
-from livestatus import SiteId, SiteConfiguration
+
+from livestatus import SiteConfiguration, SiteId
+
 from cmk.utils.type_defs import UserId
 
+import cmk.gui.forms as forms
 import cmk.gui.i18n
+import cmk.gui.login as login
 import cmk.gui.sites
 import cmk.gui.userdb as userdb
-from cmk.gui.globals import config
 import cmk.gui.watolib as watolib
-import cmk.gui.forms as forms
-import cmk.gui.login as login
-
-from cmk.gui.sites import get_site_config, sitenames
 from cmk.gui.breadcrumb import make_simple_page_breadcrumb
+from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import config, html, request, response, theme, transactions, user, user_errors
+from cmk.gui.i18n import _, _l, _u
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, UserSpec
+from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
+)
+from cmk.gui.pages import AjaxPage, AjaxPageResult, Page, page_registry
 from cmk.gui.plugins.userdb.htpasswd import hash_password
 from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic
 from cmk.gui.plugins.wato.utils.base_modes import redirect
-from cmk.gui.exceptions import (MKUserError, MKGeneralException, MKAuthException, FinalizeRequest)
-from cmk.gui.i18n import _, _l, _u
-from cmk.gui.globals import html, request, response, transactions, user_errors, theme, user
-from cmk.gui.pages import page_registry, AjaxPage, AjaxPageResult, Page
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
-)
-
-from cmk.gui.utils.urls import makeuri_contextless, requested_file_name
+from cmk.gui.sites import get_site_config, sitenames
+from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic, UserSpec
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.language_cookie import set_language_cookie
 from cmk.gui.utils.theme import theme_choices
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
+from cmk.gui.utils.urls import makeuri_contextless, requested_file_name
 from cmk.gui.wato.pages.users import select_language
-
+from cmk.gui.watolib.activate_changes import ACTIVATION_TIME_PROFILE_SYNC
+from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
 from cmk.gui.watolib.user_profile import push_user_profiles_to_site_transitional_wrapper
 

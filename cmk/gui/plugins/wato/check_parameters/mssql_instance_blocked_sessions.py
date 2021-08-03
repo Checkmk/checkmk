@@ -5,21 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Float,
-    DualListChoice,
-    MonitoringState,
-    TextInput,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.check_parameters.mssql_blocked_sessions import mssql_waittypes
+from cmk.gui.valuespec import Dictionary, DualListChoice, Float, MonitoringState, TextInput, Tuple
 
 
 def _parameter_valuespec_mssql_instance_blocked_sessions():

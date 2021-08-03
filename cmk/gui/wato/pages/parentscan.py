@@ -6,27 +6,21 @@
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
 import collections
-from typing import NamedTuple, List, Optional, Type
+from typing import List, NamedTuple, Optional, Type
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import HostName
 
-from cmk.gui.globals import config
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.globals import html, transactions, request, user
+import cmk.gui.watolib as watolib
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.plugins.wato import ActionResult, get_hosts_from_checkboxes, mode_registry, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.hosts_and_folders import CREFolder
-from cmk.gui.plugins.wato import (
-    mode_registry,
-    WatoMode,
-    ActionResult,
-    get_hosts_from_checkboxes,
-)
 
 ParentScanTask = collections.namedtuple("ParentScanTask", [
     "site_id",

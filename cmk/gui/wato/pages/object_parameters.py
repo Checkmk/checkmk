@@ -7,39 +7,28 @@
 parameters. This is a host/service overview page over all things that can be
 modified via rules."""
 
-from typing import List, Tuple as _Tuple, Optional, Type, Iterator, Union
+from typing import Iterator, List, Optional
+from typing import Tuple as _Tuple
+from typing import Type, Union
 
 from six import ensure_str
 
-from cmk.gui.globals import config
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
-from cmk.gui.utils.html import HTML
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import Tuple
-from cmk.gui.watolib.rulesets import Ruleset, Rule
-from cmk.gui.watolib.hosts_and_folders import CREFolder
-from cmk.gui.watolib.rulespecs import (
-    rulespec_group_registry,
-    rulespec_registry,
-)
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-)
-from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, request
+from cmk.gui.i18n import _
+from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
+from cmk.gui.plugins.wato import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_service_status_link
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
-)
+from cmk.gui.utils.html import HTML
+from cmk.gui.valuespec import Tuple
+from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
+from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.rulesets import Rule, Ruleset
+from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 
 
 @mode_registry.register

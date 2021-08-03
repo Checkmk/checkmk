@@ -5,38 +5,48 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
 
+import abc
 import ast
+import enum
 import errno
 import os
 import time
-import abc
-import enum
 from dataclasses import dataclass, field
-from typing import (Dict, Union, TYPE_CHECKING, Optional, Type, List, Iterable, Any, NamedTuple,
-                    TypeVar, Generic)
 from pathlib import Path
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    Iterable,
+    List,
+    NamedTuple,
+    Optional,
+    Type,
+    TYPE_CHECKING,
+    TypeVar,
+    Union,
+)
 
 from livestatus import SiteId
+
 import cmk.utils
 import cmk.utils.store as store
-from cmk.utils.type_defs import UserId, Labels
 from cmk.utils.object_diff import make_object_diff
+from cmk.utils.type_defs import Labels, UserId
 
 import cmk.gui.utils
-from cmk.gui.sites import site_is_local, activation_sites
-from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.globals import request, user, config
-from cmk.gui.utils import escaping
-from cmk.gui.i18n import _
-from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.valuespec import DropdownChoice
-
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import config, request, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.plugins.watolib import ABCConfigDomain, config_domain_registry
+from cmk.gui.sites import activation_sites, site_is_local
+from cmk.gui.utils import escaping
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.watolib import search
-
-from cmk.gui.plugins.watolib import config_domain_registry, ABCConfigDomain
 
 if TYPE_CHECKING:
     from cmk.gui.watolib.hosts_and_folders import CREHost

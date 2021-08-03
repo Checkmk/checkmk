@@ -48,16 +48,11 @@ from typing import (
     Literal,
     Mapping,
     NamedTuple,
-    Optional as _Optional,
-    Pattern,
-    Protocol,
-    Sequence,
-    SupportsFloat,
-    Tuple as _Tuple,
-    Type,
-    TypeVar,
-    Union,
 )
+from typing import Optional as _Optional
+from typing import Pattern, Protocol, Sequence, SupportsFloat
+from typing import Tuple as _Tuple
+from typing import Type, TypeVar, Union
 
 from Cryptodome.Cipher import AES
 from Cryptodome.PublicKey import RSA
@@ -72,22 +67,22 @@ import livestatus
 import cmk.utils.defines as defines
 import cmk.utils.log
 import cmk.utils.paths
-import cmk.utils.regex
 import cmk.utils.plugin_registry
+import cmk.utils.regex
 from cmk.utils.type_defs import Seconds
 
-from cmk.gui.globals import config
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils
-from cmk.gui.htmllib.foldable_container import foldable_container
+import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKGeneralException, MKUserError
-from cmk.gui.globals import html, theme, output_funnel, request, user
+from cmk.gui.globals import config, html, output_funnel, request, theme, user
+from cmk.gui.htmllib.foldable_container import foldable_container
 from cmk.gui.http import UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry
-from cmk.gui.type_defs import ChoiceGroup, ChoiceId, ChoiceText, Choices, GroupedChoices
+from cmk.gui.type_defs import ChoiceGroup, ChoiceId, Choices, ChoiceText, GroupedChoices
+from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.labels import (
     encode_labels_for_http,
@@ -97,7 +92,6 @@ from cmk.gui.utils.labels import (
 )
 from cmk.gui.utils.popups import MethodAjax, MethodColorpicker
 from cmk.gui.utils.urls import makeuri, urlencode
-from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.view_utils import render_labels
 
 seconds_per_day = 86400

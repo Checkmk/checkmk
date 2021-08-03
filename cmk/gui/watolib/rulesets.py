@@ -7,13 +7,16 @@
 from __future__ import annotations
 
 import os
-import re
 import pprint
-from typing import Any, Dict, cast, Container, List, Optional, Tuple, Union
+import re
+from typing import Any, cast, Container, Dict, List, Optional, Tuple, Union
 
+import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+import cmk.utils.store as store
+from cmk.utils.regex import escape_regex_chars
 from cmk.utils.type_defs import (
-    Labels,
     HostNameConditions,
+    Labels,
     RuleSpec,
     ServiceNameConditions,
     TagConditionNE,
@@ -21,41 +24,24 @@ from cmk.utils.type_defs import (
     TagID,
     TagIDToTaggroupID,
 )
-import cmk.utils.store as store
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
-from cmk.utils.regex import escape_regex_chars
-
-from cmk.gui.config import register_post_config_load_hook
-from cmk.gui.globals import config
-from cmk.gui.log import logger
-from cmk.gui.globals import html
-from cmk.gui.i18n import _
-from cmk.gui.utils.html import HTML
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui import utils
-
-from cmk.gui.valuespec import ValueSpec
-from cmk.gui.watolib.utils import has_agent_bakery
-from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
-from cmk.gui.watolib.rulespecs import (
-    rulespec_registry,
-    rulespec_group_registry,
-)
-from cmk.gui.watolib.hosts_and_folders import (
-    CREFolder,
-    CREHost,
-    Folder,
-    Host,
-)
-from cmk.gui.watolib.utils import (
-    ALL_HOSTS,
-    ALL_SERVICES,
-    NEGATE,
-)
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place
 import cmk.base.export  # pylint: disable=cmk-module-layer-violation
+
+from cmk.gui import utils
+from cmk.gui.config import register_post_config_load_hook
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import config, html
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.utils.html import HTML
+from cmk.gui.valuespec import ValueSpec
+from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
+from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
+from cmk.gui.watolib.utils import ALL_HOSTS, ALL_SERVICES, has_agent_bakery, NEGATE
+
 # Make the GUI config module reset the base config to always get the latest state of the config
 register_post_config_load_hook(cmk.base.export.reset_config)
 

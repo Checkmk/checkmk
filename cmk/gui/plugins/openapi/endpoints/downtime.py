@@ -30,29 +30,29 @@ Downtime object can have the following relations:
 
 """
 
-import json
 import datetime as dt
+import json
 from typing import Literal
+
+from cmk.utils.livestatus_helpers.expressions import And, Or
+from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
+from cmk.utils.livestatus_helpers.tables import Hosts
+from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 
 from cmk.gui import sites
 from cmk.gui.globals import user
 from cmk.gui.http import Response
-from cmk.gui.plugins.openapi import fields
-from cmk.gui.plugins.openapi.fields import HOST_NAME_REGEXP
 from cmk.gui.livestatus_utils.commands import downtimes as downtime_commands
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
-from cmk.utils.livestatus_helpers.expressions import And, Or
-from cmk.utils.livestatus_helpers.queries import Query, detailed_connection
-from cmk.utils.livestatus_helpers.tables import Hosts
-from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
+from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.fields import HOST_NAME_REGEXP
 from cmk.gui.plugins.openapi.restful_objects import (
+    constructors,
     Endpoint,
     request_schemas,
-    constructors,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.utils import problem
-from cmk.gui.plugins.openapi.utils import BaseSchema
+from cmk.gui.plugins.openapi.utils import BaseSchema, problem
 
 DowntimeType = Literal['host', 'service', 'hostgroup', 'servicegroup', 'host_by_query',
                        'service_by_query']

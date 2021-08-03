@@ -7,17 +7,8 @@
 import cmk.utils.render
 
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.metrics import (
-    unit_info,)
-
-from cmk.gui.valuespec import (
-    Age,
-    Float,
-    Percentage,
-    Integer,
-    Filesize,
-)
+from cmk.gui.plugins.metrics import unit_info
+from cmk.gui.valuespec import Age, Filesize, Float, Integer, Percentage
 
 # TODO Graphingsystem:
 # - Default-Template: Wenn im Graph kein "range" angegeben ist, aber

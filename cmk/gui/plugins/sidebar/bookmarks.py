@@ -4,35 +4,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List
 import urllib.parse
+from typing import Any, Dict, List
 
 import cmk.utils.store as store
 
 import cmk.gui.pagetypes as pagetypes
-from cmk.gui.i18n import _
-from cmk.gui.globals import request, user
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import request, user
 from cmk.gui.htmllib.foldable_container import foldable_container
-
-from cmk.gui.valuespec import (
-    TextInput,
-    ListOf,
-    Transform,
-    Tuple,
-    IconSelector,
-    Alternative,
-    FixedValue,
-    OptionalDropdownChoice,
-)
-
+from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
-    iconlink,
-    link,
     begin_footnote_links,
     end_footnote_links,
+    iconlink,
+    link,
+    SidebarSnapin,
+    snapin_registry,
+)
+from cmk.gui.valuespec import (
+    Alternative,
+    FixedValue,
+    IconSelector,
+    ListOf,
+    OptionalDropdownChoice,
+    TextInput,
+    Transform,
+    Tuple,
 )
 
 

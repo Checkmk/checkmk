@@ -4,36 +4,40 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Type, Optional, List, Callable, Iterable, Tuple as TupleType
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    ValueSpec,
-    DictionaryEntry,
-    Alternative,
-    Dictionary,
-    Integer,
-    Tuple,
-    Float,
-    Percentage,
-    Age,
-    FixedValue,
-    TextInput,
-    Filesize,
-    ListOf,
-    CascadingDropdown,
-    Transform,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
-    CheckParameterRulespecWithoutItem,
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-)
+from typing import Callable, Iterable, List, Optional
+from typing import Tuple as TupleType
+from typing import Type
+
 from cmk.utils.aws_constants import (
-    AWSEC2InstTypes,
     AWSEC2InstFamilies,
+    AWSEC2InstTypes,
     AWSEC2LimitsDefault,
     AWSEC2LimitsSpecial,
+)
+
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+)
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    CascadingDropdown,
+    Dictionary,
+    DictionaryEntry,
+    Filesize,
+    FixedValue,
+    Float,
+    Integer,
+    ListOf,
+    Percentage,
+    TextInput,
+    Transform,
+    Tuple,
+    ValueSpec,
 )
 
 

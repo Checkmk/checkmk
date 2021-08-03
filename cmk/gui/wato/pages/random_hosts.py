@@ -6,20 +6,19 @@
 """This module allows the creation of large numbers of random hosts
 for test and development."""
 
-from typing import List, Tuple, Dict, Optional, Type
-
 import random
+from typing import Dict, List, Optional, Tuple, Type
 
 from cmk.utils.type_defs import HostName
 
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
+from cmk.gui.globals import html, request, transactions
+from cmk.gui.i18n import _
+from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
+from cmk.gui.plugins.wato import ActionResult, flash, mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.plugins.wato import (WatoMode, ActionResult, mode_registry, flash, redirect, mode_url)
 
 
 @mode_registry.register

@@ -5,34 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Simple download page for the builtin agents and plugins"""
 
-import os
 import abc
-import glob
 import fnmatch
-from typing import List, Iterator, Optional
+import glob
+import os
+from typing import Iterator, List, Optional
 
 import cmk.utils.paths
 import cmk.utils.render
 
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.type_defs import PermissionName
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.globals import html
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
+    PageMenuTopic,
 )
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
-    folder_preserving_link,
-)
+from cmk.gui.plugins.wato import folder_preserving_link, mode_registry, WatoMode
+from cmk.gui.type_defs import PermissionName
 
 
 class ABCModeDownloadAgents(WatoMode):

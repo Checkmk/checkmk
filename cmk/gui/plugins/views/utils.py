@@ -9,61 +9,66 @@
 
 import abc
 import functools
-import time
-import re
-import os
 import hashlib
-from pathlib import Path
+import os
+import re
+import time
 import traceback
-from typing import (Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional,
-                    Union, Dict, Type, cast, Sequence)
 from contextlib import suppress
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Hashable,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    TYPE_CHECKING,
+    Union,
+)
 
 from six import ensure_str
 
 import livestatus
-from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites
+from livestatus import LivestatusColumn, LivestatusRow, OnlySites, SiteId
 
-from cmk.utils.check_utils import worst_service_state
 import cmk.utils.plugin_registry
-import cmk.utils.render
 import cmk.utils.regex
+import cmk.utils.render
+from cmk.utils.check_utils import worst_service_state
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
     HostName,
     LabelSources,
     ServiceName,
     TaggroupIDToTagID,
-    Timestamp,
     TimeRange,
+    Timestamp,
 )
 
-from cmk.gui.globals import config
-import cmk.gui.utils.escaping as escaping
-import cmk.gui.sites as sites
-import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
+import cmk.gui.sites as sites
 import cmk.gui.utils
-import cmk.gui.view_utils
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.valuespec as valuespec
-from cmk.gui.permissions import Permission
-from cmk.gui.valuespec import ValueSpec, DropdownChoice
-from cmk.gui.log import logger
+import cmk.gui.view_utils
+import cmk.gui.visuals as visuals
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import config, display_options, g, html, request, response, theme, user
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _, _u, ungettext
-from cmk.gui.globals import g, html, request, response, display_options, theme, user
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.permissions import permission_registry
-from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
-from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
+from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.plugins.visuals.utils import (
-    visual_info_registry,
-    visual_type_registry,
-    VisualType,
-)
-
+from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import (
     AllViewSpecs,
     ColumnName,
@@ -85,13 +90,14 @@ from cmk.gui.type_defs import (
     VisualLinkSpec,
     VisualName,
 )
-
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.valuespec import DropdownChoice, ValueSpec
+from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
 
 if TYPE_CHECKING:
-    from cmk.gui.views import View
     from cmk.gui.plugins.visuals.utils import Filter
+    from cmk.gui.views import View
 
 ExportCellContent = Union[str, Dict[str, Any]]
 PDFCellContent = Union[str, HTML, Tuple[str, str]]

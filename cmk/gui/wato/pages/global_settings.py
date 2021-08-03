@@ -7,59 +7,48 @@
 settings"""
 
 import abc
-from typing import (
-    Final,
-    Iterable,
-    Iterator,
-    Optional,
-    Tuple,
-    Type,
-)
+from typing import Final, Iterable, Iterator, Optional, Tuple, Type
 
 import cmk.utils.version as cmk_version
-from cmk.gui.globals import config
+
+import cmk.gui.forms as forms
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
-import cmk.gui.forms as forms
-from cmk.gui.valuespec import Checkbox, Transform
-
-from cmk.gui.plugins.watolib.utils import (
-    ConfigVariable,
-    ConfigVariableGroup,
-    config_variable_group_registry,
-    config_variable_registry,
-    ABCConfigDomain,
-)
-from cmk.gui.plugins.wato.utils import mode_registry, get_search_expression
-from cmk.gui.plugins.wato.utils.base_modes import WatoMode, ActionResult, redirect, mode_url
-
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user
-from cmk.gui.exceptions import MKGeneralException, MKAuthException, MKUserError
-from cmk.gui.log import logger
-from cmk.gui.htmllib import HTML
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.page_menu import (
+    make_confirmed_form_submit_link,
+    make_display_options_dropdown,
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuSearch,
-    make_simple_link,
-    make_confirmed_form_submit_link,
-    make_simple_form_page_menu,
-    make_display_options_dropdown,
+    PageMenuTopic,
 )
-
-from cmk.gui.utils.flashed_messages import flash
-from cmk.gui.utils.urls import makeuri_contextless, makeactionuri
+from cmk.gui.plugins.wato.utils import get_search_expression, mode_registry
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect, WatoMode
+from cmk.gui.plugins.watolib.utils import (
+    ABCConfigDomain,
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
+)
 from cmk.gui.utils.escaping import escape_html_permissive
-
+from cmk.gui.utils.flashed_messages import flash
+from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
+from cmk.gui.valuespec import Checkbox, Transform
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
+    match_item_generator_registry,
     MatchItem,
     MatchItems,
-    match_item_generator_registry,
 )
 
 

@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
+import json
+
 # TODO:
 #
 # Notes for future rewrite:
@@ -24,71 +27,50 @@
 #
 # - Unify CSS classes attribute to "class_"
 import os
-import re
-import json
-import abc
 import pprint
-from typing import (
-    Any,
-    cast,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    TYPE_CHECKING,
-    Union,
-)
+import re
 from pathlib import Path
+from typing import Any, cast, Dict, Iterable, List, Optional, Set, Tuple, TYPE_CHECKING, Union
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 
-from cmk.gui.globals import transactions, user_errors, theme, user
-from cmk.gui.exceptions import MKUserError
-import cmk.gui.utils.escaping as escaping
-import cmk.gui.utils as utils
-from cmk.gui.globals import config
 import cmk.gui.log as log
+import cmk.gui.utils as utils
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, theme, transactions, user, user_errors
+from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.i18n import _
+from cmk.gui.page_menu import (
+    enable_page_menu_entry,
+    PageMenu,
+    PageMenuPopupsRenderer,
+    PageMenuRenderer,
+)
+from cmk.gui.page_state import PageState, PageStateRenderer
+from cmk.gui.type_defs import Choice, ChoiceGroup, ChoiceText, CSSSpec, GroupedChoices, Icon
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import PopupMethod
 from cmk.gui.utils.urls import requested_file_name
-from cmk.gui.utils.mobile import is_mobile
-from cmk.gui.i18n import _
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
-from cmk.gui.page_state import PageState, PageStateRenderer
-from cmk.gui.htmllib.foldable_container import foldable_container
-from ._tag_rendering import (
-    HTMLTagValue,
-    HTMLContent,
-    HTMLTagAttributeValue,
-    HTMLTagAttributes,
-    render_start_tag,
-    render_end_tag,
-    render_element,
-)
 
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuRenderer,
-    PageMenuPopupsRenderer,
-    enable_page_menu_entry,
-)
-from cmk.gui.type_defs import (
-    CSSSpec,
-    Icon,
-    Choice,
-    ChoiceGroup,
-    ChoiceText,
-    GroupedChoices,
+from ._tag_rendering import (
+    HTMLContent,
+    HTMLTagAttributes,
+    HTMLTagAttributeValue,
+    HTMLTagValue,
+    render_element,
+    render_end_tag,
+    render_start_tag,
 )
 
 if TYPE_CHECKING:
     from cmk.gui.http import Request, Response
-    from cmk.gui.valuespec import ValueSpec
     from cmk.gui.utils.output_funnel import OutputFunnel
+    from cmk.gui.valuespec import ValueSpec
 
 HTMLMessageInput = Union[HTML, str]
 DefaultChoice = str

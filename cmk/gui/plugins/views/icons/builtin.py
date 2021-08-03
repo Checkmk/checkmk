@@ -40,11 +40,11 @@
 import json
 import re
 
-import cmk.gui.bi as bi
-from cmk.gui.globals import config
 import cmk.utils
 import cmk.utils.render
-from cmk.gui.globals import g, html, request, response, user
+
+import cmk.gui.bi as bi
+from cmk.gui.globals import config, g, html, request, response, user
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views import (
     display_options,
@@ -53,12 +53,12 @@ from cmk.gui.plugins.views import (
     render_cache_info,
     url_to_visual,
 )
-from cmk.gui.type_defs import VisualLinkSpec
-from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.graphs import cmk_graph_url
+from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
+from cmk.gui.type_defs import VisualLinkSpec
+from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
-from cmk.gui.utils.mobile import is_mobile
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |

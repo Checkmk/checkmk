@@ -4,26 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
 import time
+from pathlib import Path
 from typing import Union
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 
-import cmk.gui.utils as utils
 import cmk.gui.i18n
 import cmk.gui.pages
+import cmk.gui.utils as utils
+from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import response
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.utils.logged_in import SuperUserContext
 
 # Things imported here are used by pre legacy (pre 1.6) cron plugins
-from cmk.gui.plugins.cron import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.plugins.cron import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     multisite_cronjobs, register_job,
 )
+from cmk.gui.utils.logged_in import SuperUserContext
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.cron  # pylint: disable=no-name-in-module

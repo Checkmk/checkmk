@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
-import time
+
 import random
+import time
 from typing import List, Optional, TYPE_CHECKING
 
 from cmk.gui.http import Request

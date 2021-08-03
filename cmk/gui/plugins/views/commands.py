@@ -5,38 +5,35 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Any, Optional, Literal, List, Tuple, Sequence
+from typing import Any, List, Literal, Optional, Sequence, Tuple
 
 import livestatus
 from livestatus import SiteId
 
-from cmk.gui.globals import config
-import cmk.gui.utils as utils
 import cmk.gui.bi as bi
 import cmk.gui.sites as sites
+import cmk.gui.utils as utils
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.i18n import _u, _, _l, ungettext
-from cmk.gui.globals import html, request, user
-from cmk.gui.type_defs import Choices, Row
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import Age, AbsoluteDate, Seconds
-from cmk.gui.watolib.downtime import DowntimeSchedule, determine_downtime_mode
-
+from cmk.gui.globals import config, html, request, user
+from cmk.gui.i18n import _, _l, _u, ungettext
 from cmk.gui.permissions import (
+    Permission,
+    permission_registry,
     permission_section_registry,
     PermissionSection,
-    permission_registry,
-    Permission,
 )
-
 from cmk.gui.plugins.views import (
-    command_group_registry,
-    CommandGroup,
-    command_registry,
     Command,
+    command_group_registry,
+    command_registry,
     CommandActionResult,
+    CommandGroup,
     CommandSpec,
 )
+from cmk.gui.type_defs import Choices, Row
+from cmk.gui.valuespec import AbsoluteDate, Age, Seconds
+from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
 
 @command_group_registry.register
@@ -977,7 +974,9 @@ class CommandScheduleDowntimes(Command):
                           False,
                           label=_("Repeat this downtime on a regular basis every"))
 
-            from cmk.gui.cee.plugins.wato.cmc import recurring_downtimes_types  # pylint: disable=no-name-in-module,import-outside-toplevel
+            from cmk.gui.cee.plugins.wato.cmc import (
+                recurring_downtimes_types,  # pylint: disable=no-name-in-module,import-outside-toplevel
+            )
 
             recurring_selections: Choices = [
                 (str(k), v) for (k, v) in sorted(recurring_downtimes_types().items())
@@ -1132,8 +1131,9 @@ class CommandScheduleDowntimes(Command):
 
     def _title_prefix(self, recurring_number):
         if recurring_number:
-            from cmk.gui.cee.plugins.wato.cmc import \
-                recurring_downtimes_types  # pylint: disable=no-name-in-module,import-outside-toplevel
+            from cmk.gui.cee.plugins.wato.cmc import (
+                recurring_downtimes_types,  # pylint: disable=no-name-in-module,import-outside-toplevel
+            )
             description = (_("schedule a periodic downtime every %s") %
                            recurring_downtimes_types()[recurring_number])
         else:

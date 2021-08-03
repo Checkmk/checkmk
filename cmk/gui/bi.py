@@ -6,41 +6,40 @@
 
 import abc
 from contextlib import contextmanager
-from typing import Any, List, Optional, Set, Tuple, Type, Union, Iterable, Dict
 from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union
 
-from livestatus import SiteId, LivestatusResponse, LivestatusOutputFormat, OnlySites
+from livestatus import LivestatusOutputFormat, LivestatusResponse, OnlySites, SiteId
 
-from cmk.utils.type_defs import HostName, ServiceName
-from cmk.utils.bi.bi_packs import BIAggregationPacks
-from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher
 from cmk.utils.bi.bi_compiler import BICompiler
-from cmk.utils.bi.bi_lib import SitesCallback, BIStates, NodeResultBundle
-from cmk.utils.bi.bi_computer import BIComputer, BIAggregationFilter
+from cmk.utils.bi.bi_computer import BIAggregationFilter, BIComputer
+from cmk.utils.bi.bi_data_fetcher import BIStatusFetcher
+from cmk.utils.bi.bi_lib import BIStates, NodeResultBundle, SitesCallback
+from cmk.utils.bi.bi_packs import BIAggregationPacks
 from cmk.utils.bi.bi_trees import BICompiledRule
+from cmk.utils.type_defs import HostName, ServiceName
 
-from cmk.gui.exceptions import MKConfigError
-from cmk.gui import sites
-from cmk.gui.valuespec import DropdownChoiceEntry
-import cmk.gui.watolib as watolib
-from cmk.gui.globals import config
-import cmk.gui.pages
 import cmk.gui.i18n
+import cmk.gui.pages
 import cmk.gui.utils
-import cmk.gui.view_utils
 import cmk.gui.utils.escaping as escaping
-from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, g, request, theme, output_funnel, user
+import cmk.gui.view_utils
+import cmk.gui.watolib as watolib
+from cmk.gui import sites
+from cmk.gui.exceptions import MKConfigError
+from cmk.gui.globals import config, g, html, output_funnel, request, theme, user
 from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _, _l
 from cmk.gui.permissions import (
+    Permission,
+    permission_registry,
     permission_section_registry,
     PermissionSection,
-    permission_registry,
-    Permission,
 )
-from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
-from cmk.gui.type_defs import VisualContext, ColumnName
+from cmk.gui.type_defs import ColumnName, VisualContext
+from cmk.gui.utils.urls import makeuri_contextless, urlencode_vars
+from cmk.gui.valuespec import DropdownChoiceEntry
 
 
 @permission_section_registry.register

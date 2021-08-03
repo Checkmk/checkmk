@@ -14,21 +14,28 @@ from six import ensure_str
 import cmk.utils.paths
 import cmk.utils.store as store
 
-import cmk.gui.pages
-import cmk.gui.utils as utils
-from cmk.gui.globals import config
-import cmk.gui.userdb as userdb
 import cmk.gui.i18n
-from cmk.gui.i18n import _, _l
-from cmk.gui.globals import html, request, transactions, user
-from cmk.gui.htmllib import HTML
-from cmk.gui.utils.escaping import escape_html_permissive
+import cmk.gui.pages
+import cmk.gui.userdb as userdb
+import cmk.gui.utils as utils
+from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.default_permissions import PermissionSectionGeneral
-from cmk.gui.permissions import (
-    Permission,
-    permission_registry,
+from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _, _l
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
 )
-from cmk.gui.exceptions import MKInternalError, MKAuthException, MKUserError
+from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import (
     AbsoluteDate,
     CascadingDropdown,
@@ -39,17 +46,6 @@ from cmk.gui.valuespec import (
     Optional,
     TextAreaUnicode,
 )
-from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
-)
-from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.utils.urls import makeuri
 
 
 def get_gui_messages(user_id=None):

@@ -6,37 +6,38 @@
 
 import pprint
 import time
-from typing import Any, Dict
 from pathlib import Path
+from typing import Any, Dict
+
 from OpenSSL import crypto  # type: ignore[import]
 
 import cmk.utils.render
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
 
-from cmk.gui.table import table_element
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, response, user
-from cmk.gui.valuespec import (
-    Dictionary,
-    Password,
-    TextAreaUnicode,
-    FileUpload,
-    CascadingDropdown,
-    TextInput,
-)
-from cmk.gui.exceptions import MKUserError, FinalizeRequest
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import FinalizeRequest, MKUserError
+from cmk.gui.globals import html, request, response, transactions, user
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
+    PageMenuTopic,
 )
-from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link, makeactionuri
 from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect
+from cmk.gui.table import table_element
+from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    FileUpload,
+    Password,
+    TextAreaUnicode,
+    TextInput,
+)
 
 
 class KeypairStore:

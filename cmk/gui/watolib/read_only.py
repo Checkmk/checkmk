@@ -8,9 +8,8 @@ import time
 
 import cmk.utils.render as render
 
-from cmk.gui.globals import config
+from cmk.gui.globals import config, request, user
 from cmk.gui.i18n import _
-from cmk.gui.globals import request, user
 
 
 def message():

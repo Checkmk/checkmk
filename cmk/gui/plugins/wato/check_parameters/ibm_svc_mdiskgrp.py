@@ -5,14 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Percentage,
-    TextInput,
-    Transform,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
@@ -22,6 +14,7 @@ from cmk.gui.plugins.wato.check_parameters.utils import (
     filesystem_elements,
     transform_trend_mb_to_trend_bytes,
 )
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Transform, Tuple
 
 
 def _parameter_valuespec_ibm_svc_mdiskgrp():

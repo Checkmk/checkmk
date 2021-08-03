@@ -9,26 +9,18 @@ The intended use is for scripts such as cmk-update-config or init-redis.
 """
 
 from contextlib import contextmanager
-from typing import (
-    Any,
-    Iterator,
-    Mapping,
-    Optional,
-)
+from typing import Any, Iterator, Mapping, Optional
 
 from werkzeug.test import create_environ
 
-from cmk.gui.config import load_config, make_config_object, get_default_config
+from cmk.gui.config import get_default_config, load_config, make_config_object
 from cmk.gui.display_options import DisplayOptions
-from cmk.gui.utils.theme import Theme
-from cmk.gui.globals import (
-    AppContext,
-    RequestContext,
-)
+from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.htmllib import html
 from cmk.gui.http import Request, Response
-from cmk.gui.utils.output_funnel import OutputFunnel
 from cmk.gui.modules import load_all_plugins
+from cmk.gui.utils.output_funnel import OutputFunnel
+from cmk.gui.utils.theme import Theme
 
 
 # TODO: Better make our application available?

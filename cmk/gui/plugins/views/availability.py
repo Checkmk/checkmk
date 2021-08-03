@@ -6,82 +6,65 @@
 
 from __future__ import annotations
 
-import time
 import itertools
 import json
-from typing import List, TYPE_CHECKING, Set, Tuple, Iterator
+import time
+from typing import Iterator, List, Set, Tuple, TYPE_CHECKING
 
-import cmk.utils.version as cmk_version
 import cmk.utils.render
-from cmk.utils.defines import (
-    host_state_name,
-    service_state_name,
-)
+import cmk.utils.version as cmk_version
+from cmk.utils.defines import host_state_name, service_state_name
 
 import cmk.gui.availability as availability
+import cmk.gui.bi as bi
 from cmk.gui.availability import (
+    AVData,
+    AVEntry,
+    AVMode,
+    AVObjectCells,
+    AVObjectSpec,
     AVObjectType,
     AVOptions,
-    AVObjectSpec,
-    AVSpan,
-    AVMode,
-    AVRowCells,
-    AVObjectCells,
-    AVData,
-    AVRawData,
-    AVEntry,
-    AVTimeRange,
     AVOptionValueSpecs,
+    AVRawData,
+    AVRowCells,
+    AVSpan,
+    AVTimeRange,
 )
-from cmk.gui.table import table_element, Table
-
-import cmk.gui.bi as bi
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, transactions, user_errors, response, output_funnel, user
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html, output_funnel, request, response, transactions, user, user_errors
 from cmk.gui.htmllib import HTML
-from cmk.gui.breadcrumb import BreadcrumbItem, Breadcrumb
-from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuSidePopup,
-    make_simple_link,
-    make_simple_form_page_menu,
+    PageMenuTopic,
 )
-
-from cmk.gui.exceptions import MKUserError
-
+from cmk.gui.plugins.views import display_options, format_plugin_output, view_title
+from cmk.gui.table import Table, table_element
+from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, urlencode_vars
 from cmk.gui.valuespec import (
-    ValueSpec,
+    AbsoluteDate,
     Checkbox,
+    Dictionary,
+    DropdownChoice,
+    HostState,
+    MonitoringState,
+    Optional,
     TextAreaUnicode,
     TextInput,
-    Dictionary,
-    Optional,
-    AbsoluteDate,
-    DropdownChoice,
-    MonitoringState,
-    HostState,
+    ValueSpec,
 )
-
-from cmk.gui.plugins.views import (
-    view_title,
-    display_options,
-    format_plugin_output,
-)
-
-from cmk.gui.utils.urls import makeuri, make_confirm_link, urlencode_vars, makeactionuri
-
 from cmk.gui.visuals import page_menu_dropdown_add_to_visual
 
 if TYPE_CHECKING:
-    from cmk.gui.type_defs import (
-        FilterHeader,
-        Rows,
-        HTTPVariables,
-    )
+    from cmk.gui.type_defs import FilterHeader, HTTPVariables, Rows
     from cmk.gui.views import View
 
 # Variable name conventions

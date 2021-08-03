@@ -12,22 +12,22 @@ import io
 import itertools
 import multiprocessing
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import tarfile
-from tarfile import TarFile, TarInfo
 import time
 import traceback
+from pathlib import Path
+from tarfile import TarFile, TarInfo
 from types import TracebackType
-from typing import Any, Optional, Type, Tuple, Dict, List, NamedTuple
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Type
 
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
 
-from cmk.gui.log import logger
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
 
 Command = List[str]
 

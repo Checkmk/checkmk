@@ -24,45 +24,43 @@ from typing import Optional, Type
 
 import cmk.utils.store as store
 
-import cmk.gui.userdb as userdb
-import cmk.gui.plugins.userdb.utils as userdb_utils
-from cmk.gui.config import builtin_role_ids
-from cmk.gui.globals import config
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
-from cmk.gui.sites import get_login_sites
-from cmk.gui.table import table_element
-from cmk.gui.i18n import _
-from cmk.gui.globals import html, transactions, request
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib import HTML
+import cmk.gui.plugins.userdb.utils as userdb_utils
+import cmk.gui.userdb as userdb
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import builtin_role_ids
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, request, transactions
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuSearch,
     PageMenuTopic,
-    make_simple_link,
-    make_simple_form_page_menu,
 )
 from cmk.gui.permissions import (
-    permission_section_registry,
-    permission_registry,
     load_dynamic_permissions,
+    permission_registry,
+    permission_section_registry,
 )
-
 from cmk.gui.plugins.wato import (
-    WatoMode,
     ActionResult,
-    mode_registry,
+    get_search_expression,
     make_action_link,
     make_confirm_link,
-    get_search_expression,
-    redirect,
+    mode_registry,
     mode_url,
+    redirect,
+    WatoMode,
 )
+from cmk.gui.sites import get_login_sites
+from cmk.gui.table import table_element
 from cmk.gui.type_defs import Choices
 
 

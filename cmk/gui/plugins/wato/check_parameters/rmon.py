@@ -6,9 +6,9 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersNetworking,
-    rulespec_registry,
     BinaryHostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersNetworking,
 )
 
 rulespec_registry.register(

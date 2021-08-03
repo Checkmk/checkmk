@@ -5,42 +5,41 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from pathlib import Path
+import multiprocessing
 import subprocess
-from typing import Type, Iterator
+from pathlib import Path
+from typing import Iterator, Type
 
 import requests
 import urllib3  # type: ignore[import]
-import multiprocessing
 
 from livestatus import LocalConnection
 
-from cmk.utils.type_defs import UserId
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import UserId
 
-import cmk.gui.utils
-import cmk.gui.userdb as userdb
-import cmk.gui.watolib as watolib
 import cmk.gui.plugins.userdb.htpasswd
-from cmk.gui.i18n import _
-from cmk.gui.globals import request
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.watolib.sites import SiteManagementFactory
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
-from cmk.gui.sites import sitenames, get_site_config, has_wato_slave_sites, wato_slave_sites
 import cmk.gui.plugins.userdb.ldap_connector as ldap
-
+import cmk.gui.userdb as userdb
+import cmk.gui.utils
+import cmk.gui.watolib as watolib
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import request
+from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    ACTestCategories,
-    ACTest,
     ac_test_registry,
     ACResult,
     ACResultCRIT,
-    ACResultWARN,
     ACResultOK,
+    ACResultWARN,
+    ACTest,
+    ACTestCategories,
     ConfigDomainOMD,
     SiteBackupJobs,
 )
+from cmk.gui.sites import get_site_config, has_wato_slave_sites, sitenames, wato_slave_sites
+from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.watolib.sites import SiteManagementFactory
 
 # Disable python warnings in background job output or logs like "Unverified
 # HTTPS request is being made". We warn the user using analyze configuration.

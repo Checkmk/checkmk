@@ -13,8 +13,8 @@ from dataclasses import dataclass
 from typing import Optional, Union
 
 from cmk.gui.globals import html
-from cmk.gui.utils.html import HTML
 from cmk.gui.type_defs import CSSSpec
+from cmk.gui.utils.html import HTML
 
 
 @dataclass

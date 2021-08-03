@@ -5,43 +5,32 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
+
 from six import ensure_str
 
 import livestatus
 from livestatus import SiteId
 
 import cmk.gui.sites as sites
-from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.globals import html, request
-
+from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.views import (
+    cmp_simple_number,
+    Command,
+    command_registry,
+    CommandActionResult,
     data_source_registry,
     DataSourceLivestatus,
-    RowTable,
-)
-
-from cmk.gui.plugins.views import (
-    painter_registry,
-    Painter,
     paint_age,
-    sorter_registry,
+    Painter,
+    painter_registry,
+    RowTable,
     Sorter,
-    cmp_simple_number,
+    sorter_registry,
 )
-
-from cmk.gui.permissions import (
-    permission_registry,
-    Permission,
-)
-
 from cmk.gui.plugins.views.commands import PermissionSectionAction
-from cmk.gui.plugins.views import (
-    command_registry,
-    Command,
-    CommandActionResult,
-)
-
 from cmk.gui.utils.urls import makeuri_contextless
 
 

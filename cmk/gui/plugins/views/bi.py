@@ -5,41 +5,38 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
-from typing import Optional, Type, TYPE_CHECKING, List, Union, Tuple
+
+from typing import List, Optional, Tuple, Type, TYPE_CHECKING, Union
 
 from livestatus import OnlySites
+
 from cmk.utils.defines import short_service_state_name
 
-import cmk.gui.utils.escaping as escaping
 import cmk.gui.bi as bi
-from cmk.gui.valuespec import DropdownChoice
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.globals import html, output_funnel, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html, request, output_funnel
-
 from cmk.gui.plugins.views import (
-    data_source_registry,
     ABCDataSource,
-    RowTable,
-    PainterOptions,
-    painter_option_registry,
-    PainterOption,
-    painter_registry,
-    Painter,
-    CellSpec,
     Cell,
+    CellSpec,
+    data_source_registry,
+    Painter,
+    painter_option_registry,
+    painter_registry,
+    PainterOption,
+    PainterOptions,
     Row,
+    RowTable,
 )
-
-from cmk.gui.type_defs import (
-    ColumnName,
-    Rows,
-)
-
+from cmk.gui.type_defs import ColumnName, Rows
 from cmk.gui.utils.urls import makeuri, urlencode_vars
+from cmk.gui.valuespec import DropdownChoice
+
 if TYPE_CHECKING:
-    from cmk.gui.views import View
     from cmk.gui.plugins.visuals.utils import Filter
+    from cmk.gui.views import View
 
 #     ____        _
 #    |  _ \  __ _| |_ __ _ ___  ___  _   _ _ __ ___ ___  ___

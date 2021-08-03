@@ -8,7 +8,8 @@ import functools
 import wsgiref.util
 
 import cmk.utils.store
-from cmk.gui import http, config, sites, hooks
+
+from cmk.gui import config, hooks, http, sites
 from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
 from cmk.gui.utils.output_funnel import OutputFunnel

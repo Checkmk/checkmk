@@ -4,26 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, List
+from typing import List, NamedTuple
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import DiscoveryResult
 
-from cmk.gui.i18n import _
-from cmk.gui.globals import request
-from cmk.gui.valuespec import (
-    Checkbox,
-    Dictionary,
-    DropdownChoice,
-    Tuple,
-    Integer,
-)
-from cmk.gui.valuespec import ValueSpec
-
-from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.watolib.automations import execute_automation_discovery, AutomationDiscoveryResponse
-from cmk.gui.watolib.changes import add_service_change
 import cmk.gui.gui_background_job as gui_background_job
+from cmk.gui.globals import request
+from cmk.gui.i18n import _
+from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
+from cmk.gui.watolib.automations import AutomationDiscoveryResponse, execute_automation_discovery
+from cmk.gui.watolib.changes import add_service_change
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
 DiscoveryHost = NamedTuple("DiscoveryHost", [

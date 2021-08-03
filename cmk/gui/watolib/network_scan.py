@@ -12,31 +12,23 @@ import subprocess
 import threading
 import time
 import traceback
-from typing import TYPE_CHECKING, NamedTuple, List, Tuple, Dict, Optional, Any
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, TYPE_CHECKING
 
 from cmk.utils import store
-from cmk.utils.type_defs import HostAddress, HostName
 from cmk.utils.translations import translate_hostname
+from cmk.utils.type_defs import HostAddress, HostName
 
-from cmk.gui.log import logger
 from cmk.gui import userdb
+from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import request
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.log import logger
+from cmk.gui.sites import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.utils.logged_in import UserContext
-from cmk.gui.sites import is_wato_slave_site, site_is_local, get_site_config
-
 from cmk.gui.watolib import init_wato_datastructures
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
-from cmk.gui.watolib.hosts_and_folders import (
-    Folder,
-    Host,
-    update_metadata,
-)
-from cmk.gui.watolib.automation_commands import (
-    AutomationCommand,
-    automation_command_registry,
-)
+from cmk.gui.watolib.hosts_and_folders import Folder, Host, update_metadata
 
 NetworkScanFoundHosts = List[Tuple[HostName, HostAddress]]
 NetworkScanResult = Dict[str, Any]

@@ -8,24 +8,19 @@ from typing import Tuple
 
 import livestatus
 
-from cmk.gui.plugins.webapi import (
-    APICallCollection,
-    api_call_collection_registry,
-)
-
-import cmk.gui.sites as sites
 import cmk.gui.availability as availability
-from cmk.gui.i18n import _
+import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.visuals import get_filter_headers, cleaup_context_filters
-from cmk.gui.plugins.metrics.utils import (
-    perfvar_translation,
-    metric_info,
-    get_graph_template_choices,
-)
+from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.graph_images import graph_recipes_for_api_request
-from cmk.gui.plugins.views.utils import (
-    data_source_registry,)
+from cmk.gui.plugins.metrics.utils import (
+    get_graph_template_choices,
+    metric_info,
+    perfvar_translation,
+)
+from cmk.gui.plugins.views.utils import data_source_registry
+from cmk.gui.plugins.webapi import api_call_collection_registry, APICallCollection
+from cmk.gui.visuals import cleaup_context_filters, get_filter_headers
 
 
 @api_call_collection_registry.register

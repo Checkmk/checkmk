@@ -24,7 +24,7 @@ from cmk.utils.i18n import _
 # *all* translation values.
 class WerkTranslator:
     def __init__(self):
-        super(WerkTranslator, self).__init__()
+        super().__init__()
         self._classes = {
             "feature": _("New feature"),
             "fix": _("Bug fix"),

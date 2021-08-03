@@ -46,7 +46,7 @@ def _validate_tag_id(tag_id):
 
 class ABCTag(metaclass=abc.ABCMeta):
     def __init__(self):
-        super(ABCTag, self).__init__()
+        super().__init__()
         # TODO: See below, this was self._initialize()
         # NOTE: All the Optionals below are probably just plain wrong and just
         # an artifact of our broken 2-stage initialization.
@@ -96,17 +96,17 @@ class ABCTag(metaclass=abc.ABCMeta):
 
 class AuxTag(ABCTag):
     def __init__(self, data=None):
-        super(AuxTag, self).__init__()
+        super().__init__()
         if data:
             self.parse_config(data)
 
     def _parse_from_dict(self, tag_info):
-        super(AuxTag, self)._parse_from_dict(tag_info)
+        super()._parse_from_dict(tag_info)
         if "topic" in tag_info:
             self.topic = tag_info["topic"]
 
     def _parse_legacy_format(self, tag_info):
-        super(AuxTag, self)._parse_legacy_format(tag_info)
+        super()._parse_legacy_format(tag_info)
         self.topic, self.title = _parse_legacy_title(self.title)
 
     def get_dict_format(self):
@@ -196,18 +196,18 @@ class AuxTagList:
 
 class GroupedTag(ABCTag):
     def __init__(self, group, data=None):
-        super(GroupedTag, self).__init__()
+        super().__init__()
         self.id: Optional[str]
         self.group = group
         self.aux_tag_ids = []
         self.parse_config(data)
 
     def _parse_from_dict(self, tag_info):
-        super(GroupedTag, self)._parse_from_dict(tag_info)
+        super()._parse_from_dict(tag_info)
         self.aux_tag_ids = tag_info["aux_tags"]
 
     def _parse_legacy_format(self, tag_info):
-        super(GroupedTag, self)._parse_legacy_format(tag_info)
+        super()._parse_legacy_format(tag_info)
 
         if len(tag_info) == 3:
             self.aux_tag_ids = tag_info[2]
@@ -218,7 +218,7 @@ class GroupedTag(ABCTag):
 
 class TagGroup:
     def __init__(self, data=None):
-        super(TagGroup, self).__init__()
+        super().__init__()
         self.id: Optional[str]
         self.title: Optional[str]
         self.topic: Optional[str]
@@ -320,7 +320,7 @@ class TagConfig:
     """Container object encapsulating a whole set of configured
     tag groups with auxiliary tags"""
     def __init__(self):
-        super(TagConfig, self).__init__()
+        super().__init__()
         self._initialize()
 
     # TODO: As usual, we *really* have to nuke our _initialize() methods, everywhere!
@@ -568,7 +568,7 @@ class BuiltinAuxTagList(AuxTagList):
 
 class BuiltinTagConfig(TagConfig):
     def __init__(self):
-        super(BuiltinTagConfig, self).__init__()
+        super().__init__()
         self.parse_config({
             "tag_groups": self._builtin_tag_groups(),
             "aux_tags": self._builtin_aux_tags(),

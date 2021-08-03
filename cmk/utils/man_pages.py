@@ -647,7 +647,7 @@ def _console_stream():
 
 class ConsoleManPageRenderer(ManPageRenderer):
     def __init__(self, name):
-        super(ConsoleManPageRenderer, self).__init__(name)
+        super().__init__(name)
         self.__output = _console_stream()
         # NOTE: We must use instance variables for the TTY stuff because TTY-related
         # stuff might have been changed since import time, consider e.g. pytest.
@@ -777,7 +777,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
 class NowikiManPageRenderer(ManPageRenderer):
     def __init__(self, name):
-        super(NowikiManPageRenderer, self).__init__(name)
+        super().__init__(name)
         self.__output = StringIO()
 
     def _flush(self):

@@ -53,7 +53,7 @@ class RulesetMatchObject:
         service_description: Optional[ServiceName] = None,
         service_labels: Optional[Dict[str, str]] = None,
     ) -> None:
-        super(RulesetMatchObject, self).__init__()
+        super().__init__()
         self.host_name = host_name
         self.service_description = service_description
         self.service_labels = service_labels
@@ -92,7 +92,7 @@ class RulesetMatcher:
         clusters_of: Dict[HostName, List[HostName]],
         nodes_of: Dict[HostName, List[HostName]],
     ) -> None:
-        super(RulesetMatcher, self).__init__()
+        super().__init__()
 
         self.tuple_transformer = RulesetToDictTransformer(tag_to_group_map=tag_to_group_map)
 
@@ -279,7 +279,7 @@ class RulesetOptimizer:
         clusters_of: Dict[HostName, List[HostName]],
         nodes_of: Dict[HostName, List[HostName]],
     ) -> None:
-        super(RulesetOptimizer, self).__init__()
+        super().__init__()
         self._ruleset_matcher = ruleset_matcher
         self._labels = labels
         self._host_tags = {hn: set(tags_of_host.items()) for hn, tags_of_host in host_tags.items()}
@@ -765,7 +765,7 @@ class RulesetToDictTransformer:
     This is done in place to keep the references to the ruleset working.
     """
     def __init__(self, tag_to_group_map: TagIDToTaggroupID) -> None:
-        super(RulesetToDictTransformer, self).__init__()
+        super().__init__()
         self._tag_groups = tag_to_group_map
         self._transformed_ids: Set[int] = set()
 

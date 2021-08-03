@@ -23,7 +23,7 @@ class LabelManager:
     def __init__(self, explicit_host_labels: Dict, host_label_rules: List,
                  service_label_rules: List,
                  discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]) -> None:
-        super(LabelManager, self).__init__()
+        super().__init__()
         self._explicit_host_labels = explicit_host_labels
         self._host_label_rules = host_label_rules
         self._service_label_rules = service_label_rules
@@ -131,7 +131,7 @@ class ABCDiscoveredLabelsStore(metaclass=abc.ABCMeta):
 
 class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
     def __init__(self, hostname: str) -> None:
-        super(DiscoveredHostLabelsStore, self).__init__()
+        super().__init__()
         self._hostname = hostname
 
     @property

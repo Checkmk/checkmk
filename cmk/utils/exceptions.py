@@ -51,7 +51,7 @@ class MKParseFunctionError(MKException):
         self.exception_type = exception_type
         self.exception = exception
         self.backtrace = backtrace
-        super(MKParseFunctionError, self).__init__(self, exception_type, exception, backtrace)
+        super().__init__(self, exception_type, exception, backtrace)
 
     def exc_info(self) -> Tuple[Type[Exception], Exception, TracebackType]:
         return self.exception_type, self.exception, self.backtrace

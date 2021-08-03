@@ -170,7 +170,7 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
         return self._serialize_attributes()
 
     def __init__(self, crash_info: Dict) -> None:
-        super(ABCCrashReport, self).__init__()
+        super().__init__()
         self.crash_info = crash_info
 
     def ident(self) -> Tuple[str, ...]:

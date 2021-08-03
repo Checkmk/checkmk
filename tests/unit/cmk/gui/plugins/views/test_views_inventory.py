@@ -8,8 +8,8 @@
 import pytest
 
 import cmk.gui.inventory
-from cmk.gui.views import View
 import cmk.gui.plugins.views.inventory as inventory
+from cmk.gui.views import View
 
 RAW_ROWS = [('this_site', 'this_hostname')]
 RAW_ROWS2 = [('this_site', 'this_hostname', 'foobar')]

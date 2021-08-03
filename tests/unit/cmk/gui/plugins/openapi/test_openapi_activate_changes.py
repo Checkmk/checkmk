@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
 from cmk.gui.plugins.openapi.restful_objects import constructors
 
 CMK_WAIT_FOR_COMPLETION = 'cmk/wait-for-completion'

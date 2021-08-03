@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Optional
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.apt import _data_is_valid, parse_apt, Section
 
 import pytest
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.apt import _data_is_valid, parse_apt, Section
 
 _SECTION_UPDATES_AV = [
     ["Remv default-java-plugin [2:1.8-58]"],

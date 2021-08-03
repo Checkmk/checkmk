@@ -15,20 +15,20 @@ Environment variables VERSION, EDITION, BRANCH affect the package used for
 the test.
 """
 
+import argparse
+import logging
 import os
 import sys
-import logging
 import tempfile
-import argparse
 from pathlib import Path
 from typing import List
 
 # Make the tests.testlib available
 sys.path.insert(0, os.path.dirname((os.path.dirname(os.path.dirname(os.path.realpath(__file__))))))
 
+from tests.testlib.containers import execute_tests_in_container
 from tests.testlib.utils import current_base_branch_name
 from tests.testlib.version import CMKVersion
-from tests.testlib.containers import execute_tests_in_container
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')
 logger = logging.getLogger()

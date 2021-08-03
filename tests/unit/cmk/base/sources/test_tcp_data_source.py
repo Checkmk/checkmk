@@ -11,8 +11,8 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-from cmk.core_helpers.cache import MaxAge
 from cmk.core_helpers.agent import AgentSummarizerDefault
+from cmk.core_helpers.cache import MaxAge
 
 from cmk.base.sources.tcp import TCPSource
 

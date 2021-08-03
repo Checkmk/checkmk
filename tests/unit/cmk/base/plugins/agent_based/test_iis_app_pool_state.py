@@ -6,8 +6,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.iis_app_pool_state import check_iis_app_pool_state, IisAppPoolState, DefaultCheckParameters
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.iis_app_pool_state import (
+    check_iis_app_pool_state,
+    DefaultCheckParameters,
+    IisAppPoolState,
+)
 
 
 @pytest.mark.parametrize("item,section,params,results", [

@@ -7,7 +7,7 @@
 import pytest
 
 import cmk.gui.hooks as hooks
-from cmk.gui.pages import page_registry, Page
+from cmk.gui.pages import Page, page_registry
 
 
 @pytest.fixture(autouse=True)

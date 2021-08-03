@@ -9,9 +9,9 @@ import pytest
 
 from cmk.utils.bi.bi_search import (
     BIEmptySearch,
+    BIFixedArgumentsSearch,
     BIHostSearch,
     BIServiceSearch,
-    BIFixedArgumentsSearch,
 )
 
 

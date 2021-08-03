@@ -11,9 +11,10 @@ for further information.
 
 from typing import NewType
 
-from astroid.node_classes import Statement, Import, ImportFrom  # type: ignore[import]
+from astroid.node_classes import Import, ImportFrom, Statement  # type: ignore[import]
 from pylint.checkers import BaseChecker, utils  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
+
 from tests.testlib import cmk_path
 
 ModuleName = NewType('ModuleName', str)

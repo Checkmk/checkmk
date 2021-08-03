@@ -9,12 +9,8 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Result,
-    Metric,
-    State as state,
-)
-
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.printer_pages import parse_printer_pages
 from cmk.base.plugins.agent_based.printer_pages_canon import parse_printer_pages_canon
 from cmk.base.plugins.agent_based.printer_pages_ricoh import parse_printer_pages_ricoh

@@ -7,15 +7,14 @@
 # pylint: disable=protected-access
 
 import inspect
-
 from typing import List
 
-from cmk.utils.type_defs import ParsedSectionName, CheckPluginName, RuleSetName
+from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
 import cmk.base.api.agent_based.checking_classes as checking_classes
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy
-from cmk.base.check_api import Service as OldService
 import cmk.base.config as config
+from cmk.base.check_api import Service as OldService
 
 
 def dummy_generator(section):  # pylint: disable=unused-argument

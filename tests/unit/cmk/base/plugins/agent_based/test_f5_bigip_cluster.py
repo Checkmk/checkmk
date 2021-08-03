@@ -6,15 +6,16 @@
 
 import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.f5_bigip_cluster import (
-    parse_f5_bigip_config_sync_pre_v11,
     check_f5_bigip_config_sync_pre_v11,
-    parse_f5_bigip_config_sync_v11_plus,
     check_f5_bigip_config_sync_v11_plus,
     CONFIG_SYNC_DEFAULT_PARAMETERS,
+    parse_f5_bigip_config_sync_pre_v11,
+    parse_f5_bigip_config_sync_v11_plus,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [

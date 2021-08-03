@@ -6,16 +6,17 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import Dict, List, Union
 from pathlib import Path
+from typing import Dict, List, Union
 
 import pytest
-from mockldap import MockLdap, LDAPObject  # type: ignore[import]
+from mockldap import LDAPObject, MockLdap  # type: ignore[import]
+
+import cmk.gui.plugins.userdb.ldap_connector as ldap
+import cmk.gui.plugins.userdb.utils as userdb_utils
 
 # userdb is needed to make the module register the post-config-load-hooks
 import cmk.gui.userdb
-import cmk.gui.plugins.userdb.ldap_connector as ldap
-import cmk.gui.plugins.userdb.utils as userdb_utils
 
 
 def test_connector_info():

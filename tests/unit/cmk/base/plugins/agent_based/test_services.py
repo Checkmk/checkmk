@@ -5,12 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    State as state,
-    Result,
-)
+
 import cmk.base.plugins.agent_based.services as services
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 STRING_TABLE = [
     ['wscsvc', 'running/auto', 'Security', 'Center'],

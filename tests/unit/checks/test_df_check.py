@@ -5,15 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from tests.testlib import Check
+
+from cmk.base.plugins.agent_based.df_section import parse_df
+
 from .checktestlib import (
-    DiscoveryResult,
-    CheckResult,
-    assertDiscoveryResultsEqual,
     assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
+    CheckResult,
+    DiscoveryResult,
     MockHostExtraConf,
 )
-from cmk.base.plugins.agent_based.df_section import parse_df
 
 pytestmark = pytest.mark.checks
 

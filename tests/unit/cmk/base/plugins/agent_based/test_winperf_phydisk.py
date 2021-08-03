@@ -5,13 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from tests.testlib import get_value_store_fixture
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    IgnoreResultsError,
-    Metric,
-    type_defs,
-)
+
 from cmk.base.plugins.agent_based import winperf_phydisk
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, type_defs
 
 value_store_fixture = get_value_store_fixture(winperf_phydisk)
 

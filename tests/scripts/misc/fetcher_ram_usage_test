@@ -16,10 +16,9 @@ import argparse
 import logging
 import os
 import sys
-
 import textwrap
-import tracemalloc
 import time
+import tracemalloc
 
 import cmk.utils.log as log
 from cmk.utils.observer import FetcherMemoryObserver

@@ -5,14 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    Service,
-    State as state,
-    type_defs,
-)
+
 from cmk.base.plugins.agent_based import brocade_optical
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 from cmk.base.plugins.agent_based.utils import interfaces
 
 

@@ -8,28 +8,28 @@
 
 import pytest
 
-from .agent_aws_fake_clients import (
-    FakeCloudwatchClient,
-    ELBv2DescribeLoadBalancersIB,
-    ELBv2DescribeTargetGroupsIB,
-    ELBv2DescribeListenersIB,
-    ELBv2DescribeRulesIB,
-    ELBv2DescribeAccountLimitsIB,
-    ELBv2DescribeTargetHealthIB,
-    ELBDescribeTagsIB,
-)
-
 from cmk.special_agents.agent_aws import (
     AWSConfig,
-    ResultDistributor,
-    ELBv2Limits,
-    ELBSummaryGeneric,
     ELBLabelsGeneric,
-    ELBv2TargetGroups,
+    ELBSummaryGeneric,
     ELBv2Application,
-    ELBv2Network,
     ELBv2ApplicationTargetGroupsHTTP,
     ELBv2ApplicationTargetGroupsLambda,
+    ELBv2Limits,
+    ELBv2Network,
+    ELBv2TargetGroups,
+    ResultDistributor,
+)
+
+from .agent_aws_fake_clients import (
+    ELBDescribeTagsIB,
+    ELBv2DescribeAccountLimitsIB,
+    ELBv2DescribeListenersIB,
+    ELBv2DescribeLoadBalancersIB,
+    ELBv2DescribeRulesIB,
+    ELBv2DescribeTargetGroupsIB,
+    ELBv2DescribeTargetHealthIB,
+    FakeCloudwatchClient,
 )
 
 

@@ -4,11 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib import Check
-
 import pytest
 
-from .checktestlib import CheckResult, BasicCheckResult, assertCheckResultsEqual
+from tests.testlib import Check
+
+from .checktestlib import assertCheckResultsEqual, BasicCheckResult, CheckResult
+
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
 

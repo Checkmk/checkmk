@@ -6,22 +6,23 @@
 
 # yapf: disable
 from collections import namedtuple
-import pytest
-from cmk.gui.type_defs import VisualContext
 
-import cmk.utils.version as cmk_version
+import pytest
+
+from tests.testlib import on_time
+
 import cmk.utils.tags
+import cmk.utils.version as cmk_version
 
 import cmk.gui.inventory
-from cmk.gui.globals import output_funnel, request, config
 import cmk.gui.plugins.visuals
-from cmk.gui.plugins.visuals.wato import FilterWatoFolder
 
 # Triggers plugin loading
 import cmk.gui.views
 import cmk.gui.visuals
-
-from tests.testlib import on_time
+from cmk.gui.globals import config, output_funnel, request
+from cmk.gui.plugins.visuals.wato import FilterWatoFolder
+from cmk.gui.type_defs import VisualContext
 
 
 # mock_livestatus does not support Stats queries at the moment. We need to mock the function away

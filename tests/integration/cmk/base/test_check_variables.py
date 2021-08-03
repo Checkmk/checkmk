@@ -6,11 +6,12 @@
 
 import subprocess
 
-from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib import create_linux_test_host
-import cmk.base.config as config
-import cmk.base.check_api as check_api
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+
 import cmk.base.autochecks as autochecks
+import cmk.base.check_api as check_api
+import cmk.base.config as config
 
 
 # Test whether or not registration of check configuration variables works

@@ -7,8 +7,9 @@
 import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
-from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
+from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
 
 AGENT_OUTPUT = """@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}
 {"NodeName": "klappben"}"""

@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.gui.utils.urls import urlencode_vars, urlencode
+from cmk.gui.utils.urls import urlencode, urlencode_vars
 
 
 @pytest.mark.parametrize("inp,out", [

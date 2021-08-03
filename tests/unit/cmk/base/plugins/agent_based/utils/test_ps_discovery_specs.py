@@ -7,7 +7,6 @@
 import pytest
 
 from cmk.base.discovered_labels import DiscoveredHostLabels
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, type_defs
 from cmk.base.plugins.agent_based.utils import ps
 

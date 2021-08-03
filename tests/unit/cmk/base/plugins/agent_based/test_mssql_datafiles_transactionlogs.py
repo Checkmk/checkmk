@@ -6,8 +6,9 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Service, Result, State as state
 import cmk.base.plugins.agent_based.mssql_datafiles_transactionlogs as msdt
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 
 @pytest.fixture(name="section", scope="module")

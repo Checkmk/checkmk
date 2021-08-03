@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Dict
+from typing import Dict, List
+
 import pytest
 
 from cmk.base.api.agent_based.inventory_classes import TableRow
 from cmk.base.api.agent_based.register.inventory_plugins_legacy import (
-    MockStructuredDataNode,
     _generate_table_rows,
+    MockStructuredDataNode,
 )
 
 

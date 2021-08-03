@@ -7,15 +7,15 @@ from typing import Optional, Tuple
 
 import pytest
 
-from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
-    ServiceLabel,
-    Service,
-    State as state,
     Metric,
     Result,
+    Service,
+    ServiceLabel,
 )
+from cmk.base.api.agent_based.checking_classes import State as state
+from cmk.base.api.agent_based.type_defs import Parameters
 
 
 @pytest.mark.parametrize("data", [

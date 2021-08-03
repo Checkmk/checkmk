@@ -5,18 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import suppress
+
 import pytest
+
 from tests.testlib import get_value_store_fixture
+
+from cmk.base.plugins.agent_based import winperf_if
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResults,
     IgnoreResultsError,
     Metric,
     Result,
     Service,
-    State as state,
-    type_defs,
 )
-from cmk.base.plugins.agent_based import winperf_if
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 from cmk.base.plugins.agent_based.utils import interfaces
 
 value_store_fixture = get_value_store_fixture(interfaces)

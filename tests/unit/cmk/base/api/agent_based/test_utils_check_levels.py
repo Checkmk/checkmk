@@ -8,8 +8,9 @@
 import math
 
 import pytest
-from cmk.base.api.agent_based import utils, render
-from cmk.base.api.agent_based.checking_classes import State, Metric, Result
+
+from cmk.base.api.agent_based import render, utils
+from cmk.base.api.agent_based.checking_classes import Metric, Result, State
 
 
 @pytest.mark.parametrize("value, levels_upper, levels_lower, render_func, result", [

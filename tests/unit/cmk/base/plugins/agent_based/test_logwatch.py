@@ -9,8 +9,8 @@
 import pytest
 
 from cmk.base.plugins.agent_based import logwatch
-
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 pytestmark = pytest.mark.checks
 

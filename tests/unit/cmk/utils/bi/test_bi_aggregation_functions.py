@@ -9,8 +9,8 @@ import pytest
 
 from cmk.utils.bi.bi_aggregation_functions import (
     BIAggregationFunctionBest,
-    BIAggregationFunctionWorst,
     BIAggregationFunctionCountOK,
+    BIAggregationFunctionWorst,
 )
 
 

@@ -5,13 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    State as state,
-    type_defs,
-)
 from cmk.base.plugins.agent_based import tsm_stagingpools
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 
 SECTION = {'bar': ['99.9', '97.9'], 'foo': ['7.1']}
 NODE_SECTION = {"node1": SECTION, "node2": SECTION, "node3": {'foo': ['7.1', '9.3']}}

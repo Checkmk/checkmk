@@ -13,10 +13,12 @@ import time
 import pytest
 
 from tests.testlib import CMKEventConsole
+
 import cmk.utils.paths
+
+import cmk.ec.export as ec
 import cmk.ec.history
 import cmk.ec.main
-import cmk.ec.export as ec
 
 
 class FakeStatusSocket:

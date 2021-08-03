@@ -5,18 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from tests.testlib import on_time
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    State as state,
-    Result,
-    IgnoreResults,
-    Metric,
-)
 import cmk.base.plugins.agent_based.docker_container_status as docker
-from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.utils import uptime
+from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
 
 NOW_SIMULATED = 1559728800, "UTC"
 STRING_TABLE_WITH_VERSION = [

@@ -9,6 +9,7 @@ import pytest
 from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.utils import evaluate_snmp_detection
+
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 
 

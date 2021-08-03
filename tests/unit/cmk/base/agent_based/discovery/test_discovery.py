@@ -25,6 +25,8 @@ from cmk.utils.type_defs import (
     SourceType,
 )
 
+from cmk.core_helpers.type_defs import NO_SELECTION
+
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.autochecks as autochecks
@@ -40,7 +42,6 @@ from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, HostLabel, ServiceLabel
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.sources.snmp import SNMPHostSections
-from cmk.core_helpers.type_defs import NO_SELECTION
 
 
 def test_discovered_service_init():

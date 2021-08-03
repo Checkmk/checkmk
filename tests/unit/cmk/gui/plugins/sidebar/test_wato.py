@@ -5,14 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List
+
 import pytest
 
 import cmk.utils.version as cmk_version
-from cmk.gui.plugins.sidebar.wato import (
-    MatchItemGeneratorSetupMenu,
-    get_wato_menu_items,
-)
-from cmk.gui.type_defs import TopicMenuTopic, TopicMenuItem
+
+from cmk.gui.plugins.sidebar.wato import get_wato_menu_items, MatchItemGeneratorSetupMenu
+from cmk.gui.type_defs import TopicMenuItem, TopicMenuTopic
 from cmk.gui.watolib.search import MatchItem
 
 

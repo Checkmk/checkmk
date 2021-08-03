@@ -15,6 +15,7 @@ import pytest
 from tests.testlib import cmk_path
 
 import cmk.utils.paths
+
 import cmk.gui.i18n as i18n
 
 

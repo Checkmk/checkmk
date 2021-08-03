@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.base.check_legacy_includes.wmi import WMITable  # type: ignore[attr-defined]
+
 # mypy can not handle globals ignore in .wmi https://github.com/python/mypy/issues/9318
 
 

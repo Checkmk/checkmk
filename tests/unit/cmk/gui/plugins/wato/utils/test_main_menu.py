@@ -6,8 +6,8 @@
 
 import pytest
 
-from cmk.gui.watolib.main_menu import ModuleRegistry
 import cmk.gui.plugins.wato.utils.main_menu as main_menu
+from cmk.gui.watolib.main_menu import ModuleRegistry
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 

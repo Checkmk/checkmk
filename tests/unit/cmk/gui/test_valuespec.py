@@ -9,13 +9,13 @@ from pathlib import Path
 
 import pytest
 
+from tests.testlib import on_time
+
 import cmk.utils.paths
 
-from cmk.gui.exceptions import MKUserError
 import cmk.gui.valuespec as vs
-from cmk.gui.globals import html, config
-
-from tests.testlib import on_time
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html
 
 
 @pytest.mark.parametrize("entry, result", [

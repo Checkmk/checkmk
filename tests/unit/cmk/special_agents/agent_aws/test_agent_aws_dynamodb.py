@@ -8,15 +8,20 @@
 
 import pytest
 
+from cmk.special_agents.agent_aws import (
+    AWSConfig,
+    DynamoDBLimits,
+    DynamoDBSummary,
+    DynamoDBTable,
+    ResultDistributor,
+)
+
 from .agent_aws_fake_clients import (
-    FakeCloudwatchClient,
     DynamoDBDescribeLimitsIB,
     DynamoDBDescribeTableIB,
     DynamoDBListTagsOfResourceIB,
+    FakeCloudwatchClient,
 )
-
-from cmk.special_agents.agent_aws import (AWSConfig, ResultDistributor, DynamoDBLimits,
-                                          DynamoDBSummary, DynamoDBTable)
 
 
 class PaginatorTables:

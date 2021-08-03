@@ -6,8 +6,9 @@
 
 import pytest
 
-import cmk.gui.inventory
 from cmk.utils.structured_data import StructuredDataNode
+
+import cmk.gui.inventory
 
 
 @pytest.mark.parametrize("raw_path, expected_path", [

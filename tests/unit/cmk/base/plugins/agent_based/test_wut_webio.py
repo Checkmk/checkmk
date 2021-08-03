@@ -6,16 +6,16 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, State, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.wut_webio import (
-    parse_wut_webio,
-    check_wut_webio,
-    discover_wut_webio,
-    Section,
-    STATES_DURING_DISC_KEY,
-    STATE_EVAL_KEY,
     AS_DISCOVERED,
+    check_wut_webio,
     DEFAULT_STATE_EVALUATION,
+    discover_wut_webio,
+    parse_wut_webio,
+    Section,
+    STATE_EVAL_KEY,
+    STATES_DURING_DISC_KEY,
 )
 
 STRING_TABLE = [

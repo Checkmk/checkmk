@@ -12,9 +12,9 @@ from cmk.utils.type_defs import UserId
 import cmk.gui.login as login
 import cmk.gui.userdb as userdb
 from cmk.gui.config import load_config
-from cmk.gui.utils.script_helpers import application_and_request_context
-from cmk.gui.globals import user, request, session
 from cmk.gui.exceptions import MKAuthException
+from cmk.gui.globals import request, session, user
+from cmk.gui.utils.script_helpers import application_and_request_context
 
 
 @pytest.fixture(name="user_id")

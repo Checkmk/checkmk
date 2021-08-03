@@ -4,24 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import os
+import subprocess
 import sys
 import tarfile
-import logging
-import subprocess
 import time
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import List, Dict, Optional
-import requests
+from typing import Dict, List, Optional
 
 import dockerpty  # type: ignore[import]
-import docker  # type: ignore[import]
+import requests
 from docker.models.images import Image  # type: ignore[import]
 
 import tests.testlib as testlib
 from tests.testlib.version import CMKVersion
+
+import docker  # type: ignore[import]
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY

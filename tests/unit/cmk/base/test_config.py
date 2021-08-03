@@ -6,7 +6,7 @@
 
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union, Optional, Generator
+from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -20,7 +20,14 @@ import cmk.utils.version as cmk_version
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
-from cmk.utils.type_defs import CheckPluginName, HostKey, HostName, SectionName, SourceType, RuleSetName
+from cmk.utils.type_defs import (
+    CheckPluginName,
+    HostKey,
+    HostName,
+    RuleSetName,
+    SectionName,
+    SourceType,
+)
 
 from cmk.core_helpers.config_path import VersionedConfigPath
 from cmk.core_helpers.type_defs import Mode

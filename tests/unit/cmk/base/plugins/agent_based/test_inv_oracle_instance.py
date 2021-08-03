@@ -6,7 +6,8 @@
 
 import pytest
 
-from cmk.utils.type_defs import SectionName, InventoryPluginName
+from cmk.utils.type_defs import InventoryPluginName, SectionName
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 

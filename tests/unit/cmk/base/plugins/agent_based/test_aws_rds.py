@@ -4,15 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    State,
-)
-from cmk.base.plugins.agent_based.aws_rds import (
-    check_aws_rds_network_io,
-    parse_aws_rds,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.aws_rds import check_aws_rds_network_io, parse_aws_rds
 
 SECTION = {
     'database-1 [eu-central-1]': {

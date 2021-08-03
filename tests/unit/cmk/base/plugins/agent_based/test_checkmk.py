@@ -6,11 +6,8 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.check_mk import (
-    parse_checkmk_labels,
-    host_label_function_labels,
-)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
+from cmk.base.plugins.agent_based.check_mk import host_label_function_labels, parse_checkmk_labels
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [

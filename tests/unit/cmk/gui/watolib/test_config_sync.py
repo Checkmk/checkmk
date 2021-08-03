@@ -4,26 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
-import tarfile
 import shutil
+import tarfile
+import time
 from io import BufferedIOBase
-from typing import Dict, List
 from pathlib import Path
+from typing import Dict, List
 
 import pytest
 import responses  # type: ignore[import]
 
+from tests.testlib.utils import is_enterprise_repo
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 
-from cmk.gui.globals import config
 import cmk.gui.wato.mkeventd
-import cmk.gui.watolib.utils as utils
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync
-
-from tests.testlib.utils import is_enterprise_repo
+import cmk.gui.watolib.utils as utils
+from cmk.gui.globals import config
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 

@@ -6,24 +6,25 @@
 
 # yapf: disable
 
-from cmk.gui.plugins.visuals.utils import Filter
 import copy
 from typing import Any, Dict
 
 import pytest
 
-from cmk.gui.globals import config
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
+from cmk.gui.globals import config
+from cmk.gui.plugins.visuals.utils import Filter
+
 pytestmark = pytest.mark.usefixtures("load_plugins")
 
-from cmk.gui.globals import html, user
-from cmk.gui.valuespec import ValueSpec
 import cmk.gui.plugins.views
+import cmk.gui.views
+from cmk.gui.globals import html, user
 from cmk.gui.plugins.views.utils import transform_painter_spec
 from cmk.gui.type_defs import PainterSpec
-import cmk.gui.views
+from cmk.gui.valuespec import ValueSpec
 
 
 @pytest.fixture(name="view")

@@ -9,7 +9,7 @@ import pytest
 from tests.testlib import set_timezone
 
 import cmk.base.plugins.agent_based.kaspersky_av_client as kaspersky_av_client
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 
 
 @pytest.fixture(scope="module", autouse=True)

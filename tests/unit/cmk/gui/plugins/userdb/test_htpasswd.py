@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 import pytest
+
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
 
 

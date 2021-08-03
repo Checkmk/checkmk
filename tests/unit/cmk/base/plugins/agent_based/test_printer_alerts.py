@@ -7,10 +7,12 @@
 import mock
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, Result, State
-from cmk.base.plugins.agent_based.printer_alerts import (parse_printer_alerts,
-                                                         discovery_printer_alerts,
-                                                         check_printer_alerts)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.printer_alerts import (
+    check_printer_alerts,
+    discovery_printer_alerts,
+    parse_printer_alerts,
+)
 
 
 @pytest.mark.parametrize("info, expected_result", [([[["1", "2", "15", "3", ""]]], [Service()])])

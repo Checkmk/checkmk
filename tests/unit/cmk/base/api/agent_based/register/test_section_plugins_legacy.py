@@ -10,10 +10,10 @@ import pytest
 
 from cmk.utils.type_defs import ParsedSectionName, SectionName
 
-import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.api.agent_based.type_defs import StringTable
+import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
 from cmk.base.api.agent_based.section_classes import SNMPTree
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.check_api import Service
 
 

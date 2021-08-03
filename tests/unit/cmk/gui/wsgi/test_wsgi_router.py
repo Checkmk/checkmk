@@ -8,8 +8,8 @@ import typing
 
 import pytest
 
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
 from cmk.utils.site import omd_site
 
 if typing.TYPE_CHECKING:

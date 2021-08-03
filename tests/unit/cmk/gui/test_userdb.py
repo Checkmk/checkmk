@@ -4,26 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
-import pytest
 import os
-from pathlib import Path
+import time
 from dataclasses import asdict
+from pathlib import Path
 
-from tests.testlib import on_time, is_managed_repo
+import pytest
+
+from tests.testlib import is_managed_repo, on_time
 
 import cmk.utils.paths
-from cmk.utils.type_defs import UserId
 import cmk.utils.version
+from cmk.utils.type_defs import UserId
 
-from cmk.gui.exceptions import MKUserError, MKAuthException
-from cmk.gui.valuespec import Dictionary
-from cmk.gui.globals import config
-import cmk.gui.userdb as userdb
-from cmk.gui.globals import g
-import cmk.gui.plugins.userdb.utils as utils
 import cmk.gui.plugins.userdb.htpasswd as htpasswd
 import cmk.gui.plugins.userdb.ldap_connector as ldap
+import cmk.gui.plugins.userdb.utils as utils
+import cmk.gui.userdb as userdb
+from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.globals import config, g
+from cmk.gui.valuespec import Dictionary
 
 
 @pytest.fixture(name="fix_time", autouse=True)

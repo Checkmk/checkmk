@@ -4,13 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from contextlib import suppress
+from typing import Any, Mapping, MutableMapping, Optional, TypedDict
+
 import pytest
 
-from contextlib import suppress
-from typing import TypedDict, Any, Mapping, MutableMapping, Optional
-
+from cmk.base.api.agent_based.utils import GetRateError, Metric, Result, State
 from cmk.base.plugins.agent_based.utils.size_trend import size_trend
-from cmk.base.api.agent_based.utils import State, GetRateError, Metric, Result
 
 
 class ArgsDict(TypedDict):

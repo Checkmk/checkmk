@@ -4,14 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 import logging
+
+import pytest
 
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
 import cmk.core_helpers.factory as factory
-
 from cmk.core_helpers.snmp_backend import ClassicSNMPBackend
+
 try:
     from cmk.core_helpers.cee.snmp_backend import pysnmp_backend  # type: ignore[import]
 except ImportError:

@@ -4,38 +4,39 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import time
-import sys
 import abc
-import tempfile
 import datetime
+import os
+import sys
+import tempfile
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
-from typing import (
-    Any,
-    Callable,
-    Generator,
-    MutableMapping,
-)
+from typing import Any, Callable, Generator, MutableMapping
 
-import urllib3  # type: ignore[import]
 import freezegun
 import pytest
+import urllib3  # type: ignore[import]
 from _pytest.monkeypatch import MonkeyPatch
 
-from tests.testlib.utils import (  # noqa: F401 # pylint: disable=unused-import
-    repo_path, cmk_path, cme_path, cmc_path, current_branch_name, virtualenv_path,
-    get_cmk_download_credentials, is_running_as_site_user, site_id, add_python_paths,
-    is_enterprise_repo, is_managed_repo, get_standard_linux_agent_output,
-)
-from tests.testlib.fixtures import web, ec  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.compare_html import compare_html
+from tests.testlib.fixtures import ec, web  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
-from tests.testlib.web_session import CMKWebSession, APIError  # noqa: F401 # pylint: disable=unused-import
-from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus  # noqa: F401 # pylint: disable=unused-import
-from tests.testlib.compare_html import compare_html
+
+from tests.testlib.web_session import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    APIError, CMKWebSession,
+)
+
+from tests.testlib.event_console import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    CMKEventConsole, CMKEventConsoleStatus,
+)
+from tests.testlib.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    add_python_paths, cmc_path, cme_path, cmk_path, current_branch_name,
+    get_cmk_download_credentials, get_standard_linux_agent_output, is_enterprise_repo,
+    is_managed_repo, is_running_as_site_user, repo_path, site_id, virtualenv_path,
+)
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -66,8 +67,8 @@ def fake_version_and_paths():
     monkeypatch = _pytest.monkeypatch.MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
-    import cmk.utils.version as cmk_version  # pylint: disable=import-outside-toplevel
     import cmk.utils.paths  # pylint: disable=import-outside-toplevel
+    import cmk.utils.version as cmk_version  # pylint: disable=import-outside-toplevel
 
     if is_managed_repo():
         edition_short = "cme"
@@ -170,6 +171,7 @@ def import_module(pathname):
     modpath = os.path.join(cmk_path(), pathname)
 
     import importlib  # pylint: disable=import-outside-toplevel
+
     # TODO: load_module() is deprecated, we should avoid using it.
     # Furthermore, due to some reflection Kung-Fu and typeshed oddities,
     # mypy is confused about its arguments.

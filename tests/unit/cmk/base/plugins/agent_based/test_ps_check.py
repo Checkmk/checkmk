@@ -4,20 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# yapf: disable
-from collections import namedtuple
 import datetime
 import itertools
+
+# yapf: disable
+from collections import namedtuple
 from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
 
-from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State as state
-from cmk.base.plugins.agent_based import ps_section
-from cmk.base.plugins.agent_based.utils import ps as ps_utils
-
 from tests.testlib import on_time
+
+from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
+from cmk.base.plugins.agent_based import ps_section
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.utils import ps as ps_utils
 
 pytestmark = pytest.mark.checks
 

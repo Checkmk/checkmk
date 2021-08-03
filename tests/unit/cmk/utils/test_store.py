@@ -5,19 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import ast
 import enum
-import pickle
-import threading
-import queue
+import errno
 import os
+import pickle
+import queue
 import stat
+import threading
 from multiprocessing.pool import ThreadPool
+from pathlib import Path
 from typing import List
 
-import errno
-from pathlib import Path
-
-from six import ensure_binary
 import pytest
+from six import ensure_binary
+
 from tests.testlib import import_module, wait_until
 
 import cmk.utils.store as store

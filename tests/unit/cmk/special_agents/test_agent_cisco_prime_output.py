@@ -6,6 +6,7 @@
 
 import pytest
 import responses  # type: ignore[import]
+
 from cmk.special_agents.agent_cisco_prime import main
 
 AUTH = ("user", "passw0rd")

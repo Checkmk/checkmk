@@ -6,17 +6,11 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    Service,
-    State,
-)
-
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.mssql_counters_page_life_expectancy import (
-    discover_mssql_counters_page_life_expectancy,
     check_mssql_counters_page_life_expectancy,
     cluster_check_mssql_counters_page_life_expectancy,
+    discover_mssql_counters_page_life_expectancy,
 )
 
 

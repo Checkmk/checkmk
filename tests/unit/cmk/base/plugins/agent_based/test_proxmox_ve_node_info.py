@@ -8,8 +8,8 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.proxmox_ve_node_info import (
-    parse_proxmox_ve_node_info,
     check_proxmox_ve_node_info,
+    parse_proxmox_ve_node_info,
 )
 
 NODE_DATA = parse_proxmox_ve_node_info([[
@@ -80,6 +80,7 @@ if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
     import os
+
     from tests.testlib.utils import cmk_path
     assert not pytest.main([
         "--doctest-modules",

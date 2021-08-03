@@ -13,8 +13,9 @@ from contextlib import closing
 
 import pytest
 
-import omdlib.certs as certs
 import livestatus
+
+import omdlib.certs as certs
 
 
 # Override top level fixture to make livestatus connects possible here

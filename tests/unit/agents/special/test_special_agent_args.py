@@ -4,13 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from argparse import Namespace
 from glob import glob
-import os
-from typing import Dict, List
 from importlib import import_module
+from typing import Dict, List
 
 import pytest
+
 from tests.testlib import cmk_path
 
 # TODO: Actually fix this stuff.

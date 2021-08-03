@@ -6,10 +6,11 @@
 
 import logging
 from typing import Dict
+
 import pytest
 
-from cmk.ec.main import RuleMatcher, EventServer, make_config, MatchPriority, MatchSuccess
 from cmk.ec.defaults import default_config
+from cmk.ec.main import EventServer, make_config, MatchPriority, MatchSuccess, RuleMatcher
 
 
 @pytest.fixture(name="m")

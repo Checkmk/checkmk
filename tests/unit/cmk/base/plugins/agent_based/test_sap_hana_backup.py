@@ -7,8 +7,9 @@
 import pytest
 from freezegun import freeze_time
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, State as state, Result, Metric
 import cmk.base.plugins.agent_based.sap_hana_backup as sap_hana_backup
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 NOW_SIMULATED = "2019-05-17 00:00:00.000000"
 ITEM = "inst"

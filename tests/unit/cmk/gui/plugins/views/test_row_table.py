@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.gui.plugins.views import RowTableLivestatus
-from cmk.gui.views import View
 from cmk.gui.type_defs import VisualContext
+from cmk.gui.views import View
 
 
 def test_row_table_object(mock_livestatus, request_context):

@@ -10,8 +10,10 @@
 import copy
 import itertools
 from typing import List, Optional
+
 #
 import pytest
+
 #
 # from cmk.utils.type_defs import CheckPluginName
 #
@@ -19,6 +21,7 @@ import pytest
 # from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
 from cmk.base.plugins.agent_based import ps_section
 from cmk.base.plugins.agent_based.utils import ps
+
 #
 # from checktestlib import CheckResult, assertCheckResultsEqual
 #

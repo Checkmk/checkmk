@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.base.api.agent_based.inventory_classes import TableRow, Attributes
+from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 
 
 @pytest.mark.parametrize("class_", [TableRow, Attributes])

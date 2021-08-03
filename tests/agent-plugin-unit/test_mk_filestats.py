@@ -6,10 +6,12 @@
 
 import ast
 import configparser
+
 # pylint: disable=protected-access,redefined-outer-name
 import os
-import pytest
 import sys
+
+import pytest
 from utils import import_module
 
 try:

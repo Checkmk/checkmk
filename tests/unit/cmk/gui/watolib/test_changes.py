@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import ast
+import time
+
 import pytest
 
 from tests.testlib import on_time
@@ -13,8 +14,14 @@ from tests.testlib import on_time
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.htmllib import HTML
-from cmk.gui.watolib.changes import (AuditLogStore, SiteChanges, log_audit, make_diff_text,
-                                     ObjectRef, ObjectRefType)
+from cmk.gui.watolib.changes import (
+    AuditLogStore,
+    log_audit,
+    make_diff_text,
+    ObjectRef,
+    ObjectRefType,
+    SiteChanges,
+)
 
 
 class TestObjectRef:

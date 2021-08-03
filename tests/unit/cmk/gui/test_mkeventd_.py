@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from _pytest.monkeypatch import MonkeyPatch
+
 from cmk.gui import mkeventd
 from cmk.gui.mkeventd import send_event
-
-from _pytest.monkeypatch import MonkeyPatch
 
 
 def test_send_event(monkeypatch: MonkeyPatch) -> None:

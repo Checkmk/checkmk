@@ -6,9 +6,13 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, Result, State
-from cmk.base.plugins.agent_based.printer_io import (parse_printer_io, discovery_printer_io,
-                                                     check_printer_input, check_printer_output)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.printer_io import (
+    check_printer_input,
+    check_printer_output,
+    discovery_printer_io,
+    parse_printer_io,
+)
 
 
 @pytest.mark.parametrize("item, params, info, expected_result", [

@@ -5,11 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, Tuple
-from tests.testlib import Check
-import freezegun
 
+import freezegun
 import pytest
-from .checktestlib import CheckResult, assertCheckResultsEqual, mock_item_state
+
+from tests.testlib import Check
+
+from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
 
 # all tests in this file are hp_msa_volume check related
 pytestmark = pytest.mark.checks

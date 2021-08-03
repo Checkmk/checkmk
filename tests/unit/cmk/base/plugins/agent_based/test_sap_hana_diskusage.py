@@ -4,13 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 from datetime import datetime
+
+import pytest
 from freezegun import freeze_time
 
-from cmk.utils.type_defs import SectionName, CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, SectionName
+
 import cmk.base.plugins.agent_based.sap_hana_diskusage as sap_hana_diskusage
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service, Metric, IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+    State,
+)
 
 NOW_SIMULATED = "1988-06-08 17:00:00.000000"
 LAST_TIME_EPOCH = (datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") -

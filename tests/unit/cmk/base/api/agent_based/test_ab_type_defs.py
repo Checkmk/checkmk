@@ -7,6 +7,7 @@
 import pytest
 
 from cmk.snmplib.type_defs import SpecialColumn
+
 from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPTree
 
 

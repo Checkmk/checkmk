@@ -5,17 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+
 import pytest
+
 import cmk.base.plugins.agent_based.oracle_tablespaces as oracle_tablespaces
-from cmk.base.plugins.agent_based.utils.oracle import OraErrors, SectionTableSpaces
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    State as state,
-    Result,
-    Metric,
     IgnoreResultsError,
-    type_defs,
+    Metric,
+    Result,
+    Service,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
+from cmk.base.plugins.agent_based.utils.oracle import OraErrors, SectionTableSpaces
 
 StringTable = [
     ['line', 'too', 'short'],

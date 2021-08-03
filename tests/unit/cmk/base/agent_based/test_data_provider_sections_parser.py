@@ -11,12 +11,12 @@ import pytest
 from cmk.utils.type_defs import SectionName
 
 from cmk.base import crash_reporting
-from cmk.base.sources.agent import AgentHostSections
 from cmk.base.agent_based.data_provider import SectionsParser
 from cmk.base.api.agent_based.register.section_plugins import (
     AgentSectionPlugin,
     trivial_section_factory,
 )
+from cmk.base.sources.agent import AgentHostSections
 
 
 def _section(name: str, parse_function: Callable) -> AgentSectionPlugin:

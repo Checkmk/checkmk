@@ -6,19 +6,20 @@
 
 # pxlint: disable=redefined-outer-name
 
-import subprocess
-import re
-import os
-import tarfile
-import fnmatch
-import pytest
 import fcntl
+import fnmatch
+import os
+import re
+import subprocess
+import tarfile
 from contextlib import contextmanager
+
+import pytest
 
 from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
-from cmk.utils.python_printer import pformat
 from cmk.utils.paths import mkbackup_lock_dir
+from cmk.utils.python_printer import pformat
 
 
 @contextmanager

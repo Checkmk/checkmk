@@ -8,15 +8,16 @@ import time
 
 import pytest
 from freezegun import freeze_time
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.esx_vsphere_snapshot import (
-    Section,
-    Snapshot,
     check_snapshots,
     check_snapshots_summary,
     parse_esx_vsphere_snapshots,
+    Section,
+    Snapshot,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils.esx_vsphere import SectionVM
 
 

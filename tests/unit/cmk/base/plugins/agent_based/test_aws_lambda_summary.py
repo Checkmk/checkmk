@@ -4,13 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.aws import (
-    LambdaFunctionConfiguration,
-    LambdaSummarySection,
-)
-from cmk.base.plugins.agent_based.aws_lambda_summary import parse_aws_lambda_summary
 import pytest
+
+from cmk.base.api.agent_based.type_defs import StringTable
+from cmk.base.plugins.agent_based.aws_lambda_summary import parse_aws_lambda_summary
+from cmk.base.plugins.agent_based.utils.aws import LambdaFunctionConfiguration, LambdaSummarySection
 
 _STRING_TABLE_AWS_LAMBDA_SUMMARY = [
     [

@@ -5,15 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from tests.testlib import Check
 
-from .checktestlib import (
-    DiscoveryResult,
-    CheckResult,
-    assertDiscoveryResultsEqual,
-)
-
 from cmk.base.check_api import MKCounterWrapped
+
+from .checktestlib import assertDiscoveryResultsEqual, CheckResult, DiscoveryResult
 
 pytestmark = pytest.mark.checks
 

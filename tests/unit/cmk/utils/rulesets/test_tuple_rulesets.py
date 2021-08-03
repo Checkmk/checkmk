@@ -8,11 +8,13 @@
 from typing import Dict, List, Tuple
 
 import pytest
+
 from tests.testlib.base import Scenario
 
-import cmk.base.config as config
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.version as cmk_version
+
+import cmk.base.config as config
 
 # NOTE: A lot of signatures regarding rules and rule sets are simply lying:
 # They claim to expect a RuleSpec or Ruleset (from cmk.utils.type_defs), but

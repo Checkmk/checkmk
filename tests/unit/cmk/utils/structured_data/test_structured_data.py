@@ -17,10 +17,10 @@ from cmk.utils.structured_data import (
     Attributes,
     make_filter,
     parse_visible_raw_path,
+    RetentionIntervals,
     StructuredDataNode,
     StructuredDataStore,
     Table,
-    RetentionIntervals,
     TableRetentions,
 )
 from cmk.utils.type_defs import HostName

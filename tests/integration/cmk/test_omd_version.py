@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import cmk.utils.version as cmk_version
+
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 
 
 # Would move this to unit tests, but it would not work, because the

@@ -13,15 +13,14 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import SectionName
 
+import cmk.base.config as config
 from cmk.base.discovered_labels import (
-    DiscoveredHostLabelsDict,
     DiscoveredHostLabels,
-    HostLabel,
+    DiscoveredHostLabelsDict,
     DiscoveredServiceLabels,
+    HostLabel,
     ServiceLabel,
 )
-
-import cmk.base.config as config
 
 
 @pytest.fixture(name="labels", params=["host", "service"])

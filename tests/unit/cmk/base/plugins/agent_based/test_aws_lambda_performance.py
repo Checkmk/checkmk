@@ -4,14 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    Service,
-    State,
-)
-from cmk.base.plugins.agent_based.aws_lambda_summary import parse_aws_lambda_summary
+import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.aws_lambda_performance import (
     _DEFAULT_PARAMETERS,
     _MORE_THAN_ONE_PER_HOUR,
@@ -20,8 +15,7 @@ from cmk.base.plugins.agent_based.aws_lambda_performance import (
     LambdaCloudwatchMetrics,
     parse_aws_lambda,
 )
-
-import pytest
+from cmk.base.plugins.agent_based.aws_lambda_summary import parse_aws_lambda_summary
 
 _STRING_TABLE_AWS_LAMBDA_SUMMARY = [
     [

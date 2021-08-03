@@ -9,6 +9,7 @@
 from typing import Optional
 
 from cmk.utils.type_defs import CheckPluginName
+
 from cmk.base.check_utils import Service
 
 

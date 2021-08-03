@@ -4,18 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Iterable,
-    List,
-)
+from typing import Iterable, List
+
 import pytest
+
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.plugins.wato.utils import base_modes
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.wato.utils.main_menu import (
-    ABCMainModule,
-    MainModuleTopicHosts,
-)
+from cmk.gui.plugins.wato.utils.main_menu import ABCMainModule, MainModuleTopicHosts
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.watolib.main_menu import ModuleRegistry
 

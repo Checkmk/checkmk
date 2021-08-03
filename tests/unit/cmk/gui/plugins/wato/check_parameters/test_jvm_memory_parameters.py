@@ -8,8 +8,7 @@ from typing import Mapping, Tuple, Union
 
 import pytest
 
-from cmk.gui.plugins.wato.check_parameters.jvm_memory import (
-    _transform_legacy_parameters_jvm_memory,)
+from cmk.gui.plugins.wato.check_parameters.jvm_memory import _transform_legacy_parameters_jvm_memory
 
 
 @pytest.mark.parametrize(

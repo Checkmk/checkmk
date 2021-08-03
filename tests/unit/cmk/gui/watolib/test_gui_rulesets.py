@@ -8,14 +8,14 @@ import pytest
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 
+import cmk.gui.utils
+
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
-
-from cmk.gui.exceptions import MKGeneralException
-import cmk.gui.utils
-from cmk.gui.globals import config
-import cmk.gui.watolib.rulesets as rulesets
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
+import cmk.gui.watolib.rulesets as rulesets
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import config
 
 
 def _rule(ruleset_name):

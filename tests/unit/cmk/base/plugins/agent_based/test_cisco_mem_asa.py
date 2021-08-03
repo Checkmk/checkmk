@@ -6,17 +6,12 @@
 
 import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.cisco_mem_asa import (
-    parse_cisco_mem_asa,
-    discovery_cisco_mem,
     _idem_check_cisco_mem,
-)
-
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    Result,
-    Metric,
-    State as state,
+    discovery_cisco_mem,
+    parse_cisco_mem_asa,
 )
 
 
@@ -104,6 +99,7 @@ if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
     import os
+
     from tests.testlib.utils import cmk_path
     assert not pytest.main([
         "--doctest-modules",

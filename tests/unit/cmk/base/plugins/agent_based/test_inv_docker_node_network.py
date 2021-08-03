@@ -6,7 +6,9 @@
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_docker_node_network import (
-    inventory_docker_node_network, parse_docker_node_network)
+    inventory_docker_node_network,
+    parse_docker_node_network,
+)
 
 AGENT_OUTPUT = (
     '@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}\n'

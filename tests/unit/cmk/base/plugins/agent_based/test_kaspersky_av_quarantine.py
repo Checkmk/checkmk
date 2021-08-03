@@ -6,8 +6,8 @@
 
 import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.kaspersky_av_quarantine import check_kaspersky_av_quarantine
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State, Result, Metric
 
 
 @pytest.mark.parametrize("section,expected_results", [({

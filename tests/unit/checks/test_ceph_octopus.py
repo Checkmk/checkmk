@@ -4,9 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-from tests.testlib import Check
 from typing import List, Mapping, Tuple
+
+import pytest
+
+from tests.testlib import Check
 
 octopus_info = [['---', 'RAW', 'STORAGE', '---'],
                 ['CLASS', 'SIZE', 'AVAIL', 'USED', 'RAW', 'USED', '%RAW', 'USED'],

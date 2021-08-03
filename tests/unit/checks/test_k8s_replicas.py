@@ -5,10 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from tests.testlib import Check
-from .checktestlib import CheckResult, assertCheckResultsEqual
 
 from cmk.base.plugins.agent_based.utils.k8s import parse_json
+
+from .checktestlib import assertCheckResultsEqual, CheckResult
 
 pytestmark = pytest.mark.checks
 

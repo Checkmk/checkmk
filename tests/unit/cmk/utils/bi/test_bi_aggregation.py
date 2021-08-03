@@ -7,8 +7,10 @@
 # pylint: disable=redefined-outer-name
 
 import pytest
-from cmk.utils.bi.bi_aggregation import BIAggregation
+
 from cmk.utils.bi.bi_actions import BICallARuleAction
+from cmk.utils.bi.bi_aggregation import BIAggregation
+
 from .bi_test_data import sample_config
 
 

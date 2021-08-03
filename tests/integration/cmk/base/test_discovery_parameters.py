@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib import create_linux_test_host
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config

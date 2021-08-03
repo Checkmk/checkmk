@@ -8,8 +8,8 @@ import typing as t
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based import cisco_vpn_sessions
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 DATA_0 = [['0', '0', '0', '13', '152', '13', '58', '10533', '87', '0', '0', '0', '2500']]
 RESULT_0 = {

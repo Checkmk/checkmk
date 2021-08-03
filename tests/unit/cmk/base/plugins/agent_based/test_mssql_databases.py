@@ -6,11 +6,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.mssql_databases import (
-    parse_mssql_databases,
-    discover_mssql_databases,
     check_mssql_databases,
+    discover_mssql_databases,
+    parse_mssql_databases,
 )
 
 

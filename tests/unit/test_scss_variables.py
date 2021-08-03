@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import re
 from itertools import chain
 from pathlib import Path
-import re
 from typing import Iterable, Set, Tuple
 
 from tests.testlib import cmk_path, is_enterprise_repo

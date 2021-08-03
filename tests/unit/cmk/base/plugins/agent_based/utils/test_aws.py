@@ -5,10 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from cmk.base.plugins.agent_based.utils.aws import (
-    parse_aws,
-    extract_aws_metrics_by_labels,
-)
+
+from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
 @pytest.mark.parametrize(

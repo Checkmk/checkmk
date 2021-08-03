@@ -10,7 +10,6 @@ import shutil
 from pathlib import Path
 
 import pytest
-
 import yaml
 
 from cmk.utils import msi_patch

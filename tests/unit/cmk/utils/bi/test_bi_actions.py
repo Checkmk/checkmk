@@ -8,17 +8,12 @@
 import pytest
 
 from cmk.utils.bi.bi_actions import (
-    BIStateOfHostAction,
-    BIStateOfServiceAction,
-    BIStateOfRemainingServicesAction,
     BICallARuleAction,
+    BIStateOfHostAction,
+    BIStateOfRemainingServicesAction,
+    BIStateOfServiceAction,
 )
-
-from cmk.utils.bi.bi_trees import (
-    BICompiledLeaf,
-    BICompiledRule,
-    BIRemainingResult,
-)
+from cmk.utils.bi.bi_trees import BICompiledLeaf, BICompiledRule, BIRemainingResult
 
 
 @pytest.mark.parametrize("host_regex, num_results, num_results_unknown", [

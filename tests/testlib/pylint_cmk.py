@@ -7,16 +7,18 @@
 # pylint: disable=redefined-outer-name
 # Library for pylint checks of Checkmk
 
-import os
 import getpass
 import glob
-import time
 import multiprocessing
+import os
 import subprocess
+import time
 
-from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter  # type: ignore[import]
+from tests.testlib import cmk_path, is_enterprise_repo, repo_path
 
-from tests.testlib import repo_path, cmk_path, is_enterprise_repo
+from pylint.reporters.text import (  # type: ignore[import] # isort: skip
+    ColorizedTextReporter, ParseableTextReporter,
+)
 
 
 def check_files(base_dir):

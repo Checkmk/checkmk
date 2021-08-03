@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+
 import pytest
+
 from tests.testlib.site import SiteFactory
 from tests.testlib.utils import current_branch_name
 from tests.testlib.version import CMKVersion

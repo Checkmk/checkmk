@@ -6,8 +6,10 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 import os
-import vcr  # type: ignore[import]
+
 import pytest
+import vcr  # type: ignore[import]
+
 from tests.testlib import import_module  # pylint: disable=import-error
 
 

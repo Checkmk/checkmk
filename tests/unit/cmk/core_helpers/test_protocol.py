@@ -29,13 +29,13 @@ from cmk.core_helpers import FetcherType
 from cmk.core_helpers.protocol import (
     AgentResultMessage,
     CMCHeader,
-    CMCMessage,
     CMCLogLevel,
+    CMCMessage,
     ErrorResultMessage,
     FetcherHeader,
     FetcherMessage,
-    ResultStats,
     PayloadType,
+    ResultStats,
     SNMPResultMessage,
 )
 

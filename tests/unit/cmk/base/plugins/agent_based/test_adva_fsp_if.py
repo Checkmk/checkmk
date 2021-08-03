@@ -5,13 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    Service,
-    State,
-)
+
 from cmk.base.plugins.agent_based import adva_fsp_if
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 SECTION = {
     'CH-1-4-C1': {

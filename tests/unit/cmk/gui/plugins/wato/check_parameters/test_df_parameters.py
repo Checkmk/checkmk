@@ -8,12 +8,11 @@ import pytest
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.check_parameters.filesystem import (
-    _validate_discovery_filesystem_params,
     _transform_discovery_filesystem_params,
     _transform_filesystem_groups,
+    _validate_discovery_filesystem_params,
 )
-from cmk.gui.plugins.wato.check_parameters.utils import (
-    _transform_discovered_filesystem_params,)
+from cmk.gui.plugins.wato.check_parameters.utils import _transform_discovered_filesystem_params
 
 
 @pytest.mark.parametrize(

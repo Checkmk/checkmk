@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from cmk.gui.plugins.wato.check_parameters import domino_tasks
 
 

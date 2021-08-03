@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+
 import pytest
 
 from cmk.ec.main import Perfcounters

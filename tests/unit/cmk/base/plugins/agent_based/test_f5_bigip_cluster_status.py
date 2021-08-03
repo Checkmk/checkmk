@@ -6,16 +6,19 @@
 
 import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
-    parse_f5_bigip_cluster_status,
-    parse_f5_bigip_vcmpfailover,
     check_f5_bigip_cluster_status,
     check_f5_bigip_cluster_status_v11_2,
     cluster_check_f5_bigip_cluster_status,
     cluster_check_f5_bigip_cluster_status_v11_2,
-    F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS as def_params,
+    parse_f5_bigip_cluster_status,
+    parse_f5_bigip_vcmpfailover,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state
+
+from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (  # isort: skip
+    F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS as def_params,)
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [

@@ -4,15 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 import cmk.utils.store as store
 from cmk.utils.license_usage.samples import (
-    LicenseUsageSample,
     LicenseUsageExtensions,
     LicenseUsageHistoryDump,
     LicenseUsageHistoryDumpVersion,
+    LicenseUsageSample,
 )
 
 import cmk.base.license_usage as license_usage

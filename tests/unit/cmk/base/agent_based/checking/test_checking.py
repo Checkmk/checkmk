@@ -8,10 +8,12 @@
 
 # No stub file
 import pytest
-import cmk.base.core
-import cmk.base.config
+
 import cmk.base.agent_based.checking as checking
-from cmk.base.api.agent_based.checking_classes import Result, State as state, Metric
+import cmk.base.config
+import cmk.base.core
+from cmk.base.api.agent_based.checking_classes import Metric, Result
+from cmk.base.api.agent_based.checking_classes import State as state
 
 
 @pytest.mark.parametrize(

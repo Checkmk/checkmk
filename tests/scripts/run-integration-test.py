@@ -15,19 +15,19 @@ Environment variables VERSION, EDITION, BRANCH affect the package used for
 the test.
 """
 
+import logging
 import os
-import sys
 import pipes
 import subprocess
-import logging
+import sys
 from pathlib import Path
 
 # Make the tests.testlib available
 script_path = Path(__file__).resolve()
 sys.path.insert(0, str(script_path.parent.parent.parent))
 
-from tests.testlib.utils import is_running_as_site_user, cmk_path
 from tests.testlib.site import get_site_factory
+from tests.testlib.utils import cmk_path, is_running_as_site_user
 from tests.testlib.version import CMKVersion
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')

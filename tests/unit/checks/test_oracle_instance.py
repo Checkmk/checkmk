@@ -8,6 +8,7 @@
 # type: ignore
 
 import pytest
+
 from tests.testlib import Check
 
 from cmk.base.check_api import MKCounterWrapped

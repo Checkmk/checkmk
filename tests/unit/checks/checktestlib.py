@@ -12,8 +12,8 @@ from typing import Any, Callable, NamedTuple
 import mock
 import pytest
 
-from cmk.base.item_state import MKCounterWrapped
 from cmk.base.check_api import Service
+from cmk.base.item_state import MKCounterWrapped
 
 
 class Tuploid:

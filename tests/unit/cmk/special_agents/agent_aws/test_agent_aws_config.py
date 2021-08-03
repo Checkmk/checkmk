@@ -8,8 +8,7 @@
 
 import pytest
 
-from cmk.special_agents.agent_aws import (
-    AWSConfig,)
+from cmk.special_agents.agent_aws import AWSConfig
 
 
 @pytest.mark.parametrize("sys_argv_1, sys_argv_2, expected_result", [

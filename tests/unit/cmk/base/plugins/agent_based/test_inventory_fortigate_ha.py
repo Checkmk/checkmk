@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.inventory_fortigate_ha import (
-    parse_fortigate_ha,
-    inventory_fortigate_ha,
-)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
+from cmk.base.plugins.agent_based.inventory_fortigate_ha import (
+    inventory_fortigate_ha,
+    parse_fortigate_ha,
+)
 
 SECTION = {
     'mode': 'activePassive',

@@ -5,15 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.page_menu import (
+    make_external_link,
+    make_form_submit_link,
+    make_javascript_link,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuLink,
-    make_simple_link,
-    make_external_link,
-    make_javascript_link,
-    make_form_submit_link,
+    PageMenuTopic,
 )
 
 

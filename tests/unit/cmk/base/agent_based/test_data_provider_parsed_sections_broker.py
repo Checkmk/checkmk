@@ -6,17 +6,9 @@
 
 # pylint: disable=protected-access
 
-from typing import (
-    Callable,
-    Iterable,
-    List,
-    Mapping,
-    Optional,
-    Tuple,
-)
+from typing import Callable, Iterable, List, Mapping, Optional, Tuple
 
 import pytest
-
 from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.utils.type_defs import (
@@ -32,13 +24,13 @@ from cmk.core_helpers.type_defs import AgentRawDataSection
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 from cmk.base.agent_based.checking._legacy_mode import _MultiHostSections
-from cmk.base.check_utils import HOST_ONLY, HOST_PRECEDENCE, MGMT_ONLY
-from cmk.base.sources.agent import AgentHostSections
 from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     ParsedSectionsResolver,
     SectionsParser,
 )
+from cmk.base.check_utils import HOST_ONLY, HOST_PRECEDENCE, MGMT_ONLY
+from cmk.base.sources.agent import AgentHostSections
 
 
 def _test_section(

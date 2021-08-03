@@ -15,14 +15,11 @@ import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName
 
+import cmk.base.agent_based.discovery as discovery
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
-import cmk.base.agent_based.discovery as discovery
 from cmk.base.check_utils import Service
-from cmk.base.discovered_labels import (
-    DiscoveredServiceLabels,
-    ServiceLabel,
-)
+from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 
 @pytest.fixture(autouse=True)

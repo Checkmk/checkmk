@@ -6,15 +6,15 @@
 
 # yapf: disable
 import os
-from typing import Tuple, Callable
+from typing import Callable, Tuple
+
 import pytest
+
 from tests.testlib import Check
+
 from cmk.base.check_api import MKCounterWrapped
-from .checktestlib import (
-    DiscoveryResult,
-    assertDiscoveryResultsEqual,
-    mock_item_state,
-)
+
+from .checktestlib import assertDiscoveryResultsEqual, DiscoveryResult, mock_item_state
 
 pytestmark = pytest.mark.checks
 

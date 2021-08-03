@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from tests.testlib import compare_html
+
 from cmk.gui.globals import output_funnel
 from cmk.gui.htmllib.foldable_container import (
     foldable_container,
@@ -11,8 +13,6 @@ from cmk.gui.htmllib.foldable_container import (
     foldable_container_img_id,
     foldable_container_onclick,
 )
-
-from tests.testlib import compare_html
 
 
 def test_foldable_container(request_context) -> None:

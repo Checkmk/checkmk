@@ -5,22 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import time
 import multiprocessing
 import sys
+import time
 
 import pytest
 
 import tests.testlib as testlib
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
+
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
+import cmk.gui.log
+
 # Loads all GUI modules
 import cmk.gui.modules
-
-import cmk.gui.log
 
 
 @pytest.fixture(autouse=True)

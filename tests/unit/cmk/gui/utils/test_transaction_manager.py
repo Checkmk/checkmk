@@ -6,8 +6,9 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import List, Optional
 import time
+from typing import List, Optional
+
 import pytest
 
 from cmk.utils.type_defs import UserId

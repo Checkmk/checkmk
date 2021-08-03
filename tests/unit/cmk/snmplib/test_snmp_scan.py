@@ -19,11 +19,12 @@ from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_scan as snmp_scan
-from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPBackendEnum
+from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 from cmk.snmplib.utils import evaluate_snmp_detection
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (
+
+from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (  # isort: skip
     create_detect_spec,)
 
 

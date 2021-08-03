@@ -5,12 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from tests.testlib import Check
+
 from .checktestlib import (
-    CheckResult,
     assertCheckResultsEqual,
-    mock_item_state,
     assertMKCounterWrapped,
+    CheckResult,
+    mock_item_state,
 )
 
 pytestmark = pytest.mark.checks

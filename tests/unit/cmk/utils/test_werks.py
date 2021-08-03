@@ -16,9 +16,9 @@ from six import ensure_binary, ensure_str
 
 import tests.testlib as testlib
 
+import cmk.utils.memoize
 import cmk.utils.version as cmk_version
 import cmk.utils.werks
-import cmk.utils.memoize
 
 
 @pytest.mark.parametrize("version_str,expected", [

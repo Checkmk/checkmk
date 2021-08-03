@@ -5,15 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from tests.testlib import get_value_store_fixture
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    IgnoreResultsError,
-    Metric,
-    Result,
-    State as state,
-    type_defs,
-)
+
 from cmk.base.plugins.agent_based import netapp_api_cpu, netapp_api_vf_stats
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 
 value_store_fixture = get_value_store_fixture(netapp_api_vf_stats)
 

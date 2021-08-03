@@ -6,34 +6,36 @@
 
 # pylint: disable=redefined-outer-name
 from __future__ import annotations
+
 import ast
 import json
 import threading
 import urllib.parse
 from contextlib import contextmanager
-from http.cookiejar import CookieJar
-from typing import Any, NamedTuple, Literal, Optional, Dict, Iterator, Generator
 from functools import lru_cache
+from http.cookiejar import CookieJar
+from typing import Any, Dict, Generator, Iterator, Literal, NamedTuple, Optional
 
 import pytest
+import webtest  # type: ignore[import]
+
 # TODO: Change to pytest.MonkeyPatch. It will be available in future pytest releases.
 from _pytest.monkeypatch import MonkeyPatch
-import webtest  # type: ignore[import]
 from mock import MagicMock
 
 from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.log
 
-from cmk.gui import watolib
-from cmk.gui.globals import config
 import cmk.gui.config as config_module
 import cmk.gui.login as login
-from cmk.gui.watolib import search, hosts_and_folders
-from cmk.gui.wsgi import make_app
 import cmk.gui.watolib.activate_changes as activate_changes
+from cmk.gui import watolib
+from cmk.gui.globals import config
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.watolib import hosts_and_folders, search
+from cmk.gui.wsgi import make_app
 
 SPEC_LOCK = threading.Lock()
 

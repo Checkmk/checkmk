@@ -4,21 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 from pathlib import Path
+
+import pytest
+
+from tests.testlib.users import create_and_destroy_user
 
 import cmk.utils.paths
 
-from cmk.gui.config import builtin_role_ids
-from cmk.gui.globals import user as global_user
-from cmk.gui.globals import config
-from cmk.gui.utils.logged_in import (LoggedInNobody, LoggedInSuperUser, LoggedInUser, UserContext,
-                                     SuperUserContext)
-from cmk.gui.exceptions import MKAuthException
 import cmk.gui.permissions as permissions
+from cmk.gui.config import builtin_role_ids
+from cmk.gui.exceptions import MKAuthException
+from cmk.gui.globals import config
+from cmk.gui.globals import user as global_user
+from cmk.gui.utils.logged_in import (
+    LoggedInNobody,
+    LoggedInSuperUser,
+    LoggedInUser,
+    SuperUserContext,
+    UserContext,
+)
 from cmk.gui.watolib.utils import may_edit_ruleset
-
-from tests.testlib.users import create_and_destroy_user
 
 
 def test_user_context(with_user):

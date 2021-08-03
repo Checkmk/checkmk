@@ -5,11 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Result,
-    Metric,
-    State,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.k8s_nodes import check_k8s_nodes
 
 

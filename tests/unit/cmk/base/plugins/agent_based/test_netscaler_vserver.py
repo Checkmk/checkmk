@@ -6,11 +6,8 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    State as state,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.netscaler_vserver import _check_netscaler_vservers
 
 

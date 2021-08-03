@@ -7,6 +7,7 @@
 # pylint: disable=protected-access,redefined-outer-name
 
 import os
+
 import pytest
 from utils import import_module
 

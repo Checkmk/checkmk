@@ -9,10 +9,11 @@
 from pathlib import Path
 
 import pytest
-import docker  # type: ignore[import]
 
 import tests.testlib as testlib
 from tests.testlib.pylint_cmk import is_python_file
+
+import docker  # type: ignore[import]
 
 
 @pytest.fixture(scope="module")

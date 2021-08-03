@@ -5,9 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict
-from tests.testlib import Check
+
 import pytest
+
+from tests.testlib import Check
+
 from cmk.base.check_api import MKCounterWrapped  # noqa: F401 # pylint: disable=unused-import
+
 from .test_ibm_mq_include import parse_info
 
 pytestmark = pytest.mark.checks

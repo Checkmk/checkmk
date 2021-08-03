@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
 from typing import Any, Dict
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.utils.timesync import tolerance_check
 

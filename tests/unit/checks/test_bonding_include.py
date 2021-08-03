@@ -6,7 +6,8 @@
 
 import pytest
 
-from cmk.base.check_legacy_includes.bonding import _check_ieee_302_3ad_specific  # type: ignore[attr-defined]
+from cmk.base.check_legacy_includes.bonding import (  # type: ignore[attr-defined] # isort: skip
+    _check_ieee_302_3ad_specific,)
 
 pytestmark = pytest.mark.checks
 

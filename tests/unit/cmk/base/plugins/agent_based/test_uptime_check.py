@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from tests.testlib import on_time
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-
 from cmk.base.plugins.agent_based import uptime
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils import uptime as uptime_utils
 
 # Mark all tests in this file as check related tests

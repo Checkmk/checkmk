@@ -7,15 +7,13 @@
 # pylint: disable=protected-access
 
 import pytest
+
 from tests.testlib import get_value_store_fixture
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    IgnoreResultsError,
-    Metric,
-    Result,
-    State as state,
-    type_defs,
-)
+
 from cmk.base.plugins.agent_based import aix_diskiod
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 
 value_store_fixture = get_value_store_fixture(aix_diskiod)
 

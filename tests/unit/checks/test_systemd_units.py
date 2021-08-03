@@ -5,8 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import collections
-from tests.testlib import Check
+
 import pytest
+
+from tests.testlib import Check
 
 pytestmark = pytest.mark.checks
 

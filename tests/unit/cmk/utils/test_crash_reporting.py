@@ -15,7 +15,7 @@ from typing import Any, Dict
 import pytest
 
 import cmk.utils.paths
-from cmk.utils.crash_reporting import ABCCrashReport, _format_var_for_export, CrashReportStore
+from cmk.utils.crash_reporting import _format_var_for_export, ABCCrashReport, CrashReportStore
 
 
 class UnitTestCrashReport(ABCCrashReport):

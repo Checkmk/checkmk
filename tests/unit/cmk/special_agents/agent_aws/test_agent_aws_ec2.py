@@ -8,27 +8,27 @@
 
 import pytest
 
-from .agent_aws_fake_clients import (
-    FakeCloudwatchClient,
-    FakeServiceQuotasClient,
-    EC2DescribeInstancesIB,
-    EC2DescribeReservedInstancesIB,
-    EC2DescribeAddressesIB,
-    EC2DescribeSecurityGroupsIB,
-    EC2DescribeNetworkInterfacesIB,
-    EC2DescribeSpotInstanceRequestsIB,
-    EC2DescribeSpotFleetRequestsIB,
-    EC2DescribeTagsIB,
-)
-
 from cmk.special_agents.agent_aws import (
     AWSConfig,
-    ResultDistributor,
-    EC2Limits,
-    EC2Summary,
-    EC2Labels,
-    EC2SecurityGroups,
     EC2,
+    EC2Labels,
+    EC2Limits,
+    EC2SecurityGroups,
+    EC2Summary,
+    ResultDistributor,
+)
+
+from .agent_aws_fake_clients import (
+    EC2DescribeAddressesIB,
+    EC2DescribeInstancesIB,
+    EC2DescribeNetworkInterfacesIB,
+    EC2DescribeReservedInstancesIB,
+    EC2DescribeSecurityGroupsIB,
+    EC2DescribeSpotFleetRequestsIB,
+    EC2DescribeSpotInstanceRequestsIB,
+    EC2DescribeTagsIB,
+    FakeCloudwatchClient,
+    FakeServiceQuotasClient,
 )
 
 

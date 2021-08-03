@@ -7,8 +7,8 @@
 import logging
 import os
 import subprocess
-from typing import NamedTuple
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 
@@ -19,9 +19,10 @@ import cmk.utils.log as log
 import cmk.utils.paths
 
 import cmk.snmplib.snmp_cache as snmp_cache
-from cmk.snmplib.type_defs import SNMPHostConfig, SNMPBackendEnum
+from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
 from cmk.core_helpers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
+
 try:
     from cmk.core_helpers.cee.snmp_backend.inline import InlineSNMPBackend
 except ImportError:

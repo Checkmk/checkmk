@@ -7,9 +7,9 @@ from typing import Any, Dict
 
 import pytest
 
-from cmk.base.plugins.agent_based.utils.container_cgroupv2 import parse_cpu, _check_cpu, CpuSection
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State, Metric, Result
 from cmk.base.api.agent_based.utils import GetRateError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.utils.container_cgroupv2 import _check_cpu, CpuSection, parse_cpu
 
 AGENT_OUTPUT = [
     ["uptime", "200716.86", "651734.60"],

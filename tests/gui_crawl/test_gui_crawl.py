@@ -11,13 +11,13 @@ import threading
 import time
 import traceback
 from typing import Set
-from urllib.parse import urlsplit, parse_qsl, urlunsplit, urljoin, urlencode
+from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 
 from bs4 import BeautifulSoup  # type: ignore[import]
 
 from tests.testlib.site import get_site_factory
-from tests.testlib.web_session import CMKWebSession
 from tests.testlib.version import CMKVersion
+from tests.testlib.web_session import CMKWebSession
 
 logger = logging.getLogger()
 

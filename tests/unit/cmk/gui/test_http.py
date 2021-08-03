@@ -8,13 +8,14 @@ import io
 import time
 
 import pytest
-
 from werkzeug.test import create_environ
-from cmk.gui.utils.script_helpers import application_and_request_context
 
 import cmk.gui.http as http
-from cmk.gui.globals import html, request as global_request, response
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html
+from cmk.gui.globals import request as global_request
+from cmk.gui.globals import response
+from cmk.gui.utils.script_helpers import application_and_request_context
 
 
 def test_http_request_allowed_vars():

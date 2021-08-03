@@ -7,6 +7,7 @@
 import pytest
 
 from tests.testlib import on_time
+
 from cmk.gui.plugins.metrics import artwork
 
 

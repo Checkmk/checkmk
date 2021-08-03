@@ -37,17 +37,18 @@ local variables 'parsed' or 'info'.
 """
 import base64
 import json
-from pathlib import Path
 import pprint
 import tarfile
+from pathlib import Path
 from typing import Any, Dict
 
 import pytest
 
-from .run import run
-from .regression import WritableDataset
 from tests.testlib import Check
+
 from ..checktestlib import CheckResult
+from .regression import WritableDataset
+from .run import run
 
 pytestmark = pytest.mark.checks
 

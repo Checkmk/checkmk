@@ -8,10 +8,12 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.globals import config
-from cmk.gui.globals import user
-from cmk.gui.utils.ntop import (is_ntop_available, is_ntop_configured,
-                                get_ntop_misconfiguration_reason)
+from cmk.gui.globals import config, user
+from cmk.gui.utils.ntop import (
+    get_ntop_misconfiguration_reason,
+    is_ntop_available,
+    is_ntop_configured,
+)
 
 
 @pytest.mark.usefixtures("load_config")

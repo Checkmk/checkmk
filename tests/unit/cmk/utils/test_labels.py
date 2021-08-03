@@ -7,8 +7,12 @@
 import pytest
 
 import cmk.utils.paths
-from cmk.utils.labels import (DiscoveredHostLabelsStore, get_updated_host_label_files,
-                              save_updated_host_label_files, get_host_labels_entry_of_host)
+from cmk.utils.labels import (
+    DiscoveredHostLabelsStore,
+    get_host_labels_entry_of_host,
+    get_updated_host_label_files,
+    save_updated_host_label_files,
+)
 
 # Manager is currently not tested explicitly. Indirect tests can be found
 # at tests/unit/cmk/base/test_config.py::test_host_config_labels*

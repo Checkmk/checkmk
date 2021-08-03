@@ -7,8 +7,6 @@
 import glob
 import logging
 import os
-from contextlib import suppress
-from pathlib import Path
 import pipes
 import pwd
 import shutil
@@ -16,21 +14,22 @@ import subprocess
 import sys
 import time
 import urllib.parse
-import pytest
-
+from contextlib import suppress
+from pathlib import Path
 from typing import Union
 
+import pytest
 from six import ensure_str
 
 from tests.testlib.utils import (
-    cmk_path,
-    cme_path,
     cmc_path,
-    virtualenv_path,
+    cme_path,
+    cmk_path,
     current_base_branch_name,
+    virtualenv_path,
 )
-from tests.testlib.web_session import CMKWebSession
 from tests.testlib.version import CMKVersion
+from tests.testlib.web_session import CMKWebSession
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +85,7 @@ class Site:
     @property
     def live(self):
         import livestatus  # pylint: disable=import-outside-toplevel,import-outside-toplevel
+
         # Note: If the site comes from a SiteFactory instance, the TCP connection
         # is insecure, i.e. no TLS.
         live = (livestatus.LocalConnection() if self._is_running_as_site_user() else

@@ -8,19 +8,15 @@
 
 import pytest
 
-from .agent_aws_fake_clients import (
-    FakeCloudwatchClient,
-    GlacierListVaultsIB,
-    GlacierVaultTaggingIB,
-)
-
 from cmk.special_agents.agent_aws import (
     AWSConfig,
-    ResultDistributor,
+    Glacier,
     GlacierLimits,
     GlacierSummary,
-    Glacier,
+    ResultDistributor,
 )
+
+from .agent_aws_fake_clients import FakeCloudwatchClient, GlacierListVaultsIB, GlacierVaultTaggingIB
 
 
 class FakeGlacierClient:

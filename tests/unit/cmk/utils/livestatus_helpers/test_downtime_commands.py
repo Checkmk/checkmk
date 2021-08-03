@@ -8,8 +8,8 @@ import datetime as dt
 import pytest
 import pytz
 
-from cmk.gui import sites
 import cmk.gui.livestatus_utils.commands.downtimes as downtimes
+from cmk.gui import sites
 
 
 @pytest.fixture(name='dates')

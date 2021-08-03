@@ -4,21 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import shutil
-import tarfile
 import ast
 import json
+import shutil
+import tarfile
 from io import BytesIO
 from pathlib import Path
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from six import ensure_str
 
-from _pytest.monkeypatch import MonkeyPatch
-
-from cmk.utils.i18n import _
-import cmk.utils.paths
 import cmk.utils.packaging as packaging
+import cmk.utils.paths
+from cmk.utils.i18n import _
 
 
 def _read_package_info(pacname: packaging.PackageName) -> packaging.PackageInfo:

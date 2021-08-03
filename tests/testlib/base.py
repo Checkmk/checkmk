@@ -4,14 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
 from pathlib import Path
+from typing import Dict
 
 from tests.testlib.utils import get_standard_linux_agent_output
 
-import cmk.base.config as config
-import cmk.base.autochecks as autochecks
 import cmk.utils.tags
+
+import cmk.base.autochecks as autochecks
+import cmk.base.config as config
 
 
 class Scenario:

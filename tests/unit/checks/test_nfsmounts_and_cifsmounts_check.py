@@ -5,15 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
-from tests.testlib import Check
+
 import pytest
+
+from tests.testlib import Check
+
 from .checktestlib import (
+    assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
     BasicCheckResult,
     CheckResult,
     DiscoveryResult,
     PerfValue,
-    assertCheckResultsEqual,
-    assertDiscoveryResultsEqual,
 )
 
 # since both nfsmounts and cifsmounts use the parse, inventory

@@ -4,15 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import argparse
-import pytest
 import logging
+import sys
+
+import pytest
+
+from tests.testlib import is_enterprise_repo
 
 from livestatus import SiteId
-from tests.testlib import is_enterprise_repo
+
 from cmk.post_rename_site import main
-from cmk.post_rename_site.registry import rename_action_registry, RenameActionRegistry, RenameAction
+from cmk.post_rename_site.registry import rename_action_registry, RenameAction, RenameActionRegistry
 
 
 @pytest.fixture(autouse=True)

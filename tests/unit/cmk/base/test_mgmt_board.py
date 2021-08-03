@@ -7,6 +7,7 @@
 # TODO: This should be realized as unit tests
 
 import pytest
+
 # No stub file
 from tests.testlib.base import Scenario
 

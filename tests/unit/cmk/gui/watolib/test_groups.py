@@ -7,6 +7,7 @@
 import pytest
 
 import cmk.utils.paths
+
 import cmk.gui.groups as gui_groups
 import cmk.gui.watolib.groups as groups
 from cmk.gui.utils.script_helpers import application_and_request_context

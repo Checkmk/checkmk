@@ -6,8 +6,8 @@
 
 # force loading of web API plugins
 import cmk.utils.version as cmk_version
-import cmk.gui.webapi  # noqa: F401 # pylint: disable=unused-import
 
+import cmk.gui.webapi  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.plugins.webapi.utils import api_call_collection_registry
 from cmk.gui.plugins.webapi.webapi import _format_missing_tags
 

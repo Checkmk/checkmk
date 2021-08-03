@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
+
 # pylint: disable=protected-access,redefined-outer-name
 import sys
-import copy
+
 import pytest
-from mock import patch, Mock
+from mock import Mock, patch
 from utils import import_module
 
 #   .--defines-------------------------------------------------------------.

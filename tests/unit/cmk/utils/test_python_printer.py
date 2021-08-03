@@ -6,7 +6,9 @@
 
 import sys
 from typing import List
+
 import pytest
+
 from cmk.utils.python_printer import pformat
 
 

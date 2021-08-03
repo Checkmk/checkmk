@@ -8,12 +8,12 @@ import pytest
 
 from cmk.utils.type_defs import UserId
 
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
-from cmk.gui.userdb import on_access, on_succeeded_login
+import cmk.gui.login as login
 from cmk.gui.globals import session
+from cmk.gui.userdb import on_access, on_succeeded_login
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.script_helpers import application_and_request_context
-import cmk.gui.login as login
 
 
 @pytest.fixture(name="user_id")

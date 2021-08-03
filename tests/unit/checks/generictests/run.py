@@ -6,14 +6,10 @@
 """Submodule providing the `run` function of generictests package"""
 from ast import literal_eval
 from contextlib import contextmanager
+
 import freezegun
 
-from ..checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
-                         CheckResult, assertCheckResultsEqual, \
-                         MockHostExtraConf, mock_item_state, \
-                         Immutables, assertEqual
-from tests.testlib import MissingCheckInfoError, Check
-from .checkhandler import checkhandler
+from tests.testlib import Check, MissingCheckInfoError
 
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName
@@ -21,6 +17,18 @@ from cmk.utils.type_defs import CheckPluginName
 from cmk.base.api.agent_based import value_store
 from cmk.base.check_utils import Service
 from cmk.base.plugin_contexts import current_host, current_service
+
+from ..checktestlib import (
+    assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
+    assertEqual,
+    CheckResult,
+    DiscoveryResult,
+    Immutables,
+    mock_item_state,
+    MockHostExtraConf,
+)
+from .checkhandler import checkhandler
 
 # TODO CMK-4180
 #from cmk.gui.watolib.rulespecs import rulespec_registry

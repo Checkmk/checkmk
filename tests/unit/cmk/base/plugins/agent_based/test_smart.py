@@ -12,7 +12,6 @@ import pytest
 from cmk.base.plugins.agent_based import smart
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
-
 STRING_TABLE_SD = [
     [
         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'5', u'Reallocated_Sector_Ct', u'0x0033', u'100',

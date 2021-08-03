@@ -4,13 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 import pytest
-from cmk.base.plugins.agent_based.utils.cpu import Section, Load
+
+from cmk.base.api.agent_based.checking_classes import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
 from cmk.base.plugins.agent_based.cpu import parse_cpu
 from cmk.base.plugins.agent_based.cpu_threads import check_cpu_threads, discover_cpu_threads
-from cmk.base.api.agent_based.checking_classes import State, Metric, Result
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
+from cmk.base.plugins.agent_based.utils.cpu import Load, Section
 
 
 def test_cpu_threads():

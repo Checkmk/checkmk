@@ -6,16 +6,13 @@
 
 import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.cisco_wlc import (
-    parse_cisco_wlc,
-    discovery_cisco_wlc,
     check_cisco_wlc,
     cluster_check_cisco_wlc,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Result,
-    Service,
-    State as state,
+    discovery_cisco_wlc,
+    parse_cisco_wlc,
 )
 
 

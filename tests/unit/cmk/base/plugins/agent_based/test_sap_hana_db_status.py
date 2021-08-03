@@ -6,8 +6,14 @@
 
 import pytest
 
-from cmk.utils.type_defs import SectionName, CheckPluginName
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service, IgnoreResultsError
+from cmk.utils.type_defs import CheckPluginName, SectionName
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Result,
+    Service,
+    State,
+)
 
 
 @pytest.mark.parametrize("info, expected_result", [(

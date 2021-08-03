@@ -5,14 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from pathlib import Path
 from contextlib import ExitStack
+from pathlib import Path
+
 import pytest
 
-from cmk.special_agents.agent_proxmox_ve import (
-    BackupTask,
-    collect_vm_backup_info,
-)
+from cmk.special_agents.agent_proxmox_ve import BackupTask, collect_vm_backup_info
 
 
 @pytest.mark.parametrize("logfile, expected_results, expected_exception", (

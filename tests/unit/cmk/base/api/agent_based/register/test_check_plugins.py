@@ -10,7 +10,7 @@ from typing import Any, Dict
 
 import pytest
 
-from cmk.utils.type_defs import ParsedSectionName, CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, ParsedSectionName
 
 import cmk.base.api.agent_based.register.check_plugins as check_plugins
 

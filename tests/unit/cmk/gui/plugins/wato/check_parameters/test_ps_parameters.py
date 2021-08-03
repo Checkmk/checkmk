@@ -5,15 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.plugins.wato.check_parameters.cpu_utilization import transform_cpu_iowait
 from cmk.gui.plugins.wato.check_parameters.ps import (
+    convert_inventory_processes,
     CPU_RESCALE_MAX_UNSPEC,
     forbid_re_delimiters_inside_groups,
-    convert_inventory_processes,
     ps_cleanup_params,
     validate_process_discovery_descr_option,
 )
-from cmk.gui.plugins.wato.check_parameters.cpu_utilization import transform_cpu_iowait
 
 
 @pytest.mark.parametrize('pattern', ["(test)$", 'foo\\b', '^bar', '\\bfoo\\b', '(a)\\b'])

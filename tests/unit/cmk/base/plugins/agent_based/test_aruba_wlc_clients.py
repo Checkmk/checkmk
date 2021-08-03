@@ -4,14 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, List
+from typing import List, Optional
 
 import pytest
 
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils.wlc_clients import WlcClientsSection, ClientsTotal, VsResult
 from cmk.base.plugins.agent_based.aruba_wlc_clients import parse_aruba_wlc_clients
+from cmk.base.plugins.agent_based.utils.wlc_clients import ClientsTotal, VsResult, WlcClientsSection
 from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
 
 # raw data looks like this:

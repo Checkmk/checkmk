@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
+
 import cmk.gui.cron as cron
 
 

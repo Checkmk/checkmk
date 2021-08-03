@@ -6,10 +6,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.if_brocade_lancom import (
-    parse_if_brocade_lancom,
-    parse_if_lancom,
-)
+from cmk.base.plugins.agent_based.if_brocade_lancom import parse_if_brocade_lancom, parse_if_lancom
 
 
 @pytest.mark.parametrize("if_table,name_map,port_map,ignore,expected_results", [
@@ -183,6 +180,7 @@ if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
     import os
+
     from tests.testlib.utils import cmk_path
     assert not pytest.main([
         "--doctest-modules",

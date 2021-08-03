@@ -8,10 +8,10 @@ import pytest
 
 import cmk.utils.version
 
-from cmk.gui.globals import config
 import cmk.gui.metrics as metrics
-from cmk.gui.type_defs import Perfdata
+from cmk.gui.globals import config
 from cmk.gui.plugins.metrics import utils
+from cmk.gui.type_defs import Perfdata
 
 
 @pytest.mark.parametrize("data_string, result", [

@@ -6,15 +6,17 @@
 
 import os
 import re  # noqa: F401 # pylint: disable=unused-import
-import pytest
 
-from .checktestlib import CheckResult, assertCheckResultsEqual
-from cmk.base.check_api import (  # noqa: F401 # pylint: disable=unused-import
-    get_bytes_human_readable, check_levels,
-)
+import pytest
 
 import cmk.base.check_legacy_includes.diskstat
 from cmk.base.check_legacy_includes.diskstat import *
+
+from .checktestlib import assertCheckResultsEqual, CheckResult
+
+from cmk.base.check_api import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    check_levels, get_bytes_human_readable,
+)
 
 pytestmark = pytest.mark.checks
 

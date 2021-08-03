@@ -6,8 +6,8 @@
 
 import pytest
 
-from cmk.gui.globals import html, user, local, config
 import cmk.gui.main
+from cmk.gui.globals import config, html, local, user
 
 
 def test_get_start_url_default(request_context):

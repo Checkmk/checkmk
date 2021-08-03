@@ -6,12 +6,13 @@
 
 import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.f5_bigip_vcmpguests import (
-    parse_f5_bigip_vcmpguests,
     check_f5_bigip_vcmpguests,
     cluster_check_f5_bigip_vcmpguests,
+    parse_f5_bigip_vcmpguests,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State as state
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [

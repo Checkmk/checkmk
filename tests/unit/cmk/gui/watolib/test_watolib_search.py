@@ -5,7 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from contextlib import contextmanager
-
 from typing import Iterator
 
 import pytest
@@ -30,16 +29,15 @@ from cmk.gui.watolib.search import (
     IndexNotFoundException,
     IndexSearcher,
     localize,
-)
-from cmk.gui.watolib.search import (
-    match_item_generator_registry as real_match_item_generator_registry,)
-from cmk.gui.watolib.search import (
     MatchItem,
     MatchItemGeneratorRegistry,
     MatchItems,
     PermissionsHandler,
     URLChecker,
 )
+
+from cmk.gui.watolib.search import (  # isort: skip
+    match_item_generator_registry as real_match_item_generator_registry,)
 
 
 @pytest.fixture(scope='function')

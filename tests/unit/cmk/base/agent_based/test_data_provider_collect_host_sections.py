@@ -24,15 +24,14 @@ from cmk.core_helpers import (
     SNMPFetcher,
     TCPFetcher,
 )
+from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.protocol import FetcherMessage
 from cmk.core_helpers.type_defs import Mode, NO_SELECTION
 
 import cmk.base.config as config
-from cmk.core_helpers.host_sections import HostSections
+from cmk.base.agent_based.data_provider import _collect_host_sections
 from cmk.base.sources import make_nodes, make_sources, Source
 from cmk.base.sources.agent import AgentHostSections
-from cmk.base.agent_based.data_provider import _collect_host_sections
-
 from cmk.base.sources.piggyback import PiggybackSource
 from cmk.base.sources.programs import ProgramSource
 from cmk.base.sources.snmp import SNMPSource

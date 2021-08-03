@@ -6,7 +6,9 @@
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_docker_container_labels import (
-    inventory_docker_container_labels, parse_docker_container_labels)
+    inventory_docker_container_labels,
+    parse_docker_container_labels,
+)
 
 AGENT_OUTPUT = (
     '@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}\n'

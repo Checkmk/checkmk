@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-import cmk.gui.plugins.metrics.graph_templates as gt
+
 import cmk.gui.metrics as metrics
+import cmk.gui.plugins.metrics.graph_templates as gt
 
 
 @pytest.mark.parametrize("expression, enforced_consolidation_function, result", [

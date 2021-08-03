@@ -14,10 +14,10 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base import check_api
 import cmk.base.config as config
-from cmk.base.check_utils import Service
 import cmk.base.plugin_contexts as plugin_contexts
+from cmk.base import check_api
+from cmk.base.check_utils import Service
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])

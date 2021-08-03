@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 import cmk.base.plugins.agent_based.hr_mem as hr_mem
 
 
@@ -117,6 +118,7 @@ if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
     import os
+
     from tests.testlib.utils import cmk_path
     assert not pytest.main(
         ["--doctest-modules",

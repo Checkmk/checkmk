@@ -6,8 +6,8 @@
 
 import pytest
 
-from cmk.gui.utils.html import HTML
 from cmk.gui.utils import escaping
+from cmk.gui.utils.html import HTML
 
 
 def test_escape_html() -> None:

@@ -6,26 +6,22 @@
 
 # pylint: disable=redefined-outer-name
 
-import pytest
-
 from datetime import datetime as dt
-from .agent_aws_fake_clients import (
-    FakeCloudwatchClient,
-    S3ListBucketsIB,
-    S3BucketTaggingIB,
-)
 
-from cmk.special_agents.agent_aws import (
-    AWSConfig,
-    ResultDistributor,
-    S3Limits,
-    S3Summary,
-    S3,
-    S3Requests,
-)
+import pytest
 
 # Needed to monkeypatch agent_aws.NOW
 from cmk.special_agents import agent_aws
+from cmk.special_agents.agent_aws import (
+    AWSConfig,
+    ResultDistributor,
+    S3,
+    S3Limits,
+    S3Requests,
+    S3Summary,
+)
+
+from .agent_aws_fake_clients import FakeCloudwatchClient, S3BucketTaggingIB, S3ListBucketsIB
 
 
 class FakeS3Client:

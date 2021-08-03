@@ -4,14 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 import typing
 
+import pytest
+
 from cmk.base.plugins.agent_based.utils.docker import (
-    parse,
-    parse_multiline,
     _cleanup_oci_error_message,
     MemorySection,
+    parse,
+    parse_multiline,
 )
 
 

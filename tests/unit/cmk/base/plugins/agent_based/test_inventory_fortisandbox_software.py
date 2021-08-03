@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.inventory_fortisandbox_software import (
     inventory_fortisandbox_software,
     parse_fortisandbox_software,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 SECTION = [
     ('Tracer engine', '5.2.50534'),

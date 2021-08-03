@@ -6,10 +6,7 @@
 
 import pytest
 
-from cmk.special_agents.agent_aws import (
-    AWSSectionsGeneric,
-    AWSSectionResult,
-)
+from cmk.special_agents.agent_aws import AWSSectionResult, AWSSectionsGeneric
 
 
 class TestAWSSections:

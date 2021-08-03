@@ -4,16 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 import freezegun
+import pytest
 
 from cmk.base.plugins.agent_based import kernel
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    Service,
-    State,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 SECTION: kernel.Section = (11238, {
     'Context Switches': [('ctxt', 539210403)],

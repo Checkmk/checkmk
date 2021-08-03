@@ -4,8 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Result, State, Metric
-
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, State
 from cmk.base.plugins.agent_based.postgres_query_duration import (
     check_postgres_query_duration,
     cluster_check_postgres_query_duration,

@@ -6,11 +6,12 @@
 
 import pytest
 
-import cmk.gui.dashboard
 import cmk.utils.version as cmk_version
+
+import cmk.gui.dashboard
 import cmk.gui.dashboard as dashboard
-from cmk.gui.globals import html
 from cmk.gui.config import builtin_role_ids
+from cmk.gui.globals import html
 
 
 class DummyDashlet(dashboard.Dashlet):

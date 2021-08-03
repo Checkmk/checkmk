@@ -4,13 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_aws_fake_clients import (
-    CEGetCostsAndUsageIB,)
+from .agent_aws_fake_clients import CEGetCostsAndUsageIB  # type: ignore[import] # pylint: disable=import-error # isort: skip
 
-from cmk.special_agents.agent_aws import (
-    AWSConfig,
-    CostsAndUsage,
-)
+from cmk.special_agents.agent_aws import AWSConfig, CostsAndUsage
 
 
 class FakeCEClient:

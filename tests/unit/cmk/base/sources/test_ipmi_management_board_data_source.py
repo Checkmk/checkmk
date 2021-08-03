@@ -10,8 +10,8 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import result, SourceType
 
-from cmk.core_helpers.type_defs import Mode
 from cmk.core_helpers.ipmi import IPMISummarizer
+from cmk.core_helpers.type_defs import Mode
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

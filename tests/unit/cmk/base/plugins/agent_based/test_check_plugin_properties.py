@@ -8,12 +8,13 @@ from collections import defaultdict
 from itertools import chain
 from typing import Dict, Generator, Sequence, Set, Tuple
 
+from tests.testlib.base import Scenario
+
 from cmk.utils.type_defs import ParsedSectionName
+
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin, SNMPSectionPlugin
 from cmk.base.plugin_contexts import current_host
-
-from tests.testlib.base import Scenario
 
 
 def _section_permutations(

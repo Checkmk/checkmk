@@ -4,17 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import time
-import json
 import ast
-import re
+import json
 import logging
+import os
+import re
+import time
 import urllib.parse
 
-from bs4 import BeautifulSoup  # type: ignore[import]
-
 import requests
+from bs4 import BeautifulSoup  # type: ignore[import]
 
 
 class APIError(Exception):

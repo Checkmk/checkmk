@@ -4,24 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Iterable,
-    Tuple,
-)
-from cmk.gui.plugins.watolib.utils import (
-    ConfigVariable,
-    ConfigVariableGroup,
-)
+from typing import Iterable, Tuple
+
+from cmk.gui.plugins.watolib.utils import ConfigVariable, ConfigVariableGroup
+from cmk.gui.valuespec import TextInput, ValueSpec
 from cmk.gui.wato.pages.global_settings import (
     ABCConfigDomain,
     MatchItemGeneratorSettings,
     ModeEditGlobals,
 )
 from cmk.gui.watolib.search import MatchItem
-from cmk.gui.valuespec import (
-    TextInput,
-    ValueSpec,
-)
 
 
 def test_match_item_generator_settings(monkeypatch, request_context):

@@ -13,8 +13,9 @@ import pytest
 import tests.testlib as testlib
 
 import cmk.utils.paths
-import cmk.base.config as config
+
 import cmk.base.check_utils
+import cmk.base.config as config
 
 
 def _search_deprecated_api_feature(check_file_path, deprecated_pattern):

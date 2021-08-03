@@ -8,7 +8,6 @@
 import re
 
 import astroid  # type: ignore[import]
-
 from pylint.checkers import BaseChecker, utils  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
 

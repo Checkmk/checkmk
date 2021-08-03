@@ -8,6 +8,7 @@
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import CheckPluginName
+
 from cmk.base.api.agent_based.value_store._global_state import (
     get_value_store,
     load_host_value_store,

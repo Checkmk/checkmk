@@ -7,8 +7,8 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-from tests.testlib.web_session import CMKWebSession
 from tests.testlib.event_console import CMKEventConsole
+from tests.testlib.web_session import CMKWebSession
 
 
 @pytest.fixture(scope="module")

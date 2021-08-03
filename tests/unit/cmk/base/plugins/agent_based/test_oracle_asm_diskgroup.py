@@ -5,18 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from tests.testlib import on_time
+
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.api.agent_based import value_store
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    State as state,
-    Result,
-    Metric,
-    IgnoreResults,
-)
 import cmk.base.plugins.agent_based.oracle_asm_diskgroup as oracle_asm_diskgroup
+from cmk.base.api.agent_based import value_store
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 NOW_SIMULATED = 581792400, "UTC"
 

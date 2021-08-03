@@ -6,10 +6,12 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 from __future__ import print_function
+
+import locale
 import os
 import re
 import sys
-import locale
+
 import pytest
 from utils import import_module
 

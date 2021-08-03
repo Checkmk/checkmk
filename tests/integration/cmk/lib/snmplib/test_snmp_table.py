@@ -13,12 +13,7 @@ from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import (
-    BackendSNMPTree,
-    BackendOIDSpec,
-    SpecialColumn,
-    SNMPBackendEnum,
-)
+from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPBackendEnum, SpecialColumn
 
 INFO_TREE = BackendSNMPTree(
     base=".1.3.6.1.2.1.1",
@@ -34,7 +29,9 @@ INFO_TREE = BackendSNMPTree(
 # https://github.com/pytest-dev/pytest/issues/363
 @pytest.fixture(scope="module")
 def monkeymodule(request):
-    from _pytest.monkeypatch import MonkeyPatch  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    from _pytest.monkeypatch import (
+        MonkeyPatch,  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    )
     mpatch = MonkeyPatch()
     yield mpatch
     mpatch.undo()

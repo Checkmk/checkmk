@@ -22,7 +22,9 @@ import cmk.snmplib.snmp_modes as snmp_modes
 # https://github.com/pytest-dev/pytest/issues/363
 @pytest.fixture(scope="module")
 def monkeymodule(request):
-    from _pytest.monkeypatch import MonkeyPatch  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    from _pytest.monkeypatch import (
+        MonkeyPatch,  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    )
     mpatch = MonkeyPatch()
     yield mpatch
     mpatch.undo()

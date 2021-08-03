@@ -7,6 +7,7 @@
 # pylint: disable=redefined-outer-name
 import os
 import re
+
 import pytest
 
 import omdlib

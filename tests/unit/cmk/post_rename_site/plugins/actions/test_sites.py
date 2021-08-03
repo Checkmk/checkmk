@@ -7,9 +7,12 @@
 from pathlib import Path
 
 from livestatus import SiteId
+
 import cmk.utils.paths
-from cmk.post_rename_site.plugins.actions.sites import update_site_config
+
 from cmk.gui.watolib.sites import SiteManagementFactory
+
+from cmk.post_rename_site.plugins.actions.sites import update_site_config
 
 
 def _write_site_config(config: dict) -> None:

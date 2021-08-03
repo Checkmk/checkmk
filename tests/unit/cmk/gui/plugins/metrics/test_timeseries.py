@@ -6,8 +6,9 @@
 
 import pytest
 
-import cmk.gui.plugins.metrics.timeseries as ts
 from cmk.utils.exceptions import MKGeneralException
+
+import cmk.gui.plugins.metrics.timeseries as ts
 
 
 @pytest.mark.parametrize("args", [

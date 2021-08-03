@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import os
+import time
+
 import pytest
-import cmk.utils.paths
+
 import cmk.utils.log
+import cmk.utils.paths
 import cmk.utils.piggyback as piggyback
 
 piggyback_max_cachefile_age = 3600

@@ -7,9 +7,9 @@ import re
 
 import pytest
 
+import cmk.base.api.agent_based.utils as utils
 from cmk.base.api.agent_based.register.section_plugins import _validate_detect_spec
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
-import cmk.base.api.agent_based.utils as utils
 
 
 def _test_atomic_relation(relation_name, value, testcases):

@@ -8,21 +8,21 @@
 
 import pytest
 
-from .agent_aws_fake_clients import (
-    FakeCloudwatchClient,
-    EC2DescribeInstancesIB,
-    EC2DescribeVolumesIB,
-    EC2DescribeSnapshotsIB,
-    EC2DescribeVolumeStatusIB,
-)
-
 from cmk.special_agents.agent_aws import (
     AWSConfig,
-    ResultDistributor,
-    EC2Summary,
+    EBS,
     EBSLimits,
     EBSSummary,
-    EBS,
+    EC2Summary,
+    ResultDistributor,
+)
+
+from .agent_aws_fake_clients import (
+    EC2DescribeInstancesIB,
+    EC2DescribeSnapshotsIB,
+    EC2DescribeVolumesIB,
+    EC2DescribeVolumeStatusIB,
+    FakeCloudwatchClient,
 )
 
 

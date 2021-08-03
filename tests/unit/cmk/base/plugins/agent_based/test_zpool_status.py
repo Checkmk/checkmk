@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based import zpool_status
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 
 
 @pytest.mark.parametrize("string_table", [None])

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import livestatus
+
 from cmk.gui import sites
 
 

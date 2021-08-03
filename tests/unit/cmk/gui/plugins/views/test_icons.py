@@ -4,11 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 import pytest
 
 import cmk.utils.version as cmk_version
+
 import cmk.gui.views
 
 if not cmk_version.is_raw_edition():

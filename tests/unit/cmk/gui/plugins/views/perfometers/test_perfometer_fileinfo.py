@@ -7,8 +7,7 @@
 import pytest
 
 from cmk.gui.htmllib import HTML
-from cmk.gui.plugins.views.perfometers.check_mk import (
-    perfometer_fileinfo_groups,)
+from cmk.gui.plugins.views.perfometers.check_mk import perfometer_fileinfo_groups
 
 
 @pytest.mark.parametrize("perf_data, expected_result", [

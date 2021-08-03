@@ -5,18 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
-import freezegun
-import pytest
 from typing import Any, MutableMapping
 
-from cmk.base.plugins.agent_based.utils import temperature
+import freezegun
+import pytest
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     GetRateError,
-    Result,
-    Metric,
-    State as state,
     IgnoreResultsError,
+    Metric,
+    Result,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.utils import temperature
 
 UNIQUE_NAME = "unique_name"
 

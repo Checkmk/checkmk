@@ -4,21 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, MutableMapping
+
 import pytest
 from pytest_mock import MockerFixture
-from typing import MutableMapping, Any
+
 from tests.testlib import get_value_store_fixture
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    IgnoreResultsError,
-    Metric,
-    Result,
-    State as state,
-    type_defs,
-)
+
 from cmk.utils.type_defs import CheckPluginName
-from cmk.base.check_utils import Service
+
 from cmk.base import plugin_contexts
+from cmk.base.check_utils import Service
 from cmk.base.plugins.agent_based import diskstat
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 
 value_store_fixture = get_value_store_fixture(diskstat)
 

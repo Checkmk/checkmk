@@ -8,15 +8,10 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    State as state,
-    Result,
-    Metric,
-)
-
-from cmk.base.api.agent_based.type_defs import Parameters
 import cmk.base.plugins.agent_based.livestatus_status as livestatus_status
+from cmk.base.api.agent_based.type_defs import Parameters
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 STRING_TABLE_STATUS = [
     ['[heute]'],

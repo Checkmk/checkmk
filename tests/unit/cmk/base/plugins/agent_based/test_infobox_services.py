@@ -6,13 +6,14 @@
 
 import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.infoblox_services import (
-    parse_infoblox_services,
-    discovery_infoblox_services,
     check_infoblox_services,
     cluster_check_infoblox_services,
+    discovery_infoblox_services,
+    parse_infoblox_services,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, Result, State as state
 
 example_snmp_string_table = [[
     ['9', '1', 'Running'],

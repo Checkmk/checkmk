@@ -6,10 +6,11 @@
 
 import time
 from pathlib import Path
+
 import pytest
 
 import omdlib.tmpfs
-from omdlib.tmpfs import add_to_fstab, unmount_tmpfs, restore_tmpfs_dump
+from omdlib.tmpfs import add_to_fstab, restore_tmpfs_dump, unmount_tmpfs
 from omdlib.utils import delete_directory_contents
 
 

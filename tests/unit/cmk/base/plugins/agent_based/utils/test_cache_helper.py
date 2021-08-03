@@ -4,12 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 import re
 import time
-from cmk.base.plugins.agent_based.utils import cache_helper
-from cmk.gui.plugins.views.utils import render_cache_info
+
+import pytest
 from freezegun import freeze_time
+
+from cmk.base.plugins.agent_based.utils import cache_helper
+
+from cmk.gui.plugins.views.utils import render_cache_info
 
 NOW_SIMULATED = "2021-06-08 17:02:00.000000"
 

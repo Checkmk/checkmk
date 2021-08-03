@@ -8,12 +8,8 @@ import json
 
 import pytest
 
-from cmk.snmplib.type_defs import (
-    BackendOIDSpec,
-    BackendSNMPTree,
-    SNMPDetectSpec,
-    SpecialColumn,
-)
+from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPDetectSpec, SpecialColumn
+
 from cmk.base.api.agent_based.type_defs import OIDSpecTuple
 
 

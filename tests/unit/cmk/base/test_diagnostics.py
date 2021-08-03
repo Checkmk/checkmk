@@ -4,17 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-from pathlib import Path
-import shutil
 import collections
-import requests
+import json
+import shutil
+from pathlib import Path
+
 import pytest
+import requests
 
 import livestatus
 
-import cmk.utils.paths
 import cmk.utils.packaging as packaging
+import cmk.utils.paths
 
 import cmk.base.diagnostics as diagnostics
 

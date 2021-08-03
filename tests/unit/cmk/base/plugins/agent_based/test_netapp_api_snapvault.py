@@ -5,15 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.netapp_api_snapvault import (
-    parse_netapp_api_snapvault,
-    discover_netapp_api_snapvault,
     check_netapp_api_snapvault,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Result,
-    State,
-    Service,
+    discover_netapp_api_snapvault,
+    parse_netapp_api_snapvault,
 )
 
 

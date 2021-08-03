@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 from cmk.base.plugins.agent_based.inv_oracle_tablespaces import inventory_oracle_tablespaces
 from cmk.base.plugins.agent_based.utils.oracle import OraErrors, SectionTableSpaces
-from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 Section: SectionTableSpaces = {
     'error_sids': {

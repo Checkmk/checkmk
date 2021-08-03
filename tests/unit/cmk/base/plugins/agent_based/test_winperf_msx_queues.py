@@ -7,12 +7,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based import winperf_msx_queues
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Result,
-    Metric,
-    Service,
-    State,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 ZERO_INSTANCES_INFO = [
     ['12947176002.19'],

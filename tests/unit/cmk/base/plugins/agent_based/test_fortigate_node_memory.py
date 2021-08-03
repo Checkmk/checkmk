@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based import fortigate_node_memory as fortigate_memory
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service, Metric
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 
 @pytest.mark.parametrize(

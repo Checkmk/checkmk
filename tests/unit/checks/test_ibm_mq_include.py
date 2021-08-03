@@ -14,8 +14,8 @@ import pytest
 from cmk.base.check_api import MKCounterWrapped
 from cmk.base.check_legacy_includes.ibm_mq import (
     ibm_mq_check_version,
-    parse_runmqsc_display_output,
     is_ibm_mq_service_vanished,
+    parse_runmqsc_display_output,
 )
 
 pytestmark = pytest.mark.checks

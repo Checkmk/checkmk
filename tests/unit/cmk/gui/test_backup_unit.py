@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 import cmk.utils.paths
+
 import cmk.gui.backup as backup
 import cmk.gui.wato as wato
 

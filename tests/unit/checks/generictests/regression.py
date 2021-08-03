@@ -63,14 +63,14 @@ B. Update all or one selected test to match the current status quo
 
 """
 import ast
-from importlib import import_module
 import os
-from pathlib import Path
-import pytest
 import sys
 import time
+from importlib import import_module
+from pathlib import Path
 from typing import Any, Iterable
 
+import pytest
 import yapf  # type: ignore[import]
 
 from .run import run

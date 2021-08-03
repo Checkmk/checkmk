@@ -6,7 +6,6 @@
 
 import pytest
 
-from cmk.base.check_api import OID_END, OID_STRING
 from cmk.snmplib.type_defs import SpecialColumn
 
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
@@ -14,6 +13,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
     _create_snmp_trees_from_tuple,
 )
 from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPTree
+from cmk.base.check_api import OID_END, OID_STRING
 
 DATA_2X2 = [["1", "2"], ["3", "4"]]
 

@@ -7,19 +7,17 @@
 # pylint: disable=protected-access
 
 import re
-
 from typing import Dict, List
 
 import pytest
+
 # No stub file
 from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
-
-from cmk.base import config
-from cmk.base import check_table
+from cmk.base import check_table, config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.check_utils import Service
 

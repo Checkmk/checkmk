@@ -5,9 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.type_defs import CheckPluginName, EVERYTHING
-from cmk.base.check_utils import Service
 
 from cmk.base.agent_based.discovery._discovered_services import _analyse_discovered_services
+from cmk.base.check_utils import Service
 
 
 def _service(plugin_name: str, item: str) -> Service:

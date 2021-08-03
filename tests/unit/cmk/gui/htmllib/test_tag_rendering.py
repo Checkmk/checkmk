@@ -6,13 +6,13 @@
 
 import pytest
 
-from cmk.gui.utils.html import HTML
 from cmk.gui.htmllib._tag_rendering import (
-    render_start_tag,
-    render_end_tag,
-    render_element,
     normalize_css_spec,
+    render_element,
+    render_end_tag,
+    render_start_tag,
 )
+from cmk.gui.utils.html import HTML
 
 
 def test_render_start_tag_no_attributes():

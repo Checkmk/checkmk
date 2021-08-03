@@ -6,13 +6,14 @@
 
 from pathlib import Path
 
+from tests.testlib.base import Scenario
+
 import cmk.utils.crash_reporting
-import cmk.base.crash_reporting as crash_reporting
-import cmk.base.check_api as check_api
-import cmk.base.config as config
 import cmk.utils.version as cmk_version
 
-from tests.testlib.base import Scenario
+import cmk.base.check_api as check_api
+import cmk.base.config as config
+import cmk.base.crash_reporting as crash_reporting
 
 
 def test_base_crash_report_registry():

@@ -6,11 +6,11 @@
 
 # pylint: disable=redefined-outer-name
 
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
 from flask_babel.speaklater import LazyString  # type: ignore[import]
-from dataclasses import asdict
 
 from tests.testlib import is_enterprise_repo, is_managed_repo
 

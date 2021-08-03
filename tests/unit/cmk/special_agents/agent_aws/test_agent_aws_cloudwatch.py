@@ -6,16 +6,16 @@
 
 # pylint: disable=redefined-outer-name
 
-import pytest
 from typing import List, Optional, Tuple
-from .agent_aws_fake_clients import (
-    FakeCloudwatchClient,)
+
+import pytest
+from .agent_aws_fake_clients import FakeCloudwatchClient  # type: ignore[import] # pylint: disable=import-error # isort: skip
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
-    ResultDistributor,
-    CloudwatchAlarmsLimits,
     CloudwatchAlarms,
+    CloudwatchAlarmsLimits,
+    ResultDistributor,
 )
 
 

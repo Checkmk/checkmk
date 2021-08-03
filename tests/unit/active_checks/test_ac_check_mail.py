@@ -6,8 +6,10 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 import email
-import pytest
 from argparse import Namespace as Args
+
+import pytest
+
 from tests.testlib import import_module
 
 from cmk.utils.mailbox import _active_check_main_core

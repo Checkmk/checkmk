@@ -4,21 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import tarfile
 import io
 import logging
+import tarfile
 from pathlib import Path
 
 import pytest
 
-import cmk.gui.watolib.utils
+import tests.testlib as testlib
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+
 import cmk.gui.watolib.activate_changes as activate_changes
+import cmk.gui.watolib.utils
 from cmk.gui.watolib.activate_changes import ConfigSyncFileInfo
 from cmk.gui.watolib.config_sync import ReplicationPath
-
-import tests.testlib as testlib
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 logger = logging.getLogger(__name__)

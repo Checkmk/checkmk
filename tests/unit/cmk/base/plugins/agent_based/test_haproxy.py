@@ -4,14 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import mock
-import pytest
 from time import time
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Metric, Service
-from cmk.base.plugins.agent_based.haproxy import (parse_haproxy, discover_haproxy_frontend,
-                                                  discover_haproxy_server, check_haproxy_frontend,
-                                                  check_haproxy_server, Section)
+import mock
+import pytest
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.haproxy import (
+    check_haproxy_frontend,
+    check_haproxy_server,
+    discover_haproxy_frontend,
+    discover_haproxy_server,
+    parse_haproxy,
+    Section,
+)
 
 
 @pytest.mark.parametrize("info, expected_parsed", [((

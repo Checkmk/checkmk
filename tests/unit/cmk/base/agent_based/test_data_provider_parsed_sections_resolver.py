@@ -8,17 +8,13 @@
 
 from typing import Iterable, Sequence, Set, Tuple
 
-#import pytest
-
 from cmk.utils.type_defs import ParsedSectionName, SectionName
 
-from cmk.base.agent_based.data_provider import (
-    ParsedSectionsResolver,
-    ParsingResult,
-    ResolvedResult,
-)
+from cmk.base.agent_based.data_provider import ParsedSectionsResolver, ParsingResult, ResolvedResult
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 from cmk.base.api.agent_based.type_defs import SectionPlugin
+
+#import pytest
 
 
 def _section(name: str, parsed_section_name: str, supersedes: Set[str]) -> SectionPlugin:

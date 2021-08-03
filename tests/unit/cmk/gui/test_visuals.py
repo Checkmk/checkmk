@@ -10,12 +10,13 @@ from typing import Any, Dict
 import pytest
 
 import cmk.utils.version as cmk_version
-from cmk.gui.globals import request
-import cmk.gui.plugins.visuals.utils as utils
+
 import cmk.gui.plugins.visuals
+import cmk.gui.plugins.visuals.filters
+import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.views
 import cmk.gui.visuals as visuals
-import cmk.gui.plugins.visuals.filters
+from cmk.gui.globals import request
 
 
 def test_get_filter():

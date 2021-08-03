@@ -7,6 +7,7 @@
 # pylint: disable=redefined-outer-name
 
 import pytest
+
 from cmk.special_agents.agent_bi import AggregationData
 
 legacy_response_example = {

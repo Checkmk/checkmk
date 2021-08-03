@@ -6,53 +6,59 @@
 
 # yapf: disable
 from typing import Any, Dict
+
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    Result,
-    Metric,
-    IgnoreResults,
-    State as state,
-)
-
-from cmk.base.plugins.agent_based.mssql_counters_section import parse_mssql_counters
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.mssql_counters_cache_hits import (
-    discovery_mssql_counters_cache_hits,
     check_mssql_counters_cache_hits,
     cluster_check_mssql_counters_cache_hits,
+    discovery_mssql_counters_cache_hits,
 )
 from cmk.base.plugins.agent_based.mssql_counters_file_sizes import (
-    discovery_mssql_counters_file_sizes,
     check_mssql_counters_file_sizes,
     cluster_check_mssql_counters_file_sizes,
+    discovery_mssql_counters_file_sizes,
+)
+from cmk.base.plugins.agent_based.mssql_counters_locks import _check_base as check_locks_base
+from cmk.base.plugins.agent_based.mssql_counters_locks import (
+    _cluster_check_base as cluster_check_locks_base,
+)
+from cmk.base.plugins.agent_based.mssql_counters_locks import discovery_mssql_counters_locks
+from cmk.base.plugins.agent_based.mssql_counters_locks_per_batch import (
+    _check_base as check_locks_per_batch_base,
+)
+from cmk.base.plugins.agent_based.mssql_counters_locks_per_batch import (
+    _cluster_check_base as cluster_check_locks_per_batch_base,
 )
 from cmk.base.plugins.agent_based.mssql_counters_locks_per_batch import (
     discovery_mssql_counters_locks_per_batch,
-    _check_base as check_locks_per_batch_base,
-    _cluster_check_base as cluster_check_locks_per_batch_base,
 )
-from cmk.base.plugins.agent_based.mssql_counters_locks import (
-    discovery_mssql_counters_locks,
-    _check_base as check_locks_base,
-    _cluster_check_base as cluster_check_locks_base,
+from cmk.base.plugins.agent_based.mssql_counters_pageactivity import (
+    _check_base as check_pageactivity_base,
+)
+from cmk.base.plugins.agent_based.mssql_counters_pageactivity import (
+    _cluster_check_base as cluster_check_pageactivity_base,
 )
 from cmk.base.plugins.agent_based.mssql_counters_pageactivity import (
     discovery_mssql_counters_pageactivity,
-    _check_base as check_pageactivity_base,
-    _cluster_check_base as cluster_check_pageactivity_base,
 )
+from cmk.base.plugins.agent_based.mssql_counters_section import parse_mssql_counters
+from cmk.base.plugins.agent_based.mssql_counters_sqlstats import _check_base as check_sqlstats_base
 from cmk.base.plugins.agent_based.mssql_counters_sqlstats import (
-    discovery_mssql_counters_sqlstats,
-    _check_base as check_sqlstats_base,
     _cluster_check_base as cluster_check_sqlstats_base,
+)
+from cmk.base.plugins.agent_based.mssql_counters_sqlstats import discovery_mssql_counters_sqlstats
+from cmk.base.plugins.agent_based.mssql_counters_transactions import (
+    _check_base as check_transactions_base,
+)
+from cmk.base.plugins.agent_based.mssql_counters_transactions import (
+    _cluster_check_base as cluster_check_transactions_base,
 )
 from cmk.base.plugins.agent_based.mssql_counters_transactions import (
     discovery_mssql_counters_transactions,
-    _check_base as check_transactions_base,
-    _cluster_check_base as cluster_check_transactions_base,
 )
-
 
 ValueStore = Dict[str, Any]
 

@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 import json
+
+import pytest
+
 import cmk.utils.paths
-from cmk.gui.utils.theme import Theme, theme_choices
+
 from cmk.gui.globals import theme
+from cmk.gui.utils.theme import Theme, theme_choices
 
 
 @pytest.fixture(name="theme_dirs")

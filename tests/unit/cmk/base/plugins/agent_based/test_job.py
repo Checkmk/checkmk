@@ -6,18 +6,15 @@
 
 from copy import copy
 from typing import List, Union
+
 import pytest
 
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import job
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    clusterize,
-    Result,
-    State as state,
-    Metric,
-    type_defs,
-)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import clusterize, Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 
 SECTION_1: job.Section = {
     'SHREK': {

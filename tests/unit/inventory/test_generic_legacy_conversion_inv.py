@@ -3,15 +3,14 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import pytest
-
 from pathlib import Path
+
+import pytest
 
 from cmk.utils.type_defs import InventoryPluginName
 
-from cmk.base.api.agent_based.inventory_classes import Attributes
-
 import cmk.base.api.agent_based.register as agent_based_register
+from cmk.base.api.agent_based.inventory_classes import Attributes
 
 pytestmark = pytest.mark.checks
 

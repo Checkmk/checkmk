@@ -6,8 +6,11 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.kaspersky_av_updates import parse_kaspersky_av_updates, check_kaspersky_av_updates
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.kaspersky_av_updates import (
+    check_kaspersky_av_updates,
+    parse_kaspersky_av_updates,
+)
 
 
 @pytest.mark.parametrize("string_table,expected_section", [

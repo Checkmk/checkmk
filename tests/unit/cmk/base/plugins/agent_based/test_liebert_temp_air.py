@@ -9,20 +9,20 @@ import typing
 import freezegun
 import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    IgnoreResultsError,
+    Metric,
+    Result,
+    Service,
+)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.liebert_temp_air import (
-    parse_liebert_temp_air,
-    discover_liebert_temp_air,
     _check_liebert_temp_air,
+    discover_liebert_temp_air,
+    parse_liebert_temp_air,
 )
 from cmk.base.plugins.agent_based.utils.temperature import TempParamDict, TrendComputeDict
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Result,
-    State as state,
-    Service,
-    Metric,
-    IgnoreResultsError,
-)
 
 STRING_TABLE = [[[
     'Return Air Temperature',

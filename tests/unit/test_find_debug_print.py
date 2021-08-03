@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import os
 import re
-import logging
+
 import pytest
-from tests.testlib import cmk_path, cmc_path, cme_path
+
+from tests.testlib import cmc_path, cme_path, cmk_path
 
 LOGGER = logging.getLogger()
 

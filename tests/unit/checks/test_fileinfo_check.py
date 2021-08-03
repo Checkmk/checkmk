@@ -1,13 +1,15 @@
+from collections import namedtuple
+
 import pytest
 
-from collections import namedtuple
 from tests.testlib import Check
+
 from .checktestlib import (
-    CheckResult,
-    BasicCheckResult,
-    PerfValue,
     assertCheckResultsEqual,
+    BasicCheckResult,
+    CheckResult,
     MockHostExtraConf,
+    PerfValue,
 )
 
 pytestmark = pytest.mark.checks

@@ -8,8 +8,8 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.proxmox_ve_vm_info import (
-    parse_proxmox_ve_vm_info,
     check_proxmox_ve_vm_info,
+    parse_proxmox_ve_vm_info,
 )
 
 VM_DATA = parse_proxmox_ve_vm_info([[

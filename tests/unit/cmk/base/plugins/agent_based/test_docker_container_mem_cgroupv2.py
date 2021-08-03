@@ -4,8 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.docker_container_mem_cgroupv2 import parse_docker_container_mem_cgroupv2
 from cmk.base.plugins.agent_based.docker_container_mem import parse_docker_container_mem
+from cmk.base.plugins.agent_based.docker_container_mem_cgroupv2 import (
+    parse_docker_container_mem_cgroupv2,  # yapf: disable
+)
 
 # 16GB RAM
 AGENT_OUTPUT_NO_LIMIT = """anon 5406720

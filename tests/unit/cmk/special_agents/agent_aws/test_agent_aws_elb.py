@@ -8,22 +8,22 @@
 
 import pytest
 
-from .agent_aws_fake_clients import (
-    FakeCloudwatchClient,
-    ELBDescribeLoadBalancersIB,
-    ELBDescribeTagsIB,
-    ELBDescribeInstanceHealthIB,
-    ELBDescribeAccountLimitsIB,
-)
-
 from cmk.special_agents.agent_aws import (
     AWSConfig,
-    ResultDistributor,
+    ELB,
+    ELBHealth,
+    ELBLabelsGeneric,
     ELBLimits,
     ELBSummaryGeneric,
-    ELBLabelsGeneric,
-    ELBHealth,
-    ELB,
+    ResultDistributor,
+)
+
+from .agent_aws_fake_clients import (
+    ELBDescribeAccountLimitsIB,
+    ELBDescribeInstanceHealthIB,
+    ELBDescribeLoadBalancersIB,
+    ELBDescribeTagsIB,
+    FakeCloudwatchClient,
 )
 
 

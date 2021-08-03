@@ -10,9 +10,10 @@ from pathlib import Path
 
 import pytest
 
-import cmk.gui.watolib.utils
 import cmk.utils.tags as tags
+
 import cmk.gui.watolib.tags
+import cmk.gui.watolib.utils
 from cmk.gui.watolib.tags import TagConfigFile
 
 

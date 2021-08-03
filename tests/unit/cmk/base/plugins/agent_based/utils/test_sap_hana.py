@@ -4,16 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 from typing import Dict
 
+import pytest
+
+from cmk.utils.type_defs import CheckPluginName, SectionName
+
 from cmk.base.api.agent_based import register
-from cmk.utils.type_defs import SectionName, CheckPluginName
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service
-from cmk.base.plugins.agent_based.utils.sap_hana import get_cluster_check, get_cluster_check_with_params
-from cmk.base.plugins.agent_based.sap_hana_replication_status import check_sap_hana_replication_status
-from cmk.base.plugins.agent_based.sap_hana_instance_status import (InstanceStatus, InstanceProcess,
-                                                                   check_sap_hana_instance_status)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.sap_hana_instance_status import (
+    check_sap_hana_instance_status,
+    InstanceProcess,
+    InstanceStatus,
+)
+from cmk.base.plugins.agent_based.sap_hana_replication_status import (
+    check_sap_hana_replication_status,  # yapf: disable
+)
+from cmk.base.plugins.agent_based.utils.sap_hana import (
+    get_cluster_check,
+    get_cluster_check_with_params,
+)
 
 
 @pytest.mark.parametrize("item, section, expected_result", [(

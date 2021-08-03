@@ -12,7 +12,7 @@ from typing import Dict, List
 
 import pytest
 
-from tests.testlib import web, create_linux_test_host  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import create_linux_test_host, web  # noqa: F401 # pylint: disable=unused-import
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
 

@@ -6,9 +6,9 @@
 
 # pylint: disable=protected-access
 
-import cmk.base.api.agent_based.register as agent_based_register
-
 from cmk.utils.type_defs import CheckPluginName
+
+import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 
 

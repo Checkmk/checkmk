@@ -6,12 +6,10 @@
 
 from typing import Iterable
 
-from cmk.gui.watolib.search import MatchItem
-from cmk.ec.export import (
-    ECRulePack,
-    MkpRulePackProxy,
-)
+from cmk.ec.export import ECRulePack, MkpRulePackProxy
+
 from cmk.gui.wato.mkeventd import MatchItemGeneratorECRulePacksAndRules
+from cmk.gui.watolib.search import MatchItem
 
 
 def test_match_item_generator_ec_rule_packs_and_rules():

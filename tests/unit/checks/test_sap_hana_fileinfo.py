@@ -4,14 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 import collections
 
+import pytest
+
 from tests.testlib import Check
-from .checktestlib import MockHostExtraConf
+
 from cmk.utils.type_defs import CheckPluginName
+
 from cmk.base.item_state import MKCounterWrapped
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Metric
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+
+from .checktestlib import MockHostExtraConf
 
 FileinfoItem = collections.namedtuple("FileinfoItem", "name missing failed size time")
 

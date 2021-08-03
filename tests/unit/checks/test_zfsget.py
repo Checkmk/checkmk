@@ -5,8 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from tests.testlib import Check
-from .checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, assertEqual
+
+from .checktestlib import assertDiscoveryResultsEqual, assertEqual, DiscoveryResult
 
 pytestmark = pytest.mark.checks
 

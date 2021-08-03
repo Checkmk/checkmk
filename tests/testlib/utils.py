@@ -8,11 +8,11 @@
 
 import logging
 import os
-from pathlib import Path
 import pwd
 import re
 import subprocess
 import sys
+from pathlib import Path
 from typing import List
 
 logger = logging.getLogger()

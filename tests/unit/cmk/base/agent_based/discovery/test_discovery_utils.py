@@ -8,7 +8,7 @@ import time
 
 import pytest
 
-from cmk.base.agent_based.discovery.utils import QualifiedDiscovery, TimeLimitFilter, DiscoveryMode
+from cmk.base.agent_based.discovery.utils import DiscoveryMode, QualifiedDiscovery, TimeLimitFilter
 
 
 class TestDiscoveryMode:

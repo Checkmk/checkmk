@@ -6,13 +6,13 @@
 """Is executed in container from git top level as working directory to install
 the desired Checkmk version"""
 
-import os
-import sys
-import logging
-import subprocess
 import abc
-from typing import List, Optional, Dict
+import logging
+import os
+import subprocess
+import sys
 from pathlib import Path
+from typing import Dict, List, Optional
 
 import requests
 
@@ -20,11 +20,11 @@ import requests
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from tests.testlib.utils import (
-    current_base_branch_name,
     add_python_paths,
+    current_base_branch_name,
+    get_cmk_download_credentials,
 )
 from tests.testlib.version import CMKVersion
-from tests.testlib.utils import get_cmk_download_credentials
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')
 logger = logging.getLogger()

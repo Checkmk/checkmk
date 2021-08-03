@@ -6,17 +6,22 @@
 
 # pylint: disable=redefined-outer-name
 
-import sys
 import os
 import subprocess
+import sys
+
 import pytest
 import requests
 import requests.exceptions
-import docker  # type: ignore[import]
 
 import tests.testlib as testlib
-from tests.testlib.utils import (cmk_path, get_cmk_download_credentials_file,
-                                 get_cmk_download_credentials)
+from tests.testlib.utils import (
+    cmk_path,
+    get_cmk_download_credentials,
+    get_cmk_download_credentials_file,
+)
+
+import docker  # type: ignore[import]
 
 build_path = os.path.join(testlib.repo_path(), "docker")
 image_prefix = "docker-tests"

@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Mapping, Optional
 import os
 import socket
+from typing import Dict, Mapping, Optional
 
 import pytest
 
@@ -196,8 +196,9 @@ def test_filecache_beats_failing_lookup(monkeypatch):
 # tests/unit/cmk/base/conftest.py::clear_config_caches() then cares about this.
 @pytest.fixture(autouse=True, scope="function")
 def clear_config_caches_ip_lookup(monkeypatch):
-    from cmk.utils.caching import (  # pylint: disable=import-outside-toplevel
-        config_cache as _config_cache,)
+    from cmk.utils.caching import (
+        config_cache as _config_cache,  # pylint: disable=import-outside-toplevel
+    )
     from cmk.utils.caching import runtime_cache as _runtime_cache
     _config_cache.clear()
     _runtime_cache.clear()

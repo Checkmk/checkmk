@@ -10,13 +10,14 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.log import logger
 from cmk.utils.type_defs import SectionName
+
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import (
-    SNMPBackend,
     BackendOIDSpec,
     BackendSNMPTree,
-    SNMPHostConfig,
+    SNMPBackend,
     SNMPBackendEnum,
+    SNMPHostConfig,
     SpecialColumn,
 )
 

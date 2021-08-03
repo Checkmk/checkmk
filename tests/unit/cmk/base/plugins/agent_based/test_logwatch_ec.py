@@ -6,9 +6,9 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.logwatch_section import parse_logwatch
 from cmk.base.plugins.agent_based import logwatch_ec
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
+from cmk.base.plugins.agent_based.logwatch_section import parse_logwatch
 
 pytestmark = pytest.mark.checks
 

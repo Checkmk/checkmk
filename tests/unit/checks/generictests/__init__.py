@@ -64,4 +64,4 @@ Some more advanced ones are
 """
 from .checkhandler import checkhandler
 from .run import run
-from .utils import DATASET_NAMES, DATASET_FILES
+from .utils import DATASET_FILES, DATASET_NAMES

@@ -6,9 +6,10 @@
 
 import pytest
 
-from cmk.utils.type_defs import SectionName, CheckPluginName
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service
-from cmk.base.plugins.agent_based.sap_hana_instance_status import InstanceStatus, InstanceProcess
+from cmk.utils.type_defs import CheckPluginName, SectionName
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.sap_hana_instance_status import InstanceProcess, InstanceStatus
 
 
 @pytest.mark.parametrize("info, expected_result", [

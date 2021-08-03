@@ -7,6 +7,7 @@
 from tests.testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
+
 import cmk.base.automations
 import cmk.base.automations.check_mk as automations
 import cmk.base.config as config

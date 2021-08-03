@@ -4,13 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 import pytest
+
 from tests.testlib import SpecialAgent
 
 from cmk.base.config import SpecialAgentInfoFunctionResult
-from cmk.special_agents.agent_kubernetes import parse_arguments, get_api_client
+
+from cmk.special_agents.agent_kubernetes import get_api_client, parse_arguments
 
 pytestmark = pytest.mark.checks
 

@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Metric
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.proxmox_ve_disk_usage import check_proxmox_ve_disk_usage
 
 DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
@@ -79,6 +79,7 @@ if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
     import os
+
     from tests.testlib.utils import cmk_path
     assert not pytest.main([
         "--doctest-modules",

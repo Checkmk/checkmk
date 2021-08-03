@@ -4,15 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict
+
 import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    Service,
-    State,
-)
 from cmk.base.plugins.agent_based import apache_status
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 
 def make_agent_output_1():

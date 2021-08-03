@@ -4,22 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
 # pylint: disable=protected-access
 from typing import List, Union
 
-from cmk.utils.structured_data import StructuredDataNode, RetentionIntervals
+import pytest
+
+from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode
 
 from cmk.base.agent_based import inventory
-from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-
 from cmk.base.agent_based.inventory._retentions import (
-    RetentionsTracker,
-    RetentionInfo,
     AttributesUpdater,
+    RetentionInfo,
+    RetentionsTracker,
     TableUpdater,
 )
+from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 
 
 def test_aggregator_raises_collision():

@@ -6,22 +6,11 @@
 
 # pylint: disable=redefined-outer-name
 
+from typing import Any, Generator, Mapping, Sequence, Tuple
+
 import pytest
-from _pytest.monkeypatch import MonkeyPatch  # type: ignore[import] # pylint: disable=import-outside-toplevel
-from typing import (
-    Any,
-    Generator,
-    Mapping,
-    Sequence,
-    Tuple,
-)
-from .agent_aws_fake_clients import (
-    FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,
-    FakeCloudwatchClient,
-    FakeCloudwatchClientLogsClient,
-    LambdaListFunctionsIB,
-    LambdaListProvisionedConcurrencyConfigsIB,
-    LambdaListTagsInstancesIB,
+from _pytest.monkeypatch import (
+    MonkeyPatch,  # type: ignore[import] # pylint: disable=import-outside-toplevel
 )
 
 from cmk.special_agents.agent_aws import (
@@ -32,6 +21,15 @@ from cmk.special_agents.agent_aws import (
     LambdaProvisionedConcurrency,
     LambdaRegionLimits,
     LambdaSummary,
+)
+
+from .agent_aws_fake_clients import (
+    FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,
+    FakeCloudwatchClient,
+    FakeCloudwatchClientLogsClient,
+    LambdaListFunctionsIB,
+    LambdaListProvisionedConcurrencyConfigsIB,
+    LambdaListTagsInstancesIB,
 )
 
 

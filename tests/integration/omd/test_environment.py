@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
+
 from cmk.utils.paths import mkbackup_lock_dir
 
 

@@ -8,8 +8,7 @@ from typing import Mapping, Tuple, Union
 
 import pytest
 
-from cmk.gui.plugins.wato.check_parameters.msx_queues import (
-    transform_msx_queues_inventory,)
+from cmk.gui.plugins.wato.check_parameters.msx_queues import transform_msx_queues_inventory
 
 CUSTOMIZED_QUEUES = [('Custom queue', 56)]
 

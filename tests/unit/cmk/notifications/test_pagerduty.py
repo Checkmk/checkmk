@@ -6,10 +6,7 @@
 
 import pytest
 
-from cmk.notification_plugins.pagerduty import (
-    _notification_source_from_context,
-    pagerduty_msg,
-)
+from cmk.notification_plugins.pagerduty import _notification_source_from_context, pagerduty_msg
 
 
 @pytest.mark.parametrize(

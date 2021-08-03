@@ -6,8 +6,12 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.ups_out_load import parse_ups_load, discovery_ups, check_ups_out_load
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Service, Metric
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.ups_out_load import (
+    check_ups_out_load,
+    discovery_ups,
+    parse_ups_load,
+)
 
 
 @pytest.mark.parametrize("info, expected_result", [

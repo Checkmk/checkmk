@@ -6,8 +6,9 @@
 
 # pylint: disable=protected-access
 
-from cmk.base.plugins.agent_based.utils.logwatch import reclassify
 from typing import Counter
+
+from cmk.base.plugins.agent_based.utils.logwatch import reclassify
 
 
 def test_logwatch_reclassify(monkeypatch):

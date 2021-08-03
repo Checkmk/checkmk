@@ -8,6 +8,7 @@ import io
 import tarfile
 
 import cmk.utils.crash_reporting
+
 import cmk.gui.crash_reporting as crash_reporting
 
 

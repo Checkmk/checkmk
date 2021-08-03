@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 from datetime import datetime
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State, Metric
 
+import pytest
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.proxmox_ve_backup_status import (
     check_proxmox_ve_vm_backup_status,
     parse_proxmox_ve_vm_backup_status,
@@ -197,6 +198,7 @@ if __name__ == "__main__":
     # Please keep these lines - they make TDD easy and have no effect on normal test runs.
     # Just run this file from your IDE and dive into the code.
     import os
+
     from tests.testlib.utils import cmk_path
     assert not pytest.main([
         "--doctest-modules",

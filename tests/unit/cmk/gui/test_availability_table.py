@@ -1,7 +1,7 @@
 import pytest
 
-from cmk.gui.availability import layout_availability_table
 import cmk.gui.availability as availability
+from cmk.gui.availability import layout_availability_table
 
 
 @pytest.mark.parametrize("what, group_title, availability_table, avoptions, result", [

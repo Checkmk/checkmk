@@ -10,7 +10,7 @@ import uuid
 
 import pytest
 
-from cmk.gui.plugins.openapi.fields import FolderField, FOLDER_PATTERN
+from cmk.gui.plugins.openapi.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.plugins.openapi.utils import BaseSchema
 
 

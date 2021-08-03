@@ -8,19 +8,13 @@
 
 import pytest
 
+from cmk.special_agents.agent_aws import AWSConfig, RDS, RDSLimits, RDSSummary, ResultDistributor
+
 from .agent_aws_fake_clients import (
     FakeCloudwatchClient,
-    RDSDescribeDBInstancesIB,
     RDSDescribeAccountAttributesIB,
+    RDSDescribeDBInstancesIB,
     RDSListTagsForResourceIB,
-)
-
-from cmk.special_agents.agent_aws import (
-    AWSConfig,
-    ResultDistributor,
-    RDSLimits,
-    RDSSummary,
-    RDS,
 )
 
 

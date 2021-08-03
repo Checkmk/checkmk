@@ -6,6 +6,7 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 import pytest
+
 from tests.testlib import import_module  # pylint: disable=import-error
 
 

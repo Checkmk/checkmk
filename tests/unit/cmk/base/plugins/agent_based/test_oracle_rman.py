@@ -6,14 +6,14 @@
 
 import pytest
 
+from cmk.base.plugins.agent_based import oracle_rman
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
     IgnoreResultsError,
     Metric,
     Result,
-    State as state,
+    Service,
 )
-from cmk.base.plugins.agent_based import oracle_rman
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 
 def get_parsed_section() -> oracle_rman.SectionOracleRman:

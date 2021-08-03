@@ -4,15 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import copy
-import socket
-import shutil
 import logging
+import shutil
+import socket
 from pathlib import Path
-from unittest import mock
 from typing import Any, Mapping, NamedTuple
+from unittest import mock
 
-from fakeredis import FakeRedis  # type: ignore[import]
 import pytest
+from fakeredis import FakeRedis  # type: ignore[import]
+
+from tests.testlib import is_enterprise_repo, is_managed_repo
+from tests.testlib.debug_utils import cmk_debug_enabled
+
 import livestatus
 
 import cmk.utils.paths
@@ -25,10 +29,7 @@ from cmk.utils.site import omd_site
 # to have the default permissions loaded before that to fix some implicit dependencies.
 # TODO: Extract the livestatus mock to some other place to reduce the dependencies here.
 import cmk.gui.default_permissions
-
 from cmk.gui.livestatus_utils.testing import mock_livestatus
-from tests.testlib import is_managed_repo, is_enterprise_repo
-from tests.testlib.debug_utils import cmk_debug_enabled
 
 logger = logging.getLogger(__name__)
 

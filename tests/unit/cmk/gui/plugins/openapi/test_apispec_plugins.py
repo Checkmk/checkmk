@@ -5,11 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
-
 from apispec import APISpec  # type: ignore[import]
-from marshmallow import Schema, fields, post_load
+from marshmallow import fields, post_load, Schema
 
-from cmk.gui.plugins.openapi.plugins import ValueTypedDictSchema, ValueTypedDictMarshmallowPlugin
+from cmk.gui.plugins.openapi.plugins import ValueTypedDictMarshmallowPlugin, ValueTypedDictSchema
 
 
 class Movie:

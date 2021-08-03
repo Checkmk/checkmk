@@ -6,20 +6,21 @@
 
 import base64
 import copy
-from io import BytesIO
 import json
 import os
 import subprocess
 import sys
 import time
+from io import BytesIO
 from typing import Any, Dict, List
 
 import pytest
 from PIL import Image  # type: ignore[import]
 
-import cmk.utils.version as cmk_version
-from tests.testlib import web, APIError, wait_until  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import APIError, wait_until, web  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.utils import get_standard_linux_agent_output
+
+import cmk.utils.version as cmk_version
 
 
 @pytest.fixture(name="local_test_hosts")

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from cmk.base.plugins.agent_based.mem import parse_proc_meminfo_bytes
 
 

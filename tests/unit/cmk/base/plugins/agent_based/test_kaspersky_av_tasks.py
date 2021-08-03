@@ -6,8 +6,11 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.kaspersky_av_tasks import check_kaspersky_av_tasks, parse_kaspersky_av_tasks
-from cmk.base.plugins.agent_based.agent_based_api.v1 import State, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.kaspersky_av_tasks import (
+    check_kaspersky_av_tasks,
+    parse_kaspersky_av_tasks,
+)
 
 
 @pytest.mark.parametrize("string_table,expected_result", [([["UnnamedValue:", "Value"]], dict())])

@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_amperage  # type: ignore[attr-defined]
+# type: ignore[attr-defined]
+from cmk.base.check_legacy_includes.dell_poweredge import check_dell_poweredge_amperage
+
 # mypy can not handle globals ignore in dell_poweredge https://github.com/python/mypy/issues/9318
 
 

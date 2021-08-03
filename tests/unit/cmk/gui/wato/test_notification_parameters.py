@@ -4,11 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.gui.plugins.wato.utils as utils
+
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.gui.wato
-import cmk.gui.plugins.wato.utils as utils
-from cmk.gui.valuespec import Dictionary
 import cmk.gui.watolib.rulespecs as rulespecs
+from cmk.gui.valuespec import Dictionary
 
 expected_plugins = [
     'asciimail',

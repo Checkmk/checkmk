@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from dataclasses import asdict
-from datetime import datetime
 import json
 import time
+from dataclasses import asdict
+from datetime import datetime
 
 import pytest
 
@@ -16,7 +16,9 @@ from cmk.utils.exceptions import MKGeneralException
 
 from cmk.base import prediction
 
-from tests.testlib import web, repo_path, create_linux_test_host, on_time  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    create_linux_test_host, on_time, repo_path, web,
+)
 
 
 @pytest.fixture(name="cfg_setup", scope="module")

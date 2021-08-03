@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.wato.bi_valuespecs import _convert_bi_rule_to_vs, _convert_bi_rule_from_vs
 import pytest
 from pytest import param
+
+from cmk.gui.plugins.wato.bi_valuespecs import _convert_bi_rule_from_vs, _convert_bi_rule_to_vs
 
 
 # This test covers the outermost TransformValuespec

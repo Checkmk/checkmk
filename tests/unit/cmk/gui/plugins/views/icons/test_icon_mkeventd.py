@@ -4,9 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-import cmk.gui.plugins.views.icons as icons
 from typing import Dict, List, NamedTuple
+
+import pytest
+
+import cmk.gui.plugins.views.icons as icons
 import cmk.gui.plugins.views.icons.mkeventd as mkeventd_icon
 
 IconRenderArgs = NamedTuple("IconRenderArgs", [

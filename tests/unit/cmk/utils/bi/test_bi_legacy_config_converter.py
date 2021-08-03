@@ -4,13 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
+
 import pytest
 
 import cmk.utils.bi.bi_legacy_config_converter
-from .bi_test_data import sample_config
-import logging
 
 from cmk.gui.utils.script_helpers import application_and_request_context
+
+from .bi_test_data import sample_config  # type: ignore[import] # pylint: disable=import-error
 
 
 def test_bi_legacy_config_conversion(monkeypatch):

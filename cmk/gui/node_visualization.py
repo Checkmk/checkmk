@@ -8,7 +8,7 @@ import itertools
 import json
 import time
 from dataclasses import asdict, dataclass, field
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, TypedDict
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Type, TypedDict
 
 import livestatus
 
@@ -75,13 +75,13 @@ class TopologySettingsJSON(TopologySettings):
     @classmethod
     def from_json(cls, serialized: Dict[str, Any]) -> "TopologySettingsJSON":
         for key in ["growth_root_nodes", "growth_forbidden_nodes", "growth_continue_nodes"]:
-            serialized[key] = set(serialized[key])
+            serialized[key] = {HostName(hn) for hn in serialized[key]}
         return cls(**serialized)
 
     def to_json(self) -> Dict[str, Any]:
         value = asdict(self)
         for key in ["growth_root_nodes", "growth_forbidden_nodes", "growth_continue_nodes"]:
-            value[key] = list(value[key])
+            value[key] = list(map(str, value[key]))
         return value
 
 
@@ -141,9 +141,9 @@ class ParentChildTopologyPage(Page):
         # If no explicit site is set and the number of initially displayed hosts
         # exceeds the auto growth range, only the hosts of the master site are shown
         if len(hosts) > max_nodes:
-            hostnames = {x[1] for x in hosts if x[0] == omd_site()}
+            hostnames = {HostName(x[1]) for x in hosts if x[0] == omd_site()}
         else:
-            hostnames = {x[1] for x in hosts}
+            hostnames = {HostName(x[1]) for x in hosts}
 
         return hostnames
 
@@ -155,7 +155,7 @@ class ParentChildTopologyPage(Page):
             query += "\n%s" % filter_headers
 
         with sites.only_sites(request.var("site")):
-            return {x[0] for x in sites.live().query(query)}
+            return {HostName(x[0]) for x in sites.live().query(query)}
 
     def show_topology(self, topology_settings: TopologySettings) -> None:
         visual_spec = ParentChildTopologyPage.visual_spec()
@@ -548,17 +548,27 @@ class AjaxFetchTopology(AjaxPage):
 
 
 class _MeshNode(TypedDict, total=False):
-    name: str
+    name: HostName
     alias: str
     site: str
-    hostname: str
-    outgoing: List[str]
-    incoming: List[str]
-    node_type: str
+    hostname: HostName
+    outgoing: List[HostName]
+    incoming: List[HostName]
+    # 2021-08-03: Not entirely sure, so if mypy complains,
+    #             feel free to change it back to str
+    node_type: Literal["topology", "topology_center", "topology_site"]
     mesh_depth: int
     icon_image: str
     state: int
     has_been_checked: bool
+
+    has_no_parents: bool
+    growth_root: bool
+    growth_possible: bool
+    growth_forbidden: bool
+    growth_continue: bool
+    children: List  # List["_MeshNode"]
+    explicit_force_options: Dict[str, int]
 
 
 class Topology:
@@ -567,7 +577,7 @@ class Topology:
         self._settings = topology_settings
 
         # Hosts with complete data
-        self._known_hosts: Dict[str, _MeshNode] = {}
+        self._known_hosts: Dict[HostName, _MeshNode] = {}
 
         # Child/parent hosts at the depth boundary
         self._border_hosts: Set[HostName] = set()
@@ -583,7 +593,7 @@ class Topology:
     def title(self) -> str:
         raise NotImplementedError()
 
-    def get_info_for_host(self, hostname: HostName, mesh: Mesh) -> Dict[str, Any]:
+    def get_info_for_host(self, hostname: HostName, mesh: Mesh) -> _MeshNode:
         return {
             "name": hostname,  # Used as node text in GUI
             "hostname": hostname,
@@ -599,12 +609,12 @@ class Topology:
             return None
         return self._known_hosts[hostname].get("icon_image")
 
-    def get_host_incoming(self, hostname: HostName) -> List[str]:
+    def get_host_incoming(self, hostname: HostName) -> List[HostName]:
         if hostname not in self._known_hosts:
             return []
         return self._known_hosts[hostname]["incoming"]
 
-    def get_host_outgoing(self, hostname: HostName) -> List[str]:
+    def get_host_outgoing(self, hostname: HostName) -> List[HostName]:
         if hostname not in self._known_hosts:
             return []
         return self._known_hosts[hostname]["outgoing"]
@@ -690,16 +700,16 @@ class Topology:
 
     def _growth_to_parents(self) -> None:
         while True:
-            combined_mesh = set()
+            combined_mesh: Set[HostName] = set()
             for mesh in self._meshes:
                 combined_mesh.update(mesh)
 
             combined_mesh -= self._border_hosts
-            all_parents: Set[str] = set()
+            all_parents: Set[HostName] = set()
             for node_name in combined_mesh:
                 all_parents.update(set(self._known_hosts[node_name]["outgoing"]))
 
-            missing_parents = all_parents - combined_mesh
+            missing_parents: Set[HostName] = all_parents - combined_mesh
             if not missing_parents:
                 break
 
@@ -712,7 +722,7 @@ class Topology:
             if not growth_nodes:
                 break
 
-            border_hosts = set()
+            border_hosts: Set[HostName] = set()
             for node_name in growth_nodes:
                 border_hosts.update(set(self._known_hosts[node_name]["incoming"]))
                 border_hosts.update(set(self._known_hosts[node_name]["outgoing"]))
@@ -834,12 +844,12 @@ class ParentChildNetworkTopology(Topology):
 
         return [{
             "site": str(x[0]),
-            "name": str(x[1]),
+            "name": HostName(str(x[1])),
             "state": int(x[2]),
             "alias": str(x[3]),
             "icon_image": str(x[4]),
-            "outgoing": [str(i) for i in x[5]],
-            "incoming": [str(i) for i in x[6]],
+            "outgoing": [HostName(str(i)) for i in x[5]],
+            "incoming": [HostName(str(i)) for i in x[6]],
             "has_been_checked": bool(x[7]),
         } for x in query_result]
 
@@ -847,18 +857,18 @@ class ParentChildNetworkTopology(Topology):
         """ Create a central node and add all monitoring sites as childs """
 
         central_node: _MeshNode = {
-            "name": "",
-            "hostname": "Checkmk",
+            "name": HostName(""),
+            "hostname": HostName("Checkmk"),
             "outgoing": [],
             "incoming": [],
             "node_type": "topology_center",
         }
 
-        site_nodes: Dict[str, _MeshNode] = {}
+        site_nodes: Dict[HostName, _MeshNode] = {}
         for mesh in meshes:
             for node_name in mesh:
                 site = self._known_hosts[node_name]["site"]
-                site_node_name = _("Site %s") % site
+                site_node_name = HostName(_("Site %s") % site)
                 site_nodes.setdefault(site_node_name, {
                     "node_type": "topology_site",
                     "outgoing": [central_node["name"]],
@@ -873,7 +883,7 @@ class ParentChildNetworkTopology(Topology):
         central_node["incoming"] = list(site_nodes.keys())
         self._known_hosts[central_node["name"]] = central_node
 
-        combinator_mesh = set(central_node["name"])  # this is an empty set?!
+        combinator_mesh: Set[HostName] = set()
         for node_name, settings in site_nodes.items():
             self._known_hosts[node_name] = settings
             combinator_mesh.add(node_name)
@@ -884,20 +894,15 @@ class ParentChildNetworkTopology(Topology):
 
         return meshes
 
-    def get_info_for_host(self, hostname: HostName, mesh: Mesh) -> Dict[str, Any]:
+    def get_info_for_host(self, hostname: HostName, mesh: Mesh) -> _MeshNode:
         info = super().get_info_for_host(hostname, mesh)
         host_info = self._known_hosts[hostname]
         info.update(host_info)
-        for key in ["childs", "parents"]:
-            try:
-                del info[key]
-            except KeyError:
-                pass
 
         if "node_type" not in info:
             info["node_type"] = "topology"
 
-        info["state"] = self._map_host_state_to_service_state(info, host_info)
+        info["state"] = self._map_host_state_to_service_state(info)
 
         if info["node_type"] == "topology_center":
             info["explicit_force_options"] = {"repulsion": -3000, "center_force": 200}
@@ -906,18 +911,14 @@ class ParentChildNetworkTopology(Topology):
 
         return info
 
-    def _map_host_state_to_service_state(
-        self,
-        info: Dict[str, Any],
-        host_info: _MeshNode,
-    ) -> int:
+    def _map_host_state_to_service_state(self, info: _MeshNode) -> int:
         if info["node_type"] in ["topology_center", "topology_site"]:
             return 0
-        if not host_info["has_been_checked"]:
+        if not info["has_been_checked"]:
             return -1
-        if host_info["state"] == 0:
+        if info["state"] == 0:
             return 0
-        if host_info["state"] == 2:
+        if info["state"] == 2:
             return 3
         return 2
 

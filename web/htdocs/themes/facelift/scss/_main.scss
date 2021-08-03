@@ -49,7 +49,7 @@ textarea {
   margin-top: 0;
   font-family: arial, helvetica, sans-serif;
   vertical-align: middle;
-  background-color: rgb(255, 255, 255);
+  background-color: $white;
   border: none;
   outline-style: none;
   outline-width: medium;
@@ -76,7 +76,7 @@ select::-ms-expand {
 }
 
 input[type="file"] {
-  color: rgb(0, 0, 0);
+  color: $black;
 }
 
 form {
@@ -142,7 +142,7 @@ input.button,
 table.vs_duallist a.control {
   padding: 2px 6px;
   margin-left: 5px;
-  color: rgb(255, 255, 255);
+  color: $white;
   cursor: pointer;
   border-radius: $theme-border-radius;
 }
@@ -163,7 +163,7 @@ table.vs_duallist a.control,
   }
 
   &:active {
-    box-shadow: inset 0 0 0.5px rgb(68, 68, 68);
+    box-shadow: inset 0 0 0.5px $grey-3;
   }
 }
 
@@ -264,7 +264,7 @@ input.button.hot {
     background-color: rgb(153, 153, 153);
 
     a {
-      color: rgb(255, 255, 255);
+      color: $white;
     }
   }
 }
@@ -285,10 +285,10 @@ a.button {
   padding: 0.1ex 1ex;
   margin: 2px;
   font-weight: normal;
-  color: rgb(0, 0, 0);
+  color: $black;
   text-decoration: none;
   background-color: rgb(204, 204, 170);
-  border-color: rgb(221, 221, 221) rgb(136, 136, 136) rgb(51, 51, 51) rgb(221, 221, 221);
+  border-color: rgb(221, 221, 221) rgb(136, 136, 136) $grey-4 rgb(221, 221, 221);
   border-style: solid;
   border-width: 1px;
   border-radius: 4px;
@@ -338,7 +338,7 @@ h1 {
   margin-bottom: 5px;
   margin-left: 5px;
   font-size: $font-size-page-title;
-  color: rgb(255, 255, 255);
+  color: $white;
 }
 
 div.livestatus.message {
@@ -346,7 +346,7 @@ div.livestatus.message {
   bottom: -10px;
   left: 10px;
   z-index: 20;
-  color: rgb(0, 0, 0);
+  color: $black;
 }
 
 /*-------------------------------------------------------------------------.
@@ -389,7 +389,7 @@ b.treeangle.title {
   cursor: pointer;
 
   table.data & {
-    color: rgb(0, 0, 0);
+    color: $black;
   }
 }
 
@@ -504,7 +504,7 @@ div.error {
 
   a,
   a:link {
-    color: rgb(255, 255, 255);
+    color: $white;
   }
 
   tt {
@@ -890,16 +890,16 @@ div.popup {
   width: -moz-max-content;
   width: intrinsic;
   padding: 10px;
-  color: rgb(255, 255, 255);
+  color: $white;
   background-color: rgb(69, 130, 157);
-  border: 1px solid rgb(255, 255, 255);
+  border: 1px solid $white;
   border-radius: 5px;
   -webkit-border-radius: 5px;
 
   span {
     display: block;
     margin-bottom: 5px;
-    color: rgb(255, 255, 255);
+    color: $white;
   }
 }
 
@@ -987,7 +987,7 @@ div.popup_trigger.colorpicker div.popup_menu {
   .picker {
     width: 150px;
     height: 150px;
-    background-color: rgb(255, 255, 255);
+    background-color: $white;
   }
 
   .slide {
@@ -1002,15 +1002,15 @@ div.popup_trigger.colorpicker div.popup_menu {
   .picker-indicator {
     width: 1px;
     height: 1px;
-    background-color: rgb(255, 255, 255);
-    border: 1px solid rgb(0, 0, 0);
+    background-color: $white;
+    border: 1px solid $black;
   }
 
   .slide-indicator {
     left: 0;
     width: 100%;
     height: 2px;
-    background-color: rgb(0, 0, 0);
+    background-color: $black;
   }
 }
 
@@ -1140,7 +1140,7 @@ table.data.werks {
 
     &.werkclasssecurity {
       font-weight: bold;
-      color: rgb(255, 255, 255);
+      color: $white;
     }
 
     &.werkcompincomp_unack {
@@ -1165,14 +1165,14 @@ td.nowiki {
   h3 {
     font-size: $font-size-large;
     font-weight: bold;
-    color: rgb(0, 0, 0);
+    color: $black;
   }
 
   pre {
     padding: 3px 8px;
 
     &.code {
-      background-color: rgb(255, 255, 255);
+      background-color: $white;
     }
 
     &.file {
@@ -1190,7 +1190,7 @@ td.nowiki {
 
   table {
     margin: 10px 0;
-    border: 1px solid rgb(0, 0, 0);
+    border: 1px solid $black;
     border-collapse: collapse;
 
     table td,
@@ -1219,7 +1219,7 @@ table.modifydowntimes > tbody > tr {
 
 .select2-container--default {
   .select2-results {
-    color: rgb(0, 0, 0);
+    color: $black;
   }
 
   .select2-selection--single {
@@ -1360,7 +1360,7 @@ div.content {
 
 table.report_contents td.preview img {
   border: 1px solid $color-nuance-2;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 20px rgba($black, 0.1);
 }
 
 table td {

@@ -25,7 +25,7 @@ body.mobile {
   }
 
   div.command_group a {
-    color: rgb(0, 0, 0);
+    color: $black;
   }
 
   table.data {
@@ -43,7 +43,7 @@ body.mobile {
     width: 100%;
 
     tr.header {
-      color: rgb(0, 0, 0);
+      color: $black;
     }
 
     > tbody > tr.data > td {
@@ -65,7 +65,7 @@ body.mobile {
   }
 
   td.nonstatus {
-    background-color: rgb(255, 255, 255);
+    background-color: $white;
   }
 
   /* Forms for filters and commands */
@@ -110,7 +110,7 @@ body.mobile {
       padding: 0;
       font-size: 9px;
       font-weight: normal;
-      color: rgb(51, 51, 51);
+      color: $grey-4;
     }
 
     div.content {
@@ -172,7 +172,7 @@ body.mobile {
 
   #loginhead,
   #loginfoot {
-    color: rgb(68, 68, 68);
+    color: $grey-3;
     text-align: center;
   }
 
@@ -222,7 +222,7 @@ body.mobile {
         display: inline-block;
         width: 40px;
         overflow: hidden;
-        color: rgb(0, 0, 0);
+        color: $black;
 
         img {
           margin-left: 0;

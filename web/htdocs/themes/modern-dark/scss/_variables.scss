@@ -139,7 +139,7 @@ $dashlet-stats-border-top-color: $grey-6;
 
 $overview-info-bg: rgb(56, 59, 81);
 
-$wato-a-border: 1px solid rgb(33, 33, 33);
+$wato-a-border: 1px solid $grey-7;
 
 $wato-subtitle-color: $grey-2;
 
@@ -270,7 +270,7 @@ $dc-graph-color-2: rgb(255, 125, 20);
 $scatterdot-hilite-color: $yellow;
 
 /* TODO:  move variables defined for the UX project to the correct place */
-$popup-shadow-color: rgba(0, 0, 0, 0.1);
+$popup-shadow-color: rgba($black, 0.1);
 $button-font-color-default: $white;
 $button-bg-color-default: $ux-theme-6;
 $button-bg-color-suggestions: $ux-theme-0;
@@ -293,7 +293,7 @@ $log-output-color: $ux-theme-0;
 $dashlet-editor-free: rgb(78, 93, 105);
 $dark-image-invert: invert(100%);
 $ntop-protocol-painter-padding-top: 4px;
-$hexagon-critical-color: rgb(255, 50, 50);
+$hexagon-critical-color: $danger;
 $hexagon-unknown-color: rgb(255, 136, 0);
 $hexagon-warning-color: $yellow;
 $hexagon-downtime-color: rgb(60, 194, 255);

@@ -148,7 +148,7 @@ $footnote-link-color: rgba($grey-4, 0.8);
 $host-diag-success-bg-color: rgb(238, 255, 238);
 $host-diag-failed-bg-color: rgb(255, 238, 238);
 
-$wato-inherited-color: rgb(68, 68, 68);
+$wato-inherited-color: $grey-3;
 
 $hot-bg-color: rgb(255, 160, 66);
 $hot-font-color: $grey-5;
@@ -214,7 +214,7 @@ $node-vis-search-box-border: null;
 $node-vis-search-box-bg-color: null;
 $node-vis-search-field-border-color: transparent;
 $node-vis-box-border: 1px solid rgb(204, 207, 219); // grey
-$node-vis-box-shadow: 2px 2px 2px rgb(68, 68, 68);
+$node-vis-box-shadow: 2px 2px 2px $grey-3;
 $node-vis-toggle-down-bg-color: rgb(230, 230, 230); // light grey
 $node-vis-menu-bg-color: null;
 $node-vis-history-bg-color: null;
@@ -271,7 +271,7 @@ $scatterdot-hilite-color: rgb(0, 185, 255);
 
 /* TODO:  move variables defined for the UX project to the correct place */
 /* TODO:  adapt variables to modern theme */
-$popup-shadow-color: rgba(255, 255, 255, 0.2);
+$popup-shadow-color: rgba($white, 0.2);
 $button-font-color-default: $grey-4;
 $button-bg-color-default: $ux-theme-5;
 $button-bg-color-suggestions: $ux-theme-4;

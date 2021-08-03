@@ -105,7 +105,7 @@ body.side {
   #side_content {
     height: 100%;
     overflow: auto;
-    color: rgb(0, 0, 0);
+    color: $black;
 
     & > .snapin {
       margin-top: 0;
@@ -529,9 +529,9 @@ div#snapinDragIndicator {
   margin: 0 0 0 11px;
   font-size: 1px;
   line-height: 1px;
-  background-color: rgb(255, 255, 255);
+  background-color: $white;
   border-radius: 3px;
-  box-shadow: 0 0 3px rgb(255, 255, 255);
+  box-shadow: 0 0 3px $white;
 }
 
 /*-------------------------------------------------------------------------.

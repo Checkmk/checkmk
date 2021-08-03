@@ -425,7 +425,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
     left: 20px;
     padding: 0;
     overflow: hidden;
-    color: rgb(255, 255, 255);
+    color: $white;
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -508,8 +508,8 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   width: 500px;
   height: 140px;
   margin-top: 10px;
-  background-color: rgba(255, 255, 255, 0.3);
-  border: 1px solid rgb(255, 255, 255);
+  background-color: rgba($white, 0.3);
+  border: 1px solid $white;
   border-radius: 4px;
 
   div.nr {
@@ -518,10 +518,10 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     left: 9px;
     width: 20px;
     height: 20px;
-    color: rgb(0, 0, 0);
+    color: $black;
     text-align: center;
     background-color: rgb(252, 211, 64);
-    border: 1px solid rgb(255, 255, 255);
+    border: 1px solid $white;
     border-radius: 10px;
 
     b {
@@ -534,7 +534,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     position: absolute;
     top: 12px;
     font-weight: bold;
-    color: rgb(255, 255, 255);
+    color: $white;
 
     &.conditions {
       left: 40px;
@@ -551,7 +551,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     height: 90px;
     padding: 5px;
     background-color: rgb(167, 190, 195);
-    border: 1px solid rgb(255, 255, 255);
+    border: 1px solid $white;
     border-radius: 4px;
 
     &.conditions {
@@ -810,7 +810,7 @@ div.filter_buttons {
  * with white color it wasn't visible anyways */
 div.varname {
   font-family: monospace, sans-serif;
-  color: rgb(255, 255, 255);
+  color: $white;
 }
 
 /* page "global settings*/
@@ -1038,8 +1038,8 @@ table.data tr.notification_context table {
 table.data tr.data.dcd_log_entries {
   > td {
     font-family: monospace, sans-serif;
-    color: rgb(255, 255, 255);
-    background-color: rgb(0, 0, 0);
+    color: $white;
+    background-color: $black;
   }
 
   pre {
@@ -1063,14 +1063,14 @@ table.data tr.data.dcd_log_entries {
 
 .wato table.progress {
   width: 50%;
-  color: rgb(0, 0, 0);
+  color: $black;
   background: $bg-color-secondary;
   border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
 
   th {
     padding: 3px 0;
-    background-color: rgb(255, 255, 255);
+    background-color: $white;
   }
 
   td {
@@ -1112,7 +1112,7 @@ table.data tr.data.dcd_log_entries {
         top: 12px;
         width: 100%;
         height: 22px;
-        background-color: rgb(255, 255, 255);
+        background-color: $white;
         border-spacing: 1px 2px;
       }
 
@@ -1153,7 +1153,7 @@ table.data tr.data.dcd_log_entries {
       padding: 24px 12px 18px;
 
       table {
-        border: 1px solid rgb(255, 255, 255);
+        border: 1px solid $white;
         border-collapse: collapse;
         border-spacing: 0;
       }
@@ -1161,7 +1161,7 @@ table.data tr.data.dcd_log_entries {
       th,
       td {
         padding: 6px 0;
-        border-bottom: 1px solid rgb(255, 255, 255);
+        border-bottom: 1px solid $white;
         border-color: $color-table-border;
       }
 
@@ -1173,7 +1173,7 @@ table.data tr.data.dcd_log_entries {
       td {
         width: 4em;
         text-align: right;
-        background-color: rgba(255, 255, 255, 0.3);
+        background-color: rgba($white, 0.3);
       }
     }
 
@@ -1212,7 +1212,7 @@ table.data tr.data.dcd_log_entries {
   padding: 2px 5px;
   margin: 2px;
   font-weight: bold;
-  color: rgb(0, 0, 0);
+  color: $black;
   background-color: rgb(255, 255, 0);
   border-radius: 3px;
   opacity: 0.9;
@@ -1232,7 +1232,7 @@ table.logwatch {
 
   span.match {
     padding: 0 2px 2px;
-    background-color: rgb(255, 255, 255);
+    background-color: $white;
     border: 1px solid rgb(73, 118, 139);
     border-radius: 4px;
   }
@@ -1253,7 +1253,7 @@ table.multisite_conn_method td {
 table.data td.bi_rule_tree {
   b.treeangle {
     font-weight: normal;
-    color: rgb(0, 0, 0);
+    color: $black;
   }
 
   ul.treeangle {
@@ -1389,7 +1389,7 @@ table.setting td.reason {
   float: none;
   width: 180px;
   font-style: italic;
-  color: rgb(255, 255, 255);
+  color: $white;
 
   i {
     /* default value */

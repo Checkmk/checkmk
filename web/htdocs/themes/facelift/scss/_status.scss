@@ -278,7 +278,7 @@ table.data tr.data > td.perfometer {
 
 td.perfometer {
   a {
-    color: rgb(0, 0, 0);
+    color: $black;
     text-decoration: none;
   }
 
@@ -381,7 +381,7 @@ tr[class*="even"] {
   padding-right: 3px;
   padding-left: 3px;
   background-color: $danger;
-  border: 2px solid rgb(0, 0, 0);
+  border: 2px solid $black;
   border-radius: 4px;
 }
 
@@ -479,7 +479,7 @@ td.matchgroups span {
   padding: 0 3px;
   margin-right: 3px;
   font-family: monospace;
-  background-color: rgb(255, 255, 255);
+  background-color: $white;
   border: 1px solid rgb(238, 238, 238);
   border-radius: 3px;
   box-shadow: 0 0 1px rgb(136, 136, 136);

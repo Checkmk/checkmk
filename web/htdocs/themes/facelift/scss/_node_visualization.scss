@@ -298,11 +298,11 @@ div.node_vis {
   }
 
   .state1 {
-    fill: rgb(255, 254, 68);
+    fill: $warning;
   }
 
   .state2 {
-    fill: rgb(255, 50, 50);
+    fill: $danger;
   }
 
   .state3 {
@@ -349,7 +349,7 @@ div.node_vis {
 
   circle.style_indicator.focus {
     opacity: 0.5;
-    stroke: rgb(255, 254, 68);
+    stroke: $warning;
     stroke-width: 3;
   }
 

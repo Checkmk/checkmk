@@ -701,8 +701,8 @@ table.views {
   td,
   th {
     padding: 2px 1ex;
-    color: rgb(255, 255, 255);
-    border: 1px solid rgb(68, 68, 68);
+    color: $white;
+    border: 1px solid $grey-3;
   }
 
   td {
@@ -710,12 +710,12 @@ table.views {
     padding-top: 3px;
 
     &.legend {
-      color: rgb(255, 255, 255);
+      color: $white;
       background-color: rgb(142, 174, 184);
     }
 
     &.content {
-      color: rgb(255, 255, 255);
+      color: $white;
       background-color: rgb(158, 190, 200);
     }
 
@@ -970,7 +970,7 @@ td.invtree {
   /* TODO: Reproduce this html element */
   b.treeangle.title {
     font-weight: normal;
-    color: rgb(0, 0, 0);
+    color: $black;
   }
 
   ul.treeangle {
@@ -995,7 +995,7 @@ td.invtree {
   }
 
   table td {
-    background-color: rgb(255, 255, 255);
+    background-color: $white;
   }
 
   table.data.single tr.data & table,
@@ -1111,7 +1111,7 @@ table.data.headerleft.sla {
   }
 
   a {
-    color: rgb(255, 255, 255);
+    color: $white;
     text-decoration: underline;
   }
 }
@@ -1153,7 +1153,7 @@ div.sla_details {
 }
 
 td.sla > div.foldable > b {
-  color: rgb(0, 0, 0);
+  color: $black;
 }
 
 table.data tr.sla_horizontal_line > td.sla_horizontal_line {
@@ -1161,7 +1161,7 @@ table.data tr.sla_horizontal_line > td.sla_horizontal_line {
 
   &.black {
     height: 1px;
-    border-bottom: 1px solid rgb(0, 0, 0);
+    border-bottom: 1px solid $black;
   }
 }
 

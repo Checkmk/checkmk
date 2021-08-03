@@ -69,21 +69,21 @@ div.cmk_tab {
 
   rect.bar.bar_chart {
     fill: $bar-fill-color;
-    stroke: rgba(0, 0, 0, 0.2);
+    stroke: rgba($black, 0.2);
 
     &:hover {
       fill: $bar-hover-fill-color;
-      stroke: rgb(0, 0, 0);
+      stroke: $black;
     }
   }
 
   rect.bar.bar_chart.barbar_chart {
     fill: $barbar-fill-color;
-    stroke: rgba(0, 0, 0, 0.3);
+    stroke: rgba($black, 0.3);
 
     &:hover {
       fill: $barbar-hover-fill-color;
-      stroke: rgb(0, 0, 0);
+      stroke: $black;
     }
   }
 }

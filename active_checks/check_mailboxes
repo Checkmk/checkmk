@@ -8,18 +8,12 @@
 
 import argparse
 import logging
-import time
 import socket
+import time
 from getpass import getpass
 
 import cmk.utils.render
-
-from cmk.utils.mailbox import (
-    CheckResult,
-    active_check_main,
-    Args,
-    Mailbox,
-)
+from cmk.utils.mailbox import active_check_main, Args, CheckResult, Mailbox
 
 
 def create_argument_parser() -> argparse.ArgumentParser:

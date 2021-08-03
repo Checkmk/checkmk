@@ -8,9 +8,9 @@
 # been updated since the TimeSeries refactoring. This will be cleaned up with CMK-3556
 # type: ignore[arg-type,assignment,call-overload]
 
+import getopt
 import sys
 import time
-import getopt
 from typing import Optional
 
 import cmk.utils.prediction as prediction

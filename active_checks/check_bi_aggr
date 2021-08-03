@@ -4,19 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import getopt
 import os
+import subprocess
 import sys
 import time
 import traceback
 import urllib.parse
-import ast
-import subprocess
 from pathlib import Path
 
 import requests
-from requests_kerberos import HTTPKerberosAuth  # type: ignore[import]
 import urllib3  # type: ignore[import]
+from requests_kerberos import HTTPKerberosAuth  # type: ignore[import]
 
 import cmk.utils.password_store
 

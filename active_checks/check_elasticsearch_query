@@ -7,10 +7,12 @@
 import argparse
 import sys
 import urllib.parse
+
 import requests
 import urllib3  # type: ignore[import]
-from cmk.utils.exceptions import MKGeneralException
+
 import cmk.utils.password_store
+from cmk.utils.exceptions import MKGeneralException
 
 cmk.utils.password_store.replace_passwords()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)

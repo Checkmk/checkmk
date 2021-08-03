@@ -7,23 +7,23 @@
 
 """
 
-from typing import Tuple, List, Union
-import os
 import argparse
-import logging
-import time
-import re
 import base64
+import logging
+import os
+import re
 import socket
+import time
+from typing import List, Tuple, Union
 
 from cmk.utils.mailbox import (
+    active_check_main,
+    Args,
+    CheckResult,
     ConnectError,
     ForwardToECError,
-    CheckResult,
-    active_check_main,
-    MailMessages,
-    Args,
     Mailbox,
+    MailMessages,
 )
 
 

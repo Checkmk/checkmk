@@ -9,11 +9,11 @@
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.python.org/pypi/ibm_db
 """Check_MK SQL Test"""
-from typing import List, Optional, Tuple, NoReturn
 import argparse
 import logging
 import os
 import sys
+from typing import List, NoReturn, Optional, Tuple
 
 import cmk.utils.password_store
 

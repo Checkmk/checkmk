@@ -5,26 +5,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Email server roundtrip active check
 """
-from typing import Tuple, Dict
-import os
-import re
 import argparse
-import logging
-from contextlib import suppress
-import time
-import random
-import smtplib
-import email.utils
 import email.mime.text
+import email.utils
+import logging
+import os
+import random
+import re
+import smtplib
+import time
+from contextlib import suppress
+from typing import Dict, Tuple
 
 from cmk.utils.mailbox import (
-    SendMailError,
-    FetchMailsError,
-    CheckResult,
     active_check_main,
-    MailMessages,
     Args,
+    CheckResult,
+    FetchMailsError,
     Mailbox,
+    MailMessages,
+    SendMailError,
 )
 
 MailID = Tuple[int, int]

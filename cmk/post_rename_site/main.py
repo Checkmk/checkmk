@@ -19,7 +19,7 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 # This special script needs persistence and conversion code from different places of Checkmk. We may
 # centralize the conversion and move the persistence to a specific layer in the future, but for the
 # the moment we need to deal with it.
-from cmk.gui.utils.script_helpers import application_and_request_context
+from cmk.gui.utils.script_helpers import application_and_request_context, initialize_gui_environment
 from cmk.gui.utils.logged_in import SuperUserContext
 
 from .registry import rename_action_registry
@@ -99,6 +99,8 @@ def run(arguments: argparse.Namespace, old_site_id: SiteId, new_site_id: SiteId)
     has_errors = False
     logger.debug("Initializing application...")
     with application_and_request_context(), SuperUserContext():
+        initialize_gui_environment()
+
         logger.debug("Starting actions...")
         actions = sorted(rename_action_registry.values(), key=lambda a: a.sort_index)
         total = len(actions)

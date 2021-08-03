@@ -6,6 +6,7 @@
 
 from livestatus import SiteId
 from cmk.utils.i18n import _
+from cmk.post_rename_site.main import logger
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
 from cmk.gui.watolib.sites import SiteManagementFactory
@@ -30,6 +31,7 @@ def update_site_config(old_site_id: SiteId, new_site_id: SiteId) -> None:
         changed = True
 
         # 1. Transform entry in all sites
+        logger.debug("Rename site configuration")
         site_spec = all_sites[new_site_id] = all_sites.pop(old_site_id)
 
         # 2. Update the sites URL prefix
@@ -41,9 +43,10 @@ def update_site_config(old_site_id: SiteId, new_site_id: SiteId) -> None:
                                                                       f"/{new_site_id}/")
 
     # Iterate all sites and check for status host entries refering to the renamed site
-    for site_cfg in all_sites.values():
+    for this_site_id, site_cfg in all_sites.items():
         status_host = site_cfg.get("status_host")
         if status_host and status_host[0] == old_site_id:
+            logger.debug("Update status host of site %s", this_site_id)
             changed = True
             site_cfg["status_host"] = (new_site_id, site_cfg["status_host"][1])
 

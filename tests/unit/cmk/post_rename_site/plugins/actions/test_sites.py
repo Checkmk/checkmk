@@ -10,8 +10,6 @@ from livestatus import SiteId
 import cmk.utils.paths
 from cmk.post_rename_site.plugins.actions.sites import update_site_config
 from cmk.gui.watolib.sites import SiteManagementFactory
-from cmk.gui.utils.script_helpers import application_and_request_context
-from cmk.gui.utils.logged_in import SuperUserContext
 
 
 def _write_site_config(config: dict) -> None:
@@ -40,8 +38,7 @@ def test_update_basic_site_config():
         },
     })
 
-    with application_and_request_context(), SuperUserContext():
-        update_site_config(SiteId("heute"), SiteId("haha"))
+    update_site_config(SiteId("heute"), SiteId("haha"))
 
     site_mgmt = SiteManagementFactory().factory()
     all_sites = site_mgmt.load_sites()
@@ -102,8 +99,7 @@ def test_update_remote_site_status_host_config():
         }
     })
 
-    with application_and_request_context(), SuperUserContext():
-        update_site_config(SiteId("stable"), SiteId("dingdong"))
+    update_site_config(SiteId("stable"), SiteId("dingdong"))
 
     site_mgmt = SiteManagementFactory().factory()
     all_sites = site_mgmt.load_sites()

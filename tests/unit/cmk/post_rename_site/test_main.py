@@ -84,4 +84,8 @@ def test_load_plugins():
         "sites",
         "hosts_and_folders",
         "dcd_connections",
+        "update_core_config",
+        "warn_remote_site",
+        "warn_about_network_ports",
+        "warn_about_configs_to_review",
     ])

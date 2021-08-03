@@ -5,6 +5,7 @@ PROTOBUF_DIR := $(PROTOBUF)-$(PROTOBUF_VERS)
 # Increase this to enforce a recreation of the build cache
 PROTOBUF_BUILD_ID := 6
 
+PROTOBUF_PATCHING := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-patching
 PROTOBUF_UNPACK := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-unpack
 PROTOBUF_BUILD := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-build
 PROTOBUF_BUILD_LIBRARY := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-build-library
@@ -34,7 +35,8 @@ $(PROTOBUF_UNPACK): $(PACKAGE_DIR)/$(PROTOBUF)/protobuf-python-$(PROTOBUF_VERS).
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
-$(PROTOBUF_BUILD_LIBRARY): $(PROTOBUF_UNPACK)
+# We have hidden embedded dependency: PATCHING -> UNPACK
+$(PROTOBUF_BUILD_LIBRARY): $(PROTOBUF_PATCHING)
 	cd $(PROTOBUF_BUILD_DIR) && \
 	    export LDFLAGS="-static-libgcc -static-libstdc++ -s" \
 		`: -fPIC is needed for python static linking ` \

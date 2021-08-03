@@ -123,7 +123,7 @@ parts from the build cache.
 
 ```
 cd omd
-make $PWD/omd/build/stamps/protobuf-3.17.3-cache-pkg-process
+make $PWD/build/stamps/protobuf-3.17.3-cache-pkg-process
 ```
 
 ## Incremental package building

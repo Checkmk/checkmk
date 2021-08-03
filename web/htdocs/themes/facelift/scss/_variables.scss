@@ -37,6 +37,7 @@ $font-color: $grey-4;
 $primary-font-color: $black;
 $secondary-font-color: $grey-6;
 $primary-hover-font-color: $black;
+$font-color-light-bg: $grey-4;
 
 // -----------------------------------------------------------------------------
 // Buttons
@@ -47,31 +48,15 @@ $button-background-hover: rgb(247, 247, 247);
 // States
 // -----------------------------------------------------------------------------
 $color-state-1-background: $yellow;
-$color-state-1-border: rgb(233, 196, 0); // yellow
-
 $color-state-2-background: rgb(232, 85, 85);
-$color-state-2-border: rgb(229, 63, 63);
-
 $color-state-3-background: rgb(252, 185, 123);
-
 $color-state-4-background: rgb(136, 136, 136);
-
 $color-state-5-background: rgb(72, 203, 240);
-
 $color-state-6-background: rgb(185, 236, 250);
-
 $color-state-7-background: rgb(233, 128, 110);
-
 $color-state-8-background: rgb(241, 174, 162);
-
 $color-state-9-background: rgb(191, 90, 191);
-
-$color-state-error-border: rgb(226, 40, 40); // red
-
 $color-state-success-background: $success; // green
-$color-state-success-border: null; // green
-
-$color-perfometer-title: $grey-4;
 
 // -----------------------------------------------------------------------------
 // Tables
@@ -165,7 +150,6 @@ $wato-info-padding: null;
 $ac-test-details-td-padding: 1px 5px;
 
 $repprogress-progress-bg-color: rgb(185, 236, 250);
-$repprogress-progress-border-color: $color-nuance-5;
 
 $nform-table-hr-color: rgb(229, 229, 229);
 
@@ -237,7 +221,6 @@ $matches-search-bg-color: $color-nuance-1;
 $matches-search-font-color: null;
 
 $help-bg-color: rgb(255, 255, 204);
-$help-link-color: $grey-4;
 
 $minority-font-color: null;
 

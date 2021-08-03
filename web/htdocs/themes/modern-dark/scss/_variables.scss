@@ -36,6 +36,7 @@ $inpage-highlight-color: $ux-theme-5;
 $font-color: $white;
 $primary-font-color: $white;
 $secondary-font-color: $white;
+$font-color-light-bg: $grey-7;
 $primary-hover-font-color: $grey-1;
 
 // -----------------------------------------------------------------------------
@@ -47,31 +48,15 @@ $button-background-hover: lighten($grey-7, 10%);
 // States
 // -----------------------------------------------------------------------------
 $color-state-1-background: $yellow;
-$color-state-1-border: $warning;
-
 $color-state-2-background: $danger;
-$color-state-2-border: mix($black, $danger, 30%);
-
 $color-state-3-background: rgb(255, 132, 0);
-
 $color-state-4-background: rgb(136, 136, 136);
-
 $color-state-5-background: rgb(72, 203, 240);
-
 $color-state-6-background: rgb(185, 236, 250);
-
 $color-state-7-background: rgb(233, 128, 110);
-
 $color-state-8-background: rgb(241, 174, 162);
-
 $color-state-9-background: rgb(191, 90, 191);
-
-$color-state-error-border: rgb(226, 40, 40); // red
-
 $color-state-success-background: $success; // green
-$color-state-success-border: mix($black, $success, 30%); // green
-
-$color-perfometer-title: $grey-7;
 
 // -----------------------------------------------------------------------------
 // Tables
@@ -165,7 +150,6 @@ $wato-info-padding: 10px 0 10px 10px;
 $ac-test-details-td-padding: 4px 5px;
 
 $repprogress-progress-bg-color: rgb(105, 156, 170); // darkened state6 bg color
-$repprogress-progress-border-color: rgb(111, 180, 198); // darkened nuance17
 
 $nform-table-hr-color: rgba($white, 0.1);
 
@@ -237,7 +221,6 @@ $matches-search-bg-color: darken($success, 5%);
 $matches-search-font-color: $grey-7;
 
 $help-bg-color: rgba(255, 235, 131, 0.85);
-$help-link-color: $grey-7;
 
 $minority-font-color: $grey-7;
 

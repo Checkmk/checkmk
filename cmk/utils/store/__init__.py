@@ -6,8 +6,9 @@
 """This module cares about Check_MK's file storage accessing. Most important
 functionality is the locked file opening realized with the File() context
 manager."""
-
+import abc
 import enum
+import pickle
 from contextlib import nullcontext
 import logging
 import pprint
@@ -223,26 +224,41 @@ def save_bytes_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660
         ObjectStore(Path(path), serializer=BytesSerializer()).write_obj(content, mode=mode)
 
 
-class RawStorageLoader:
-    """This is POC class: minimal working functionality. OOP and more clear API is planned"""
-    __slots__ = ['_data', '_loaded']
-
+class ABCStorageLoader(abc.ABC):
+    __slots__ = ["_loaded", "_data"]
+    """This is WIP class: minimal working functionality. OOP and more clear API is planned"""
     def __init__(self) -> None:
-        self._data: str = ""
         self._loaded: Dict[str, Any] = {}
 
+    @abc.abstractmethod
     def read(self, filename: Path) -> None:
-        with filename.open() as f:
-            self._data = f.read()
+        raise NotImplementedError()
 
+    @abc.abstractmethod
     def parse(self) -> None:
-        to_run = "loaded.update(" + self._data + ")"
-
-        exec(to_run, {'__builtins__': None}, {"loaded": self._loaded})
+        raise NotImplementedError()
 
     def apply(self, variables: Dict[str, Any]) -> bool:
-        """Stub"""
-        isinstance(variables, dict)
+        # TODO: will be changed to read from self._all_hosts, self._host_tags, etc.
+        # List based settings
+        for var_list in ["all_hosts"]:
+            variables[var_list].extend(self._loaded.get(var_list, {}))
+
+        # Dict based settings
+        # Note: host_attributes is not loaded / not required by cmk.base
+        for var_dict in [
+                "clusters",
+                "host_tags",
+                "host_labels",
+                "ipaddresses",
+                "ipv6addresses",
+                "explicit_snmp_communities",
+                "management_ipmi_credentials",
+                "management_snmp_credentials",
+                "management_protocol",
+                "explicit_host_conf",
+        ]:
+            variables[var_dict].update(self._loaded.get(var_dict, {}))
         return True
 
     def _all_hosts(self) -> List[str]:
@@ -267,8 +283,45 @@ class RawStorageLoader:
         return self._loaded.get("extra_host_conf", {})
 
 
+class RawStorageLoader(ABCStorageLoader):
+    def __init__(self) -> None:
+        super().__init__()
+        self._data: str = ""
+
+    def read(self, filename: Path) -> None:
+        with filename.open() as f:
+            self._data = f.read()
+
+    def parse(self) -> None:
+        to_run = "loaded.update(" + self._data + ")"
+        exec(to_run, {'__builtins__': None}, {"loaded": self._loaded})
+
+    def apply(self, variables: Dict[str, Any]) -> bool:
+        """stub"""
+        return True
+
+
+class PickleStorageLoader(ABCStorageLoader):
+    """Supports pickled config files."""
+    def __init__(self) -> None:
+        super().__init__()
+        self._data: bytes = b""
+
+    def read(self, filename: Path) -> None:
+        with filename.open("rb") as f:
+            self._data = f.read()
+
+    def parse(self) -> None:
+        self._loaded = pickle.loads(self._data)
+
+    def apply(self, variables: Dict[str, Any]) -> bool:
+        """stub"""
+        return True
+
+
 class StorageFormat(enum.Enum):
     STANDARD = "standard"
+    PICKLE = "pickle"
     RAW = "raw"
 
     def __str__(self) -> str:
@@ -282,6 +335,7 @@ class StorageFormat(enum.Enum):
         # This typing error is a false positive.  There are tests to demonstrate that.
         return {  # type: ignore[return-value]
             StorageFormat.STANDARD: ".mk",
+            StorageFormat.PICKLE: ".pkl",
             StorageFormat.RAW: ".cfg",
         }[self]
 

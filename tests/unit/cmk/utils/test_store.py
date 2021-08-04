@@ -3,8 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import ast
 import enum
+import pickle
 import threading
 import queue
 import os
@@ -691,9 +692,9 @@ def test_storage_is_hosts_config(file_path, valid_for_standard, valid_for_raw):
 
 
 _raw_storage_loader_test_data = """{
-    'all_hosts': ['0699z0imsnpsl01', '0699z0imsnpsl02'],
+    'all_hosts': ['0699z0abcnpsl01', '0699z0abcnpsl02'],
     'host_tags': {
-        '0699z0imsnpsl01': {
+        '0699z0abcnpsl01': {
             'site': 'heute',
             'address_family': 'ip-v4-only',
             'ip-v4': 'ip-v4',
@@ -704,7 +705,7 @@ _raw_storage_loader_test_data = """{
             'criticality': 'prod',
             'networking': 'lan'
         },
-        '0699z0imsnpsl02': {
+        '0699z0abcnpsl02': {
             'site': 'heute',
             'address_family': 'ip-v4-only',
             'ip-v4': 'ip-v4',
@@ -717,33 +718,33 @@ _raw_storage_loader_test_data = """{
         }
     },
     'host_labels': {
-        '0699z0imsnpsl01': {
+        '0699z0abcnpsl01': {
             'hw': 'test1'
         },
-        '0699z0imsnpsl02': {
+        '0699z0abcnpsl02': {
             'hw': 'test2'
         }
     },
     'attributes': {
         'ipaddresses': {
-            '0699z0imsnpsl01': '10.211.162.80',
-            '0699z0imsnpsl02': '10.211.162.81'
+            '0699z0abcnpsl01': '10.211.162.80',
+            '0699z0abcnpsl02': '10.211.162.81'
         },
     },
     'extra_host_conf': {
-        'alias': [(u'699 Radius Server 02', ['0699z0imsnpsl02']),
-                  (u'699 Radius Server 01', ['0699z0imsnpsl01'])],
-        '_aldi_country_id': [(u'699', ['0699z0imsnpsl02']), (u'699', ['0699z0imsnpsl01'])]
+        'alias': [(u'699 Radius Server 02', ['0699z0abcnpsl02']),
+                  (u'699 Radius Server 01', ['0699z0abcnpsl01'])],
+        '_neui_country_id': [(u'699', ['0699z0abcnpsl02']), (u'699', ['0699z0abcnpsl01'])]
     },
     'explicit_host_conf': {
         'alias': {
-            '0699z0imsnpsl01': '699 Radius Server 01',
-            '0699z0imsnpsl02': '699 Radius Server 02'
+            '0699z0abcnpsl01': '699 Radius Server 01',
+            '0699z0abcnpsl02': '699 Radius Server 02'
         },
     },
     'contact_groups': {},
     'host_attributes': {
-        '0699z0imsnpsl01': {
+        '0699z0abcnpsl01': {
             'alias': '699 Radius Server 01',
             'ipaddress': '10.211.162.80',
             'meta_data': {
@@ -758,7 +759,7 @@ _raw_storage_loader_test_data = """{
             'tag_snmp_ds': 'no-snmp',
             'tag_criticality': 'prod'
         },
-        '0699z0imsnpsl02': {
+        '0699z0abcnpsl02': {
             'alias': '699 Radius Server 02',
             'ipaddress': '10.211.162.81',
             'meta_data': {
@@ -778,26 +779,37 @@ _raw_storage_loader_test_data = """{
 """
 
 
-@pytest.fixture
-def loader():
+@pytest.fixture(scope="function")
+def raw_loader():
     loader = store.RawStorageLoader()
     loader._data = _raw_storage_loader_test_data
     loader.parse()
     loader.apply({})
-    return loader
+    yield loader
 
 
-def test_raw_storage_loader(loader):
-    hosts = loader._all_hosts()
-    assert hosts == ['0699z0imsnpsl01', '0699z0imsnpsl02']
-    ips = loader._attributes()["ipaddresses"]
-    host_conf_alias = loader._explicit_host_conf()["alias"]
+@pytest.fixture(scope="function")
+def pickle_loader():
+    loader = store.PickleStorageLoader()
+    loader._data = pickle.dumps(ast.literal_eval(_raw_storage_loader_test_data))
+    loader.parse()
+    loader.apply({})
+    yield loader
+
+
+@pytest.mark.parametrize("loader_name", ["raw_loader", "pickle_loader"])
+def test_raw_storage_loader(loader_name, request):
+    storage_loader = request.getfixturevalue(loader_name)
+    hosts = storage_loader._all_hosts()
+    assert hosts == ['0699z0abcnpsl01', '0699z0abcnpsl02']
+    ips = storage_loader._attributes()["ipaddresses"]
+    host_conf_alias = storage_loader._explicit_host_conf()["alias"]
     for h in hosts:
-        assert isinstance(loader._host_tags()[h], dict)
-        assert isinstance(loader._host_labels()[h], dict)
-        assert isinstance(loader._host_attributes()[h], dict)
+        assert isinstance(storage_loader._host_tags()[h], dict)
+        assert isinstance(storage_loader._host_labels()[h], dict)
+        assert isinstance(storage_loader._host_attributes()[h], dict)
         assert isinstance(ips[h], str)
         assert isinstance(host_conf_alias[h], str)
 
-    assert isinstance(loader._extra_host_conf()['alias'], list)
-    assert isinstance(loader._extra_host_conf()['_aldi_country_id'], list)
+    assert isinstance(storage_loader._extra_host_conf()['alias'], list)
+    assert isinstance(storage_loader._extra_host_conf()['_neui_country_id'], list)

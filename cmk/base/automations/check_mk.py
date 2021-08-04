@@ -16,6 +16,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Sequence, Union, cast
 from contextlib import redirect_stdout, redirect_stderr
+from itertools import islice
 
 from six import ensure_binary
 
@@ -147,7 +148,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 "Need two arguments: new|remove|fixall|refresh|only-host-labels HOSTNAME")
 
         mode = discovery.DiscoveryMode.from_str(args[0])
-        hostnames = args[1:]
+        hostnames = [HostName(h) for h in islice(args, 1, None)]
 
         config_cache = config.get_config_cache()
 
@@ -228,7 +229,7 @@ class AutomationTryDiscovery(Automation):
             on_error = OnError.WARN
 
         return discovery.get_check_preview(
-            host_name=args[0],
+            host_name=HostName(args[0]),
             max_cachefile_age=config.max_cachefile_age(),
             use_cached_snmp_data=use_cached_snmp_data,
             on_error=on_error,
@@ -248,7 +249,7 @@ class AutomationSetAutochecks(DiscoveryAutomation):
     # are either (1) kept from existing autochecks or (2) computed
     # from a new inventory.
     def execute(self, args: List[str]) -> None:
-        hostname = args[0]
+        hostname = HostName(args[0])
         new_items: Union[SetAutochecksTable,
                          SetAutochecksTablePre20] = ast.literal_eval(sys.stdin.read())
 
@@ -320,7 +321,7 @@ class AutomationUpdateHostLabels(DiscoveryAutomation):
     needs_checks = False
 
     def execute(self, args: List[str]) -> None:
-        hostname = args[0]
+        hostname = HostName(args[0])
         new_host_labels = ast.literal_eval(sys.stdin.read())
         DiscoveredHostLabelsStore(hostname).save(new_host_labels)
 
@@ -644,7 +645,7 @@ class AutomationAnalyseServices(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args: List[str]) -> Dict:
-        hostname = args[0]
+        hostname = HostName(args[0])
         servicedesc = args[1]
 
         config_cache = config.get_config_cache()
@@ -774,7 +775,7 @@ class AutomationAnalyseHost(Automation):
     needs_checks = False
 
     def execute(self, args: List[str]) -> Dict:
-        host_name = args[0]
+        host_name = HostName(args[0])
         config_cache = config.get_config_cache()
         return {
             "labels": config_cache.get_host_config(host_name).labels,
@@ -791,8 +792,8 @@ class AutomationDeleteHosts(Automation):
     needs_checks = False
 
     def execute(self, args: List[str]) -> None:
-        for hostname in args:
-            self._delete_host_files(hostname)
+        for hostname_str in args:
+            self._delete_host_files(HostName(hostname_str))
 
     def _delete_host_files(self, hostname: HostName) -> None:
 
@@ -1056,7 +1057,7 @@ class AutomationScanParents(Automation):
             "max_ttl": int(args[2]),
             "ping_probes": int(args[3]),
         }
-        hostnames = args[4:]
+        hostnames = [HostName(hn) for hn in islice(args, 4, None)]
         if not cmk.base.parent_scan.traceroute_available():
             raise MKAutomationError("Cannot find binary <tt>traceroute</tt> in search path.")
         config_cache = config.get_config_cache()
@@ -1080,7 +1081,8 @@ class AutomationDiagHost(Automation):
     needs_checks = True
 
     def execute(self, args: List[str]) -> Tuple[int, str]:
-        hostname, test, ipaddress, snmp_community = args[:4]
+        hostname = HostName(args[0])
+        test, ipaddress, snmp_community = args[1:4]
         agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
 
         config_cache = config.get_config_cache()
@@ -1354,7 +1356,8 @@ class AutomationActiveCheck(Automation):
     needs_checks = True
 
     def execute(self, args: List[str]) -> Optional[Tuple[ServiceState, ServiceDetails]]:
-        hostname, plugin, raw_item = args
+        hostname = HostName(args[0])
+        plugin, raw_item = args[1:]
         item = raw_item
 
         host_config = config.get_config_cache().get_host_config(hostname)
@@ -1469,7 +1472,8 @@ class AutomationGetAgentOutput(Automation):
     needs_checks = True  # TODO: Can we change this?
 
     def execute(self, args: List[str]) -> Tuple[bool, ServiceDetails, bytes]:
-        hostname, ty = args
+        hostname = HostName(args[0])
+        ty = args[1]
         host_config = config.HostConfig.make_host_config(hostname)
 
         success = True
@@ -1616,7 +1620,8 @@ class AutomationGetLabelsOf(Automation):
     needs_checks = False
 
     def execute(self, args: List[str]) -> Dict[str, Any]:
-        object_type, host_name = args[:2]
+        object_type = args[0]
+        host_name = HostName(args[1])
 
         config_cache = config.get_config_cache()
 

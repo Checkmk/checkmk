@@ -193,7 +193,7 @@ body {
           }
 
           * {
-            color: $table-secondary-font-color;
+            color: $font-color-dimmed;
           }
         }
       }
@@ -318,7 +318,7 @@ table.data {
     height: 24px;
     padding: 0 8px;
     letter-spacing: $letter-spacing-table;
-    color: $table-secondary-font-color;
+    color: $font-color-dimmed;
     text-align: left;
     vertical-align: middle;
     background-color: $odd-tr-bg-color;

@@ -34,13 +34,13 @@ $inpage-highlight-color: $ux-theme-5;
 // Fonts
 // -----------------------------------------------------------------------------
 $font-color: $grey-4;
+$font-color-dimmed: rgba($grey-4, 0.8);
 $primary-font-color: $black;
 $secondary-font-color: $grey-6;
 $font-color-light-bg: $grey-4;
 $primary-hover-font-color: $black;
 
 // TODO: merge common variable definitions
-$table-secondary-font-color: rgba($grey-4, 0.8);
 $unmonitored-font-color: rgb(102, 102, 102);
 $tag-dropdown-hover-font-color: $success;
 $host-folder-font-color: rgb(187, 221, 238);

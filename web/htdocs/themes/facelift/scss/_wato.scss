@@ -28,7 +28,7 @@
 
 .wato table.data {
   th.header_state {
-    color: $table-secondary-font-color !important; // prevents state colors in table headers
+    color: $font-color-dimmed !important; // prevents state colors in table headers
   }
 
   /* TODO: Reproduce this html element */

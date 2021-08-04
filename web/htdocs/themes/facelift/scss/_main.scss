@@ -454,12 +454,12 @@ div.really {
 }
 
 div.success {
-  color: $primary-font-color;
+  color: $font-color-primary;
   background-color: $headline-color;
 }
 
 div.message {
-  color: $black; // TODO: Check whether this must be $primary-font-color as is for .success
+  color: $black; // TODO: Check whether this must be $font-color-primary as is for .success
   background-color: rgb(157, 190, 205);
   border-color: rgb(0, 68, 136);
 }

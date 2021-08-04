@@ -333,7 +333,7 @@ table.data {
 
     /* Table header links (For sorting) */
     &.sort:hover {
-      color: $primary-hover-font-color;
+      color: $font-color-primary-hover;
       cursor: pointer;
       background-color: $data-th-sort-hover-bg-color;
     }
@@ -381,7 +381,7 @@ table.data {
     }
 
     &:not(.state) {
-      color: $secondary-font-color;
+      color: $font-color-secondary;
     }
 
     &.nowrap {
@@ -405,10 +405,10 @@ table.data {
       vertical-align: middle;
 
       a {
-        color: $secondary-font-color;
+        color: $font-color-secondary;
 
         &:hover {
-          color: $primary-hover-font-color;
+          color: $font-color-primary-hover;
         }
       }
 
@@ -899,7 +899,7 @@ table.nform {
       padding: 4px 10px 3px 9px;
       font-weight: $font-weight-bold;
       letter-spacing: $letter-spacing-table;
-      color: $secondary-font-color;
+      color: $font-color-secondary;
       background-color: $headline-color;
     }
 
@@ -1268,7 +1268,7 @@ body.main .popup_menu {
     }
 
     &.active a {
-      color: $primary-font-color;
+      color: $font-color-primary;
       border-bottom: 1px solid rgb(80, 138, 161);
     }
   }

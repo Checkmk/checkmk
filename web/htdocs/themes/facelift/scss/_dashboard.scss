@@ -680,7 +680,7 @@ div#dashboard.grid {
 }
 
 .dashlet.pnpgraph .dashlet_inner {
-  color: $primary-font-color;
+  color: $font-color-primary;
   text-align: left;
   background-color: $dashlet-inner-bg-color;
 }
@@ -695,14 +695,14 @@ div#dashboard.grid {
 }
 
 .dashlet.pnpgraph div.title a {
-  color: $primary-font-color;
+  color: $font-color-primary;
 }
 
 svg {
   .title,
   .single_value,
   .state_component {
-    fill: $primary-font-color;
+    fill: $font-color-primary;
     text {
       // because there is conflict with a general: svg text
       stroke: none;
@@ -758,7 +758,7 @@ svg {
   .gauge_span {
     // TODO: Suitable for both themes. Darkgrey is rather in the middle grey.
     // Gives enough contrast on both themes against the color of the gauge level
-    // which is $primary-font-color
+    // which is $font-color-primary
     fill: $darkgrey;
   }
 }

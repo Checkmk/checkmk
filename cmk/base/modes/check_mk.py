@@ -1326,7 +1326,19 @@ modes.register(
         long_option="notify",
         handler_function=mode_notify,
         needs_config=False,
-        needs_checks=False,
+        # We know that this is a performance issue for non keepalive "cmk --notify" calls.
+        # But this is needed by cmk.base.events.complete_raw_context() for adding service labels to
+        # the service notification contexts. To compute the effective service labels, the discovered
+        # service labels from the autochecks have to be loaded. To find the correct labels from the
+        # autochecks, we'll have to compute the service description of all autochecks from the check
+        # name and item. And this is only possible in the moment we have all checks loaded.
+        #
+        # Possible alternatives would be:
+        # - Query livestatus for the current service labels
+        # - Make the cores hand over the service labels with the raw notification context
+        #
+        # Sadly all of them have their own drawbacks.
+        needs_checks=True,
         argument=True,
         argument_descr="MODE",
         argument_optional=True,

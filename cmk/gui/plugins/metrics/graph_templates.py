@@ -201,13 +201,17 @@ def metric_line_title(metric_definition: Tuple, translated_metrics: Dict) -> str
     return translated_metrics[metric_name]["title"]
 
 
-def metric_unit_color(metric_expression, translated_metrics, optional_metrics=None):
+def metric_unit_color(
+    metric_expression: str,
+    translated_metrics: TranslatedMetrics,
+    optional_metrics=None,
+) -> Dict[str, str]:
     try:
         _value, unit, color = evaluate(metric_expression, translated_metrics)
     except KeyError as err:  # because metric_name is not in translated_metrics
         metric_name = err.args[0]
         if optional_metrics and metric_name in optional_metrics:
-            return
+            return {}
         raise MKGeneralException(
             _("Graph recipe '%s' uses undefined metric '%s', available are: %s") %
             (metric_expression, metric_name, ", ".join(sorted(translated_metrics.keys())) or

@@ -284,7 +284,7 @@ def parse_perf_data(perf_data_string: str,
     return perf_data, check_command
 
 
-def _float_or_int(val: Optional[str]) -> Optional[float]:
+def _float_or_int(val: Optional[str]) -> Union[int, float, None]:
     """"45.0" -> 45.0, "45" -> 45"""
     if val is None:
         return None
@@ -350,7 +350,7 @@ def normalize_perf_data(perf_data, check_command):
     return translation_entry["name"], new_entry
 
 
-def get_metric_info(metric_name, color_index):
+def get_metric_info(metric_name: str, color_index: int) -> Tuple[Dict[str, str], int]:
 
     if metric_name not in metric_info:
         color_index += 1
@@ -476,13 +476,16 @@ def split_expression(expression: str) -> Tuple[str, Optional[str], Optional[str]
 # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
 # e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
 # e.g. "fs_used:max(%)" -> 100.0,  "%", "#00ffc6",
-# e.g. 123.4            -> 123.4,  "",  None
+# e.g. 123.4            -> 123.4,  "",  "#000000"
 # e.g. "123.4#ff0000"   -> 123.4,  "",  "#ff0000",
 # Note:
 # "fs_growth.max" is the same as fs_growth. The .max is just
 # relevant when fetching RRD data and is used for selecting
 # the consolidation function MAX.
-def evaluate(expression, translated_metrics):
+def evaluate(
+    expression: Union[str, int, float],
+    translated_metrics: TranslatedMetrics,
+) -> Tuple[float, Dict[str, Any], str]:
     if isinstance(expression, (float, int)):
         return _evaluate_literal(expression, translated_metrics)
 
@@ -500,8 +503,9 @@ def evaluate(expression, translated_metrics):
 
 
 def _evaluate_rpn(
-        expression: str,
-        translated_metrics: Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]:
+    expression: str,
+    translated_metrics: TranslatedMetrics,
+) -> Tuple[float, Dict[str, Any], str]:
     # stack of (value, unit, color)
     return stack_resolver(expression.split(","), lambda x: x in rpn_operators,
                           lambda op, a, b: rpn_operators[op](a, b),
@@ -557,10 +561,10 @@ _unit_add: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]] = _unit_mu
 _unit_sub: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]] = _unit_mult
 
 
-def _choose_operator_color(a, b):
-    if a is None:
+def _choose_operator_color(a: str, b: str) -> str:
+    if a == "#000000":
         return b
-    if b is None:
+    if b == "#000000":
         return a
     return render_color(_mix_colors(parse_color(a), parse_color(b)))
 
@@ -586,16 +590,17 @@ def _operator_minmax(a, b, func):
 
 
 def _evaluate_literal(
-        expression: Union[int, float, str],
-        translated_metrics: Dict[str, Any]) -> Tuple[float, Dict[str, Any], Optional[str]]:
+    expression: Union[int, float, str],
+    translated_metrics: TranslatedMetrics,
+) -> Tuple[float, Dict[str, Any], str]:
     if isinstance(expression, int):
-        return float(expression), unit_info["count"], None
+        return float(expression), unit_info["count"], "#000000"
 
     if isinstance(expression, float):
-        return expression, unit_info[""], None
+        return expression, unit_info[""], "#000000"
 
     if val := _float_or_int(expression):
-        return val, unit_info[""], None
+        return float(val), unit_info[""], "#000000"
 
     varname = drop_metric_consolidation_advice(expression)
 
@@ -946,7 +951,7 @@ scalar_colors = {
 }
 
 
-def get_palette_color_by_index(i, shading='a'):
+def get_palette_color_by_index(i: int, shading='a') -> str:
     color_key = sorted(_cmk_color_palette.keys())[i % len(_cmk_color_palette)]
     return "%s/%s" % (color_key, shading)
 
@@ -989,7 +994,7 @@ def _get_hue_by_weight_index(weight_index: float) -> float:
 
 # 23/c -> #ff8040
 # #ff8040 -> #ff8040
-def parse_color_into_hexrgb(color_string):
+def parse_color_into_hexrgb(color_string: str) -> str:
     if color_string[0] == "#":
         return color_string
 
@@ -1066,7 +1071,7 @@ def _mix_colors(a, b):
     return tuple((ca + cb) / 2.0 for (ca, cb) in zip(a, b))
 
 
-def render_color_icon(color) -> HTML:
+def render_color_icon(color: str) -> HTML:
     return html.render_div(
         '',
         class_="color",

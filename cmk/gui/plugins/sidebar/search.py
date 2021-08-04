@@ -848,7 +848,7 @@ match_plugin_registry = MatchPluginRegistry()
 
 class GroupMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self, group_type: str, name: str):
-        super(GroupMatchPlugin, self).__init__(
+        super().__init__(
             ["%sgroups" % group_type, "%ss" % group_type, "services"],
             "%sgroups" % group_type,
             name,
@@ -933,7 +933,7 @@ match_plugin_registry.register(GroupMatchPlugin(
 
 class ServiceMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self):
-        super(ServiceMatchPlugin, self).__init__(["services"], "services", "s")
+        super().__init__(["services"], "services", "s")
 
     def get_match_topic(self) -> str:
         return _("Service Description")
@@ -973,7 +973,7 @@ match_plugin_registry.register(ServiceMatchPlugin())
 
 class HostMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self, livestatus_field, name):
-        super(HostMatchPlugin, self).__init__(["hosts", "services"], "hosts", name)
+        super().__init__(["hosts", "services"], "hosts", name)
         self._livestatus_field = livestatus_field  # address, name or alias
 
     def get_match_topic(self) -> str:
@@ -1068,7 +1068,7 @@ match_plugin_registry.register(HostMatchPlugin(
 
 class HosttagMatchPlugin(ABCLivestatusMatchPlugin):
     def __init__(self):
-        super(HosttagMatchPlugin, self).__init__(["hosts", "services"], "hosts", "tg")
+        super().__init__(["hosts", "services"], "hosts", "tg")
 
     def _get_hosttag_dict(self):
         lookup_dict = {}

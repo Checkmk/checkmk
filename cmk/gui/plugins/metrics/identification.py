@@ -36,7 +36,7 @@ from cmk.gui.type_defs import GraphIdentifier
 class GraphIdentificationTypes:
     """Container class for managing all known identification types"""
     def __init__(self) -> None:
-        super(GraphIdentificationTypes, self).__init__()
+        super().__init__()
         self._types: MutableMapping[str, Type['GraphIdentification']] = {}
 
     def register(self, type_cls: Type['GraphIdentification']) -> None:

@@ -569,7 +569,7 @@ class _MeshNode(TypedDict, total=False):
 
 class Topology:
     def __init__(self, topology_settings: TopologySettings) -> None:
-        super(Topology, self).__init__()
+        super().__init__()
         self._settings = topology_settings
 
         # Hosts with complete data
@@ -891,7 +891,7 @@ class ParentChildNetworkTopology(Topology):
         return meshes
 
     def get_info_for_host(self, hostname: HostName, mesh: Mesh) -> Dict[str, Any]:
-        info = super(ParentChildNetworkTopology, self).get_info_for_host(hostname, mesh)
+        info = super().get_info_for_host(hostname, mesh)
         host_info = self._known_hosts[hostname]
         info.update(host_info)
         for key in ["childs", "parents"]:

@@ -192,7 +192,7 @@ class LDAPUserConnector(UserConnector):
         return cfg
 
     def __init__(self, cfg):
-        super(LDAPUserConnector, self).__init__(self.transform_config(cfg))
+        super().__init__(self.transform_config(cfg))
 
         self._ldap_obj: Optional[ldap.ldapobject.ReconnectLDAPObject] = None
         self._ldap_obj_config = None

@@ -314,7 +314,7 @@ def _get_builtin_roles() -> Roles:
 
 class UserConnector(metaclass=abc.ABCMeta):
     def __init__(self, cfg):
-        super(UserConnector, self).__init__()
+        super().__init__()
         self._config = cfg
 
     @classmethod

@@ -113,7 +113,7 @@ SubPagesSpec = List[Tuple[str, str, str]]
 
 class Base:
     def __init__(self, d: Dict[str, Any]) -> None:
-        super(Base, self).__init__()
+        super().__init__()
 
         # The dictionary with the name _ holds all information about
         # the page in question - as a dictionary that can be loaded
@@ -369,7 +369,7 @@ class PageRenderer(Base):
     # so we need a topic and a checkbox for the visibility
     @classmethod
     def parameters(cls, mode):
-        parameters = super(PageRenderer, cls).parameters(mode)
+        parameters = super().parameters(mode)
 
         parameters += [(_("Navigation"), [
             (1.4, 'topic', DropdownChoice(
@@ -416,7 +416,7 @@ class PageRenderer(Base):
 
     @classmethod
     def page_handlers(cls):
-        handlers = super(PageRenderer, cls).page_handlers()
+        handlers = super().page_handlers()
         handlers.update({
             cls.type_name(): cls.page_show,
         })
@@ -488,12 +488,12 @@ class PageRenderer(Base):
 
 class Overridable(Base):
     def __init__(self, d):
-        super(Overridable, self).__init__(d)
+        super().__init__(d)
         self._.setdefault("public", False)
 
     @classmethod
     def parameters(cls, mode):
-        parameters = super(Overridable, cls).parameters(mode)
+        parameters = super().parameters(mode)
 
         if cls.has_overriding_permission("publish"):
             vs_visibility: ValueSpec = Optional(
@@ -523,7 +523,7 @@ class Overridable(Base):
 
     @classmethod
     def page_handlers(cls):
-        handlers = super(Overridable, cls).page_handlers()
+        handlers = super().page_handlers()
         handlers.update({
             "%ss" % cls.type_name(): cls.page_list,
             "edit_%s" % cls.type_name(): cls.page_edit,
@@ -1521,7 +1521,7 @@ def _page_menu_entries_sub_pages(mode: str, sub_pages: SubPagesSpec, ident_attr_
 class ContactGroupChoice(DualListChoice):
     """A multiple selection of contact groups that are part of the current active config"""
     def __init__(self, with_foreign_groups=True, **kwargs):
-        super(ContactGroupChoice, self).__init__(choices=self._load_groups, **kwargs)
+        super().__init__(choices=self._load_groups, **kwargs)
         self._with_foreign_groups = with_foreign_groups
 
     def _load_groups(self):
@@ -1548,7 +1548,7 @@ class ContactGroupChoice(DualListChoice):
 
 class Container(Base):
     def __init__(self, d):
-        super(Container, self).__init__(d)
+        super().__init__(d)
         self._.setdefault("elements", [])
 
     # Which kind of elements are allowed to be added to this container?
@@ -1601,7 +1601,7 @@ class OverridableContainer(Overridable, Container):
 
     @classmethod
     def page_handlers(cls):
-        handlers = super(OverridableContainer, cls).page_handlers()
+        handlers = super().page_handlers()
         handlers.update({
             # Ajax handler for adding elements to a container
             "ajax_pagetype_add_element": cls.ajax_add_element
@@ -1732,7 +1732,7 @@ class PagetypeTopics(Overridable):
 
     @classmethod
     def parameters(cls, mode):
-        parameters = super(PagetypeTopics, cls).parameters(mode)
+        parameters = super().parameters(mode)
 
         parameters += [
             (

@@ -366,7 +366,7 @@ class MetricometerRenderer(metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def __init__(self, perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics) -> None:
-        super(MetricometerRenderer, self).__init__()
+        super().__init__()
         self._perfometer = perfometer
         self._translated_metrics = translated_metrics
 
@@ -431,7 +431,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         return "logarithmic"
 
     def __init__(self, perfometer: PerfometerSpec, translated_metrics: TranslatedMetrics) -> None:
-        super(MetricometerRendererLogarithmic, self).__init__(perfometer, translated_metrics)
+        super().__init__(perfometer, translated_metrics)
 
         if self._perfometer is not None and "metric" not in self._perfometer:
             raise MKGeneralException(
@@ -564,7 +564,7 @@ class MetricometerRendererDual(MetricometerRenderer):
         return "dual"
 
     def __init__(self, perfometer, translated_metrics):
-        super(MetricometerRendererDual, self).__init__(perfometer, translated_metrics)
+        super().__init__(perfometer, translated_metrics)
 
         if len(perfometer["perfometers"]) != 2:
             raise MKInternalError(

@@ -57,7 +57,7 @@ class Page(metaclass=abc.ABCMeta):
 class AjaxPage(Page, metaclass=abc.ABCMeta):
     """Generic page handler that wraps page() calls into AJAX respones"""
     def __init__(self):
-        super(AjaxPage, self).__init__()
+        super().__init__()
         self._from_vars()
 
     def _from_vars(self) -> None:

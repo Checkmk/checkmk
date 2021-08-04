@@ -103,7 +103,7 @@ class Permission(metaclass=abc.ABCMeta):
 
 class PermissionRegistry(cmk.utils.plugin_registry.Registry[Permission]):
     def __init__(self):
-        super(PermissionRegistry, self).__init__()
+        super().__init__()
         # TODO: Better make the sorting explicit in the future
         # used as auto incrementing counter to numerate the permissions in
         # the order they have been added.

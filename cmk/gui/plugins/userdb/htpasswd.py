@@ -34,7 +34,7 @@ crypt_context = CryptContext(schemes=[
 class Htpasswd:
     """Thin wrapper for loading and saving the htpasswd file"""
     def __init__(self, path: Path) -> None:
-        super(Htpasswd, self).__init__()
+        super().__init__()
         self._path = path
 
     def load(self) -> Dict[str, str]:

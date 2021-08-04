@@ -242,7 +242,7 @@ class Dashlet(metaclass=abc.ABCMeta):
 
     def __init__(self, dashboard_name: DashboardName, dashboard: DashboardConfig,
                  dashlet_id: DashletId, dashlet: DashletConfig) -> None:
-        super(Dashlet, self).__init__()
+        super().__init__()
         self._dashboard_name = dashboard_name
         self._dashboard = dashboard
         self._dashlet_id = dashlet_id

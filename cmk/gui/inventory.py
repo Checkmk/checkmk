@@ -543,7 +543,7 @@ def _write_python(resp):
 
 class InventoryHousekeeping:
     def __init__(self):
-        super(InventoryHousekeeping, self).__init__()
+        super().__init__()
         self._inventory_path = Path(cmk.utils.paths.inventory_output_dir)
         self._inventory_archive_path = Path(cmk.utils.paths.inventory_archive_dir)
         self._inventory_delta_cache_path = Path(cmk.utils.paths.var_dir) / "inventory_delta_cache"

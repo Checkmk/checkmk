@@ -43,7 +43,7 @@ class KeypairStore:
     def __init__(self, path: str, attr: str) -> None:
         self._path = Path(path)
         self._attr = attr
-        super(KeypairStore, self).__init__()
+        super().__init__()
 
     def load(self):
         if not self._path.exists():
@@ -83,7 +83,7 @@ class PageKeyManagement:
 
     def __init__(self):
         self.keys = self.load()
-        super(PageKeyManagement, self).__init__()
+        super().__init__()
 
     def title(self):
         raise NotImplementedError()

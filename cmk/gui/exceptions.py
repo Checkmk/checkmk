@@ -24,7 +24,7 @@ class RequestTimeout(MKTimeout):
 class FinalizeRequest(MKException):
     """Is used to end the HTTP request processing from deeper code levels"""
     def __init__(self, code: int) -> None:
-        super(FinalizeRequest, self).__init__("%d %s" % (code, HTTP_STATUS_CODES[code]))
+        super().__init__("%d %s" % (code, HTTP_STATUS_CODES[code]))
         self.status = code
 
 
@@ -32,7 +32,7 @@ class HTTPRedirect(FinalizeRequest):
     """Is used to end the HTTP request processing from deeper code levels
     and making the client request another page after receiving the response."""
     def __init__(self, url: str, code: int = http.client.FOUND) -> None:
-        super(HTTPRedirect, self).__init__(code)
+        super().__init__(code)
         self.url: str = url
 
 
@@ -52,7 +52,7 @@ class MKUserError(MKException):
     def __init__(self, varname: Optional[str], message: str) -> None:
         self.varname: Optional[str] = varname
         self.message: str = message
-        super(MKUserError, self).__init__(varname, message)
+        super().__init__(varname, message)
 
     def __str__(self):
         return self.message

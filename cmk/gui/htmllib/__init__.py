@@ -818,7 +818,7 @@ class html(ABCHTMLGenerator):
         output_funnel: 'OutputFunnel',
         output_format: str,
     ) -> None:
-        super(html, self).__init__()
+        super().__init__()
 
         self._logger = log.logger.getChild("html")
 

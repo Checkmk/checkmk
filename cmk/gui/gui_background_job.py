@@ -116,7 +116,7 @@ class GUIBackgroundProcess(background_job.BackgroundProcess):
         if g:
             sites.disconnect()
 
-        super(GUIBackgroundProcess, self).initialize_environment()
+        super().initialize_environment()
 
 
 # These functions here are included in a frozen snapshot of a background job
@@ -176,16 +176,16 @@ class GUIBackgroundJobSnapshottedFunctions(background_job.BackgroundJob):
     # GUIBackgroundStatusSnapshot which needs the methods *in this class*,
     # although they are actually totally useless here.
     def is_active(self):  # pylint: disable=useless-super-delegation
-        return super(GUIBackgroundJobSnapshottedFunctions, self).is_active()
+        return super().is_active()
 
     def exists(self):  # pylint: disable=useless-super-delegation
-        return super(GUIBackgroundJobSnapshottedFunctions, self).exists()
+        return super().exists()
 
     def get_job_id(self):  # pylint: disable=useless-super-delegation
-        return super(GUIBackgroundJobSnapshottedFunctions, self).get_job_id()
+        return super().get_job_id()
 
     def get_title(self):  # pylint: disable=useless-super-delegation
-        return super(GUIBackgroundJobSnapshottedFunctions, self).get_title()
+        return super().get_title()
 
 
 class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
@@ -198,7 +198,7 @@ class GUIBackgroundJob(GUIBackgroundJobSnapshottedFunctions):
         # Deletable is currently a GUI only feature, not known in background_job
         self._deletable = kwargs.get("deletable", True)
 
-        super(GUIBackgroundJob, self).__init__(job_id, logger=logger, **kwargs)
+        super().__init__(job_id, logger=logger, **kwargs)
 
     @classmethod
     def gui_title(cls) -> str:
@@ -246,7 +246,7 @@ job_registry = GUIBackgroundJobRegistry()
 # here without any metaprogramming Kung Fu and arcane inheritance hierarchies.
 class GUIBackgroundStatusSnapshot:
     def __init__(self, job):
-        super(GUIBackgroundStatusSnapshot, self).__init__()
+        super().__init__()
         self._job_status = job.get_status()
         self._logger = job._logger.getChild("snapshot")
 
@@ -266,15 +266,14 @@ class GUIBackgroundStatusSnapshot:
 
 class GUIBackgroundJobManager(background_job.BackgroundJobManager):
     def __init__(self):
-        super(GUIBackgroundJobManager,
-              self).__init__(logger=log.logger.getChild("background-job.manager"))
+        super().__init__(logger=log.logger.getChild("background-job.manager"))
 
     def get_running_job_ids(self, job_class):
-        job_ids = super(GUIBackgroundJobManager, self).get_running_job_ids(job_class)
+        job_ids = super().get_running_job_ids(job_class)
         return self._filter_available_jobs(job_ids)
 
     def get_all_job_ids(self, job_class):
-        job_ids = super(GUIBackgroundJobManager, self).get_all_job_ids(job_class)
+        job_ids = super().get_all_job_ids(job_class)
         return self._filter_available_jobs(job_ids)
 
     def _filter_available_jobs(self, job_ids):
@@ -602,7 +601,7 @@ class ActionHandler:
     acknowledge_job_var = "_acknowledge_job"
 
     def __init__(self, breadcrumb: Breadcrumb):
-        super(ActionHandler, self).__init__()
+        super().__init__()
         self._breadcrumb = breadcrumb
         self._did_acknowledge_job = False
         self._did_stop_job = False

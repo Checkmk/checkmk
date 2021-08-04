@@ -40,7 +40,7 @@ class LegacyVarsMixin:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # [mypy:] Too many arguments for "__init__" of "object"  [call-arg]
-        super(LegacyVarsMixin, self).__init__(*args, **kw)  # type: ignore[call-arg]
+        super().__init__(*args, **kw)  # type: ignore[call-arg]
         self.legacy_vars = self._vars = {}  # type: Dict[str, Union[str, object]]
 
     def set_var(self, varname: str, value: str) -> None:
@@ -77,7 +77,7 @@ class LegacyVarsMixin:
         # We only fall through to the real HTTP request if our var isn't set and isn't deleted.
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
-        for name, val in super(LegacyVarsMixin, self).itervars(prefix=prefix):  # type: ignore[misc]
+        for name, val in super().itervars(prefix=prefix):  # type: ignore[misc]
             if name in skip:
                 continue
             yield name, val
@@ -90,7 +90,7 @@ class LegacyVarsMixin:
         # We only fall through to the real HTTP request if our var isn't set and isn't deleted.
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
-        return super(LegacyVarsMixin, self).has_var(varname)  # type: ignore[misc]
+        return super().has_var(varname)  # type: ignore[misc]
 
     def var(self, varname: str, default: Optional[str] = None) -> Optional[str]:
         varname = ensure_str(varname)
@@ -103,7 +103,7 @@ class LegacyVarsMixin:
         # We only fall through to the real HTTP request if our var isn't set and isn't deleted.
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
-        return super(LegacyVarsMixin, self).var(varname, default)  # type: ignore[misc]
+        return super().var(varname, default)  # type: ignore[misc]
 
 
 class LegacyUploadMixin:
@@ -111,7 +111,7 @@ class LegacyUploadMixin:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
         # [mypy:] Too many arguments for "__init__" of "object"  [call-arg]
-        super(LegacyUploadMixin, self).__init__(*args, **kw)  # type: ignore[call-arg]
+        super().__init__(*args, **kw)  # type: ignore[call-arg]
         self.upload_cache: Dict[str, UploadedFile] = {}
 
     def uploaded_file(self, name: str) -> UploadedFile:

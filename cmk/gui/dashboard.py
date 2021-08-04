@@ -390,7 +390,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
     def add_url(cls) -> str:
         if "add_urlfunc" in cls._spec:
             return cls._spec["add_urlfunc"]()
-        return super(LegacyDashlet, cls).add_url()
+        return super().add_url()
 
     def infos(self) -> List[str]:
         return self._spec.get("infos", [])
@@ -432,7 +432,7 @@ class LegacyDashlet(cmk.gui.plugins.dashboard.IFrameDashlet):
             url = self._spec["iframe_urlfunc"](self._dashlet_spec)
             return url
 
-        return super(LegacyDashlet, self)._get_iframe_url()
+        return super()._get_iframe_url()
 
 
 # Pre Checkmk 1.6 the dashlets were declared with dictionaries like this:

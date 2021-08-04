@@ -424,7 +424,7 @@ auth_type: Union[str, LocalProxy] = LocalProxy(lambda: local.auth_type)
 @page_registry.register_page("login")
 class LoginPage(Page):
     def __init__(self) -> None:
-        super(LoginPage, self).__init__()
+        super().__init__()
         self._no_html_output = False
 
     def set_no_html_output(self, no_html_output: bool) -> None:

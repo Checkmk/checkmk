@@ -131,7 +131,7 @@
 
   b {
     font-weight: normal;
-    color: $font-color-primary;
+    color: $font-color;
   }
 }
 
@@ -782,7 +782,7 @@ div.filter_buttons {
   }
 
   a {
-    color: $font-color-primary;
+    color: $font-color;
     text-decoration: none;
     white-space: nowrap;
 
@@ -1406,7 +1406,7 @@ td.settingvalue.unused td {
 }
 
 .wato table.nform div.title a {
-  color: $font-color-primary;
+  color: $font-color;
   text-decoration: none;
 
   &:hover {

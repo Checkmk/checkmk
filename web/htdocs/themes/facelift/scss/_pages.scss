@@ -333,7 +333,7 @@ table.data {
 
     /* Table header links (For sorting) */
     &.sort:hover {
-      color: $font-color-primary-hover;
+      color: $font-color-hover;
       cursor: pointer;
       background-color: $data-th-sort-hover-bg-color;
     }
@@ -408,7 +408,7 @@ table.data {
         color: $font-color-secondary;
 
         &:hover {
-          color: $font-color-primary-hover;
+          color: $font-color-hover;
         }
       }
 
@@ -1268,7 +1268,7 @@ body.main .popup_menu {
     }
 
     &.active a {
-      color: $font-color-primary;
+      color: $font-color;
       border-bottom: 1px solid rgb(80, 138, 161);
     }
   }

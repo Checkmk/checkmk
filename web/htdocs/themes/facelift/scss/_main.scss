@@ -313,7 +313,6 @@ div.livestatus.message {
   bottom: -10px;
   left: 10px;
   z-index: 20;
-  color: $black;
 }
 
 /*-------------------------------------------------------------------------.
@@ -454,20 +453,18 @@ div.really {
 }
 
 div.success {
-  color: $font-color-primary;
+  color: $font-color;
   background-color: $headline-color;
 }
 
 div.message {
-  color: $black; // TODO: Check whether this must be $font-color-primary as is for .success
+  color: $font-color-light-bg;
   background-color: rgb(157, 190, 205);
-  border-color: rgb(0, 68, 136);
 }
 
 div.error {
   color: $lightgrey;
   background-color: $color-state-2-background;
-  border-color: rgb(238, 68, 0);
 
   a,
   a:link {

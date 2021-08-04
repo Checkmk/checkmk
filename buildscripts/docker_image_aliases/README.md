@@ -68,6 +68,7 @@ it manually just run `docker build` as usual and provide the variable containing
 via `--build-arg`:
 
         docker build \
+            --pull \
             --build-arg "IMAGE_CMK_BASE=$(./resolve.sh IMAGE_CMK_BASE)" \
             -t debian_example example
 
@@ -83,7 +84,7 @@ you can now run s.th. like
 You can also use the Dockerfiles contained in the alias directories directly if possible. E.g. in 
 Jenkins/Groovy scripts you write
 
-        docker.build(<NAME>, <PATH-TO-ALIAS>).inside(<ARGS>) {
+        docker.build("<NAME>", "--pull <PATH-TO-ALIAS>").inside(<ARGS>) {
             <CODE>
         }
 

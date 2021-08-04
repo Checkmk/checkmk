@@ -88,7 +88,7 @@ node(NODE) {
             upload_artifacts = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
 
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                 BUILD_IMAGE.inside(DOCKER_ARGS) {
 
                     withFolderProperties{
@@ -133,7 +133,7 @@ node(NODE) {
                     }
                     else if (EDITION != 'raw') {
                         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                            def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                            def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                             BUILD_IMAGE.inside(DOCKER_ARGS + " -u 0:0 --ulimit nofile=1024:1024 -v /var/run/docker.sock:/var/run/docker.sock --privileged") {
                                 build_linux_agent_updater(AGENT, EDITION, BRANCH_VERSION, DOCKER_REGISTRY_NO_HTTP)
                             }
@@ -147,7 +147,7 @@ node(NODE) {
         notify.notify_error(e)
     }
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-        def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+        def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
 
         BUILD_IMAGE.inside(DOCKER_ARGS) {
             create_source_package(WORKSPACE, CMK_VERS)
@@ -198,7 +198,7 @@ node(NODE) {
                             }
                         }
 
-                        def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                        def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                         BUILD_IMAGE.inside(DOCKER_ARGS) {
                             def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS)
                             def BUILD_PACKAGE_PATH = DISTRO_DIR + "/" + PACKAGE_NAME
@@ -230,7 +230,7 @@ node(NODE) {
     }finally {
         if (DEPLOY_TO_WEBSITE) {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                 BUILD_IMAGE.inside(DOCKER_ARGS) {
                     upload_artifacts.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS)
                     upload_artifacts.create_hashes(WORKSPACE + "/" + CMK_VERS)
@@ -241,7 +241,7 @@ node(NODE) {
         }
     }
     } finally {
-        def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+        def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
         BUILD_IMAGE.inside(DOCKER_ARGS) {
             println(">>>>>>> clean WORKSPACE=${WORKSPACE}")
             sh('chmod -R a+r+w "${WORKSPACE}"')

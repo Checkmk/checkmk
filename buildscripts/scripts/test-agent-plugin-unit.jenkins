@@ -25,7 +25,7 @@ def DOCKER_BUILDS = [:]
 try {
     node(NODE) {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            def TEST_IMAGE = docker.build("test-image:${env.BUILD_ID}", "buildscripts/docker_image_aliases/IMAGE_TESTING")
+            def TEST_IMAGE = docker.build("test-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
             // ID of docker group on the node
             def DOCKER_GROUP_ID = docker_util.get_docker_group_id()
             // The commands are executed with the 1001:1000 UID:GID (non-root).

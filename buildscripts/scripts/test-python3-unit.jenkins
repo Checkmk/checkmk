@@ -18,7 +18,7 @@ node (NODE) {
 try {
     node (NODE) {
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-            def TEST_IMAGE = docker.build("test-image:${env.BUILD_ID}", "buildscripts/docker_image_aliases/IMAGE_TESTING") 
+            def TEST_IMAGE = docker.build("test-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING") 
             // The commands are executed with the 1001:1000 UID:GID (non-root).
             // This is the UID of the jenkins user on the node which does not exist
             // in the container. For the moment this does not look like a problem.

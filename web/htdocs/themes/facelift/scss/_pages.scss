@@ -380,10 +380,6 @@ table.data {
       color: rgb(136, 136, 136);
     }
 
-    &:not(.state) {
-      color: $font-color-secondary;
-    }
-
     &.nowrap {
       white-space: nowrap;
     }
@@ -404,12 +400,8 @@ table.data {
     > td {
       vertical-align: middle;
 
-      a {
-        color: $font-color-secondary;
-
-        &:hover {
-          color: $font-color-hover;
-        }
+      a:hover {
+        color: $font-color-hover;
       }
 
       &:not(.state):not(.hstate) {
@@ -899,7 +891,6 @@ table.nform {
       padding: 4px 10px 3px 9px;
       font-weight: $font-weight-bold;
       letter-spacing: $letter-spacing-table;
-      color: $font-color-secondary;
       background-color: $headline-color;
     }
 

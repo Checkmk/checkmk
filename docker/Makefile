@@ -48,7 +48,7 @@ check-mk-$(EDITION)-docker-$(VERSION).demo.tar.gz: image-demo
 image: needed-packages
 	SECRET_CONTAINER_ID=$$($(SECRET_CONTAINER_ID_CMD)) ; \
 	docker build \
-	    --pull \
+	    --pull
 	    --network=container:$$SECRET_CONTAINER_ID \
 	    --build-arg CMK_VERSION="$(VERSION)" \
 	    --build-arg CMK_EDITION="$(EDITION)" \

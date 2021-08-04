@@ -4,24 +4,61 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
 import logging
-from typing import Dict, List, Tuple as _Tuple, Any
+import re
+from typing import Any, Dict, List, Tuple as _Tuple
 
 import cmk.utils.paths
 from cmk.utils.tags import TagGroup
 
-from cmk.gui.globals import config
-import cmk.gui.plugins.userdb.utils as userdb_utils
-import cmk.gui.utils as utils
-from cmk.gui.utils.theme import theme_choices
-from cmk.gui.utils import show_mode_choices
-from cmk.gui.exceptions import MKUserError, MKConfigError
-from cmk.gui.i18n import _
-from cmk.gui.globals import request, user
-
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
+import cmk.gui.plugins.userdb.utils as userdb_utils
+import cmk.gui.utils as utils
+from cmk.gui.exceptions import MKConfigError, MKUserError
+from cmk.gui.globals import config, request, user
+from cmk.gui.i18n import _
+from cmk.gui.plugins.views.icons import icon_and_action_registry
+from cmk.gui.plugins.wato import (
+    BinaryHostRulespec,
+    BinaryServiceRulespec,
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigDomainCACertificates,
+    ConfigDomainCore,
+    ConfigDomainGUI,
+    ConfigDomainOMD,
+    ConfigVariable,
+    ConfigVariableGroup,
+    ContactGroupSelection,
+    HostGroupSelection,
+    HostnameTranslation,
+    HostRulespec,
+    HTTPProxyInput,
+    IPMIParameters,
+    PluginCommandLine,
+    rulespec_group_registry,
+    rulespec_registry,
+    RulespecGroup,
+    RulespecSubGroup,
+    ServiceDescriptionTranslation,
+    ServiceGroupSelection,
+    ServiceRulespec,
+    site_neutral_path,
+    SNMPCredentials,
+    TimeperiodSelection,
+    UserIconOrAction,
+    valuespec_check_plugin_selection,
+)
+from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
+from cmk.gui.plugins.wato.utils import (
+    get_section_information,
+    RulespecGroupDiscoveryCheckParameters,
+    RulespecGroupMonitoringConfiguration,
+)
+from cmk.gui.utils import show_mode_choices
+from cmk.gui.utils.theme import theme_choices
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -53,50 +90,8 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
-
-from cmk.gui.plugins.wato import (
-    BinaryHostRulespec,
-    BinaryServiceRulespec,
-    ConfigDomainCACertificates,
-    ConfigDomainCore,
-    ConfigDomainGUI,
-    ConfigDomainOMD,
-    ConfigVariable,
-    ConfigVariableGroup,
-    config_variable_group_registry,
-    config_variable_registry,
-    ContactGroupSelection,
-    HostGroupSelection,
-    HostnameTranslation,
-    HostRulespec,
-    HTTPProxyInput,
-    IPMIParameters,
-    PluginCommandLine,
-    RulespecGroup,
-    rulespec_group_registry,
-    rulespec_registry,
-    RulespecSubGroup,
-    ServiceDescriptionTranslation,
-    ServiceGroupSelection,
-    ServiceRulespec,
-    site_neutral_path,
-    SNMPCredentials,
-    TimeperiodSelection,
-    UserIconOrAction,
-    valuespec_check_plugin_selection,
-)
-
-from cmk.gui.plugins.views.icons import icon_and_action_registry
-from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
-from cmk.gui.plugins.wato.utils import (
-    get_section_information,
-    RulespecGroupMonitoringConfiguration,
-    RulespecGroupDiscoveryCheckParameters,
-)
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
 from cmk.gui.watolib.groups import load_contact_group_information
-
-from cmk.gui.utils.urls import makeuri_contextless
 
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |

@@ -18,6 +18,7 @@ from typing import (
 import livestatus
 import cmk.utils.paths
 import cmk.utils.prediction as prediction
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
@@ -56,7 +57,7 @@ def _load_prediction_information(
 
 @cmk.gui.pages.register("prediction_graph")
 def page_graph():
-    host = request.get_str_input_mandatory("host")
+    host = HostName(request.get_str_input_mandatory("host"))
     service = request.get_str_input_mandatory("service")
     dsname = request.get_str_input_mandatory("dsname")
 
@@ -195,7 +196,7 @@ def compute_vertical_scala(low, high):
     return vert_scala
 
 
-def get_current_perfdata(host, service, dsname):
+def get_current_perfdata(host: HostName, service: str, dsname: str) -> Optional[float]:
     perf_data = sites.live().query_value(
         "GET services\nFilter: host_name = %s\nFilter: description = %s\n"
         "Columns: perf_data" % (livestatus.lqencode(host), livestatus.lqencode(service)))
@@ -204,6 +205,7 @@ def get_current_perfdata(host, service, dsname):
         name, rest = part.split("=")
         if name == dsname:
             return float(rest.split(";")[0])
+    return None
 
 
 # Compute check levels from prediction data and check parameters

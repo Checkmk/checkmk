@@ -585,7 +585,8 @@ def _evaluate_literal(
         return expression, unit_info[""], "#000000"
 
     if val := _float_or_int(expression):
-        return float(val), unit_info[""], "#000000"
+        if expression not in translated_metrics:
+            return float(val), unit_info[""], "#000000"
 
     varname = drop_metric_consolidation_advice(expression)
 

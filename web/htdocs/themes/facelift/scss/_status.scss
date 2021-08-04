@@ -152,7 +152,6 @@ td.fillbackground.state3,
   span {
     &,
     a {
-      color: $statep-font-color !important;
       background-color: $color-state-4-background !important;
     }
   }
@@ -215,7 +214,7 @@ img.pluginurl {
   }
 
   &.online {
-    color: $hot-font-color !important;
+    color: $font-color-light-bg;
     background-color: $color-state-success-background;
   }
 

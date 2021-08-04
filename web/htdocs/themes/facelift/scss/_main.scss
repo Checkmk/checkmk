@@ -188,7 +188,7 @@ button.hot,
 input.button.hot {
   &,
   &:active {
-    color: $hot-font-color;
+    color: $font-color-light-bg;
     background-color: rgb(17, 189, 123);
   }
 
@@ -1455,12 +1455,13 @@ body.main.visible div.foldable .title {
   color: $font-color;
 }
 
-.hot a,
-.hot body.main .popup_menu span,
-body.main .popup_menu .hot span {
-  color: $hot-font-color;
-  background-color: $hot-bg-color !important;
-  border-color: $color-nuance-4;
+.hot:not(.entry) {
+  a,
+  span {
+    // highlighted suggestion buttons used e.g. in "Bake agents"
+    color: $font-color-light-bg !important;
+    background-color: $hot-bg-color !important;
+  }
 }
 
 div.info {

@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 from typing import Iterable, Set, Tuple
 
-from tests.testlib import cmk_path
+from tests.testlib import cmk_path, is_enterprise_repo
 
 
 def _scss_files() -> Set[Path]:
@@ -39,6 +39,11 @@ def _scss_variables(scss_files: Iterable[Path]) -> Tuple[Set[str], Set[str]]:
 def test_unused_scss_variables() -> None:
     definitions, usages = _scss_variables(_scss_files())
     unused = [var for var in definitions if var not in usages]
-    assert unused == [
+    expected = [
         '$self',  # used in interpolation with #{}
-    ], 'Found unused SCSS variables'
+    ]
+
+    if not is_enterprise_repo():
+        expected.append('$ntop-protocol-painter-padding-top')
+
+    assert sorted(unused) == sorted(expected), 'Found unused SCSS variables'

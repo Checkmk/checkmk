@@ -40,6 +40,8 @@ def test_split_perf_data(data_string, result):
         ("hi", 5, u"G", None, None, None, None),
         ("not_here", 6, u"M", 5.6, None, None, None),
     ], "test")),
+    ("11.26=6;;;;", "check_mk-local",
+     ([("11.26", 6, "", None, None, None, None)], "check_mk-local")),
 ])
 def test_parse_perf_data(request_context, perf_str, check_command, result):
     assert utils.parse_perf_data(perf_str, check_command) == result
@@ -189,6 +191,13 @@ def test_evaluate():
         utils.translate_metrics(
             utils.parse_perf_data('127.0.0.1pl=5%;80;100;;')[0],
             "check_mk_active-icmp")) == (5, utils.unit_info[""], '#cc00ff')
+
+    # Here the user has a metrics that represent subnets, but the values look like floats
+    # Test that evaluation recognizes the metric from the perf data
+    assert utils.evaluate(
+        "10.172",
+        utils.translate_metrics(utils.parse_perf_data("10.172=6")[0], "check_mk-local"),
+    ) == (6, utils.unit_info[""], "#cc00ff")
 
 
 @pytest.mark.parametrize("elements, is_operator, apply_operator, apply_element, result", [

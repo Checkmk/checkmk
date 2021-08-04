@@ -14,9 +14,8 @@ from cmk.gui.watolib.utils import wato_root_dir
 
 class PredefinedConditionStore(WatoSimpleConfigFile):
     def __init__(self):
-        super(PredefinedConditionStore,
-              self).__init__(config_file_path=Path(wato_root_dir()) / "predefined_conditions.mk",
-                             config_variable="predefined_conditions")
+        super().__init__(config_file_path=Path(wato_root_dir()) / "predefined_conditions.mk",
+                         config_variable="predefined_conditions")
 
     def filter_usable_entries(self, entries):
         if user.may("wato.edit_all_predefined_conditions"):

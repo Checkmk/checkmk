@@ -319,7 +319,7 @@ class ActivateChanges:
         # Each change contains a list of affected sites.
         self._changes = []
 
-        super(ActivateChanges, self).__init__()
+        super().__init__()
 
     def load(self):
         self._repstatus = _load_replication_status()
@@ -499,7 +499,7 @@ class ActivateChangesManager(ActivateChanges):
         self._activation_id: Optional[str] = None
         self._prevent_activate = False
         store.makedirs(self.activation_persisted_dir)
-        super(ActivateChangesManager, self).__init__()
+        super().__init__()
 
     def load_activation(self, activation_id: ActivationId) -> None:
         self._activation_id = activation_id
@@ -877,7 +877,7 @@ class SnapshotManager:
                                                                               SnapshotSettings],
                  data_collector: 'ABCSnapshotDataCollector', reuse_identical_snapshots: bool,
                  generate_in_suprocess: bool) -> None:
-        super(SnapshotManager, self).__init__()
+        super().__init__()
         self._activation_work_dir = activation_work_dir
         self._site_snapshot_settings = site_snapshot_settings
         self._data_collector = data_collector
@@ -929,7 +929,7 @@ class SnapshotManager:
 class ABCSnapshotDataCollector(metaclass=abc.ABCMeta):
     """Prepares files to be synchronized to the remote sites"""
     def __init__(self, site_snapshot_settings: Dict[SiteId, SnapshotSettings]) -> None:
-        super(ABCSnapshotDataCollector, self).__init__()
+        super().__init__()
         self._site_snapshot_settings = site_snapshot_settings
         self._logger = logger.getChild(self.__class__.__name__)
 
@@ -1095,7 +1095,7 @@ class ActivationCleanupBackgroundJob(WatoBackgroundJob):
         return _("Activation cleanup")
 
     def __init__(self):
-        super(ActivationCleanupBackgroundJob, self).__init__(
+        super().__init__(
             self.job_prefix,
             title=self.gui_title(),
             lock_wato=False,
@@ -1193,10 +1193,9 @@ class ActivateChangesSchedulerBackgroundJob(WatoBackgroundJob):
 
     def __init__(self, activation_id: str, site_snapshot_settings: Dict[SiteId, SnapshotSettings],
                  prevent_activate: bool) -> None:
-        super(ActivateChangesSchedulerBackgroundJob,
-              self).__init__("%s-%s" % (self.job_prefix, activation_id),
-                             deletable=False,
-                             stoppable=False)
+        super().__init__("%s-%s" % (self.job_prefix, activation_id),
+                         deletable=False,
+                         stoppable=False)
         self._activation_id = activation_id
         self._site_snapshot_settings = site_snapshot_settings
         self._prevent_activate = prevent_activate
@@ -1288,7 +1287,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                  activation_id: str,
                  prevent_activate: bool = False,
                  file_filter_func: Optional[Callable[[str], bool]] = None) -> None:
-        super(ActivateChangesSite, self).__init__()
+        super().__init__()
         self._site_id = site_id
         self._site_changes: List = []
         self._activation_id = activation_id
@@ -1315,7 +1314,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
         return self._site_id
 
     def load(self):
-        super(ActivateChangesSite, self).load()
+        super().load()
         self._load_this_sites_changes()
         self._load_expected_duration()
 

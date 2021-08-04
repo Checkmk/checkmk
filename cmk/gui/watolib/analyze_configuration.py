@@ -31,7 +31,7 @@ class ACResult:
     status: Optional[int] = None
 
     def __init__(self, text: str) -> None:
-        super(ACResult, self).__init__()
+        super().__init__()
         self.text = text
         self.site_id = omd_site()
 

@@ -51,7 +51,7 @@ class ReplicationPath(
         else:
             final_excludes = excludes
 
-        return super(ReplicationPath, cls).__new__(
+        return super().__new__(
             cls,
             ty=ty,
             ident=ident,
@@ -62,7 +62,7 @@ class ReplicationPath(
 
 class SnapshotCreationBase:
     def __init__(self, activation_work_dir: str) -> None:
-        super(SnapshotCreationBase, self).__init__()
+        super().__init__()
         self._logger = logger.getChild("SnapshotCreationBase")
         self._multitar_workdir = os.path.join(activation_work_dir, "multitar_workdir")
         self._rsync_target_dir = os.path.join(self._multitar_workdir, "synced_files")
@@ -252,7 +252,7 @@ class SnapshotCreationBase:
 class SnapshotCreator(SnapshotCreationBase):
     def __init__(self, activation_work_dir: str,
                  all_generic_components: List[ReplicationPath]) -> None:
-        super(SnapshotCreator, self).__init__(activation_work_dir)
+        super().__init__(activation_work_dir)
         self._setup_directories()
         self._generic_components = all_generic_components
         self._worker_subprocesses: List[multiprocessing.Process] = []

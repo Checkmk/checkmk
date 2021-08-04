@@ -493,14 +493,14 @@ class CheckmkAutomationBackgroundJob(WatoBackgroundJob):
                  api_request: Optional[CheckmkAutomationRequest] = None) -> None:
         if job_id is not None:
             # Loading an existing job
-            super(CheckmkAutomationBackgroundJob, self).__init__(job_id=job_id)
+            super().__init__(job_id=job_id)
             return
 
         assert api_request is not None
 
         # A new job is started
         automation_id = str(uuid.uuid4())
-        super(CheckmkAutomationBackgroundJob, self).__init__(
+        super().__init__(
             job_id="%s%s-%s" % (self.job_prefix, api_request.command, automation_id),
             title=_("Checkmk automation %s %s") % (api_request.command, automation_id),
         )

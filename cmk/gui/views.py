@@ -202,8 +202,7 @@ class VisualTypeViews(VisualType):
         """This has been implemented for HW/SW inventory views which are often useless when a host
         has no such information available. For example the "Oracle Tablespaces" inventory view is
         useless on hosts that don't host Oracle databases."""
-        result = super(VisualTypeViews, self).link_from(linking_view, linking_view_rows, visual,
-                                                        context_vars)
+        result = super().link_from(linking_view, linking_view_rows, visual, context_vars)
         if result is False:
             return False
 
@@ -306,7 +305,7 @@ class PermissionSectionViews(PermissionSection):
 class View:
     """Manages processing of a single view, e.g. during rendering"""
     def __init__(self, view_name: str, view_spec: ViewSpec, context: VisualContext) -> None:
-        super(View, self).__init__()
+        super().__init__()
         self.name = view_name
         self.spec = view_spec
         self.context: VisualContext = context
@@ -601,7 +600,7 @@ class ABCViewRenderer(metaclass=abc.ABCMeta):
 
 class GUIViewRenderer(ABCViewRenderer):
     def __init__(self, view: View, show_buttons: bool) -> None:
-        super(GUIViewRenderer, self).__init__(view)
+        super().__init__(view)
         self._show_buttons = show_buttons
 
     def render(

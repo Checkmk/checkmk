@@ -940,10 +940,10 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, metaclass=abc.ABCMeta
         return True
 
     def render_input(self, varprefix, value):
-        super(ABCHostAttributeHostTagCheckbox, self).render_input(varprefix, bool(value))
+        super().render_input(varprefix, bool(value))
 
     def from_html_vars(self, varprefix):
-        if super(ABCHostAttributeHostTagCheckbox, self).from_html_vars(varprefix):
+        if super().from_html_vars(varprefix):
             return self._tag_value()
         return None
 
@@ -953,7 +953,7 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, metaclass=abc.ABCMeta
     def get_tag_groups(self, value):
         if not value:
             return {}
-        return super(ABCHostAttributeHostTagCheckbox, self).get_tag_groups(self._tag_value())
+        return super().get_tag_groups(self._tag_value())
 
 
 class ABCHostAttributeNagiosValueSpec(ABCHostAttributeValueSpec):

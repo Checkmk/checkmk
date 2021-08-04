@@ -109,9 +109,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         return liveproxyd_config_dir()
 
     def save(self, settings, site_specific=False, custom_site_path=None):
-        super(ConfigDomainLiveproxy, self).save(settings,
-                                                site_specific=site_specific,
-                                                custom_site_path=custom_site_path)
+        super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
         self.activate()
 
     def activate(self):
@@ -226,9 +224,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         return os.path.join(self.config_dir(), "ca-certificates.mk")
 
     def save(self, settings, site_specific=False, custom_site_path=None):
-        super(ConfigDomainCACertificates, self).save(settings,
-                                                     site_specific=site_specific,
-                                                     custom_site_path=custom_site_path)
+        super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
 
         current_config = settings.get("trusted_certificate_authorities", {
             "use_system_wide_cas": True,
@@ -337,7 +333,7 @@ class ConfigDomainOMD(ABCConfigDomain):
     omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
 
     def __init__(self):
-        super(ConfigDomainOMD, self).__init__()
+        super().__init__()
         self._logger = logger.getChild("config.omd")
 
     @classmethod

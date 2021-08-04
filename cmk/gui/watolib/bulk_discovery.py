@@ -115,7 +115,7 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         return _("Bulk Discovery")
 
     def __init__(self):
-        super(BulkDiscoveryBackgroundJob, self).__init__(
+        super().__init__(
             self.job_prefix,
             title=self.gui_title(),
             lock_wato=False,

@@ -125,7 +125,7 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
 
     @classmethod
     def from_exception(cls, details=None, type_specific_attributes=None):
-        return super(GUICrashReport, cls).from_exception(details={
+        return super().from_exception(details={
             "page": requested_file_name(request) + ".py",
             "vars": {
                 key: "***" if value in ["password", "_password"] else value
@@ -143,7 +143,7 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
 
 class ABCCrashReportPage(cmk.gui.pages.Page, metaclass=abc.ABCMeta):
     def __init__(self):
-        super(ABCCrashReportPage, self).__init__()
+        super().__init__()
         self._crash_id = request.get_unicode_input_mandatory("crash_id")
         self._site_id = request.get_unicode_input_mandatory("site")
 

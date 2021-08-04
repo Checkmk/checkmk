@@ -1455,12 +1455,12 @@ body.main.visible div.foldable .title {
   color: $font-color;
 }
 
-.hot a,
-.hot body.main .popup_menu span,
-body.main .popup_menu .hot span {
-  color: $hot-font-color;
-  background-color: $hot-bg-color !important;
-  border-color: $color-nuance-16;
+.hot:not(.entry) {
+  a,
+  span {
+    color: $hot-font-color !important;
+    background-color: $hot-bg-color !important;
+  }
 }
 
 div.info {

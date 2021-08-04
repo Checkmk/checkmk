@@ -56,6 +56,9 @@ $menu-item-spacing: (2.2 * $spacing);
 $theme-border-radius: 4px;
 $single-column-mega-menu-width: 340px;
 $theme-snapin-width: 240px;
+/* TODO: There are two implementations of toggle switches. One in _wato.scss
+ * and one in _main.scss. Can we use just one implementation?
+*/
 $toggle-switch-height: 13px;
 $toggle-switch-width: 30px;
 $tag-padding: 0.1em 0.3em;

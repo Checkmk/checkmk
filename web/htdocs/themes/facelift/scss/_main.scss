@@ -199,72 +199,39 @@ input.button.hot {
 
 /* on/off toggle button */
 .toggle_switch {
-  background: $bg-color;
-  border-radius: 11px;
-  box-shadow: none;
-  box-sizing: border-box;
-
-  /* TODO: Decide whether these .wato div.globalvars styles should stay here
-   *       or rather go to _wato.scss - duplicating the .toggle_switch selector
-   */
-  a,
-  body.main .popup_menu span,
-  body.main .popup_menu & span,
-  .wato div.globalvars & a,
-  .wato div.globalvars & body.main .popup_menu span,
-  body.main .popup_menu .wato div.globalvars & {
+  a {
+    display: block;
+    float: left;
     width: $toggle-switch-width;
     height: $toggle-switch-height;
     font-size: $font-size-small;
     font-weight: $font-weight-bold;
     line-height: $toggle-switch-height;
     letter-spacing: $letter-spacing-table;
-    border: none;
-    border-radius: 8px;
-    box-shadow: none;
-  }
-
-  a,
-  .wato div.globalvars & a {
-    display: block;
-    width: 30px;
-    color: $toggle-switch-font-color-on;
     text-align: center;
     text-decoration: none;
     cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    box-shadow: none;
+
+    &:hover {
+      text-decoration: none !important;
+      opacity: 0.5; /* TODO: create a better hover effect */
+    }
   }
 
   &.on {
-    a,
-    .wato div.globalvars & a {
-      float: left;
-      color: $toggle-switch-font-color-on;
+    a {
+      color: $font-color-light-bg !important;
       background-color: $success;
     }
   }
 
   &.off {
-    a,
-    .wato div.globalvars & a {
-      float: left;
-      color: $toggle-switch-font-color-off;
-      background-color: $inpage-highlight-color;
-    }
-  }
-
-  a:hover,
-  .wato div.globalvars & a:hover {
-    /* TODO: create a better hover effect */
-    text-decoration: none;
-    opacity: 0.5;
-    filter: alpha(opacity=50); /* For IE8 and earlier */
-  }
-
-  table.data & {
-    background-color: rgb(153, 153, 153);
-
     a {
-      color: $white;
+      color: rgba($font-color, 0.4) !important;
+      background-color: $inpage-highlight-color;
     }
   }
 }

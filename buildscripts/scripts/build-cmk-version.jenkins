@@ -85,7 +85,7 @@ node(NODE) {
             upload_artifacts = load 'buildscripts/scripts/lib/upload_artifacts.groovy'
 
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                 BUILD_IMAGE.inside(DOCKER_ARGS) {
 
                     withFolderProperties{
@@ -229,7 +229,7 @@ node(NODE) {
     } finally {
         if (DEPLOY_TO_WEBSITE) {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
-                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
+                def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                 BUILD_IMAGE.inside(DOCKER_ARGS) {
                     upload_artifacts.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS)
                     upload_artifacts.create_hashes(WORKSPACE + "/" + CMK_VERS)

@@ -66,6 +66,7 @@ node (NODE) {
                                     def RESOLVED_IMAGE_ID = sh(script: "../../docker_image_aliases/resolve.sh ${IMAGE_ALIAS_NAME}", returnStdout: true).replaceAll("[\r\n]+", "");
                                     println("Using IMAGE_ALIAS_NAME: ${IMAGE_ALIAS_NAME}=${RESOLVED_IMAGE_ID}");
                                     def DOCKER_ARGS = (
+                                        " --pull" +
                                         " --build-arg $IMAGE_ALIAS_NAME=$RESOLVED_IMAGE_ID" + 
                                         " --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP'" +
                                         " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +

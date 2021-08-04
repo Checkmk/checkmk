@@ -520,6 +520,14 @@ class Endpoint:
 
             # make pylint happy
             assert callable(self.func)
+
+            if self.tag_group == 'Setup' and not config.wato_enabled:
+                return problem(status=403,
+                               title="Forbidden: WATO is disabled",
+                               detail="This endpoint is currently disabled via the "
+                               "'Disable remote configuration' option in 'Distributed Monitoring'. "
+                               "You may be able to query the central site.")
+
             if not self.skip_locking and self.method != 'get':
                 with store.lock_checkmk_configuration():
                     response = self.func(param)
@@ -644,6 +652,9 @@ class Endpoint:
             response_headers[etag_header.pop('name')] = etag_header
 
         responses: ResponseType = {}
+
+        if self.tag_group == 'Setup':
+            responses['403'] = self._path_item(403, 'Configuration via WATO is disabled')
 
         if 401 in self._expected_status_codes:
             responses['401'] = self._path_item(401,

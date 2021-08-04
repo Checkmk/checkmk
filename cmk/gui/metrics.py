@@ -451,7 +451,7 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
         value, _unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
-        return value
+        return int(value)
 
     @staticmethod
     def get_stack_from_values(value: Union[str, int, float], half_value: Union[int, float],
@@ -512,7 +512,7 @@ class MetricometerRendererLinear(MetricometerRenderer):
     def get_sort_number(self) -> int:
         """Use the first segment value for sorting"""
         value, _unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
-        return value
+        return int(value)
 
     def _get_summed_values(self):
         summed = 0.0

@@ -1647,7 +1647,7 @@ table.data.job_table td {
       margin: 1px;
 
       &--active {
-        color: $tag-dropdown-hover-font-color;
+        color: $success;
         background-color: $tag-dropdown-hover-bg-color;
         border: $tag-dropdown-hover-border-color;
       }

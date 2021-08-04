@@ -781,17 +781,17 @@ div.avlegend.timeline div.state.hostdown span {
 table.data tr.data td.unmonitored span,
 table.timeline td.unmonitored,
 div.avlegend.timeline div.state.unmonitored span {
-  color: $unmonitored-font-color;
+  color: $black;
   background-color: $unmonitored-bg-color;
 }
 
 table.data.availability tr td {
   &.unmonitored {
-    background-color: lighten($unmonitored-bg-color, 10%);
+    background-color: $unmonitored-bg-color;
   }
 
   &.hostdown {
-    background-color: lighten($hostdown-bg-color, 10%);
+    background-color: $hostdown-bg-color;
   }
 }
 

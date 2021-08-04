@@ -355,7 +355,7 @@ class Dashlet(metaclass=abc.ABCMeta):
             return url
 
         context_vars = {
-            k: "%s" % v  #
+            k: str(v)  #
             for k, v in self._dashlet_context_vars()
             if v is not None
         }
@@ -363,8 +363,6 @@ class Dashlet(metaclass=abc.ABCMeta):
         # This is a long distance hack to be able to rebuild the variables on the dashlet _get_context
         # using the visuals.VisualFilterListWithAddPopup.from_html_vars, which
         # requires this flag.
-        context_vars["_active"] = ";".join(self.context)
-
         parts = urllib.parse.urlparse(url)
         url_vars = dict(urllib.parse.parse_qsl(parts.query, keep_blank_values=True))
         url_vars.update(context_vars)

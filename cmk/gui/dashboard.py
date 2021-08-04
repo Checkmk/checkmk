@@ -533,12 +533,9 @@ def draw_dashboard(name: DashboardName) -> None:
     board = _load_dashboard_with_cloning(get_permitted_dashboards(), name, edit=mode == 'edit')
     board = _add_context_to_dashboard(board)
 
-    board_context = board["context"]
-    if html.request.has_var("_active"):
-        # Like _dashboard_info_handler we assume that only host / service filters are relevant
-        board_context = visuals.VisualFilterListWithAddPopup(
-            info_list=["host", "service"]).from_html_vars("")
-        board["context"] = board_context
+    # Like _dashboard_info_handler we assume that only host / service filters are relevant
+    board_context = visuals.active_context_from_request(['host", service']) or board["context"]
+    board["context"] = board_context
 
     title = visuals.visual_title('dashboard', board, board_context)
 

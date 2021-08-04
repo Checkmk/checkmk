@@ -69,13 +69,11 @@ def makeuri(
     filename: Optional[str] = None,
     remove_prefix: Optional[str] = None,
     delvars: Optional[Sequence[str]] = None,
-    keep_vars: Optional[Sequence[str]] = None,
 ) -> str:
     new_vars = [nv[0] for nv in addvars]
     vars_: HTTPVariables = [(v, val)
                             for v, val in request.itervars()
-                            if (keep_vars and v in keep_vars) or
-                            v[0] != "_" and v not in new_vars and not (delvars and v in delvars)]
+                            if v[0] != "_" and v not in new_vars and not (delvars and v in delvars)]
     if remove_prefix is not None:
         vars_ = [i for i in vars_ if not i[0].startswith(remove_prefix)]
     vars_ = vars_ + addvars

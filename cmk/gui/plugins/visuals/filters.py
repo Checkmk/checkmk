@@ -2754,7 +2754,7 @@ filter_registry.register(
         sort_index=201,
         info="event",
         column="event_host",
-        htmlvar="event_host",
+        htmlvar="event_host_regex",
         op="~~",
     ))
 

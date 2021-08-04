@@ -696,9 +696,7 @@ class GUIViewRenderer(ABCViewRenderer):
             ):  # submit button pressed, no reload
                 try:
                     # Create URI with all actions variables removed
-                    backurl = makeuri(request, [],
-                                      delvars=['filled_in', 'actions'],
-                                      keep_vars=['_active'])
+                    backurl = makeuri(request, [], delvars=['filled_in', 'actions'])
                     has_done_actions = do_actions(view_spec, self.view.datasource.infos[0], rows,
                                                   backurl)
                 except MKUserError as e:
@@ -921,15 +919,13 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("Export CSV"),
             icon_name="download_csv",
-            item=make_simple_link(
-                makeuri(request, [("output_format", "csv_export")], keep_vars=['_active'])),
+            item=make_simple_link(makeuri(request, [("output_format", "csv_export")])),
         )
 
         yield PageMenuEntry(
             title=_("Export JSON"),
             icon_name="download_json",
-            item=make_simple_link(
-                makeuri(request, [("output_format", "json_export")], keep_vars=['_active'])),
+            item=make_simple_link(makeuri(request, [("output_format", "json_export")])),
         )
 
     def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
@@ -942,8 +938,7 @@ class GUIViewRenderer(ABCViewRenderer):
         yield PageMenuEntry(
             title=_("This view as PDF"),
             icon_name="report",
-            item=make_simple_link(
-                makeuri(request, [], filename="report_instant.py", keep_vars=['_active'])),
+            item=make_simple_link(makeuri(request, [], filename="report_instant.py")),
         )
 
         # Link related reports
@@ -1055,8 +1050,6 @@ class GUIViewRenderer(ABCViewRenderer):
             # TODO: Make unique form names (object IDs), investigate whether or not something
             # depends on the form name "actions"
             html.begin_form("actions")
-            if active_filters := request.get_str_input("_active"):
-                html.hidden_field("_active", active_filters)
             # TODO: Are these variables still needed
             html.hidden_field("_do_actions", "yes")
             html.hidden_field("actions", "yes")
@@ -1827,10 +1820,7 @@ def page_view():
         _patch_view_context(view_spec)
 
         datasource = data_source_registry[view_spec["datasource"]]()
-        context = view_spec["context"]
-        if html.request.has_var("_active"):
-            context = visuals.VisualFilterListWithAddPopup(
-                info_list=datasource.infos).from_html_vars("")
+        context = visuals.active_context_from_request(datasource.infos) or view_spec["context"]
 
         view = View(view_name, view_spec, context)
         view.row_limit = get_limit()
@@ -2761,7 +2751,7 @@ def _get_availability_entry(view: View, info: VisualInfo,
     return PageMenuEntry(
         title=_("Availability"),
         icon_name="availability",
-        item=make_simple_link(makeuri(request, [("mode", "availability")], keep_vars=["_active"])),
+        item=make_simple_link(makeuri(request, [("mode", "availability")])),
         is_enabled=not view.missing_single_infos,
         disabled_tooltip=_("Missing required context information")
         if view.missing_single_infos else None,
@@ -2797,7 +2787,7 @@ def _get_combined_graphs_entry(view: View, info: VisualInfo,
         ("view_title", view_title(view.spec, view.context)),
     ]
 
-    url = makeuri(request, httpvars, filename="combined_graphs.py", keep_vars=['_active'])
+    url = makeuri(request, httpvars, filename="combined_graphs.py")
     return PageMenuEntry(
         title=_("All metrics of same type in one graph"),
         icon_name="graph",

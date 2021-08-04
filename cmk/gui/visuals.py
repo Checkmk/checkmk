@@ -104,8 +104,9 @@ from cmk.gui.valuespec import (
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    Filter, filter_registry, FilterTime, FilterTristate, get_livestatus_filter_headers,
-    get_only_sites_from_context, visual_info_registry, visual_type_registry,
+    active_filter_flag, Filter, filter_registry, FilterTime, FilterTristate,
+    get_livestatus_filter_headers, get_only_sites_from_context, visual_info_registry,
+    visual_type_registry,
 )
 
 if not cmk_version.is_raw_edition():
@@ -1498,6 +1499,14 @@ class VisualFilterList(ListOfMultiple):
                          },
                          **kwargs)
 
+    def from_html_vars(self, varprefix: str) -> VisualContext:
+        context = super().from_html_vars(varprefix)
+        for values in context.values():
+            assert isinstance(values, dict)
+            for name, value in values.items():
+                assert isinstance(name, str) and isinstance(value, str)
+        return context
+
     def filter_names(self):
         return self._filters.keys()
 
@@ -1561,6 +1570,18 @@ class VisualFilterListWithAddPopup(VisualFilterList):
         html.javascript('cmk.valuespecs.listofmultiple_init(%s, %s);' %
                         (json.dumps(varprefix), json.dumps(filters_applied)))
         html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_id))
+
+
+def active_context_from_request(infos: List[str]) -> VisualContext:
+    if request.has_var("_active"):
+        return VisualFilterListWithAddPopup(info_list=infos).from_html_vars("")
+    # Test if filters are in url and rescostruct them. This is because we
+    # contruct crosslinks manually without the filter menu.
+    if flag := active_filter_flag(request.itervars()):
+        with request.stashed_vars():
+            request.set_var("_active", flag)
+            return VisualFilterListWithAddPopup(info_list=infos).from_html_vars("")
+    return {}
 
 
 @page_registry.register_page("ajax_visual_filter_list_get_choice")
@@ -1655,7 +1676,7 @@ class VisualFilter(ValueSpec):
         # A filter can not be used twice on a page, because the varprefix is not used
         show_filter(self._filter, value)
 
-    def from_html_vars(self, varprefix):
+    def from_html_vars(self, varprefix) -> FilterHTTPVariables:
         # A filter can not be used twice on a page, because the varprefix is not used
         return self._filter.value()
 

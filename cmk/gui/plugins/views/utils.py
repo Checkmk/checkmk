@@ -72,7 +72,6 @@ from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_regi
 from cmk.gui.type_defs import (
     AllViewSpecs,
     ColumnName,
-    FilterName,
     HTTPVariables,
     LivestatusQuery,
     PainterName,
@@ -1303,7 +1302,7 @@ def make_linked_visual_url(visual_type: VisualType, visual: Visual,
     if visual_type.multicontext_links:
         # Keeping the _active flag is a long distance hack to be able to rebuild the
         # filters on the linked view using the visuals.VisualFilterListWithAddPopup.from_html_vars
-        return makeuri(request, required_vars, filename=filename, keep_vars=["_active"])
+        return makeuri(request, required_vars, filename=filename)
 
     vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
     # For views and dashboards currently the current filter settings
@@ -1327,14 +1326,12 @@ def get_linked_visual_request_vars(visual: Visual,
     vars_values: HTTPVariables = []
 
     filters = visuals.get_single_info_keys(visual["single_infos"])
-    active_filters: List[FilterName] = []
 
     for src_filter, dst_filter in zip(filters, map(translate_filters(visual), filters)):
         try:
             src_var = visuals.get_filter(src_filter).htmlvars[0]
             dst_var = visuals.get_filter(dst_filter).htmlvars[0]
             vars_values.append((dst_var, singlecontext_request_vars[src_var]))
-            active_filters.append(dst_filter)
         except KeyError:
             # The information needed for a mandatory filter (single context) is not available.
             # Continue without failing: The target site will show up a warning and ask for the
@@ -1352,9 +1349,6 @@ def get_linked_visual_request_vars(visual: Visual,
 
         if add_site_hint and request.var('site'):
             vars_values.append(('site', request.get_ascii_input_mandatory('site')))
-            active_filters.append("site")
-
-    vars_values.append(("_active", ";".join(active_filters)))
 
     return vars_values
 

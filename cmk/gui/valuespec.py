@@ -2104,7 +2104,7 @@ class ListOfMultiple(ValueSpec):
                 html.render_td(vs.title()) + html.render_td(vs.value_to_text(val)))
         return html.render_table(table_content)
 
-    def from_html_vars(self, varprefix: str) -> Dict[str, Any]:
+    def from_html_vars(self, varprefix: str) -> Mapping[str, Any]:
         value: Dict[str, Any] = {}
         active = request.get_str_input_mandatory('%s_active' % varprefix, "").strip()
         if not active:

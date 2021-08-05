@@ -257,3 +257,40 @@ def test_read_config(config, expected_pymongo_config, mk_mongodb):
     for key, value in config.items():
         config_parser.set('MONGODB', key, value)
     assert mk_mongodb.Config(config_parser).get_pymongo_config() == expected_pymongo_config
+
+
+@pytest.mark.parametrize("pymongo_version, pymongo_config", [(
+    (999, 9, 9),
+    {
+        'host': 'example.com',
+        'password': '/?!/',
+        'tls': True,
+        'username': 'username',
+    },
+), (
+    (3, 2, 0),
+    {
+        'host': 'mongodb://username:%2F%3F%21%2F@example.com',
+        'ssl': True,
+    },
+)])
+def test_transform_config(pymongo_version, pymongo_config, mk_mongodb):
+    class DummyConfig(mk_mongodb.Config):  # type: ignore[name-defined]
+        def __init__(self):
+            self.tls_enable = True
+            self.tls_verify = None
+            self.tls_ca_file = None
+            self.auth_mechanism = None
+            self.auth_source = None
+            self.host = "example.com"
+            self.password = "/?!/"
+            self.username = "username"
+
+    class TransformerMocked(mk_mongodb.PyMongoConfigTransformer):  # type: ignore[name-defined]
+        @staticmethod
+        def _get_pymongo_version():
+            return pymongo_version
+
+    config = DummyConfig()
+    result = TransformerMocked(config).transform(config.get_pymongo_config())
+    assert result == pymongo_config

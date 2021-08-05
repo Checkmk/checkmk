@@ -14,6 +14,14 @@ Important: 1) If MongoDB runs as single instance the agent data is assigned
               You have to create a new host in the monitoring system matching the
               replica set name, or use the piggyback translation rule to modify the
               hostname according to your needs.
+
+It is possible to run this script with pymongo 2.5.2 (the version provided by
+centos 7) but you can not connect to a MongoDB 4.0 server with authentication.
+Pymongo 2.5.2 uses the auth mechanism ``MONGODB-CR`` but this auth mechanism
+was removed with MongoDB 4.0. If you want to use mk_mongodb.py with
+authentication and a MongoDB server 4.0 you will have to use a more recent
+version of pymongo (at least 2.8).
+
 """
 
 __version__ = "2.1.0i1"
@@ -31,9 +39,14 @@ from collections import defaultdict
 PY2 = sys.version_info[0] == 2
 
 try:
-    from typing import Any, Callable, Dict, Union
+    from typing import Any, Callable, Dict, Tuple, Union
 except ImportError:
     pass
+
+if PY2:
+    from urllib import quote_plus  # pylint: disable=no-name-in-module
+else:
+    from urllib.parse import quote_plus
 
 try:
     import pymongo  # type: ignore[import] # pylint: disable=import-error
@@ -704,9 +717,9 @@ class Config:
         self.password = config.get_mongodb_str("password")
 
     def get_pymongo_config(self):
-        # type:(Config) -> Dict[str, Union[str, bool]]
+        # type:() -> Dict[str, Union[str, bool]]
         """
-        return config for pymongo 3.12.X
+        return config for latest pymongo (3.12.X)
         """
         pymongo_config = {}
         if self.username:
@@ -732,6 +745,70 @@ class Config:
         return pymongo_config
 
 
+class PyMongoConfigTransformer:
+    def __init__(self, config):
+        # type:(Config) -> None
+        self._config = config
+
+    @staticmethod
+    def _get_pymongo_version():
+        # type:() -> Tuple[int, ...]
+        return tuple(int(i) for i in pymongo.version.split("."))
+
+    def transform(self, pymongo_config):
+        pymongo_version = self._get_pymongo_version()
+        version_transforms = [
+            # apply the transform if the version of pymongo is lower than the
+            # tuple defined here. For the oldest pymongo version, multiple
+            # transforms will be executed.
+            ((3, 9, 0), self._transform_tls_to_ssl),
+            ((3, 5, 0), self._transform_credentials_to_uri),
+        ]
+
+        for version, transform_function in version_transforms:
+            if pymongo_version < version:
+                pymongo_config = transform_function(pymongo_config, pymongo_version)
+        return pymongo_config
+
+    def _transform_tls_to_ssl(self, pymongo_config, pymongo_version):
+        # type:(Dict[str, Union[str, bool]], Tuple[int, ...]) -> Dict[str, Union[str, bool]]
+        if pymongo_config.get("tlsInsecure") is True:
+            sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
+            sys.stdout.write(
+                ("error\tCan not use option 'tls_verify = False' with this pymongo version %s."
+                 "This option is only available with pymongo > 3.9.0\n") % str(pymongo_version))
+            sys.exit(3)
+        pymongo_config.pop("tlsInsecure", None)
+
+        new_to_old = (
+            ("tls", "ssl"),
+            ("tlsCAFile", "ssl_ca_certs"),
+        )
+        for new_arg, old_arg in new_to_old:
+            if new_arg in pymongo_config:
+                pymongo_config[old_arg] = pymongo_config.pop(new_arg)
+        return pymongo_config
+
+    def _transform_credentials_to_uri(self, pymongo_config, _pymongo_version):
+        # type:(Dict[str, Union[str, bool]], Tuple[int, ...]) -> Dict[str, Union[str, bool]]
+        username = pymongo_config.pop("username", None)
+        password = pymongo_config.pop("password", None)
+        host = pymongo_config.pop("host", "localhost")
+        if username is not None:
+            password_element = ""
+            if password is not None:
+                password_element = ":{}".format(quote_plus(self._config.password))
+            uri = "mongodb://{}{}@{}".format(
+                quote_plus(self._config.username),
+                password_element,
+                host,
+            )
+        else:
+            uri = "mongodb://{}".format(host)
+        pymongo_config['host'] = uri
+        return pymongo_config
+
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv[1:]
@@ -747,13 +824,14 @@ def main(argv=None):
     config_parser = MongoDBConfigParser()
     config_parser.read_from_filename(os.path.abspath(args.config_file))
     config = Config(config_parser)
-    pymongo_config = config.get_pymongo_config()
+    pymongo_config = PyMongoConfigTransformer(config).transform(config.get_pymongo_config())
 
     if LOGGER.isEnabledFor(logging.INFO):
         LOGGER.info("pymongo configuration:")
         message = str(pymongo_config)
         if config.password is not None:
             message = message.replace(config.password, '****')
+            message = message.replace(quote_plus(config.password), '****')
         LOGGER.info(message)
 
     client = pymongo.MongoClient(read_preference=pymongo.ReadPreference.SECONDARY, **pymongo_config)

@@ -56,7 +56,6 @@ if (!params.USE_OMD_PACKAGE_CACHE) {
 }
 
 def DOCKER_ARGS = "--ulimit nofile=1024:1024"
-def DOCKER_ROOT_ARGS = "-u 0:0 --ulimit nofile=1024:1024"
 
 def DOCKER_REGISTRY_NO_HTTP = ''
 def SOURCE_DIR = ''
@@ -66,7 +65,8 @@ def DOCKER_GROUP_ID = ''
 // MAIN
 //
 node(NODE) {
-    stage('Prepare version directory') {
+    stage('Cleanup work directories') {
+        /// takes place as regular Jenkins user - can't deal with root's files
         sh('rm -rf ${WORKSPACE}/*')
     }
 
@@ -195,7 +195,7 @@ node(NODE) {
                     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                         def DISTRO_DIR = WORKSPACE + "/git"
 
-                        docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ROOT_ARGS + " -v ${SOURCE_DIR}:${SOURCE_DIR}:ro --privileged --hostname ${DISTRO}") {
+                        docker.image(DISTRO + ':' + DOCKER_TAG).inside(DOCKER_ARGS + " -v ${SOURCE_DIR}:${SOURCE_DIR}:ro --hostname ${DISTRO}") {
                             initialize_workspace(DISTRO, SOURCE_DIR, DISTRO_DIR)
 
                             withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'NEXUS_PASSWORD', usernameVariable: 'NEXUS_USERNAME')]) {
@@ -205,7 +205,7 @@ node(NODE) {
                         }
 
                         def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
-                        BUILD_IMAGE.inside(DOCKER_ROOT_ARGS) {
+                        BUILD_IMAGE.inside(DOCKER_ARGS) {
                             def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS)
                             def BUILD_PACKAGE_PATH = DISTRO_DIR + "/" + PACKAGE_NAME
                             def FINAL_PACKAGE_PATH = WORKSPACE + "/" + CMK_VERS + "/" + PACKAGE_NAME
@@ -238,7 +238,7 @@ node(NODE) {
         if (DEPLOY_TO_WEBSITE) {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
-                BUILD_IMAGE.inside(DOCKER_ROOT_ARGS) {
+                BUILD_IMAGE.inside(DOCKER_ARGS) {
                     upload_artifacts.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS)
                     upload_artifacts.create_hashes(WORKSPACE + "/" + CMK_VERS)
                     upload_artifacts.upload_version_dir(WORKSPACE + "/" + CMK_VERS, WEB_DEPLOY_DEST, WEB_DEPLOY_PORT)

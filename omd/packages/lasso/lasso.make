@@ -43,6 +43,9 @@ ifeq ($(filter $(DISTRO_CODE),sles15 sles12sp3 sles12sp4),)
 	$(MAKE) DESTDIR=$(DESTDIR) \
 		-C $(LASSO_BUILD_DIR) install
 	if [ -d "$(DESTDIR)/$(OMD_ROOT)/lib64/perl5" ]; then mv $(DESTDIR)/$(OMD_ROOT)/lib64/perl5 $(DESTDIR)/$(OMD_ROOT)/lib/; rm -r $(DESTDIR)/$(OMD_ROOT)/lib64; fi
+	chmod u+w \
+	    $(DESTDIR)/$(OMD_ROOT)/lib/x86_64-linux-gnu/perl5/5.30/Lasso.pm \
+	    $(DESTDIR)/$(OMD_ROOT)/lib/x86_64-linux-gnu/perl5/5.30/auto/Lasso/Lasso.so
 endif
 	$(TOUCH) $@
 

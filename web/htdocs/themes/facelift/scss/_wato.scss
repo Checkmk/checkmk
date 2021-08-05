@@ -1332,7 +1332,7 @@ table.data td.bi_rule_tree {
     }
 
     &.diag_failed {
-      background-color: $host-diag-failed-bg-color;
+      background-color: $input-error-bg-color;
     }
   }
 

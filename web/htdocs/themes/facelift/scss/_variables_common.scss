@@ -23,10 +23,12 @@ $grey-6: rgb(40, 40, 40);
 $grey-7: rgb(33, 33, 33);
 $darkgrey: rgb(131, 131, 131); // dark grey
 
-$color-nuance-1: rgb(170, 255, 187); // light green
-$color-nuance-2: rgb(130, 136, 166); // dark grey
-$color-nuance-3: rgb(247, 197, 197); // light red
-$color-nuance-4: rgb(255, 150, 68); // orange
+// TODO: Extend list below by all currently used color definitions. This way we can see
+// what colors are actually used and decide if we want to drop some of them.
+$green-1: rgb(170, 255, 187);
+$orange-1: rgb(255, 160, 66);
+$red-1: rgb(247, 197, 197);
+$red-2: rgb(130, 50, 50);
 
 // -----------------------------------------------------------------------------
 // Fonts

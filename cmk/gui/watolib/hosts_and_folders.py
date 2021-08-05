@@ -14,7 +14,8 @@ import time
 import re
 import shutil
 import uuid
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Type, Union
+from typing import (Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Type, Union,
+                    Sequence)
 
 from livestatus import SiteId
 
@@ -1813,9 +1814,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self.need_unlocked()
 
         # For changing contact groups user needs write permission on parent folder
-        if _get_cgconf_from_attributes(new_attributes) != \
-           _get_cgconf_from_attributes(self.attributes()):
-            _must_be_in_contactgroups(_get_cgconf_from_attributes(self.attributes())["groups"])
+        new_cgconf = _get_cgconf_from_attributes(new_attributes)
+        old_cgconf = _get_cgconf_from_attributes(self.attributes())
+        if new_cgconf != old_cgconf:
+            _validate_contact_group_modification(old_cgconf["groups"], new_cgconf["groups"])
+
             if self.has_parent():
                 if not self.parent().may("write"):
                     raise MKAuthException(
@@ -2567,7 +2570,10 @@ class CREHost(WithPermissions, WithAttributes):
             self._need_folder_write_permissions()
         self.need_permission("write")
         self.need_unlocked()
-        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
+
+        _validate_contact_group_modification(
+            _get_cgconf_from_attributes(self._attributes)["groups"],
+            _get_cgconf_from_attributes(attributes)["groups"])
 
         old_object = make_host_audit_log_object(self._attributes, self._cluster_nodes)
         new_object = make_host_audit_log_object(attributes, cluster_nodes)
@@ -2690,6 +2696,20 @@ def make_folder_audit_log_object(attributes):
     obj = attributes.copy()
     obj.pop("meta_data", None)
     return obj
+
+
+def _validate_contact_group_modification(old_groups: Sequence[ContactgroupName],
+                                         new_groups: Sequence[ContactgroupName]) -> None:
+    """Verifies if a user is allowed to modify the contact groups.
+
+    A user must not be member of all groups assigned to a host/folder, but a user can only add or
+    remove the contact groups if he is a member of.
+
+    This is necessary to provide the user a consistent experience: In case he is able to add a
+    group, he should also be able to remove it. And vice versa.
+    """
+    if diff_groups := set(old_groups) ^ set(new_groups):
+        _must_be_in_contactgroups(diff_groups)
 
 
 def _must_be_in_contactgroups(cgs: Iterable[ContactgroupName]) -> None:

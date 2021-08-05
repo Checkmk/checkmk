@@ -28,8 +28,10 @@ import sys
 import time
 from collections import defaultdict
 
+PY2 = sys.version_info[0] == 2
+
 try:
-    from typing import Any, Callable, Dict
+    from typing import Any, Callable, Dict, Union
 except ImportError:
     pass
 
@@ -659,17 +661,75 @@ def setup_logging(verbosity):
         logging.basicConfig(level=logging.DEBUG, format=fmt % "(line %(lineno)3d) ")
 
 
-def get_config(cfg_file):
-    config = configparser.ConfigParser()
-    cfg_file = os.path.abspath(cfg_file)
-    LOGGER.debug("trying to read %r", cfg_file)
-    if not os.path.exists(cfg_file):
-        LOGGER.warning("config file does not exist!")
-        return config
-    with open(cfg_file, 'r') as cfg:
-        config.read_file(cfg)
-    LOGGER.info("read configuration file %r", cfg_file)
-    return config
+class MongoDBConfigParser(configparser.ConfigParser):
+    """
+    Python2/Python3 compatibility layer for ConfigParser
+    """
+    mongo_section = "MONGODB"
+
+    def read_from_filename(self, filename):
+        LOGGER.debug("trying to read %r", filename)
+        if not os.path.exists(filename):
+            LOGGER.warning("config file does not exist!")
+        else:
+            with open(filename, 'r') as cfg:
+                if PY2:
+                    self.readfp(cfg)  # pylint: disable=deprecated-method
+                else:
+                    self.read_file(cfg)
+            LOGGER.info("read configuration file %r", filename)
+
+    def get_mongodb_bool(self, option, *, default=None):
+        if not self.has_option(self.mongo_section, option):
+            return default
+        return self.getboolean(self.mongo_section, option)
+
+    def get_mongodb_str(self, option, *, default=None):
+        if not self.has_option(self.mongo_section, option):
+            return default
+        return self.get(self.mongo_section, option)
+
+
+class Config:
+    def __init__(self, config):
+        self.tls_enable = config.get_mongodb_bool("tls_enable")
+        self.tls_verify = config.get_mongodb_bool("tls_verify")
+        self.tls_ca_file = config.get_mongodb_str("tls_ca_file")
+
+        self.auth_mechanism = config.get_mongodb_str("auth_mechanism")
+        self.auth_source = config.get_mongodb_str("auth_source")
+
+        self.host = config.get_mongodb_str("host")
+        self.username = config.get_mongodb_str("username")
+        self.password = config.get_mongodb_str("password")
+
+    def get_pymongo_config(self):
+        # type:(Config) -> Dict[str, Union[str, bool]]
+        """
+        return config for pymongo 3.12.X
+        """
+        pymongo_config = {}
+        if self.username:
+            pymongo_config['username'] = self.username
+            if self.password:
+                pymongo_config['password'] = self.password
+
+        if self.tls_enable is not None:
+            pymongo_config["tls"] = self.tls_enable
+            if self.tls_enable:
+                if self.tls_verify is not None:
+                    pymongo_config['tlsInsecure'] = not self.tls_verify
+                if self.tls_ca_file is not None:
+                    pymongo_config['tlsCAFile'] = self.tls_ca_file
+
+        if self.auth_mechanism is not None:
+            pymongo_config['authMechanism'] = self.auth_mechanism
+        if self.auth_source is not None:
+            pymongo_config['authSource'] = self.auth_source
+        if self.host is not None:
+            pymongo_config['host'] = self.host
+
+        return pymongo_config
 
 
 def main(argv=None):
@@ -679,37 +739,22 @@ def main(argv=None):
     args = parse_arguments(argv)
     setup_logging(args.verbose)
     LOGGER.debug("parsed args: %r", args)
-    config = get_config(args.config_file)
-
-    tls_enable = config.getboolean('MONGODB', 'tls_enable', fallback=False)
-    auth_mechanism = config.get('MONGODB', 'auth_mechanism', fallback=None)
-    auth_source = config.get('MONGODB', 'auth_source', fallback=None)
-    host = config.get('MONGODB', 'host', fallback=None)
-
-    pymongo_config = dict(
-        username=config.get('MONGODB', 'username', fallback=None),
-        password=config.get('MONGODB', 'password', fallback=None),
-        tls=tls_enable,
-    )
-    if tls_enable:
-        pymongo_config['tlsInsecure'] = not config.getboolean(
-            'MONGODB', 'tls_verify', fallback=True)
-        ca_file = config.get('MONGODB', 'tls_ca_file', fallback=None)
-        if ca_file is not None:
-            pymongo_config['tlsCAFile'] = ca_file
-    if auth_mechanism is not None:
-        pymongo_config['authMechanism'] = auth_mechanism
-    if auth_source is not None:
-        pymongo_config['authSource'] = auth_source
-    if host is not None:
-        pymongo_config['host'] = host
-
-    LOGGER.info("pymongo configuration:")
     if LOGGER.isEnabledFor(logging.INFO):
-        config = pymongo_config.copy()
-        if 'password' in config and config['password'] is not None:
-            config['password'] = '******'
-        LOGGER.info(config)
+        LOGGER.info("python version: %s", sys.version.replace("\n", " "))
+        if hasattr(pymongo, "version"):
+            LOGGER.info("pymongo version: %s", pymongo.version)
+
+    config_parser = MongoDBConfigParser()
+    config_parser.read_from_filename(os.path.abspath(args.config_file))
+    config = Config(config_parser)
+    pymongo_config = config.get_pymongo_config()
+
+    if LOGGER.isEnabledFor(logging.INFO):
+        LOGGER.info("pymongo configuration:")
+        message = str(pymongo_config)
+        if config.password is not None:
+            message = message.replace(config.password, '****')
+        LOGGER.info(message)
 
     client = pymongo.MongoClient(read_preference=pymongo.ReadPreference.SECONDARY, **pymongo_config)
     try:
@@ -722,7 +767,7 @@ def main(argv=None):
         # (e.g. config with enabled TLS, but mongodb is plaintext only)
         # Give the user some hints what the issue could be:
         sys.stdout.write("details\t%s\n" % str(e))
-        return
+        sys.exit(2)
 
     section_instance(server_status)
     repl_info = server_status.get("repl")

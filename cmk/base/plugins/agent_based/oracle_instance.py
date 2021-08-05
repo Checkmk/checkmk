@@ -6,8 +6,8 @@
 
 from typing import Dict, Optional, Sequence, Mapping, Union
 
-from .agent_based_api.v1.type_defs import StringTable
-from .agent_based_api.v1 import register
+from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+from .agent_based_api.v1 import register, TableRow
 
 Instance = Mapping[str, Union[None, str, bool]]
 
@@ -115,4 +115,51 @@ def parse_oracle_instance(string_table: StringTable) -> Section:
 register.agent_section(
     name="oracle_instance",
     parse_function=parse_oracle_instance,
+)
+
+
+def _parse_raw_db_creation_time(raw_str) -> Optional[str]:
+    """ "%d%m%Y%H%M%S" => "%Y-%m-%d %H:%M"
+
+        >>> _parse_raw_db_creation_time("080220151025")
+        '2015-02-08 10:25'
+
+    """
+
+    if not (isinstance(raw_str, str) and raw_str.isdigit() and len(raw_str) == 12):
+        return None
+
+    return f"{raw_str[4:8]}-{raw_str[2:4]}-{raw_str[:2]} {raw_str[8:10]}:{raw_str[10:]}"
+
+
+def inventory_oracle_instance(section: Section) -> InventoryResult:
+    path = ["software", "applications", "oracle", "instance"]
+
+    for item_data in sorted(section.values(), key=lambda v: str(v["sid"])):
+        if item_data['invalid_data']:
+            continue
+
+        try:
+            status_columns = {"db_uptime": int(item_data['up_seconds'])}  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            status_columns = {}
+
+        yield TableRow(
+            path=path,
+            key_columns={"sid": item_data['sid']},
+            inventory_columns={
+                "pname": item_data['pname'],
+                "version": item_data['version'],
+                "openmode": item_data['openmode'],
+                "logmode": item_data['log_mode'],
+                "logins": item_data['logins'],
+                "db_creation_time": _parse_raw_db_creation_time(item_data['db_creation_time']),
+            },
+            status_columns=status_columns,
+        )
+
+
+register.inventory_plugin(
+    name="oracle_instance",
+    inventory_function=inventory_oracle_instance,
 )

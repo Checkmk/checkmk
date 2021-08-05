@@ -21,24 +21,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
             path=['software', 'applications', 'oracle', 'instance'],
             key_columns={
                 "sid": "SID",
-                "pname": None,
             },
             inventory_columns={
+                "pname": None,
                 "version": "VERSION",
                 "openmode": "OPENMODE",
                 "logmode": None,
                 "logins": "LOGINS",
                 "db_creation_time": None,
-            },
-        ),
-        TableRow(
-            path=['software', 'applications', 'oracle', 'instance'],
-            key_columns={
-                "sid": "SID",
-                "pname": None,
-            },
-            status_columns={
-                "db_uptime": None,
             },
         ),
     ]),
@@ -59,24 +49,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
             path=['software', 'applications', 'oracle', 'instance'],
             key_columns={
                 "sid": "SID",
-                "pname": None,
             },
             inventory_columns={
+                "pname": None,
                 "version": "VERSION",
                 "openmode": "OPENMODE",
                 "logmode": "LOGMODE",
                 "logins": "LOGINS",
                 "db_creation_time": None,
-            },
-        ),
-        TableRow(
-            path=['software', 'applications', 'oracle', 'instance'],
-            key_columns={
-                "sid": "SID",
-                "pname": None,
-            },
-            status_columns={
-                "db_uptime": None,
             },
         ),
     ]),
@@ -97,21 +77,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
             path=['software', 'applications', 'oracle', 'instance'],
             key_columns={
                 "sid": "SID",
-                "pname": None,
             },
             inventory_columns={
+                "pname": None,
                 "version": "VERSION",
                 "openmode": "OPENMODE",
                 "logmode": "LOGMODE",
                 "logins": "LOGINS",
                 "db_creation_time": None,
-            },
-        ),
-        TableRow(
-            path=['software', 'applications', 'oracle', 'instance'],
-            key_columns={
-                "sid": "SID",
-                "pname": None,
             },
             status_columns={
                 "db_uptime": 123,
@@ -138,24 +111,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
                 path=['software', 'applications', 'oracle', 'instance'],
                 key_columns={
                     "sid": "SID",
-                    "pname": None,
                 },
                 inventory_columns={
+                    "pname": None,
                     "version": "VERSION",
                     "openmode": "OPENMODE",
                     "logmode": 'LOGMODE',
                     "logins": "LOGINS",
                     "db_creation_time": "2015-02-08 10:25",
-                },
-            ),
-            TableRow(
-                path=['software', 'applications', 'oracle', 'instance'],
-                key_columns={
-                    "sid": "SID",
-                    "pname": None,
-                },
-                status_columns={
-                    "db_uptime": None,
                 },
             ),
         ],
@@ -180,21 +143,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
                 path=['software', 'applications', 'oracle', 'instance'],
                 key_columns={
                     "sid": "SID",
-                    "pname": None,
                 },
                 inventory_columns={
+                    "pname": None,
                     "version": "VERSION",
                     "openmode": "OPENMODE",
                     "logmode": 'LOGMODE',
                     "logins": "LOGINS",
                     "db_creation_time": "2015-02-08 10:25",
-                },
-            ),
-            TableRow(
-                path=['software', 'applications', 'oracle', 'instance'],
-                key_columns={
-                    "sid": "SID",
-                    "pname": None,
                 },
                 status_columns={
                     "db_uptime": 123,
@@ -232,24 +188,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
                 path=['software', 'applications', 'oracle', 'instance'],
                 key_columns={
                     "sid": "SID",
-                    "pname": "PNAME",
                 },
                 inventory_columns={
+                    "pname": "PNAME",
                     "version": "VERSION",
                     "openmode": "OPENMODE",
                     "logmode": 'LOGMODE',
                     "logins": "LOGINS",
                     "db_creation_time": None,
-                },
-            ),
-            TableRow(
-                path=['software', 'applications', 'oracle', 'instance'],
-                key_columns={
-                    "sid": "SID",
-                    "pname": "PNAME",
-                },
-                status_columns={
-                    "db_uptime": None,
                 },
             ),
         ],
@@ -284,21 +230,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
                 path=['software', 'applications', 'oracle', 'instance'],
                 key_columns={
                     "sid": "SID",
-                    "pname": "PNAME",
                 },
                 inventory_columns={
+                    "pname": "PNAME",
                     "version": "VERSION",
                     "openmode": "OPENMODE",
                     "logmode": 'LOGMODE',
                     "logins": "LOGINS",
                     "db_creation_time": "2015-02-08 10:25",
-                },
-            ),
-            TableRow(
-                path=['software', 'applications', 'oracle', 'instance'],
-                key_columns={
-                    "sid": "SID",
-                    "pname": "PNAME",
                 },
                 status_columns={
                     "db_uptime": 123,
@@ -375,35 +314,14 @@ def test_inv_oracle_instance_multiline(fix_register):
             path=['software', 'applications', 'oracle', 'instance'],
             key_columns={
                 "sid": "SID",
-                "pname": "",
             },
             inventory_columns={
+                "pname": "",
                 "version": "VERSION",
                 "openmode": "OPENMODE",
                 "logmode": 'LOGMODE',
                 "logins": "LOGINS",
                 "db_creation_time": "2015-02-08 10:25",
-            },
-        ),
-        TableRow(
-            path=['software', 'applications', 'oracle', 'instance'],
-            key_columns={
-                "sid": "SID",
-                "pname": "PNAME",
-            },
-            inventory_columns={
-                "version": "VERSION",
-                "openmode": "POPENMODE",
-                "logmode": 'LOGMODE',
-                "logins": "ALLOWED",
-                "db_creation_time": "2015-02-08 10:26",
-            },
-        ),
-        TableRow(
-            path=['software', 'applications', 'oracle', 'instance'],
-            key_columns={
-                "sid": "SID",
-                "pname": "",
             },
             status_columns={
                 "db_uptime": 123,
@@ -413,7 +331,14 @@ def test_inv_oracle_instance_multiline(fix_register):
             path=['software', 'applications', 'oracle', 'instance'],
             key_columns={
                 "sid": "SID",
+            },
+            inventory_columns={
                 "pname": "PNAME",
+                "version": "VERSION",
+                "openmode": "POPENMODE",
+                "logmode": 'LOGMODE',
+                "logins": "ALLOWED",
+                "db_creation_time": "2015-02-08 10:26",
             },
             status_columns={
                 "db_uptime": 456,

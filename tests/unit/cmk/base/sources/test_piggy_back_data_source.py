@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import HostName, result
+from cmk.utils.type_defs import HostAddress, HostName, result
 
 from cmk.core_helpers.agent import AgentHostSections
 from cmk.core_helpers.type_defs import Mode
@@ -21,8 +22,8 @@ def mode_fixture(request):
     return request.param
 
 
-@pytest.mark.parametrize("ipaddress", [None, "127.0.0.1"])
-def test_attribute_defaults(monkeypatch, ipaddress, mode):
+@pytest.mark.parametrize("ipaddress", [None, HostAddress("127.0.0.1")])
+def test_attribute_defaults(monkeypatch: MonkeyPatch, ipaddress: HostAddress, mode: Mode) -> None:
     hostname = HostName("testhost")
     Scenario().add_host(hostname).apply(monkeypatch)
 

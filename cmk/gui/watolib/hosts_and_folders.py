@@ -3,6 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from __future__ import annotations
+
 import abc
 import errno
 import io
@@ -302,7 +305,7 @@ class BaseFolder:
     def host_names(self):
         return self.hosts().keys()
 
-    def host(self, host_name: str) -> 'CREHost':
+    def host(self, host_name: str) -> CREHost:
         return self.hosts().get(host_name)
 
     def has_host(self, host_name):
@@ -810,6 +813,13 @@ def make_hosts_storage() -> ABCHostsStorage:
     return StandardHostsStorage()
 
 
+class WATOHosts(TypedDict):
+    locked: bool
+    host_attributes: HostAttributes
+    all_hosts: List[HostName]
+    clusters: Dict[HostName, List[HostName]]
+
+
 class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolder):
     """This class represents a WATO folder that contains other folders and hosts."""
 
@@ -983,56 +993,25 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if self._hosts is None:
             self._load_hosts()
 
-    def _load_hosts(self):
+    def _load_hosts(self) -> None:
         self._locked_hosts = False
 
         self._hosts = {}
         if not os.path.exists(self.hosts_file_path()):
             return
 
-        variables = self._load_hosts_file()
+        wato_hosts = self._load_wato_hosts()
         # Can either be set to True or a string (which will be used as host lock message)
-        self._locked_hosts = variables["_lock"]
-
-        # Add entries in clusters{} to all_hosts, prepare cluster to node mapping
-        nodes_of = {}
-        for cluster_with_tags, nodes in variables["clusters"].items():
-            variables["all_hosts"].append(cluster_with_tags)
-            nodes_of[cluster_with_tags.split('|')[0]] = list(map(str, nodes))
+        self._locked_hosts = wato_hosts["locked"]
 
         # Build list of individual hosts
-        for host_name_with_tags in variables["all_hosts"]:
-            parts = host_name_with_tags.split('|', 1)
-            host_name = parts[0]
-            host = self._create_host_from_variables(host_name, nodes_of, variables)
+        for host_name in wato_hosts["host_attributes"].keys():
+            host = self._create_host_from_variables(host_name, wato_hosts)
             self._hosts[host_name] = host
 
-    def _create_host_from_variables(self, host_name, nodes_of, variables):
-        cluster_nodes = nodes_of.get(host_name)
-
-        # If we have a valid entry in host_attributes then the hosts.mk file contained
-        # valid WATO information from a last save and we use that
-        if host_name in variables["host_attributes"]:
-            attributes = variables["host_attributes"][host_name]
-            attributes = self._transform_old_attributes(attributes)
-
-        else:
-            # Otherwise it is an import from some manual old version of from some
-            # CMDB and we reconstruct the attributes. That way the folder inheritance
-            # information is not available and all tags are set explicitely
-            # 1.6: Tag transform from all_hosts has been dropped
-            attributes = {}
-            alias = self._get_alias_from_extra_conf(host_name, variables)
-            if alias is not None:
-                attributes["alias"] = alias
-            for attribute_key, config_dict in [
-                ("ipaddress", "ipaddresses"),
-                ("ipv6address", "ipv6addresses"),
-                ("snmp_community", "explicit_snmp_communities"),
-            ]:
-                if host_name in variables[config_dict]:
-                    attributes[attribute_key] = variables[config_dict][host_name]
-
+    def _create_host_from_variables(self, host_name: HostName, wato_hosts: WATOHosts) -> CREHost:
+        cluster_nodes = wato_hosts["clusters"].get(host_name)
+        attributes = self._transform_old_attributes(wato_hosts["host_attributes"][host_name])
         return Host(self, host_name, attributes, cluster_nodes)
 
     def _upgrade_keys(self, data):
@@ -1134,7 +1113,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             del attributes["site"]
         return attributes
 
-    def _load_hosts_file(self):
+    def _load_wato_hosts(self) -> WATOHosts:
+        variables = self._load_hosts_file()
+        return WATOHosts(locked=variables["_lock"],
+                         host_attributes=variables["host_attributes"],
+                         all_hosts=variables["all_hosts"],
+                         clusters=variables["clusters"])
+
+    def _load_hosts_file(self) -> Dict[str, Any]:
         variables = {
             "FOLDER_PATH": "",
             "ALL_HOSTS": ALL_HOSTS,
@@ -1426,7 +1412,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def object_ref(self) -> ObjectRef:
         return ObjectRef(ObjectRefType.Folder, self.path())
 
-    def hosts(self) -> Dict[str, 'CREHost']:
+    def hosts(self) -> Dict[str, CREHost]:
         self._load_hosts_on_demand()
         return self._hosts
 
@@ -1440,7 +1426,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             num += subfolder.num_hosts_recursively()
         return num
 
-    def all_hosts_recursively(self) -> Dict[str, 'CREHost']:
+    def all_hosts_recursively(self) -> Dict[str, CREHost]:
         hosts = {}
         hosts.update(self.hosts())
         for subfolder in self.subfolders():

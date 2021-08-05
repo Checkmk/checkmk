@@ -1,5 +1,5 @@
 LASSO := lasso
-LASSO_VERS := 2.6.1.2
+LASSO_VERS := 2.7.0
 LASSO_DIR := $(LASSO)-$(LASSO_VERS)
 
 LASSO_BUILD := $(BUILD_HELPER_DIR)/$(LASSO_DIR)-build
@@ -20,9 +20,12 @@ $(LASSO)-int: $(LASSO_INTERMEDIATE_INSTALL)
 ifeq ($(filter sles%,$(DISTRO_CODE)),)
 $(LASSO_BUILD): $(LASSO_UNPACK)
 	cd $(LASSO_BUILD_DIR) \
-	&& echo $(LASSO_VERS) > .tarball-version \
-	&& ./autogen.sh noconfig \
-        && ./configure --prefix=$(OMD_ROOT) --disable-gtk-doc --enable-static-linking \
+        && ./configure \
+	    --prefix=$(OMD_ROOT) \
+	    --disable-gtk-doc \
+	    --disable-java \
+	    --disable-perl \
+	    --enable-static-linking \
 	&& $(MAKE)
 	$(TOUCH) $@
 else
@@ -42,9 +45,6 @@ $(LASSO_INSTALL): $(LASSO_BUILD)
 ifeq ($(filter sles%,$(DISTRO_CODE)),)
 	$(MAKE) DESTDIR=$(DESTDIR) \
 		-C $(LASSO_BUILD_DIR) install
-	if [ -d "$(DESTDIR)/$(OMD_ROOT)/lib64/perl5" ]; then mv $(DESTDIR)/$(OMD_ROOT)/lib64/perl5 $(DESTDIR)/$(OMD_ROOT)/lib/; rm -r $(DESTDIR)/$(OMD_ROOT)/lib64; fi
-	chmod -R u+w $(DESTDIR)/$(OMD_ROOT)/lib/x86_64-linux-gnu/perl5
-endif
 	$(TOUCH) $@
 
 $(LASSO)_download:

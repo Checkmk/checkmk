@@ -335,3 +335,11 @@ class StorageFormat(enum.Enum):
     def is_hosts_config(self, filename: str) -> bool:
         """Unified method to determine that the file is hosts config."""
         return filename.startswith("/wato/") and filename.endswith("/" + self.hosts_file())
+
+
+class PickleSerializer:
+    def serialize(self, data) -> bytes:
+        return pickle.dumps(data)
+
+    def deserialize(self, raw: bytes) -> Any:
+        return pickle.loads(raw)

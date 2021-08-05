@@ -14,6 +14,7 @@ import shutil
 import time
 import uuid
 from collections.abc import Mapping as ABCMapping
+from pathlib import Path
 from typing import (
     Any,
     Callable,
@@ -38,6 +39,7 @@ from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
 from cmk.utils.site import omd_site
+from cmk.utils.store import PickleSerializer, StorageFormat
 from cmk.utils.type_defs import ContactgroupName, HostName
 
 import cmk.gui.hooks as hooks
@@ -529,7 +531,7 @@ class ABCHostsStorage(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def save_contact_groups(self, groups: Tuple[Set[bool], Set[bool], bool]):
+    def save_contact_groups(self, folder_path: str, groups: Tuple[Set[str], Set[str], bool]):
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -606,7 +608,7 @@ class StandardHostsStorage(ABCHumanReadableHostStorage):
                 self.save(format_config_value(dictionary))
                 self.save(")\n")
 
-    def save_contact_groups(self, groups: Tuple[Set[bool], Set[bool], bool]):
+    def save_contact_groups(self, folder_path: str, groups: Tuple[Set[str], Set[str], bool]):
         # If the contact groups of the folder are set to be used for the monitoring,
         # we create an according rule for the folder here and an according rule for
         # each host that has an explicit setting for that attribute (see above).
@@ -631,6 +633,8 @@ class StandardHostsStorage(ABCHumanReadableHostStorage):
 def make_experimental_storage() -> Optional[ABCHostsStorage]:
     if get_storage_format() == store.StorageFormat.RAW:
         return RawHostsStorage()
+    if get_storage_format() == store.StorageFormat.PICKLE:
+        return PickleHostsStorage()
     return None
 
 
@@ -693,7 +697,7 @@ class RawHostsStorage(ABCHumanReadableHostStorage):
                 ))
         self.save("    },\n")
 
-    def save_contact_groups(self, groups: Tuple[Set[bool], Set[bool], bool]):
+    def save_contact_groups(self, folder_path: str, groups: Tuple[Set[str], Set[str], bool]):
         # If the contact groups of the folder are set to be used for the monitoring,
         # we create an according rule for the folder here and an according rule for
         # each host that has an explicit setting for that attribute (see above).
@@ -714,6 +718,90 @@ class RawHostsStorage(ABCHumanReadableHostStorage):
         """Write information about all host attributes into special variable - even
         values stored for check_mk as well."""
         self.save("    'host_attributes': %s,\n" % format_config_value(cleaned_hosts))
+
+
+class PickleHostsStorage(ABCHostsStorage):
+    __slots__ = ["_data"]
+
+    def __init__(self) -> None:
+        self._data: Dict[str, Any] = {}
+
+    def save_group_rules_list(self, group_rules_list: List[Tuple[List[GroupRuleType], bool]]):
+        for group_rules, use_for_service in group_rules_list:
+            self._save_group_rules(group_rules, use_for_service)
+
+    def _save_group_rules(self, group_rules: List[GroupRuleType],
+                          use_for_services: Optional[bool]) -> None:
+        self._data["host_contactgroups"] = group_rules
+        if use_for_services:
+            self._data["service_contactgroups"] = group_rules
+
+    def save_all_hosts(self, all_hosts: List[str]) -> None:
+        self._data["all_hosts"] = all_hosts
+
+    def save_clusters(self, clusters: Dict[str, List[str]]) -> None:
+        self._data["clusters"] = clusters
+
+    def save_host_tags(self, host_tags: Dict[str, Any]) -> None:
+        self._data["host_tags"] = host_tags
+
+    def save_host_labels(self, host_labels: Dict[str, Any]) -> None:
+        self._data["host_labels"] = host_labels
+
+    def save_extra_host_conf(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
+        for custom_varname, entries in custom_macros.items():
+            macrolist = []
+            for hostname, nagstring in entries.items():
+                macrolist.append((nagstring, [hostname]))
+            if len(macrolist) > 0:
+                self._data.setdefault("custom_macros", {})[custom_varname] = macrolist
+
+    def save_attributes(self, attribute_mappings: List[AttributeType]):
+        for _host_attr, cmk_base_varname, dictionary, _title in attribute_mappings:
+            if dictionary:
+                self._data.setdefault("attributes", {})[cmk_base_varname] = dictionary
+
+    def save_explicit_host_settings(self, explicit_host_settings: Dict[str, Dict[str, str]]):
+        for varname, entries in explicit_host_settings.items():
+            if len(entries) > 0:
+                self._data.setdefault("explicit_host_conf", {})[varname] = entries
+
+    def save_contact_groups(self, folder_path: str, groups: Tuple[Set[str], Set[str], bool]):
+        # If the contact groups of the folder are set to be used for the monitoring,
+        # we create an according rule for the folder here and an according rule for
+        # each host that has an explicit setting for that attribute (see above).
+        _permitted_groups, contact_groups, use_for_services = groups
+        if contact_groups:
+            self._data.setdefault("contact_groups", {})["host_contact_groups"] = {
+                "value": list(contact_groups),
+                "condition": {
+                    'host_folder': folder_path
+                }
+            }
+            if use_for_services:
+                # Currently service_contactgroups requires single values. Lists are not supported
+                for cg in contact_groups:
+                    self._data.setdefault("contact_groups", {})["service_contact_groups"] = {
+                        "value": cg,
+                        "condition": {
+                            'host_folder': folder_path
+                        }
+                    }
+
+    def save_cleaned_hosts(self, cleaned_hosts: Dict[str, Dict[str, Any]]) -> None:
+        """Write information about all host attributes into special variable - even
+        values stored for check_mk as well."""
+        self._data["host_attributes"] = cleaned_hosts
+
+    def write(self, filename: str) -> None:
+        path = Path(filename)
+        pickle_path = path.parent / (path.name + StorageFormat.PICKLE.extension())
+        pickle_store = store.ObjectStore(
+            pickle_path,
+            serializer=PickleSerializer(),
+        )
+        with pickle_store.locked():
+            pickle_store.write_obj(self._data)
 
 
 def make_hosts_storage() -> ABCHostsStorage:
@@ -1207,7 +1295,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             storage.save_extra_host_conf(custom_macros)
             storage.save_explicit_host_settings(explicit_host_settings)
 
-            storage.save_contact_groups(self.groups())
+            storage.save_contact_groups(self.path_for_rule_matching(), self.groups())
             storage.save_cleaned_hosts(cleaned_hosts)
 
             storage.write(self.hosts_file_path())

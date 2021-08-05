@@ -4,34 +4,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# <<<oracle_instance:sep(124)>>>
-# XE|11.2.0.2.0|OPEN|ALLOWED|STOPPED|3524|2752243048|NOARCHIVELOG|PRIMARY|NO|XE|080220151025
-# last entry: db creation time 'ddmmyyyyhh24mi'
+from typing import Optional
 
 
-def _parse_raw_db_creation_time(raw_db_creation_time):
-    if raw_db_creation_time is None:
+def _parse_raw_db_creation_time(raw_str) -> Optional[str]:
+    """ "%d%m%Y%H%M%S" => "%Y-%m-%d %H:%M"
+
+        >>> _parse_raw_db_creation_time("080220151025")
+        '2015-02-08 10:25'
+
+    """
+
+    if not (isinstance(raw_str, str) and raw_str.isdigit() and len(raw_str) == 12):
         return None
 
-    # We just translate the format to another
-    # "%d%m%Y%H%M%S" => "%Y-%m-%d %H:%M"
-    # we cannot use time because we have no information about the timezone here.
-    try:
-        year = int(raw_db_creation_time[4:8])
-        month = int(raw_db_creation_time[2:4])
-        day = int(raw_db_creation_time[:2])
-        hours = int(raw_db_creation_time[8:10])
-        minutes = int(raw_db_creation_time[10:])
-    except (IndexError, ValueError):
-        return None
-    return "%s-%02d-%02d %02d:%02d" % (year, month, day, hours, minutes)
+    return f"{raw_str[4:8]}-{raw_str[2:4]}-{raw_str[:2]} {raw_str[8:10]}:{raw_str[10:]}"
 
 
-def inv_oracle_instance(info, inventory_tree, status_data_tree):
+def inventory_oracle_instance(parsed, inventory_tree, status_data_tree):
     path = "software.applications.oracle.instance:"
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
-    for item_data in sorted(info.values(), key=lambda v: v.get("sid")):
+    for item_data in sorted(parsed.values(), key=lambda v: v.get("sid")):
         if item_data['invalid_data']:
             continue
 
@@ -58,5 +52,5 @@ def inv_oracle_instance(info, inventory_tree, status_data_tree):
 
 
 inv_info['oracle_instance'] = {
-    'inv_function': inv_oracle_instance,
+    'inv_function': inventory_oracle_instance,
 }

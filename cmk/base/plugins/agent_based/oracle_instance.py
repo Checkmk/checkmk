@@ -13,6 +13,10 @@ Instance = Mapping[str, Union[None, str, bool]]
 
 Section = Mapping[str, Instance]
 
+# <<<oracle_instance:sep(124)>>>
+# XE|11.2.0.2.0|OPEN|ALLOWED|STOPPED|3524|2752243048|NOARCHIVELOG|PRIMARY|NO|XE|080220151025
+# last entry: db creation time 'ddmmyyyyhh24mi'
+
 
 def create_oracle_instance(info_line: Sequence[str]) -> Instance:
     result: Dict[str, Union[None, str, bool]] = {}

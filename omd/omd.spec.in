@@ -31,11 +31,19 @@ Checkmk - Best-in-class infrastructure & application monitoring
 
 %install
 # Avoid the annobin chaos on CentOS 8, part 2:
-# Empty the already existing spec file, it is referenced by various system stuff, e.g. Perl.
-if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then
-    rm -f /usr/lib/rpm/redhat/redhat-annobin-cc1
-    touch /usr/lib/rpm/redhat/redhat-annobin-cc1
-fi
+# Previously we were replacing the file /usr/lib/rpm/redhat/redhat-annobin-cc1 with an empty file here.
+# Since we don't want to modify global files during build we just ensure that the file has been patched
+# in the environment we build.
+#
+# See also buildscripts/infrastructure/build-nodes/centos-8/Dockerfile
+#
+# You can do it like this locally:
+#
+#if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then
+#    rm -f /usr/lib/rpm/redhat/redhat-annobin-cc1
+#    touch /usr/lib/rpm/redhat/redhat-annobin-cc1
+#fi
+! test -s /usr/lib/rpm/redhat/redhat-annobin-cc1
 
 # This target compiles and installs everything needed into our DESTDIR
 make -C $REPO_PATH/omd DESTDIR=$RPM_BUILD_ROOT install

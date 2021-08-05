@@ -25,6 +25,10 @@ msgstr ""
 msgid " (%d times)"
 msgstr ""
 
+#, python-format
+msgid " (%s left)"
+msgstr ""
+
 msgid " (Copy)"
 msgstr " (Copiază)"
 
@@ -60,6 +64,9 @@ msgstr ""
 
 msgid " (invalid)"
 msgstr " (invalid)"
+
+msgid " (outdated)"
+msgstr ""
 
 #, python-format
 msgid " (owned by %s)"
@@ -1264,6 +1271,11 @@ msgid "<br><b>Note</b>: this key has created by user <b>%s</b>"
 msgstr ""
 
 msgid ""
+"<br>If single values, table columns or subcategories are not restricted, "
+"then all entries are added respectively."
+msgstr ""
+
+msgid ""
 "<br>If there are permission problems, please ensure the site user has write "
 "permissions."
 msgstr ""
@@ -1289,6 +1301,13 @@ msgstr ""
 msgid ""
 "<br>Please note that Check_MK needs this password in clear<br>text during "
 "normal operation and thus stores it unencrypted<br>on the Check_MK server."
+msgstr ""
+
+msgid ""
+"<br>With these intervals specific single values or table columns can be kept "
+"from the previous inventory tree if the current agent output does not "
+"provide any new data for these entries.<br>Only entries corresponding to "
+"chosen single values or columns are added."
 msgstr ""
 
 #, python-format
@@ -8739,6 +8758,31 @@ msgstr "Portul TCP pentru conexiune"
 msgid "Checks & agents"
 msgstr ""
 
+msgid ""
+"Checks <tt>fileinfo</tt> and <tt>sap_hana_fileinfo</tt> monitor the age and "
+"size of a single file. Each file information that is sent by the agent will "
+"create one service. By defining grouping patterns you can switch to checks "
+"<tt>fileinfo.groups</tt> or <tt>sap_hana_fileinfo.groups</tt>. These checks "
+"monitor a list of files at once. You can set levels not only for the total "
+"size and the age of the oldest/youngest file but also on the count. You can "
+"define one or several patterns for a group containing <tt>*</tt> and <tt>?</"
+"tt>, for example <tt>/var/log/apache/*.log</tt>. Please see Python's fnmatch "
+"for more information regarding globbing patterns and special characters. If "
+"the pattern begins with a tilde then this pattern is interpreted as a "
+"regular expression instead of as a filename globbing pattern and <tt>*</tt> "
+"and <tt>?</tt> are treated differently. For files contained in a group the "
+"discovery will automatically create a group service instead of single "
+"services for each file. This rule also applies when you use manually "
+"configured checks instead of inventorized ones. Furthermore, the current "
+"time/date in a configurable format may be included in the include pattern. "
+"The syntax is as follows: $DATE:format-spec$ or $YESTERDAY:format-spec$, "
+"where format-spec is a list of time format directives of the unix date "
+"command. Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A pattern of /"
+"var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files with todays "
+"date  as name in the directory /var/tmp/backups. The YESTERDAY syntax simply "
+"subtracts one day from the reference time."
+msgstr ""
+
 #, fuzzy
 msgid "Checks on management boards"
 msgstr "(fără parametri)"
@@ -8792,6 +8836,10 @@ msgid ""
 "&gt;."
 msgstr ""
 
+#, fuzzy
+msgid "Choose all"
+msgstr "afiseaza toate"
+
 #, python-format
 msgid "Choose another %s"
 msgstr ""
@@ -8825,6 +8873,14 @@ msgstr ""
 msgid "Choose if this rule applies to plugins or local checks"
 msgstr ""
 
+#, fuzzy
+msgid "Choose single values"
+msgstr "Tagul Aplicatiei in syslog"
+
+#, fuzzy
+msgid "Choose table columns"
+msgstr "Tagul Aplicatiei in syslog"
+
 msgid ""
 "Choose the action the Event Console should trigger once the limit is reached."
 msgstr ""
@@ -8840,6 +8896,10 @@ msgid ""
 "respective interface. The default is \"Check and Display\". This feature is "
 "currently only supported by the check netapp_api_if."
 msgstr ""
+
+#, fuzzy
+msgid "Choose the following keys"
+msgstr "Adaugă instanță NGINX"
 
 msgid "Choose the logic with which the value is to be interpreted."
 msgstr ""
@@ -19527,6 +19587,10 @@ msgstr ""
 msgid "Group path"
 msgstr ""
 
+#, fuzzy
+msgid "Group patterns"
+msgstr "Adaugă model/tipar"
+
 msgid "Group<nobr> </nobr>CN"
 msgstr ""
 
@@ -21486,6 +21550,9 @@ msgstr ""
 msgid "How"
 msgstr ""
 
+msgid "How long single values or table columns are kept."
+msgstr ""
+
 msgid ""
 "How long statistics files are kept on the target system. This time should be "
 "at least double the check interval."
@@ -22108,11 +22175,6 @@ msgstr ""
 msgid ""
 "If set, the plugin may be called repeately - up to this many times or until "
 "it finishes successfully."
-msgstr ""
-
-msgid ""
-"If single values, table columns or subcategories are not restricted, then "
-"all entries are added respectively."
 msgstr ""
 
 msgid ""
@@ -37600,6 +37662,9 @@ msgstr ""
 msgid "Resumables"
 msgstr ""
 
+msgid "Retention intervals for HW/SW inventory entities"
+msgstr ""
+
 msgid "Retrieve information about..."
 msgstr ""
 
@@ -44938,30 +45003,6 @@ msgstr ""
 
 #, python-format
 msgid "The character <tt>%s</tt> is not allowed here."
-msgstr ""
-
-msgid ""
-"The check <tt>fileinfo</tt> monitors the age and size of a single file. Each "
-"file information that is sent by the agent will create one service. By "
-"defining grouping patterns you can switch to the check <tt>fileinfo.groups</"
-"tt>. That check monitors a list of files at once. You can set levels not "
-"only for the total size and the age of the oldest/youngest file but also on "
-"the count. You can define one or several patterns for a group containing "
-"<tt>*</tt> and <tt>?</tt>, for example <tt>/var/log/apache/*.log</tt>. "
-"Please see Python's fnmatch for more information regarding globbing patterns "
-"and special characters. If the pattern begins with a tilde then this pattern "
-"is interpreted as a regular expression instead of as a filename globbing "
-"pattern and <tt>*</tt> and <tt>?</tt> are treated differently. For files "
-"contained in a group the discovery will automatically create a group service "
-"instead of single services for each file. This rule also applies when you "
-"use manually configured checks instead of inventorized ones. Furthermore, "
-"the current time/date in a configurable format may be included in the "
-"include pattern. The syntax is as follows: $DATE:format-spec$ or $YESTERDAY:"
-"format-spec$, where format-spec is a list of time format directives of the "
-"unix date command. Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A "
-"pattern of /var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files "
-"with todays date  as name in the directory /var/tmp/backups. The YESTERDAY "
-"syntax simply subtracts one day from the reference time."
 msgstr ""
 
 msgid ""
@@ -54357,10 +54398,10 @@ msgstr "(fără elemente)"
 msgid ""
 "Via <tt>Display options > Show internal tree paths</tt> on the HW/SW "
 "Inventory page of a host the internal tree paths leading to subcategories, "
-"the keys of singles values and table column names become visible. Key "
-"columns of tables are marked with '*'. See <a href=\"https://docs.checkmk."
-"com/latest/de/inventory.html\">HW/SW Inventory</a>. for more details about "
-"the HW/SW Inventory system."
+"the keys of singles values or table column names become visible. Key columns "
+"of tables are marked with '*'. See <a href=\"https://docs.checkmk.com/latest/"
+"de/inventory.html\">HW/SW Inventory</a>. for more details about the HW/SW "
+"Inventory system."
 msgstr ""
 
 msgid "Vibrate only"

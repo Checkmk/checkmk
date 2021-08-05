@@ -85,10 +85,7 @@ def _cluster_check_worst(
 
     node_results = executor(check_function, cluster_kwargs)
     if not node_results.results:
-        if (node_ignores := node_results.ignore_results.items()):
-            raise IgnoreResultsError(", ".join(
-                f"[{node}] {', '.join(str(i) for i in ign)}" for node, ign in node_ignores))
-        return
+        return node_results.raise_for_ignores()
 
     worst_node = node_results.get_worst_node()
     yield from node_results.results[worst_node]
@@ -114,6 +111,11 @@ class NodeResults:
         self.results: Final = results
         self.metrics: Final = metrics
         self.ignore_results: Final = ignore_results
+
+    def raise_for_ignores(self) -> None:
+        if (node_ignores := self.ignore_results.items()):
+            raise IgnoreResultsError(", ".join(
+                f"[{node}] {', '.join(str(i) for i in ign)}" for node, ign in node_ignores))
 
     def get_worst_node(self) -> str:
         return self._get_extreme_node(selector=State.worst)

@@ -174,16 +174,17 @@ function ajax_call_autocomplete_labels(post_data, tagify, value, element) {
 
             let tagify__input = element?.parentElement?.querySelector(".tagify__input");
             if (tagify__input) {
-                let max = 0;
+                let max = value.length;
                 handler_data.tagify.suggestedListItems.forEach(entry => {
-                    max = entry.value.length > max ? entry.value.length : max;
+                    max = Math.max(entry.value.length, max);
                 });
                 let fontSize = parseInt(
                     window.getComputedStyle(tagify__input, null).getPropertyValue("font-size")
                 );
-                tagify__input.style.width = (max * (fontSize / 2 + 1)).toString() + "px";
-                tagify__input.parentElement.style.width =
-                    (max * (fontSize / 2 + 1) + 10).toString() + "px";
+                // Minimum width set by tagify
+                let size = Math.max(110, max * (fontSize / 2 + 1));
+                tagify__input.style.width = size.toString() + "px";
+                tagify__input.parentElement.style.width = (size + 10).toString() + "px";
             }
         },
         handler_data: {

@@ -10,6 +10,7 @@ import pytest
 import logging
 
 from livestatus import SiteId
+from tests.testlib import is_enterprise_repo
 from cmk.post_rename_site import main
 from cmk.post_rename_site.registry import rename_action_registry, RenameActionRegistry, RenameAction
 
@@ -80,12 +81,16 @@ def test_run_executes_plugins(capsys, test_registry, mocker):
 
 def test_load_plugins():
     main.load_plugins()
-    assert sorted(rename_action_registry.keys()) == sorted([
+    expected = [
         "sites",
         "hosts_and_folders",
-        "dcd_connections",
         "update_core_config",
         "warn_remote_site",
         "warn_about_network_ports",
         "warn_about_configs_to_review",
-    ])
+    ]
+
+    if is_enterprise_repo():
+        expected.append("dcd_connections")
+
+    assert sorted(rename_action_registry.keys()) == sorted(expected)

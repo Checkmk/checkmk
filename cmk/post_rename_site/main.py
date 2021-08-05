@@ -15,6 +15,7 @@ import cmk.utils.log as log
 from cmk.utils.log import VERBOSE
 import cmk.utils.debug
 import cmk.utils.plugin_registry
+from cmk.utils.version import is_raw_edition
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 
 # This special script needs persistence and conversion code from different places of Checkmk. We may
@@ -57,7 +58,8 @@ def main(args: List[str]) -> int:
 def load_plugins() -> None:
     for plugin, exc in chain(
             load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions"),
-            load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")):
+            load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")
+            if not is_raw_edition() else []):
         logger.error("Error in action plugin %s: %s\n", plugin, exc)
         if cmk.utils.debug.enabled():
             raise exc

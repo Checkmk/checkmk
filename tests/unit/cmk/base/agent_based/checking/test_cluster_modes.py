@@ -13,7 +13,7 @@ import pytest
 
 from cmk.utils.type_defs import CheckPluginName
 
-import cmk.base.agent_based.checking._cluster_modes as cluster_modes
+from cmk.base.agent_based.checking import _cluster_modes as cluster_modes
 from cmk.base.api.agent_based.checking_classes import (
     CheckPlugin,
     CheckResult,
@@ -135,3 +135,103 @@ def test_cluster_check_worst_yield_worst_nodes_metrics():
         "Nodett": [0, 23],
         "Nodebert": [1, 42],
     },) if isinstance(m, Metric))[0] == Metric("n", 42)  # Nodeberts value
+
+
+def _get_simple_check_best_function(check_function):
+    plugin = _get_test_check_plugin(check_function=check_function)
+    return cluster_modes.get_cluster_check_function(
+        mode='best',
+        clusterization_parameters={},
+        service_id=TEST_SERVICE_ID,
+        plugin=plugin,
+        persist_value_store_changes=False,
+    )
+
+
+def test_cluster_check_best_item_not_found():
+    check_best = _get_simple_check_best_function(_simple_check)
+    assert not list(check_best(section={"Nodett": [], "Nomo": []},))
+
+
+def test_cluster_check_best_ignore_results():
+    check_best = _get_simple_check_best_function(_simple_check)
+    expected_msg = re.escape("[Nodett] yielded, [Nomo] raised")
+    with pytest.raises(IgnoreResultsError, match=expected_msg):
+        _ = list(check_best(section={"Nodett": [-1], "Nomo": [-2]},))
+
+
+def test_cluster_check_best_others_are_notice_only():
+    check_best = _get_simple_check_best_function(_simple_check)
+
+    assert list(check_best(section={
+        "Nodett": [2],
+        "Nomo": [1],
+    },)) == [
+        Result(state=State.OK, summary="Best: [Nomo]"),
+        Result(state=State.WARN, summary="Hi", details="[Nomo]: Hi"),
+        Result(state=State.OK, summary='Additional results from: [Nodett]'),
+        Result(state=State.OK, notice="[Nodett]: Hi(!!)"),
+    ]
+
+
+def test_cluster_check_best_yield_best_nodes_metrics():
+
+    check_best = _get_simple_check_best_function(_simple_check)
+
+    assert list(m for m in check_best(section={
+        "Nodett": [0, 23],
+        "Nodebert": [1, 42],
+    },) if isinstance(m, Metric))[0] == Metric("n", 23)  # Nodetts value
+
+
+def _get_simple_check_failover_function(check_function):
+    plugin = _get_test_check_plugin(check_function=check_function)
+    return cluster_modes.get_cluster_check_function(
+        mode='failover',
+        clusterization_parameters={},
+        service_id=TEST_SERVICE_ID,
+        plugin=plugin,
+        persist_value_store_changes=False,
+    )
+
+
+def test_cluster_check_failover_item_not_found():
+    check_best = _get_simple_check_failover_function(_simple_check)
+    assert not list(check_best(section={"Nodett": [], "Nomo": []},))
+
+
+def test_cluster_check_failover_ignore_results():
+    check_failover = _get_simple_check_failover_function(_simple_check)
+    expected_msg = re.escape("[Nodett] yielded, [Nomo] raised")
+    with pytest.raises(IgnoreResultsError, match=expected_msg):
+        _ = list(check_failover(section={"Nodett": [-1], "Nomo": [-2]},))
+
+
+def test_cluster_check_failover_others_are_notice_only():
+    check_failover = _get_simple_check_failover_function(_simple_check)
+
+    assert list(check_failover(section={
+        "Nodett": [2],
+        "Nomo": [1],
+    },))[3:] == [
+        Result(state=State.OK, notice="[Nomo]: Hi(!)"),
+    ]
+
+
+def test_cluster_check_failover_yield_worst_nodes_metrics():
+
+    check_failover = _get_simple_check_failover_function(_simple_check)
+
+    assert list(m for m in check_failover(section={
+        "Nodett": [0, 23],
+        "Nodebert": [1, 42],
+    },) if isinstance(m, Metric))[0] == Metric("n", 42)  # Nodeberts value.
+
+
+def test_cluster_check_failover_two_are_not_ok():
+
+    check_failover = _get_simple_check_failover_function(_simple_check)
+    section = {"Nodett": [0], "Nodebert": [0]}  # => everything ok, but to many results
+
+    assert State.worst(*(
+        r.state for r in check_failover(section=section) if isinstance(r, Result))) is not State.OK

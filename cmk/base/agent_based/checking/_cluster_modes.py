@@ -40,6 +40,8 @@ _Kwargs = Mapping[str, Any]
 
 _NON_SECTION_KEYS: Final = {'item', 'params'}
 
+_INF = float('inf')
+
 
 class Selector(Protocol):
     def __call__(self, *a: State) -> State:
@@ -72,6 +74,17 @@ def get_cluster_check_function(
         persist_value_store_changes=persist_value_store_changes,
     )
 
+    if mode == "failover":
+        return partial(
+            _cluster_check,
+            clusterization_parameters=clusterization_parameters,
+            executor=executor,
+            check_function=plugin.check_function,
+            label="active",
+            selector=State.worst,
+            levels_additional_nodes_count=(1, _INF),
+        )
+
     if mode == "worst":
         return partial(
             _cluster_check,
@@ -80,6 +93,18 @@ def get_cluster_check_function(
             check_function=plugin.check_function,
             label="worst",
             selector=State.worst,
+            levels_additional_nodes_count=(_INF, _INF),
+        )
+
+    if mode == "best":
+        return partial(
+            _cluster_check,
+            clusterization_parameters=clusterization_parameters,
+            executor=executor,
+            check_function=plugin.check_function,
+            label="best",
+            selector=State.best,
+            levels_additional_nodes_count=(_INF, _INF),
         )
 
     raise ValueError(mode)
@@ -92,6 +117,7 @@ def _cluster_check(
     check_function: Callable,
     label: str,
     selector: Selector,
+    levels_additional_nodes_count: Tuple[float, float],
     **cluster_kwargs: Any,
 ) -> CheckResult:
 
@@ -105,7 +131,8 @@ def _cluster_check(
 
     yield from summarizer.primary_results()
 
-    yield from summarizer.secondary_results()
+    yield from summarizer.secondary_results(
+        levels_additional_nodes_count=levels_additional_nodes_count)
 
     yield from summarizer.metrics()
 
@@ -159,13 +186,17 @@ class Summarizer:
         yield Result(state=State.OK, summary=f"{self._label}: [{self._pivoting}]")
         yield from self._node_results.results[self._pivoting]
 
-    def secondary_results(self) -> Iterable[Result]:
+    def secondary_results(
+        self,
+        *,
+        levels_additional_nodes_count: Tuple[float, float],
+    ) -> Iterable[Result]:
         secondary_nodes = sorted(n for n in self._node_results.results if n != self._pivoting)
         if not secondary_nodes:
             return
 
         yield Result(
-            state=State.OK,
+            state=self._secondary_nodes_state(secondary_nodes, levels_additional_nodes_count),
             summary=f"Additional results from: {', '.join(f'[{n}]' for n in secondary_nodes)}",
         )
         yield from (Result(
@@ -173,6 +204,14 @@ class Summarizer:
             notice=r.summary,
             details=f"{r.details}{STATE_MARKERS[int(r.state)]}",
         ) for node in secondary_nodes for r in self._node_results.results[node])
+
+    @staticmethod
+    def _secondary_nodes_state(
+        secondary_nodes: Sequence[str],
+        levels: Tuple[float, float],
+    ) -> State:
+        count = len(secondary_nodes)
+        return State.CRIT if count >= levels[1] else State(count >= levels[0])
 
     def metrics(self) -> Iterable[Metric]:
         return self._node_results.metrics[self._pivoting]

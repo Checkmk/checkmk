@@ -3865,11 +3865,17 @@ class ConfigCache:
             for k, v in cfg.items()
         }
 
+        if effective_mode == "native":
+            return "native", merged_cfg
+
+        if effective_mode == "failover":
+            return "failover", merged_cfg
+
         if effective_mode == "worst":
             return "worst", merged_cfg
 
-        if effective_mode == "native":
-            return "native", merged_cfg
+        if effective_mode == "best":
+            return "best", merged_cfg
 
         raise NotImplementedError(effective_mode)
 

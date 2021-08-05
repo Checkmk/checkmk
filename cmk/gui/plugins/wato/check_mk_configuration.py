@@ -3839,13 +3839,21 @@ def _valuespec_clustered_services_config():
                   "specifically designed for the check plugin in question. Implementing it is "
                   "optional however, so this might not be available (a warning will be displayed). "
                   "Consult the plugins manpage for details about its cluster behaviour."),
+                _("Failover: The check function of the plugin will be applied to each individual "
+                  "node. The worst outcome will determine the overall state of the clustered "
+                  "service. However only one node is supposed to send data, any additional nodes "
+                  "results will least trigger a WARNING state."),
                 _("Worst: The check function of the plugin will be applied to each individual node. "
                   "The worst outcome will determine the overall state of the clustered service."),
+                _("Best: The check function of the plugin will be applied to each individual node. "
+                  "The best outcome will determine the overall state of the clustered service."),
             )),
         ),
         choices=[
             ("native", _("Native cluster mode"), Dictionary(elements=[])),
+            ("failover", _("Failover (only one node should be active)"), Dictionary(elements=[])),
             ("worst", _("Worst node wins"), Dictionary(elements=[])),
+            ("best", _("Best node wins"), Dictionary(elements=[])),
         ],
     )
 

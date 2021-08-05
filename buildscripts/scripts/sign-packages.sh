@@ -30,7 +30,7 @@ if ! type rpm >/dev/null 2>&1; then
     exit 1
 fi
 
-export GNUPGHOME=/root/.gnupg
+export GNUPGHOME=$HOME/.gnupg
 
 function is_already_signed() {
     if [[ "$FILE_PATH" == *rpm ]]; then

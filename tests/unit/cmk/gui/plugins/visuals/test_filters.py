@@ -20,7 +20,7 @@ import cmk.gui.plugins.visuals
 # Triggers plugin loading
 import cmk.gui.views
 import cmk.gui.visuals
-from cmk.gui.globals import config, output_funnel, request
+from cmk.gui.globals import config, output_funnel
 from cmk.gui.plugins.visuals.wato import FilterWatoFolder
 from cmk.gui.type_defs import VisualContext
 
@@ -569,7 +569,10 @@ def test_filters_filter(request_context, test, monkeypatch):
 
     with on_time('2018-04-15 16:50', 'CET'):
         filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
-        assert filt.filter(dict(test.request_vars)) == test.expected_filters
+        filter_vars = dict(filt.value())  # Default empty vars, exhaustive
+        filter_vars.update(dict(test.request_vars))
+        assert filt.filter(filter_vars) == test.expected_filters
+
 
 FilterTableTest = namedtuple("FilterTableTest", [
     "ident",

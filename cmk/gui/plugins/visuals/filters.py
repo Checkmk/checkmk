@@ -2877,6 +2877,9 @@ class EventFilterState(Filter):
         html.end_checkbox_group()
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        if all(value.values()):  # everything on, skip filter
+            return ""
+
         selected = (name for name, _title in self._choices if value.get(self.ident + "_" + name))
 
         return lq_logic("Filter: %s =" % self.ident, sorted(selected), "Or")

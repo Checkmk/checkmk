@@ -9,14 +9,14 @@ import re
 import pprint
 import base64
 import pickle
-from typing import Any, Union, List
+from typing import Any, Union, List, TypedDict, Tuple
 
 from six import ensure_binary, ensure_str
 
 from cmk.gui.sites import SiteStatus
 from cmk.utils.werks import parse_check_mk_version
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, ContactgroupName
 import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
@@ -59,19 +59,32 @@ def rename_host_in_list(thelist, oldname, newname):
     return did_rename
 
 
-# Convert old tuple representation to new dict representation of
-# folder's group settings
+class HostContactGroupSpec(TypedDict):
+    groups: List[ContactgroupName]
+    recurse_perms: bool
+    use: bool
+    use_for_services: bool
+    recurse_use: bool
+
+
+LegacyContactGroupSpec = Tuple[bool, List[ContactgroupName]]
+
+
 # TODO: Find a better place later
-def convert_cgroups_from_tuple(value):
+def convert_cgroups_from_tuple(
+        value: Union[HostContactGroupSpec, LegacyContactGroupSpec]) -> HostContactGroupSpec:
+    """Convert old tuple representation to new dict representation of folder's group settings"""
     if isinstance(value, dict):
         if "use_for_services" in value:
             return value
 
-        new_value = {
+        return {
+            "groups": value["groups"],
+            "recurse_perms": value["recurse_perms"],
+            "use": value["use"],
             "use_for_services": False,
+            "recurse_use": value["recurse_use"],
         }
-        new_value.update(value)
-        return value
 
     return {
         "groups": value[1],

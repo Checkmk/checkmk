@@ -38,6 +38,7 @@ from cmk.gui.watolib.utils import (
     wato_root_dir,
     rename_host_in_list,
     convert_cgroups_from_tuple,
+    HostContactGroupSpec,
     host_attribute_matches,
     format_config_value,
     ALL_HOSTS,
@@ -1372,7 +1373,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             effective_folder_attributes = host.effective_attributes()
         else:
             effective_folder_attributes = self.effective_attributes()
-        cgconf = self._get_cgconf_from_attributes(effective_folder_attributes)
+        cgconf = _get_cgconf_from_attributes(effective_folder_attributes)
 
         # First set explicit groups
         permitted_groups.update(cgconf["groups"])
@@ -1386,7 +1387,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         while parent:
             effective_folder_attributes = parent.effective_attributes()
-            parconf = self._get_cgconf_from_attributes(effective_folder_attributes)
+            parconf = _get_cgconf_from_attributes(effective_folder_attributes)
             parent_permitted_groups, parent_host_contact_groups, _parent_use_for_services = parent.groups(
             )
 
@@ -1812,8 +1813,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self.need_unlocked()
 
         # For changing contact groups user needs write permission on parent folder
-        if self._get_cgconf_from_attributes(new_attributes) != \
-           self._get_cgconf_from_attributes(self.attributes()):
+        if _get_cgconf_from_attributes(new_attributes) != \
+           _get_cgconf_from_attributes(self.attributes()):
             must_be_in_contactgroups(self.attributes().get("contactgroups"))
             if self.has_parent():
                 if not self.parent().may("write"):
@@ -1849,11 +1850,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                    diff_text=make_diff_text(old_object,
                                             make_folder_audit_log_object(self._attributes)))
         self._clear_id_cache()
-
-    def _get_cgconf_from_attributes(self, attributes):
-        v = attributes.get("contactgroups", (False, []))
-        cgconf = convert_cgroups_from_tuple(v)
-        return cgconf
 
     def prepare_create_hosts(self):
         config.user.need_permission("wato.manage_hosts")
@@ -2129,6 +2125,11 @@ def validate_host_uniqueness(varname, host_name):
             _('A host with the name <b><tt>%s</tt></b> already '
               'exists in the folder <a href="%s">%s</a>.') %
             (host_name, host.folder().url(), host.folder().alias_path()))
+
+
+def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupSpec:
+    v = attributes.get("contactgroups", (False, []))
+    return convert_cgroups_from_tuple(v)
 
 
 class SearchFolder(WithPermissions, WithAttributes, BaseFolder):

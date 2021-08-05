@@ -69,7 +69,7 @@ from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostName, ContactgroupName
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -1705,7 +1705,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         config.user.need_permission("wato.manage_folders")
         self.need_permission("write")
         self.need_unlocked_subfolders()
-        must_be_in_contactgroups(attributes.get("contactgroups"))
+        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
 
         attributes = update_metadata(attributes, created_by=config.user.id)
 
@@ -1815,7 +1815,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # For changing contact groups user needs write permission on parent folder
         if _get_cgconf_from_attributes(new_attributes) != \
            _get_cgconf_from_attributes(self.attributes()):
-            must_be_in_contactgroups(self.attributes().get("contactgroups"))
+            _must_be_in_contactgroups(_get_cgconf_from_attributes(self.attributes())["groups"])
             if self.has_parent():
                 if not self.parent().may("write"):
                     raise MKAuthException(
@@ -1884,7 +1884,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     @staticmethod
     def verify_host_details(name, attributes):
         # MKAuthException, MKUserError
-        must_be_in_contactgroups(attributes.get("contactgroups"))
+        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
         validate_host_uniqueness("host", name)
         _attributes = update_metadata(attributes, created_by=config.user.id)
 
@@ -2567,7 +2567,7 @@ class CREHost(WithPermissions, WithAttributes):
             self._need_folder_write_permissions()
         self.need_permission("write")
         self.need_unlocked()
-        must_be_in_contactgroups(attributes.get("contactgroups"))
+        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
 
         old_object = make_host_audit_log_object(self._attributes, self._cluster_nodes)
         new_object = make_host_audit_log_object(attributes, cluster_nodes)
@@ -2692,19 +2692,18 @@ def make_folder_audit_log_object(attributes):
     return obj
 
 
-# Make sure that the user is in all of cgs contact groups.
-# This is needed when the user assigns contact groups to
-# objects. He may only assign such groups he is member himself.
-def must_be_in_contactgroups(cgspec):
+def _must_be_in_contactgroups(cgs: Iterable[ContactgroupName]) -> None:
+    """Make sure that the user is in all of cgs contact groups
+
+    This is needed when the user assigns contact groups to
+    objects. He may only assign such groups he is member himself.
+    """
     if config.user.may("wato.all_folders"):
         return
 
-    # No contact groups specified
-    if cgspec is None:
-        return
+    if not cgs:
+        return  # No contact groups specified
 
-    cgconf = convert_cgroups_from_tuple(cgspec)
-    cgs = cgconf["groups"]
     users = userdb.load_users()
     if config.user.id not in users:
         user_cgs = []

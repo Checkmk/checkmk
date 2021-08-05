@@ -228,6 +228,9 @@ node(NODE) {
     } catch(Exception e) {
         notify.notify_error(e)
     }finally {
+
+        currentBuild.description = currentBuild.description + "<p><a href='${INTERNAL_DEPLOY_URL}/${CMK_VERS}'>Download Artifacts</a></p>"
+
         if (DEPLOY_TO_WEBSITE) {
             docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                 def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")

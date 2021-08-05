@@ -1,10 +1,13 @@
 LASSO := lasso
 LASSO_VERS := 2.7.0
 LASSO_DIR := $(LASSO)-$(LASSO_VERS)
+# Increase this to enforce a recreation of the build cache
+LASSO_BUILD_ID := 1
 
 LASSO_BUILD := $(BUILD_HELPER_DIR)/$(LASSO_DIR)-build
 LASSO_UNPACK := $(BUILD_HELPER_DIR)/$(LASSO_DIR)-unpack
 LASSO_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(LASSO_DIR)-install-intermediate
+LASSO_CACHE_PKG_PROCESS := $(BUILD_HELPER_DIR)/$(LASSO_DIR)-cache-pkg-process
 LASSO_INSTALL := $(BUILD_HELPER_DIR)/$(LASSO_DIR)-install
 
 LASSO_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(LASSO_DIR)
@@ -25,7 +28,7 @@ $(LASSO_BUILD): $(LASSO_UNPACK) $(PYTHON3_CACHE_PKG_PROCESS) $(PYTHON3_MODULES_C
 	&& export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" \
 	&& export CFLAGS="-I$(PACKAGE_PYTHON3_INCLUDE_PATH)" \
         && ./configure \
-	    --prefix=$(OMD_ROOT) \
+	    --prefix="" \
 	    --disable-gtk-doc \
 	    --disable-java \
 	    --disable-perl \
@@ -35,6 +38,22 @@ $(LASSO_BUILD): $(LASSO_UNPACK) $(PYTHON3_CACHE_PKG_PROCESS) $(PYTHON3_MODULES_C
 	$(TOUCH) $@
 else
 $(LASSO_BUILD):
+	$(MKDIR) $(BUILD_HELPER_DIR)
+	$(TOUCH) $@
+endif
+
+LASSO_CACHE_PKG_PATH := $(call cache_pkg_path,$(LASSO_DIR),$(LASSO_BUILD_ID))
+
+$(LASSO_CACHE_PKG_PATH):
+	$(call pack_pkg_archive,$@,$(LASSO_DIR),$(LASSO_BUILD_ID),$(LASSO_INTERMEDIATE_INSTALL))
+
+ifeq ($(filter $(DISTRO_CODE),sles15 sles12sp3 sles12sp4),)
+$(LASSO_CACHE_PKG_PROCESS): $(LASSO_CACHE_PKG_PATH)
+	$(call unpack_pkg_archive,$(LASSO_CACHE_PKG_PATH),$(LASSO_DIR))
+	$(call upload_pkg_archive,$(LASSO_CACHE_PKG_PATH),$(LASSO_DIR),$(LASSO_BUILD_ID))
+	$(TOUCH) $@
+else
+$(LASSO_CACHE_PKG_PROCESS):
 	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 endif
@@ -49,13 +68,10 @@ ifeq ($(filter $(DISTRO_CODE),sles15 sles12sp3 sles12sp4),)
 endif
 	$(TOUCH) $@
 
-$(LASSO_INSTALL): $(LASSO_BUILD)
+$(LASSO_INSTALL): $(LASSO_CACHE_PKG_PROCESS)
 ifeq ($(filter $(DISTRO_CODE),sles15 sles12sp3 sles12sp4),)
-	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH) \
-	&& export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH) \
-	&& export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" \
-	&& $(MAKE) DESTDIR=$(DESTDIR) \
-		-C $(LASSO_BUILD_DIR) install
+	$(RSYNC) $(LASSO_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
+	$(TOUCH) $@
 endif
 	$(TOUCH) $@
 

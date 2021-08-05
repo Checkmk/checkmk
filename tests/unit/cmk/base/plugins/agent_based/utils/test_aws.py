@@ -6,7 +6,14 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
+from cmk.base.plugins.agent_based.utils.aws import (
+    CloudwatchInsightsSection,
+    extract_aws_metrics_by_labels,
+    LambdaFunctionConfiguration,
+    LambdaInsightMetrics,
+    LambdaSummarySection,
+    parse_aws,
+)
 
 
 @pytest.mark.parametrize(
@@ -347,3 +354,26 @@ def test_parse_aws(string_table, expected_result):
 )
 def test_extract_aws_metrics_by_labels(expected_metric_names, section, expected_result):
     assert extract_aws_metrics_by_labels(expected_metric_names, section) == expected_result
+
+
+SECTION_AWS_LAMBDA_SUMMARY: LambdaSummarySection = {
+    'eu-central-1 calling_other_lambda_concurrently': LambdaFunctionConfiguration(Timeout=1.0,
+                                                                                  MemorySize=128.0,
+                                                                                  CodeSize=483.0),
+    'eu-central-1 my_python_test_function': LambdaFunctionConfiguration(Timeout=1.0,
+                                                                        MemorySize=128.0,
+                                                                        CodeSize=483.0),
+    'eu-north-1 myLambdaTestFunction': LambdaFunctionConfiguration(Timeout=1.0,
+                                                                   MemorySize=128.0,
+                                                                   CodeSize=299.0),
+}
+
+SECTION_AWS_LAMBDA_CLOUDWATCH_INSIGHTS: CloudwatchInsightsSection = {
+    'eu-central-1 calling_other_lambda_concurrently': LambdaInsightMetrics(
+        max_memory_used_bytes=128000000.0,
+        count_cold_starts_in_percent=50.0,
+        max_init_duration_seconds=0.33964999999999995),
+    'eu-central-1 my_python_test_function': LambdaInsightMetrics(max_memory_used_bytes=52000000.0,
+                                                                 count_cold_starts_in_percent=50.0,
+                                                                 max_init_duration_seconds=1.62853),
+}

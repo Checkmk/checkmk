@@ -1391,6 +1391,24 @@ def _parameter_valuespec_aws_lambda_performance():
                "This metric is only reported for asynchronous invocations. Default is CRIT for more than one error per hour (ca. 1.0/3600)."
               ),
          )),
+        ('levels_init_duration_absolute',
+         Tuple(
+             title=_("Init duration with absolute limits"),
+             elements=[
+                 Float(title=_("Warning at"), unit="s"),
+                 Float(title=_("Critical at"), unit="s"),
+             ],
+         )),
+        ('levels_cold_starts_in_percent',
+         Tuple(
+             title=_("Cold starts in percent"),
+             elements=[
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=10.0),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=20.0),
+             ],
+             help=_(
+                 "Specify the upper levels for the cold starts in percent of total invocations."),
+         )),
     ],)
 
 

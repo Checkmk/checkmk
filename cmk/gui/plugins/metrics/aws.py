@@ -806,6 +806,18 @@ metric_info['aws_lambda_dead_letter_errors'] = {
     'color': '41/a',
 }
 
+metric_info['aws_lambda_init_duration_absolute'] = {
+    'title': _('Init duration'),
+    'unit': 's',
+    'color': '43/a',
+}
+
+metric_info['aws_lambda_cold_starts_in_percent'] = {
+    'title': _('Cold starts in percent'),
+    'unit': '%',
+    'color': '44/a',
+}
+
 metric_info['aws_lambda_concurrent_executions_in_percent'] = {
     'title': _('Concurrent executions in percent'),
     'unit': '%',

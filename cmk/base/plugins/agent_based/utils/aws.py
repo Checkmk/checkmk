@@ -169,13 +169,30 @@ LambdaQueryStats = Sequence[Mapping[str, str]]
 @dataclass
 class LambdaInsightMetrics:
     max_memory_used_bytes: float
-    count_cold_starts: float
-    max_init_duration_ms: Optional[float] = None
+    count_cold_starts_in_percent: float
+    max_init_duration_seconds: Optional[float] = None
 
     @staticmethod
     def from_metrics(query_stats: LambdaQueryStats) -> 'LambdaInsightMetrics':
+        max_memory_used_bytes: float
+        count_cold_starts: int
+        count_invocations: int
+        max_init_duration_seconds: Optional[float] = None
+        for metric in query_stats:
+            if metric["field"] == "max_memory_used_bytes":
+                max_memory_used_bytes = float(metric["value"])
+            if metric["field"] == "count_cold_starts":
+                count_cold_starts = int(metric["value"])
+            if metric["field"] == "count_invocations":
+                count_invocations = int(metric["value"])
+            if metric["field"] == "max_init_duration_ms":
+                max_init_duration_seconds = float(metric["value"]) / 1000.0
+
         return LambdaInsightMetrics(
-            **{metric["field"]: float(metric["value"]) for metric in query_stats})
+            max_memory_used_bytes,
+            count_cold_starts * 100.0 / count_invocations,
+            max_init_duration_seconds,
+        )
 
 
 CloudwatchInsightsSection = Mapping[str, LambdaInsightMetrics]

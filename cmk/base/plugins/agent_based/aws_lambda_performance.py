@@ -3,11 +3,12 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Generator, Mapping, Optional, Union
+from typing import Generator, Optional, Tuple, TypedDict, Union
 
 from .agent_based_api.v1 import check_levels, Metric, register, render, Result
-from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.aws import (
+    CloudwatchInsightsSection,
     discover_lambda_functions,
     extract_aws_metrics_by_labels,
     function_arn_to_item,
@@ -51,6 +52,7 @@ register.agent_section(
 def discover_aws_lambda(
     section_aws_lambda_summary: Optional[LambdaSummarySection],
     section_aws_lambda: Optional[LambdaCloudwatchSection],
+    section_aws_lambda_cloudwatch_insights: Optional[CloudwatchInsightsSection],
 ) -> DiscoveryResult:
     if section_aws_lambda is None:
         return
@@ -67,12 +69,24 @@ def check_invocations(invocations: float, params) -> Generator[Union[Result, Met
     )
 
 
+class LambdaPerformanceParameters(TypedDict, total=False):
+    levels_duration_percent: Tuple[float, float]
+    levels_duration_absolute: Tuple[float, float]
+    levels_errors: Tuple[float, float]
+    levels_throttles: Tuple[float, float]
+    levels_iterator_age: Tuple[float, float]
+    levels_dead_letter_errors: Tuple[float, float]
+    levels_init_duration_absolute: Tuple[float, float]
+    levels_cold_starts_in_percent: Tuple[float, float]
+
+
 def check_aws_lambda_performance(
     item: str,
-    params: Mapping[str, Any],
+    params: LambdaPerformanceParameters,
     section_aws_lambda_summary: Optional[LambdaSummarySection],
     section_aws_lambda: Optional[LambdaCloudwatchSection],
-):
+    section_aws_lambda_cloudwatch_insights: Optional[CloudwatchInsightsSection],
+) -> CheckResult:
     if (section_aws_lambda_summary is None or section_aws_lambda_summary.get(item) is None or
             section_aws_lambda is None or section_aws_lambda.get(item) is None):
         # The metrics will not be reported by AWS if a lambda function was not used in the last monitoring period.
@@ -138,19 +152,37 @@ def check_aws_lambda_performance(
             render_func=lambda f: "%.4f" % f,
         )
 
+    if section_aws_lambda_cloudwatch_insights and (
+            insight_metrics := section_aws_lambda_cloudwatch_insights.get(item)):
+        if insight_metrics.max_init_duration_seconds is not None:
+            yield from check_levels(
+                insight_metrics.max_init_duration_seconds,
+                levels_upper=params.get('levels_init_duration_absolute'),
+                metric_name='aws_lambda_init_duration_absolute',
+                label='Init duration with absolute limits',
+                render_func=render.timespan,
+            )
+
+        yield from check_levels(insight_metrics.count_cold_starts_in_percent,
+                                levels_upper=params['levels_cold_starts_in_percent'],
+                                metric_name='aws_lambda_cold_starts_in_percent',
+                                label='Cold starts in percent',
+                                render_func=render.percent)
+
 
 _MORE_THAN_ONE_PER_HOUR = 0.00028  # 1.0/3600
 
-_DEFAULT_PARAMETERS: Mapping[str, Any] = {
+_DEFAULT_PARAMETERS: LambdaPerformanceParameters = {
     "levels_duration_percent": (90.0, 95.0),
     "levels_errors": (_MORE_THAN_ONE_PER_HOUR, _MORE_THAN_ONE_PER_HOUR),
     "levels_throttles": (_MORE_THAN_ONE_PER_HOUR, _MORE_THAN_ONE_PER_HOUR),
     "levels_dead_letter_errors": (_MORE_THAN_ONE_PER_HOUR, _MORE_THAN_ONE_PER_HOUR),
+    "levels_cold_starts_in_percent": (10.0, 20.0)
 }
 
 register.check_plugin(
     name='aws_lambda_performance',
-    sections=["aws_lambda_summary", "aws_lambda"],
+    sections=["aws_lambda_summary", "aws_lambda", "aws_lambda_cloudwatch_insights"],
     service_name='AWS/Lambda Performance %s',
     discovery_function=discover_aws_lambda,
     check_ruleset_name="aws_lambda_performance",

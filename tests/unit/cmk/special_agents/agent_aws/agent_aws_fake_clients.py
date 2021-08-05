@@ -2195,16 +2195,24 @@ class QueryResults(TypedDict):
 FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE: QueryResults = {
     "status": "Complete",
     "results": {
-        "arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function": [{
-            "field": "max_memory_used_bytes",
-            "value": "52000000"
-        }, {
-            "field": "max_init_duration_ms",
-            "value": "1702.11"
-        }, {
-            "field": "count_cold_starts",
-            "value": "2"
-        }]
+        "arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function": [
+            {
+                "field": "max_memory_used_bytes",
+                "value": "52000000"
+            },
+            {
+                "field": "max_init_duration_ms",
+                "value": "1702.11"
+            },
+            {
+                "field": "count_cold_starts",
+                "value": "2"
+            },
+            {
+                "field": "count_invocations",
+                "value": "4"
+            },
+        ]
     }
 }
 

@@ -4218,7 +4218,8 @@ class LambdaCloudwatchInsights(AWSSection):
                 '| stats '
                 'max(@maxMemoryUsed) as max_memory_used_bytes,'
                 'max(@initDuration) as max_init_duration_ms,'
-                'sum(strcontains(@message, "Init Duration")) as count_cold_starts',
+                'sum(strcontains(@message, "Init Duration")) as count_cold_starts,'
+                'count() as count_invocations',
                 timeout_seconds=30,
             ))
         }

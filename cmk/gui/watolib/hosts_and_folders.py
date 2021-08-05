@@ -478,17 +478,9 @@ def update_metadata(
 
 
 class ABCHostsStorage(abc.ABC):
-    __slots__ = ['_out']
-
-    def __init__(self) -> None:
-        super().__init__()
-        self._out = io.StringIO()
-
-    def getvalue(self) -> str:
-        return self._out.getvalue()
-
-    def save(self, s: str) -> None:
-        self._out.write(s)
+    @abc.abstractmethod
+    def write(self, filename: str) -> None:
+        raise NotImplementedError()
 
     def save_group_rules_list(self, group_rules_list: List[Tuple[List[GroupRuleType],
                                                                  Optional[bool]]]):
@@ -538,11 +530,25 @@ class ABCHostsStorage(abc.ABC):
         values stored for check_mk as well."""
         raise NotImplementedError()
 
+
+class ABCHumanReadableHostStorage(ABCHostsStorage):
+    __slots__ = ['_out']
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._out = io.StringIO()
+
+    def getvalue(self) -> str:
+        return self._out.getvalue()
+
+    def save(self, s: str) -> None:
+        self._out.write(s)
+
     def write(self, filename: str) -> None:
         store.save_text_to_file(filename, self.getvalue())
 
 
-class StandardHostsStorage(ABCHostsStorage):
+class StandardHostsStorage(ABCHumanReadableHostStorage):
     def __init__(self) -> None:
         super().__init__()
         self.save(wato_fileheader())
@@ -615,7 +621,13 @@ class StandardHostsStorage(ABCHostsStorage):
         self.save("host_attributes.update(\n%s)\n" % format_config_value(cleaned_hosts))
 
 
-class RawHostsStorage(ABCHostsStorage):
+def make_experimental_storage() -> Optional[ABCHostsStorage]:
+    if get_storage_format() == store.StorageFormat.RAW:
+        return RawHostsStorage()
+    return None
+
+
+class RawHostsStorage(ABCHumanReadableHostStorage):
     def __init__(self) -> None:
         super().__init__()
         self.save("{\n")
@@ -1173,8 +1185,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                                 custom_macros[custom_varname][hostname] = nagstring
 
         storage_list: List[ABCHostsStorage] = [StandardHostsStorage()]
-        if get_storage_format() == store.StorageFormat.RAW:
-            storage_list.append(RawHostsStorage())
+
+        if storage := make_experimental_storage():
+            storage_list.append(storage)
 
         for storage in storage_list:  # = make_hosts_storage()
             storage.save_group_rules_list(group_rules_list)

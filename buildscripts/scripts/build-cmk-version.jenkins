@@ -65,15 +65,20 @@ def DOCKER_GROUP_ID = ''
 // MAIN
 //
 node(NODE) {
-    stage('Cleanup work directories') {
-        /// takes place as regular Jenkins user - can't deal with root's files
-        sh('rm -rf ${WORKSPACE}/*')
+    stage('Prepare version directory') {
+        sh('rm -rf "${WORKSPACE}/versions/"*')
+        sh('mkdir -p "${WORKSPACE}/versions"')
     }
 
     stage('Checkout sources') {
         /// takes place as regular Jenkins user
         dir("${WORKSPACE}/git") {
             checkout_git(scm, VERSION)
+
+            // Clean up left overs from previous runs, but keep previously
+            // created virtual environments to save some time
+            sh("make mrclean")
+
             // Load libraries
             versioning = load 'buildscripts/scripts/lib/versioning.groovy'
             windows = load 'buildscripts/scripts/lib/windows.groovy'
@@ -104,14 +109,17 @@ node(NODE) {
     }
     try {
         if (!params.FAKE_WINDOWS_ARTIFACTS) {
+            // Clean up agent artifacts to not accidentally reuse things from
+            // previous runs
+            sh('rm -rf ${WORKSPACE}/agents/*')
+            sh('mkdir -p ${WORKSPACE}/agents')
+
             AGENT_LIST.each { AGENT ->
                 AGENT_BUILDS['build agent ' + AGENT] = {
                     if (AGENT == 'windows') {
                         def FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
                         def WIN_PROJECT = "${FOLDER_ID}/windows-agent-build"
                         def WIN_PY_PROJECT = "${FOLDER_ID}/Windows-Python-Build"
-
-                        sh('mkdir -p agents')
 
                         def WIN_BUILD = build(job: WIN_PROJECT, parameters: [string(name: 'VERSION', value: VERSION)])
                         copyArtifacts(
@@ -153,8 +161,8 @@ node(NODE) {
 
             SOURCE_DIR = WORKSPACE + "/git"
             def SOURCE_PACKAGE_NAME = get_source_package_name(WORKSPACE, EDITION, CMK_VERS)
-            def BUILD_SOURCE_PACKAGE_PATH = WORKSPACE + "/git/" + SOURCE_PACKAGE_NAME
-            def FINAL_SOURCE_PACKAGE_PATH = WORKSPACE + "/" + CMK_VERS + "/" + SOURCE_PACKAGE_NAME
+            def BUILD_SOURCE_PACKAGE_PATH = SOURCE_DIR + "/" + SOURCE_PACKAGE_NAME
+            def FINAL_SOURCE_PACKAGE_PATH = get_versions_dir(WORKSPACE, CMK_VERS) + "/" + SOURCE_PACKAGE_NAME
 
             copy_source_package(BUILD_SOURCE_PACKAGE_PATH, FINAL_SOURCE_PACKAGE_PATH)
 
@@ -201,13 +209,13 @@ node(NODE) {
                         BUILD_IMAGE.inside(DOCKER_ARGS) {
                             def PACKAGE_NAME = get_package_name(WORKSPACE, DISTRO, CMK_VERS)
                             def BUILD_PACKAGE_PATH = DISTRO_DIR + "/" + PACKAGE_NAME
-                            def FINAL_PACKAGE_PATH = WORKSPACE + "/" + CMK_VERS + "/" + PACKAGE_NAME
+                            def FINAL_PACKAGE_PATH = get_versions_dir(WORKSPACE, CMK_VERS) + "/" + PACKAGE_NAME
 
                             clean_venv()
 
                             sign_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE)
                             test_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE, CMK_VERS)
-                            copy_package(BUILD_PACKAGE_PATH, DISTRO, WORKSPACE + "/" + CMK_VERS )
+                            copy_package(BUILD_PACKAGE_PATH, DISTRO, FINAL_PACKAGE_PATH)
 
                             upload_artifacts.upload(
                                 NAME: DISTRO,
@@ -235,8 +243,8 @@ node(NODE) {
                 def BUILD_IMAGE = docker.build("build-image:${env.BUILD_ID}", "--pull ${WORKSPACE}/git/buildscripts/docker_image_aliases/IMAGE_TESTING")
                 BUILD_IMAGE.inside(DOCKER_ARGS) {
                     upload_artifacts.download_version_dir(INTERNAL_DEPLOY_DEST, INTERNAL_DEPLOY_PORT, CMK_VERS)
-                    upload_artifacts.create_hashes(WORKSPACE + "/" + CMK_VERS)
-                    upload_artifacts.upload_version_dir(WORKSPACE + "/" + CMK_VERS, WEB_DEPLOY_DEST, WEB_DEPLOY_PORT)
+                    upload_artifacts.create_hashes(get_versions_dir(WORKSPACE, CMK_VERS))
+                    upload_artifacts.upload_version_dir(get_versions_dir(WORKSPACE, CMK_VERS), WEB_DEPLOY_DEST, WEB_DEPLOY_PORT)
                     upload_artifacts.deploy_to_website(WEB_DEPLOY_URL, WEB_DEPLOY_PORT, CMK_VERS)
                 }
             }
@@ -247,6 +255,10 @@ node(NODE) {
 //
 // FUNCTIONS
 //
+
+def get_versions_dir(WORKSPACE, CMK_VERS) {
+    return WORKSPACE + "/versions/" + CMK_VERS
+}
 
 // Duplicate code with nightly-cmk-container.jenkins
 def get_cmk_version(BRANCH, VERSION) {
@@ -414,10 +426,10 @@ def get_package_name(WORKSPACE, DISTRO, CMK_VERS) {
     return PACKAGE_NAME
 }
 
-def copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_DIR) {
+def copy_package(PACKAGE_PATH, DISTRO, ARCHIVE_PATH) {
     stage(DISTRO + ' copy package') {
-        sh "mkdir -p ${ARCHIVE_DIR}"
-        sh "cp '${PACKAGE_PATH}' '${ARCHIVE_DIR}'"
+        sh "mkdir -p \$(dirname ${ARCHIVE_PATH})"
+        sh "cp '${PACKAGE_PATH}' '${ARCHIVE_PATH}'"
     }
 }
 

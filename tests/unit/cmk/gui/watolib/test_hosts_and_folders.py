@@ -198,6 +198,7 @@ def test_mgmt_inherit_credentials_explicit_host(protocol, host_attribute, base_v
     }, [])])
 
     data = folder._load_hosts_file()
+    assert data is not None
     assert data["management_protocol"]["test-host"] == protocol
     assert data[base_variable]["test-host"] == credentials
 
@@ -219,6 +220,7 @@ def test_mgmt_inherit_credentials(protocol, host_attribute, base_variable, folde
     }, [])])
 
     data = folder._load_hosts_file()
+    assert data is not None
     assert data["management_protocol"]["mgmt-host"] == protocol
     assert data[base_variable]["mgmt-host"] == folder_credentials
 
@@ -246,6 +248,7 @@ def test_mgmt_inherit_protocol_explicit_host(protocol, host_attribute, base_vari
     }, [])])
 
     data = folder._load_hosts_file()
+    assert data is not None
     assert data["management_protocol"]["mgmt-host"] == protocol
     assert data[base_variable]["mgmt-host"] == credentials
 
@@ -267,6 +270,7 @@ def test_mgmt_inherit_protocol(protocol, host_attribute, base_variable, folder_c
     }, [])])
 
     data = folder._load_hosts_file()
+    assert data is not None
     assert data["management_protocol"]["mgmt-host"] == protocol
     assert data[base_variable]["mgmt-host"] == folder_credentials
 

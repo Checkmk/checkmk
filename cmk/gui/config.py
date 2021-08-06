@@ -17,7 +17,6 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 from livestatus import SiteConfigurations
 
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site, url_prefix
@@ -80,10 +79,6 @@ class Config(CREConfig, CEEConfig, CMEConfig):
     mentioned above. But that's fine for now.
     """
     tags: cmk.utils.tags.TagConfig = cmk.utils.tags.TagConfig()
-
-
-def get_storage_format() -> 'store.StorageFormat':
-    return store.StorageFormat.from_str(config.config_storage_format)
 
 
 #.

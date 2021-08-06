@@ -8,7 +8,7 @@ import ast
 import base64
 import pprint
 import re
-from typing import Any, List, Tuple, TypedDict, Union
+from typing import Any, Callable, List, Tuple, TypedDict, Union
 
 from six import ensure_binary, ensure_str
 
@@ -102,8 +102,14 @@ def host_attribute_matches(crit, value):
     return crit.lower() in value.lower()
 
 
+def get_value_formatter() -> Callable[[Any], str]:
+    if config.wato_pprint_config:
+        return pprint.pformat
+    return repr
+
+
 def format_config_value(value: Any) -> str:
-    return pprint.pformat(value) if config.wato_pprint_config else repr(value)
+    return get_value_formatter()(value)
 
 
 def mk_repr(x: Any) -> bytes:

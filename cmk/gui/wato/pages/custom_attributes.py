@@ -12,8 +12,10 @@ import re
 from typing import Any, Dict, Iterable, Optional, Type
 
 import cmk.utils.store as store
+import cmk.utils.store.host_storage
 
 import cmk.gui.forms as forms
+import cmk.gui.plugins.watolib.utils
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
@@ -77,7 +79,7 @@ def load_custom_attrs_from_mk_file(lock):
 
 
 def save_custom_attrs_to_mk_file(attrs):
-    output = watolib.wato_fileheader()
+    output = cmk.gui.plugins.watolib.utils.wato_fileheader()
     for what in ["user", "host"]:
         if what in attrs and len(attrs[what]) > 0:
             output += "if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what)

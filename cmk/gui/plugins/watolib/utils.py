@@ -23,7 +23,7 @@ from cmk.gui.valuespec import ValueSpec
 
 
 def wato_fileheader() -> str:
-    return "# Created by WATO\n# encoding: utf-8\n\n"
+    return "# Created by WATO\n\n"
 
 
 class ABCConfigDomain(abc.ABC):

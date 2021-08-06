@@ -82,6 +82,7 @@ host_attributes.update(
 
     # also verify that the attributes (host_tags) not read by WATO have been updated
     hosts_config = Folder.root_folder()._load_hosts_file()
+    assert hosts_config is not None
     assert hosts_config["host_tags"]["ag"]["site"] == "dingdong"
 
 
@@ -138,4 +139,5 @@ host_attributes.update(
 
     # also verify that the attributes (host_tags) not read by WATO have been updated
     hosts_config = Folder.root_folder()._load_hosts_file()
+    assert hosts_config is not None
     assert hosts_config["host_tags"]["ag"]["site"] == "dingdong"

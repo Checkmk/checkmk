@@ -172,11 +172,12 @@ class Perfometer:
 
         Returns None in case there is no matching definition found.
         """
-        perfometer_definitions = metrics.Perfometers().get_matching_perfometers(translated_metrics)
-        if not perfometer_definitions:
+        perfometer_definition = metrics.Perfometers().get_first_matching_perfometer(
+            translated_metrics)
+        if not perfometer_definition:
             return None
 
-        return perfometer_definitions[0]
+        return perfometer_definition
 
     def _has_legacy_perfometer(self) -> bool:
         return self._check_command in perfometers

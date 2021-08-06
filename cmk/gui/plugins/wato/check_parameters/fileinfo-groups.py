@@ -36,63 +36,70 @@ def _transform_fileinfo_groups(params):
     return params
 
 
+def _get_fileinfo_groups_help():
+    return _('Checks <tt>fileinfo</tt> and <tt>sap_hana_fileinfo</tt> monitor '
+             'the age and size of a single file. Each file information that is sent '
+             'by the agent will create one service. By defining grouping '
+             'patterns you can switch to checks <tt>fileinfo.groups</tt> or '
+             '<tt>sap_hana_fileinfo.groups</tt>. These checks monitor a list of files at once. '
+             'You can set levels not only for the total size and the age of the oldest/youngest '
+             'file but also on the count. You can define one or several '
+             'patterns for a group containing <tt>*</tt> and <tt>?</tt>, for example '
+             '<tt>/var/log/apache/*.log</tt>. Please see Python\'s fnmatch for more '
+             'information regarding globbing patterns and special characters. '
+             'If the pattern begins with a tilde then this pattern is interpreted as '
+             'a regular expression instead of as a filename globbing pattern and '
+             '<tt>*</tt> and <tt>?</tt> are treated differently. '
+             'For files contained in a group '
+             'the discovery will automatically create a group service instead '
+             'of single services for each file. This rule also applies when '
+             'you use manually configured checks instead of inventorized ones. '
+             'Furthermore, the current time/date in a configurable format '
+             'may be included in the include pattern. The syntax is as follows: '
+             '$DATE:format-spec$ or $YESTERDAY:format-spec$, where format-spec '
+             'is a list of time format directives of the unix date command. '
+             'Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A pattern '
+             'of /var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files '
+             'with todays date  as name in the directory /var/tmp/backups. '
+             'The YESTERDAY syntax simply subtracts one day from the reference time.')
+
+
 def _valuespec_fileinfo_groups():
     return Transform(
         Dictionary(
             title=_("Group patterns"),
-            elements=[(
-                "group_patterns",
-                ListOf(
-                    Tuple(
-                        help=_("This defines one file grouping pattern."),
-                        show_titles=True,
-                        orientation="horizontal",
-                        elements=[
-                            TextInput(
-                                title=_("Name of group"),
-                                size=20,
-                            ),
-                            Transform(Tuple(
-                                show_titles=True,
-                                orientation="vertical",
-                                elements=[
-                                    TextInput(title=_("Include Pattern"), size=40),
-                                    TextInput(title=_("Exclude Pattern"), size=40),
-                                ],
-                            ),
-                                      forth=lambda params: isinstance(params, str) and
-                                      (params, '') or params),
-                        ],
+            elements=[
+                (
+                    "group_patterns",
+                    ListOf(
+                        Tuple(
+                            help=_("This defines one file grouping pattern."),
+                            show_titles=True,
+                            orientation="horizontal",
+                            elements=[
+                                TextInput(
+                                    title=_("Name of group"),
+                                    size=20,
+                                ),
+                                Transform(Tuple(
+                                    show_titles=True,
+                                    orientation="vertical",
+                                    elements=[
+                                        TextInput(title=_("Include Pattern"), size=40),
+                                        TextInput(title=_("Exclude Pattern"), size=40),
+                                    ],
+                                ),
+                                          forth=lambda params: isinstance(params, str) and
+                                          (params, '') or params),
+                            ],
+                        ),
+                        title=_('File Grouping Patterns'),
+                        help=_get_fileinfo_groups_help(),
+                        add_label=_("Add pattern group"),
                     ),
-                    title=_('File Grouping Patterns'),
-                    help=
-                    _('Checks <tt>fileinfo</tt> and <tt>sap_hana_fileinfo</tt> monitor '
-                      'the age and size of a single file. Each file information that is sent '
-                      'by the agent will create one service. By defining grouping '
-                      'patterns you can switch to checks <tt>fileinfo.groups</tt> or '
-                      '<tt>sap_hana_fileinfo.groups</tt>. These checks monitor a list of files at once. '
-                      'You can set levels not only for the total size and the age of the oldest/youngest '
-                      'file but also on the count. You can define one or several '
-                      'patterns for a group containing <tt>*</tt> and <tt>?</tt>, for example '
-                      '<tt>/var/log/apache/*.log</tt>. Please see Python\'s fnmatch for more '
-                      'information regarding globbing patterns and special characters. '
-                      'If the pattern begins with a tilde then this pattern is interpreted as '
-                      'a regular expression instead of as a filename globbing pattern and '
-                      '<tt>*</tt> and <tt>?</tt> are treated differently. '
-                      'For files contained in a group '
-                      'the discovery will automatically create a group service instead '
-                      'of single services for each file. This rule also applies when '
-                      'you use manually configured checks instead of inventorized ones. '
-                      'Furthermore, the current time/date in a configurable format '
-                      'may be included in the include pattern. The syntax is as follows: '
-                      '$DATE:format-spec$ or $YESTERDAY:format-spec$, where format-spec '
-                      'is a list of time format directives of the unix date command. '
-                      'Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A pattern '
-                      'of /var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files '
-                      'with todays date  as name in the directory /var/tmp/backups. '
-                      'The YESTERDAY syntax simply subtracts one day from the reference time.'),
-                    add_label=_("Add pattern group"),
-                ))]),
+                ),
+            ],
+        ),
         forth=_transform_fileinfo_groups,
     )
 
@@ -299,32 +306,7 @@ def _manual_parameter_valuespec_fileinfo_groups():
                             ],
                         ),
                         title=_("Group patterns"),
-                        help=
-                        _('Checks <tt>fileinfo</tt> and <tt>sap_hana_fileinfo</tt> monitor '
-                          'the age and size of a single file. Each file information that is sent '
-                          'by the agent will create one service. By defining grouping '
-                          'patterns you can switch to checks <tt>fileinfo.groups</tt> or '
-                          '<tt>sap_hana_fileinfo.groups</tt>. These checks monitor a list of files at once. '
-                          'You can set levels not only for the total size and the age of the oldest/youngest '
-                          'file but also on the count. You can define one or several '
-                          'patterns for a group containing <tt>*</tt> and <tt>?</tt>, for example '
-                          '<tt>/var/log/apache/*.log</tt>. Please see Python\'s fnmatch for more '
-                          'information regarding globbing patterns and special characters. '
-                          'If the pattern begins with a tilde then this pattern is interpreted as '
-                          'a regular expression instead of as a filename globbing pattern and '
-                          '<tt>*</tt> and <tt>?</tt> are treated differently. '
-                          'For files contained in a group '
-                          'the discovery will automatically create a group service instead '
-                          'of single services for each file. This rule also applies when '
-                          'you use manually configured checks instead of inventorized ones. '
-                          'Furthermore, the current time/date in a configurable format '
-                          'may be included in the include pattern. The syntax is as follows: '
-                          '$DATE:format-spec$ or $YESTERDAY:format-spec$, where format-spec '
-                          'is a list of time format directives of the unix date command. '
-                          'Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A pattern '
-                          'of /var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files '
-                          'with todays date  as name in the directory /var/tmp/backups. '
-                          'The YESTERDAY syntax simply subtracts one day from the reference time.'),
+                        help=_get_fileinfo_groups_help(),
                         add_label=_("Add pattern group"),
                     ),
                 ),

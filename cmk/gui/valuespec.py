@@ -2551,6 +2551,9 @@ class AjaxDropdownChoice(DropdownChoice):
         if value and self._regex and not self._regex.match(ensure_str(value)):
             raise MKUserError(varprefix, self._regex_error)
 
+    def value_to_text(self, value) -> ValueSpecText:
+        return super().value_to_text(value) if self.choices() else str(value)
+
     def render_input(self, varprefix: str, value) -> None:
         if self._label:
             html.write_text(self._label)

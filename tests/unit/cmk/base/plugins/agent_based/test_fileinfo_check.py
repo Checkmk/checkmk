@@ -1,6 +1,7 @@
 import pytest
 
 from collections import namedtuple
+from freezegun import freeze_time
 
 from cmk.base.plugins.agent_based.utils import fileinfo as fileinfo_utils
 from cmk.base.plugins.agent_based import fileinfo as fileinfo_plugin
@@ -859,6 +860,7 @@ def test_fileinfo_group_discovery(info, params, expected_result):
         ],
     ),
 ])
+@freeze_time("2021-07-12 12:00")
 def test_fileinfo_groups_check(info, item, params, expected_result):
     section = fileinfo_utils.parse_fileinfo(info)
 

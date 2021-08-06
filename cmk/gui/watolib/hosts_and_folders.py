@@ -1219,7 +1219,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return choices
 
     def _prefixed_title(self, current_depth, pretty):
-        if pretty:
+        if not pretty:
             return HTML(
                 escaping.escape_attribute("/".join(str(p) for p in self.title_path_without_root())))
 

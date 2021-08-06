@@ -748,7 +748,9 @@ class Site:
                         {
                             'condition': {},
                             'options': {},
-                            'value': [('TESTGROUP', ('*gwia*', ''))]
+                            'value': {
+                                'group_patterns': [('TESTGROUP', ('*gwia*', ''))]
+                            }
                         },
                     ],
                 }

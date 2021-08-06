@@ -31,7 +31,6 @@ DIST_DEPS          := $(CONFIG_DEPS) \
                       omd/packages/openhardwaremonitor/OpenHardwareMonitorCLI.exe \
                       omd/packages/openhardwaremonitor/OpenHardwareMonitorLib.dll
 
-
 LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
                       src/{Makefile.am,{,test/}*.{cc,h}} standalone/config_files.m4
@@ -78,8 +77,8 @@ LOCK_PATH := .venv.lock
         clean compile-neb-cmc compile-neb-cmc-docker dist documentation \
         documentation-quick format format-c format-python format-shell format-js \
         GTAGS headers help install iwyu mrproper mrclean optimize-images \
-        packages setup setversion tidy version am--refresh skel openapi openapi-doc
-
+        packages setup setversion tidy version am--refresh skel openapi openapi-doc \
+        protobuf-files
 
 help:
 	@echo "setup			      --> Prepare system for development and building"
@@ -119,7 +118,7 @@ check-version:
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: $(DISTNAME).tar.gz config.h.in $(DIST_DEPS)
+dist: $(DISTNAME).tar.gz config.h.in $(DIST_DEPS) protobuf-files
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise agents/plugins/cmk-update-agent
 	$(MAKE) -C enterprise agents/plugins/cmk-update-agent-32
@@ -482,6 +481,11 @@ config.status: $(CONFIG_DEPS)
 	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$RRD_OPT\" \"$$RE2_OPT\"" ; \
 	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$RRD_OPT" "$$RE2_OPT" ; \
 	fi
+
+protobuf-files: .venv
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise protobuf-files
+endif
 
 configure: $(CONFIGURE_DEPS)
 	autoconf

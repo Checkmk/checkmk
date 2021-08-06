@@ -3,7 +3,7 @@
 
 import pytest
 
-from cmk.special_agents.agent_fuse import (
+from cmk.special_agents.agent_fuse_management_central import (
     SummaryStructure,
     Alert,
     get_summary_structure,

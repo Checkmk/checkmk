@@ -5,13 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+
+from enum import Enum
+from typing import Any
+
 from cmk.base.check_api import check_levels
+
 # Common code for all CPU load checks. Please do not mix this up
 # with CPU utilization. The load is at any time the current number
 # of processes in the running state (on some systems, like Linux,
 # also Disk wait is account for the load).
-
-from enum import Enum
 
 
 class ProcessorType(Enum):
@@ -40,8 +43,8 @@ def check_cpu_load_generic(params, load, num_cpus=1, processor_type=ProcessorTyp
         # predictive levels
         warn, crit = None, None
 
-    perfdata = [('load' + str(z), l, warn, crit, 0, num_cpus)
-                for (z, l) in [(1, load[0]), (5, load[1]), (15, load[2])]]
+    perfdata: Any = [('load' + str(z), l, warn, crit, 0, num_cpus)
+                     for (z, l) in [(1, load[0]), (5, load[1]), (15, load[2])]]
 
     state, infotext, perf = check_levels(load[2],
                                          'load15',

@@ -5,19 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.config import factory_settings
-import time
-import collections
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_api import get_percent_human_readable
-from cmk.base.check_api import get_average
-from typing import NamedTuple
 
-from cmk.base.plugins.agent_based.utils.memory import (
-    compute_state,
-    get_levels_mode_from_value,
-    normalize_levels as normalize_mem_levels,
-)
+import collections
+import time
+from numbers import Integral
+from typing import Any, List, NamedTuple, Optional
+
+from cmk.base.check_api import get_average, get_bytes_human_readable, get_percent_human_readable
+from cmk.base.config import factory_settings
+from cmk.base.plugins.agent_based.utils.memory import compute_state, get_levels_mode_from_value
+from cmk.base.plugins.agent_based.utils.memory import normalize_levels as normalize_mem_levels
 
 memused_default_levels = (150.0, 200.0)
 
@@ -87,7 +84,7 @@ def check_memory_element(label,
             used * scale_to_perc,
             warn * scale_to_perc if warn is not None else None,
             crit * scale_to_perc if crit is not None else None,
-            0.0,
+            0,
             None,  # some times over 100%!
         ))
 
@@ -249,6 +246,9 @@ def check_memory(params, meminfo):
     memtotal = MemBytes(meminfo['MemTotal'])
     memused = MemBytes(memtotal.kb - meminfo['MemFree'])
 
+    swaptotal: Optional[MemBytes]
+    swapused: Optional[MemBytes]
+    perfdata: List[Any]
     if "SwapFree" in meminfo:
         swaptotal = MemBytes(meminfo['SwapTotal'])
         swapused = MemBytes(swaptotal.kb - meminfo['SwapFree'])
@@ -261,6 +261,7 @@ def check_memory(params, meminfo):
     # Size of Pagetable on Linux can be relevant e.g. on ORACLE
     # servers with much memory, that do not use HugeTables. We account
     # that for used
+    pagetables: Optional[MemBytes]
     if 'PageTables' in meminfo:
         pagetables = MemBytes(meminfo['PageTables'])
         perfdata.append(('mem_lnx_page_tables', pagetables.bytes))
@@ -312,6 +313,9 @@ def check_memory(params, meminfo):
         _perc_total=memtotal.mb,
         render_unit=1024**2,
     )
+    assert isinstance(totalused, MemBytes)
+    assert isinstance(warn_mb, Integral)
+    assert isinstance(crit_mb, Integral)
     perfdata.append(('mem_lnx_total_used', totalused.bytes, warn_mb * 1024**2, crit_mb * 1024**2, 0,
                      totalvirt.bytes))
 
@@ -322,6 +326,10 @@ def check_memory(params, meminfo):
 
     yield state, infotext, perfdata
 
+    # Not sure why the next two lines are necessary: memtotal and ramused
+    # are not optional.
+    assert isinstance(ramused, MemBytes)
+    assert isinstance(memtotal, MemBytes)
     if totalused_descr != "RAM":
         yield check_memory_element(
             "RAM",
@@ -329,6 +337,8 @@ def check_memory(params, meminfo):
             memtotal.bytes,
             None,
         )
+        assert isinstance(swapused, MemBytes)
+        assert isinstance(swaptotal, MemBytes)
         if swaptotal and swaptotal.bytes:
             yield check_memory_element(
                 "Swap",

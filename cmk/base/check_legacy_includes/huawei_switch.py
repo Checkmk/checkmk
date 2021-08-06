@@ -5,8 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.check_api import OID_END
+
 import collections
+from typing import Dict, List
+
+from cmk.base.check_api import OID_END
 
 
 def huawei_switch_scan_function(oid):
@@ -86,7 +89,8 @@ def parse_huawei_physical_entity_values(info, entity_name_start=huawei_mpu_board
     """
     entities_info, values_info = info
     stack_member_number = 0
-    entities_per_member = {}  # groups entities per stack member
+    # groups entities per stack member
+    entities_per_member: Dict[int, List[HuaweiPhysicalEntityValue]] = {}
 
     for entity_line in entities_info:
         lower_entity_name = entity_line[1].lower()

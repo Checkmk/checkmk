@@ -5,15 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-import time
-import functools
-from cmk.base.check_api import MKCounterWrapped
-from cmk.base.check_api import get_rate
-from cmk.base.check_api import check_levels
+
 import collections
-from cmk.base.check_api import get_bytes_human_readable
-from cmk.base.check_api import get_percent_human_readable
+import functools
 import json
+import time
+from typing import Any, List
+
+from cmk.base.check_api import (
+    check_levels,
+    get_bytes_human_readable,
+    get_percent_human_readable,
+    get_rate,
+    MKCounterWrapped,
+)
 
 _AZURE_METRIC_FMT = {
     "count": lambda n: "%d" % n,
@@ -91,7 +96,7 @@ def check_azure_metric(  # pylint: disable=too-many-locals
         cmk_key,
         (levels or (None, None)) + (levels_lower or (None, None)),
         infoname=display_name,
-        human_readable_func=_AZURE_METRIC_FMT.get(unit, str),
+        human_readable_func=_AZURE_METRIC_FMT.get(unit, str),  # type: ignore[arg-type]
         boundaries=(0, None),
     )
 
@@ -161,7 +166,7 @@ def _parse_resource(info):
 
 
 def parse_azure(info):
-    raw_resources = []
+    raw_resources: List[Any] = []
 
     # create list of lines per resource
     for row in info:

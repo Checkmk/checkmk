@@ -3,6 +3,8 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# type: ignore[attr-defined]
 import pytest
 
 from cmk.utils.check_utils import section_name_of
@@ -16,11 +18,13 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
 from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
 from cmk.base.api.agent_based.section_classes import SNMPTree
 
-from cmk.base.check_legacy_includes.df_netapp import is_netapp_filer  # type: ignore[attr-defined]
-from cmk.base.check_legacy_includes.fsc import _is_fsc_or_windows, is_fsc  # type: ignore[attr-defined]
-from cmk.base.check_legacy_includes.ucd_hr import _is_ucd  # type: ignore[attr-defined]
-from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (  # type: ignore[attr-defined]
-    _has_table_2, _is_cisco, _is_cisco_nexus,
+from cmk.base.check_legacy_includes.df_netapp import is_netapp_filer
+from cmk.base.check_legacy_includes.fsc import _is_fsc_or_windows, is_fsc
+from cmk.base.check_legacy_includes.ucd_hr import _is_ucd
+from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (
+    _has_table_2,
+    _is_cisco,
+    _is_cisco_nexus,
 )
 from cmk.base.check_utils import HOST_ONLY, MGMT_ONLY
 

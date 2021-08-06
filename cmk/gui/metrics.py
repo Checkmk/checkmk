@@ -281,14 +281,14 @@ def translate_perf_data(perf_data_string: str,
 
 
 class Perfometers:
-    def get_matching_perfometers(self, translated_metrics: TranslatedMetrics) -> List[Perfometer]:
-        perfometers = []
+    def get_first_matching_perfometer(
+            self, translated_metrics: TranslatedMetrics) -> Optional[Perfometer]:
         for perfometer in perfometer_info:
             if not isinstance(perfometer, dict):
                 continue
             if self._perfometer_possible(perfometer, translated_metrics):
-                perfometers.append(perfometer)
-        return perfometers
+                return perfometer
+        return None
 
     def _perfometer_possible(self, perfometer: Perfometer,
                              translated_metrics: TranslatedMetrics) -> bool:

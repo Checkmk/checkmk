@@ -2407,6 +2407,10 @@ msgid "AWS/Lambda Concurrency"
 msgstr "パフォーマンス"
 
 #, fuzzy
+msgid "AWS/Lambda Memory"
+msgstr "パフォーマンス"
+
+#, fuzzy
 msgid "AWS/Lambda Performance"
 msgstr "パフォーマンス"
 
@@ -4037,6 +4041,10 @@ msgid ""
 msgstr ""
 "エージェントは、受け入れる少なくとも1つのキーで署名されていないパッケージを受"
 "け入れません。"
+
+#, fuzzy
+msgid "Aggreation options for clustered services"
+msgstr "サービスの影響を受ける集約"
 
 msgid "Aggregate"
 msgstr "集計"
@@ -8901,51 +8909,6 @@ msgstr "チェックポイントVSIDトラフィックレート"
 msgid "Checks & agents"
 msgstr "チェックとエージェント"
 
-#, fuzzy
-msgid ""
-"Checks <tt>fileinfo</tt> and <tt>sap_hana_fileinfo</tt> monitor the age and "
-"size of a single file. Each file information that is sent by the agent will "
-"create one service. By defining grouping patterns you can switch to checks "
-"<tt>fileinfo.groups</tt> or <tt>sap_hana_fileinfo.groups</tt>. These checks "
-"monitor a list of files at once. You can set levels not only for the total "
-"size and the age of the oldest/youngest file but also on the count. You can "
-"define one or several patterns for a group containing <tt>*</tt> and <tt>?</"
-"tt>, for example <tt>/var/log/apache/*.log</tt>. Please see Python's fnmatch "
-"for more information regarding globbing patterns and special characters. If "
-"the pattern begins with a tilde then this pattern is interpreted as a "
-"regular expression instead of as a filename globbing pattern and <tt>*</tt> "
-"and <tt>?</tt> are treated differently. For files contained in a group the "
-"discovery will automatically create a group service instead of single "
-"services for each file. This rule also applies when you use manually "
-"configured checks instead of inventorized ones. Furthermore, the current "
-"time/date in a configurable format may be included in the include pattern. "
-"The syntax is as follows: $DATE:format-spec$ or $YESTERDAY:format-spec$, "
-"where format-spec is a list of time format directives of the unix date "
-"command. Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A pattern of /"
-"var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files with todays "
-"date  as name in the directory /var/tmp/backups. The YESTERDAY syntax simply "
-"subtracts one day from the reference time."
-msgstr ""
-"チェック<tt>fileinfo</tt>は、単一ファイルの経過時間とサイズを監視します。エー"
-"ジェントによって送信される各ファイル情報は、1つのサービスを作成します。グルー"
-"プ化パターンを定義することにより、チェック<tt>fileinfo.groups</tt>に切り替え"
-"ることができます。このチェックは、ファイルのリストを一度に監視します。合計サ"
-"イズと最も古い/最も若いファイルの経過時間だけでなく、カウントにもレベルを設定"
-"できます。<tt>*</tt>と<tt>?</tt>を含むグループには、1つまたは複数のパターンを"
-"定義できます(例: <tt>/var/log/apache/*.log</tt>)。グロブパターンと特殊文字の"
-"詳細については、Pythonのfnmatchを参照してください。パターンがチルダで始まる場"
-"合、このパターンはファイル名のグロブパターンではなく正規表現として解釈され、"
-"<tt>*</tt>と<tt>?</tt>は異なる方法で処理されます。グループに含まれるファイル"
-"の場合、検出により、ファイルごとに単一のサービスではなく、グループサービスが"
-"自動的に作成されます。このルールは、インベントリされたチェックの代わりに手動"
-"で構成されたチェックを使用する場合にも適用されます。さらに、構成可能な形式の"
-"現在の時刻/日付をインクルードパターンに含めることができます。構文は次のとおり"
-"です: $DATE:format-spec$ または $YESTERDAY:format-spec$。ここで、format-spec"
-"は、unixdateコマンドの時刻フォーマットディレクティブのリストです。例: $DATE:"
-"%Y%m%d$は今日の日付です(例:20140127)。/var/tmp/backups/$DATE:%Y%m%d$.txtのパ"
-"ターンは、ディレクトリ/var/tmp/backupsで、名前が、今日の日付.txtファイルを検"
-"索します。YESTERDAY構文は、参照時刻から1日を引くだけです。"
-
 msgid "Checks on management boards"
 msgstr ""
 
@@ -9537,6 +9500,14 @@ msgstr "クラスター全体"
 
 msgid "Cnt."
 msgstr "Cnt"
+
+#, fuzzy
+msgid "Code Size"
+msgstr "キャッシュサイズ"
+
+#, fuzzy
+msgid "Code Size in percent"
+msgstr "CPU(パーセント)"
 
 msgid "Codec that should be used to decode the matching files"
 msgstr "一致するファイルをデコードするために使用する必要があるコーデック"
@@ -14375,6 +14346,10 @@ msgstr "分散監視"
 msgid "Distributed monitoring"
 msgstr "分散監視"
 
+#, fuzzy
+msgid "Distributed monitoring configuration"
+msgstr "監視構成に追加"
+
 msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "複数のCheckmkサイトを使用した分散監視"
 
@@ -15385,6 +15360,10 @@ msgid "Dynamic configuration logging"
 msgstr "動的構成ロギング"
 
 msgid "Dynamic host configuration"
+msgstr "ダイナミックホスト構成"
+
+#, fuzzy
+msgid "Dynamic host configuration connections"
 msgstr "ダイナミックホスト構成"
 
 msgid "Dynamic host management"
@@ -19512,10 +19491,6 @@ msgstr "グループが存在しないか、メンバーではありません"
 msgid "Group path"
 msgstr "グループパス"
 
-#, fuzzy
-msgid "Group patterns"
-msgstr "グループパス"
-
 msgid "Group<nobr> </nobr>CN"
 msgstr "グループ<nobr> </nobr> CN"
 
@@ -21410,6 +21385,10 @@ msgid "Hosts Contacts (as Server)"
 msgstr "連絡先をホストします(サーバーとして)"
 
 msgid "Hosts and Folders"
+msgstr "ホストとフォルダー"
+
+#, fuzzy
+msgid "Hosts and folders"
 msgstr "ホストとフォルダー"
 
 #, python-format
@@ -28701,6 +28680,14 @@ msgstr "メモリページの統計"
 msgid "Memory Pool Name"
 msgstr "メモリプール名"
 
+#, fuzzy
+msgid "Memory Size"
+msgstr "使用メモリ"
+
+#, fuzzy
+msgid "Memory Size in percent"
+msgstr "パーセントで表したメモリ使用量"
+
 msgid "Memory Usage"
 msgstr "メモリ使用量"
 
@@ -30126,6 +30113,19 @@ msgstr "ネームスペース"
 
 msgid "Namespace prefix for hosts"
 msgstr "ホストの名前空間プレフィックス"
+
+#, fuzzy
+msgid "Native cluster mode"
+msgstr "レイアウトモードを終了します"
+
+msgid ""
+"Native: Use the cluster check function implemented by the check plugin. If "
+"it is available, it is probably the best choice, as it implements logic "
+"specifically designed for the check plugin in question. Implementing it is "
+"optional however, so this might not be available (a warning will be "
+"displayed). Consult the plugins manpage for details about its cluster "
+"behaviour."
+msgstr ""
 
 msgid "Navigation"
 msgstr "ナビゲーション"
@@ -44927,6 +44927,50 @@ msgstr ""
 msgid "The character <tt>%s</tt> is not allowed here."
 msgstr "ここでは、文字<tt>%s </tt>は使用できません。"
 
+#, fuzzy
+msgid ""
+"The check <tt>fileinfo</tt> monitors the age and size of a single file. Each "
+"file information that is sent by the agent will create one service. By "
+"defining grouping patterns you can switch to the check <tt>fileinfo.groups</"
+"tt>. That check monitors a list of files at once. You can set levels not "
+"only for the total size and the age of the oldest/youngest file but also on "
+"the count. You can define one or several patterns for a group containing "
+"<tt>*</tt> and <tt>?</tt>, for example <tt>/var/log/apache/*.log</tt>. "
+"Please see Python's fnmatch for more information regarding globbing patterns "
+"and special characters. If the pattern begins with a tilde then this pattern "
+"is interpreted as a regular expression instead of as a filename globbing "
+"pattern and <tt>*</tt> and <tt>?</tt> are treated differently. For files "
+"contained in a group the discovery will automatically create a group service "
+"instead of single services for each file. This rule also applies when you "
+"use manually configured checks instead of inventorized ones. Furthermore, "
+"the current time/date in a configurable format may be included in the "
+"include pattern. The syntax is as follows: $DATE:format-spec$ or $YESTERDAY:"
+"format-spec$, where format-spec is a list of time format directives of the "
+"unix date command. Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A "
+"pattern of /var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files "
+"with todays date  as name in the directory /var/tmp/backups. The YESTERDAY "
+"syntax simply subtracts one day from the reference time."
+msgstr ""
+"チェック<tt>fileinfo</tt>は、単一ファイルの経過時間とサイズを監視します。エー"
+"ジェントによって送信される各ファイル情報は、1つのサービスを作成します。グルー"
+"プ化パターンを定義することにより、チェック<tt>fileinfo.groups</tt>に切り替え"
+"ることができます。このチェックは、ファイルのリストを一度に監視します。合計サ"
+"イズと最も古い/最も若いファイルの経過時間だけでなく、カウントにもレベルを設定"
+"できます。<tt>*</tt>と<tt>?</tt>を含むグループには、1つまたは複数のパターンを"
+"定義できます(例: <tt>/var/log/apache/*.log</tt>)。グロブパターンと特殊文字の"
+"詳細については、Pythonのfnmatchを参照してください。パターンがチルダで始まる場"
+"合、このパターンはファイル名のグロブパターンではなく正規表現として解釈され、"
+"<tt>*</tt>と<tt>?</tt>は異なる方法で処理されます。グループに含まれるファイル"
+"の場合、検出により、ファイルごとに単一のサービスではなく、グループサービスが"
+"自動的に作成されます。このルールは、インベントリされたチェックの代わりに手動"
+"で構成されたチェックを使用する場合にも適用されます。さらに、構成可能な形式の"
+"現在の時刻/日付をインクルードパターンに含めることができます。構文は次のとおり"
+"です: $DATE:format-spec$ または $YESTERDAY:format-spec$。ここで、format-spec"
+"は、unixdateコマンドの時刻フォーマットディレクティブのリストです。例: $DATE:"
+"%Y%m%d$は今日の日付です(例:20140127)。/var/tmp/backups/$DATE:%Y%m%d$.txtのパ"
+"ターンは、ディレクトリ/var/tmp/backupsで、名前が、今日の日付.txtファイルを検"
+"索します。YESTERDAY構文は、参照時刻から1日を引くだけです。"
+
 msgid ""
 "The check <tt>logwatch</tt> normally creates one service for each logfile. "
 "By defining grouping patterns you can switch to the check <tt>logwatch."
@@ -53318,6 +53362,10 @@ msgstr "状態の更新"
 msgid "Update Status"
 msgstr "最新状況"
 
+#, fuzzy
+msgid "Update core config"
+msgstr "プレビューを更新"
+
 msgid "Update delay for PNP meta information"
 msgstr "PNPメタ情報の更新遅延"
 
@@ -53665,6 +53713,14 @@ msgid "Upper levels for clients"
 msgstr "クライアントの上位レベル"
 
 #, fuzzy
+msgid "Upper levels for code size"
+msgstr "サイズの上位レベル"
+
+#, fuzzy
+msgid "Upper levels for code size in percent of the region limit"
+msgstr "更新期間の上位レベル"
+
+#, fuzzy
 msgid "Upper levels for concurrent executions"
 msgstr "発生した例外の上位レベル"
 
@@ -53740,6 +53796,14 @@ msgstr "ロードバランサー容量ユニットの上位レベル"
 
 msgid "Upper levels for mail latency"
 msgstr "メール遅延の上位レベル"
+
+#, fuzzy
+msgid "Upper levels for memory used"
+msgstr "HTTPエラーの上位レベル"
+
+#, fuzzy
+msgid "Upper levels for memory used in percent of the Lambda function limit"
+msgstr "更新期間の上位レベル"
 
 msgid "Upper levels for number of OSDs which are down"
 msgstr "ダウンしているOSDsの数の上位レベル"
@@ -55754,6 +55818,17 @@ msgstr "ウェイトロック"
 msgid "Warn"
 msgstr "警告"
 
+#, fuzzy
+msgid "Warn about configurations to review"
+msgstr "このサイトに設定をプッシュする"
+
+msgid "Warn about new network ports"
+msgstr ""
+
+#, fuzzy
+msgid "Warn about renamed remote site"
+msgstr "リモートサイトからの空の出力。"
+
 msgid "Warn if VM status value is not"
 msgstr "VMステータス値がそうでない場合に警告する"
 
@@ -57428,12 +57503,21 @@ msgstr "ワークプレース"
 msgid "Worst - take worst of all node states"
 msgstr "最悪 - すべてのノード状態の中で最悪を取ります"
 
+msgid "Worst node wins"
+msgstr ""
+
 msgid "Worst state"
 msgstr "最悪の状態"
 
 #, python-format
 msgid "Worst state, %d nodes, restrict to %s"
 msgstr "最悪の状態、 %d ノード、 %sに制限"
+
+msgid ""
+"Worst: The check function of the plugin will be applied to each individual "
+"node. The worst outcome will determine the overall state of the clustered "
+"service."
+msgstr ""
 
 msgid "Write"
 msgstr ""
@@ -57815,6 +57899,9 @@ msgid ""
 msgstr ""
 "必要に応じてこれらの割り当てを変更し、上の <i>インポート</i>ボタンをクリック"
 "してインポートを開始できます。"
+
+msgid "You can choose from different aggregation modes of clustered services:"
+msgstr ""
 
 msgid ""
 "You can configure an individual alias here for the tunnel matching the IP-"
@@ -61017,6 +61104,11 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Group path"
+#~ msgid "Group patterns"
+#~ msgstr "グループパス"
 
 #~ msgid "Deploy MongoDB plugin"
 #~ msgstr "MongoDBプラグインをデプロイする"

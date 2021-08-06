@@ -2529,6 +2529,10 @@ msgid "AWS/Lambda Concurrency"
 msgstr "Desempenho"
 
 #, fuzzy
+msgid "AWS/Lambda Memory"
+msgstr "Desempenho"
+
+#, fuzzy
 msgid "AWS/Lambda Performance"
 msgstr "Desempenho"
 
@@ -4199,6 +4203,10 @@ msgid ""
 msgstr ""
 "Os agentes não aceitarão pacotes que não sejam assinados por pelo menos uma "
 "chave que eles aceitem."
+
+#, fuzzy
+msgid "Aggreation options for clustered services"
+msgstr "Agregações Afetadas pelo Serviço"
 
 msgid "Aggregate"
 msgstr "Agregar"
@@ -9270,55 +9278,6 @@ msgstr "Taxa de tráfego VSID do ponto de verificação"
 msgid "Checks & agents"
 msgstr "Cheques e agentes"
 
-#, fuzzy
-msgid ""
-"Checks <tt>fileinfo</tt> and <tt>sap_hana_fileinfo</tt> monitor the age and "
-"size of a single file. Each file information that is sent by the agent will "
-"create one service. By defining grouping patterns you can switch to checks "
-"<tt>fileinfo.groups</tt> or <tt>sap_hana_fileinfo.groups</tt>. These checks "
-"monitor a list of files at once. You can set levels not only for the total "
-"size and the age of the oldest/youngest file but also on the count. You can "
-"define one or several patterns for a group containing <tt>*</tt> and <tt>?</"
-"tt>, for example <tt>/var/log/apache/*.log</tt>. Please see Python's fnmatch "
-"for more information regarding globbing patterns and special characters. If "
-"the pattern begins with a tilde then this pattern is interpreted as a "
-"regular expression instead of as a filename globbing pattern and <tt>*</tt> "
-"and <tt>?</tt> are treated differently. For files contained in a group the "
-"discovery will automatically create a group service instead of single "
-"services for each file. This rule also applies when you use manually "
-"configured checks instead of inventorized ones. Furthermore, the current "
-"time/date in a configurable format may be included in the include pattern. "
-"The syntax is as follows: $DATE:format-spec$ or $YESTERDAY:format-spec$, "
-"where format-spec is a list of time format directives of the unix date "
-"command. Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A pattern of /"
-"var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files with todays "
-"date  as name in the directory /var/tmp/backups. The YESTERDAY syntax simply "
-"subtracts one day from the reference time."
-msgstr ""
-"A verificação <tt>fileinfo</tt> monitoriza a idade e o tamanho de um único "
-"ficheiro. Cada informação de arquivo que é enviada pelo agente criará um "
-"serviço. Ao definir padrões de agrupamento você pode mudar para a "
-"verificação <tt>fileinfo.groups</tt>. Essa verificação monitora uma lista de "
-"arquivos de uma só vez. Você pode definir níveis não só para o tamanho total "
-"e a idade do arquivo mais antigo/jovem, mas também na contagem. Você pode "
-"definir um ou vários padrões para um grupo contendo <tt>**</tt> e <tt>?</"
-"tt>, por exemplo <tt>/var/log/apache/*.log</tt>. Por favor veja o fnmatch de "
-"Python para mais informações sobre padrões de globbing e caracteres "
-"especiais. Se o padrão começa com um til então este padrão é interpretado "
-"como uma expressão regular ao invés de um padrão de globbing com o nome de "
-"arquivo e <tt>**</tt> e <tt>?</tt> são tratados de forma diferente. Para "
-"ficheiros contidos num grupo, a descoberta criará automaticamente um serviço "
-"de grupo em vez de serviços únicos para cada ficheiro. Esta regra também se "
-"aplica quando você usa verificações configuradas manualmente em vez de "
-"verificações inventariadas. Além disso, a hora/data atual em um formato "
-"configurável pode ser incluída no padrão de inclusão. A sintaxe é a "
-"seguinte: $DATE:format-spec$ ou $YESTERDAY:format-spec$, onde format-spec é "
-"uma lista de diretrizes de formato de hora do comando de data unix. Exemplo: "
-"$DATE:%Y%m%d$ é a data de hoje, por exemplo, 20140127. Um padrão de /var/tmp/"
-"backups/$DATE:%Y%m%d$.txt procuraria por arquivos .txt com data de hoje como "
-"nome no diretório /var/tmp/backups. A sintaxe do dia de ontem simplesmente "
-"subtrai um dia da hora de referência."
-
 msgid "Checks on management boards"
 msgstr "Verificações nos conselhos de administração"
 
@@ -9932,6 +9891,14 @@ msgstr "Clusterwide"
 
 msgid "Cnt."
 msgstr "Cnt."
+
+#, fuzzy
+msgid "Code Size"
+msgstr "Tamanho da Cache"
+
+#, fuzzy
+msgid "Code Size in percent"
+msgstr "CPU em percentagem"
 
 msgid "Codec that should be used to decode the matching files"
 msgstr ""
@@ -14909,6 +14876,10 @@ msgstr "Monitoramento distribuído"
 msgid "Distributed monitoring"
 msgstr "Monitoramento distribuído"
 
+#, fuzzy
+msgid "Distributed monitoring configuration"
+msgstr "Adicionar à configuração de monitoramento"
+
 msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "Monitoramento distribuído usando vários locais Checkmk"
 
@@ -15930,6 +15901,10 @@ msgid "Dynamic configuration logging"
 msgstr "Registro dinâmico de configuração"
 
 msgid "Dynamic host configuration"
+msgstr "Configuração dinâmica do host"
+
+#, fuzzy
+msgid "Dynamic host configuration connections"
 msgstr "Configuração dinâmica do host"
 
 msgid "Dynamic host management"
@@ -20150,10 +20125,6 @@ msgstr "Grupo não existente ou não membro"
 msgid "Group path"
 msgstr "Caminho de grupo"
 
-#, fuzzy
-msgid "Group patterns"
-msgstr "Caminho de grupo"
-
 msgid "Group<nobr> </nobr>CN"
 msgstr "Grupo<nobr> </nobr>CN"
 
@@ -22159,6 +22130,10 @@ msgid "Hosts Contacts (as Server)"
 msgstr "Contactos dos anfitriões (como Servidor)"
 
 msgid "Hosts and Folders"
+msgstr "Hosts e Pastas"
+
+#, fuzzy
+msgid "Hosts and folders"
 msgstr "Hosts e Pastas"
 
 #, python-format
@@ -29793,6 +29768,14 @@ msgstr "Estatísticas das Páginas de Memória"
 msgid "Memory Pool Name"
 msgstr "Nome do Pool de Memória"
 
+#, fuzzy
+msgid "Memory Size"
+msgstr "Memória utilizada"
+
+#, fuzzy
+msgid "Memory Size in percent"
+msgstr "Utilização de memória em percentagem"
+
 msgid "Memory Usage"
 msgstr "Uso da memória"
 
@@ -31230,6 +31213,19 @@ msgstr "Namespace"
 
 msgid "Namespace prefix for hosts"
 msgstr "Prefixo do espaço de nomes dos anfitriões"
+
+#, fuzzy
+msgid "Native cluster mode"
+msgstr "Criar cluster"
+
+msgid ""
+"Native: Use the cluster check function implemented by the check plugin. If "
+"it is available, it is probably the best choice, as it implements logic "
+"specifically designed for the check plugin in question. Implementing it is "
+"optional however, so this might not be available (a warning will be "
+"displayed). Consult the plugins manpage for details about its cluster "
+"behaviour."
+msgstr ""
 
 msgid "Navigation"
 msgstr "Navegação"
@@ -46601,6 +46597,54 @@ msgstr ""
 msgid "The character <tt>%s</tt> is not allowed here."
 msgstr "O caractere <tt>%s</tt> não é permitido aqui."
 
+#, fuzzy
+msgid ""
+"The check <tt>fileinfo</tt> monitors the age and size of a single file. Each "
+"file information that is sent by the agent will create one service. By "
+"defining grouping patterns you can switch to the check <tt>fileinfo.groups</"
+"tt>. That check monitors a list of files at once. You can set levels not "
+"only for the total size and the age of the oldest/youngest file but also on "
+"the count. You can define one or several patterns for a group containing "
+"<tt>*</tt> and <tt>?</tt>, for example <tt>/var/log/apache/*.log</tt>. "
+"Please see Python's fnmatch for more information regarding globbing patterns "
+"and special characters. If the pattern begins with a tilde then this pattern "
+"is interpreted as a regular expression instead of as a filename globbing "
+"pattern and <tt>*</tt> and <tt>?</tt> are treated differently. For files "
+"contained in a group the discovery will automatically create a group service "
+"instead of single services for each file. This rule also applies when you "
+"use manually configured checks instead of inventorized ones. Furthermore, "
+"the current time/date in a configurable format may be included in the "
+"include pattern. The syntax is as follows: $DATE:format-spec$ or $YESTERDAY:"
+"format-spec$, where format-spec is a list of time format directives of the "
+"unix date command. Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A "
+"pattern of /var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files "
+"with todays date  as name in the directory /var/tmp/backups. The YESTERDAY "
+"syntax simply subtracts one day from the reference time."
+msgstr ""
+"A verificação <tt>fileinfo</tt> monitoriza a idade e o tamanho de um único "
+"ficheiro. Cada informação de arquivo que é enviada pelo agente criará um "
+"serviço. Ao definir padrões de agrupamento você pode mudar para a "
+"verificação <tt>fileinfo.groups</tt>. Essa verificação monitora uma lista de "
+"arquivos de uma só vez. Você pode definir níveis não só para o tamanho total "
+"e a idade do arquivo mais antigo/jovem, mas também na contagem. Você pode "
+"definir um ou vários padrões para um grupo contendo <tt>**</tt> e <tt>?</"
+"tt>, por exemplo <tt>/var/log/apache/*.log</tt>. Por favor veja o fnmatch de "
+"Python para mais informações sobre padrões de globbing e caracteres "
+"especiais. Se o padrão começa com um til então este padrão é interpretado "
+"como uma expressão regular ao invés de um padrão de globbing com o nome de "
+"arquivo e <tt>**</tt> e <tt>?</tt> são tratados de forma diferente. Para "
+"ficheiros contidos num grupo, a descoberta criará automaticamente um serviço "
+"de grupo em vez de serviços únicos para cada ficheiro. Esta regra também se "
+"aplica quando você usa verificações configuradas manualmente em vez de "
+"verificações inventariadas. Além disso, a hora/data atual em um formato "
+"configurável pode ser incluída no padrão de inclusão. A sintaxe é a "
+"seguinte: $DATE:format-spec$ ou $YESTERDAY:format-spec$, onde format-spec é "
+"uma lista de diretrizes de formato de hora do comando de data unix. Exemplo: "
+"$DATE:%Y%m%d$ é a data de hoje, por exemplo, 20140127. Um padrão de /var/tmp/"
+"backups/$DATE:%Y%m%d$.txt procuraria por arquivos .txt com data de hoje como "
+"nome no diretório /var/tmp/backups. A sintaxe do dia de ontem simplesmente "
+"subtrai um dia da hora de referência."
+
 msgid ""
 "The check <tt>logwatch</tt> normally creates one service for each logfile. "
 "By defining grouping patterns you can switch to the check <tt>logwatch."
@@ -55735,6 +55779,10 @@ msgstr "Estado de Atualização"
 msgid "Update Status"
 msgstr "Status de atualização"
 
+#, fuzzy
+msgid "Update core config"
+msgstr "Pré-visualização de atualização"
+
 msgid "Update delay for PNP meta information"
 msgstr "Atraso de actualização para meta-informação PNP"
 
@@ -56087,6 +56135,14 @@ msgid "Upper levels for clients"
 msgstr "Níveis superiores para clientes"
 
 #, fuzzy
+msgid "Upper levels for code size"
+msgstr "Níveis superiores para o tamanho"
+
+#, fuzzy
+msgid "Upper levels for code size in percent of the region limit"
+msgstr "Níveis superiores em percentagem do limite"
+
+#, fuzzy
 msgid "Upper levels for concurrent executions"
 msgstr "Níveis superiores para exceções encontradas"
 
@@ -56163,6 +56219,14 @@ msgstr ""
 
 msgid "Upper levels for mail latency"
 msgstr "Níveis superiores para latência de correio"
+
+#, fuzzy
+msgid "Upper levels for memory used"
+msgstr "Níveis superiores para erros HTTP"
+
+#, fuzzy
+msgid "Upper levels for memory used in percent of the Lambda function limit"
+msgstr "Níveis superiores em percentagem do limite"
 
 msgid "Upper levels for number of OSDs which are down"
 msgstr "Níveis superiores para o número de OSDs que estão em baixa"
@@ -58258,6 +58322,17 @@ msgstr "Waitlocks"
 msgid "Warn"
 msgstr "Avisar"
 
+#, fuzzy
+msgid "Warn about configurations to review"
+msgstr "Empurre a configuração para este site"
+
+msgid "Warn about new network ports"
+msgstr ""
+
+#, fuzzy
+msgid "Warn about renamed remote site"
+msgstr "Saída vazia do local remoto."
+
 msgid "Warn if VM status value is not"
 msgstr "Avisar se o valor do status da VM não for"
 
@@ -60121,12 +60196,21 @@ msgstr "Local de trabalho"
 msgid "Worst - take worst of all node states"
 msgstr "Pior - pior de todos os estados de nodo"
 
+msgid "Worst node wins"
+msgstr ""
+
 msgid "Worst state"
 msgstr "pior estado"
 
 #, python-format
 msgid "Worst state, %d nodes, restrict to %s"
 msgstr "Pior estado, %d nós, restringir a %s"
+
+msgid ""
+"Worst: The check function of the plugin will be applied to each individual "
+"node. The worst outcome will determine the overall state of the clustered "
+"service."
+msgstr ""
 
 msgid "Write"
 msgstr "Escreva para"
@@ -60525,6 +60609,9 @@ msgid ""
 msgstr ""
 "Você pode alterar essas atribuições de acordo com suas necessidades e então "
 "iniciar a importação clicando no botão <i>Importar</i> acima."
+
+msgid "You can choose from different aggregation modes of clustered services:"
+msgstr ""
 
 msgid ""
 "You can configure an individual alias here for the tunnel matching the IP-"
@@ -63900,6 +63987,11 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#, fuzzy
+#~| msgid "Group path"
+#~ msgid "Group patterns"
+#~ msgstr "Caminho de grupo"
 
 #~ msgid "Deploy MongoDB plugin"
 #~ msgstr "Implantar o plugin MongoDB"

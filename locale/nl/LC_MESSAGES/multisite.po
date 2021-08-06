@@ -2529,6 +2529,10 @@ msgid "AWS/Lambda Concurrency"
 msgstr "Prestaties"
 
 #, fuzzy
+msgid "AWS/Lambda Memory"
+msgstr "Prestaties"
+
+#, fuzzy
 msgid "AWS/Lambda Performance"
 msgstr "Prestaties"
 
@@ -4202,6 +4206,10 @@ msgid ""
 msgstr ""
 "Agenten zullen geen pakketten aanvaarden die niet ondertekend zijn door ten "
 "minste één sleutel die zij aanvaarden."
+
+#, fuzzy
+msgid "Aggreation options for clustered services"
+msgstr "Aggregaties waarop de dienst betrekking heeft"
 
 msgid "Aggregate"
 msgstr "Geaggregeerd"
@@ -9266,56 +9274,6 @@ msgstr "Checkpoint VSID verkeerssnelheid"
 msgid "Checks & agents"
 msgstr "Controles en agenten"
 
-#, fuzzy
-msgid ""
-"Checks <tt>fileinfo</tt> and <tt>sap_hana_fileinfo</tt> monitor the age and "
-"size of a single file. Each file information that is sent by the agent will "
-"create one service. By defining grouping patterns you can switch to checks "
-"<tt>fileinfo.groups</tt> or <tt>sap_hana_fileinfo.groups</tt>. These checks "
-"monitor a list of files at once. You can set levels not only for the total "
-"size and the age of the oldest/youngest file but also on the count. You can "
-"define one or several patterns for a group containing <tt>*</tt> and <tt>?</"
-"tt>, for example <tt>/var/log/apache/*.log</tt>. Please see Python's fnmatch "
-"for more information regarding globbing patterns and special characters. If "
-"the pattern begins with a tilde then this pattern is interpreted as a "
-"regular expression instead of as a filename globbing pattern and <tt>*</tt> "
-"and <tt>?</tt> are treated differently. For files contained in a group the "
-"discovery will automatically create a group service instead of single "
-"services for each file. This rule also applies when you use manually "
-"configured checks instead of inventorized ones. Furthermore, the current "
-"time/date in a configurable format may be included in the include pattern. "
-"The syntax is as follows: $DATE:format-spec$ or $YESTERDAY:format-spec$, "
-"where format-spec is a list of time format directives of the unix date "
-"command. Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A pattern of /"
-"var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files with todays "
-"date  as name in the directory /var/tmp/backups. The YESTERDAY syntax simply "
-"subtracts one day from the reference time."
-msgstr ""
-"De controle <tt>fileinfo</tt> controleert de leeftijd en de grootte van een "
-"enkel bestand. Elke bestandsinformatie die door de agent wordt verzonden, "
-"creëert één dienst. Door groeperingspatronen te definiëren kunt u "
-"overschakelen naar de controle <tt>fileinfo.groups</tt>. Die controleert een "
-"lijst van bestanden tegelijk. U kunt niet alleen niveaus instellen voor de "
-"totale grootte en de leeftijd van het oudste/jongste bestand, maar ook op "
-"het aantal. U kunt een of meer patronen definiëren voor een groep die <tt>*</"
-"tt> en <tt>?</tt> bevat, bijvoorbeeld <tt>/var/log/apache/*.log</tt>. Zie "
-"Python's fnmatch voor meer informatie over globbing patronen en speciale "
-"tekens. Als het patroon begint met een tilde dan wordt dit patroon "
-"geïnterpreteerd als een reguliere expressie in plaats van als een "
-"bestandsnaam globbbing patroon en <tt>*</tt> en <tt>?</tt> worden anders "
-"behandeld. Voor bestanden die in een groep zitten zal de discovery "
-"automatisch een groepservice aanmaken in plaats van losse services voor elk "
-"bestand. Deze regel is ook van toepassing wanneer u handmatig "
-"geconfigureerde controles gebruikt in plaats van geïnventariseerde "
-"controles. Verder kan de huidige tijd/datum in een configureerbaar formaat "
-"worden opgenomen in het include patroon. De syntaxis is als volgt: $DATE:"
-"format-spec$ of $YESTERDAY:format-spec$, waarbij format-spec een lijst is "
-"van tijdformaat directives van het unix date commando. Voorbeeld: $DATE:%Y%m"
-"%d$ is de datum van vandaag, bv. 20140127. Een patroon van /var/tmp/backupss/"
-"$DATE:%Y%m%d$.txt zou zoeken naar .txt bestanden met de datum van vandaag "
-"als naam in de directory /var/tmp/backups. De YESTERDAY syntaxis trekt "
-"eenvoudig een dag af van de referentietijd."
-
 msgid "Checks on management boards"
 msgstr "Controles op de raden van bestuur"
 
@@ -9921,6 +9879,14 @@ msgstr "Clusterbreed"
 
 msgid "Cnt."
 msgstr "Cnt."
+
+#, fuzzy
+msgid "Code Size"
+msgstr "Cachegrootte"
+
+#, fuzzy
+msgid "Code Size in percent"
+msgstr "CPU in procenten"
 
 msgid "Codec that should be used to decode the matching files"
 msgstr ""
@@ -14895,6 +14861,10 @@ msgstr "Gedistribueerd toezicht"
 msgid "Distributed monitoring"
 msgstr "Gedistribueerde bewaking"
 
+#, fuzzy
+msgid "Distributed monitoring configuration"
+msgstr "Toevoegen aan bewakingsconfiguratie"
+
 msgid "Distributed monitoring using multiple Checkmk sites"
 msgstr "Gedistribueerde monitoring met meerdere Checkmk-sites"
 
@@ -15921,6 +15891,10 @@ msgid "Dynamic configuration logging"
 msgstr "Loggen van dynamische configuratie"
 
 msgid "Dynamic host configuration"
+msgstr "Dynamische host configuratie"
+
+#, fuzzy
+msgid "Dynamic host configuration connections"
 msgstr "Dynamische host configuratie"
 
 msgid "Dynamic host management"
@@ -20142,10 +20116,6 @@ msgstr "Groep bestaat niet of is geen lid"
 msgid "Group path"
 msgstr "Groepspad"
 
-#, fuzzy
-msgid "Group patterns"
-msgstr "Groepspad"
-
 msgid "Group<nobr> </nobr>CN"
 msgstr "Groep<nobr> </nobr>CN"
 
@@ -22146,6 +22116,10 @@ msgid "Hosts Contacts (as Server)"
 msgstr "Hosts Contacten (als Server)"
 
 msgid "Hosts and Folders"
+msgstr "Hosts en mappen"
+
+#, fuzzy
+msgid "Hosts and folders"
 msgstr "Hosts en mappen"
 
 #, python-format
@@ -29776,6 +29750,14 @@ msgstr "Geheugenpaginastatistieken"
 msgid "Memory Pool Name"
 msgstr "Geheugenpool Naam"
 
+#, fuzzy
+msgid "Memory Size"
+msgstr "Gebruikt geheugen"
+
+#, fuzzy
+msgid "Memory Size in percent"
+msgstr "Geheugengebruik in procenten"
+
 msgid "Memory Usage"
 msgstr "Geheugen Gebruik"
 
@@ -31210,6 +31192,19 @@ msgstr "Namespace"
 
 msgid "Namespace prefix for hosts"
 msgstr "Namespace voorvoegsel voor hosts"
+
+#, fuzzy
+msgid "Native cluster mode"
+msgstr "Cluster maken"
+
+msgid ""
+"Native: Use the cluster check function implemented by the check plugin. If "
+"it is available, it is probably the best choice, as it implements logic "
+"specifically designed for the check plugin in question. Implementing it is "
+"optional however, so this might not be available (a warning will be "
+"displayed). Consult the plugins manpage for details about its cluster "
+"behaviour."
+msgstr ""
 
 msgid "Navigation"
 msgstr "Navigatie"
@@ -46572,6 +46567,55 @@ msgstr ""
 msgid "The character <tt>%s</tt> is not allowed here."
 msgstr "Het teken <tt>%s</tt> is hier niet toegestaan."
 
+#, fuzzy
+msgid ""
+"The check <tt>fileinfo</tt> monitors the age and size of a single file. Each "
+"file information that is sent by the agent will create one service. By "
+"defining grouping patterns you can switch to the check <tt>fileinfo.groups</"
+"tt>. That check monitors a list of files at once. You can set levels not "
+"only for the total size and the age of the oldest/youngest file but also on "
+"the count. You can define one or several patterns for a group containing "
+"<tt>*</tt> and <tt>?</tt>, for example <tt>/var/log/apache/*.log</tt>. "
+"Please see Python's fnmatch for more information regarding globbing patterns "
+"and special characters. If the pattern begins with a tilde then this pattern "
+"is interpreted as a regular expression instead of as a filename globbing "
+"pattern and <tt>*</tt> and <tt>?</tt> are treated differently. For files "
+"contained in a group the discovery will automatically create a group service "
+"instead of single services for each file. This rule also applies when you "
+"use manually configured checks instead of inventorized ones. Furthermore, "
+"the current time/date in a configurable format may be included in the "
+"include pattern. The syntax is as follows: $DATE:format-spec$ or $YESTERDAY:"
+"format-spec$, where format-spec is a list of time format directives of the "
+"unix date command. Example: $DATE:%Y%m%d$ is todays date, e.g. 20140127. A "
+"pattern of /var/tmp/backups/$DATE:%Y%m%d$.txt would search for .txt files "
+"with todays date  as name in the directory /var/tmp/backups. The YESTERDAY "
+"syntax simply subtracts one day from the reference time."
+msgstr ""
+"De controle <tt>fileinfo</tt> controleert de leeftijd en de grootte van een "
+"enkel bestand. Elke bestandsinformatie die door de agent wordt verzonden, "
+"creëert één dienst. Door groeperingspatronen te definiëren kunt u "
+"overschakelen naar de controle <tt>fileinfo.groups</tt>. Die controleert een "
+"lijst van bestanden tegelijk. U kunt niet alleen niveaus instellen voor de "
+"totale grootte en de leeftijd van het oudste/jongste bestand, maar ook op "
+"het aantal. U kunt een of meer patronen definiëren voor een groep die <tt>*</"
+"tt> en <tt>?</tt> bevat, bijvoorbeeld <tt>/var/log/apache/*.log</tt>. Zie "
+"Python's fnmatch voor meer informatie over globbing patronen en speciale "
+"tekens. Als het patroon begint met een tilde dan wordt dit patroon "
+"geïnterpreteerd als een reguliere expressie in plaats van als een "
+"bestandsnaam globbbing patroon en <tt>*</tt> en <tt>?</tt> worden anders "
+"behandeld. Voor bestanden die in een groep zitten zal de discovery "
+"automatisch een groepservice aanmaken in plaats van losse services voor elk "
+"bestand. Deze regel is ook van toepassing wanneer u handmatig "
+"geconfigureerde controles gebruikt in plaats van geïnventariseerde "
+"controles. Verder kan de huidige tijd/datum in een configureerbaar formaat "
+"worden opgenomen in het include patroon. De syntaxis is als volgt: $DATE:"
+"format-spec$ of $YESTERDAY:format-spec$, waarbij format-spec een lijst is "
+"van tijdformaat directives van het unix date commando. Voorbeeld: $DATE:%Y%m"
+"%d$ is de datum van vandaag, bv. 20140127. Een patroon van /var/tmp/backupss/"
+"$DATE:%Y%m%d$.txt zou zoeken naar .txt bestanden met de datum van vandaag "
+"als naam in de directory /var/tmp/backups. De YESTERDAY syntaxis trekt "
+"eenvoudig een dag af van de referentietijd."
+
 msgid ""
 "The check <tt>logwatch</tt> normally creates one service for each logfile. "
 "By defining grouping patterns you can switch to the check <tt>logwatch."
@@ -55767,6 +55811,10 @@ msgstr "Staat bijwerken"
 msgid "Update Status"
 msgstr "Status bijwerken"
 
+#, fuzzy
+msgid "Update core config"
+msgstr "Update preview"
+
 msgid "Update delay for PNP meta information"
 msgstr "Bijwerkvertraging voor PNP meta-informatie"
 
@@ -56118,6 +56166,14 @@ msgid "Upper levels for clients"
 msgstr "Bovenste niveaus voor klanten"
 
 #, fuzzy
+msgid "Upper levels for code size"
+msgstr "Bovenste niveaus voor grootte"
+
+#, fuzzy
+msgid "Upper levels for code size in percent of the region limit"
+msgstr "Bovengrens in percentage van grenswaarde"
+
+#, fuzzy
 msgid "Upper levels for concurrent executions"
 msgstr "Bovenste niveaus voor aangetroffen uitzonderingen"
 
@@ -56193,6 +56249,14 @@ msgstr "Bovenste niveaus voor loadbalancer-capaciteitseenheden"
 
 msgid "Upper levels for mail latency"
 msgstr "Bovenste niveaus voor postlatentie"
+
+#, fuzzy
+msgid "Upper levels for memory used"
+msgstr "Hogere niveaus voor HTTP-fouten"
+
+#, fuzzy
+msgid "Upper levels for memory used in percent of the Lambda function limit"
+msgstr "Bovengrens in percentage van grenswaarde"
 
 msgid "Upper levels for number of OSDs which are down"
 msgstr "Bovenste niveaus voor aantal OSD's dat niet werkt"
@@ -58295,6 +58359,17 @@ msgstr "Wachtsloten"
 msgid "Warn"
 msgstr "Waarschuw"
 
+#, fuzzy
+msgid "Warn about configurations to review"
+msgstr "Push configuratie naar deze site"
+
+msgid "Warn about new network ports"
+msgstr ""
+
+#, fuzzy
+msgid "Warn about renamed remote site"
+msgstr "Lege uitgang van externe locatie."
+
 msgid "Warn if VM status value is not"
 msgstr "Waarschuwen als VM statuswaarde niet"
 
@@ -60164,12 +60239,21 @@ msgstr "Werkplaats"
 msgid "Worst - take worst of all node states"
 msgstr "Worst - neem de slechtste van alle knooppunt toestanden"
 
+msgid "Worst node wins"
+msgstr ""
+
 msgid "Worst state"
 msgstr "Slechtste staat"
 
 #, python-format
 msgid "Worst state, %d nodes, restrict to %s"
 msgstr "Slechtste staat, %d knooppunten, beperken tot %s"
+
+msgid ""
+"Worst: The check function of the plugin will be applied to each individual "
+"node. The worst outcome will determine the overall state of the clustered "
+"service."
+msgstr ""
 
 msgid "Write"
 msgstr "Schrijf"
@@ -60570,6 +60654,9 @@ msgid ""
 msgstr ""
 "U kunt deze toewijzingen naar eigen behoefte wijzigen en dan de import "
 "starten door op de <i>Import</i> knop hierboven te klikken."
+
+msgid "You can choose from different aggregation modes of clustered services:"
+msgstr ""
 
 msgid ""
 "You can configure an individual alias here for the tunnel matching the IP-"
@@ -63948,6 +64035,11 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Group path"
+#~ msgid "Group patterns"
+#~ msgstr "Groepspad"
 
 #~ msgid "Deploy MongoDB plugin"
 #~ msgstr "MongoDB plugin uitrollen"

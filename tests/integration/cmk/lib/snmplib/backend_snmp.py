@@ -24,8 +24,8 @@ except ImportError:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
 try:
-    from cmk.core_helpers.cee.snmp_backend.pysnmp_backend import (
-        PySNMPBackend,  # type: ignore[import]
+    from cmk.core_helpers.cee.snmp_backend.pysnmp_backend import (  # type: ignore[import]
+        PySNMPBackend,
     )
 except ImportError:
     PySNMPBackend = None  # type: ignore[assignment, misc]

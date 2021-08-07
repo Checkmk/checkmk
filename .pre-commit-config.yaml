@@ -17,7 +17,7 @@ default_stages:
     - manual
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v2.4.0
+      rev: v4.0.1
       hooks:
           - id: trailing-whitespace
           - id: check-merge-conflict
@@ -25,6 +25,11 @@ repos:
           - id: check-yaml
           - id: end-of-file-fixer
             exclude: .werks/*
+    - repo: https://github.com/pycqa/isort
+      rev: 5.9.3
+      hooks:
+          - id: isort
+            name: isort (python)
     - repo: local
       hooks:
           - id: yapf

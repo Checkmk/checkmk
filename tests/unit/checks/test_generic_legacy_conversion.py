@@ -18,7 +18,6 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
 from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import AgentSectionPlugin, SNMPSectionPlugin
 from cmk.base.check_legacy_includes.df_netapp import is_netapp_filer  # type: ignore[attr-defined]
-from cmk.base.check_utils import HOST_ONLY, MGMT_ONLY
 
 from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import (  # type: ignore[attr-defined] # isort: skip
     _has_table_2, _is_cisco, _is_cisco_nexus,
@@ -29,38 +28,6 @@ from cmk.base.check_legacy_includes.fsc import (  # type: ignore[attr-defined] #
 from cmk.base.check_legacy_includes.ucd_hr import _is_ucd  # type: ignore[attr-defined] # isort: skip
 
 pytestmark = pytest.mark.checks
-
-
-def test_management_board_interface_prefix(fix_plugin_legacy):
-    mgmt_criteria = (
-        ("Name must start with 'mgmt_'", lambda k, c: k.startswith("mgmt_")),
-        ("Description must start with 'Management Interface: '",
-         lambda k, c: c["service_description"].startswith("Management Interface: ")),
-        ("MGMT_ONLY must be set", lambda k, c: c["management_board"] == MGMT_ONLY),
-    )
-
-    management_checks = [(key, check)
-                         for key, check in fix_plugin_legacy.check_info.items()
-                         if (check["service_description"] is not None and any(
-                             test(key, check) for _, test in mgmt_criteria))]
-
-    for key, check in management_checks:
-
-        for requirement, test in mgmt_criteria:
-            assert test(key,
-                        check), ("%s: Inconsistent management propertiers: %s" % (key, requirement))
-
-        host_check = fix_plugin_legacy.check_info.get(key[5:])
-        if host_check is None:
-            continue
-
-        requirement = "The corresponding non-mgmt check must have the matching description"
-        assert host_check["service_description"] == check["service_description"][22:], (
-            "%s: Inconsistent management propertiers: %s" % (key, requirement))
-
-        requirement = "The corresponding non-mgmt check must have HOST_ONLY set"
-        assert host_check["management_board"] == HOST_ONLY, (
-            "%s: Inconsistent management propertiers: %s" % (key, requirement))
 
 
 def test_create_section_plugin_from_legacy(fix_plugin_legacy, fix_register):

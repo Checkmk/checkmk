@@ -84,7 +84,7 @@ STAGES:
       DIR: 'tests'
       ENV_VARS:
         PYTHON_FILES: "${CHANGED_PYTHON_FILES}"
-      COMMAND: "make --quiet test-format-python-docker &> ${RESULTS}/python-format.txt"
+      COMMAND: "make --quiet test-format-python-docker &> ${RESULTS}/python-yapf.txt"
       TEXT_ON_SKIP: 'No Python files changed'
 
     - NAME: 'Python Unit Test'

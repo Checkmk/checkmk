@@ -3830,7 +3830,7 @@ rulespec_registry.register(
 
 def _valuespec_clustered_services_config():
     return CascadingDropdown(
-        title=_("Aggreation options for clustered services"),
+        title=_("Aggregation options for clustered services"),
         help="%s <ul><li>%s</li></ul>" % (
             _("You can choose from different aggregation modes of clustered services:"),
             "</li><li>".join((

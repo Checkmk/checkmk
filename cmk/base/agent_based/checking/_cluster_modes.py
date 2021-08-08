@@ -7,10 +7,21 @@
 
 from collections import defaultdict
 from functools import partial
-from typing import Any, Callable, Final, Iterable, Mapping, Sequence, Set, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Final,
+    Iterable,
+    Mapping,
+    NamedTuple,
+    Protocol,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
-from cmk.utils.type_defs import ClusterMode
-from cmk.utils.type_defs import state_markers as STATE_MARKERS
+from cmk.utils.type_defs import ClusterMode, state_markers as STATE_MARKERS
 
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
@@ -30,12 +41,17 @@ _Kwargs = Mapping[str, Any]
 _NON_SECTION_KEYS: Final = {'item', 'params'}
 
 
+class Selector(Protocol):
+    def __call__(self, *a: State) -> State:
+        ...
+
+
 def _unfit_for_clustering(**_kw) -> CheckResult:
     """A cluster_check_function that displays a generic warning"""
     yield Result(
         state=State.UNKNOWN,
         summary=("This service does not implement a native cluster mode. Please change your "
-                 "configuration using the rule 'Aggreation options for clustered services', "
+                 "configuration using the rule 'Aggregation options for clustered services', "
                  "and select one of the other available aggregation modes."),
     )
 
@@ -58,82 +74,98 @@ def get_cluster_check_function(
 
     if mode == "worst":
         return partial(
-            _cluster_check_worst,
+            _cluster_check,
             clusterization_parameters=clusterization_parameters,
             executor=executor,
             check_function=plugin.check_function,
+            selector=State.worst,
         )
 
     raise ValueError(mode)
 
 
-def _cluster_check_worst(
+def _cluster_check(
     *,
     clusterization_parameters: Mapping[str, Any],
     executor: "NodeCheckExecutor",
     check_function: Callable,
+    selector: Selector,
     **cluster_kwargs: Any,
 ) -> CheckResult:
 
-    node_results = executor(check_function, cluster_kwargs)
-    if not node_results.results:
-        return node_results.raise_for_ignores()
+    summarizer = Summarizer(
+        node_results=executor(check_function, cluster_kwargs),
+        selector=selector,
+    )
+    if summarizer.is_empty():
+        return summarizer.raise_for_ignores()
 
-    worst_node = node_results.get_worst_node()
-    yield from node_results.results[worst_node]
+    yield from summarizer.primary_results()
 
-    # TODO: maybe output information on how many nodes there are in total?
-    # see how we do this for the failover case, and find a consistent solutiuon.
+    yield from summarizer.secondary_results()
 
-    yield from (_noticeify(r)
-                for node in sorted(n for n in node_results.results if n != worst_node)
-                for r in node_results.results[node])
-
-    # TODO: check if we need an option to "nail down" the node here
-    yield from node_results.metrics[worst_node]
+    yield from summarizer.metrics()
 
 
-class NodeResults:
+class NodeResults(NamedTuple):
+    results: Mapping[str, Sequence[Result]]
+    metrics: Mapping[str, Sequence[Metric]]
+    ignore_results: Mapping[str, Sequence[IgnoreResults]]
+
+
+class Summarizer:
     def __init__(
         self,
-        results: Mapping[str, Sequence[Result]],
-        metrics: Mapping[str, Sequence[Metric]],
-        ignore_results: Mapping[str, Sequence[IgnoreResults]],
-    ) -> None:
-        self.results: Final = results
-        self.metrics: Final = metrics
-        self.ignore_results: Final = ignore_results
-
-    def raise_for_ignores(self) -> None:
-        if (node_ignores := self.ignore_results.items()):
-            raise IgnoreResultsError(", ".join(
-                f"[{node}] {', '.join(str(i) for i in ign)}" for node, ign in node_ignores))
-
-    def get_worst_node(self) -> str:
-        return self._get_extreme_node(selector=State.worst)
-
-    def _get_extreme_node(
-        self,
         *,
-        selector: Callable[..., State],
-    ) -> str:
-        """Determine the best/worst nodes name
+        node_results: NodeResults,
+        selector: Selector,
+    ) -> None:
+        self._node_results = node_results
+        self._selector = selector
 
-        If multiple nodes share the extreme (best/worst) state,
-        for now we choose the first one (alphabetically).
-        """
-        if not self.results:
-            # This would happen in the selector call anyway, but better be explicit.
-            raise ValueError('no results available')
+        selected_nodes = self._get_selected_nodes(node_results.results, selector)
+        # fallback: arbitrary, but comprehensible choice.
+        self._pivoting = sorted(selected_nodes)[0]
 
+    @staticmethod
+    def _get_selected_nodes(
+        results_map: Mapping[str, Sequence[Result]],
+        selector: Selector,
+    ) -> Set[str]:
+        """Determine the best/worst nodes names"""
         nodes_by_states = defaultdict(set)
-        for node, results in self.results.items():
+        for node, results in ((n, r) for n, r in results_map.items() if r):
             nodes_by_states[State.worst(*(r.state for r in results))].add(node)
 
-        extreme_nodes = nodes_by_states[selector(*nodes_by_states)]
+        return nodes_by_states[selector(*nodes_by_states)] if nodes_by_states else set(results_map)
 
-        # for now: arbitrary, but comprehensible choice
-        return sorted(extreme_nodes)[0]
+    def is_empty(self) -> bool:
+        return not any(self._node_results.results.values())
+
+    def raise_for_ignores(self) -> None:
+        if (msgs := [
+                f"[{node}] {', '.join(str(i) for i in ign)}"
+                for node, ign in self._node_results.ignore_results.items()
+                if ign
+        ]):
+            raise IgnoreResultsError(", ".join(msgs))
+
+    def primary_results(self) -> Iterable[Result]:
+        yield from self._node_results.results[self._pivoting]
+
+    def secondary_results(self) -> Iterable[Result]:
+        secondary_nodes = sorted(n for n in self._node_results.results if n != self._pivoting)
+        if not secondary_nodes:
+            return
+
+        yield from (Result(
+            state=State.OK,
+            notice=r.summary,
+            details=f"{r.details}{STATE_MARKERS[int(r.state)]}",
+        ) for node in secondary_nodes for r in self._node_results.results[node])
+
+    def metrics(self) -> Iterable[Metric]:
+        return self._node_results.metrics[self._pivoting]
 
 
 class NodeCheckExecutor:
@@ -147,22 +179,18 @@ class NodeCheckExecutor:
         cluster_kwargs: _Kwargs,
     ) -> NodeResults:
         """Dispatch the check function results for all nodes"""
-        results = defaultdict(list)
-        metrics = defaultdict(list)
-        ignores = defaultdict(list)
+        results = {}
+        metrics = {}
+        ignores = {}
 
         for node, kwargs in self._iter_node_kwargs(cluster_kwargs):
 
-            for element in self._consume_checkresult(node, check_function(**kwargs)):
-
-                if isinstance(element, Metric):
-                    metrics[node].append(element)
-
-                elif isinstance(element, IgnoreResults):
-                    ignores[node].append(element)
-
-                elif isinstance(element, Result):
-                    results[node].append(self._add_node_name(element, node))
+            elements = self._consume_checkresult(node, check_function(**kwargs))
+            metrics[node] = [e for e in elements if isinstance(e, Metric)]
+            ignores[node] = [e for e in elements if isinstance(e, IgnoreResults)]
+            results[node] = [
+                self._add_node_name(e, node) for e in elements if isinstance(e, Result)
+            ]
 
         return NodeResults(results, metrics, ignores)
 
@@ -211,12 +239,3 @@ class NodeCheckExecutor:
             summary=f"[{node_name}]: {result.summary}",
             details='\n'.join(f"[{node_name}]: {line}" for line in result.details.splitlines()),
         )
-
-
-def _noticeify(result: Result) -> Result:
-    """Force notice text"""
-    return Result(
-        state=State.OK,
-        notice=result.summary,
-        details=f"{result.details}{STATE_MARKERS[int(result.state)]}",
-    )

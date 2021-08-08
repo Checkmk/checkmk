@@ -129,11 +129,7 @@ def test_cluster_check_worst_yield_worst_nodes_metrics():
 
     check_worst = _get_simple_check_worst_function(_simple_check)
 
-    assert list(check_worst(section={
+    assert list(m for m in check_worst(section={
         "Nodett": [0, 23],
         "Nodebert": [1, 42],
-    },)) == [
-        Result(state=State.WARN, summary="[Nodebert]: Hi"),
-        Result(state=State.OK, notice="[Nodett]: Hi"),
-        Metric("n", 42),  # Nodeberts value.
-    ]
+    },) if isinstance(m, Metric))[0] == Metric("n", 42)  # Nodeberts value

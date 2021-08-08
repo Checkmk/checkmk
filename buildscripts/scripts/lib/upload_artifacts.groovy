@@ -17,14 +17,14 @@ def upload(Map args) {
     }
 }
 
-def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST=".") {
+def download_version_dir(DOWNLOAD_SOURCE, PORT, CMK_VERSION, DOWNLOAD_DEST) {
     stage('Download from shared storage') {
         withCredentials([file(credentialsId: 'Release_Key', variable: 'RELEASE_KEY')]) {
             sh """
-                rsync -av --relative \
+                rsync -av \
                     -e "ssh -o StrictHostKeyChecking=no -i ${RELEASE_KEY} -p ${PORT}" \
-                    ${DOWNLOAD_SOURCE}/./${CMK_VERSION}/* \
-                    ${DOWNLOAD_DEST}
+                    ${DOWNLOAD_SOURCE}/${CMK_VERSION}/* \
+                    ${DOWNLOAD_DEST}/
             """
         }
     }
@@ -48,11 +48,11 @@ def get_file_base(FILE_PATH) {
     return sh(script: "dirname ${FILE_PATH}", returnStdout: true).toString().trim()
 }
 
-def get_archive_base(FILE_BASE) { 
+def get_archive_base(FILE_BASE) {
     return sh(script: "dirname ${FILE_BASE}", returnStdout: true).toString().trim()
 }
 
-def get_file_name(FILE_PATH) { 
+def get_file_name(FILE_PATH) {
     return sh(script: "basename ${FILE_PATH}", returnStdout: true).toString().trim()
 }
 

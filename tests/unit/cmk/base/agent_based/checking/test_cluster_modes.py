@@ -120,7 +120,9 @@ def test_cluster_check_worst_others_are_notice_only():
         "Nodett": [2],
         "Nomo": [1],
     },)) == [
-        Result(state=State.CRIT, summary="[Nodett]: Hi"),
+        Result(state=State.OK, summary="Worst: [Nodett]"),
+        Result(state=State.CRIT, summary="Hi", details="[Nodett]: Hi"),
+        Result(state=State.OK, summary="Additional results from: [Nomo]"),
         Result(state=State.OK, notice="[Nomo]: Hi(!)"),
     ]
 

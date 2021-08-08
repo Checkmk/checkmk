@@ -78,6 +78,7 @@ def get_cluster_check_function(
             clusterization_parameters=clusterization_parameters,
             executor=executor,
             check_function=plugin.check_function,
+            label="worst",
             selector=State.worst,
         )
 
@@ -89,12 +90,14 @@ def _cluster_check(
     clusterization_parameters: Mapping[str, Any],
     executor: "NodeCheckExecutor",
     check_function: Callable,
+    label: str,
     selector: Selector,
     **cluster_kwargs: Any,
 ) -> CheckResult:
 
     summarizer = Summarizer(
         node_results=executor(check_function, cluster_kwargs),
+        label=label,
         selector=selector,
     )
     if summarizer.is_empty():
@@ -118,9 +121,11 @@ class Summarizer:
         self,
         *,
         node_results: NodeResults,
+        label: str,
         selector: Selector,
     ) -> None:
         self._node_results = node_results
+        self._label = label.title()
         self._selector = selector
 
         selected_nodes = self._get_selected_nodes(node_results.results, selector)
@@ -151,6 +156,7 @@ class Summarizer:
             raise IgnoreResultsError(", ".join(msgs))
 
     def primary_results(self) -> Iterable[Result]:
+        yield Result(state=State.OK, summary=f"{self._label}: [{self._pivoting}]")
         yield from self._node_results.results[self._pivoting]
 
     def secondary_results(self) -> Iterable[Result]:
@@ -158,6 +164,10 @@ class Summarizer:
         if not secondary_nodes:
             return
 
+        yield Result(
+            state=State.OK,
+            summary=f"Additional results from: {', '.join(f'[{n}]' for n in secondary_nodes)}",
+        )
         yield from (Result(
             state=State.OK,
             notice=r.summary,
@@ -236,6 +246,6 @@ class NodeCheckExecutor:
     def _add_node_name(result: Result, node_name: str) -> Result:
         return Result(
             state=result.state,
-            summary=f"[{node_name}]: {result.summary}",
+            summary=result.summary,
             details='\n'.join(f"[{node_name}]: {line}" for line in result.details.splitlines()),
         )

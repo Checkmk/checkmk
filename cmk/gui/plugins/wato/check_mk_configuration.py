@@ -53,6 +53,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.plugins.wato.omd_configuration import ConfigVariableGroupSiteManagement
 from cmk.gui.plugins.wato.utils import (
+    ConfigHostname,
     get_section_information,
     RulespecGroupDiscoveryCheckParameters,
     RulespecGroupMonitoringConfiguration,
@@ -3828,6 +3829,10 @@ rulespec_registry.register(
     ))
 
 
+def _valuespec_prefered_node(help_: str) -> _Tuple[str, ConfigHostname]:
+    return ('primary_node', ConfigHostname(title=_("Prefered node"), help=help_))
+
+
 def _valuespec_clustered_services_config():
     return CascadingDropdown(
         title=_("Aggregation options for clustered services"),
@@ -3851,9 +3856,29 @@ def _valuespec_clustered_services_config():
         ),
         choices=[
             ("native", _("Native cluster mode"), Dictionary(elements=[])),
-            ("failover", _("Failover (only one node should be active)"), Dictionary(elements=[])),
-            ("worst", _("Worst node wins"), Dictionary(elements=[])),
-            ("best", _("Best node wins"), Dictionary(elements=[])),
+            ("failover", _("Failover (only one node should be active)"),
+             Dictionary(elements=[
+                 _valuespec_prefered_node(
+                     _("If provided, the service result is expected to originate from the prefered "
+                       "node. If the result originates from any other node, the service will at least "
+                       "be in a WARNING state (even if the result itself is OK).")),
+             ])),
+            ("worst", _("Worst node wins"),
+             Dictionary(elements=[
+                 _valuespec_prefered_node(
+                     _("The results of the node in the worst state are displayed most prominently. "
+                       "If multiple nodes share the same 'worst' state and a prefered "
+                       "node is configured, the result of the prefered node will be chosen. "
+                       "This is hopefully relevant most of the time: when all nodes are OK.")),
+             ])),
+            ("best", _("Best node wins"),
+             Dictionary(elements=[
+                 _valuespec_prefered_node(
+                     _("The results of the node in the best state are displayed most prominently. "
+                       "If multiple nodes share the same 'best' state and a prefered "
+                       "node is configured, the result of the prefered node will be chosen. "
+                       "This is hopefully relevant most of the time: when all nodes are OK.")),
+             ])),
         ],
     )
 

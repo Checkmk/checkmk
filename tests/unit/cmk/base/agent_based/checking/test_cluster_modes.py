@@ -7,7 +7,7 @@
 # pylint: disable=protected-access
 
 import re
-from typing import Iterable
+from typing import Any, Iterable, Literal, Mapping, Optional, Union
 
 import pytest
 
@@ -15,6 +15,7 @@ from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.agent_based.checking import _cluster_modes as cluster_modes
 from cmk.base.api.agent_based.checking_classes import (
+    CheckFunction,
     CheckPlugin,
     CheckResult,
     IgnoreResults,
@@ -61,7 +62,11 @@ def _simple_check(section: Iterable[int]) -> CheckResult:
                 yield Metric("n", value)
 
 
-def test_get_cluster_check_function_native_missing():
+def _is_ok(*elements: Union[Result, Metric, IgnoreResults]) -> bool:
+    return State.worst(*(r.state for r in elements if isinstance(r, Result))) is State.OK
+
+
+def test_get_cluster_check_function_native_missing() -> None:
     plugin = _get_test_check_plugin(cluster_check_function=None)
 
     cc_function = cluster_modes.get_cluster_check_function(
@@ -76,7 +81,7 @@ def test_get_cluster_check_function_native_missing():
     assert isinstance(result, Result) and result.state == State.UNKNOWN
 
 
-def test_get_cluster_check_function_native_ok():
+def test_get_cluster_check_function_native_ok() -> None:
     plugin = _get_test_check_plugin(cluster_check_function=_simple_check)
 
     cc_function = cluster_modes.get_cluster_check_function(
@@ -90,31 +95,37 @@ def test_get_cluster_check_function_native_ok():
     assert cc_function is _simple_check
 
 
-def _get_simple_check_worst_function(check_function):
+def _get_cluster_check_function(
+    check_function: CheckFunction,
+    *,
+    mode: Literal["native", "failover", "worst", "best"],
+    clusterization_parameters: Optional[Mapping[ſtr, Any]] = None,
+) -> CheckFunction:
+    """small wrapper for cluster_modes.get_cluster_check_function"""
     plugin = _get_test_check_plugin(check_function=check_function)
     return cluster_modes.get_cluster_check_function(
-        mode='worst',
-        clusterization_parameters={},
+        mode=mode,
+        clusterization_parameters=clusterization_parameters or {},
         service_id=TEST_SERVICE_ID,
         plugin=plugin,
         persist_value_store_changes=False,
     )
 
 
-def test_cluster_check_worst_item_not_found():
-    check_worst = _get_simple_check_worst_function(_simple_check)
+def test_cluster_check_worst_item_not_found() -> None:
+    check_worst = _get_cluster_check_function(_simple_check, mode="worst")
     assert not list(check_worst(section={"Nodett": [], "Nomo": []},))
 
 
-def test_cluster_check_worst_ignore_results():
-    check_worst = _get_simple_check_worst_function(_simple_check)
+def test_cluster_check_worst_ignore_results() -> None:
+    check_worst = _get_cluster_check_function(_simple_check, mode="worst")
     expected_msg = re.escape("[Nodett] yielded, [Nomo] raised")
     with pytest.raises(IgnoreResultsError, match=expected_msg):
         _ = list(check_worst(section={"Nodett": [-1], "Nomo": [-2]},))
 
 
-def test_cluster_check_worst_others_are_notice_only():
-    check_worst = _get_simple_check_worst_function(_simple_check)
+def test_cluster_check_worst_others_are_notice_only() -> None:
+    check_worst = _get_cluster_check_function(_simple_check, mode="worst")
 
     assert list(check_worst(section={
         "Nodett": [2],
@@ -127,9 +138,9 @@ def test_cluster_check_worst_others_are_notice_only():
     ]
 
 
-def test_cluster_check_worst_yield_worst_nodes_metrics():
+def test_cluster_check_worst_yield_worst_nodes_metrics() -> None:
 
-    check_worst = _get_simple_check_worst_function(_simple_check)
+    check_worst = _get_cluster_check_function(_simple_check, mode="worst")
 
     assert list(m for m in check_worst(section={
         "Nodett": [0, 23],
@@ -137,31 +148,29 @@ def test_cluster_check_worst_yield_worst_nodes_metrics():
     },) if isinstance(m, Metric))[0] == Metric("n", 42)  # Nodeberts value
 
 
-def _get_simple_check_best_function(check_function):
-    plugin = _get_test_check_plugin(check_function=check_function)
-    return cluster_modes.get_cluster_check_function(
-        mode='best',
-        clusterization_parameters={},
-        service_id=TEST_SERVICE_ID,
-        plugin=plugin,
-        persist_value_store_changes=False,
-    )
+def test_cluster_check_worst_unprefered_node_is_ok() -> None:
+
+    check_failover = _get_cluster_check_function(
+        _simple_check, mode="worst", clusterization_parameters={"primary_node": "Nodebert"})
+    section = {"Nodett": [0]}
+
+    assert _is_ok(*check_failover(section=section))
 
 
-def test_cluster_check_best_item_not_found():
-    check_best = _get_simple_check_best_function(_simple_check)
+def test_cluster_check_best_item_not_found() -> None:
+    check_best = _get_cluster_check_function(_simple_check, mode="best")
     assert not list(check_best(section={"Nodett": [], "Nomo": []},))
 
 
-def test_cluster_check_best_ignore_results():
-    check_best = _get_simple_check_best_function(_simple_check)
+def test_cluster_check_best_ignore_results() -> None:
+    check_best = _get_cluster_check_function(_simple_check, mode="best")
     expected_msg = re.escape("[Nodett] yielded, [Nomo] raised")
     with pytest.raises(IgnoreResultsError, match=expected_msg):
         _ = list(check_best(section={"Nodett": [-1], "Nomo": [-2]},))
 
 
-def test_cluster_check_best_others_are_notice_only():
-    check_best = _get_simple_check_best_function(_simple_check)
+def test_cluster_check_best_others_are_notice_only() -> None:
+    check_best = _get_cluster_check_function(_simple_check, mode="best")
 
     assert list(check_best(section={
         "Nodett": [2],
@@ -174,9 +183,9 @@ def test_cluster_check_best_others_are_notice_only():
     ]
 
 
-def test_cluster_check_best_yield_best_nodes_metrics():
+def test_cluster_check_best_yield_best_nodes_metrics() -> None:
 
-    check_best = _get_simple_check_best_function(_simple_check)
+    check_best = _get_cluster_check_function(_simple_check, mode="best")
 
     assert list(m for m in check_best(section={
         "Nodett": [0, 23],
@@ -184,31 +193,29 @@ def test_cluster_check_best_yield_best_nodes_metrics():
     },) if isinstance(m, Metric))[0] == Metric("n", 23)  # Nodetts value
 
 
-def _get_simple_check_failover_function(check_function):
-    plugin = _get_test_check_plugin(check_function=check_function)
-    return cluster_modes.get_cluster_check_function(
-        mode='failover',
-        clusterization_parameters={},
-        service_id=TEST_SERVICE_ID,
-        plugin=plugin,
-        persist_value_store_changes=False,
-    )
+def test_cluster_check_best_unprefered_node_is_ok() -> None:
+
+    check_failover = _get_cluster_check_function(
+        _simple_check, mode="best", clusterization_parameters={"primary_node": "Nodebert"})
+    section = {"Nodett": [0]}
+
+    assert _is_ok(*check_failover(section=section))
 
 
-def test_cluster_check_failover_item_not_found():
-    check_best = _get_simple_check_failover_function(_simple_check)
+def test_cluster_check_failover_item_not_found() -> None:
+    check_best = _get_cluster_check_function(_simple_check, mode="failover")
     assert not list(check_best(section={"Nodett": [], "Nomo": []},))
 
 
-def test_cluster_check_failover_ignore_results():
-    check_failover = _get_simple_check_failover_function(_simple_check)
+def test_cluster_check_failover_ignore_results() -> None:
+    check_failover = _get_cluster_check_function(_simple_check, mode="failover")
     expected_msg = re.escape("[Nodett] yielded, [Nomo] raised")
     with pytest.raises(IgnoreResultsError, match=expected_msg):
         _ = list(check_failover(section={"Nodett": [-1], "Nomo": [-2]},))
 
 
-def test_cluster_check_failover_others_are_notice_only():
-    check_failover = _get_simple_check_failover_function(_simple_check)
+def test_cluster_check_failover_others_are_notice_only() -> None:
+    check_failover = _get_cluster_check_function(_simple_check, mode="failover")
 
     assert list(check_failover(section={
         "Nodett": [2],
@@ -218,9 +225,9 @@ def test_cluster_check_failover_others_are_notice_only():
     ]
 
 
-def test_cluster_check_failover_yield_worst_nodes_metrics():
+def test_cluster_check_failover_yield_worst_nodes_metrics() -> None:
 
-    check_failover = _get_simple_check_failover_function(_simple_check)
+    check_failover = _get_cluster_check_function(_simple_check, mode="failover")
 
     assert list(m for m in check_failover(section={
         "Nodett": [0, 23],
@@ -228,10 +235,18 @@ def test_cluster_check_failover_yield_worst_nodes_metrics():
     },) if isinstance(m, Metric))[0] == Metric("n", 42)  # Nodeberts value.
 
 
-def test_cluster_check_failover_two_are_not_ok():
+def test_cluster_check_failover_two_are_not_ok() -> None:
 
-    check_failover = _get_simple_check_failover_function(_simple_check)
+    check_failover = _get_cluster_check_function(_simple_check, mode="failover")
     section = {"Nodett": [0], "Nodebert": [0]}  # => everything ok, but to many results
 
-    assert State.worst(*(
-        r.state for r in check_failover(section=section) if isinstance(r, Result))) is not State.OK
+    assert not _is_ok(*check_failover(section=section))
+
+
+def test_cluster_check_failover_unprefered_node_is_not_ok() -> None:
+
+    check_failover = _get_cluster_check_function(
+        _simple_check, mode="failover", clusterization_parameters={"primary_node": "Nodebert"})
+    section = {"Nodett": [0]}
+
+    assert not _is_ok(*check_failover(section=section))

@@ -974,8 +974,9 @@ class CommandScheduleDowntimes(Command):
                           False,
                           label=_("Repeat this downtime on a regular basis every"))
 
+            # pylint: disable=no-name-in-module
             from cmk.gui.cee.plugins.wato.cmc import (
-                recurring_downtimes_types,  # pylint: disable=no-name-in-module,import-outside-toplevel
+                recurring_downtimes_types,  # pylint: disable=import-outside-toplevel
             )
 
             recurring_selections: Choices = [
@@ -1131,8 +1132,9 @@ class CommandScheduleDowntimes(Command):
 
     def _title_prefix(self, recurring_number):
         if recurring_number:
+            # pylint: disable=no-name-in-module
             from cmk.gui.cee.plugins.wato.cmc import (
-                recurring_downtimes_types,  # pylint: disable=no-name-in-module,import-outside-toplevel
+                recurring_downtimes_types,  # pylint: disable=import-outside-toplevel
             )
             description = (_("schedule a periodic downtime every %s") %
                            recurring_downtimes_types()[recurring_number])

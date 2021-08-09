@@ -25,8 +25,7 @@ except ImportError:
 
 try:
     from cmk.core_helpers.cee.snmp_backend.pysnmp_backend import (  # type: ignore[import]
-        PySNMPBackend,
-    )
+        PySNMPBackend,)
 except ImportError:
     PySNMPBackend = None  # type: ignore[assignment, misc]
 

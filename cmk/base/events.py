@@ -37,7 +37,7 @@ logger = logging.getLogger('cmk.base.events')
 
 
 def _send_reply_ready():
-    sys.stdout.write("*")
+    sys.stdout.write("*\n")
     sys.stdout.flush()
 
 

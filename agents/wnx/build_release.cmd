@@ -63,7 +63,7 @@ if "%1" == "SIMULATE_OK" powershell Write-Host "Successful Build" -Foreground Gr
 if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foreground Red && del %arte%\check_mk_service.msi  && exit /b 8
 
 :: CHECK for line ending
-@py -3 check_crlf.py 
+@py -3 scripts\check_crlf.py 
 @if errorlevel 1 powershell Write-Host "Line Encoding Error`r`n`tPlease check how good repo was checked out" -Foreground Red && exit /b 113
 
 call %cur_dir%\clean_artefacts.cmd 
@@ -96,7 +96,7 @@ echo %wnx_version:~1,-1%
 powershell Write-Host "Setting Version in MSI: %wnx_version%" -Foreground Green
 :: command
 @echo cscript.exe //nologo WiRunSQL.vbs %arte%\check_mk_agent.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
-cscript.exe //nologo WiRunSQL.vbs %build_dir%\install\Release\check_mk_service.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
+cscript.exe //nologo scripts\WiRunSQL.vbs %build_dir%\install\Release\check_mk_service.msi "UPDATE `Property` SET `Property`.`Value`='%wnx_version:~1,-1%' WHERE `Property`.`Property`='ProductVersion'"
 :: check result
 if not %errorlevel% == 0 powershell Write-Host "Failed version set" -Foreground Red && exit /b 34
 

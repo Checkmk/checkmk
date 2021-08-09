@@ -8,7 +8,7 @@
 5. .gitignore
 6. Makefile
 7. rulesets for clang/tidy
-8. 
+
 
 ## Installation
 

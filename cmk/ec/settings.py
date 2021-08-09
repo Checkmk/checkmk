@@ -102,10 +102,10 @@ class FileDescriptor(NamedTuple):
 class ECArgumentParser(ArgumentParser):
     """An argument parser for the event console"""
     def __init__(self, prog: str, version: str, paths: Paths, port_numbers: PortNumbers) -> None:
-        super(ECArgumentParser, self).__init__(prog=prog,
-                                               formatter_class=RawDescriptionHelpFormatter,
-                                               description='Start the Check_MK event console.',
-                                               epilog=self._epilog(paths))
+        super().__init__(prog=prog,
+                         formatter_class=RawDescriptionHelpFormatter,
+                         description='Start the Check_MK event console.',
+                         epilog=self._epilog(paths))
         self._add_arguments(version, port_numbers)
 
     @staticmethod

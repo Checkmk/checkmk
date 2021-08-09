@@ -59,16 +59,15 @@ def escape_attribute(value: EscapableEntity) -> str:
     Returns:
 
     """
-    attr_type = type(value)
-    if value is None:
-        return u''
-    if attr_type == int:
-        return str(value)
+    if isinstance(value, str):
+        return html_escape(value, quote=True)
     if isinstance(value, HTML):
         return value.__html__()  # This is HTML code which must not be escaped
-    if isinstance(attr_type, str):
-        return html_escape(value, quote=True)
-    if isinstance(attr_type, bytes):  # TODO: Not in the signature!
+    if value is None:
+        return u''
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, bytes):  # TODO: Not in the signature!
         return html_escape(ensure_str(value), quote=True)
     # TODO: What is this case for? Exception?
     return html_escape(str(value), quote=True)  # TODO: Not in the signature!

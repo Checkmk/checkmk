@@ -8,15 +8,16 @@
 
 import pytest  # type: ignore[import]
 
+from tests.testlib import get_value_store_fixture, on_time
+
 from cmk.base.plugins.agent_based import smart
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    GetRateError,
     Metric,
     Result,
     Service,
     State,
-    GetRateError,
 )
-from tests.testlib import get_value_store_fixture, on_time
 
 value_store_fixture = get_value_store_fixture(smart)
 STRING_TABLE_SD = [

@@ -19,6 +19,7 @@ from typing import Any, List, Optional, Tuple, Union
 from PIL import PngImagePlugin  # type: ignore[import]
 from reportlab.lib.units import mm  # type: ignore[import]
 from reportlab.lib.utils import ImageReader  # type: ignore[import]
+
 # Import software from reportlab (thanks to them!)
 from reportlab.pdfgen import canvas  # type: ignore[import]
 from six import ensure_str

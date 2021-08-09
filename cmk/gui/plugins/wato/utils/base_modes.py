@@ -25,7 +25,7 @@ ActionResult = Optional[FinalizeRequest]
 
 class WatoMode(metaclass=abc.ABCMeta):
     def __init__(self) -> None:
-        super(WatoMode, self).__init__()
+        super().__init__()
         self._from_vars()
 
     @classmethod

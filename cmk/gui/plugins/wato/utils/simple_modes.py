@@ -127,7 +127,7 @@ class _SimpleWatoModeBase(WatoMode, metaclass=abc.ABCMeta):
         # to be set before it is executed. Therefore we execute the super constructor
         # here.
         # TODO: Make the _from_vars() mechanism more explicit
-        super(_SimpleWatoModeBase, self).__init__()
+        super().__init__()
 
     def _add_change(
         self,

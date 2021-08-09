@@ -569,7 +569,7 @@ def _convert_start_url(value: str) -> str:
 class GenericUserAttribute(cmk.gui.plugins.userdb.UserAttribute):
     def __init__(self, user_editable: bool, show_in_table: bool, add_custom_macro: bool,
                  domain: str, permission: Optional[str], from_config: bool) -> None:
-        super(GenericUserAttribute, self).__init__()
+        super().__init__()
         self._user_editable = user_editable
         self._show_in_table = show_in_table
         self._add_custom_macro = add_custom_macro
@@ -613,7 +613,7 @@ def declare_user_attribute(name: str,
     attr_topic = topic
 
     @user_attribute_registry.register
-    class LegacyUserAttribute(GenericUserAttribute):
+    class _LegacyUserAttribute(GenericUserAttribute):
         _name = attr_name
         _valuespec = vs
         _topic = attr_topic if attr_topic else 'personal'
@@ -631,7 +631,7 @@ def declare_user_attribute(name: str,
             return cls._topic
 
         def __init__(self) -> None:
-            super(LegacyUserAttribute, self).__init__(
+            super().__init__(
                 user_editable=user_editable,
                 show_in_table=show_in_table,
                 add_custom_macro=add_custom_macro,
@@ -1305,7 +1305,7 @@ class UserSyncBackgroundJob(gui_background_job.GUIBackgroundJob):
         return _("User synchronization")
 
     def __init__(self) -> None:
-        super(UserSyncBackgroundJob, self).__init__(
+        super().__init__(
             self.job_prefix,
             title=self.gui_title(),
             stoppable=False,

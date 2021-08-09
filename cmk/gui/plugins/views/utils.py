@@ -129,7 +129,7 @@ class PainterOptions:
         return g.painter_options
 
     def __init__(self) -> None:
-        super(PainterOptions, self).__init__()
+        super().__init__()
         # The names of the painter options used by the current view
         self._used_option_names: List[str] = []
         # The effective options for this view
@@ -763,7 +763,7 @@ class RowTable(metaclass=abc.ABCMeta):
 
 class RowTableLivestatus(RowTable):
     def __init__(self, table_name: str) -> None:
-        super(RowTableLivestatus, self).__init__()
+        super().__init__()
         self._table_name = table_name
 
     @property
@@ -2275,10 +2275,10 @@ def _parse_url_sorters(sort: Optional[str]) -> List[SorterSpec]:
 class JoinCell(Cell):
     def __init__(self, view: 'View', painter_spec: PainterSpec) -> None:
         self._join_service_descr: Optional[ServiceName] = None
-        super(JoinCell, self).__init__(view, painter_spec)
+        super().__init__(view, painter_spec)
 
     def _from_view(self, painter_spec: PainterSpec) -> None:
-        super(JoinCell, self)._from_view(painter_spec)
+        super()._from_view(painter_spec)
 
         self._join_service_descr = painter_spec.join_index
 

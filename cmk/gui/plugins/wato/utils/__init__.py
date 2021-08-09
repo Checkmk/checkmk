@@ -485,7 +485,7 @@ class _GroupSelection(ElementSelection):
             'empty_text',
             _('You have not defined any %s group yet. Please '
               '<a href="wato.py?mode=edit_%s_group">create</a> at least one first.') % (what, what))
-        super(_GroupSelection, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._what = what
         self._choices = choices
         self._no_selection = no_selection
@@ -1727,7 +1727,7 @@ def some_host_hasnt_set(folder, attrname):
 
 class SiteBackupJobs(backup.Jobs):
     def __init__(self):
-        super(SiteBackupJobs, self).__init__(backup.site_config_path())
+        super().__init__(backup.site_config_path())
 
     def _apply_cron_config(self):
         p = subprocess.Popen(["omd", "restart", "crontab"],
@@ -1798,7 +1798,7 @@ def register_notification_parameters(scriptname, valuespec):
 
 class DictHostTagCondition(Transform):
     def __init__(self, title, help_txt):
-        super(DictHostTagCondition, self).__init__(
+        super().__init__(
             ListOfMultiple(
                 title=title,
                 help=help_txt,
@@ -2127,7 +2127,7 @@ class HostTagCondition(ValueSpec):
 
 class LabelCondition(Transform):
     def __init__(self, title, help_txt):
-        super(LabelCondition, self).__init__(
+        super().__init__(
             ListOf(
                 Tuple(
                     orientation="horizontal",

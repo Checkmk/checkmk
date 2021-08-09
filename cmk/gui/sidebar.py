@@ -135,7 +135,7 @@ def transform_old_dict_based_snapins() -> None:
 class UserSidebarConfig:
     """Manages the configuration of the users sidebar"""
     def __init__(self, usr: LoggedInUser, default_config: List[Tuple[str, str]]) -> None:
-        super(UserSidebarConfig, self).__init__()
+        super().__init__()
         self._user = usr
         self._default_config = copy.deepcopy(default_config)
         self._config = self._load()
@@ -267,7 +267,7 @@ class UserSidebarSnapin:
     def __init__(self,
                  snapin_type: Type[cmk.gui.plugins.sidebar.SidebarSnapin],
                  visibility: SnapinVisibility = SnapinVisibility.OPEN) -> None:
-        super(UserSidebarSnapin, self).__init__()
+        super().__init__()
         self.snapin_type = snapin_type
         self.visible = visibility
 
@@ -703,7 +703,7 @@ class CustomSnapins(pagetypes.Overridable):
 
     @classmethod
     def parameters(cls, mode):
-        parameters = super(CustomSnapins, cls).parameters(mode)
+        parameters = super().parameters(mode)
 
         parameters += [(
             cls.phrase("title"),

@@ -394,7 +394,7 @@ class LoggedInUser:
 # TODO: Can we somehow get rid of this?
 class LoggedInSuperUser(LoggedInUser):
     def __init__(self) -> None:
-        super(LoggedInSuperUser, self).__init__(None)
+        super().__init__(None)
         self.alias = "Superuser for unauthenticated pages"
         self.email = "admin"
 
@@ -407,7 +407,7 @@ class LoggedInSuperUser(LoggedInUser):
 
 class LoggedInNobody(LoggedInUser):
     def __init__(self) -> None:
-        super(LoggedInNobody, self).__init__(None)
+        super().__init__(None)
         self.alias = "Unauthenticated user"
         self.email = "nobody"
 

@@ -143,7 +143,7 @@ class Table:
         help: Optional[str] = None,  # pylint: disable=redefined-builtin
         css: Optional[str] = None,
     ):
-        super(Table, self).__init__()
+        super().__init__()
         self.next_func = lambda: None
         self.next_header: Optional[str] = None
 

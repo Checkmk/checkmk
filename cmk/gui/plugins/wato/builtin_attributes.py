@@ -761,7 +761,7 @@ class IPMICredentials(Alternative):
             ),
             IPMIParameters(),
         ]
-        super(IPMICredentials, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 @host_attribute_registry.register

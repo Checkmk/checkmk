@@ -60,7 +60,7 @@ class BackgroundJobAlreadyRunning(MKGeneralException):
 
 class BackgroundProcessInterface:
     def __init__(self, job_parameters: JobParameters) -> None:
-        super(BackgroundProcessInterface, self).__init__()
+        super().__init__()
         self._job_parameters = job_parameters
 
     def get_work_dir(self) -> str:
@@ -121,7 +121,7 @@ class BackgroundProcessInterface:
 
 class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
     def __init__(self, job_parameters: JobParameters) -> None:
-        super(BackgroundProcess, self).__init__(job_parameters)
+        super().__init__(job_parameters)
         self._jobstatus = self._job_parameters["jobstatus"]
         # TODO: Hand over the logger via arguments
         self._logger = cmk.gui.log.logger.getChild("background_process")
@@ -272,7 +272,7 @@ class BackgroundJob:
     job_prefix = "unnamed-job"
 
     def __init__(self, job_id: str, logger: Optional[logging.Logger] = None, **kwargs: Any) -> None:
-        super(BackgroundJob, self).__init__()
+        super().__init__()
         self._job_id = job_id
         self._job_base_dir = BackgroundJobDefines.base_dir
         self._job_initializiation_lock = os.path.join(self._job_base_dir, "job_initialization.lock")
@@ -531,7 +531,7 @@ class JobStatusStates:
 
 class JobStatus:
     def __init__(self, work_dir: str) -> None:
-        super(JobStatus, self).__init__()
+        super().__init__()
         self._work_dir = work_dir
         self._jobstatus_path = Path(work_dir) / BackgroundJobDefines.jobstatus_filename
 
@@ -602,7 +602,7 @@ class JobStatus:
 class BackgroundJobManager:
     def __init__(self, logger: logging.Logger) -> None:
         self._logger = logger.getChild("job_manager")
-        super(BackgroundJobManager, self).__init__()
+        super().__init__()
 
     def get_running_job_ids(self, job_class: Type[BackgroundJob]) -> List[JobId]:
         """Checks for running jobs in the jobs default basedir"""

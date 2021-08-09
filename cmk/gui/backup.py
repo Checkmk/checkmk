@@ -419,7 +419,7 @@ class Job(MKBackupJob, BackupEntity):
 
 class Jobs(BackupEntityCollection):
     def __init__(self, config_file_path):
-        super(Jobs, self).__init__(config_file_path, cls=Job, config_attr="jobs")
+        super().__init__(config_file_path, cls=Job, config_attr="jobs")
 
         etc_path = os.path.dirname(os.path.dirname(config_file_path))
         self._cronjob_path = "%s/cron.d/mkbackup" % etc_path
@@ -534,7 +534,7 @@ class Jobs(BackupEntityCollection):
         return jobs
 
     def save(self):
-        super(Jobs, self).save()
+        super().save()
         self.save_cronjobs()
 
     def save_cronjobs(self):
@@ -680,7 +680,7 @@ class PageBackup:
 
 class PageEditBackupJob:
     def __init__(self):
-        super(PageEditBackupJob, self).__init__()
+        super().__init__()
         job_ident = request.var("job")
 
         if job_ident is not None:
@@ -878,7 +878,7 @@ class PageEditBackupJob:
 
 class PageAbstractBackupJobState:
     def __init__(self):
-        super(PageAbstractBackupJobState, self).__init__()
+        super().__init__()
         self._job: Optional[MKBackupJob] = None
         self._ident: Optional[str] = None
 
@@ -956,7 +956,7 @@ class PageAbstractBackupJobState:
 
 class PageBackupJobState(PageAbstractBackupJobState):
     def __init__(self):
-        super(PageBackupJobState, self).__init__()
+        super().__init__()
         self._from_vars()
 
     def _from_vars(self):
@@ -1071,7 +1071,7 @@ class Target(BackupEntity):
 
 class Targets(BackupEntityCollection):
     def __init__(self, config_file_path):
-        super(Targets, self).__init__(config_file_path, cls=Target, config_attr="targets")
+        super().__init__(config_file_path, cls=Target, config_attr="targets")
 
     def show_list(self, title=None, editable=True):
         title = title if title else _("Targets")
@@ -1199,7 +1199,7 @@ class PageBackupTargets:
 
 class PageEditBackupTarget:
     def __init__(self):
-        super(PageEditBackupTarget, self).__init__()
+        super().__init__()
         target_ident = request.var("target")
 
         if target_ident is not None:
@@ -1316,12 +1316,12 @@ class PageEditBackupTarget:
 
 class SystemBackupTargetsReadOnly(Targets):
     def __init__(self):
-        super(SystemBackupTargetsReadOnly, self).__init__(system_config_path())
+        super().__init__(system_config_path())
 
     # Only show the list on CMA devices
     def show_list(self, title=None, editable=True):
         if cmk_version.is_cma():
-            super(SystemBackupTargetsReadOnly, self).show_list(title, editable)
+            super().show_list(title, editable)
 
 
 #.
@@ -1523,7 +1523,7 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
 
     def page(self):
         show_key_download_warning(self.keys)
-        super(PageBackupKeyManagement, self).page()
+        super().page()
 
     def _key_in_use(self, key_id, key):
         for job in self.jobs().objects.values():
@@ -1558,7 +1558,7 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
                  "passphrase to decrypt the backup.")
 
     def _generate_key(self, alias, passphrase):
-        key = super(PageBackupEditKey, self)._generate_key(alias, passphrase)
+        key = super()._generate_key(alias, passphrase)
         # Mark key as not downloaded yet to issue a warning to the user that the key
         # should be backed up. The warning is removed on first download.
         key["not_downloaded"] = True
@@ -1586,7 +1586,7 @@ class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
         return _("Download backup key")
 
     def _send_download(self, keys, key_id):
-        super(PageBackupDownloadKey, self)._send_download(keys, key_id)
+        super()._send_download(keys, key_id)
         if "not_downloaded" in keys[key_id]:
             del keys[key_id]["not_downloaded"]
         self.save(keys)
@@ -1621,7 +1621,7 @@ def show_key_download_warning(keys):
 
 class RestoreJob(MKBackupJob):
     def __init__(self, target_ident, backup_ident, passphrase=None):
-        super(RestoreJob, self).__init__()
+        super().__init__()
         self._target_ident = target_ident
         self._backup_ident = backup_ident
         self._passphrase = passphrase
@@ -1646,13 +1646,13 @@ class RestoreJob(MKBackupJob):
                 env = {}
             env.update(os.environ.copy())
             env["MKBACKUP_PASSPHRASE"] = self._passphrase
-        super(RestoreJob, self).start(env)
+        super().start(env)
 
 
 class PageBackupRestore:
     def __init__(self):
         self._load_target()
-        super(PageBackupRestore, self).__init__()
+        super().__init__()
 
     def keys(self):
         raise NotImplementedError()
@@ -1877,6 +1877,6 @@ class PageBackupRestore:
 
 class PageBackupRestoreState(PageAbstractBackupJobState):
     def __init__(self):
-        super(PageBackupRestoreState, self).__init__()
+        super().__init__()
         self._job = RestoreJob(None, None)  # TODO: target_ident and backup_ident needed?
         self._ident = "restore"

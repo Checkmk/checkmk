@@ -155,7 +155,7 @@ ColumnSpec = _Tuple[str, str, str, _Optional[str]]
 
 class AvailabilityColumns:
     def __init__(self) -> None:
-        super(AvailabilityColumns, self).__init__()
+        super().__init__()
         self.host = self._host_availability_columns()
         self.service = self._service_availability_columns()
         self.bi = self._bi_availability_columns()

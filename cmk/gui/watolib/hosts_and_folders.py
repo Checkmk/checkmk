@@ -14,7 +14,20 @@ import shutil
 import time
 import uuid
 from collections.abc import Mapping as ABCMapping
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Set, Tuple, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    TypedDict,
+    Union,
+)
 
 from livestatus import SiteId
 
@@ -24,7 +37,7 @@ from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import ContactgroupName, HostName
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -57,6 +70,7 @@ from cmk.gui.watolib.utils import (
     convert_cgroups_from_tuple,
     format_config_value,
     host_attribute_matches,
+    HostContactGroupSpec,
     rename_host_in_list,
     try_bake_agents_for_hosts,
     wato_root_dir,
@@ -68,7 +82,12 @@ if cmk_version.is_managed_edition():
 HostAttributes = Mapping[str, Any]
 HostsWithAttributes = Mapping[HostName, HostAttributes]
 AttributeType = Tuple[str, str, Dict[str, Any], str]  # host attr, cmk.base var name, value, title
-GroupRuleType = Dict[str, Dict[str, List[str]]]
+
+
+class GroupRuleType(TypedDict):
+    value: ContactgroupName
+    condition: Dict[str, List[str]]
+
 
 # Names:
 # folder_path: Path of the folders directory relative to etc/check_mk/conf.d/wato
@@ -472,14 +491,12 @@ class ABCHostsStorage(abc.ABC):
     def write(self, filename: str) -> None:
         raise NotImplementedError()
 
-    def save_group_rules_list(self, group_rules_list: List[Tuple[List[GroupRuleType],
-                                                                 Optional[bool]]]):
+    def save_group_rules_list(self, group_rules_list: List[Tuple[List[GroupRuleType], bool]]):
         for group_rules, use_for_service in group_rules_list:
             self._save_group_rules(group_rules, use_for_service)
 
     @abc.abstractmethod
-    def _save_group_rules(self, group_rules: List[GroupRuleType],
-                          use_for_services: Optional[bool]) -> None:
+    def _save_group_rules(self, group_rules: List[GroupRuleType], use_for_services: bool) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -543,8 +560,7 @@ class StandardHostsStorage(ABCHumanReadableHostStorage):
         super().__init__()
         self.save(wato_fileheader())
 
-    def _save_group_rules(self, group_rules: List[GroupRuleType],
-                          use_for_services: Optional[bool]) -> None:
+    def _save_group_rules(self, group_rules: List[GroupRuleType], use_for_services: bool) -> None:
         self.save("\nhost_contactgroups += %s\n\n" % format_config_value(group_rules))
 
         if use_for_services:
@@ -626,8 +642,7 @@ class RawHostsStorage(ABCHumanReadableHostStorage):
         self.save("}\n")
         store.save_text_to_file(filename + ".cfg", self.getvalue())
 
-    def _save_group_rules(self, group_rules: List[GroupRuleType],
-                          use_for_services: Optional[bool]) -> None:
+    def _save_group_rules(self, group_rules: List[GroupRuleType], use_for_services: bool) -> None:
         self.save("    'host_contactgroups': %s,\n" % format_config_value(group_rules))
 
         if use_for_services:
@@ -1091,7 +1106,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         cleaned_hosts = {}
         host_tags = {}
         host_labels = {}
-        group_rules_list: List[Tuple[List[GroupRuleType], Optional[bool]]] = []
+        group_rules_list: List[Tuple[List[GroupRuleType], bool]] = []
 
         attribute_mappings: List[AttributeType] = [
             # host attr, cmk.base variable name, value, title
@@ -1149,7 +1164,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 cgconfig = convert_cgroups_from_tuple(host.attribute("contactgroups"))
                 cgs = cgconfig["groups"]
                 if cgs and cgconfig["use"]:
-                    group_rules = []
+                    group_rules: List[GroupRuleType] = []
                     for cg in cgs:
                         group_rules.append({
                             "value": cg,
@@ -1157,7 +1172,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                                 "host_name": [hostname]
                             },
                         })
-                    group_rules_list.append((group_rules, cgconfig.get("use_for_services")))
+                    group_rules_list.append((group_rules, cgconfig["use_for_services"]))
 
             for attr in host_attribute_registry.attributes():
                 attrname = attr.name()
@@ -1553,7 +1568,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             effective_folder_attributes = host.effective_attributes()
         else:
             effective_folder_attributes = self.effective_attributes()
-        cgconf = self._get_cgconf_from_attributes(effective_folder_attributes)
+        cgconf = _get_cgconf_from_attributes(effective_folder_attributes)
 
         # First set explicit groups
         permitted_groups.update(cgconf["groups"])
@@ -1567,7 +1582,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         while parent:
             effective_folder_attributes = parent.effective_attributes()
-            parconf = self._get_cgconf_from_attributes(effective_folder_attributes)
+            parconf = _get_cgconf_from_attributes(effective_folder_attributes)
             parent_permitted_groups, parent_host_contact_groups, _parent_use_for_services = parent.groups(
             )
 
@@ -1993,8 +2008,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self.need_unlocked()
 
         # For changing contact groups user needs write permission on parent folder
-        if self._get_cgconf_from_attributes(new_attributes) != \
-           self._get_cgconf_from_attributes(self.attributes()):
+        if _get_cgconf_from_attributes(new_attributes) != \
+           _get_cgconf_from_attributes(self.attributes()):
             must_be_in_contactgroups(self.attributes().get("contactgroups"))
             if self.has_parent():
                 if not self.parent().may("write"):
@@ -2031,11 +2046,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                                             make_folder_audit_log_object(self._attributes)))
         self._clear_id_cache()
 
-    def _get_cgconf_from_attributes(self, attributes):
-        v = attributes.get("contactgroups", (False, []))
-        cgconf = convert_cgroups_from_tuple(v)
-        return cgconf
-
     def prepare_create_hosts(self):
         user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
@@ -2071,7 +2081,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # MKAuthException, MKUserError
         must_be_in_contactgroups(attributes.get("contactgroups"))
         validate_host_uniqueness("host", name)
-        _attributes = update_metadata(attributes, created_by=user.id)
+        update_metadata(attributes, created_by=user.id)
 
     def propagate_hosts_changes(self, host_name, attributes, cluster_nodes):
         host = Host(self, host_name, attributes, cluster_nodes)
@@ -2305,6 +2315,11 @@ def validate_host_uniqueness(varname, host_name):
             _('A host with the name <b><tt>%s</tt></b> already '
               'exists in the folder <a href="%s">%s</a>.') %
             (host_name, host.folder().url(), host.folder().alias_path()))
+
+
+def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupSpec:
+    v = attributes.get("contactgroups", (False, []))
+    return convert_cgroups_from_tuple(v)
 
 
 class SearchFolder(WithPermissions, WithAttributes, BaseFolder):

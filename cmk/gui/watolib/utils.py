@@ -8,14 +8,14 @@ import ast
 import base64
 import pprint
 import re
-from typing import Any, List, Union
+from typing import Any, List, Tuple, TypedDict, Union
 
 from six import ensure_binary, ensure_str
 
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import ContactgroupName, HostName
 from cmk.utils.werks import parse_check_mk_version
 
 from cmk.gui.background_job import BackgroundJobAlreadyRunning
@@ -57,16 +57,31 @@ def rename_host_in_list(thelist, oldname, newname):
     return did_rename
 
 
-# Convert old tuple representation to new dict representation of
-# folder's group settings
+class HostContactGroupSpec(TypedDict):
+    groups: List[ContactgroupName]
+    recurse_perms: bool
+    use: bool
+    use_for_services: bool
+    recurse_use: bool
+
+
+LegacyContactGroupSpec = Tuple[bool, List[ContactgroupName]]
+
+
 # TODO: Find a better place later
-def convert_cgroups_from_tuple(value):
+def convert_cgroups_from_tuple(
+        value: Union[HostContactGroupSpec, LegacyContactGroupSpec]) -> HostContactGroupSpec:
+    """Convert old tuple representation to new dict representation of folder's group settings"""
     if isinstance(value, dict):
         if "use_for_services" in value:
             return value
-        new_value = value.copy()
-        new_value.update({"use_for_services": False})
-        return new_value
+        return {
+            "groups": value["groups"],
+            "recurse_perms": value["recurse_perms"],
+            "use": value["use"],
+            "use_for_services": False,
+            "recurse_use": value["recurse_use"],
+        }
 
     return {
         "groups": value[1],

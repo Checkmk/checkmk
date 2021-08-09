@@ -53,14 +53,6 @@ def check_result(
     show_perfdata: bool,
 ) -> None:
     state, infotext, perfdata = result
-    # make sure that plugin output does not contain a vertical bar. If that is the
-    # case then replace it with a Uniocode "Light vertical bar"
-    if isinstance(infotext, str):
-        # regular check results are unicode...
-        infotext = infotext.replace(u"|", u"\u2758")
-    else:
-        # ...crash dumps, and hard-coded outputs are regular strings
-        infotext = infotext.replace("|", u"\u2758".encode("utf8"))
 
     perftexts = [_convert_perf_data(p) for p in perfdata]
     if perftexts:
@@ -72,7 +64,10 @@ def check_result(
         perftext = ""
 
     if not dry_run:
-        _do_submit_to_core(host_name, service_name, state, infotext + perftext, cache_info)
+        # make sure that plugin output does not contain a vertical bar. If that is the
+        # case then replace it with a Uniocode "Light vertical bar"
+        _do_submit_to_core(host_name, service_name, state,
+                           infotext.replace("|", "\u2758") + perftext, cache_info)
 
     _output_check_result(service_name, state, infotext, perftexts, show_perfdata=show_perfdata)
 

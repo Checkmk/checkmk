@@ -22,7 +22,7 @@ DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
 
 class ABCDiscoveredLabels(MutableMapping, metaclass=abc.ABCMeta):
     def __init__(self, *args: 'ABCLabel') -> None:
-        super(ABCDiscoveredLabels, self).__init__()
+        super().__init__()
         self._labels: Dict[str, Any] = {}
         for entry in args:
             self.add_label(entry)
@@ -70,7 +70,7 @@ class DiscoveredHostLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-anc
 
     def __init__(self, *args: 'HostLabel') -> None:
         self._labels: Dict[str, HostLabel] = {}
-        super(DiscoveredHostLabels, self).__init__(*args)
+        super().__init__(*args)
 
     def add_label(self, label: 'ABCLabel') -> None:
         assert isinstance(label, HostLabel)
@@ -166,7 +166,7 @@ class HostLabel(ABCLabel):
         value: str,
         plugin_name: Optional[SectionName] = None,
     ) -> None:
-        super(HostLabel, self).__init__(name, value)
+        super().__init__(name, value)
         self._plugin_name = plugin_name
 
     @property
@@ -197,7 +197,7 @@ class DiscoveredServiceLabels(ABCDiscoveredLabels):  # pylint: disable=too-many-
     def __init__(self, *args: ServiceLabel) -> None:
         # TODO: Make self._labels also store ServiceLabel objects just like DiscoveredHostLabels
         self._labels: Labels = {}
-        super(DiscoveredServiceLabels, self).__init__(*args)
+        super().__init__(*args)
 
     def add_label(self, label: ABCLabel) -> None:
         assert isinstance(label, ServiceLabel)

@@ -107,7 +107,7 @@ class NagiosCore(core_config.MonitoringCore):
 
 class NagiosConfig:
     def __init__(self, outfile: IO[str], hostnames: Optional[List[HostName]]) -> None:
-        super(NagiosConfig, self).__init__()
+        super().__init__()
         self._outfile = outfile
         self.hostnames = hostnames
 

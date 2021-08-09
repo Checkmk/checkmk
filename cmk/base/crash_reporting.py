@@ -42,7 +42,7 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
             cls,
             details: Optional[Dict] = None,
             type_specific_attributes: Optional[Dict] = None) -> crash_reporting.ABCCrashReport:
-        return super(CMKBaseCrashReport, cls).from_exception(details={
+        return super().from_exception(details={
             "argv": sys.argv,
             "env": dict(os.environ),
         })
@@ -166,13 +166,13 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                  crash_info: Dict,
                  snmp_info: Optional[bytes] = None,
                  agent_output: Optional[bytes] = None) -> None:
-        super(CheckCrashReport, self).__init__(crash_info)
+        super().__init__(crash_info)
         self.snmp_info = snmp_info
         self.agent_output = agent_output
 
     def _serialize_attributes(self) -> Dict:
         """Serialize object type specific attributes for transport"""
-        attributes = super(CheckCrashReport, self)._serialize_attributes()
+        attributes = super()._serialize_attributes()
 
         for key, val in [
             ("snmp_info", self.snmp_info),

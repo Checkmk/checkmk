@@ -38,7 +38,7 @@ class AutochecksManager:
     Autochecks of a host are once read and cached for the whole lifetime of the
     AutochecksManager."""
     def __init__(self) -> None:
-        super(AutochecksManager, self).__init__()
+        super().__init__()
         self._autochecks: Dict[HostName, List[Service]] = {}
         # Extract of the autochecks: This cache is populated either on the way while
         # processing get_autochecks_of() or when directly calling discovered_labels_of().

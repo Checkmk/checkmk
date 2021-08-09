@@ -309,7 +309,7 @@ def _perform_post_config_loading_actions() -> None:
 class SetFolderPathAbstract:
     def __init__(self, the_object: Iterable) -> None:
         # TODO: Cleanup this somehow to work nicer with mypy
-        super(SetFolderPathAbstract, self).__init__(the_object)  # type: ignore[call-arg]
+        super().__init__(the_object)  # type: ignore[call-arg]
         self._current_path: Optional[str] = None
 
     def set_current_path(self, current_path: Optional[str]) -> None:
@@ -326,18 +326,18 @@ class SetFolderPathList(SetFolderPathAbstract, list):
     def __iadd__(self, new_hosts: Iterable[Any]) -> 'SetFolderPathList':
         assert isinstance(new_hosts, list)
         self._set_folder_paths(new_hosts)
-        return super(SetFolderPathList, self).__iadd__(new_hosts)
+        return super().__iadd__(new_hosts)
 
     # Probably unused
     def __add__(self, new_hosts: Iterable[Any]) -> 'SetFolderPathList':
         assert isinstance(new_hosts, list)
         self._set_folder_paths(new_hosts)
-        return SetFolderPathList(super(SetFolderPathList, self).__add__(new_hosts))
+        return SetFolderPathList(super().__add__(new_hosts))
 
     # Probably unused
     def append(self, new_host: str) -> None:
         self._set_folder_paths([new_host])
-        super(SetFolderPathList, self).append(new_host)
+        super().append(new_host)
 
 
 class SetFolderPathDict(SetFolderPathAbstract, dict):
@@ -345,12 +345,12 @@ class SetFolderPathDict(SetFolderPathAbstract, dict):
     def update(self, new_hosts):
         # not-yet-a-type
         self._set_folder_paths(new_hosts)
-        return super(SetFolderPathDict, self).update(new_hosts)
+        return super().update(new_hosts)
 
     # Probably unused
     def __setitem__(self, cluster_name: Any, value: Any) -> Any:
         self._set_folder_paths([cluster_name])
-        return super(SetFolderPathDict, self).__setitem__(cluster_name, value)
+        return super().__setitem__(cluster_name, value)
 
 
 def cleanup_fs_used_marker_flag(log):
@@ -2309,7 +2309,7 @@ def _get_checkgroup_parameters(config_cache: 'ConfigCache', host: HostName, chec
 
 class HostConfig:
     def __init__(self, config_cache: 'ConfigCache', hostname: HostName) -> None:
-        super(HostConfig, self).__init__()
+        super().__init__()
         self.hostname = hostname
 
         self._config_cache = config_cache
@@ -3248,7 +3248,7 @@ def lookup_ip_address(
 # Wouldn't it be better to make them part of HostConfig?
 class ConfigCache:
     def __init__(self) -> None:
-        super(ConfigCache, self).__init__()
+        super().__init__()
         self._initialize_caches()
 
     def initialize(self) -> None:

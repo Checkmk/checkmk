@@ -343,7 +343,7 @@ class AutomationRenameHosts(Automation):
     needs_checks = True
 
     def __init__(self) -> None:
-        super(AutomationRenameHosts, self).__init__()
+        super().__init__()
         self._finished_history_files: Dict[HistoryFilePair, List[HistoryFile]] = {}
 
     # WATO calls this automation when hosts have been renamed. We need to change

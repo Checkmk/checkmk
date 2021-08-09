@@ -853,14 +853,18 @@ table.timeline {
   }
 }
 
+div.sla_timerange {
+  width: $timerange-width;
+}
+
 div.timelinerange {
   position: relative;
   float: none;
-  width: 800px;
+  width: $timerange-width;
 
   div {
     float: left;
-    width: 300px;
+    width: ($timerange-width * 0.5);
 
     /* We render the small vertical lines in a way that only
        the left border is visible but the thing is thick 5 pixels.

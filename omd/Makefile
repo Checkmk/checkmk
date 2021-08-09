@@ -36,7 +36,7 @@ PACKAGES := \
     lasso \
     mod_auth_mellon \
     mod_fcgid \
-    python3-mod_wsgi \
+    mod_wsgi \
     check_mk \
     check_mysql_health \
     check_oracle_health \

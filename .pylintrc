@@ -144,7 +144,7 @@ disable=
     raise-missing-from,
     #---------------------------------------------------------------------------
     # Many occurences of this one, to be fixed
-    super-with-arguments,
+    #super-with-arguments,
     #---------------------------------------------------------------------------
     # To be evaluated
     wrong-import-order,

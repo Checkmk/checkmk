@@ -21,11 +21,20 @@
 #/dev/sda ATA WDC_SSC-D0128SC- 240 Head_Flying_Hours       0x0013   100   100   050    Pre-fail  Always       -       0
 #/dev/sda ATA WDC_SSC-D0128SC- 170 Unknown_Attribute       0x0003   100   100   010    Pre-fail  Always       -       1769478
 #/dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
-
+import time
 from typing import Any, Callable, Dict, Final, Mapping, Tuple
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
-from .agent_based_api.v1 import Metric, register, render, Result, State, Service
+from .agent_based_api.v1 import (
+    Metric,
+    register,
+    render,
+    Result,
+    State,
+    Service,
+    get_value_store,
+    get_rate,
+)
 
 # TODO: Need to completely rework smart check. Use IDs instead of changing
 # descriptions! But be careful: There is no standard neither for IDs nor for
@@ -34,6 +43,12 @@ from .agent_based_api.v1 import Metric, register, render, Result, State, Service
 Disk = Dict[str, int]
 
 Section = Dict[str, Disk]
+
+# The command timeouts is a counter and we experienced that on some devices, it will already be
+# increased by one count after a simple reboot. In a faulty situation it will however increase in
+# much larger steps (100 or 1000). So we accept any rate below 100 counts per hour.
+# See CMK-7684
+MAX_COMMAND_TIMEOUTS_PER_HOUR = 100
 
 
 def _set_int_or_zero(disk: Disk, key: str, value: Any) -> None:
@@ -181,7 +196,7 @@ OUTPUT_FIELDS: Tuple[Tuple[Callable[[State, str], Result], str, str, Callable], 
     (_summary, 'Reallocated_Event_Count', 'Reallocated events', str),
     (_summary, 'Spin_Retry_Count', 'Spin retries', str),
     (_summary, 'Current_Pending_Sector', 'Pending sectors', str),
-    (_summary, 'Command_Timeout', 'Command timeouts', str),
+    (_summary, 'Command_Timeout', 'Command timeout counter', str),
     (_summary, 'End-to-End_Error', 'End-to-End errors', str),
     (_summary, 'UDMA_CRC_Error_Count', 'UDMA CRC errors', str),
     (_summary, 'CRC_Error_Count', 'UDMA CRC errors', str),
@@ -242,6 +257,14 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
             if norm_value <= norm_threshold:
                 state = State.CRIT
                 hints[-1] += " (!!)"
+
+        if field == "Command_Timeout":
+            rate = get_rate(get_value_store(), "cmd_timeout", time.time(), value)
+            state = State.OK if rate < MAX_COMMAND_TIMEOUTS_PER_HOUR / (60 * 60) else State.CRIT
+            hints = [] if state == State.OK else [
+                f"counter increased more than {MAX_COMMAND_TIMEOUTS_PER_HOUR} counts / h (!!). "
+                f"Value during discovery was: {ref_value}"
+            ]
 
         yield make_result(state, infotext + " (%s)" % ', '.join(hints) if hints else infotext)
         yield Metric(field, value)

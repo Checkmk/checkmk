@@ -4,159 +4,173 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# yapf: disable
 # type: ignore
 
 import pytest  # type: ignore[import]
 
 from cmk.base.plugins.agent_based import smart
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    Metric,
+    Result,
+    Service,
+    State,
+    GetRateError,
+)
+from testlib import get_value_store_fixture, on_time
 
-
+value_store_fixture = get_value_store_fixture(smart)
 STRING_TABLE_SD = [
     [
         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'5', u'Reallocated_Sector_Ct', u'0x0033', u'100',
         u'100', u'010', u'Pre-fail', u'Always', u'-', u'0'
     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'9', u'Power_On_Hours', u'0x0032', u'099',
-         u'099', u'000', u'Old_age', u'Always', u'-', u'1609'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'12', u'Power_Cycle_Count', u'0x0032', u'099',
-         u'099', u'000', u'Old_age', u'Always', u'-', u'9'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'177', u'Wear_Leveling_Count', u'0x0013',
-         u'099', u'099', u'005', u'Pre-fail', u'Always', u'-', u'1'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'179', u'Used_Rsvd_Blk_Cnt_Tot', u'0x0013',
-         u'100', u'100', u'010', u'Pre-fail', u'Always', u'-', u'0'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'180', u'Unused_Rsvd_Blk_Cnt_Tot', u'0x0013',
-         u'100', u'100', u'010', u'Pre-fail', u'Always', u'-', u'13127'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'181', u'Program_Fail_Cnt_Total', u'0x0032',
-         u'100', u'100', u'010', u'Old_age', u'Always', u'-', u'0'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'182', u'Erase_Fail_Count_Total', u'0x0032',
-         u'100', u'100', u'010', u'Old_age', u'Always', u'-', u'0'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'183', u'Runtime_Bad_Block', u'0x0013', u'100',
-         u'100', u'010', u'Pre-fail', u'Always', u'-', u'0'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'184', u'End-to-End_Error', u'0x0033', u'100',
-         u'100', u'097', u'Pre-fail', u'Always', u'-', u'0'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'187', u'Reported_Uncorrect', u'0x0032', u'100',
-         u'100', u'000', u'Old_age', u'Always', u'-', u'0'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'194', u'Temperature_Celsius', u'0x0022',
-         u'061', u'052', u'000', u'Old_age', u'Always', u'-', u'39', u'(Min/Max', u'31/49)'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'195', u'Hardware_ECC_Recovered', u'0x001a',
-         u'200', u'200', u'000', u'Old_age', u'Always', u'-', u'0'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'197', u'Current_Pending_Sector', u'0x0032',
-         u'100', u'100', u'000', u'Old_age', u'Always', u'-', u'0'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'199', u'UDMA_CRC_Error_Count', u'0x003e',
-         u'100', u'100', u'000', u'Old_age', u'Always', u'-', u'0'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'202', u'Unknown_SSD_Attribute', u'0x0033',
-         u'100', u'100', u'010', u'Pre-fail', u'Always', u'-', u'0'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'235', u'Unknown_Attribute', u'0x0012', u'099',
-         u'099', u'000', u'Old_age', u'Always', u'-', u'5'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'241', u'Total_LBAs_Written', u'0x0032', u'099',
-         u'099', u'000', u'Old_age', u'Always', u'-', u'7655764477'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'242', u'Total_LBAs_Read', u'0x0032', u'099',
-         u'099', u'000', u'Old_age', u'Always', u'-', u'10967739912'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'243', u'Unknown_Attribute', u'0x0032', u'100',
-         u'100', u'000', u'Old_age', u'Always', u'-', u'0'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'244', u'Unknown_Attribute', u'0x0032', u'100',
-         u'100', u'000', u'Old_age', u'Always', u'-', u'0'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'245', u'Unknown_Attribute', u'0x0032', u'100',
-         u'100', u'000', u'Old_age', u'Always', u'-', u'65535'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'246', u'Unknown_Attribute', u'0x0032', u'100',
-         u'100', u'000', u'Old_age', u'Always', u'-', u'65535'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'247', u'Unknown_Attribute', u'0x0032', u'100',
-         u'100', u'000', u'Old_age', u'Always', u'-', u'65535'
-     ],
-     [
-         u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'251', u'Unknown_Attribute', u'0x0032', u'100',
-         u'100', u'000', u'Old_age', u'Always', u'-', u'14938006528'
-     ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'9', u'Power_On_Hours', u'0x0032', u'099',
+        u'099', u'000', u'Old_age', u'Always', u'-', u'1609'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'12', u'Power_Cycle_Count', u'0x0032', u'099',
+        u'099', u'000', u'Old_age', u'Always', u'-', u'9'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'177', u'Wear_Leveling_Count', u'0x0013', u'099',
+        u'099', u'005', u'Pre-fail', u'Always', u'-', u'1'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'179', u'Used_Rsvd_Blk_Cnt_Tot', u'0x0013',
+        u'100', u'100', u'010', u'Pre-fail', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'180', u'Unused_Rsvd_Blk_Cnt_Tot', u'0x0013',
+        u'100', u'100', u'010', u'Pre-fail', u'Always', u'-', u'13127'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'181', u'Program_Fail_Cnt_Total', u'0x0032',
+        u'100', u'100', u'010', u'Old_age', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'182', u'Erase_Fail_Count_Total', u'0x0032',
+        u'100', u'100', u'010', u'Old_age', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'183', u'Runtime_Bad_Block', u'0x0013', u'100',
+        u'100', u'010', u'Pre-fail', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'184', u'End-to-End_Error', u'0x0033', u'100',
+        u'100', u'097', u'Pre-fail', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'187', u'Reported_Uncorrect', u'0x0032', u'100',
+        u'100', u'000', u'Old_age', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'188', u'Command_Timeout', u'0x0032', u'100',
+        u'100', u'000', u'Old_age', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'194', u'Temperature_Celsius', u'0x0022', u'061',
+        u'052', u'000', u'Old_age', u'Always', u'-', u'39', u'(Min/Max', u'31/49)'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'195', u'Hardware_ECC_Recovered', u'0x001a',
+        u'200', u'200', u'000', u'Old_age', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'197', u'Current_Pending_Sector', u'0x0032',
+        u'100', u'100', u'000', u'Old_age', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'199', u'UDMA_CRC_Error_Count', u'0x003e',
+        u'100', u'100', u'000', u'Old_age', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'202', u'Unknown_SSD_Attribute', u'0x0033',
+        u'100', u'100', u'010', u'Pre-fail', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'235', u'Unknown_Attribute', u'0x0012', u'099',
+        u'099', u'000', u'Old_age', u'Always', u'-', u'5'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'241', u'Total_LBAs_Written', u'0x0032', u'099',
+        u'099', u'000', u'Old_age', u'Always', u'-', u'7655764477'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'242', u'Total_LBAs_Read', u'0x0032', u'099',
+        u'099', u'000', u'Old_age', u'Always', u'-', u'10967739912'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'243', u'Unknown_Attribute', u'0x0032', u'100',
+        u'100', u'000', u'Old_age', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'244', u'Unknown_Attribute', u'0x0032', u'100',
+        u'100', u'000', u'Old_age', u'Always', u'-', u'0'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'245', u'Unknown_Attribute', u'0x0032', u'100',
+        u'100', u'000', u'Old_age', u'Always', u'-', u'65535'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'246', u'Unknown_Attribute', u'0x0032', u'100',
+        u'100', u'000', u'Old_age', u'Always', u'-', u'65535'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'247', u'Unknown_Attribute', u'0x0032', u'100',
+        u'100', u'000', u'Old_age', u'Always', u'-', u'65535'
+    ],
+    [
+        u'/dev/sda', u'ATA', u'SAMSUNG_MZ7LM3T8', u'251', u'Unknown_Attribute', u'0x0032', u'100',
+        u'100', u'000', u'Old_age', u'Always', u'-', u'14938006528'
+    ],
 ]
 
 STRING_TABLE_NVME = [
     [u'/dev/nvme0n1', u'NVME', u'SAMSUNG_MZQLW960HMJP-00003'],
-    [u'Critical', u'Warning:', u'0x00'], [u'Temperature:', u'39', u'Celsius'],
-    [u'Available', u'Spare:', u'100%'], [u'Available', u'Spare', u'Threshold:', u'10%'],
+    [u'Critical', u'Warning:', u'0x00'],
+    [u'Temperature:', u'39', u'Celsius'],
+    [u'Available', u'Spare:', u'100%'],
+    [u'Available', u'Spare', u'Threshold:', u'10%'],
     [u'Percentage', u'Used:', u'0%'],
     [u'Data', u'Units', u'Read:', u'5.125.696', u'[2,62', u'TB]'],
     [u'Data', u'Units', u'Written:', u'4.566.369', u'[2,33', u'TB]'],
     [u'Host', u'Read', u'Commands:', u'544.752.409'],
-    [u'Host', u'Write', u'Commands:', u'113.831.833'], [u'Controller', u'Busy', u'Time:', u'221'],
-    [u'Power', u'Cycles:', u'8'], [u'Power', u'On', u'Hours:', u'1.609'],
-    [u'Unsafe', u'Shutdowns:', u'5'], [u'Media', u'and', u'Data', u'Integrity', u'Errors:', u'0'],
+    [u'Host', u'Write', u'Commands:', u'113.831.833'],
+    [u'Controller', u'Busy', u'Time:', u'221'],
+    [u'Power', u'Cycles:', u'8'],
+    [u'Power', u'On', u'Hours:', u'1.609'],
+    [u'Unsafe', u'Shutdowns:', u'5'],
+    [u'Media', u'and', u'Data', u'Integrity', u'Errors:', u'0'],
     [u'Error', u'Information', u'Log', u'Entries:', u'0'],
     [u'Warning', u'Comp.', u'Temperature', u'Time:', u'0'],
     [u'Critical', u'Comp.', u'Temperature', u'Time:', u'0'],
     [u'Temperature', u'Sensor', u'1:', u'39', u'Celsius'],
 ]
 
-
 SECTION_SD = {
     '/dev/sda': {
+        'Command_Timeout': 0,
         'Current_Pending_Sector': 0,
-         'End-to-End_Error': 0,
-         'Erase_Fail_Count_Total': 0,
-         'Hardware_ECC_Recovered': 0,
-         'Power_Cycle_Count': 9,
-         'Power_On_Hours': 1609,
-         'Program_Fail_Cnt_Total': 0,
-         'Reallocated_Sector_Ct': 0,
-         'Reported_Uncorrect': 0,
-         'Runtime_Bad_Block': 0,
-         'Temperature_Celsius': 39,
-         'Total_LBAs_Read': 10967739912,
-         'Total_LBAs_Written': 7655764477,
-         'UDMA_CRC_Error_Count': 0,
-         'Unknown_SSD_Attribute': 0,
-         'Unused_Rsvd_Blk_Cnt_Tot': 13127,
-         'Used_Rsvd_Blk_Cnt_Tot': 0,
-         'Wear_Leveling_Count': 1
+        'End-to-End_Error': 0,
+        'Erase_Fail_Count_Total': 0,
+        'Hardware_ECC_Recovered': 0,
+        'Power_Cycle_Count': 9,
+        'Power_On_Hours': 1609,
+        'Program_Fail_Cnt_Total': 0,
+        'Reallocated_Sector_Ct': 0,
+        'Reported_Uncorrect': 0,
+        'Runtime_Bad_Block': 0,
+        'Temperature_Celsius': 39,
+        'Total_LBAs_Read': 10967739912,
+        'Total_LBAs_Written': 7655764477,
+        'UDMA_CRC_Error_Count': 0,
+        'Unknown_SSD_Attribute': 0,
+        'Unused_Rsvd_Blk_Cnt_Tot': 13127,
+        'Used_Rsvd_Blk_Cnt_Tot': 0,
+        'Wear_Leveling_Count': 1
     },
 }
-
 
 SECTION_NVME = {
     '/dev/nvme0n1': {
@@ -182,10 +196,8 @@ SECTION_NVME = {
 }
 
 
-@pytest.mark.parametrize("string_table, section", [
-    (STRING_TABLE_SD, SECTION_SD),
-    (STRING_TABLE_NVME, SECTION_NVME)
-])
+@pytest.mark.parametrize("string_table, section", [(STRING_TABLE_SD, SECTION_SD),
+                                                   (STRING_TABLE_NVME, SECTION_NVME)])
 def test_parse_smart(string_table, section):
     assert smart.parse_raw_values(string_table) == section
 
@@ -195,6 +207,7 @@ def test_parse_smart(string_table, section):
         Service(
             item='/dev/sda',
             parameters={
+                'Command_Timeout': 0,
                 'Current_Pending_Sector': 0,
                 'End-to-End_Error': 0,
                 'Reallocated_Sector_Ct': 0,
@@ -234,12 +247,16 @@ def test_discover_smart_stats(section, discovered):
         Metric('Reallocated_Sector_Ct', 0),
         Result(state=State.OK, summary='Pending sectors: 0'),
         Metric('Current_Pending_Sector', 0),
+        Result(state=State.OK, summary='Command timeout counter: 0'),
+        Metric('Command_Timeout', 0.0),
         Result(state=State.OK, summary='End-to-End errors: 0'),
         Metric('End-to-End_Error', 0),
         Result(state=State.OK, summary='UDMA CRC errors: 0'),
         Metric('UDMA_CRC_Error_Count', 0),
     ]),
-    ("/dev/nvme0n1", {'Critical_Warning': 0}, SECTION_NVME, [
+    ("/dev/nvme0n1", {
+        'Critical_Warning': 0
+    }, SECTION_NVME, [
         Result(state=State.OK, summary='Powered on: 67 days 1 hour'),
         Metric('Power_On_Hours', 1609),
         Result(state=State.OK, summary='Power cycles: 8'),
@@ -262,3 +279,34 @@ def test_discover_smart_stats(section, discovered):
 ])
 def test_check_smart_stats(item, params, section, result):
     assert list(smart.check_smart_stats(item, params, section)) == result
+
+
+def test_check_smart_command_timeout_rate(value_store):
+    section_timeout = {'/dev/sda': {'Command_Timeout': 0}}
+    now_simulated = 581792400, "UTC"
+    with pytest.raises(GetRateError), on_time(*now_simulated):
+        list(smart.check_smart_stats("/dev/sda", {"Command_Timeout": 0}, section_timeout))
+
+    # Simulate an accepted increment rate of the counter
+    thirty_min_later = now_simulated[0] + 30 * 60, "UTC"
+    section_timeout['/dev/sda']['Command_Timeout'] = 1
+    with on_time(*thirty_min_later):
+        assert list(smart.check_smart_stats("/dev/sda", {"Command_Timeout": 0},
+                                            section_timeout)) == [
+                                                Result(state=State.OK,
+                                                       summary='Command timeout counter: 1'),
+                                                Metric('Command_Timeout', 1.0)
+                                            ]
+
+    # Simulate an exceeding rate for command timeouts
+    ten_sec_later = thirty_min_later[0] + 10, "UTC"
+    section_timeout['/dev/sda']['Command_Timeout'] = 5
+    with on_time(*ten_sec_later):
+        assert list(smart.check_smart_stats(
+            "/dev/sda", {"Command_Timeout": 0}, section_timeout)) == [
+                Result(state=State.CRIT,
+                       summary=('Command timeout counter: 5 '
+                                '(counter increased more than 100 counts / h (!!). '
+                                'Value during discovery was: 0)')),
+                Metric('Command_Timeout', 5)
+            ]

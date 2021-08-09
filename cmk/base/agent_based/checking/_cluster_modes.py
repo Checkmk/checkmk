@@ -21,7 +21,7 @@ from typing import (
     Union,
 )
 
-from cmk.utils.type_defs import ClusterMode, state_markers as STATE_MARKERS
+from cmk.utils.type_defs import ClusterMode, state_markers
 
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
@@ -202,7 +202,7 @@ class Summarizer:
         yield from (Result(
             state=State.OK,
             notice=r.summary,
-            details=f"{r.details}{STATE_MARKERS[int(r.state)]}",
+            details=f"{r.details}{state_markers[int(r.state)]}",
         ) for node in secondary_nodes for r in self._node_results.results[node])
 
     @staticmethod

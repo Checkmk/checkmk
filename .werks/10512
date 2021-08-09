@@ -6,7 +6,7 @@ Date: 1574755610
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 There has been a regression in werk #10359. This werk changed accidentally
 the check for the oracle version in the tablespace section. This is now

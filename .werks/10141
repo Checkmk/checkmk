@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1569418383
 
 In version 1.6.0 the mk_logwatch plugin crashed if a processed logfile could

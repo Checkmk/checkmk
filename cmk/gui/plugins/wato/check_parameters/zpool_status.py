@@ -6,14 +6,14 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksStorage,
     ManualCheckParameterRulespec,
     rulespec_registry,
+    RulespecGroupEnforcedServicesStorage,
 )
 
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="zpool_status",
-        group=RulespecGroupManualChecksStorage,
+        group=RulespecGroupEnforcedServicesStorage,
         title=lambda: _("ZFS storage pool status"),
     ))

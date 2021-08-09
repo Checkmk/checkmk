@@ -1,1 +1,1 @@
-{'networking': {'addresses': [{'device': u'lo', 'type': 'ipv4 asdasd', }, {'device': u'wlp3s0', 'type': 'ipv4', 'address': u'10.3.1.225'}, {'device': u'wlp3s0 asdasd', 'type': 'ipv6', 'address': u'fe80::aebc:32ff:fe95:8ac1'}]}}
+{'networking': {'addresses': [{'device': 'lo', 'type': 'ipv4 asdasd'}, {'device': 'wlp3s0', 'type': 'ipv4', 'address': '10.3.1.225'}, {'device': 'wlp3s0 asdasd', 'type': 'ipv6', 'address': 'fe80::aebc:32ff:fe95:8ac1'}]}}

@@ -1,0 +1,14 @@
+Title: Fix crash in Rittal CMC III temperature check
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1612169271
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Some entries (such as the ones for the blue LED) do not report their
+temperatures.  However, the missing temperature would crash the check.
+
+<b>Note:</b> The device must be rediscovered.

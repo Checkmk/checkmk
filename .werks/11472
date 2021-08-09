@@ -1,0 +1,32 @@
+Title: Added agent based discovery of host labels
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1599643213
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+All agents now support the automatic discovery of the following host labels:
+
+<table>
+<tr><th>Agent</th><th>Host label</th></tr>
+<tr> <td>AIX</td> <td>cmk/os_family:aix</td></tr>
+<tr> <td>FreeBSD</td> <td>cmk/os_family:freebsd</td></tr>
+<tr> <td>HP-UX</td> <td>cmk/os_family:hpux</td></tr>
+<tr> <td>LINUX</td> <td>cmk/os_family:linux</td></tr>
+<tr> <td>Mac OS X</td> <td>cmk/os_family:macosx</td></tr>
+<tr> <td>NetBSD</td> <td>cmk/os_family:netbsd</td></tr>
+<tr> <td>OpenBSD</td> <td>cmk/os_family:openbsd</td></tr>
+<tr> <td>OpenVMS</td> <td>cmk/os_family:openvms</td></tr>
+<tr> <td>OpenWrt</td> <td>cmk/os_family:openwrt</td></tr>
+<tr> <td>Solaris</td> <td>cmk/os_family:solaris</td></tr>
+<tr> <td>Windows</td> <td>cmk/os_family:windows</td></tr>
+</table>
+
+The Linux agent can also gather the following host labels, if the host is
+virtualized or a Linux container:
+
+<li>"cmk/device_type:vm"</li>
+<li>"cmk/device_type:container"</li>

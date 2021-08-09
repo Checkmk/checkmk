@@ -43,8 +43,8 @@ checks = {
             'levels_12v_lower': (11.9, 11.8)
         },
         [
-            (0, 'Output 3.3V-Average: 3.34 V', [('3_3v', 3.336, None, None, None, None)]),
-            (0, 'Output 12V-Average: 12.01 V', [('12v', 12.008, None, None, None, None)]),
+            (0, 'Output 3.3V-Average: 3.34 V', [('3_3v', 3.336, 3.4, 3.45, None, None)]),
+            (0, 'Output 12V-Average: 12.01 V', [('12v', 12.008, 12.1, 12.2, None, None)]),
         ],
     )],
     'chassis_temp': [(

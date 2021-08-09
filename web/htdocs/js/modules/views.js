@@ -6,8 +6,7 @@ import * as utils from "utils";
 import * as ajax from "ajax";
 import * as foldable_container from "foldable_container";
 
-export function toggle_grouped_rows(tree, id, cell, num_rows)
-{
+export function toggle_grouped_rows(tree, id, cell, num_rows) {
     var group_title_row = cell.parentNode;
 
     var display, toggle_img_open, state;
@@ -16,8 +15,7 @@ export function toggle_grouped_rows(tree, id, cell, num_rows)
         display = "";
         toggle_img_open = true;
         state = "on";
-    }
-    else {
+    } else {
         utils.add_class(group_title_row, "closed");
         display = "none";
         toggle_img_open = false;
@@ -39,12 +37,16 @@ export function reschedule_check(oLink, site, host, service, wait_svc) {
     utils.remove_class(img, "reload_failed");
     utils.add_class(img, "reloading");
 
-    var post_data = "request=" + encodeURIComponent(JSON.stringify({
-        "site": site,
-        "host": host,
-        "service": service,
-        "wait_svc": wait_svc,
-    }));
+    var post_data =
+        "request=" +
+        encodeURIComponent(
+            JSON.stringify({
+                site: site,
+                host: host,
+                service: service,
+                wait_svc: wait_svc,
+            })
+        );
 
     ajax.call_ajax("ajax_reschedule.py", {
         method: "POST",
@@ -69,7 +71,7 @@ function reschedule_check_response_handler(handler_data, ajax_response) {
 
     if (response.result.state === "OK") {
         window.location.reload();
-    } else if(response.result.state === "TIMEOUT") {
+    } else if (response.result.state === "TIMEOUT") {
         utils.add_class(img, "reload_failed");
         img.title = "Timeout while performing action: " + response.result.message;
     } else {

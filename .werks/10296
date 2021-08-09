@@ -6,7 +6,7 @@ Date: 1569938943
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
  This check behaves simarly to the already existing ntp check. It uses
  the output of {timedatectl timesync-status} as sent by the agent. It

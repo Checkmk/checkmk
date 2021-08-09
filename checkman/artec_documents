@@ -18,5 +18,5 @@ description:
 
  This check uses the ARTEC-MIB.
 
-inventory:
+discovery:
  One service is created.

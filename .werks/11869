@@ -1,0 +1,12 @@
+Title: check_ldap: Fix broken "Version 3 and TLS" SSL version
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1610451731
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+

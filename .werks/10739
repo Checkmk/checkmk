@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Due to a bug in the notification spooler new spoolfiles were processed before
 old spoolfiles. This may lead to suprising results. If e.g. a host goes DOWN

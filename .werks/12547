@@ -1,0 +1,15 @@
+Title: Fix possible XSS on audit log page
+Class: security
+Compatible: compat
+Component: wato
+Date: 1615563784
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Displaying the detail text of changes could trigger execution of arbitrary
+javascript code that was previously stored by a modification made to the
+configuration. This issue may affect users of the setup of previous 2.0.0
+versions.

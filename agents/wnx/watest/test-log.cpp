@@ -174,6 +174,8 @@ TEST(LogTest, RotationFile) {
 }
 
 TEST(LogTest, All) {
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
     // tests of log:
     // stream OUT
     // e
@@ -220,7 +222,7 @@ TEST(LogTest, All) {
 
     // DEFAULT
     auto prefix = GetDefaultPrefixName();
-    auto prefix_ascii = wtools::ConvertToUTF8(prefix);
+    auto prefix_ascii = wtools::ToUtf8(prefix);
     auto& lp = l.log_param_;
 
     EXPECT_TRUE(lp.directions_ & xlog::Directions::kDebuggerPrint);
@@ -403,19 +405,17 @@ std::string return_current_time_and_date() {
 }
 
 TEST(LogTest, EventTest) {
-    if (0) {
+    if (false) {
         // #TODO place in docu
-        // how to use windows event log
+        // #REFERENCE how to use windows event log
         XLOG::details::LogWindowsEventCritical(1, "Test is on {}", "error!");
         XLOG::l(XLOG::kCritError) << "Streamed test output kCritError";
         XLOG::l(XLOG::kEvent) << "Streamed test output kEvent";
     }
 }
 
-TEST(LogTest, Yaml) {
+TEST(LogTest, Functional) {
     namespace fs = std::filesystem;
-    using namespace xlog;
-    using namespace XLOG;
     std::string log_file_name = "test_file.log";
     fs::path logf = log_file_name;
     fs::remove(logf);
@@ -433,6 +433,7 @@ TEST(LogTest, Yaml) {
     XLOG::l.i() << " info";
 
     XLOG::l.crit("<GTEST> This is critical ptr is {} code is {}", nullptr, 5);
+    XLOG::l("filesystem test {}", fs::path("c:\\a\\a"));
     std::error_code ec;
     EXPECT_TRUE(fs::exists(logf, ec));  // check that file is exists
 
@@ -443,21 +444,26 @@ TEST(LogTest, Yaml) {
         auto contents = sstr.str();
         auto n = std::count(contents.begin(), contents.end(), '\n');
         auto result = cma::tools::SplitString(contents, "\n");
-        ASSERT_EQ(result.size(), 8);
-        const int start_position = 24;
+        ASSERT_EQ(result.size(), 9);
         EXPECT_NE(std::string::npos, result[0].find("simple test"));
         EXPECT_NE(std::string::npos, result[1].find("<GTEST> std test"));
         EXPECT_NE(std::string::npos, result[2].find("<GTEST> stream test"));
         EXPECT_NE(std::string::npos, result[2].find("[ERROR:CRITICAL]"));
 
-        EXPECT_EQ(start_position, result[3].find("[Trace]  trace"));
-        EXPECT_EQ(start_position, result[4].find("[Warn ]  warn"));
-        EXPECT_EQ(start_position, result[5].find("[Err  ]  error"));
-        EXPECT_EQ(start_position, result[6].find(" info"));
-        EXPECT_EQ(
+        constexpr size_t start_position = 32;
+        EXPECT_LE(start_position, result[3].find("[Trace]  trace"))
+            << "result=" << result[3];
+        EXPECT_LE(start_position, result[4].find("[Warn ]  warn"))
+            << "result=" << result[4];
+        EXPECT_LE(start_position, result[5].find("[Err  ]  error"))
+            << "result=" << result[5];
+        EXPECT_LE(start_position, result[6].find(" info"));
+        EXPECT_LE(
             start_position,
             result[7].find(
                 "[ERROR:CRITICAL] <GTEST> This is critical ptr is 0x0 code is 5"));
+        EXPECT_LE(start_position,
+                  result[8].find("[Err  ] filesystem test c:\\a\\a"));
     }
     fs::remove(logf);
 }

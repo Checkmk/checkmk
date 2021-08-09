@@ -6,6 +6,7 @@
 
 import abc
 import random
+from typing import Any, Mapping, Optional, Sequence, TypedDict
 
 from cmk.utils.aws_constants import AWSEC2InstTypes
 
@@ -51,7 +52,7 @@ class List(Entity):
 
 
 class Dict(Entity):
-    def __init__(self, key, values, enumerate_keys=None):
+    def __init__(self, key, values, enumerate_keys: Optional[Entity] = None):
         super(Dict, self).__init__(key)
         self._values = values
         self._enumerate_keys = enumerate_keys
@@ -70,8 +71,12 @@ class Dict(Entity):
 
 
 class Str(Entity):
+    def __init__(self, key, value=None):
+        super().__init__(key)
+        self.value = value
+
     def create(self, idx, amount):
-        return "%s-%s" % (self.key, idx)
+        return "%s-%s" % (self.value or self.key, idx)
 
 
 class Int(Entity):
@@ -130,22 +135,77 @@ class Bytes(Str):
 
 
 class InstanceBuilder(metaclass=abc.ABCMeta):
+    def __init__(self, idx, amount, skip_entities=None):
+        self._idx = idx
+        self._amount = amount
+        self._skip_entities = [] if not skip_entities else skip_entities
+
+    def _fill_instance(self) -> Sequence[Entity]:
+        return []
+
+    def _create_instance(self) -> Mapping[str, Any]:
+        return {
+            value.key: value.create(self._idx, self._amount)
+            for value in self._fill_instance()
+            if value.key not in self._skip_entities
+        }
+
+    @classmethod
+    def create_instances(cls, amount, skip_entities=None):
+        return [cls(idx, amount, skip_entities)._create_instance() for idx in range(amount)]
+
+
+class DictInstanceBuilder(metaclass=abc.ABCMeta):
+    # This class was created in order to support the fake client for AWS Lambda.
+    # The Lambda API responses contain dictionaries like:
+    # {
+    #   'Tags': {
+    #   'key': 'value'
+    #   }
+    # }
+    #
+    #TODO: Currently complex structures where the value are dictionaries are not yet supported,e.g.
+    #
+    # class ComplexStructureIB(DictInstanceBuilder):
+    #   def _key(self):
+    #     return Str('Foo')
+    #
+    #   def _value(self):
+    #     return Dict(Str('Bar'), [Str('Baz')])
+    #
+    # should return:
+    # {
+    #   'Foo-0': {
+    #     'Bar-0': {"Baz": "Baz"}
+    #   }
+    # }
+    #
+    # but the actual output is:
+    # {
+    #   'Foo-0': {
+    #     "Baz": "Baz",
+    #   }
+    # }
+
     def __init__(self, idx, amount):
         self._idx = idx
         self._amount = amount
 
-    def _fill_instance(self):
-        return []
+    def _key(self) -> Optional[Entity]:
+        return None
 
-    def create_instance(self):
-        instance = {}
-        for value in self._fill_instance():
-            instance[value.key] = value.create(self._idx, self._amount)
-        return instance
+    def _value(self) -> Optional[Entity]:
+        return None
 
     @classmethod
-    def create_instances(cls, amount):
-        return [cls(idx, amount).create_instance() for idx in range(amount)]
+    def create_instances(cls, amount) -> Mapping[str, Any]:
+        return {
+            # static analysis does not recognize that None can not happen because of if clause -> disable warning
+            key.create(idx, amount): value.create(idx, amount)  # type: ignore
+            for idx in range(amount)
+            if ((key := cls(idx, amount)._key()) is not None and
+                (value := cls(idx, amount)._value()) is not None)
+        }
 
 
 #.
@@ -2127,6 +2187,44 @@ class FakeCloudwatchClient:
         }
 
 
+class QueryResults(TypedDict):
+    status: str
+    results: Mapping[str, Sequence[Mapping[str, str]]]
+
+
+FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE: QueryResults = {
+    "status": "Complete",
+    "results": {
+        "arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function": [{
+            "field": "max_memory_used_bytes",
+            "value": "52000000"
+        }, {
+            "field": "max_init_duration_ms",
+            "value": "1702.11"
+        }, {
+            "field": "count_cold_starts",
+            "value": "2"
+        }]
+    }
+}
+
+
+class QueryId(TypedDict):
+    queryId: str
+
+
+class FakeCloudwatchClientLogsClient:
+    def start_query(self, logGroupName: str, startTime: int, endTime: int,
+                    queryString: str) -> QueryId:
+        return {"queryId": "MY_QUERY_ID"}
+
+    def get_query_results(self, queryId: str) -> QueryResults:
+        return FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE
+
+    def stop_query(self, queryId: str):
+        pass
+
+
 class FakeServiceQuotasClient:
     def list_service_quotas(self, ServiceCode):
         q_val = Float('Value')
@@ -2141,6 +2239,93 @@ class FakeServiceQuotasClient:
                 'Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances',
                 'Running On-Demand X instances',
             ]]
+        }
+
+
+#   .--Lambda----------------------------------
+
+
+class LambdaListFunctionsIB(InstanceBuilder):
+    def _fill_instance(self):
+        return {
+            Str('FunctionName'),
+            Str('FunctionArn', value='arn:aws:lambda:eu-central-1:123456789:function:FunctionName'),
+            Choice('Runtime', ['nodejs', 'python2.7', 'dotnetcore3.1']),
+            Str('Role'),
+            Str('Handler'),
+            Int('CodeSize'),
+            Str('Description'),
+            Int('Timeout'),
+            Int('MemorySize'),
+            Str('LastModified'),
+            Str('CodeSha256'),
+            Str('Version'),
+            Dict('VpcConfig', [
+                List('SubnetIds', []),
+                List('SecurityGroupIds', []),
+                List('DeadLetterConfig', []),
+                List('DeadLetterConfig', []),
+                Dict('Environment',
+                     [Dict('Variables', []),
+                      Dict('Error', [
+                          Str('ErrorCode'),
+                          Str('Message'),
+                      ])])
+            ]),
+            Str('KMSKeyArn'),
+            Dict('TracingConfig', [
+                Choice('Mode', ['Active', 'PassThrough']),
+            ]),
+            Str('MasterArn'),
+            Str('RevisionId'),
+            List('Layers', []),
+            Choice('State', ['Pending', 'Active', 'Inactive', 'Failed']),
+            Str('StateReason'),
+            Choice('StateReasonCode', ['Idle', 'Creating', 'Restoring']),
+            Str('LastUpdateStatus'),
+            Str('LastUpdateStatusReason'),
+            Choice('LastUpdateStatusReasonCode',
+                   ['EniLimitExceeded', 'InsufficientRolePermissions']),
+            Dict('FileSystemConfigs', [
+                Str('Arn'),
+                Str('LocalMountPath'),
+            ]),
+            Choice('PackageType', ['Zip', 'Image']),
+            Dict('ImageConfigResponse', [
+                Dict('ImageConfig', [
+                    Str('EntryPoint'),
+                    Str('Command'),
+                    Str('WorkingDirectory'),
+                ]),
+                Dict('Error', [
+                    Str('ErrorCode'),
+                    Str('Message'),
+                ])
+            ]),
+            Str('SigningProfileVersionArn'),
+            Str('SigningJobArn')
+        }
+
+
+class LambdaListTagsInstancesIB(DictInstanceBuilder):
+    def _key(self):
+        return Str('Tag')
+
+    def _value(self):
+        return Str('Value')
+
+
+class LambdaListProvisionedConcurrencyConfigsIB(InstanceBuilder):
+    def _fill_instance(self):
+        return {
+            Str('FunctionArn',
+                value='arn:aws:lambda:eu-central-1:123456789:function:FunctionName:Alias'),
+            Int('RequestedProvisionedConcurrentExecutions'),
+            Int('AvailableProvisionedConcurrentExecutions'),
+            Int('AllocatedProvisionedConcurrentExecutions'),
+            Choice('Status', ['IN_PROGRESS', 'READY', 'FAILED']),
+            Str('StatusReason'),
+            Str('LastModified'),
         }
 
 

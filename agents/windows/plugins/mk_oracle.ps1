@@ -1,8 +1,9 @@
+$CMK_VERSION = "2.1.0i1"
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# Check_MK agent plugin for monitoring ORACLE databases
+# Checkmk agent plugin for monitoring ORACLE databases
 # This plugin is a result of the common work of Thorsten Bruhns, Andrew Lacy
 # and Mathias Kettner. Thorsten is responsible for the ORACLE
 # stuff, Mathias for the shell hacking, Andrew for the powershell...
@@ -174,14 +175,9 @@ $env:NLS_LANG = "AMERICAN_AMERICA.AL32UTF8"
 #   '----------------------------------------------------------------------'
 
 
-
-
 $SQL_START = @"
-set pages 0 trimspool on;
-set linesize 1024;
-set feedback off;
-whenever OSERROR EXIT failure;
-whenever sqlerror exit failure;
+set pages 0 trimspool on feedback off lines 8000
+set echo on
 
 "@
 
@@ -473,9 +469,9 @@ Function sqlcall {
                     # add the SID and "FAILURE" to the output
                     $res = "$sqlsid|FAILURE|" + $res | select-string -pattern "ERROR"
                     # write the output to the file
+                    $res = "<<<oracle_instance:sep(124)>>>" + "`n" + $res
                     $res | Set-Content $fullpath
                     # show the contents of the file
-                    echo '<<<oracle_instance:sep(124)>>>'
                     cat $fullpath
                }
           }
@@ -487,9 +483,9 @@ Function sqlcall {
                     # add the SID and "FAILURE" to the output
                     $res = "$sqlsid|FAILURE|" + $res | select-string -pattern "ERROR"
                     # write the output to the file
+                    $res = "<<<oracle_instance:sep(124)>>>" + "`n" + $res
                     $res | Set-Content $fullpath
                     # show the contents of the file
-                    echo '<<<oracle_instance:sep(124)>>>'
                     cat $fullpath
                }
 
@@ -527,7 +523,7 @@ Function sqlcall {
 Function sql_performance {
      if ($DBVERSION -gt 121000) {
           $query_performance = @'
-          PROMPT <<<oracle_performance:sep(124)>>>'
+          PROMPT <<<oracle_performance:sep(124)>>>;
           select upper(i.INSTANCE_NAME)
                ||'|'|| 'sys_time_model'
                ||'|'|| S.STAT_NAME
@@ -1038,14 +1034,13 @@ Function sql_recovery_status {
                  ||'|'|| dh.RECOVER
                  ||'|'|| dh.FUZZY
                  ||'|'|| dh.CHECKPOINT_CHANGE#
-                 ||'|'|| vb.STATUS
-                 ||'|'|| round((sysdate-vb.TIME)*24*60*60)
+                 ||'|'|| nvl(vb.STATUS, 'unknown')
+                 ||'|'|| nvl2(vb.TIME, round((sysdate-vb.TIME)*24*60*60), 0)
           FROM V$datafile_header dh
           JOIN v$database d on 1=1
           JOIN v$instance i on 1=1
-          JOIN v$backup vb on 1=1
+          LEFT OUTER JOIN v$backup vb on vb.file# = dh.file#
           LEFT OUTER JOIN V$PDBS vp on dh.con_id = vp.con_id
-          WHERE vb.file# = dh.file#
           ORDER BY dh.file#;
 
 '@
@@ -1074,7 +1069,7 @@ Function sql_recovery_status {
      }
      elseif ($DBVERSION -gt 92000) {
           $query_recovery_status = @'
-          prompt <<<oracle_recovery_status:sep(124)>>>
+          prompt <<<oracle_recovery_status:sep(124)>>>;
           SELECT upper(d.NAME)
                      ||'|'|| d.NAME
                      ||'|'|| d.DATABASE_ROLE
@@ -1412,22 +1407,22 @@ Function sql_resumable {
                begin
                     execute immediate
                          'select upper(i.INSTANCE_NAME)
-                              ||'|'|| u.username
-                              ||'|'|| a.SESSION_ID
-                              ||'|'|| a.status
-                              ||'|'|| a.TIMEOUT
-                              ||'|'|| round((sysdate-to_date(a.SUSPEND_TIME,'mm/dd/yy hh24:mi:ss'))*24*60*60)
-                              ||'|'|| a.ERROR_NUMBER
-                              ||'|'|| to_char(to_date(a.SUSPEND_TIME, 'mm/dd/yy hh24:mi:ss'),'mm/dd/yy_hh24:mi:ss')
-                              ||'|'|| a.RESUME_TIME
-                              ||'|'|| a.ERROR_MSG
+                              ||''|''|| u.username
+                              ||''|''|| a.SESSION_ID
+                              ||''|''|| a.status
+                              ||''|''|| a.TIMEOUT
+                              ||''|''|| round((sysdate-to_date(a.SUSPEND_TIME,''mm/dd/yy hh24:mi:ss''))*24*60*60)
+                              ||''|''|| a.ERROR_NUMBER
+                              ||''|''|| to_char(to_date(a.SUSPEND_TIME, ''mm/dd/yy hh24:mi:ss''),''mm/dd/yy_hh24:mi:ss'')
+                              ||''|''|| a.RESUME_TIME
+                              ||''|''|| a.ERROR_MSG
                          from dba_resumable a, v$instance i, dba_users u
                          where a.INSTANCE_ID = i.INSTANCE_NUMBER
                          and u.user_id = a.user_id
                          and a.SUSPEND_TIME is not null
                          union all
                          select upper(i.INSTANCE_NAME)
-                              || '|||||||||'
+                              || ''|||||||||''
                          from v$instance i'
                     bulk collect into xx;
                     if xx.count >= 1 then
@@ -1529,16 +1524,16 @@ Function sql_jobs {
           begin
                begin
                     execute immediate
-                         'SELECT upper(d.NAME)
-                              ||'|'|| j.OWNER
-                              ||'|'|| j.JOB_NAME
-                              ||'|'|| j.STATE
-                              ||'|'|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
-                              ||'|'|| j.RUN_COUNT
-                              ||'|'|| j.ENABLED
-                              ||'|'|| NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd'))
-                              ||'|'|| NVL(j.SCHEDULE_NAME, '-')
-                              ||'|'|| d.STATUS
+                         'SELECT upper(vd.NAME)
+                              ||''|''|| j.OWNER
+                              ||''|''|| j.JOB_NAME
+                              ||''|''|| j.STATE
+                              ||''|''|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
+                              ||''|''|| j.RUN_COUNT
+                              ||''|''|| j.ENABLED
+                              ||''|''|| NVL(j.NEXT_RUN_DATE, to_date(''1970-01-01'', ''YYYY-mm-dd''))
+                              ||''|''|| NVL(j.SCHEDULE_NAME, ''-'')
+                              ||''|''|| jd.STATUS
                          FROM dba_scheduler_jobs j
                          join v$database vd on 1 = 1
                          join v$instance i on 1 = 1

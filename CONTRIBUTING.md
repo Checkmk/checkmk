@@ -117,7 +117,7 @@ To set up the development environment do the following:
     execution of the checkers with `git commit -n`. Please don't push unchecked changes as this will
     introduce delays and additional work.
 
-    Additional helpers can be found in `scripts/`. One noteable one is `scripts/check-current-commit`
+    Additional helpers can be found in `scripts/`. One notable one is `scripts/check-current-commit`
     which checks your commit *after* it has been made. You can then fix errors and amend or squash
     your commit. You can also use this script in a rebase like such:
 
@@ -134,7 +134,9 @@ Once done, you are ready for the next chapter.
 
 1. Create your feature branch
 
-    The number one rule is to *put each piece of work on its own branch*. In most of the cases your development will be based on the *master* branch. So lets start like this:
+    The number one rule is to *put each piece of work on its own branch*. Please note that in
+    general, we only accept changes which are based on the *master* branch. There is one (rare)
+    exception, namely bugfixes which *only* affect older branches. So lets start like this:
 
     ```console
     $ git checkout master
@@ -230,11 +232,7 @@ the project base directory:
 $ make -C tests test-pylint
 $ make -C tests test-bandit
 $ make -C tests test-unit
-$ make -C tests test-python-futurize
 $ make -C tests test-format-python
-
-$ make -C tests test-pylint
-$ make -C tests test-unit
 $ make -C tests test-mypy-raw
 ```
 
@@ -244,7 +242,7 @@ Normally you only change a small set of files in your commits. If you execute
 `yapf -i [filename]` to format the changed code, this should be enough and you
 don't need to execute the formatting test at all.
 
-> We highly recommend to integrate yapf, pylint and mypy into the editor you
+> We highly recommend to integrate yapf, isort, pylint and mypy into the editor you
 > work with. Most editors will notify you about issues in the moment you edit
 > the code.
 
@@ -255,7 +253,7 @@ to execute the tests for you, but that takes several minutes for each try.
 
 ## Guidelines for coding check plug-ins
 
-Respect the [Guidelines for coding check plug-ins](https://checkmk.com/cms_dev_guidelines.html).
+Respect the [Guidelines for coding check plug-ins](https://docs.checkmk.com/master/en/dev_guidelines.html).
 
 ## Commit messages
 
@@ -280,32 +278,47 @@ content changes.
 [Zen of Python](https://www.python.org/dev/peps/pep-0020/).
 
 Checkmk is mostly written in Python. At the moment the most of the code base is
-using Python 3.7.
+using Python 3.8.
 
 Only rely on non-standard modules that are mentioned in the `Pipfile`.
 <!--- TODO: How to add new modules? -->
 
 ### Agent plugins: Supported Python versions
 
-The agent plugins are however available Python 2 compatible. These Python 2
-variants (.py2 ending in agents/plugins) will (in the future) be generated
-automatically from the Python 3 scripts, so no Python 2 script needs to be
-programmed.
+The agent plugins are also written for Python 3, but have to be compatible with
+Python 3.4 or newer. Since they are executed in various Python environments on
+the monitored hosts, they should have as small dependencies as possible. Best is
+to only rely on vanilla Python without 3rd party modules.
 
-The Python 2 compatible plugins are compatible with Python 2.5 up to 2.7.
+Use `#!/usr/bin/env python3` as shebang.
 
-Python plugins that are incompatible to 2.5, for example because some 3rd party
-library is not available with 2.5, need to be syntax compatible with 2.5 for the
-moment, but are allowed to terminate with a helpful error message about this
-incompatibility.
+Besides the Python 3 variant, the agent plugins are also available for Python 2.
+These Python 2 variants (`_2.py` ending in `agents/plugins`) are generated
+automatically from the Python 3 scripts while packaging Checkmk. So no Python 2
+script needs to be programmed. The Python 2 files are named `[plugin]_2.py`.
+Have a look at `agents/plugins/Makefile` to see how we generate them.
 
-Use `#!/usr/bin/env python` as shebang.
+The agent is automatically dealing with Python 2 and 3 plugins and environments
+if possible.  If a `.py` file is found and a `python3` greater than or equal to
+Python 3.4 is in the `PATH`, then this plugin is used.  If `_2.py` file is found
+and there is a `python2` or `python` in the `PATH`, then this is used. It is
+ensured that no plugin is executed in two versions.
 
-Completely new plugins should be written to be compatible with Python 2.7 and
-Python 3.
+Agent plugins are executed on monitored systems. Here we can not rely on the
+presence of certain modules. The agent plugin + Check-Plugin must transport a
+clean message to the user in the GUI, if a dependency is missing (see e.g.
+Docker plugin).
 
-In case you want to explicitly create a Python 3 agent plugin, use
-`#!/usr/bin/env python3` as shebang.
+For new plugins it is okay to use special dependencies, e.g. API bindings.  But
+we have to take older Python versions and incompatibilities into account and
+produce error agent sections + error messages that tell the user about this
+issue.
+
+---
+**Known issues regarding 3to2 conversion**
+- `f-strings`: Currently 3to2  cannot convert `f-strings` into `python2`
+  compatible syntax. So use `format()` instead.
+---
 
 ### Imports
 
@@ -319,9 +332,10 @@ understand which names are really available and needed in the current namespace.
     ```python
     def get_status(file):
         if not os.path.exists(file):
-            print "file not found"
+            print("file not found")
             sys.exit(1)
-        return open(file).readline()
+        with open(file) as f:
+            return f.readline()
     ```
 
     vs.
@@ -329,9 +343,10 @@ understand which names are really available and needed in the current namespace.
     ```python
     def get_status(file):
         try:
-            return open(file).readline()
-        except EnvironmentError as e:
-            print "Unable to open file: %s" % e
+            with open(file) as f:
+                return f.readline()
+        except OSError as e:
+            print("Unable to open file: %s" % e)
             sys.exit(1)
     ```
 
@@ -403,7 +418,7 @@ understand which names are really available and needed in the current namespace.
       downsides.
     * Tuples of a fixed length: Slightly better, they have a fixed number of
       slots and are immutable. Still, one has no clue what a slot should mean.
-    * `collectons.namedtuple`: A bit better than tuples of a fixed length, at
+    * `collections.namedtuple`: A bit better than tuples of a fixed length, at
       least the slots have names now. Still no clue about the valid values of a
       slot.
     * `typing.NamedTuple`: Kind of OK, slots have names and a type now. Still
@@ -456,6 +471,7 @@ understand which names are really available and needed in the current namespace.
   install [one of the available plugins](https://editorconfig.org/#download).
 * We use YAPF for automatic formatting of the Python code.
   Have a look [below](#automatic-formatting) for further information.
+* We use isort for automatic sorting of imports in Python code.
 * Multi line imports: Use braces instead of continuation character
 
     ```python
@@ -474,30 +490,51 @@ understand which names are really available and needed in the current namespace.
     )
     ```
 
-### Automatic formatting
+### Automatic formatting with yapf and isort
 
 The style definition file, `.style.yapf`, lives in the root directory of the
 project repository, where YAPF picks it up automatically. YAPF itself lives in
 a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with
-`make format-python` or `scripts/run-pipenv run yapf`.
+`make format-python-yapf` or `scripts/run-pipenv run yapf`.
 
-#### Manual invocation: Single file
+The imports are also sorted with isort. Configuration is in `pyproject.toml`
+file in the root directory of the project repository. If you have isort installed
+in you virtualenv you can run it with `make format-python-isort`
+
+#### Manual yapf invocation: Single file
 
 ```console
 $ yapf -i [the_file.py]
 ```
 
-#### Manual invocation: Whole code base
-
-If you want to format all Python files in the repository, you can run:
+#### Manual isort invocation: Single file
 
 ```console
-$ make format-python
+$ isort [the_file.py]
+
+# or with pre-commit installed
+$ pre-commit run isort
+```
+
+#### Manual yapf invocation: Whole code base
+
+If you want to yapf format all Python files in the repository, you can run:
+
+```console
+$ make format-python-yapf
+```
+
+#### Manual isort invocation: Whole code base
+
+If you want to isort format all Python files in the repository, you can run:
+
+```console
+$ make format-python-isort
 ```
 
 #### Integration with CI
 
-Our CI executes the following formatting test on the whole code base:
+Our CI executes yapf and isort formatting test on the whole code base:
 
 ```console
 $ make -C tests test-format-python
@@ -992,12 +1029,16 @@ counter-balanced via explanatory comments.
 
 ## Localization
 
-The User interface of Checkmk can be localized. Currently we maintain a German
-localization of Checkmk for all users. We are open to support other languages
-when the localization is in a good state and nearly complete.
+The user interface of Checkmk can be localized using [Weblate](https://translate.checkmk.com/).
+We are very happy about any contributions to the localization of Checkmk. To
+contribute, please first register an account at our Weblate server. Afterwards,
+you can iterate through untranslated source strings and localize them. See this
+[forum post](https://forum.checkmk.com/t/about-the-localization-category/21578)
+for further information.
 
-If you are interested: We can use [POEditor.com](https://poeditor.com) for
-upstream localizations. Please contact us at info@checkmk.com if you are interested.
+Please note that any PRs which directly edit the PO-files will be disregarded,
+since the localization should be done exclusively via Weblate to avoid merge
+conflicts.
 
 ### Translation of technical terms
 
@@ -1022,7 +1063,14 @@ one name for one thing and use it consistently in all translations.
 ## Copyright and Licensing
 
 The open source part of Checkmk is licensed under the terms of the [GNU GPLv2
-License](COPYING). Any code brought in must be compatible with those terms.
+License](COPYING). Any new code must be compatible with those terms.
 
-You need to make sure that the code you send us in your pull request is GPLv2
-compatible.
+To ensure that, please always add our current licensing information to any new
+files you want to contribute. The licensing information can be found at the beginning
+of already existing files and looks something like
+
+```python
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+```

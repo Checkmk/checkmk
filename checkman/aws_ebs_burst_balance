@@ -15,5 +15,5 @@ description:
 item:
  Name of the instance
 
-inventory:
+discovery:
  One service is created for each volume if all required metrics (Burst Balance) are given.

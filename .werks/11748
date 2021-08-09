@@ -1,0 +1,14 @@
+Title: Fix double slashes in tmpfs fstab entries
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1607071275
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Previous 2.0.0 releases create tmpfs entries in /etc/fstab with double slashes
+in the path (e.g. "/opt//omd/sites/beta/tmp"). The paths are now correcltly
+using a single slash as separator.

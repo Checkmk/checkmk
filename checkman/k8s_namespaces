@@ -7,7 +7,7 @@ description:
  This check monitors a namespace in a kubernetes cluster.
  If a namespace is active the check returns {OK} otherwise {CRIT}.
 
-inventory:
+discovery:
  One service is created for each namespace.
 
 item:

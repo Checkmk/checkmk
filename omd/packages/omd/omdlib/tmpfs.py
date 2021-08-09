@@ -24,22 +24,22 @@
 # Boston, MA 02110-1301 USA.
 """Helper functions for dealing with the tmpfs"""
 
+import errno
 import os
 import re
-import sys
-import time
 import shlex
-import errno
-import tarfile
 import subprocess
+import sys
+import tarfile
+import time
 from pathlib import Path
 from typing import Optional
 
-import cmk.utils.tty as tty
-
-from omdlib.utils import is_dockerized, ok, delete_directory_contents
-from omdlib.version_info import VersionInfo
 from omdlib.contexts import SiteContext
+from omdlib.utils import delete_directory_contents, is_dockerized, ok
+from omdlib.version_info import VersionInfo
+
+import cmk.utils.tty as tty
 
 
 # TODO: Use site context?

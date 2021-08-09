@@ -8,29 +8,32 @@ import ast
 import math
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
-from cmk.snmplib.type_defs import OIDBytes, OIDCached
+from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base import check_api
 import cmk.base.config as config
-import cmk.base.check_api_utils as check_api_utils
+import cmk.base.plugin_contexts as plugin_contexts
+from cmk.base import check_api
+from cmk.base.check_utils import Service
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])
 def test_oid_spec_binary(value_eight):
     oid_bin = check_api.BINARY(value_eight)
-    assert isinstance(oid_bin, OIDBytes)
-    assert str(oid_bin) == "8"
+    assert oid_bin.column == "8"
+    assert oid_bin.encoding == "binary"
+    assert oid_bin.save_to_cache is False
 
 
 @pytest.mark.parametrize("value_eight", ["8", 8])
 def test_oid_spec_cached(value_eight):
     oid_cached = check_api.CACHED_OID(value_eight)
-    assert isinstance(oid_cached, OIDCached)
-    assert str(oid_cached) == "8"
+    assert oid_cached.column == "8"
+    assert oid_cached.encoding == "string"
+    assert oid_cached.save_to_cache is True
 
 
 @check_api.get_parsed_item_data
@@ -283,14 +286,22 @@ def test_get_effective_service_level(monkeypatch):
     )
     ts.apply(monkeypatch)
 
-    check_api_utils.set_service("cpu.loads", "CPU load")
+    with plugin_contexts.current_service(
+            Service(
+                item=None,
+                check_plugin_name=CheckPluginName("cpu_loads"),
+                description="CPU load",
+                parameters={},
+            )):
 
-    check_api_utils.set_hostname("testhost1")
-    assert check_api.get_effective_service_level() == 33
-    check_api_utils.set_hostname("testhost2")
-    assert check_api.get_effective_service_level() == 10
-    check_api_utils.set_hostname("testhost3")
-    assert check_api.get_effective_service_level() == 0
+        with plugin_contexts.current_host("testhost1"):
+            assert check_api.get_effective_service_level() == 33
+
+        with plugin_contexts.current_host("testhost2"):
+            assert check_api.get_effective_service_level() == 10
+
+        with plugin_contexts.current_host("testhost3"):
+            assert check_api.get_effective_service_level() == 0
 
 
 def test_as_float():

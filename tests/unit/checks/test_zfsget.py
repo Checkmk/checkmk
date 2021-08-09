@@ -4,10 +4,69 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
+import pytest
+
+from tests.testlib import Check
+
+from .checktestlib import assertDiscoveryResultsEqual, assertEqual, DiscoveryResult
 
 pytestmark = pytest.mark.checks
+
+
+@pytest.mark.parametrize(
+    "info, expected_parse_result",
+    [
+        (
+            [
+                ['[SNIP]'],
+                ['dataset13', 'name', 'dataset13', '-'],
+                ['dataset13', 'quota', '0', 'local'],
+                ['dataset13', 'used', '33419296463072', '-'],
+                ['dataset13', 'available', '11861098415520', '-'],
+                ['dataset13', 'mountpoint', '/mnt/dataset13', 'default'],
+                ['dataset13', 'type', 'filesystem', '-'],
+                ['[SNIP]'],
+                ['dataset13/MyFolder', 'name', 'dataset13/MyFolder', '-'],
+                ['dataset13/MyFolder', 'quota', '5497558138880', 'local'],
+                ['dataset13/MyFolder', 'used', '5497558146368', '-'],
+                ['dataset13/MyFolder', 'available', '0', '-'],
+                ['dataset13/MyFolder', 'mountpoint', '/mnt/dataset13/MyFolder', 'default'],
+                ['dataset13/MyFolder', 'type', 'filesystem', '-'],
+                ['[SNIP]'],
+                ['[df]'],
+                ['[SNIP]'],
+                ['dataset13', '11583104083', '162', '11583103921', '0%', '/mnt/dataset13'],
+                ['[SNIP]'],
+                [
+                    'dataset13/MyFolder', '5368709127', '5368709127', '0', '100%',
+                    '/mnt/dataset13/MyFolder'
+                ],
+                ['[SNIP]'],
+            ],
+            {
+                '/mnt/dataset13': {
+                    'name': 'dataset13',
+                    'used': 31871124.709197998,
+                    'available': 11311624.923248291,
+                    'mountpoint': '/mnt/dataset13',
+                    'type': 'filesystem',
+                    'is_pool': True
+                },
+                '/mnt/dataset13/MyFolder': {
+                    'name': 'dataset13/MyFolder',
+                    'quota': 5242880.0,
+                    'used': 5242880.007141113,
+                    'available': 0.0,
+                    'mountpoint': '/mnt/dataset13/MyFolder',
+                    'type': 'filesystem',
+                    'is_pool': False
+                },
+            },
+        ),
+    ],
+)
+def test_zfsget_parse(info, expected_parse_result):
+    assertEqual(Check("zfsget").run_parse(info), expected_parse_result)
 
 
 @pytest.mark.parametrize(
@@ -231,8 +290,8 @@ pytestmark = pytest.mark.checks
             [("/mnt/f oo/bar baz", {}), ("/mnt/f oo", {}), ("/", {})],
         ),
     ])
-def test_zfsget_discovery(check_manager, info, expected_discovery_result):
-    check_zfsget = check_manager.get_check("zfsget")
+def test_zfsget_discovery(info, expected_discovery_result):
+    check_zfsget = Check("zfsget")
     discovery_result = DiscoveryResult(check_zfsget.run_discovery(check_zfsget.run_parse(info)))
     assertDiscoveryResultsEqual("zfsget", discovery_result,
                                 DiscoveryResult(expected_discovery_result))

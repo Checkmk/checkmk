@@ -15,7 +15,7 @@ register_alert_handler_parameters(
                  "WMI access, the credentials might be used to execute arbitrary commands on "
                  "the remote system. Use with caution!"),
         elements = [
-            ("runas", TextAscii(
+            ("runas", TextInput(
                   title = _("User to run handler as"),
                   allow_empty = False,
                   regex = re.compile('^[a-zA-Z_][-/a-zA-Z0-9_\\\\]*$'),
@@ -26,7 +26,7 @@ register_alert_handler_parameters(
                   title = _("Password of the user"),
                   allow_empty = False,
             )),
-            ("command", TextAscii(
+            ("command", TextInput(
                 title = _("Command to execute"),
                 allow_empty = False,
             )),

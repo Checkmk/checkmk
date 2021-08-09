@@ -10,7 +10,7 @@ description:
 item:
  The MSSQL object, instance and counter names separated by spaces.
 
-inventory:
+discovery:
  One service is created for each counter.
 
 cluster:

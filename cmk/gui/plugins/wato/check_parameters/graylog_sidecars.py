@@ -5,20 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    Integer,
-    MonitoringState,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Dictionary, Integer, MonitoringState, TextInput, Tuple
 
 
 def _parameter_valuespec_graylog_sidecars():
@@ -100,7 +92,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="graylog_sidecars",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Sidecar name")),
+        item_spec=lambda: TextInput(title=_("Sidecar name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_graylog_sidecars,
         title=lambda: _("Graylog sidecars"),

@@ -7,21 +7,21 @@
 from typing import Tuple as _Tuple
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupCheckParametersEnvironment,
+)
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
     FixedValue,
     Float,
-    TextAscii,
-    Tuple,
     ListChoice,
-)
-from cmk.gui.plugins.wato import (
-    HostRulespec,
-    RulespecGroupCheckParametersDiscovery,
-    RulespecGroupCheckParametersEnvironment,
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
+    TextInput,
+    Tuple,
 )
 
 
@@ -68,8 +68,8 @@ def _vs_cisco_dom(which_levels: str) -> _Tuple[str, Alternative]:
             ]))
 
 
-def _item_spec_cisco_dom() -> TextAscii:
-    return TextAscii(title=_("Sensor description if present, sensor index otherwise"))
+def _item_spec_cisco_dom() -> TextInput:
+    return TextInput(title=_("Sensor description if present, sensor index otherwise"))
 
 
 def _parameter_valuespec_cisco_dom() -> Dictionary:

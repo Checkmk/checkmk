@@ -154,6 +154,7 @@
     <ClCompile Include="test-zip.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="test-fmt_ext.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">

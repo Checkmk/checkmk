@@ -5,11 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import pytest  # type: ignore[import]
+
+import pytest
+
+from cmk.base.check_legacy_includes.jolokia import *
 
 pytestmark = pytest.mark.checks
-
-exec(open(os.path.join(os.path.dirname(__file__), '../../../checks/jolokia.include')).read())
 
 
 @pytest.mark.parametrize('line,length,result', [

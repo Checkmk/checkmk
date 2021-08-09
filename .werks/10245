@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The livestatus proxy normally keeps open several connections to the remote
 livestatus server and uses them in the moment a livestatus query is made

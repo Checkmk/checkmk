@@ -8,18 +8,17 @@
 
 from typing import List
 
-import pytest  # type: ignore[import]
+import pytest
 
-from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName
-
-from cmk.snmplib.type_defs import OIDEnd, SNMPDetectSpec, SNMPRuleDependentDetectSpec, SNMPTree
+from cmk.utils.type_defs import ParsedSectionName, SectionName
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
+from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPDetectSpecification, SNMPTree
 from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
     SNMPSectionPlugin,
-    SNMPStringTable,
-    SNMPStringByteTable,
+    StringByteTable,
+    StringTable,
 )
 
 
@@ -64,18 +63,18 @@ def test_validate_parse_function_value(parse_function):
 
 
 def test_validate_parse_function_annotation_string_table():
-    def _parse_function(string_table: SNMPStringTable):
+    def _parse_function(string_table: List[StringTable]):
         return string_table
 
     with pytest.raises(TypeError):
         section_plugins._validate_parse_function(
             _parse_function,
-            expected_annotation=(SNMPStringByteTable, "SNMPStringByteTable"),
+            expected_annotation=(StringByteTable, "StringByteTable"),
         )
 
     section_plugins._validate_parse_function(
         _parse_function,
-        expected_annotation=(SNMPStringTable, "SNMPStringTable"),
+        expected_annotation=(List[StringTable], "List[StringTable]"),
     )
 
 
@@ -104,11 +103,14 @@ def test_create_agent_section_plugin():
     )
 
     assert isinstance(plugin, AgentSectionPlugin)
-    assert len(plugin) == 6
+    assert len(plugin) == 9
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
+    assert plugin.host_label_default_parameters is None
+    assert plugin.host_label_ruleset_name is None
+    assert plugin.host_label_ruleset_type == "merged"
     assert plugin.supersedes == {SectionName("bar"), SectionName("foo")}
 
 
@@ -121,35 +123,49 @@ def test_create_snmp_section_plugin():
         ),
     ]
 
-    detect = SNMPDetectSpec([
+    detect = SNMPDetectSpecification([
         [('.1.2.3.4.5', 'Foo.*', True)],
     ])
-
-    rule_dependent_detect = SNMPRuleDependentDetectSpec(
-        [RuleSetName('a'), RuleSetName('b')],
-        lambda a, b: detect,
-    )
 
     plugin = section_plugins.create_snmp_section_plugin(
         name="norris",
         parsed_section_name="chuck",
         parse_function=_parse_dummy,
-        trees=trees,
+        fetch=trees,
         detect_spec=detect,
         supersedes=["foo", "bar"],
-        rule_dependent_detect_spec=rule_dependent_detect,
     )
 
     assert isinstance(plugin, SNMPSectionPlugin)
-    assert len(plugin) == 9
+    assert len(plugin) == 11
     assert plugin.name == SectionName("norris")
     assert plugin.parsed_section_name == ParsedSectionName("chuck")
     assert plugin.parse_function is _parse_dummy
     assert plugin.host_label_function is section_plugins._noop_host_label_function
+    assert plugin.host_label_default_parameters is None
+    assert plugin.host_label_ruleset_name is None
+    assert plugin.host_label_ruleset_type == "merged"
     assert plugin.detect_spec == detect
     assert plugin.trees == trees
     assert plugin.supersedes == {SectionName("bar"), SectionName("foo")}
-    assert plugin.rule_dependent_detect_spec == rule_dependent_detect
+
+
+def test_create_snmp_section_plugin_single_tree():
+
+    single_tree = SNMPTree(base='.1.2.3', oids=[OIDEnd(), '2.3'])
+
+    plugin = section_plugins.create_snmp_section_plugin(
+        name="norris",
+        parse_function=lambda string_table: string_table,
+        # just one, no list:
+        fetch=single_tree,
+        detect_spec=SNMPDetectSpecification([[('.1.2.3.4.5', 'Foo.*', True)]]),
+    )
+
+    assert plugin.trees == [single_tree]
+    # the plugin only specified a single tree (not a list),
+    # so a wrapper should unpack the argument:
+    assert plugin.parse_function([[['A', 'B']]]) == [['A', 'B']]
 
 
 def test_validate_supersedings_raise_implicit():

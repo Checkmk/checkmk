@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 A real host may have several data sources like SNMP, agent or other programs.
 If all data sources of these hosts fail related the {{HW/SW Inventory}}

@@ -5,37 +5,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
+from typing import Any, Dict, Mapping, Union
 
-from typing import Mapping
-
+from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
-from .agent_based_api.v1 import (
-    render,
-    check_levels,
-    register,
-    Service,
-    Result,
-    state,
-)
-
-from .agent_based_api.v1.type_defs import (
-    AgentStringTable,
-    DiscoveryGenerator,
-    CheckGenerator,
-    Parameters,
-)
 
 SAP_HANA_MAYBE = namedtuple("SAP_HANA_MAYBE", ["bool", "value"])
 
 
-def parse_sap_hana_license(string_table: AgentStringTable) -> sap_hana.ParsedSection:
+def parse_sap_hana_license(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
+        inst: Dict[str, Union[int, SAP_HANA_MAYBE]] = {}
         for line in lines:
             if len(line) < 7:
                 continue
 
-            inst = section.setdefault(sid_instance, {})
             for index, key, in [
                 (0, "enforced"),
                 (1, "permanent"),
@@ -54,6 +41,8 @@ def parse_sap_hana_license(string_table: AgentStringTable) -> sap_hana.ParsedSec
                 except ValueError:
                     pass
             inst["expiration_date"] = line[6]
+
+        section.setdefault(sid_instance, inst)
     return section
 
 
@@ -71,17 +60,17 @@ def _parse_maybe_bool(value):
     return
 
 
-def discovery_sap_hana_license(section: sap_hana.ParsedSection) -> DiscoveryGenerator:
+def discovery_sap_hana_license(section: sap_hana.ParsedSection) -> DiscoveryResult:
     for elem in section:
         yield Service(item=elem)
 
 
-def check_sap_hana_license(item: str, params: Parameters,
-                           section: sap_hana.ParsedSection) -> CheckGenerator:
+def check_sap_hana_license(item: str, params: Mapping[str, Any],
+                           section: sap_hana.ParsedSection) -> CheckResult:
 
     data = section.get(item)
-    if data is None:
-        return
+    if not data:
+        raise IgnoreResultsError("Login into database failed.")
 
     enforced = data['enforced']
     if enforced.bool:
@@ -105,10 +94,6 @@ def check_sap_hana_license(item: str, params: Parameters,
     if expiration_date != "?":
         yield Result(state=state.WARN, summary='Expiration date: %s' % expiration_date)
 
-    # It ONE physical device and at least two nodes.
-    # Thus we only need to check the first one.
-    return
-
 
 def _check_product_usage(size, limit, params):
     yield from check_levels(size,
@@ -129,8 +114,8 @@ def _check_product_usage(size, limit, params):
                                 label="Usage")
 
 
-def cluster_check_sap_hana_license(item: str, params: Parameters,
-                                   section: Mapping[str, sap_hana.ParsedSection]) -> CheckGenerator:
+def cluster_check_sap_hana_license(item: str, params: Mapping[str, Any],
+                                   section: Mapping[str, sap_hana.ParsedSection]) -> CheckResult:
     yield Result(state=state.OK, summary='Nodes: %s' % ', '.join(section.keys()))
     for node_section in section.values():
         if item in node_section:

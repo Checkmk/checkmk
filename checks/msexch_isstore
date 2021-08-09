@@ -4,6 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # checks for is store and is clienttype
 # as I understand it, these are logically related but the performance
 # counters are completely separate
@@ -11,6 +17,7 @@
 # source for these defaults:
 # https://blogs.technet.microsoft.com/samdrey/2015/01/26/exchange-2013-performance-counters-and-their-thresholds/
 factory_settings['msexch_info_store_defaultlevels'] = {
+    # attention! those three dictionaries are tuples when returned by wato!
     'store_latency': {
         'upper': (40.0, 50.0)
     },
@@ -36,7 +43,7 @@ def check_msexch_isstore(item, params, parsed):
         yield check_levels(
             average,
             "average_latency",
-            params['store_latency'].get('upper'),
+            get_levels_quadruple(params['store_latency']),
             infoname="Average latency",
             unit="ms",
         )
@@ -48,7 +55,6 @@ check_info['msexch_isstore'] = {
     'parse_function': parse_wmi_table,
     'has_perfdata': True,
     'service_description': "Exchange IS Store %s",
-    'includes': ['wmi.include'],
     'group': 'msx_info_store',
     'default_levels_variable': 'msexch_info_store_defaultlevels'
 }

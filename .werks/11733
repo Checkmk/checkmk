@@ -1,0 +1,16 @@
+Title: Default value in "Parameters for this service"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1607005411
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+For certain configurations, the page "Parameters for this service"
+shows that the corresponding service uses default parameters, even
+though the service actually uses user-defined parameters. This is
+fixed by this werk. Note that this bug did not affect any service
+outputs, only the page mentioned above.

@@ -1,0 +1,14 @@
+Title: Fix exception caused by custom host attributes when saving host changes
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1610721341
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+When some kind of custom host attribute has been defined and is used in the host
+configuration, this may lead to an exception like this when editing or deleting
+hosts: <tt>Exception: AttributeError ('HostAttributeMYATTRIBUTEConcrete' object has no attribute 'is_explicit')</tt>.

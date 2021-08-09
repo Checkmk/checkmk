@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
+import glob
 import os
+import random
+import subprocess
 import sys
 import time
-import random
-import glob
 import traceback
-import subprocess
 
 from cmk.utils.render import fmt_bytes
 
@@ -188,7 +188,7 @@ def cleanup_aged():
     max_age = time.time() - max_file_age
 
     for plugin in plugins.values():
-        for path, (_size, mtime) in plugin.get('file_infos', {}).items():
+        for path, (_size, mtime) in list(plugin.get('file_infos', {}).items()):
             if mtime < max_age:
                 if delete_file(path, 'too old'):
                     del plugin['file_infos'][path]
@@ -328,11 +328,13 @@ def get_configured_hosts():
 
     if file_vars.get("is_wato_slave_site", False):
         host_names.update(
-            subprocess.check_output(["check_mk", "--list-hosts", "--include-offline"]).splitlines())
+            subprocess.check_output(["check_mk", "--list-hosts", "--include-offline"],
+                                    encoding="utf-8").splitlines())
     else:
         host_names.update(
             subprocess.check_output(
-                ["check_mk", "--list-hosts", "--all-sites", "--include-offline"]).splitlines())
+                ["check_mk", "--list-hosts", "--all-sites", "--include-offline"],
+                encoding="utf-8").splitlines())
 
     return host_names
 

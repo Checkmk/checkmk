@@ -7,7 +7,7 @@
 # pylint: disable=redefined-outer-name
 
 import OpenSSL  # type: ignore[import]
-import pytest  # type: ignore[import]
+import pytest
 
 import omdlib.certs as certs
 

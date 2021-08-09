@@ -4,18 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 import cmk.utils.render
-from cmk.gui.i18n import _
 
+from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import (
-    metric_info,
     graph_info,
-    m,
-    parse_color_into_hexrgb,
     indexed_color,
+    m,
     MAX_NUMBER_HOPS,
+    metric_info,
+    parse_color_into_hexrgb,
 )
 
 # .
@@ -1458,16 +1458,16 @@ metric_info['write_avg_exe_ms'] = {
 }
 
 
-def register_requests_metrics():
+def register_requests_metrics() -> None:
     for request, color in zip(['get', 'put', 'delete', 'head', 'post', 'select', 'list'],
                               ['11/a', '13/a', '15/a', '21/a', '23/a', '25/a', '31/a']):
         metric_info['%s_requests' % request] = {
-            'title': _('%s Requests' % request.upper()),
+            'title': _('%s Requests') % request.upper(),
             'unit': '1/s',
             'color': color,
         }
         metric_info['%s_requests_perc' % request] = {
-            'title': _('Percentage %s Requests' % request.upper()),
+            'title': _('Percentage %s Requests') % request.upper(),
             'unit': '%',
             'color': color,
         }
@@ -1523,6 +1523,24 @@ metric_info['packets_rejected'] = {
     "color": "42/a",
 }
 
+metric_info["fortiauthenticator_fails_5min"] = {
+    "title": _("Authentication failures (last 5 minutes)"),
+    "unit": "count",
+    "color": "42/a",
+}
+
+metric_info["fortigate_detection_rate"] = {
+    "title": _("Detection rate"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
+metric_info["fortigate_blocking_rate"] = {
+    "title": _("Blocking rate"),
+    "unit": "1/s",
+    "color": "42/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -1569,6 +1587,36 @@ graph_info["bandwidth"] = {
         ("if_in_bps:crit", _("Critical (In)")),
         ("if_out_bps:warn,-1,*", _("Warning (Out)")),
         ("if_out_bps:crit,-1,*", _("Critical (Out)")),
+    ],
+}
+
+graph_info["if_errors"] = {
+    "title": _("Errors"),
+    "metrics": [
+        ("if_in_errors", "area"),
+        ("if_in_discards", "stack"),
+        ("if_out_errors", "-area"),
+        ("if_out_discards", "-stack"),
+    ],
+}
+
+graph_info["bm_packets"] = {
+    "title": _("Broad-/Multicast"),
+    "metrics": [
+        ("if_in_mcast", "line"),
+        ("if_in_bcast", "line"),
+        ("if_out_mcast", "-line"),
+        ("if_out_bcast", "-line"),
+    ],
+}
+
+graph_info["packets_1"] = {
+    "title": _("Packets"),
+    "metrics": [
+        ("if_in_unicast", "line"),
+        ("if_in_non_unicast", "line"),
+        ("if_out_unicast", "-line"),
+        ("if_out_non_unicast", "-line"),
     ],
 }
 
@@ -1978,6 +2026,7 @@ graph_info["nodes_by_type"] = {
     ],
 }
 graph_info["channel_utilization_24ghz"] = {
+    "title": _("Channel utilization for 2,4GHz Band"),
     "metrics": [("channel_utilization_24ghz", "area"),],
     "scalars": [
         "channel_utilization_24ghz:warn",
@@ -1987,6 +2036,7 @@ graph_info["channel_utilization_24ghz"] = {
 }
 
 graph_info["channel_utilization_5ghz"] = {
+    "title": _("Channel utilization for 5GHz Band"),
     "metrics": [("channel_utilization_5ghz", "area"),],
     "scalars": [
         "channel_utilization_5ghz:warn",
@@ -1996,6 +2046,7 @@ graph_info["channel_utilization_5ghz"] = {
 }
 
 graph_info["active_sessions_with_peak_value"] = {
+    "title": _("Active sessions"),
     "metrics": [
         ("active_sessions", "area"),
         ("active_sessions_peak", "line"),

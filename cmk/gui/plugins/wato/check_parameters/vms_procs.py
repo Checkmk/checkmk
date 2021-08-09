@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Optional,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Integer, Optional, Tuple
 
 
 def _parameter_valuespec_vms_procs():
@@ -33,5 +28,5 @@ rulespec_registry.register(
         check_group_name="vms_procs",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vms_procs,
-        title=lambda: _("Number of processes on OpenVMS"),
+        title=lambda: _("OpenVMS processes"),
     ))

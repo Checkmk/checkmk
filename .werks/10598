@@ -6,7 +6,7 @@ Date: 1581429907
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If averaging is configured, the checkplugin considered the specified averaging period
 to be hours instead of minutes.

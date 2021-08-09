@@ -5,21 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    DropdownChoice,
-    Dictionary,
-    Integer,
-    Percentage,
-    Tuple,
-    Transform,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersOperatingSystem,
     CheckParameterRulespecWithoutItem,
-    rulespec_registry,
     Levels,
+    rulespec_registry,
+    RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer, Percentage, Transform, Tuple
 
 cpu_util_common_dict = Dictionary(
     help=_("This rule configures levels for the CPU utilization (not load) for "
@@ -38,7 +30,7 @@ cpu_util_common_dict = Dictionary(
                  Age(title=_("Critical after "), default_value=15 * 60),
              ],
              help=
-             _("With this configuration, check_mk will alert if the actual (not averaged) total CPU is "
+             _("With this configuration, Checkmk will alert if the actual (not averaged) total CPU is "
                "exceeding a utilization threshold over an extended period of time. "
                "ATTENTION: This configuration cannot be used for check <i>lparstat_aix.cpu_util</i>!"
               ))),
@@ -51,7 +43,7 @@ cpu_util_common_dict = Dictionary(
                ],
                help=_("A single thread fully utilizing a single core (potentially due to a bug) "
                       "may go unnoticed when only monitoring the total utilization of the CPU. "
-                      "With this configuration, check_mk will alert if a single core is "
+                      "With this configuration, Checkmk will alert if a single core is "
                       "exceeding a utilization threshold over an extended period of time."
                       "This is currently only supported on linux and windows agents "
                       "as well as devices monitored through the host-resource mib"))),
@@ -217,7 +209,7 @@ rulespec_registry.register(
 def _transform_cpu_utilization(params):
     if params is None:
         return {}
-    if isinstance(params, Tuple):
+    if isinstance(params, tuple):
         return {"util": params}
     return params
 

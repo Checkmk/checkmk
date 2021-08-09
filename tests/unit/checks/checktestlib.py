@@ -7,14 +7,13 @@
 import copy
 import os
 import types
-from typing import List
+from typing import Any, Callable, NamedTuple
 
 import mock
-import pytest  # type: ignore[import]
+import pytest
 
+from cmk.base.check_api import Service
 from cmk.base.item_state import MKCounterWrapped
-from cmk.base.discovered_labels import DiscoveredHostLabels, HostLabel
-from cmk.base.check_api_utils import Service
 
 
 class Tuploid:
@@ -61,8 +60,8 @@ class PerfValue(Tuploid):
             assert c not in key, "PerfValue: key %r must not contain %r" % (key, c)
         # NOTE: The CMC as well as all other Nagios-compatible cores do accept a
         #       string value that may contain a unit, which is in turn available
-        #       for use in PNP4Nagios templates. Check_MK defines its own semantic
-        #       context for performance values using Check_MK metrics. It is therefore
+        #       for use in PNP4Nagios templates. Checkmk defines its own semantic
+        #       context for performance values using Checkmk metrics. It is therefore
         #       preferred to return a "naked" scalar.
         msg = "PerfValue: %s parameter %r must be of type int, float or None - not %r"
         assert isinstance(value, (int, float)),\
@@ -293,40 +292,14 @@ class DiscoveryResult:
     that yield-based discovery functions run, and that no exceptions
     get lost in the laziness.
     """
-
-    # TODO: Add some more consistency checks here.
     def __init__(self, result=()):
-        self.entries = []
-        self.labels = DiscoveredHostLabels()
-        if not result:
-            # discovering nothing is valid!
-            return
-        for entry in result:
-            if isinstance(entry, DiscoveredHostLabels):
-                self.labels += entry
-            elif isinstance(entry, HostLabel):
-                self.labels.add_label(entry)
-            # preparation for ServiceLabel Discovery
-            #elif isinstance(entry, Service):
-            #
-            else:
-                self.entries.append(DiscoveryEntry(entry))
-        self.entries.sort(key=repr)
+        self.entries = sorted((DiscoveryEntry(e) for e in (result or ())), key=repr)
 
     def __eq__(self, other):
-        return self.entries == other.entries and self.labels == other.labels
+        return self.entries == other.entries
 
-    # TODO: Very questionable __repr__ conversion, leading to even more
-    # interesting typing Kung Fu...
     def __repr__(self) -> str:
-        entries: List[object] = [o for o in self.entries if isinstance(o, object)]
-        host_labels: List[object] = [HostLabel(str(k), str(self.labels[k])) for k in self.labels]
-        return "DiscoveryResult(%r)" % (entries + host_labels,)
-
-    # TODO: Very obscure and inconsistent __str__ conversion...
-    def __str__(self):
-        return "%s%s" % ([tuple(e) for e in self.entries
-                         ], [self.labels[k].label for k in self.labels])
+        return f"DiscoveryResult({self.entries!r})"
 
 
 def assertDiscoveryResultsEqual(check, actual, expected):
@@ -355,13 +328,6 @@ def assertDiscoveryResultsEqual(check, actual, expected):
         assert default_params_a == default_params_e, "default parameters differ: %r != %r" % (
             default_params_a, default_params_e)
 
-    assert len(actual.labels) == len(expected.labels), \
-           "DiscoveryResults labels are not of equal length: %s != %s" % (actual.labels.to_dict(), expected.labels.to_dict())
-
-    # iterate over the HostLabels in DiscoveredHostLabels, not lable string
-    for laba, labe in zip(actual.labels.to_list(), expected.labels.to_list()):
-        assert laba == labe, "discovered host labels differ: expected %r got %r" % (laba, labe)
-
 
 class BasicItemState:
     """Item state as returned by get_item_state
@@ -384,26 +350,32 @@ class BasicItemState:
         # We want to be able to test time anomalies.
 
 
-class MockItemState:
+class _MockValueStore:
+    def __init__(self, getter: Callable):
+        self._getter = getter
+
+    def get(self, key, default=None):
+        return self._getter(key, default)
+
+    def __setitem__(self, key, value):
+        pass
+
+
+class _MockVSManager(NamedTuple):
+    active_service_interface: _MockValueStore
+
+
+def mock_item_state(mock_state):
     """Mock the calls to item_state API.
-
-    Due to our rather unorthodox import structure, we cannot mock
-    cmk.base.item_state.get_item_state directly (it's a global var
-    in running checks!)
-    Instead, this context manager mocks
-    cmk.base.item_state._cached_item_states.get_item_state.
-
-    This will affect get_rate and get_average as well as
-    get_item_state.
 
     Usage:
 
-    with MockItemState(mock_state):
+    with mock_item_state(mock_state):
         # run your check test here
         mocked_time_diff, mocked_value = \
             cmk.base.item_state.get_item_state('whatever_key', default="IGNORED")
 
-    There are three different types of arguments to pass to MockItemState:
+    There are three different types of arguments to pass to mock_item_state:
 
     1) Callable object:
         The callable object will replace `get_item_state`. It must accept two
@@ -415,38 +387,18 @@ class MockItemState:
 
     3) Anything else:
         All calls to the item_state API behave as if the last state had
-        been `value`, recorded
-        `time_diff` seconds ago.
+        been `mock_state`
 
     See for example 'test_statgrab_cpu_check.py'.
     """
-    TARGET = 'cmk.base.item_state._cached_item_states.get_item_state'
+    target = 'cmk.base.api.agent_based.value_store._global_state._active_host_value_store'
 
-    def __init__(self, mock_state):
-        self.context = None
+    getter = (  #
+        mock_state.get if isinstance(mock_state, dict) else
+        (mock_state if callable(mock_state) else  #
+         lambda key, default: mock_state))
 
-        if hasattr(mock_state, '__call__'):
-            self.get_val_function = mock_state
-        elif isinstance(mock_state, dict):
-            self.get_val_function = mock_state.get  # in dict case check values
-        else:
-            self.get_val_function = lambda key, default: mock_state
-
-    def __call__(self, user_key, default=None):
-        val = self.get_val_function(user_key, default)
-        return val
-
-    def __enter__(self):
-        '''The default context: just mock get_item_state'''
-        self.context = mock.patch(
-            MockItemState.TARGET,
-            # I'm the MockObj myself!
-            new_callable=lambda: self)
-        return self.context.__enter__()
-
-    def __exit__(self, *exc_info):
-        assert self.context is not None
-        return self.context.__exit__(*exc_info)
+    return mock.patch(target, _MockVSManager(_MockValueStore(getter)))
 
 
 class assertMKCounterWrapped:
@@ -454,14 +406,14 @@ class assertMKCounterWrapped:
 
     If you can choose to also assert a certain error message:
 
-    with MockItemState((1., -42)):
+    with mock_item_state((1., -42)):
         with assertMKCounterWrapped("value is negative"):
             # do a check that raises such an exception
             run_my_check()
 
     Or you can ignore the exact error message:
 
-    with MockItemState((1., -42)):
+    with mock_item_state((1., -42)):
         with assertMKCounterWrapped():
             # do a check that raises such an exception
             run_my_check()

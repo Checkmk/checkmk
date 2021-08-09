@@ -7,6 +7,6 @@ Edition: cre
 Knowledge: doc
 Level: 2
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Users without the role <tt>Read access to all hosts and folders</tt> had to save hosts twice to get their changes applied.

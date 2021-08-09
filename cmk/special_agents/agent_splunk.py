@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import namedtuple
 import argparse
 import sys
+from collections import namedtuple
+
 import requests
 import urllib3  # type: ignore[import]
+
 import cmk.utils.password_store
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -171,8 +173,8 @@ def handle_jobs(value):
         sys.stdout.write("%s %s %s %s %s\n" % (
             entries["published"],  # creation time
             entries["author"],  # author of the search
-            entries.get("content", "Unknown").get("request", "Unkown").get(
-                "ui_dispatch_app"),  # Application of the search, may be empty for internal searches
+            # Application of the search, may be empty for internal searches
+            entries.get("content", {}).get("request", {}).get("ui_dispatch_app", "Unknown"),
             entries["content"]["dispatchState"],  # state of the search
             entries["content"]["isZombie"],  # zombie state (false/true)
         ))

@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The metrics "Guest operating systems" and "CPU time stolen by other
 operating systems" that appear on the CPU utilization service Check for

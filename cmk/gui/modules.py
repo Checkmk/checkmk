@@ -29,16 +29,15 @@ import errno
 import os
 import sys
 from types import ModuleType
-from typing import Optional, Iterator, Any, Dict, List
+from typing import Any, Dict, Iterator, List, Optional
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 
-import cmk.gui.utils as utils
 import cmk.gui.pages
-from cmk.gui.globals import g
-
 import cmk.gui.plugins.main_modules
+import cmk.gui.utils as utils
+from cmk.gui.globals import g
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module
@@ -95,6 +94,9 @@ def load_all_plugins(only_modules: Optional[List[str]] = None) -> None:
     need_plugins_reload = _local_web_plugins_have_changed()
 
     for module in _cmk_gui_top_level_modules() + _legacy_modules:
+        # initial config is already loaded, do not load it again
+        if module.__name__ == "cmk.gui.config":
+            continue
         if (only_modules is None or module.__name__ in only_modules) and \
            hasattr(module, "load_plugins"):
             # hasattr above ensures the function is available. Mypy does not understand this.

@@ -5,24 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    ListOf,
-    MonitoringState,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput
 
 
 def _parameter_valuespec_hostsystem_sensors():
     return ListOf(Dictionary(
         help=_("This rule allows to override alert levels for the given sensor names."),
-        elements=[("name", TextAscii(title=_("Sensor name"))),
+        elements=[("name", TextInput(title=_("Sensor name"))),
                   ("states",
                    Dictionary(
                        title=_("Custom states"),

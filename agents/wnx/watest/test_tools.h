@@ -1,11 +1,14 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef test_tools_h__
 #define test_tools_h__
 //
 
+#include <chrono>
+#include <functional>
 #include <vector>
 
 #include "cfg.h"
@@ -20,6 +23,26 @@ class Node;
 }
 
 namespace tst {
+std::filesystem::path GetSolutionRoot();
+std::filesystem::path GetProjectRoot();
+std::filesystem::path GetUnitTestFilesRoot();
+
+std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root);
+inline std::filesystem::path MakePathToUnitTestFiles() {
+    return MakePathToUnitTestFiles(GetSolutionRoot());
+}
+std::filesystem::path MakePathToConfigTestFiles(const std::wstring& root);
+inline std::filesystem::path MakePathToConfigTestFiles() {
+    return MakePathToConfigTestFiles(GetSolutionRoot());
+}
+std::filesystem::path MakePathToCapTestFiles(const std::wstring& root);
+inline std::filesystem::path MakePathToCapTestFiles() {
+    return MakePathToCapTestFiles(GetSolutionRoot());
+}
+
+///  from the TestEnvironment
+[[nodiscard]] std::filesystem::path GetTempDir();
+
 class YamlLoader {
 public:
     YamlLoader() {
@@ -35,39 +58,55 @@ public:
     ~YamlLoader() { OnStart(cma::AppType::test); }
 };
 
-inline void ConstructFile(std::filesystem::path Path,
-                          std::string_view Content) {
-    std::ofstream ofs(Path);
-
-    ofs << Content;
-}
-
 void SafeCleanTempDir();
 void SafeCleanTempDir(std::string_view sub_dir);
 
-inline auto CreateIniFile(std::filesystem::path Lwa, const std::string Content,
-                          const std::string YamlName) {
-    auto ini_file = Lwa / (YamlName + ".ini");
-    ConstructFile(Lwa / ini_file, Content);
+inline void CreateTextFile(const std::filesystem::path& path,
+                           std::string_view content) {
+    std::ofstream ofs(path);
+
+    ofs << content;
+}
+
+inline void CreateBinaryFile(const std::filesystem::path& path,
+                             std::string_view data) {
+    std::ofstream ofs(path, std::ios::binary);
+
+    ofs.write(data.data(), data.size());
+}
+
+inline std::filesystem::path CreateIniFile(
+    const std::filesystem::path& lwa_path, const std::string content,
+    const std::string yaml_name) {
+    auto ini_file = lwa_path / (yaml_name + ".ini");
+    CreateTextFile(lwa_path / ini_file, content);
     return ini_file;
 }
 
-inline std::filesystem::path CreateWorkFile(const std::filesystem::path& Name,
-                                            const std::string& Text) {
-    namespace fs = std::filesystem;
-
-    auto path = Name;
-
-    std::ofstream ofs(path.u8string(), std::ios::binary);
-
-    if (!ofs) {
-        XLOG::l("Can't open file {} error {}", path.u8string(), GetLastError());
-        return {};
-    }
-
-    ofs << Text << "\n";
+inline std::filesystem::path CreateWorkFile(const std::filesystem::path& path,
+                                            const std::string& content) {
+    CreateBinaryFile(path, content + "\n");
     return path;
 }
+
+// Storage for temporary in out dir
+class TempDirPair {
+public:
+    TempDirPair(const std::string& case_name);
+    TempDirPair(const TempDirPair&) = delete;
+    TempDirPair(TempDirPair&&) = delete;
+    TempDirPair& operator=(const TempDirPair&) = delete;
+    TempDirPair& operator=(TempDirPair&&) = delete;
+
+    ~TempDirPair();
+    std::filesystem::path in() const noexcept { return in_; }
+    std::filesystem::path out() const noexcept { return out_; }
+
+private:
+    std::filesystem::path path_;
+    std::filesystem::path in_;
+    std::filesystem::path out_;
+};
 
 inline std::tuple<std::filesystem::path, std::filesystem::path> CreateInOut() {
     namespace fs = std::filesystem;
@@ -101,7 +140,8 @@ inline std::filesystem::path CreateDirInTemp(std::wstring_view Dir) {
 
 // add Str to enabled sections and remove from disabled
 // optionally updates parameters in Config
-void EnableSectionsNode(const std::string_view& Str, bool UpdateGlobal = true);
+void EnableSectionsNode(std::string_view value, bool update_global);
+void DisableSectionsNode(std::string_view value, bool update_global);
 
 inline void SafeCleanBakeryDir() {
     namespace fs = std::filesystem;
@@ -113,7 +153,7 @@ inline void SafeCleanBakeryDir() {
         fs::create_directory(bakery_dir);
     } else {
         XLOG::l("attempt to delete suspicious dir {}",
-                wtools::ConvertToUTF8(bakery_dir));
+                wtools::ToUtf8(bakery_dir));
     }
 }
 
@@ -121,8 +161,11 @@ const std::string_view very_temp = "tmpx";
 
 void SafeCleanTmpxDir();
 
-void PrintNode(YAML::Node node, std::string_view S);
 std::vector<std::string> ReadFileAsTable(const std::string& Name);
+inline std::vector<std::string> ReadFileAsTable(
+    const std::filesystem::path& name) {
+    return ReadFileAsTable(name.u8string());
+}
 
 using CheckYamlVector =
     std::vector<std::pair<std::string_view, YAML::NodeType::value>>;
@@ -135,7 +178,97 @@ inline void CheckYaml(YAML::Node table, const CheckYamlVector& vec) {
     }
 }
 
-constexpr std::string_view zip_to_test = "unzip_test.zip";
+constexpr std::string_view install_cab_to_test = "install_test.cab";
+constexpr std::string_view cab_to_test = "uncab_test.cab";
+
+std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name);
+std::wstring GenerateRandomFileName() noexcept;
+
+/// \brief RAII class to change folder structure in the config
+class TempCfgFs {
+private:
+    enum class Mode { standard, no_io };
+
+public:
+    using ptr = std::unique_ptr<TempCfgFs>;
+
+    static std::unique_ptr<TempCfgFs> CreateNoIo() {
+        return std::unique_ptr<TempCfgFs>(new TempCfgFs(Mode::no_io));
+    }
+
+    static std::unique_ptr<TempCfgFs> Create() {
+        return std::unique_ptr<TempCfgFs>(new TempCfgFs(Mode::standard));
+    }
+    ~TempCfgFs();
+
+    TempCfgFs(const TempCfgFs&) = delete;
+    TempCfgFs(TempCfgFs&&) = delete;
+    TempCfgFs& operator=(const TempCfgFs&) = delete;
+    TempCfgFs& operator=(TempCfgFs&&) = delete;
+
+    [[nodiscard]] bool loadConfig(const std::filesystem::path& yml);
+    [[nodiscard]] bool reloadConfig();
+    [[nodiscard]] bool loadFactoryConfig();
+    [[nodiscard]] bool loadContent(std::string_view config);
+
+    [[nodiscard]] bool createRootFile(const std::filesystem::path& relative_p,
+                                      const std::string& content) const;
+    [[nodiscard]] bool createDataFile(const std::filesystem::path& relative_p,
+                                      const std::string& content) const;
+
+    void removeRootFile(const std::filesystem::path& relative_p) const;
+    void removeDataFile(const std::filesystem::path& relative_p) const;
+
+    const std::filesystem::path root() const { return root_; }
+    const std::filesystem::path data() const { return data_; }
+
+    void allowUserAccess();
+
+private:
+    TempCfgFs(Mode mode);
+    [[nodiscard]] static bool createFile(
+        const std::filesystem::path& filepath,
+        const std::filesystem::path& filepath_base, const std::string& content);
+    static void removeFile(const std::filesystem::path& filepath,
+                           const std::filesystem::path& filepath_base);
+    std::filesystem::path root_;
+    std::filesystem::path data_;
+    std::filesystem::path base_;
+    Mode mode_;
+    YAML::Node yaml_;
+};
+
+std::filesystem::path GetFabricYml();
+std::string GetFabricYmlContent();
+
+bool WaitForSuccessSilent(std::chrono::milliseconds ms,
+                          std::function<bool()> predicat);
+
+bool WaitForSuccessIndicate(std::chrono::milliseconds ms,
+                            std::function<bool()> predicat);
+
+// Usage FirewallOpener fwo;
+class FirewallOpener {
+public:
+    FirewallOpener();
+    ~FirewallOpener();
+
+    FirewallOpener(const FirewallOpener&) = delete;
+    FirewallOpener(FirewallOpener&&) = delete;
+
+    FirewallOpener& operator=(const FirewallOpener&) = delete;
+    FirewallOpener& operator=(FirewallOpener&&) = delete;
+
+private:
+    std::wstring argv0_;
+};
+
+constexpr inline int TestPort() { return 64531; }
+
+namespace misc {
+void CopyFailedPythonLogFileToLog(const std::filesystem::path& data);
+
+}  // namespace misc
 
 }  // namespace tst
 #endif  // test_tools_h__

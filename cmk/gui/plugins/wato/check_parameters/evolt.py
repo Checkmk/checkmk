@@ -5,21 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _item_spec_evolt():
-    return TextAscii(title=_("Phase"),
+    return TextInput(title=_("Phase"),
                      help=_("The identifier of the phase the power is related to."))
 
 

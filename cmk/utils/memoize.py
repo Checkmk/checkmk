@@ -7,7 +7,7 @@
 It provides a decorator that can be used to cache function results based on the
 given function arguments."""
 
-from typing import Type, Union, Callable, Tuple, Dict, Set, Any
+from typing import Any, Callable, Dict, Set, Tuple, Type, Union
 
 # The functions that violate this checker are borrowed from official python
 # code and are done for performance reasons.
@@ -54,7 +54,7 @@ class _HashedSeq(list):
     __slots__ = ['hashvalue']
 
     def __init__(self, tup, hash=hash):
-        super(_HashedSeq, self).__init__()
+        super().__init__()
         self[:] = tup
         self.hashvalue = hash(tup)
 
@@ -73,7 +73,7 @@ Examples:
   @cmk.utils.memoize.MemoizeCache
 
 """
-    __slots__ = ["_logger", "_cache", "mem_func"]
+    __slots__ = ["_cache", "mem_func"]
 
     def __init__(self, function: Callable) -> None:
         self.mem_func = function

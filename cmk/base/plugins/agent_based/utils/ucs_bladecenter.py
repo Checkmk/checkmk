@@ -5,12 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict
+
 from ..agent_based_api.v1 import type_defs
 
 GenericSection = Dict[str, Dict[str, Dict[str, str]]]
 
 
-def generic_parse(string_table: type_defs.AgentStringTable) -> GenericSection:
+def generic_parse(string_table: type_defs.StringTable) -> GenericSection:
     """
     >>> from pprint import pprint
     >>> pprint(generic_parse([

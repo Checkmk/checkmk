@@ -5,23 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Tuple,
-    TextAscii,
-    Age,
-    Filesize,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Age, Dictionary, Filesize, TextInput, Tuple
 
 
 def _item_spec_filestats():
-    return TextAscii(title=_("File Name"),
+    return TextInput(title=_("File Name"),
                      help=_("This name corresponds to the single file name to be monitored."),
                      allow_empty=True)
 
@@ -32,32 +25,32 @@ def _parameter_valuespec_filestats():
                    Tuple(
                        title=_("Minimal age of a file"),
                        elements=[
-                           Age(title=_("Warning if younger than")),
-                           Age(title=_("Critical if younger than")),
+                           Age(title=_("Warning below")),
+                           Age(title=_("Critical below")),
                        ],
                    )),
                   ("max_age",
                    Tuple(
                        title=_("Maximal age of a file"),
                        elements=[
-                           Age(title=_("Warning if older than")),
-                           Age(title=_("Critical if older than")),
+                           Age(title=_("Warning at or above")),
+                           Age(title=_("Critical at or above")),
                        ],
                    )),
                   ("min_size",
                    Tuple(
                        title=_("Minimal size of a file"),
                        elements=[
-                           Filesize(title=_("Warning if below")),
-                           Filesize(title=_("Critical if below")),
+                           Filesize(title=_("Warning below")),
+                           Filesize(title=_("Critical below")),
                        ],
                    )),
                   ("max_size",
                    Tuple(
                        title=_("Maximal size of a file"),
                        elements=[
-                           Filesize(title=_("Warning if above")),
-                           Filesize(title=_("Critical if above")),
+                           Filesize(title=_("Warning at or above")),
+                           Filesize(title=_("Critical at or above")),
                        ],
                    ))],
         help=_("Here you can impose various levels the results reported by the"

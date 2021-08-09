@@ -1,0 +1,14 @@
+Title: k8s_nodes: fix crash with error "unexpected keyword argument 'bounderies'"
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1613661537
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The check k8s_nodes crashed with the following error message:
+TypeError (check_levels() got an unexpected keyword argument 'bounderies')
+This has been fixed.

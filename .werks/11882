@@ -1,0 +1,11 @@
+Title: mk_logwatch: Output limitation counted characters instead of bytes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1608734193
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+

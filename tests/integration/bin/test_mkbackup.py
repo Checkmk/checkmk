@@ -6,20 +6,32 @@
 
 # pxlint: disable=redefined-outer-name
 
-import subprocess
-import re
-import os
-import tarfile
+import fcntl
 import fnmatch
-import pytest  # type: ignore[import]
+import os
+import re
+import subprocess
+import tarfile
+from contextlib import contextmanager
 
-from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+import pytest
 
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+
+from cmk.utils.paths import mkbackup_lock_dir
 from cmk.utils.python_printer import pformat
+
+
+@contextmanager
+def simulate_backup_lock(site_id):
+    with open(mkbackup_lock_dir / f"mkbackup-{site_id}.lock", "ab") as flock:
+        fcntl.flock(flock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield flock
 
 
 @pytest.fixture(name="backup_path")
 def backup_path_fixture(tmp_path):
+
     backup_path = str(tmp_path / 'backup')
 
     if not os.path.exists(backup_path):
@@ -28,8 +40,36 @@ def backup_path_fixture(tmp_path):
     return backup_path
 
 
+@pytest.fixture(name="backup_lock_dir", params=[
+    {
+        "exists": True
+    },
+    {
+        "exists": False
+    },
+])
+def backup_lock_dir_fixture(request):
+    # This fixture should prepare two possible scenarios:
+    # 1) The folder for the backup locks does already exist *and* has the correct permissions
+    # 2) The folder does not yet exist.
+    # --> In both scenarios mkbackup must not fail
+
+    # As get_site_factory executes "sudo omd start", the backup dir will already be created as
+    # root. Therefore we need to perform the setup steps as root as well (due to the sticky bit of
+    # /run/lock).
+    if request.param["exists"]:
+        subprocess.call(["sudo", "mkdir", str(mkbackup_lock_dir)])
+        subprocess.call(["sudo", "chmod", "0770", str(mkbackup_lock_dir)])
+        subprocess.call(["sudo", "chgrp", "omd", str(mkbackup_lock_dir)])
+
+    else:
+        subprocess.call(["sudo", "rm", "-r", str(mkbackup_lock_dir)])
+
+
 @pytest.fixture(name="test_cfg", scope="function")
 def test_cfg_fixture(web, site, backup_path):  # noqa:F811  # pylint: disable=redefined-outer-name
+    site.ensure_running()
+
     cfg = {
         'jobs': {
             'testjob': {
@@ -95,6 +135,8 @@ def test_cfg_fixture(web, site, backup_path):  # noqa:F811  # pylint: disable=re
     site.delete_file("etc/check_mk/backup_keys.mk")
     site.delete_file("etc/check_mk/backup.mk")
 
+    site.ensure_running()
+
 
 def _execute_backup(site, job_id="testjob"):
     # Perform the backup
@@ -131,7 +173,7 @@ def _execute_backup(site, job_id="testjob"):
     return backup_id
 
 
-def _execute_restore(site, backup_id, env=None):
+def _execute_restore(site, backup_id, env=None, restore_site=True):
     p = site.execute(["mkbackup", "restore", "test-target", backup_id],
                      stdout=subprocess.PIPE,
                      stderr=subprocess.PIPE,
@@ -140,13 +182,14 @@ def _execute_restore(site, backup_id, env=None):
     stdout, stderr = p.communicate()
 
     try:
-        assert "Restore completed" in stdout, "Invalid output: %r" % stdout
         assert stderr == ""
+        assert "Restore completed" in stdout, "Invalid output: %r" % stdout
         assert p.wait() == 0
     except Exception:
-        # Bring back the site in case the restore test fails which may leave the
-        # site in a stopped state
-        site.start()
+        if restore_site:
+            # Bring back the site in case the restore test fails which may leave the
+            # site in a stopped state
+            site.start()
         raise
 
 
@@ -229,7 +272,7 @@ def test_mkbackup_list_jobs(site, test_cfg):
     assert "Tästjob" in stdout
 
 
-def test_mkbackup_simple_backup(site, test_cfg):
+def test_mkbackup_simple_backup(site, test_cfg, backup_lock_dir):
     _execute_backup(site)
 
 
@@ -271,3 +314,16 @@ def test_mkbackup_no_history_backup_and_restore(site, test_cfg, backup_path):
     assert not logs, logs
 
     _execute_restore(site, backup_id)
+
+
+def test_mkbackup_locking(site, test_cfg):
+
+    backup_id = _execute_backup(site, job_id="testjob-no-history")
+    with simulate_backup_lock(site.id):
+        for what in (
+                lambda s: _execute_backup(s),
+                lambda s: _execute_restore(s, backup_id),
+        ):
+            with pytest.raises(AssertionError) as locking_issue:
+                what(site)
+            assert "Failed to get the exclusive backup lock" in str(locking_issue)

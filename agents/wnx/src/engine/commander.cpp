@@ -1,4 +1,8 @@
-// Configuration Parameters for whole Agent
+// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
+
 #include "stdafx.h"
 
 #include "commander.h"
@@ -10,7 +14,10 @@
 
 namespace cma::commander {
 
-std::mutex run_command_processor_lock;
+namespace {
+std::mutex g_run_command_processor_lock{};
+
+}  // namespace
 
 bool RunCommand(std::string_view peer, std::string_view cmd) {
     if (!cma::tools::IsEqual(peer, kMainPeer)) {
@@ -37,7 +44,7 @@ bool RunCommand(std::string_view peer, std::string_view cmd) {
         if (cma::IsTest()) return false;
         if (!cma::IsService()) return false;
 
-        cma::G_UninstallALert.set();
+        cma::g_uninstall_alert.set();
         return true;
     }
 
@@ -50,12 +57,12 @@ bool RunCommand(std::string_view peer, std::string_view cmd) {
 RunCommandProcessor g_rcp = RunCommand;
 
 RunCommandProcessor ObtainRunCommandProcessor() {
-    std::lock_guard lk(run_command_processor_lock);
+    std::lock_guard lk(g_run_command_processor_lock);
     return g_rcp;
 }
 
 void ChangeRunCommandProcessor(RunCommandProcessor rcp) {
-    std::lock_guard lk(run_command_processor_lock);
+    std::lock_guard lk(g_run_command_processor_lock);
     g_rcp = rcp;
 }
 

@@ -19,6 +19,7 @@ def inv_ibm_mq_channels(parsed, inventory_tree, status_data_tree):
 
         data = dict(key)
         data["type"] = attrs.get("CHLTYPE", "Unknown")
+        data["monchl"] = attrs.get("MONCHL", "n/a")
         inv_node.append(data)
 
         data = dict(key)

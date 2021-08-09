@@ -5,11 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
+from cmk.gui.plugins.metrics import graph_info, metric_info
 
 #.
 #   .--Metrics-------------------------------------------------------------.
@@ -646,6 +642,7 @@ graph_info["bufferpool_hitratios"] = {
 }
 
 graph_info["deadlocks_and_waits"] = {
+    "title": _("Dead- and waitlocks"),
     "metrics": [
         ("deadlocks", "area"),
         ("lockwaits", "stack"),

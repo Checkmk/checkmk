@@ -6,7 +6,7 @@ Date: 1590770467
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 With this release Windows Agent will wait for WIndows Network availabale
 up to 30 seconds by default. This can prevent some rare and strange errors 

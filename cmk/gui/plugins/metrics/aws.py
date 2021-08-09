@@ -4,14 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
+from cmk.utils.aws_constants import AWSEC2InstFamilies, AWSEC2InstTypes
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-    indexed_color,
-)
-from cmk.utils.aws_constants import AWSEC2InstTypes, AWSEC2InstFamilies
+from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics import graph_info, indexed_color, metric_info
 
 #.
 #   .--Metrics-------------------------------------------------------------.
@@ -106,12 +102,12 @@ def register_aws_http_metrics():
         ['2xx', '3xx', '4xx', '5xx', '500', '502', '503', '504'],
         ['53/a', '11/a', '32/a', '42/a', '13/a', '14/a', '16/b', '34/a']):
         metric_info["aws_http_%s_rate" % http_err_code] = {
-            "title": _("HTTP %s errors" % http_err_code.upper()),
+            "title": _("HTTP %s errors") % http_err_code.upper(),
             "unit": "1/s",
             "color": color,
         }
         metric_info["aws_http_%s_perc" % http_err_code] = {
-            "title": _("Percentage of HTTP %s errors" % http_err_code.upper()),
+            "title": _("Percentage of HTTP %s errors") % http_err_code.upper(),
             "unit": "%",
             "color": color,
         }
@@ -239,9 +235,9 @@ for i, inst_type in enumerate(AWSEC2InstTypes):
         'color': indexed_color(i, len(AWSEC2InstTypes)),
     }
 
-for inst_fam in AWSEC2InstFamilies:
+for inst_fam, inst_fam_title in AWSEC2InstFamilies.items():
     metric_info['aws_ec2_running_ondemand_instances_%s_vcpu' % inst_fam[0]] = {
-        'title': _('Total %s vCPUs') % AWSEC2InstFamilies[inst_fam],
+        'title': _('Total %s vCPUs') % inst_fam_title,
         'unit': 'count',
         'color': '25/a',
     }
@@ -766,6 +762,120 @@ metric_info['aws_cloudwatch_alarms_cloudwatch_alarms'] = {
     'title': _('CloudWatch alarms'),
     'unit': 'count',
     'color': '41/a',
+}
+
+metric_info['aws_lambda_duration'] = {
+    'title': _('Duration of Lambda functions'),
+    'unit': 's',
+    'color': '12/a',
+}
+
+metric_info['aws_lambda_duration_in_percent'] = {
+    'title': _('Duration in percent of Lambda timeout'),
+    'unit': '%',
+    'color': '14/a',
+}
+
+metric_info['aws_lambda_invocations'] = {
+    'title': _('Invocations'),
+    'unit': '1/s',
+    'color': '16/a',
+}
+
+metric_info['aws_lambda_throttles'] = {
+    'title': _('Throttles'),
+    'unit': '1/s',
+    'color': '26/a',
+}
+
+metric_info['aws_lambda_timeout'] = {
+    'title': _('Timeout'),
+    'unit': 'count',
+    'color': '11/a',
+}
+
+metric_info['aws_lambda_iterator_age'] = {
+    'title': _('Iterator age'),
+    'unit': 's',
+    'color': '31/a',
+}
+
+metric_info['aws_lambda_dead_letter_errors'] = {
+    'title': _('Dead letter errors'),
+    'unit': '1/s',
+    'color': '41/a',
+}
+
+metric_info['aws_lambda_concurrent_executions_in_percent'] = {
+    'title': _('Concurrent executions in percent'),
+    'unit': '%',
+    'color': '35/a',
+}
+
+metric_info['aws_lambda_concurrent_executions'] = {
+    'title': _('Concurrent executions'),
+    'unit': 'count',
+    'color': '36/a',
+}
+
+metric_info['aws_lambda_unreserved_concurrent_executions_in_percent'] = {
+    'title': _('Unreserved concurrent executions in percent'),
+    'unit': '%',
+    'color': '25/a',
+}
+
+metric_info['aws_lambda_unreserved_concurrent_executions'] = {
+    'title': _('Unreserved concurrent executions'),
+    'unit': 'count',
+    'color': '26/a',
+}
+
+metric_info['aws_lambda_provisioned_concurrency_executions'] = {
+    'title': _('Provisioned concurrency executions'),
+    'unit': '1/s',
+    'color': '43/a',
+}
+
+metric_info['aws_lambda_provisioned_concurrency_invocations'] = {
+    'title': _('Provisioned concurrency invocations'),
+    'unit': '1/s',
+    'color': '44/a',
+}
+
+metric_info['aws_lambda_provisioned_concurrency_spillover_invocations'] = {
+    'title': _('Provisioned concurrency spillover invocations'),
+    'unit': '1/s',
+    'color': '12/a',
+}
+
+metric_info['aws_lambda_provisioned_concurrency_utilization'] = {
+    'title': _('Provisioned concurrency utilization'),
+    'unit': '%',
+    'color': '31/a',
+}
+
+metric_info['aws_lambda_code_size_in_percent'] = {
+    'title': _('Code Size in percent'),
+    'unit': '%',
+    'color': '41/a',
+}
+
+metric_info['aws_lambda_code_size_absolute'] = {
+    'title': _('Code Size'),
+    'unit': 'bytes',
+    'color': '42/a',
+}
+
+metric_info['aws_lambda_memory_size_in_percent'] = {
+    'title': _('Memory Size in percent'),
+    'unit': '%',
+    'color': '43/a',
+}
+
+metric_info['aws_lambda_memory_size_absolute'] = {
+    'title': _('Memory Size'),
+    'unit': 'bytes',
+    'color': '44/a',
 }
 
 #.

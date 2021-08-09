@@ -6,7 +6,7 @@ Date: 1586868567
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The service details (aka plugin output) was not escaped correctly on the
 availability timeline page. Now the escaping is done the same way as in the

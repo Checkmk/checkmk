@@ -7,98 +7,106 @@
 
 # TODO: More feature related splitting up would be better
 
-import os
 import abc
 import json
+import os
 import re
 import subprocess
-from typing import Callable, List, Type, Optional as _Optional, Tuple as _Tuple
+from contextlib import nullcontext
+from typing import Callable, ContextManager, Dict, List, Mapping
+from typing import Optional as _Optional
+from typing import Tuple as _Tuple
+from typing import Type
 
 from six import ensure_str
 
-import cmk.utils.plugin_registry
+from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
-import cmk.gui.mkeventd
-import cmk.gui.config as config
-from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations
-import cmk.gui.userdb as userdb
+import cmk.utils.plugin_registry
+from cmk.utils.type_defs import CheckPluginName
+
 import cmk.gui.backup as backup
+import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
-import cmk.gui.weblib as weblib
-from cmk.gui.pages import page_registry
-from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, g
-from cmk.gui.htmllib import Choices, HTML
-from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
-    ABCPageListOfMultipleGetChoice, Alternative, CascadingDropdown, Checkbox, Dictionary,
-    DocumentationURL, DropdownChoice, DualListChoice, ElementSelection, FixedValue, Float, Integer,
-    ListChoice, ListOf, ListOfMultiple, ListOfStrings, MonitoredHostname, OptionalDropdownChoice,
-    Password, Percentage, RegExp, RegExpUnicode, RuleComment, TextAscii, TextAsciiAutocomplete,
-    TextUnicode, Transform, Tuple, Url, ValueSpec, ValueSpecHelp, rule_option_elements,
-)
-from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
-    ActionResult, WatoMode,
-)
-from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: disable=unused-import
-    SimpleEditMode, SimpleListMode, SimpleModeType,
-)
-from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: disable=unused-import
-    search_form, wato_confirm,
-)
-from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disable=unused-import
-    MainMenu, MainModule, MenuItem, WatoModule, main_module_registry, register_modules,
-    MainModuleTopic, MainModuleTopicHosts, MainModuleTopicServices, MainModuleTopicAgents,
-    MainModuleTopicEvents, MainModuleTopicUsers, MainModuleTopicGeneral, MainModuleTopicMaintenance,
-    MainModuleTopicCustom,
-)
+import cmk.gui.mkeventd
+import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
-from cmk.gui.watolib.password_store import PasswordStore
-from cmk.gui.watolib.timeperiods import TimeperiodSelection  # noqa: F401 # pylint: disable=unused-import
-from cmk.gui.watolib.users import notification_script_title
+import cmk.gui.weblib as weblib
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import config, g, html, request, transactions, user
 from cmk.gui.groups import (
     load_contact_group_information,
     load_host_group_information,
     load_service_group_information,
 )
-from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.i18n import _, _u
+from cmk.gui.pages import page_registry
+from cmk.gui.permissions import permission_section_registry, PermissionSection
+from cmk.gui.sites import get_activation_site_choices, get_site_config
+from cmk.gui.type_defs import Choices
+from cmk.gui.utils.escaping import escape_html
+from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.watolib.users import notification_script_title
+
+from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    ActionResult, mode_registry, mode_url, redirect, WatoMode,
+)
+from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    search_form,)
+from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    ABCMainModule, main_module_registry, MainMenu, MainModuleTopic, MainModuleTopicAgents,
+    MainModuleTopicBI, MainModuleTopicCustom, MainModuleTopicEvents, MainModuleTopicGeneral,
+    MainModuleTopicHosts, MainModuleTopicMaintenance, MainModuleTopicServices, MainModuleTopicUsers,
+    MenuItem, register_modules, WatoModule,
+)
+from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    SimpleEditMode, SimpleListMode, SimpleModeType,
+)
+from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    config_variable_group_registry, config_variable_registry, ConfigVariable, ConfigVariableGroup,
+    register_configvar, sample_config_generator_registry, SampleConfigGenerator,
+)
+from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    ABCPageListOfMultipleGetChoice, AjaxDropdownChoice, Alternative, autocompleter_registry,
+    CascadingDropdown, Checkbox, Dictionary, DocumentationURL, DropdownChoice, DualListChoice,
+    ElementSelection, FixedValue, Float, Integer, Labels, ListChoice, ListOf, ListOfMultiple,
+    ListOfStrings, MonitoredHostname, OptionalDropdownChoice, Password, Percentage, RegExp,
+    rule_option_elements, RuleComment, SingleLabel, TextInput, Transform, Tuple, Url, ValueSpec,
+    ValueSpecHelp,
+)
+from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    ABCConfigDomain, ac_test_registry, ACResult, ACResultCRIT, ACResultOK, ACResultWARN, ACTest,
+    ACTestCategories, add_change, add_replication_paths, config_domain_registry,
+    ConfigDomainCACertificates, ConfigDomainCore, ConfigDomainEventConsole, ConfigDomainGUI,
+    ConfigDomainOMD, folder_preserving_link, get_rulegroup, is_wato_slave_site, LivestatusViaTCP,
+    log_audit, make_action_link, make_diff_text, multisite_dir, register_rule, site_neutral_path,
+    user_script_choices, user_script_title, wato_fileheader, wato_root_dir,
+)
+from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    ReplicationPath,)
+from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    ABCHostAttributeNagiosText, ABCHostAttributeValueSpec, host_attribute_registry,
+    host_attribute_topic_registry, HostAttributeTopicAddress, HostAttributeTopicBasicSettings,
+    HostAttributeTopicCustomAttributes, HostAttributeTopicDataSources, HostAttributeTopicHostTags,
+    HostAttributeTopicManagementBoard, HostAttributeTopicMetaData, HostAttributeTopicNetworkScan,
+)
+from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     BinaryHostRulespec, BinaryServiceRulespec, CheckParameterRulespecWithItem,
     CheckParameterRulespecWithoutItem, HostRulespec, ManualCheckParameterRulespec, Rulespec,
-    RulespecGroup, RulespecGroupManualChecksApplications, RulespecGroupManualChecksEnvironment,
-    RulespecGroupManualChecksHardware, RulespecGroupManualChecksNetworking,
-    RulespecGroupManualChecksOperatingSystem, RulespecGroupManualChecksStorage,
-    RulespecGroupManualChecksVirtualization, RulespecSubGroup, ServiceRulespec, TimeperiodValuespec,
-    rulespec_group_registry, rulespec_registry,
+    rulespec_group_registry, rulespec_registry, RulespecGroup,
+    RulespecGroupEnforcedServicesApplications, RulespecGroupEnforcedServicesEnvironment,
+    RulespecGroupEnforcedServicesHardware, RulespecGroupEnforcedServicesNetworking,
+    RulespecGroupEnforcedServicesOperatingSystem, RulespecGroupEnforcedServicesStorage,
+    RulespecGroupEnforcedServicesVirtualization, RulespecSubGroup, ServiceRulespec,
+    TimeperiodValuespec,
 )
-from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=unused-import
-    ABCHostAttributeNagiosText, ABCHostAttributeValueSpec, HostAttributeTopicAddress,
-    HostAttributeTopicBasicSettings, HostAttributeTopicCustomAttributes,
-    HostAttributeTopicDataSources, HostAttributeTopicHostTags, HostAttributeTopicManagementBoard,
-    HostAttributeTopicMetaData, HostAttributeTopicNetworkScan, host_attribute_registry,
-    host_attribute_topic_registry,
-)
-from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
-    ABCConfigDomain, ACResult, ACResultCRIT, ACResultOK, ACResultWARN, ACTest, ACTestCategories,
-    ConfigDomainCACertificates, ConfigDomainCore, ConfigDomainEventConsole, ConfigDomainGUI,
-    ConfigDomainOMD, LivestatusViaTCP, ac_test_registry, add_change, add_replication_paths,
-    config_domain_registry, folder_preserving_link, get_rulegroup, is_wato_slave_site, log_audit,
-    make_action_link, multisite_dir, register_rule, site_neutral_path, user_script_choices,
-    user_script_title, wato_fileheader, wato_root_dir,
-)
-from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused-import
-    ReplicationPath,)
-from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
-    ConfigVariable, ConfigVariableGroup, SampleConfigGenerator, config_variable_group_registry,
-    config_variable_registry, register_configvar, sample_config_generator_registry,
-)
-
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob  # noqa: F401 # pylint: disable=unused-import
-
-import cmk.gui.forms as forms
-from cmk.gui.permissions import (
-    PermissionSection,
-    permission_section_registry,
-)
+from cmk.gui.watolib.timeperiods import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    TimeperiodSelection,)
+from cmk.gui.watolib.wato_background_job import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    WatoBackgroundJob,)
 
 
 @permission_section_registry.register
@@ -118,7 +126,7 @@ def PluginCommandLine():
             raise MKUserError(
                 varprefix, _("You are not allowed to use passwords from the password store here."))
 
-    return TextAscii(
+    return TextInput(
         title=_("Command line"),
         help=
         _("Please enter the complete shell command including path name and arguments to execute. "
@@ -258,7 +266,7 @@ def _snmpv3_no_auth_no_priv_credentials_element() -> ValueSpec:
                     title=_("Security Level"),
                     totext=_("No authentication, no privacy"),
                 ),
-                TextAscii(title=_("Security name"), attrencode=True, allow_empty=False),
+                TextInput(title=_("Security name"), allow_empty=False),
             ],
         ),
         forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", ""),
@@ -329,10 +337,7 @@ def _snmpv3_auth_protocol_elements():
             ],
             title=_("Authentication protocol"),
         ),
-        TextAscii(
-            title=_("Security name"),
-            attrencode=True,
-        ),
+        TextInput(title=_("Security name"),),
         Password(
             title=_("Authentication password"),
             minlen=8,
@@ -344,7 +349,7 @@ def IPMIParameters() -> Dictionary:
     return Dictionary(
         title=_("IPMI credentials"),
         elements=[
-            ("username", TextAscii(
+            ("username", TextInput(
                 title=_("Username"),
                 allow_empty=False,
             )),
@@ -410,7 +415,7 @@ def _translation_elements(what):
                  Tuple(
                      orientation="horizontal",
                      elements=[
-                         RegExpUnicode(
+                         RegExp(
                              title=_("Regular expression"),
                              help=_("Must contain at least one subgroup <tt>(...)</tt>"),
                              mingroups=0,
@@ -420,7 +425,7 @@ def _translation_elements(what):
                              mode=RegExp.prefix,
                              case_sensitive=False,
                          ),
-                         TextUnicode(
+                         TextInput(
                              title=_("Replacement"),
                              help=_(
                                  "Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"
@@ -448,17 +453,15 @@ def _translation_elements(what):
              Tuple(
                  orientation="horizontal",
                  elements=[
-                     TextUnicode(
+                     TextInput(
                          title=_("Original %s") % singular,
                          size=30,
                          allow_empty=False,
-                         attrencode=True,
                      ),
-                     TextUnicode(
+                     TextInput(
                          title=_("Translated %s") % singular,
                          size=30,
                          allow_empty=False,
-                         attrencode=True,
                      ),
                  ],
              ),
@@ -482,7 +485,7 @@ class _GroupSelection(ElementSelection):
             'empty_text',
             _('You have not defined any %s group yet. Please '
               '<a href="wato.py?mode=edit_%s_group">create</a> at least one first.') % (what, what))
-        super(_GroupSelection, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._what = what
         self._choices = choices
         self._no_selection = no_selection
@@ -527,24 +530,21 @@ def HostGroupChoice(**kwargs):
 
 
 def _sorted_contact_group_choices():
-    cache_id = "sorted_contact_group_choices"
-    if cache_id not in g:
-        g.cache_id = _group_choices(load_contact_group_information())
-    return g.cache_id
+    if "sorted_contact_group_choices" not in g:
+        g.sorted_contact_group_choices = _group_choices(load_contact_group_information())
+    return g.sorted_contact_group_choices
 
 
 def _sorted_service_group_choices():
-    cache_id = "sorted_service_group_choices"
-    if cache_id not in g:
-        g.cache_id = _group_choices(load_service_group_information())
-    return g.cache_id
+    if "sorted_service_group_choices" not in g:
+        g.sorted_service_group_choices = _group_choices(load_service_group_information())
+    return g.sorted_service_group_choices
 
 
 def _sorted_host_group_choices():
-    cache_id = "sorted_host_group_choices"
-    if cache_id not in g:
-        g.cache_id = _group_choices(load_host_group_information())
-    return g.cache_id
+    if "sorted_host_group_choices" not in g:
+        g.sorted_host_group_choices = _group_choices(load_host_group_information())
+    return g.sorted_host_group_choices
 
 
 def _group_choices(group_information):
@@ -714,7 +714,10 @@ class RulespecGroupMonitoringConfiguration(RulespecGroup):
 
     @property
     def help(self):
-        return _("Configuration of discovered services")
+        return _("Rules to configure existing services in the monitoring. For "
+                 "example, threshold values can be set, the execution time for "
+                 "active checks can be configured or attributes such as labels "
+                 "or tags can be assigned to the services.")
 
 
 @rulespec_group_registry.register
@@ -729,7 +732,12 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
 
     @property
     def help(self):
-        return _("Rules that change the behaviour of the Checkmk service discovery")
+        return _("Rules that influence the discovery of services. These rules "
+                 "allow, for example, the execution of a periodic service "
+                 "discovery or the deactivation of check plugins and services. "
+                 "Additionally, the discovery of individual check plugins like "
+                 "for example the interface check plugin can "
+                 "be customized.")
 
 
 @rulespec_group_registry.register
@@ -882,7 +890,6 @@ def PredictiveLevels(**args):
         ],
         default_keys=["levels_upper"],
         columns=1,
-        headers="sup",
         elements=[
             ("period",
              DropdownChoice(title=_("Base prediction on"),
@@ -1035,59 +1042,77 @@ def Levels(**kwargs):
     )
 
 
-def may_edit_ruleset(varname):
-    if varname == "ignored_services":
-        return config.user.may("wato.services") or config.user.may("wato.rulesets")
-    if varname in [
-            "custom_checks",
-            "datasource_programs",
-            "agent_config:mrpe",
-            "agent_config:agent_paths",
-            "agent_config:runas",
-            "agent_config:only_from",
-    ]:
-        return config.user.may("wato.rulesets") and config.user.may(
-            "wato.add_or_modify_executables")
-    if varname == "agent_config:custom_files":
-        return config.user.may("wato.rulesets") and config.user.may(
-            "wato.agent_deploy_custom_files")
-    return config.user.may("wato.rulesets")
+def valuespec_check_plugin_selection(
+    *,
+    title: str,
+    help_: str,
+) -> Transform:
+    return Transform(
+        Dictionary(
+            title=title,
+            help=help_,
+            elements=[
+                ("host", _CheckTypeHostSelection(title=_("Checks on regular hosts"))),
+                ("mgmt", _CheckTypeMgmtSelection(title=_("Checks on management boards"))),
+            ],
+            optional_keys=["mgmt"],
+        ),
+        # omit empty mgmt key
+        forth=lambda list_: {
+            k: v for k, v in (
+                ("host", [name for name in list_ if not name.startswith("mgmt_")]),
+                ("mgmt", [name[5:] for name in list_ if name.startswith("mgmt_")]),
+            ) if v or k == "host"
+        },
+        back=lambda dict_: dict_["host"] + [f"mgmt_{n}" for n in dict_.get("mgmt", ())],
+    )
 
 
-class CheckTypeSelection(DualListChoice):
+class _CheckTypeHostSelection(DualListChoice):
     def __init__(self, **kwargs):
-        super(CheckTypeSelection, self).__init__(rows=25, **kwargs)
+        super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
         checks = get_check_information()
-        elements = sorted([
-            (cn, (cn + " - " + ensure_str(c["title"]))[:60]) for (cn, c) in checks.items()
-        ])
-        return elements
+        return [
+            (str(cn), (str(cn) + " - " + ensure_str(c["title"]))[:60])
+            for (cn, c) in checks.items()
+            # filter out plugins implemented *explicitly* for management boards
+            if not cn.is_management_name()
+        ]
 
 
-class ConfigHostname(TextAsciiAutocomplete):
+class _CheckTypeMgmtSelection(DualListChoice):
+    def __init__(self, **kwargs):
+        super().__init__(rows=25, **kwargs)
+
+    def get_elements(self):
+        checks = get_check_information()
+        return [(str(cn.create_basic_name()), (str(cn) + " - " + ensure_str(c["title"]))[:60])
+                for (cn, c) in checks.items()]
+
+
+@autocompleter_registry.register
+class ConfigHostname(AjaxDropdownChoice):
     """Hostname input with dropdown completion
 
     Renders an input field for entering a host name while providing an auto completion dropdown field.
     Fetching the choices from the current WATO config"""
-    ident = "monitored_hostname"
-
-    def __init__(self, **kwargs):
-        super(ConfigHostname, self).__init__(completion_ident=self.ident,
-                                             completion_params={},
-                                             **kwargs)
+    ident = "config_hostname"
 
     @classmethod
-    def autocomplete_choices(cls, value, params):
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
         """Return the matching list of dropdown choices
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-        all_hosts = watolib.Host.all()
+        all_hosts: Dict[str, watolib.CREHost] = watolib.Host.all()
         match_pattern = re.compile(value, re.IGNORECASE)
-        match_list = []
+        match_list: Choices = []
         for host_name, host_object in all_hosts.items():
             if match_pattern.search(host_name) is not None and host_object.may("read"):
-                match_list.append(tuple((host_name, host_name)))
+                match_list.append((host_name, host_name))
+
+        if not any(x[0] == value for x in match_list):
+            match_list.insert(0, (value, value))  # User is allowed to enter anything they want
 
         return match_list
 
@@ -1182,9 +1207,16 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
     @classmethod
     def _generic_rule_match_conditions(cls):
         return _simple_host_rule_match_conditions() + [
+            ("match_servicelabels",
+             Labels(
+                 Labels.World.CORE,
+                 title=_("Match service labels"),
+                 help=_(
+                     "Use this condition to select hosts based on the configured service labels."),
+             )),
             ("match_servicegroups",
              ServiceGroupChoice(
-                 title=_("Match Service Groups"),
+                 title=_("Match service groups"),
                  help=_(
                      "The service must be in one of the selected service groups. For host events this condition "
                      "never matches as soon as at least one group is selected."),
@@ -1192,7 +1224,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_exclude_servicegroups",
              ServiceGroupChoice(
-                 title=_("Exclude Service Groups"),
+                 title=_("Exclude service groups"),
                  help=_(
                      "The service must not be in one of the selected service groups. For host events this condition "
                      "is simply ignored."),
@@ -1200,7 +1232,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_servicegroups_regex",
              Tuple(
-                 title=_("Match Service Groups (regex)"),
+                 title=_("Match service groups (regex)"),
                  elements=[
                      DropdownChoice(choices=[("match_id", _("Match the internal identifier")),
                                              ("match_alias", _("Match the alias"))],
@@ -1210,16 +1242,16 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                          _("The service group alias must match one of the following regular expressions."
                            " For host events this condition never matches as soon as at least one group is selected."
                           ),
-                         valuespec=RegExpUnicode(
+                         valuespec=RegExp(
                              size=32,
-                             mode=RegExpUnicode.infix,
+                             mode=RegExp.infix,
                          ),
                          orientation="horizontal",
                      )
                  ])),
             ("match_exclude_servicegroups_regex",
              Tuple(
-                 title=_("Exclude Service Groups (regex)"),
+                 title=_("Exclude service groups (regex)"),
                  elements=[
                      DropdownChoice(choices=[("match_id", _("Match the internal identifier")),
                                              ("match_alias", _("Match the alias"))],
@@ -1228,23 +1260,23 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                          help=_(
                              "The service group alias must not match one of the following regular expressions. "
                              "For host events this condition is simply ignored."),
-                         valuespec=RegExpUnicode(
+                         valuespec=RegExp(
                              size=32,
-                             mode=RegExpUnicode.infix,
+                             mode=RegExp.infix,
                          ),
                          orientation="horizontal",
                      )
                  ])),
             ("match_services",
              ListOfStrings(
-                 title=_("Match only the following services"),
+                 title=_("Match services"),
                  help=
                  _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
                    "service name in order for the rule to match. Note: Host notifications never match this "
                    "rule if this option is being used."),
-                 valuespec=RegExpUnicode(
+                 valuespec=RegExp(
                      size=32,
-                     mode=RegExpUnicode.prefix,
+                     mode=RegExp.prefix,
                  ),
                  orientation="horizontal",
                  allow_empty=False,
@@ -1254,35 +1286,35 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_exclude_services",
              ListOfStrings(
-                 title=_("Exclude the following services"),
-                 valuespec=RegExpUnicode(
+                 title=_("Exclude services"),
+                 valuespec=RegExp(
                      size=32,
-                     mode=RegExpUnicode.prefix,
+                     mode=RegExp.prefix,
                  ),
                  orientation="horizontal",
              )),
             ("match_checktype",
-             CheckTypeSelection(
-                 title=_("Match the following check types"),
-                 help=
+             valuespec_check_plugin_selection(
+                 title=_("Match check types"),
+                 help_=
                  _("Only apply the rule if the notification originates from certain types of check plugins. "
                    "Note: Host notifications never match this rule if this option is being used."),
              )),
             (
                 "match_plugin_output",
                 RegExp(
-                    title=_("Match the output of the check plugin"),
+                    title=_("Match check plugin output"),
                     help=_(
                         "This text is a regular expression that is being searched in the output "
                         "of the check plugins that produced the alert. It is not a prefix but an infix match."
                     ),
-                    mode=RegExpUnicode.prefix,
+                    mode=RegExp.prefix,
                 ),
             ),
             ("match_contacts",
              ListOf(
                  userdb.UserSelection(only_contacts=True),
-                 title=_("Match Contacts"),
+                 title=_("Match contacts"),
                  help=_("The host/service must have one of the selected contacts."),
                  movable=False,
                  allow_empty=False,
@@ -1290,7 +1322,7 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
              )),
             ("match_contactgroups",
              ContactGroupChoice(
-                 title=_("Match Contact Groups"),
+                 title=_("Match contact groups"),
                  help=_(
                      "The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. "
                      "If you don't use the CMC that filter will not apply"),
@@ -1332,27 +1364,17 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
     def _add_change(self, log_what, log_text):
         raise NotImplementedError()
 
-    def _generic_rule_list_actions(self, rules, what, what_title, save_rules):
-        if html.request.has_var("_delete"):
-            nr = html.request.get_integer_input_mandatory("_delete")
-            rule = rules[nr]
-            c = wato_confirm(
-                _("Confirm deletion of %s") % what_title,
-                _("Do you really want to delete the %s <b>%d</b> <i>%s</i>?") %
-                (what_title, nr, rule.get("description", "")))
-            if c:
-                self._add_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
-                del rules[nr]
-                save_rules(rules)
-            elif c is False:
-                return ""
-            else:
-                return
+    def _generic_rule_list_actions(self, rules, what, what_title, save_rules) -> None:
+        if request.has_var("_delete"):
+            nr = request.get_integer_input_mandatory("_delete")
+            self._add_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
+            del rules[nr]
+            save_rules(rules)
 
-        elif html.request.has_var("_move"):
-            if html.check_transaction():
-                from_pos = html.request.get_integer_input_mandatory("_move")
-                to_pos = html.request.get_integer_input_mandatory("_index")
+        elif request.has_var("_move"):
+            if transactions.check_transaction():
+                from_pos = request.get_integer_input_mandatory("_move")
+                to_pos = request.get_integer_input_mandatory("_index")
                 rule = rules[from_pos]
                 del rules[from_pos]  # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
@@ -1366,14 +1388,6 @@ def sort_sites(sites: SiteConfigurations) -> List[_Tuple[SiteId, SiteConfigurati
     return sorted(sites.items(),
                   key=lambda sid_s:
                   (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]))
-
-
-class ModeRegistry(cmk.utils.plugin_registry.Registry[Type[WatoMode]]):
-    def plugin_name(self, instance):
-        return instance.name()
-
-
-mode_registry = ModeRegistry()
 
 
 # Show HTML form for editing attributes.
@@ -1414,22 +1428,28 @@ def configure_attributes(new,
 
     volatile_topics = []
     hide_attributes = []
+    show_more_mode: bool = False
+
+    show_more_mode = user.show_mode != "default_show_less"
+
     for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
+        topic_attributes = watolib.get_sorted_host_attributes_by_topic(topic_id)
 
         forms.header(
             topic_title,
-            isopen=topic_id in ["basic", "address", "data_sources"],
+            isopen=topic_id in ["basic", "address", "monitoring_agents"],
             table_id=topic_id,
-            show_advanced_toggle=True,
+            show_more_toggle=any(attribute.is_show_more() for attribute in topic_attributes),
+            show_more_mode=show_more_mode,
         )
 
         if topic_id == "basic":
             for attr_varprefix, vs, default_value in basic_attributes:
-                forms.section(_u(vs.title()))
+                forms.section(_u(vs.title()), is_required=not vs.allow_empty())
                 vs.render_input(attr_varprefix, default_value)
 
-        for attr in watolib.get_sorted_host_attributes_by_topic(topic_id):
+        for attr in topic_attributes:
             attrname = attr.name()
             if attrname in without_attributes:
                 continue  # e.g. needed to skip ipaddress in CSV-Import
@@ -1487,7 +1507,7 @@ def configure_attributes(new,
             # Collect information about attribute values inherited from folder.
             # This information is just needed for informational display to the user.
             # This does not apply in "host_search" mode.
-            inherited_from = None
+            inherited_from: _Optional[HTML] = None
             inherited_value = None
             has_inherited = False
             container = None
@@ -1500,8 +1520,8 @@ def configure_attributes(new,
                 while container:
                     if attrname in container.attributes():
                         url = container.edit_url()
-                        inherited_from = _("Inherited from ") + str(
-                            html.render_a(container.title(), href=url))
+                        inherited_from = escape_html(_("Inherited from ")) + html.render_a(
+                            container.title(), href=url)
 
                         inherited_value = container.attributes()[attrname]
                         has_inherited = True
@@ -1512,7 +1532,7 @@ def configure_attributes(new,
                     container = container.parent()
 
             if not container:  # We are the root folder - we inherit the default values
-                inherited_from = _("Default value")
+                inherited_from = escape_html(_("Default value"))
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
                 if attr.is_tag_attribute:
@@ -1589,7 +1609,8 @@ def configure_attributes(new,
             forms.section(_u(attr.title()),
                           checkbox=checkbox_code,
                           section_id="attr_" + attrname,
-                          is_advanced=attr.is_advanced())
+                          is_show_more=attr.is_show_more(),
+                          is_changed=active)
             html.help(attr.help())
 
             if len(values) == 1:
@@ -1627,13 +1648,14 @@ def configure_attributes(new,
             #
 
             # in bulk mode we show inheritance only if *all* hosts inherit
-            explanation = u""
+            explanation: HTML = HTML("")
             if for_what == "bulk":
                 if num_haveit == 0:
-                    explanation = u" (%s)" % inherited_from
+                    assert inherited_from is not None
+                    explanation = HTML(" (") + inherited_from + HTML(")")
                     value = inherited_value
                 elif not unique:
-                    explanation = _("This value differs between the selected hosts.")
+                    explanation = escape_html(_("This value differs between the selected hosts."))
                 else:
                     value = values[0]
 
@@ -1652,10 +1674,12 @@ def configure_attributes(new,
 
                 if isinstance(attr, ABCHostAttributeValueSpec):
                     html.open_b()
-                    html.write(content)
+                    html.write_text(content)
                     html.close_b()
-                else:
+                elif isinstance(attr, str):
                     html.b(_u(content))
+                else:
+                    html.b(content)
 
             html.write_text(explanation)
             html.close_div()
@@ -1674,7 +1698,7 @@ def configure_attributes(new,
         "depends_on_tags": dependency_mapping_tags,
         "depends_on_roles": dependency_mapping_roles,
         "volatile_topics": volatile_topics,
-        "user_roles": config.user.role_ids,
+        "user_roles": user.role_ids,
         "hide_attributes": hide_attributes,
     }
     html.javascript("cmk.wato.prepare_edit_dialog(%s);"
@@ -1703,7 +1727,7 @@ def some_host_hasnt_set(folder, attrname):
 
 class SiteBackupJobs(backup.Jobs):
     def __init__(self):
-        super(SiteBackupJobs, self).__init__(backup.site_config_path())
+        super().__init__(backup.site_config_path())
 
     def _apply_cron_config(self):
         p = subprocess.Popen(["omd", "restart", "crontab"],
@@ -1723,11 +1747,13 @@ def register_hook(name, func):
 
 
 class NotificationParameter(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def spec(self) -> Dictionary:
         raise NotImplementedError()
 
@@ -1772,7 +1798,7 @@ def register_notification_parameters(scriptname, valuespec):
 
 class DictHostTagCondition(Transform):
     def __init__(self, title, help_txt):
-        super(DictHostTagCondition, self).__init__(
+        super().__init__(
             ListOfMultiple(
                 title=title,
                 help=help_txt,
@@ -1962,9 +1988,9 @@ class HostTagCondition(ValueSpec):
             if tag_group.is_checkbox_tag_group:
                 tagvalue = tag_group.default_value
             else:
-                tagvalue = html.request.var(varprefix + "tagvalue_" + tag_group.id)
+                tagvalue = request.var(varprefix + "tagvalue_" + tag_group.id)
 
-            mode = html.request.var(varprefix + "tag_" + tag_group.id)
+            mode = request.var(varprefix + "tag_" + tag_group.id)
             if mode == "is":
                 tag_list.append(tagvalue)
             elif mode == "isnot":
@@ -1972,7 +1998,7 @@ class HostTagCondition(ValueSpec):
 
         # Auxiliary tags
         for aux_tag in config.tags.aux_tag_list.get_tags():
-            mode = html.request.var(varprefix + "auxtag_" + aux_tag.id)
+            mode = request.var(varprefix + "auxtag_" + aux_tag.id)
             if mode == "is":
                 tag_list.append(aux_tag.id)
             elif mode == "isnot":
@@ -1983,7 +2009,7 @@ class HostTagCondition(ValueSpec):
     def canonical_value(self):
         return []
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> str:
         return "|".join(value)
 
     def validate_datatype(self, value, varprefix):
@@ -2004,7 +2030,8 @@ class HostTagCondition(ValueSpec):
             varprefix += "_"
 
         if not config.tags.get_tag_ids():
-            html.write(_("You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."))
+            html.write_text(
+                _("You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."))
             return
 
         tag_groups_by_topic = dict(config.tags.get_tag_groups_by_topic())
@@ -2014,47 +2041,45 @@ class HostTagCondition(ValueSpec):
         make_foldable = len(all_topics) > 1
 
         for topic_id, topic_title in all_topics:
-            if make_foldable:
-                html.begin_foldable_container("topic", varprefix + topic_title, True,
-                                              HTML("<b>%s</b>" % (_u(topic_title))))
-            html.open_table(class_=["hosttags"])
+            container: ContextManager[bool] = foldable_container(
+                treename="topic",
+                id_=varprefix + topic_title,
+                isopen=True,
+                title=_u(topic_title),
+            ) if make_foldable else nullcontext(False)
+            with container:
+                html.open_table(class_=["hosttags"])
 
-            for tag_group in tag_groups_by_topic.get(topic_id, []):
-                html.open_tr()
-                html.open_td(class_="title")
-                html.write("%s: &nbsp;" % _u(tag_group.title))
-                html.close_td()
+                for tag_group in tag_groups_by_topic.get(topic_id, []):
+                    html.open_tr()
+                    html.td("%s: &nbsp;" % _u(tag_group.title), class_="title")
 
-                choices = tag_group.get_tag_choices()
-                default_tag, deflt = self._current_tag_setting(choices, tag_specs)
-                self._tag_condition_dropdown(varprefix, "tag", deflt, tag_group.id)
-                if tag_group.is_checkbox_tag_group:
+                    choices = tag_group.get_tag_choices()
+                    default_tag, deflt = self._current_tag_setting(choices, tag_specs)
+                    self._tag_condition_dropdown(varprefix, "tag", deflt, tag_group.id)
+                    if tag_group.is_checkbox_tag_group:
+                        html.write_text(" " + _("set"))
+                    else:
+                        html.dropdown(varprefix + "tagvalue_" + tag_group.id,
+                                      [(t[0], _u(t[1])) for t in choices if t[0] is not None],
+                                      deflt=default_tag)
+
+                    html.close_div()
+                    html.close_td()
+                    html.close_tr()
+
+                for aux_tag in aux_tags_by_topic.get(topic_id, []):
+                    html.open_tr()
+                    html.td("%s: &nbsp;" % _u(aux_tag.title), class_="title")
+                    default_tag, deflt = self._current_tag_setting(
+                        [(aux_tag.id, _u(aux_tag.title))], tag_specs)
+                    self._tag_condition_dropdown(varprefix, "auxtag", deflt, aux_tag.id)
                     html.write_text(" " + _("set"))
-                else:
-                    html.dropdown(varprefix + "tagvalue_" + tag_group.id,
-                                  [(t[0], _u(t[1])) for t in choices if t[0] is not None],
-                                  deflt=default_tag)
+                    html.close_div()
+                    html.close_td()
+                    html.close_tr()
 
-                html.close_div()
-                html.close_td()
-                html.close_tr()
-
-            for aux_tag in aux_tags_by_topic.get(topic_id, []):
-                html.open_tr()
-                html.open_td(class_="title")
-                html.write("%s: &nbsp;" % _u(aux_tag.title))
-                html.close_td()
-                default_tag, deflt = self._current_tag_setting([(aux_tag.id, _u(aux_tag.title))],
-                                                               tag_specs)
-                self._tag_condition_dropdown(varprefix, "auxtag", deflt, aux_tag.id)
-                html.write_text(" " + _("set"))
-                html.close_div()
-                html.close_td()
-                html.close_tr()
-
-            html.close_table()
-            if make_foldable:
-                html.end_foldable_container()
+                html.close_table()
 
     def _current_tag_setting(self, choices, tag_specs):
         """Determine current (default) setting of tag by looking into tag_specs (e.g. [ "snmp", "!tcp", "test" ] )"""
@@ -2093,16 +2118,72 @@ class HostTagCondition(ValueSpec):
 
         html.open_td(class_="tag_sel")
         if html.form_submitted():
-            div_is_open = html.request.var(dropdown_id, "ignore") != "ignore"
+            div_is_open = request.var(dropdown_id, "ignore") != "ignore"
         else:
             div_is_open = deflt != "ignore"
         html.open_div(id_="%stag_sel_%s" % (varprefix, id_),
                       style="display: none;" if not div_is_open else None)
 
 
+class LabelCondition(Transform):
+    def __init__(self, title, help_txt):
+        super().__init__(
+            ListOf(
+                Tuple(
+                    orientation="horizontal",
+                    elements=[
+                        DropdownChoice(choices=[
+                            ("is", _("has")),
+                            ("is_not", _("has not")),
+                        ],),
+                        SingleLabel(world=Labels.World.CONFIG,),
+                    ],
+                    show_titles=False,
+                ),
+                add_label=_("Add label condition"),
+                del_label=_("Remove label condition"),
+                style=ListOf.Style.FLOATING,
+                movable=False,
+            ),
+            forth=self._to_valuespec,
+            back=self._from_valuespec,
+            title=title,
+            help=help_txt,
+        )
+
+    def _to_valuespec(self, label_conditions):
+        valuespec_value = []
+        for label_id, label_value in label_conditions.items():
+            valuespec_value.append(self._single_label_to_valuespec(label_id, label_value))
+        return valuespec_value
+
+    def _single_label_to_valuespec(self, label_id, label_value):
+        if isinstance(label_value, dict):
+            if "$ne" in label_value:
+                return ("is_not", {label_id: label_value["$ne"]})
+            raise NotImplementedError()
+        return ("is", {label_id: label_value})
+
+    def _from_valuespec(self, valuespec_value):
+        label_conditions = {}
+        for operator, label in valuespec_value:
+            if label:
+                label_id, label_value = list(label.items())[0]
+                label_conditions[label_id] = self._single_label_from_valuespec(
+                    operator, label_value)
+        return label_conditions
+
+    def _single_label_from_valuespec(self, operator, label_value):
+        if operator == "is":
+            return label_value
+        if operator == "is_not":
+            return {"$ne": label_value}
+        raise NotImplementedError()
+
+
 @page_registry.register_page("ajax_dict_host_tag_condition_get_choice")
 class PageAjaxDictHostTagConditionGetChoice(ABCPageListOfMultipleGetChoice):
-    def _get_choices(self, request):
+    def _get_choices(self, api_request):
         condition = DictHostTagCondition("Dummy title", "Dummy help")
         return condition._get_tag_group_choices()
 
@@ -2127,10 +2208,10 @@ def _site_rule_match_condition():
     return (
         "match_site",
         DualListChoice(
-            title=_("Match site"),
+            title=_("Match sites"),
             help=_("This condition makes the rule match only hosts of "
                    "the selected sites."),
-            choices=config.site_attribute_choices,
+            choices=get_activation_site_choices,
         ),
     )
 
@@ -2152,17 +2233,23 @@ def _multi_folder_rule_match_condition():
 
 def _common_host_rule_match_conditions():
     return [
-        ("match_hosttags", HostTagCondition(title=_("Match Host Tags"))),
+        ("match_hosttags", HostTagCondition(title=_("Match host tags"))),
+        ("match_hostlabels",
+         Labels(
+             Labels.World.CORE,
+             title=_("Match host labels"),
+             help=_("Use this condition to select hosts based on the configured host labels."),
+         )),
         ("match_hostgroups",
          HostGroupChoice(
-             title=_("Match Host Groups"),
+             title=_("Match host groups"),
              help=_("The host must be in one of the selected host groups"),
              allow_empty=False,
          )),
         ("match_hosts",
          ListOfStrings(
              valuespec=MonitoredHostname(),
-             title=_("Match only the following hosts"),
+             title=_("Match hosts"),
              size=24,
              orientation="horizontal",
              allow_empty=False,
@@ -2173,7 +2260,7 @@ def _common_host_rule_match_conditions():
         ("match_exclude_hosts",
          ListOfStrings(
              valuespec=MonitoredHostname(),
-             title=_("Exclude the following hosts"),
+             title=_("Exclude hosts"),
              size=24,
              orientation="horizontal",
          ))
@@ -2193,7 +2280,7 @@ def _single_folder_rule_match_condition():
 
 
 def get_search_expression():
-    search = html.request.get_unicode_input("search")
+    search = request.get_unicode_input("search")
     if search is not None:
         search = search.strip().lower()
     return search
@@ -2203,17 +2290,36 @@ def get_hostnames_from_checkboxes(filterfunc: _Optional[Callable] = None,
                                   deflt: bool = False) -> List[str]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    selected = config.user.get_rowselection(weblib.selection_id(),
-                                            'wato-folder-/' + watolib.Folder.current().path())
-    search_text = html.request.var("search")
+    selected = user.get_rowselection(weblib.selection_id(),
+                                     'wato-folder-/' + watolib.Folder.current().path())
+    search_text = request.var("search")
 
-    selected_host_names = []
+    selected_host_names: List[str] = []
     for host_name, host in sorted(watolib.Folder.current().hosts().items()):
-        if ((not search_text or (search_text.lower() in host_name.lower())) and
+        if ((not search_text or _search_text_matches(host, search_text)) and
             ('_c_' + host_name) in selected):
             if filterfunc is None or filterfunc(host):
                 selected_host_names.append(host_name)
     return selected_host_names
+
+
+def _search_text_matches(
+    host: watolib.CREHost,
+    search_text: str,
+) -> bool:
+
+    match_regex = re.compile(search_text, re.IGNORECASE)
+    for pattern in [
+            host.name(),
+            host.effective_attributes().get("ipaddress"),
+            host.site_id(),
+            get_site_config(host.site_id())["alias"],
+            str(host.tag_groups()),
+            str(host.labels()),
+    ]:
+        if match_regex.search(pattern):
+            return True
+    return False
 
 
 def get_hosts_from_checkboxes(filterfunc=None):
@@ -2237,10 +2343,12 @@ class FolderChoice(DropdownChoice):
         DropdownChoice.__init__(self, **kwargs)
 
 
-def get_check_information():
+def get_check_information() -> Mapping[CheckPluginName, Mapping[str, str]]:
     if 'automation_get_check_information' not in g:
-        g.automation_get_check_information = watolib.check_mk_local_automation(
-            "get-check-information")
+        raw_check_dict = watolib.check_mk_local_automation("get-check-information")
+        g.automation_get_check_information = {
+            CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())
+        }
 
     return g.automation_get_check_information
 

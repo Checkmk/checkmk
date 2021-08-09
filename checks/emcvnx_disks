@@ -130,10 +130,11 @@ def check_emcvnx_disks(item, params, parsed):
     if params is None:  # convert legacy params
         params = {}
 
-    if item not in parsed:
-        return 3, "Enclosure %s not found in agent output" % item
+    data = parsed.get(item)
+    if data is None:
+        return
 
-    diskstate = parsed[item]["state"]
+    diskstate = data["state"]
     message = "Enclosure %s is %s" % (item, diskstate)
     if diskstate in ["Unbound", "Hot Spare Ready", "Enabled", "Ready"]:
         nagstate = 0
@@ -146,19 +147,19 @@ def check_emcvnx_disks(item, params, parsed):
         # on error state all other fields besides "State:" are missing, omitting...
         return nagstate, message
 
-    read_errors = parsed[item]["Hard Read Errors"]
+    read_errors = data["Hard Read Errors"]
     message += ", Hard Read Errors: %s" % read_errors
     if read_errors >= params["state_read_error"][1]:
         nagstate = params["state_read_error"][0]
         message += " %s" % state_markers[nagstate]
 
-    write_errors = parsed[item]["Hard Write Errors"]
+    write_errors = data["Hard Write Errors"]
     message += ", Hard Write Errors: %s" % write_errors
     if write_errors >= params["state_write_error"][1]:
         nagstate = params["state_write_error"][0]
         message += " %s" % state_markers[nagstate]
 
-    read_bytes = parsed[item]["Kbytes Read"] * 1024
+    read_bytes = data["Kbytes Read"] * 1024
     write_bytes = parsed[item]["Kbytes Written"] * 1024
     countername_r = "emcvnx_disks.read_bytes.%s" % item.replace(" ", "_")
     countername_w = "emcvnx_disks.write_bytes.%s" % item.replace(" ", "_")

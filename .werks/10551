@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When updating a Checkmk docker container instance from 1.5* to 1.6 the web
 interface is not reachable using the top level URL "/" nor the "/cmk/" URL.

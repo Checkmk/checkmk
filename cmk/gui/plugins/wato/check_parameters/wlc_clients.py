@@ -5,19 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    TextAscii,
-    Transform,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Transform, Tuple
 
 
 def _parameter_valuespec_wlc_clients():
@@ -55,7 +48,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="wlc_clients",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Name of Wifi")),
+        item_spec=lambda: TextInput(title=_("Name of Wifi")),
         parameter_valuespec=_parameter_valuespec_wlc_clients,
         title=lambda: _("WLC WiFi client connections"),
     ))

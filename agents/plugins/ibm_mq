@@ -4,6 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# Reason for this no-op: shellcheck disable=... before the first command disables the error for the
+# entire script.
+:
+
+# Disable unused variable error (needed to keep track of version)
+# shellcheck disable=SC2034
+CMK_VERSION="2.1.0i1"
+
 #
 # Collects monitoring information of all IBM MQ Queue Managers.
 #
@@ -15,7 +23,13 @@
 # - Explicitly skip certain Queue Managers, e.g:
 #     SKIP_QM="FAULTY TOWER"
 #
-# Daniel Steinmann, Swisscom, December 2017
+#
+# Necessary IBM MQ rights, in case script does not run as mqm user:
+#
+#     set authrec objtype(QMGR) principal('cmkagent') authadd(DSP,INQ)
+#     set authrec profile(**) objtype(QUEUE) principal('cmkagent') authadd(DSP)
+#     set authrec profile(**) objtype(CHANNEL) principal('cmkagent') authadd(DSP)
+#     set authrec profile(**) objtype(CLNTCONN) principal('cmkagent') authadd(DSP)
 #
 
 load_config() {
@@ -66,26 +80,26 @@ check_tool() {
 load_config
 
 echo "<<<ibm_mq_plugin:sep(58)>>>"
-echo "version: 1.6.0"
+echo "version: $CMK_VERSION"
 check_tool dspmq
 check_tool runmqsc
 
 dspmq -n | while read -r dspmqline
 do
-    now=$(date +'%Y-%m-%dT%H:%M:%S%z')
+    now=$(date +'%Y-%m-%dT%H:%M:%S')
     QM=$(echo "$dspmqline" | sed 's,QMNAME(\([^)]*\).*,\1,')
     if is_qm_monitored "$QM"; then
         echo '<<<ibm_mq_channels:sep(10)>>>'
         echo "$dspmqline NOW($now)"
         runmqsc -e "$QM" <<EOF
 display channel(*) xmitq
-display chstatus(*)
+display chstatus(*) monitor
 EOF
         echo '<<<ibm_mq_queues:sep(10)>>>'
         echo "$dspmqline NOW($now)"
         runmqsc -e "$QM" <<EOF
-display qlocal(*) maxdepth maxmsgl
-display qstatus(*) all
+display qlocal(*) maxdepth maxmsgl crdate crtime altdate alttime monq
+display qstatus(*) monitor ipprocs opprocs
 EOF
     fi
 done

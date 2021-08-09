@@ -1,0 +1,12 @@
+Title: agent_innovaphone: added optional parameter "--vcrtrace"
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1615906565
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+The special agent Innovaphone does now understand the optional parameter "--vcrtrace".
+This parameter supports better debugging.

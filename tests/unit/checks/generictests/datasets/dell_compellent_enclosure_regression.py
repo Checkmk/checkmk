@@ -18,7 +18,7 @@ info = [
     [u'10', u'2', u'KAPUTT', u'TYP', u'MODEL', u'TAG'],
 ]
 
-discovery = {'': [(u'1', None), (u'2', None), (u'3', None), (u'4', None), (u'10', None)]}
+discovery = {'': [(u'1', {}), (u'2', {}), (u'3', {}), (u'4', {}), (u'10', {})]}
 
 checks = {
     '': [

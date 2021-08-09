@@ -14,5 +14,5 @@ description:
 item:
  The sensor number.
 
-inventory:
+discovery:
  One service is created for each temperature sensor.

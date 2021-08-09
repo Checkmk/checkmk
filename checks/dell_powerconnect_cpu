@@ -48,9 +48,9 @@ def check_dell_powerconnect_cpu(item, params, info):
             # We do *not* rename the performance variables here, in order not
             # to mix up existing RRDs...
             return (status, 'CPU utilization is %d%% %s' % (cpu_util, output), [
-                ('load', '%d%%' % cpu_util, params[0], params[1], 0, 100),
-                ('loadavg 60s', '%d%%' % saveint(oneminuteperc), params[0], params[1], 0, 100),
-                ('loadavg 5m', '%d%%' % saveint(fiveminutesperc), params[0], params[1], 0, 100),
+                ('util', '%d%%' % cpu_util, params[0], params[1], 0, 100),
+                ('util1', '%d%%' % saveint(oneminuteperc), params[0], params[1], 0, 100),
+                ('util5', '%d%%' % saveint(fiveminutesperc), params[0], params[1], 0, 100),
             ])
 
     return (3, "Invalid  information in SNMP data")

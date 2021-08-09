@@ -7,8 +7,12 @@
 import functools
 import wsgiref.util
 
-from cmk.gui import http
+import cmk.utils.store
+
+from cmk.gui import config, hooks, http, sites
+from cmk.gui.display_options import DisplayOptions
 from cmk.gui.globals import AppContext, RequestContext
+from cmk.gui.utils.output_funnel import OutputFunnel
 
 
 def with_context_middleware(app):
@@ -18,10 +22,28 @@ def with_context_middleware(app):
     @functools.wraps(app)
     def with_context(environ, start_response):
         req = http.Request(environ)
-        with AppContext(app), RequestContext(req=req):
+        resp = http.Response()
+        with AppContext(app), \
+                RequestContext(req=req, resp=resp, funnel=OutputFunnel(resp),
+                               config_obj=config.make_config_object(config.get_default_config()),
+                               display_options=DisplayOptions()), \
+                cmk.utils.store.cleanup_locks(), \
+                sites.cleanup_connections():
+            config.initialize()
             return app(environ, start_response)
 
     return with_context
+
+
+class CallHooks:
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        hooks.call("request-start")
+        response = self.app(environ, start_response)
+        hooks.call("request-end")
+        return response
 
 
 def apache_env(app):

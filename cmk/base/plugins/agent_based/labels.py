@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from .agent_based_api.v1 import register, HostLabel
+
+from .agent_based_api.v1 import HostLabel, register
 
 
 def parse_labels(string_table):
@@ -23,6 +24,22 @@ def parse_labels(string_table):
 
 
 def host_label_function_labels(section):
+    """Host label function
+
+    Labels:
+
+        This function creates host labels according to the '<<<labels>>>'
+        section sent by the agent(s).
+
+    Example:
+
+        >>> section = {"tier": "control-plane", "component": "kube-scheduler"}
+        >>> for hl in host_label_function_labels(section):
+        ...     print(str(hl))
+        HostLabel('tier', 'control-plane')
+        HostLabel('component', 'kube-scheduler')
+
+    """
     for pair in section.items():
         yield HostLabel(*pair)
 

@@ -5,9 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for check parameter module internals"""
 
-from typing import List, Tuple as _Tuple
-from cmk.gui.i18n import _
+from typing import Any, List, MutableMapping
+from typing import Tuple as _Tuple
+from typing import Union
+
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import PredictiveLevels
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
@@ -19,13 +23,12 @@ from cmk.gui.valuespec import (
     Float,
     Integer,
     ListOf,
-    Optional,
     Percentage,
+    TextInput,
     Transform,
     Tuple,
     ValueSpec,
 )
-from cmk.gui.plugins.wato import PredictiveLevels
 
 
 # Match and transform functions for level configurations like
@@ -45,10 +48,17 @@ def match_dual_level_type(value):
     return 0
 
 
-def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
+def get_free_used_dynamic_valuespec(
+        what,
+        name,
+        default_value=(80.0, 90.0),
+        *,
+        maxvalue: Union[None, int, float] = 101.0,
+):
     if what == "used":
         title = _("used space")
         course = _("above")
+
     else:
         title = _("free space")
         course = _("below")
@@ -56,19 +66,37 @@ def get_free_used_dynamic_valuespec(what, name, default_value=(80.0, 90.0)):
     vs_subgroup: List[ValueSpec] = [
         Tuple(title=_("Percentage %s") % title,
               elements=[
-                  Percentage(title=_("Warning if %s") % course, unit="%", minvalue=0.0),
-                  Percentage(title=_("Critical if %s") % course, unit="%", minvalue=0.0),
+                  Percentage(
+                      title=_("Warning if %s") % course,
+                      unit="%",
+                      minvalue=0.0 if what == "used" else 0.0001,
+                      maxvalue=maxvalue,
+                  ),
+                  Percentage(
+                      title=_("Critical if %s") % course,
+                      unit="%",
+                      minvalue=0.0 if what == "used" else 0.0001,
+                      maxvalue=maxvalue,
+                  ),
               ]),
         Tuple(title=_("Absolute %s") % title,
               elements=[
-                  Integer(title=_("Warning if %s") % course, unit=_("MB"), minvalue=0),
-                  Integer(title=_("Critical if %s") % course, unit=_("MB"), minvalue=0),
+                  Integer(
+                      title=_("Warning if %s") % course,
+                      unit=_("MB"),
+                      minvalue=0 if what == "used" else 1,
+                  ),
+                  Integer(
+                      title=_("Critical if %s") % course,
+                      unit=_("MB"),
+                      minvalue=0 if what == "used" else 1,
+                  ),
               ])
     ]
 
     def validate_dynamic_levels(value, varprefix):
         if [v for v in value if v[0] < 0]:
-            raise MKUserError(varprefix, _("You need to specify levels " "of at least 0 bytes."))
+            raise MKUserError(varprefix, _("You need to specify levels of at least 0 bytes."))
 
     return Alternative(
         title=_("Levels for %s %s") % (name, title),
@@ -226,38 +254,89 @@ fs_magic_elements = [
     ("magic_normsize",
      Integer(title=_("Reference size for magic factor"), default_value=20, minvalue=1,
              unit=_("GB"))),
-    ("levels_low",
-     Tuple(title=_("Minimum levels if using magic factor"),
-           help=_("The filesystem levels will never fall below these values, when using "
-                  "the magic factor and the filesystem is very small."),
-           elements=[
-               Percentage(title=_("Warning at"),
-                          unit=_("% usage"),
-                          allow_int=True,
-                          default_value=50),
-               Percentage(title=_("Critical at"),
-                          unit=_("% usage"),
-                          allow_int=True,
-                          default_value=60)
-           ]))
+    (
+        "levels_low",
+        Tuple(
+            title=_("Minimum levels if using magic factor"),
+            help=_("The filesystem levels will never fall below these values, when using "
+                   "the magic factor and the filesystem is very small."),
+            elements=[
+                Percentage(
+                    title=_("Warning at"),
+                    # xgettext: no-python-format
+                    unit=_("% usage"),
+                    allow_int=True,
+                    default_value=50),
+                Percentage(
+                    title=_("Critical at"),
+                    # xgettext: no-python-format
+                    unit=_("% usage"),
+                    allow_int=True,
+                    default_value=60)
+            ]))
 ]
+
+TREND_RANGE_DEFAULT = 24
+
+
+def _transform_trend_range_not_none(params):
+    return TREND_RANGE_DEFAULT if params is None else params
+
+
+def transform_trend_mb_to_trend_bytes(params: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
+    """forth transform for trend_bytes and the former trend_mb
+    when changing the trend_mb field to a Filesize field the name was also changed.
+    Therefore the transform needs to be applied on several locations
+    In Version 2.1.0 trend_mb was substituted by trend_bytes. Therefore this transform was created.
+
+    >>> transform_trend_mb_to_trend_bytes({"trend_mb": (100, 200), "foo": "bar"})
+    {'foo': 'bar', 'trend_bytes': (104857600, 209715200)}
+    >>> transform_trend_mb_to_trend_bytes({"foo": "bar"})
+    {'foo': 'bar'}
+    """
+    transformed_params = {**params}
+    if "trend_mb" in params and "trend_bytes" not in params:
+        transformed_params["trend_bytes"] = (transformed_params["trend_mb"][0] * 1024**2,
+                                             transformed_params["trend_mb"][1] * 1024**2)
+        del transformed_params["trend_mb"]
+    return transformed_params
+
 
 size_trend_elements = [
     ("trend_range",
-     Optional(Integer(title=_("Time Range for trend computation"),
-                      default_value=24,
-                      minvalue=1,
-                      unit=_("hours")),
-              title=_("Trend computation"),
-              label=_("Enable trend computation"))),
-    ("trend_mb",
-     Tuple(title=_("Levels on trends in MB per time range"),
+     Transform(Integer(title=_("Time Range for trend computation"),
+                       default_value=TREND_RANGE_DEFAULT,
+                       minvalue=1,
+                       unit=_("hours")),
+               forth=_transform_trend_range_not_none)),
+    ("trend_bytes",
+     Tuple(title=_("Levels on trends per time range"),
            elements=[
-               Integer(title=_("Warning at"), unit=_("MB / range"), default_value=100),
-               Integer(title=_("Critical at"), unit=_("MB / range"), default_value=200)
+               Filesize(title=_("Warning at"), default_value=100 * 1024**2),
+               Filesize(title=_("Critical at"), default_value=200 * 1024**2),
            ])),
     ("trend_perc",
      Tuple(title=_("Levels for the percentual growth per time range"),
+           elements=[
+               Percentage(
+                   title=_("Warning at"),
+                   unit=_("% / range"),
+                   default_value=5,
+               ),
+               Percentage(
+                   title=_("Critical at"),
+                   unit=_("% / range"),
+                   default_value=10,
+               ),
+           ])),
+    ("trend_shrinking_bytes",
+     Tuple(title=_("Levels on decreasing trends in MB per time range"),
+           elements=[
+               Filesize(title=_("Warning at"), default_value=1 * 1024**3),
+               Filesize(title=_("Critical at"), default_value=4 * 1024**3)
+           ])),
+    ("trend_shrinking_perc",
+     Tuple(title=_("Levels for the percentual shrinking per time range"),
            elements=[
                Percentage(
                    title=_("Warning at"),
@@ -303,14 +382,39 @@ filesystem_elements: List[_Tuple[str, ValueSpec]] = fs_levels_elements \
                     + size_trend_elements
 
 
+def _transform_discovered_filesystem_params(params):
+    include_volume_name = params.pop("include_volume_name", None)
+    if include_volume_name is True:
+        params["item_appearance"] = "volume_name_and_mountpoint"
+    elif include_volume_name is False:
+        params["item_appearance"] = "mountpoint"
+    return params
+
+
+def _forth_transform_vs_filesystem(params: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
+    """wrapper for all the transforms on vs_filesystem"""
+    params = _transform_discovered_filesystem_params(params)
+    params = transform_trend_mb_to_trend_bytes(params)
+    return params
+
+
 def vs_filesystem(extra_elements=None):
     if extra_elements is None:
         extra_elements = []
-    return Dictionary(
-        help=_("This ruleset allows to set parameters for space and inodes usage"),
-        elements=filesystem_elements + extra_elements,
-        hidden_keys=["flex_levels"],
-        ignored_keys=["patterns"],
+    return Transform(
+        Dictionary(
+            help=_("This ruleset allows to set parameters for space and inodes usage"),
+            elements=filesystem_elements + extra_elements,
+            hidden_keys=["flex_levels"],
+            ignored_keys=[
+                "patterns",
+                "include_volume_name",
+                "item_appearance",
+                "grouping_behaviour",
+                "mountpoint_for_block_devices",
+            ],
+        ),
+        forth=_forth_transform_vs_filesystem,
     )
 
 
@@ -340,3 +444,19 @@ def vs_interface_traffic():
                                  ("upper", _("Upper"), vs_abs_perc()),
                                  ("lower", _("Lower"), vs_abs_perc()),
                              ])
+
+
+def mssql_item_spec_instance_tablespace() -> TextInput:
+    return TextInput(
+        title=_("Instance & tablespace name"),
+        help=_("The MSSQL instance name and the tablespace name separated by a space."),
+        allow_empty=False,
+    )
+
+
+def mssql_item_spec_instance_database_file() -> TextInput:
+    return TextInput(
+        title=_("Instance, database & file name"),
+        help=_("A combination of the instance, database and (logical) file name."),
+        allow_empty=False,
+    )

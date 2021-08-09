@@ -5,23 +5,21 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    Levels,
+    rulespec_registry,
+    RulespecGroupCheckParametersNetworking,
+)
+from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
-    OptionalDropdownChoice,
     Integer,
     ListOf,
-    TextAscii,
+    OptionalDropdownChoice,
+    TextInput,
 )
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    Levels,
-    RulespecGroupCheckParametersNetworking,
-)
-
-from cmk.gui.plugins.wato.check_parameters.utils import vs_interface_traffic
 
 
 def _parameter_valuespec_fcp():
@@ -78,7 +76,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fcp",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Port specification"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Port specification"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fcp,
         title=lambda: _("Fibrechannel Interfaces"),

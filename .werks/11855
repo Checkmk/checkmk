@@ -1,0 +1,18 @@
+Title: The updating of the Windows agent no longer causes the disappearing of directories in the ProgramData
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1615197141
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.1.0i1
+
+Previously, cleaning routine of the Windows agent was called too late: after the sending of the signal "SERVICE_STOPPED". 
+This may lead to the disappearing of some directories in <tt>%programdata%/checkmk/agent</tt>, because deleting of 
+directories, such as <tt>tmp</tt>, is the integral part of the cleaning phase of the update routine. If the cleaning 
+will happen after the Windows agent restarted, then the cleaning will remove working directories and the Windows agent 
+will not be able to function properly.
+ 
+With this release the error had been fixed.
+

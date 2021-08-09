@@ -9,6 +9,6 @@ description:
  Via the rule "Distribution of virtual machines over ESX hosts" you can make sure that a
  given set of VMs is running on a given number of different Hosts.
 
-inventory:
+discovery:
  One service is created.
 

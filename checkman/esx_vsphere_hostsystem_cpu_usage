@@ -7,6 +7,6 @@ description:
  This check measures the CPU utilization of an VMWare ESX Host System.
  It also shows you the number of sockets, cores and threads.
 
-inventory:
+discovery:
  One service is created for each ESX Host System.
 

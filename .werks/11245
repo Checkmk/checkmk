@@ -6,7 +6,7 @@ Date: 1593670445
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Each user opening a dashboard is now able to apply custom filters to a dashboard
 when viewing it. This can be done by opening the "Update context" dialog from

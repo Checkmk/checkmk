@@ -4,15 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.config as config
 import cmk.gui.sites as sites
-from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
-    snapin_site_choice,
-)
+from cmk.gui.i18n import _
+from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, snapin_site_choice
 
 
 @snapin_registry.register
@@ -26,7 +21,7 @@ class Performance(SidebarSnapin):
         return _("Server performance")
 
     @classmethod
-    def has_advanced_items(cls):
+    def has_show_more_items(cls):
         return True
 
     @classmethod
@@ -38,15 +33,15 @@ class Performance(SidebarSnapin):
         return True
 
     def show(self):
-        only_sites = snapin_site_choice("performance", config.site_choices())
+        only_sites = snapin_site_choice("performance", sites.get_configured_site_choices())
 
-        def write_line(left, right, advanced):
-            html.open_tr(class_="advanced" if advanced else "basic")
+        def write_line(left, right, show_more):
+            html.open_tr(class_="show_more_mode" if show_more else "basic")
             html.td(left, class_="left")
             html.td(html.render_strong(right), class_="right")
             html.close_tr()
 
-        html.open_table(class_=["content_center", "performance"])
+        html.open_table(class_=["performance"])
 
         try:
             sites.live().set_only_sites(only_sites)
@@ -56,7 +51,7 @@ class Performance(SidebarSnapin):
         finally:
             sites.live().set_only_sites(None)
 
-        for what, advanced, col, format_str in \
+        for what, show_more, col, format_str in \
             [("Service checks",         False, 0, "%.2f/s"),
              ("Host checks",            False, 1, "%.2f/s"),
              ("External commands",      True, 2, "%.2f/s"),
@@ -64,9 +59,9 @@ class Performance(SidebarSnapin):
              ("Process creations",      True, 4, "%.2f/s"),
              ("New log messages",       True, 5, "%.2f/s"),
              ("Cached log messages",    True, 6, "%d")]:
-            write_line(what + ":", format_str % sum(row[col] for row in data), advanced=advanced)
+            write_line(what + ":", format_str % sum(row[col] for row in data), show_more=show_more)
 
-        if only_sites is None and len(config.allsites()) == 1:
+        if only_sites is None and len(sites.allsites()) == 1:
             try:
                 data = sites.live().query("GET status\nColumns: external_command_buffer_slots "
                                           "external_command_buffer_max\n")
@@ -74,7 +69,7 @@ class Performance(SidebarSnapin):
                 sites.live().set_only_sites(None)
             size = sum([row[0] for row in data])
             maxx = sum([row[1] for row in data])
-            write_line(_('Com. buf. max/total'), "%d / %d" % (maxx, size), advanced=True)
+            write_line(_('Com. buf. max/total'), "%d / %d" % (maxx, size), show_more=True)
 
         html.close_table()
 

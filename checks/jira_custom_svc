@@ -99,9 +99,7 @@ def _get_value_diff(diff_name, svc_value, timespan):
 
     # Get previous value and time difference
     last_time, last_val = old_state
-    timedif = this_time - last_time
-    if timedif < 0:
-        timedif = 0
+    timedif = max(this_time - last_time, 0)
     if timedif < float(timespan):
         diff_val = svc_value - last_val
     else:

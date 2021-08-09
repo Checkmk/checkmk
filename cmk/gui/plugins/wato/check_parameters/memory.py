@@ -5,24 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Alternative,
-    Dictionary,
-    Integer,
-    Percentage,
-    Transform,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.plugins.wato.check_parameters.utils import (
-    match_dual_level_type,)
+from cmk.gui.plugins.wato.check_parameters.utils import match_dual_level_type
+from cmk.gui.valuespec import Alternative, Dictionary, Integer, Percentage, Transform, Tuple
 
 
+# if you refactor this: grep for "DualMemoryLevels"
 def _parameter_valuespec_memory():
     return Transform(
         Dictionary(
@@ -57,8 +49,8 @@ def _parameter_valuespec_memory():
                                     Tuple(
                                         title=_("Specify levels in absolute values"),
                                         elements=[
-                                            Integer(title=_("Warning at"), unit=_("MB")),
-                                            Integer(title=_("Critical at"), unit=_("MB"))
+                                            Integer(title=_("Warning at"), unit=_("MiB")),
+                                            Integer(title=_("Critical at"), unit=_("MiB"))
                                         ],
                                     ),
                                 ],
@@ -81,13 +73,14 @@ def _parameter_valuespec_memory():
                                     Tuple(
                                         title=_("Specify levels in absolute values"),
                                         elements=[
-                                            Integer(title=_("Warning if below"), unit=_("MB")),
-                                            Integer(title=_("Critical if below"), unit=_("MB"))
+                                            Integer(title=_("Warning if below"), unit=_("MiB")),
+                                            Integer(title=_("Critical if below"), unit=_("MiB"))
                                         ],
                                     ),
                                 ],),
                                 title=_("Levels for free memory"),
                                 help=
+                                # xgettext: no-python-format
                                 _("Keep in mind that if you have 1GB RAM and 1GB Swap you need to "
                                   "specify 120% or 1200MB to get an alert if there is only 20% free RAM available. "
                                   "The free memory levels do not work with the fortigate check, because it does "

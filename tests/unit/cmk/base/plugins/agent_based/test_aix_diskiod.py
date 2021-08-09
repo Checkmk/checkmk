@@ -4,32 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+# pylint: disable=protected-access
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    IgnoreResultsError,
-    Metric,
-    Result,
-    state,
-    type_defs,
-)
+import pytest
+
+from tests.testlib import get_value_store_fixture
+
 from cmk.base.plugins.agent_based import aix_diskiod
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
+
+value_store_fixture = get_value_store_fixture(aix_diskiod)
 
 DISK = {
     'read_throughput': 2437253982208,
     'write_throughput': 12421567621120,
 }
-
-
-def _get_value_store():
-    return {}
-
-
-@pytest.fixture(name="value_store")
-def value_store_fixture(monkeypatch):
-    value_store = _get_value_store()
-    monkeypatch.setattr(aix_diskiod, 'get_value_store', lambda: value_store)
-    yield value_store
 
 
 def test_parse_aix_diskiod():
@@ -41,27 +32,14 @@ def test_parse_aix_diskiod():
     }
 
 
-def test_compute_rates():
-    value_store = _get_value_store()
-    # first call should result in IngoreResults, second call should yield rates
-    with pytest.raises(IgnoreResultsError):
-        assert aix_diskiod._compute_rates(DISK, value_store)
-    disk_with_rates = aix_diskiod._compute_rates(DISK, value_store)
-    assert disk_with_rates == {k: 0 for k in DISK}
-
-
 def test_check_disk(value_store):
     with pytest.raises(IgnoreResultsError):
-        list(aix_diskiod._check_disk(type_defs.Parameters({}), DISK))
-    assert list(aix_diskiod._check_disk(type_defs.Parameters({}), DISK)) == [
-        Result(state=state.OK,
-               summary='Read throughput: 0.00 B/s',
-               details='Read throughput: 0.00 B/s'),
-        Metric('disk_read_throughput', 0.0, levels=(None, None), boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Write throughput: 0.00 B/s',
-               details='Write throughput: 0.00 B/s'),
-        Metric('disk_write_throughput', 0.0, levels=(None, None), boundaries=(None, None)),
+        list(aix_diskiod._check_disk({}, DISK))
+    assert list(aix_diskiod._check_disk({}, DISK)) == [
+        Result(state=state.OK, summary='Read: 0.00 B/s'),
+        Metric('disk_read_throughput', 0.0),
+        Result(state=state.OK, summary='Write: 0.00 B/s'),
+        Metric('disk_write_throughput', 0.0),
     ]
 
 
@@ -70,14 +48,14 @@ def _test_check_aix_diskiod(item, section_1, section_2, check_func):
     with pytest.raises(IgnoreResultsError):
         list(check_func(
             item,
-            type_defs.Parameters({}),
+            {},
             section_1,
         ))
 
     # second call: get values
     check_results = list(check_func(
         item,
-        type_defs.Parameters({}),
+        {},
         section_2,
     ))
     for res in check_results:

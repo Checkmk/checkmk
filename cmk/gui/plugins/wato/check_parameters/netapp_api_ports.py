@@ -5,16 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    ListChoice,
-)
-
 from cmk.gui.plugins.wato import (
+    HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
 )
+from cmk.gui.valuespec import Dictionary, ListChoice
 
 
 def _valuespec_discovery_netapp_api_ports_ignored():

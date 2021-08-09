@@ -4,11 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import re
 from typing import Any, Dict
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    ManualCheckParameterRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupEnforcedServicesApplications,
+    UserIconOrAction,
+)
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -26,26 +37,25 @@ from cmk.gui.valuespec import (
     MonitoringState,
     Percentage,
     RegExp,
-    TextAscii,
-    TextUnicode,
+    TextInput,
     Transform,
     Tuple,
 )
-from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksApplications,
-    RulespecGroupCheckParametersApplications,
-    RulespecGroupCheckParametersDiscovery,
-    UserIconOrAction,
-    rulespec_registry,
-    HostRulespec,
-    ManualCheckParameterRulespec,
-    CheckParameterRulespecWithItem,
-)
+
+# This object indicates that the setting 'CPU rescale maximum load' has not been set, which can only
+# be the case for legacy rules from before version 1.6.0, see werk #6646. Note that we cannot use
+# None here because DropdownChoice only renders invalid_choice_title if the input value is not
+# None...
+CPU_RESCALE_MAX_UNSPEC = 'cpu_rescale_max_unspecified'
 
 
 def process_level_elements():
     cpu_rescale_max_choices: DropdownChoices = [
-        (True, _("100% is all cores at full load")),
+        (
+            True,
+            # xgettext: no-python-format
+            _("100% is all cores at full load"),
+        ),
         (False, _("N * 100% as each core contributes with 100% at full load")),
     ]
     return [
@@ -66,6 +76,7 @@ def process_level_elements():
              invalid_choice_error=_("CPU rescale maximum load is Unspecified.") + " " +
              _("Starting from version 1.6.0 this value must be configured. "
                "Read Werk #6646 for further information."),
+             deprecated_choices=[CPU_RESCALE_MAX_UNSPEC],
          )),
         ('levels',
          Tuple(
@@ -193,11 +204,16 @@ def process_level_elements():
              label=_("Enable per-process details"),
              help=_("If active, the long output of this service will contain a list of all the "
                     "matching processes and their details (i.e. PID, CPU usage, memory usage). "
-                    "Please note that HTML output will only work if \"Escape HTML codes in "
-                    "plugin output\" is disabled in global settings. This might expose you to "
-                    "Cross-Site-Scripting (everyone with write-access to checks could get "
-                    "scripts executed on the monitoring site in the context of the user of the "
-                    "monitoring site) so please do this if you understand the consequences."),
+                    "Please note that HTML output will only work if rules in the rulesets "
+                    "\"%s\" or \"%s\" are created or the global setting \"%s\" is disabled. "
+                    "This might expose you to Cross-Site-Scripting attacks (everyone with "
+                    "write-access to checks could get scripts executed on the monitoring site "
+                    "in the context of the user of the monitoring site), so please do this if "
+                    "you understand the consequences.") % (
+                        _("Escape HTML codes in host output"),
+                        _("Escape HTML codes in service output"),
+                        _("Escape HTML codes in service output"),
+                    ),
              choices=[
                  (None, _("Disable")),
                  ("text", _("Text output")),
@@ -225,6 +241,26 @@ def process_level_elements():
 
 # Add checks that have parameters but are only configured as manual checks
 def ps_cleanup_params(params):
+    # New parameter format: dictionary. Example:
+    # {
+    #    "user" : "foo",
+    #    "process" : "/usr/bin/food",
+    #    "warnmin" : 1,
+    #    "okmin"   : 1,
+    #    "okmax"   : 1,
+    #    "warnmax" : 1,
+    # }
+
+    # Even newer format:
+    # {
+    #   "user" : "foo",
+    #   "levels" : (1, 1, 99999, 99999)
+    # }
+
+    # TODO: This is a workaround which makes sure input arguments are not getting altered.
+    #       A nice implementation would return a new dict based on the input
+    params = copy.deepcopy(params)
+
     if isinstance(params, (list, tuple)):
         if len(params) == 5:
             procname, warnmin, okmin, okmax, warnmax = params
@@ -237,16 +273,16 @@ def ps_cleanup_params(params):
             "user": user,
         }
 
-    if any(k in params for k in ['okmin', 'warnmin', 'okmax', 'warnmax']):
+    elif any(k in params for k in ['okmin', 'warnmin', 'okmax', 'warnmax']):
         params["levels"] = (
             params.pop("warnmin", 1),
             params.pop("okmin", 1),
-            params.pop("warnmax", 99999),
             params.pop("okmax", 99999),
+            params.pop("warnmax", 99999),
         )
 
     if "cpu_rescale_max" not in params:
-        params["cpu_rescale_max"] = None
+        params["cpu_rescale_max"] = CPU_RESCALE_MAX_UNSPEC
 
     return params
 
@@ -293,11 +329,11 @@ def validate_process_discovery_descr_option(description, varprefix):
 
 
 def process_discovery_descr_option():
-    return TextUnicode(
+    return TextInput(
         title=_('Process Name'),
         allow_empty=False,
         validate=validate_process_discovery_descr_option,
-        help=_("<p>The process name may contain one or more occurances of <tt>%s</tt>. If "
+        help=_("<p>The process name may contain one or more occurrences of <tt>%s</tt>. If "
                "you do this, then the pattern must be a regular expression and be prefixed "
                "with ~. For each <tt>%s</tt> in the description, the expression has to "
                "contain one \"group\". A group is a subexpression enclosed in brackets, "
@@ -305,7 +341,7 @@ def process_discovery_descr_option():
                "When the inventory finds a process matching the pattern, it will "
                "substitute all such groups with the actual values when creating the "
                "check. That way one rule can create several checks on a host.</p>"
-               "<p>If the pattern contains more groups then occurrances of <tt>%s</tt> in "
+               "<p>If the pattern contains more groups then occurrences of <tt>%s</tt> in "
                "the service description then only the first matching subexpressions are "
                "used for the service descriptions. The matched substrings corresponding to "
                "the remaining groups are copied into the regular expression, "
@@ -320,8 +356,8 @@ def process_match_options():
     return Alternative(
         title=_("Process Matching"),
         elements=[
-            TextAscii(
-                title=_("Exact name of the process without argments"),
+            TextInput(
+                title=_("Exact name of the process without arguments"),
                 label=_("Executable:"),
                 size=50,
             ),
@@ -362,7 +398,7 @@ def user_match_options(extra_elements=None):
     return Alternative(
         title=_("Name of operating system user"),
         elements=[
-            TextAscii(title=_("Exact name of the operating system user"), label=_("User:"),
+            TextInput(title=_("Exact name of the operating system user"), label=_("User:"),
                       size=50),
             Transform(
                 RegExp(
@@ -399,7 +435,7 @@ def cgroup_match_options():
         elements=[
             Alternative(
                 elements=[
-                    TextAscii(title=_("Exact content of the operating system control group info"),
+                    TextInput(title=_("Exact content of the operating system control group info"),
                               label=_("Control group:"),
                               size=50),
                     Transform(
@@ -432,9 +468,8 @@ def cgroup_match_options():
     )
 
 
-# Rule for discovered process checks
 def _item_spec_ps():
-    return TextAscii(title=_("Process name as defined at discovery"),)
+    return TextInput(title=_("Discovered process name"),)
 
 
 def _parameter_valuespec_ps():
@@ -459,7 +494,7 @@ rulespec_registry.register(
 
 # Rule for static process checks
 def _manual_item_spec_ps():
-    return TextAscii(
+    return TextInput(
         title=_("Process Name"),
         help=_("This name will be used in the description of the service"),
         allow_empty=False,
@@ -484,7 +519,7 @@ def _manual_parameter_valuespec_ps():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="ps",
-        group=RulespecGroupManualChecksApplications,
+        group=RulespecGroupEnforcedServicesApplications,
         item_spec=_manual_item_spec_ps,
         parameter_valuespec=_manual_parameter_valuespec_ps,
         title=lambda: _("State and count of processes"),
@@ -492,7 +527,7 @@ rulespec_registry.register(
 
 
 # In version 1.2.4 the check parameters for the resulting ps check
-# where defined in the dicovery rule. We moved that to an own rule
+# where defined in the discovery rule. We moved that to an own rule
 # in the classical check parameter style. In order to support old
 # configuration we allow reading old discovery rules and ship these
 # settings in an optional sub-dictionary.
@@ -513,7 +548,7 @@ def convert_inventory_processes(old_dict):
 
     # cmk1.6 cpu rescaling load rule
     if "cpu_rescale_max" not in old_dict.get("default_params", {}):
-        new_dict["default_params"]["cpu_rescale_max"] = None
+        new_dict["default_params"]["cpu_rescale_max"] = CPU_RESCALE_MAX_UNSPEC
 
     # cmk1.6 move icon into default_params to match setup of static and discovered ps checks
     if "icon" in old_dict:
@@ -612,7 +647,7 @@ def hr_process_match_name_option():
     return Alternative(
         title=_("Process Name Matching"),
         elements=[
-            TextAscii(
+            TextInput(
                 title=_("Exact name of the textual description"),
                 size=50,
                 allow_empty=False,
@@ -646,7 +681,7 @@ def hr_process_match_path_option():
     return Alternative(
         title=_("Process Path Matching"),
         elements=[
-            TextAscii(
+            TextInput(
                 title=_("Exact name of the process path"),
                 size=50,
                 allow_empty=False,
@@ -784,11 +819,6 @@ rulespec_registry.register(
     ))
 
 
-# Rule for discovered process checks
-def _item_spec_hr_ps():
-    return TextAscii(title=_("Process name as defined at discovery"),)
-
-
 def _parameter_valuespec_hr_ps():
     return Dictionary(help=_(
         "This ruleset defines criteria for SNMP processes base upon the HOST Resources MIB."),
@@ -800,7 +830,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hr_ps",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=_item_spec_hr_ps,
+        item_spec=_item_spec_ps,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hr_ps,
         title=lambda: _("State and count of processes (only SNMP)"),
@@ -809,7 +839,7 @@ rulespec_registry.register(
 
 # Rule for static process checks
 def _manual_item_spec_hr_ps():
-    return TextAscii(
+    return TextInput(
         title=_("Process Name"),
         help=_("This name will be used in the description of the service"),
         allow_empty=False,
@@ -830,7 +860,7 @@ def _manual_parameter_valuespec_hr_ps():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="hr_ps",
-        group=RulespecGroupManualChecksApplications,
+        group=RulespecGroupEnforcedServicesApplications,
         item_spec=_manual_item_spec_hr_ps,
         parameter_valuespec=_manual_parameter_valuespec_hr_ps,
         title=lambda: _("State and count of processes (only SNMP)"),

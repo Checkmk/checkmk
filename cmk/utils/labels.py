@@ -6,13 +6,16 @@
 """Helper functions for dealing with Checkmk labels of all kind"""
 
 import abc
+import os
 from pathlib import Path
-from typing import Callable, List, Dict
+from typing import Callable, Dict, List, Tuple
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher, RulesetMatchObject
-from cmk.utils.type_defs import HostName, ServiceName, Labels, LabelSources
+from cmk.utils.type_defs import HostName, Labels, LabelSources, ServiceName
+
+UpdatedHostLabelsEntry = Tuple[str, float, str]
 
 
 class LabelManager:
@@ -20,7 +23,7 @@ class LabelManager:
     def __init__(self, explicit_host_labels: Dict, host_label_rules: List,
                  service_label_rules: List,
                  discovered_labels_of_service: Callable[[HostName, ServiceName], Labels]) -> None:
-        super(LabelManager, self).__init__()
+        super().__init__()
         self._explicit_host_labels = explicit_host_labels
         self._host_label_rules = host_label_rules
         self._service_label_rules = service_label_rules
@@ -103,7 +106,8 @@ class LabelManager:
 
 class ABCDiscoveredLabelsStore(metaclass=abc.ABCMeta):
     """Managing persistance of discovered labels"""
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def file_path(self) -> Path:
         raise NotImplementedError()
 
@@ -127,9 +131,37 @@ class ABCDiscoveredLabelsStore(metaclass=abc.ABCMeta):
 
 class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
     def __init__(self, hostname: str) -> None:
-        super(DiscoveredHostLabelsStore, self).__init__()
+        super().__init__()
         self._hostname = hostname
 
     @property
     def file_path(self) -> Path:
-        return (cmk.utils.paths.discovered_host_labels_dir / self._hostname).with_suffix(".mk")
+        return cmk.utils.paths.discovered_host_labels_dir / (self._hostname + ".mk")
+
+
+def get_host_labels_entry_of_host(host_name: HostName) -> UpdatedHostLabelsEntry:
+    """Returns the host labels entry of the given host"""
+    path = DiscoveredHostLabelsStore(host_name).file_path
+    with path.open() as f:
+        return (path.name, path.stat().st_mtime, f.read())
+
+
+def get_updated_host_label_files(newer_than: float) -> List[UpdatedHostLabelsEntry]:
+    """Returns the host label file content + meta data which are newer than the given timestamp"""
+    updated_host_labels = []
+    for path in sorted(cmk.utils.paths.discovered_host_labels_dir.glob("*.mk")):
+        mtime = path.stat().st_mtime
+        if path.stat().st_mtime <= newer_than:
+            continue  # Already known to central site
+
+        with path.open() as f:
+            updated_host_labels.append((path.name, mtime, f.read()))
+    return updated_host_labels
+
+
+def save_updated_host_label_files(updated_host_labels: List[UpdatedHostLabelsEntry]) -> None:
+    """Persists the data previously read by get_updated_host_label_files()"""
+    for file_name, mtime, content in updated_host_labels:
+        file_path = cmk.utils.paths.discovered_host_labels_dir / file_name
+        store.save_text_to_file(file_path, content)
+        os.utime(file_path, (mtime, mtime))

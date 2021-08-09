@@ -24,16 +24,16 @@
 # Boston, MA 02110-1301 USA.
 """Handling of site-internal init scripts"""
 
-import sys
+import logging
 import os
 import subprocess
-import logging
-from typing import TYPE_CHECKING, Optional, Tuple, List
-
-from cmk.utils.log import VERBOSE
-import cmk.utils.tty as tty
+import sys
+from typing import List, Optional, Tuple, TYPE_CHECKING
 
 from omdlib.utils import chdir
+
+import cmk.utils.tty as tty
+from cmk.utils.log import VERBOSE
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext

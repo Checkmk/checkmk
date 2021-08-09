@@ -24,10 +24,10 @@
 # Boston, MA 02110-1301 USA.
 """Management of the site local CA and certificates issued by it"""
 
-import sys
-from typing import List, Tuple
 import random
+import sys
 from pathlib import Path
+from typing import List, Tuple
 
 from OpenSSL import crypto  # type: ignore[import]
 from OpenSSL.SSL import FILETYPE_PEM  # type: ignore[import]
@@ -39,7 +39,7 @@ CA_CERT_NOT_AFTER = CERT_NOT_AFTER
 class CertificateAuthority:
     """Management of the site local CA and certificates issued by it"""
     def __init__(self, ca_path: Path, ca_name: str) -> None:
-        super(CertificateAuthority, self).__init__()
+        super().__init__()
         self._ca_path = ca_path
         self._ca_name = ca_name
 

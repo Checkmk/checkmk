@@ -5,23 +5,24 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    ManualCheckParameterRulespec,
+    rulespec_registry,
+    RulespecGroupEnforcedServicesNetworking,
+)
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     Integer,
     IPv4Address,
-    TextAscii,
+    NetworkPort,
+    TextInput,
     Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksNetworking,
-    rulespec_registry,
-    ManualCheckParameterRulespec,
 )
 
 
 def _item_spec_tcp_connections():
-    return TextAscii(
+    return TextInput(
         title=_("Connection name"),
         help=_("Specify an arbitrary name of this connection here"),
         allow_empty=False,
@@ -60,17 +61,9 @@ def _parameter_valuespec_tcp_connections():
                                ]),
             ),
             ("local_ip", IPv4Address(title=_("Local IP address"))),
-            ("local_port", Integer(
-                title=_("Local port number"),
-                minvalue=1,
-                maxvalue=65535,
-            )),
+            ("local_port", NetworkPort(title=_("Local port number"))),
             ("remote_ip", IPv4Address(title=_("Remote IP address"))),
-            ("remote_port", Integer(
-                title=_("Remote port number"),
-                minvalue=1,
-                maxvalue=65535,
-            )),
+            ("remote_port", NetworkPort(title=_("Remote port number"))),
             ("max_states",
              Tuple(
                  title=_("Maximum number of connections or listeners"),
@@ -94,7 +87,7 @@ def _parameter_valuespec_tcp_connections():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="tcp_connections",
-        group=RulespecGroupManualChecksNetworking,
+        group=RulespecGroupEnforcedServicesNetworking,
         item_spec=_item_spec_tcp_connections,
         parameter_valuespec=_parameter_valuespec_tcp_connections,
         title=lambda: _("Monitor specific TCP/UDP connections and listeners"),

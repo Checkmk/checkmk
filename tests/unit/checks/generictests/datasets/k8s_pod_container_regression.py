@@ -27,7 +27,7 @@ parsed = {
 }
 
 discovery = {
-    "": [(None, {}), HostLabel(u'cmk/kubernetes_object', u'pod')]
+    "": [(None, {})]
 }
 
 checks = {

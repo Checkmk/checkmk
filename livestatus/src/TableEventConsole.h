@@ -8,27 +8,66 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <chrono>
 #include <cstdint>
-#include <cstdlib>
-#include <ctime>
 #include <map>
+#include <memory>
 #include <string>
-#include <utility>
 #include <vector>
 
-#include "Column.h"
 #include "DoubleColumn.h"
-#include "IntColumn.h"
-#include "ListColumn.h"
+#include "IntLambdaColumn.h"
+#include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
-#include "Row.h"
 #include "StringColumn.h"
-#include "StringUtils.h"
 #include "Table.h"
 #include "TimeColumn.h"
+#ifdef CMC
+#include "contact_fwd.h"
+#else
 #include "nagios.h"
+#endif
+class ColumnOffsets;
 class Query;
+class Row;
+
+// NOTE: We have a few "keep" pragmas above to avoid the insane handling of
+// template foward declarations, when the templates have parameters with
+// defaults. Yet another example "simple things gone wrong"... :-/
+
+class ECRow {
+public:
+    ECRow(MonitoringCore *mc, const std::vector<std::string> &headers,
+          const std::vector<std::string> &columns);
+
+    static std::unique_ptr<StringColumn::Callback<ECRow>> makeStringColumn(
+        const std::string &name, const std::string &description,
+        const ColumnOffsets &offsets);
+    static std::unique_ptr<IntColumn::Callback<ECRow>> makeIntColumn(
+        const std::string &name, const std::string &description,
+        const ColumnOffsets &offsets);
+    static std::unique_ptr<DoubleColumn::Callback<ECRow>> makeDoubleColumn(
+        const std::string &name, const std::string &description,
+        const ColumnOffsets &offsets);
+    static std::unique_ptr<TimeColumn::Callback<ECRow>> makeTimeColumn(
+        const std::string &name, const std::string &description,
+        const ColumnOffsets &offsets);
+    static std::unique_ptr<ListColumn::Callback<ECRow>> makeListColumn(
+        const std::string &name, const std::string &description,
+        const ColumnOffsets &offsets);
+
+    [[nodiscard]] std::string getString(const std::string &column_name) const;
+    [[nodiscard]] int32_t getInt(const std::string &column_name) const;
+    [[nodiscard]] double getDouble(const std::string &column_name) const;
+
+    [[nodiscard]] const MonitoringCore::Host *host() const;
+
+private:
+    std::map<std::string, std::string> map_;
+    MonitoringCore::Host *host_;
+
+    [[nodiscard]] std::string get(const std::string &column_name,
+                                  const std::string &default_value) const;
+};
 
 class TableEventConsole : public Table {
 public:
@@ -36,92 +75,7 @@ public:
 
     void answerQuery(Query *query) override;
 
-    struct ECRow {
-        std::map<std::string, std::string> _map;
-        MonitoringCore::Host *_host;
-    };
-
 protected:
-    static std::string getRaw(Row row, const Column &column,
-                              const std::string &default_value) {
-        if (auto r = column.columnData<ECRow>(row)) {
-            auto it = r->_map.find(column.name());
-            if (it != r->_map.end()) {
-                return it->second;
-            }
-        }
-        return default_value;
-    }
-
-    struct StringEventConsoleColumn : public StringColumn {
-        StringEventConsoleColumn(const std::string &name,
-                                 const std::string &description,
-                                 const ColumnOffsets &offsets)
-            : StringColumn(name, description, offsets) {}
-
-        [[nodiscard]] std::string getValue(Row row) const override {
-            return getRaw(row, *this, "");
-        }
-    };
-
-    struct IntEventConsoleColumn : public IntColumn {
-        IntEventConsoleColumn(const std::string &name,
-                              const std::string &description,
-                              const ColumnOffsets &offsets)
-            : IntColumn(name, description, offsets) {}
-
-        int32_t getValue(Row row,
-                         const contact * /* auth_user */) const override {
-            return static_cast<int32_t>(atol(getRaw(row, *this, "0").c_str()));
-        }
-    };
-
-    struct DoubleEventConsoleColumn : public DoubleColumn {
-        DoubleEventConsoleColumn(const std::string &name,
-                                 const std::string &description,
-                                 const ColumnOffsets &offsets)
-            : DoubleColumn(name, description, offsets) {}
-
-        [[nodiscard]] double getValue(Row row) const override {
-            return atof(getRaw(row, *this, "0").c_str());
-        }
-    };
-
-    struct TimeEventConsoleColumn : public TimeColumn {
-        TimeEventConsoleColumn(const std::string &name,
-                               const std::string &description,
-                               const ColumnOffsets &offsets)
-            : TimeColumn(name, description, offsets) {}
-
-    private:
-        [[nodiscard]] std::chrono::system_clock::time_point getRawValue(
-            Row row) const override {
-            return std::chrono::system_clock::from_time_t(
-                static_cast<std::time_t>(
-                    atof(getRaw(row, *this, "0").c_str())));
-        }
-    };
-
-    struct ListEventConsoleColumn : public ListColumn {
-        ListEventConsoleColumn(const std::string &name,
-                               const std::string &description,
-                               const ColumnOffsets &offsets)
-            : ListColumn(name, description, offsets) {}
-
-        std::vector<std::string> getValue(
-            Row row, const contact * /*auth_user*/,
-            std::chrono::seconds /*timezone_offset*/) const override {
-            auto result = getRaw(row, *this, "");
-            return result.empty() || result == "\002"
-                       ? std::vector<std::string>()
-                       : mk::split(result.substr(1), '\001');
-        }
-
-        [[nodiscard]] bool isNone(Row row) const {
-            return getRaw(row, *this, "") == "\002";
-        }
-    };
-
     bool isAuthorizedForEvent(Row row, const contact *ctc) const;
 
 private:

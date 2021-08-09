@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When moving dashlets on a Checkmk dashboard while the page is zoomed to e.g. 75% in chrome,
 this lead to "invalid dashlet coordinate" popup error messages.

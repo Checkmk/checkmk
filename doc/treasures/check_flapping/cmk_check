@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# This is the Check_MK check to configure active checks of check_flapping
+# This is the Checkmk check to configure active checks of check_flapping
 # via WATO. It must be placed into share/check_mk/checks directory.
 
 

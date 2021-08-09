@@ -1,0 +1,11 @@
+Title: Fix show mode always displaying show more
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613630895
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+This fixes a regression since werk #12058.

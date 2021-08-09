@@ -6,33 +6,36 @@
 
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore[import]
-
-from agent_aws_fake_clients import (
-    FakeCloudwatchClient,
-    FakeServiceQuotasClient,
-    EC2DescribeInstancesIB,
-    EC2DescribeReservedInstancesIB,
-    EC2DescribeAddressesIB,
-    EC2DescribeSecurityGroupsIB,
-    EC2DescribeNetworkInterfacesIB,
-    EC2DescribeSpotInstanceRequestsIB,
-    EC2DescribeSpotFleetRequestsIB,
-    EC2DescribeTagsIB,
-)
+import pytest
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
-    ResultDistributor,
-    EC2Limits,
-    EC2Summary,
-    EC2Labels,
-    EC2SecurityGroups,
     EC2,
+    EC2Labels,
+    EC2Limits,
+    EC2SecurityGroups,
+    EC2Summary,
+    ResultDistributor,
+)
+
+from .agent_aws_fake_clients import (
+    EC2DescribeAddressesIB,
+    EC2DescribeInstancesIB,
+    EC2DescribeNetworkInterfacesIB,
+    EC2DescribeReservedInstancesIB,
+    EC2DescribeSecurityGroupsIB,
+    EC2DescribeSpotFleetRequestsIB,
+    EC2DescribeSpotInstanceRequestsIB,
+    EC2DescribeTagsIB,
+    FakeCloudwatchClient,
+    FakeServiceQuotasClient,
 )
 
 
 class FakeEC2Client:
+    def __init__(self, skip_entities=None):
+        self._skip_entities = {} if not skip_entities else skip_entities
+
     def describe_instances(self, InstanceIds=None, Filters=None):
         return {
             'Reservations': [{
@@ -50,7 +53,10 @@ class FakeEC2Client:
 
     def describe_reserved_instances(self):
         return {
-            'ReservedInstances': EC2DescribeReservedInstancesIB.create_instances(amount=3),
+            'ReservedInstances': EC2DescribeReservedInstancesIB.create_instances(
+                amount=3,
+                skip_entities=self._skip_entities.get('ReservedInstances', []),
+            ),
         }
 
     def describe_addresses(self):
@@ -99,13 +105,12 @@ class FakeEC2Client:
 
 @pytest.fixture()
 def get_ec2_sections():
-    def _create_ec2_sections(names, tags):
+    def _create_ec2_sections(names, tags, *, skip_entities=None):
         region = 'region'
         config = AWSConfig('hostname', [], (None, None))
         config.add_single_service_config('ec2_names', names)
         config.add_service_tags('ec2_tags', tags)
-
-        fake_ec2_client = FakeEC2Client()
+        fake_ec2_client = FakeEC2Client(skip_entities)
         fake_cloudwatch_client = FakeCloudwatchClient()
         fake_service_quotas_client = FakeServiceQuotasClient()
 
@@ -153,6 +158,7 @@ def test_agent_aws_ec2_limits(get_ec2_sections, names, tags, found_ec2, found_ec
     ec2_limits_results = ec2_limits.run().results
 
     assert ec2_limits.cache_interval == 300
+    assert ec2_limits.period == 600
     assert ec2_limits.name == "ec2_limits"
     assert len(ec2_limits_results) == 1
 
@@ -178,6 +184,7 @@ def test_agent_aws_ec2_summary(get_ec2_sections, names, tags, found_ec2, found_e
     ec2_summary_results = ec2_summary.run().results
 
     assert ec2_summary.cache_interval == 300
+    assert ec2_summary.period == 600
     assert ec2_summary.name == "ec2_summary"
 
     if found_ec2:
@@ -199,6 +206,7 @@ def test_agent_aws_ec2_labels(get_ec2_sections, names, tags, found_ec2, found_ec
     ec2_labels_results = ec2_labels.run().results
 
     assert ec2_labels.cache_interval == 300
+    assert ec2_labels.period == 600
     assert ec2_labels.name == "ec2_labels"
 
     assert len(ec2_labels_results) == found_ec2_with_labels
@@ -213,6 +221,7 @@ def test_agent_aws_ec2_security_groups(get_ec2_sections, names, tags, found_ec2,
     ec2_security_groups_results = ec2_security_groups.run().results
 
     assert ec2_security_groups.cache_interval == 300
+    assert ec2_security_groups.period == 600
     assert ec2_security_groups.name == "ec2_security_groups"
 
     assert len(ec2_security_groups_results) == found_ec2
@@ -229,6 +238,7 @@ def test_agent_aws_ec2(get_ec2_sections, names, tags, found_ec2, found_ec2_with_
     ec2_results = ec2.run().results
 
     assert ec2.cache_interval == 300
+    assert ec2.period == 600
     assert ec2.name == "ec2"
 
     assert len(ec2_results) == found_ec2
@@ -246,6 +256,7 @@ def test_agent_aws_ec2_summary_without_limits(get_ec2_sections):
     ec2_summary_results = ec2_summary.run().results
 
     assert ec2_summary.cache_interval == 300
+    assert ec2_summary.period == 600
     assert ec2_summary.name == "ec2_summary"
 
     assert len(ec2_summary_results) == 1
@@ -262,6 +273,7 @@ def test_agent_aws_ec2_labels_without_limits(get_ec2_sections):
     ec2_labels_results = ec2_labels.run().results
 
     assert ec2_labels.cache_interval == 300
+    assert ec2_labels.period == 600
     assert ec2_labels.name == "ec2_labels"
 
     assert len(ec2_labels_results) == 1
@@ -274,6 +286,7 @@ def test_agent_aws_ec2_security_groups_without_limits(get_ec2_sections):
     ec2_security_groups_results = ec2_security_groups.run().results
 
     assert ec2_security_groups.cache_interval == 300
+    assert ec2_security_groups.period == 600
     assert ec2_security_groups.name == "ec2_security_groups"
 
     assert len(ec2_security_groups_results) == 3
@@ -289,6 +302,7 @@ def test_agent_aws_ec2_without_limits(get_ec2_sections):
     ec2_results = ec2.run().results
 
     assert ec2.cache_interval == 300
+    assert ec2.period == 600
     assert ec2.name == "ec2"
 
     assert len(ec2_results) == 3
@@ -298,3 +312,14 @@ def test_agent_aws_ec2_without_limits(get_ec2_sections):
 
         # 11 metrics
         assert len(result.content) == 11
+
+
+@pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", [
+    (['InstanceId-0', 'InstanceId-1', 'Foo', 'Bar'], (None, None), 2, 1),
+])
+def test_agent_aws_ec2_no_crash_when_availability_zone_missing(get_ec2_sections, names, tags,
+                                                               found_ec2, found_ec2_with_labels):
+    ec2_limits, _ec2_summary, _ec2_labels, _ec2_security_groups, _ec2 = get_ec2_sections(
+        names, tags, skip_entities={'ReservedInstances': ('AvailabilityZone',)})
+    ec2_limits_results = ec2_limits.run().results
+    assert len(ec2_limits_results) == 1

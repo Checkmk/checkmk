@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Interface groups may be configured on clusters. In order to detect counter
 wraps all metrics of each interface of the cluster nodes are checked. In the

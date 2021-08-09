@@ -6,7 +6,7 @@ Date: 1599126829
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The original check plugin {{if_fortigate}} uses the {{ifName}} under the guise
 of {{ifAlias}} because on Fortigate devices the {{ifName}} contains the

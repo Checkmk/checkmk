@@ -5,10 +5,9 @@
 
 #include "LogEntry.h"
 
-#include <algorithm>  // IWYU pragma: keep
 #include <cstdlib>
 #include <cstring>
-#include <functional>  // IWYU pragma: keep
+#include <functional>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
@@ -121,6 +120,7 @@ void LogEntry::assign(Param par, const std::string &field) {
     }
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::vector<LogEntry::LogDef> LogEntry::log_definitions{
     LogDef{"INITIAL HOST STATE",
            Class::state,
@@ -365,7 +365,7 @@ std::string extractStateType(const std::string &str) {
     return str;
 }
 
-std::unordered_map<std::string, ServiceState> fl_service_state_types{
+const std::unordered_map<std::string, ServiceState> fl_service_state_types{
     // normal states
     {"OK", ServiceState::ok},
     {"WARNING", ServiceState::warning},
@@ -374,7 +374,7 @@ std::unordered_map<std::string, ServiceState> fl_service_state_types{
     // states from "... ALERT"/"... NOTIFICATION"
     {"RECOVERY", ServiceState::ok}};
 
-std::unordered_map<std::string, HostState> fl_host_state_types{
+const std::unordered_map<std::string, HostState> fl_host_state_types{
     // normal states
     {"UP", HostState::up},
     {"DOWN", HostState::down},

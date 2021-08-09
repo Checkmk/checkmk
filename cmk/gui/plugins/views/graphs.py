@@ -4,30 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import copy
+import time
 
-import cmk.gui.config as config
+from cmk.gui.globals import config, request, response
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.valuespec import (
-    DropdownChoice,
-    Transform,
-    Dictionary,
-)
-
-from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.metrics import html_render
-
+from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.views import (
-    painter_registry,
+    get_graph_timerange_from_painter_options,
+    multisite_builtin_views,
     Painter,
     painter_option_registry,
+    painter_registry,
     PainterOption,
     PainterOptions,
-    multisite_builtin_views,
-    get_graph_timerange_from_painter_options,
 )
+from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Transform
 
 multisite_builtin_views.update({
     'service_graphs': {
@@ -54,8 +49,7 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Graphs'),
-        'icon': 'pnp',
+        'icon': 'service_graph',
         'title': _('Service Graphs'),
         "topic": "history",
     },
@@ -82,9 +76,8 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [],
-        'linktitle': _('Graphs'),
-        'icon': 'pnp',
-        'title': _('Host Graphs'),
+        'icon': 'graph',
+        'title': _('Host graphs'),
         "topic": "history",
     },
 })
@@ -147,7 +140,7 @@ def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
     if painter_option_pnp_timerange is not None:
         graph_data_range["time_range"] = get_graph_timerange_from_painter_options()
 
-    if html.is_mobile():
+    if is_mobile(request, response):
         graph_render_options.update({
             "interaction": False,
             "show_controls": False,
@@ -305,4 +298,6 @@ def cmk_graph_url(row, what):
     else:
         urivars.append(("view_name", "host_graphs"))
 
-    return html.makeuri_contextless(urivars, filename="view.py")
+    urivars.append(("_active", ";".join(set(["siteopt", "host", what]))))
+
+    return makeuri_contextless(request, urivars, filename="view.py")

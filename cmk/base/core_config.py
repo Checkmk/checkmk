@@ -7,15 +7,29 @@
 import abc
 import numbers
 import os
+import shutil
+import socket
 import sys
-from typing import AnyStr, Callable, Dict, List, Optional, Tuple, Union, Iterator
 from contextlib import contextmanager
+from pathlib import Path
+from typing import (
+    AnyStr,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
-import cmk.utils.version as cmk_version
 import cmk.utils.debug
+import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.tty as tty
-import cmk.utils.password_store
+import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.type_defs import (
@@ -27,39 +41,42 @@ from cmk.utils.type_defs import (
     ServiceName,
 )
 
+import cmk.core_helpers.config_path
+from cmk.core_helpers.config_path import VersionedConfigPath
+
 import cmk.base.api.agent_based.register as agent_based_register
-import cmk.base.obsolete_output as out
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup
+import cmk.base.obsolete_output as out
+from cmk.base.check_utils import LegacyCheckParameters, Service
 from cmk.base.config import (
-    HostConfig,
     ConfigCache,
     HostCheckCommand,
-    Tags,
+    HostConfig,
     ObjectAttributes,
+    TaggroupIDToTagID,
 )
-from cmk.base.check_utils import Service, LegacyCheckParameters
 from cmk.base.nagios_utils import do_check_nagiosconfig
 
 ConfigurationWarnings = List[str]
 ObjectMacros = Dict[str, AnyStr]
 CoreCommandName = str
 CoreCommand = str
-
-
-def current_core_config_serial() -> int:
-    # TODO: Needs to be changed (increased?) on every invokation
-    return 13
+CheckCommandArguments = Iterable[Union[int, float, str, Tuple[str, str, str]]]
+HostsToActivate = Optional[List[HostName]]
 
 
 class MonitoringCore(metaclass=abc.ABCMeta):
+    @classmethod
     @abc.abstractmethod
-    def create_config(self) -> None:
-        pass
+    def name(cls) -> str:
+        raise NotImplementedError
 
     @abc.abstractmethod
-    def precompile(self) -> None:
-        pass
+    def create_config(self,
+                      config_path: VersionedConfigPath,
+                      hosts_to_activate: HostsToActivate = None) -> None:
+        raise NotImplementedError
 
 
 _ignore_ip_lookup_failures = False
@@ -102,16 +119,30 @@ def get_configuration_warnings() -> ConfigurationWarnings:
     return warnings
 
 
-# TODO: Just for documentation purposes for now, add typing_extensions and use this.
+def duplicate_service_warning(
+    *,
+    checktype: str,
+    description: str,
+    host_name: HostName,
+    first_occurrence: Tuple[Union[str, CheckPluginName], Optional[str]],
+    second_occurrence: Tuple[Union[str, CheckPluginName], Optional[str]],
+) -> None:
+    return warning("ERROR: Duplicate service description (%s check) '%s' for host '%s'!\n"
+                   " - 1st occurrence: check plugin / item: %s / %r\n"
+                   " - 2nd occurrence: check plugin / item: %s / %r\n" %
+                   (checktype, description, host_name, *first_occurrence, *second_occurrence))
+
+
+# TODO: Just for documentation purposes for now.
 #
 # HostCheckCommand = NewType('HostCheckCommand',
 #                            Union[Literal["smart"],
 #                                  Literal["ping"],
 #                                  Literal["ok"],
 #                                  Literal["agent"],
-#                                  Tuple[Literal["service"], TextUnicode],
+#                                  Tuple[Literal["service"], TextInput],
 #                                  Tuple[Literal["tcp"], Integer],
-#                                  Tuple[Literal["custom"], TextAscii]])
+#                                  Tuple[Literal["custom"], TextInput]])
 
 
 def _get_host_check_command(host_config: HostConfig,
@@ -246,27 +277,29 @@ def check_icmp_arguments_of(config_cache: ConfigCache,
 #   '----------------------------------------------------------------------'
 
 
-def do_create_config(core: MonitoringCore) -> None:
+def do_create_config(core: MonitoringCore, hosts_to_activate: HostsToActivate = None) -> None:
     """Creating the monitoring core configuration and additional files
 
     Ensures that everything needed by the monitoring core and it's helper processes is up-to-date
     and available for starting the monitoring.
     """
-    with _backup_objects_file(core):
-        out.output("Generating configuration for core (type %s)..." % config.monitoring_core)
-        try:
-            _create_core_config(core)
-            out.output(tty.ok + "\n")
-        except Exception as e:
-            if cmk.utils.debug.enabled():
-                raise
-            raise MKGeneralException("Error creating configuration: %s" % e)
-
-    core.precompile()
-
+    out.output("Generating configuration for core (type %s)..." % core.name())
     try:
-        import cmk.base.cee.bakery.agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
-        cmk.base.cee.bakery.agent_bakery.bake_on_restart()
+        _create_core_config(core, hosts_to_activate=hosts_to_activate)
+        out.output(tty.ok + "\n")
+    except Exception as e:
+        if cmk.utils.debug.enabled():
+            raise
+        raise MKGeneralException("Error creating configuration: %s" % e)
+
+    _bake_on_restart()
+
+
+def _bake_on_restart():
+    try:
+        # Local import is needed, because this is not available in all environments
+        import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
+        agent_bakery.bake_on_restart()
     except ImportError:
         pass
 
@@ -291,9 +324,10 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
                 os.rename(backup_path, objects_file)
             raise
 
-        if config.monitoring_core == "nagios" and not do_check_nagiosconfig():
-            broken_config_path = "%s/check_mk_objects.cfg.broken" % cmk.utils.paths.tmp_dir
-            os.rename(cmk.utils.paths.nagios_objects_file, broken_config_path)
+        if (config.monitoring_core == "nagios" and
+                Path(cmk.utils.paths.nagios_config_file).exists() and not do_check_nagiosconfig()):
+            broken_config_path = Path(cmk.utils.paths.tmp_dir) / "check_mk_objects.cfg.broken"
+            shutil.move(cmk.utils.paths.nagios_objects_file, broken_config_path)
 
             if backup_path:
                 os.rename(backup_path, objects_file)
@@ -308,12 +342,17 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
             os.remove(backup_path)
 
 
-def _create_core_config(core: MonitoringCore) -> ConfigurationWarnings:
+def _create_core_config(core: MonitoringCore,
+                        hosts_to_activate: HostsToActivate = None) -> ConfigurationWarnings:
     initialize_warnings()
 
     _verify_non_duplicate_hosts()
     _verify_non_deprecated_checkgroups()
-    core.create_config()
+
+    config_path = next(VersionedConfigPath.current())
+    with config_path.create(is_cmc=config.is_cmc()), _backup_objects_file(core):
+        core.create_config(config_path, hosts_to_activate=hosts_to_activate)
+
     cmk.utils.password_store.save(config.stored_passwords)
 
     return get_configuration_warnings()
@@ -364,25 +403,68 @@ def _verify_non_duplicate_hosts() -> None:
 
 def active_check_arguments(hostname: HostName, description: Optional[ServiceName],
                            args: config.SpecialAgentInfoFunctionResult) -> str:
+    if isinstance(args, str):
+        return args
+
+    cmd_args: CheckCommandArguments = []
     if isinstance(args, config.SpecialAgentConfiguration):
-        # TODO: Silly dispatching because of broken types/variance.
-        if isinstance(args.args, str):
-            cmd_args: Union[str, List[Union[int, float, str, Tuple[str, str, str]]]] = args.args
-        elif isinstance(args.args, list):
-            cmd_args = [arg for arg in args.args if isinstance(arg, str)]
-        else:
-            raise Exception("funny SpecialAgentConfiguration args %r" % (args.args,))
-    elif isinstance(args, str):
-        cmd_args = args
-    elif isinstance(args, list):
-        cmd_args = [arg for arg in args if isinstance(arg, (str, tuple))]
+        cmd_args = args.args
     else:
+        cmd_args = args
+
+    if not isinstance(cmd_args, list):
         raise MKGeneralException(
             "The check argument function needs to return either a list of arguments or a "
             "string of the concatenated arguments (Host: %s, Service: %s)." %
             (hostname, description))
 
-    return config.prepare_check_command(cmd_args, hostname, description)
+    return _prepare_check_command(cmd_args, hostname, description)
+
+
+def _prepare_check_command(command_spec: CheckCommandArguments, hostname: HostName,
+                           description: Optional[ServiceName]) -> str:
+    """Prepares a check command for execution by Checkmk
+
+    In case a list is given it quotes the single elements. It also prepares password store entries
+    for the command line. These entries will be completed by the executed program later to get the
+    password from the password store.
+    """
+    passwords: List[Tuple[str, str, str]] = []
+    formated: List[str] = []
+    for arg in command_spec:
+        if isinstance(arg, (int, float)):
+            formated.append("%s" % arg)
+
+        elif isinstance(arg, str):
+            formated.append(cmk.utils.quote_shell_string(arg))
+
+        elif isinstance(arg, tuple) and len(arg) == 3:
+            pw_ident, preformated_arg = arg[1:]
+            try:
+                password = config.stored_passwords[pw_ident]["password"]
+            except KeyError:
+                if hostname and description:
+                    descr = " used by service \"%s\" on host \"%s\"" % (description, hostname)
+                elif hostname:
+                    descr = " used by host host \"%s\"" % (hostname)
+                else:
+                    descr = ""
+
+                console.warning("The stored password \"%s\"%s does not exist (anymore)." %
+                                (pw_ident, descr))
+                password = "%%%"
+
+            pw_start_index = str(preformated_arg.index("%s"))
+            formated.append(cmk.utils.quote_shell_string(preformated_arg % ("*" * len(password))))
+            passwords.append((str(len(formated)), pw_start_index, pw_ident))
+
+        else:
+            raise MKGeneralException("Invalid argument for command line: %r" % (arg,))
+
+    if passwords:
+        formated = ["--pwstore=%s" % ",".join(["@".join(p) for p in passwords])] + formated
+
+    return " ".join(formated)
 
 
 #.
@@ -428,10 +510,8 @@ def get_service_attributes(
                                                         check_plugin_name, params)
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
 
-    # TODO: Remove ignore once we are on Python 3
     attrs.update(_get_tag_attributes(config_cache.labels_of_service(hostname, description),
                                      "LABEL"))
-    # TODO: Remove ignore once we are on Python 3
     attrs.update(
         _get_tag_attributes(config_cache.label_sources_of_service(hostname, description),
                             "LABELSOURCE"))
@@ -499,7 +579,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     # Now lookup configured IP addresses
     v4address: Optional[str] = None
     if host_config.is_ipv4_host:
-        v4address = ip_address_of(host_config, 4)
+        v4address = ip_address_of(host_config, socket.AF_INET)
 
     if v4address is None:
         v4address = ""
@@ -507,7 +587,7 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
 
     v6address: Optional[str] = None
     if host_config.is_ipv6_host:
-        v6address = ip_address_of(host_config, 6)
+        v6address = ip_address_of(host_config, socket.AF_INET6)
     if v6address is None:
         v6address = ""
     attrs["_ADDRESS_6"] = v6address
@@ -549,13 +629,18 @@ def get_host_attributes(hostname: HostName, config_cache: ConfigCache) -> Object
     return attrs
 
 
-def _get_tag_attributes(collection: Union[Tags, Labels, LabelSources],
-                        prefix: str) -> ObjectAttributes:
+def _get_tag_attributes(
+    collection: Union[TaggroupIDToTagID, Labels, LabelSources],
+    prefix: str,
+) -> ObjectAttributes:
     return {u"__%s_%s" % (prefix, k): str(v) for k, v in collection.items()}
 
 
-def get_cluster_attributes(config_cache: config.ConfigCache, host_config: config.HostConfig,
-                           nodes: List[str]) -> Dict:
+def get_cluster_attributes(
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+    nodes: Sequence[HostName],
+) -> Dict:
     sorted_nodes = sorted(nodes)
 
     attrs = {
@@ -563,23 +648,25 @@ def get_cluster_attributes(config_cache: config.ConfigCache, host_config: config
     }
     node_ips_4 = []
     if host_config.is_ipv4_host:
+        family = socket.AF_INET
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
-            addr = ip_address_of(node_config, 4)
+            addr = ip_address_of(node_config, family)
             if addr is not None:
                 node_ips_4.append(addr)
             else:
-                node_ips_4.append(fallback_ip_for(node_config, 4))
+                node_ips_4.append(ip_lookup.fallback_ip_for(family))
 
     node_ips_6 = []
     if host_config.is_ipv6_host:
+        family = socket.AF_INET6
         for h in sorted_nodes:
             node_config = config_cache.get_host_config(h)
-            addr = ip_address_of(node_config, 6)
+            addr = ip_address_of(node_config, family)
             if addr is not None:
                 node_ips_6.append(addr)
             else:
-                node_ips_6.append(fallback_ip_for(node_config, 6))
+                node_ips_6.append(ip_lookup.fallback_ip_for(family))
 
     node_ips = node_ips_6 if host_config.is_ipv6_primary else node_ips_4
 
@@ -589,8 +676,10 @@ def get_cluster_attributes(config_cache: config.ConfigCache, host_config: config
     return attrs
 
 
-def get_cluster_nodes_for_config(config_cache: ConfigCache,
-                                 host_config: HostConfig) -> List[HostName]:
+def get_cluster_nodes_for_config(
+    config_cache: ConfigCache,
+    host_config: HostConfig,
+) -> List[HostName]:
 
     if host_config.nodes is None:
         return []
@@ -606,8 +695,11 @@ def get_cluster_nodes_for_config(config_cache: ConfigCache,
     return nodes
 
 
-def _verify_cluster_address_family(nodes: List[str], config_cache: config.ConfigCache,
-                                   host_config: config.HostConfig) -> None:
+def _verify_cluster_address_family(
+    nodes: List[HostName],
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+) -> None:
     cluster_host_family = "IPv6" if host_config.is_ipv6_primary else "IPv4"
 
     address_families = [
@@ -630,8 +722,11 @@ def _verify_cluster_address_family(nodes: List[str], config_cache: config.Config
                 (host_config.hostname, ", ".join(address_families)))
 
 
-def _verify_cluster_datasource(nodes: List[str], config_cache: config.ConfigCache,
-                               host_config: config.HostConfig) -> None:
+def _verify_cluster_datasource(
+    nodes: List[HostName],
+    config_cache: config.ConfigCache,
+    host_config: config.HostConfig,
+) -> None:
     cluster_tg = host_config.tag_groups
     cluster_agent_ds = cluster_tg.get("agent")
     cluster_snmp_ds = cluster_tg.get("snmp_ds")
@@ -647,9 +742,9 @@ def _verify_cluster_datasource(nodes: List[str], config_cache: config.ConfigCach
             warning("%s '%s': %s vs. %s" % (warn_text, nodename, cluster_snmp_ds, node_snmp_ds))
 
 
-def ip_address_of(host_config: config.HostConfig, family: Optional[int] = None) -> Optional[str]:
+def ip_address_of(host_config: config.HostConfig, family: socket.AddressFamily) -> Optional[str]:
     try:
-        return ip_lookup.lookup_ip_address(host_config, family)
+        return config.lookup_ip_address(host_config, family=family)
     except Exception as e:
         if host_config.is_cluster:
             return ""
@@ -658,7 +753,7 @@ def ip_address_of(host_config: config.HostConfig, family: Optional[int] = None) 
         if not _ignore_ip_lookup_failures:
             warning("Cannot lookup IP address of '%s' (%s). "
                     "The host will not be monitored correctly." % (host_config.hostname, e))
-        return fallback_ip_for(host_config, family)
+        return ip_lookup.fallback_ip_for(family)
 
 
 def ignore_ip_lookup_failures() -> None:
@@ -668,16 +763,6 @@ def ignore_ip_lookup_failures() -> None:
 
 def failed_ip_lookups() -> List[HostName]:
     return _failed_ip_lookups
-
-
-def fallback_ip_for(host_config: HostConfig, family: Optional[int] = None) -> str:
-    if family is None:
-        family = 6 if host_config.is_ipv6_primary else 4
-
-    if family == 4:
-        return "0.0.0.0"
-
-    return "::"
 
 
 def get_host_macros_from_attributes(hostname: HostName, attrs: ObjectAttributes) -> ObjectMacros:

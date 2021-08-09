@@ -4,23 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Iterable,
-    Mapping,
-    Sequence,
-    Tuple,
-    TypedDict,
-)
-from .agent_based_api.v1 import (
-    check_levels,
-    register,
-    render,
-    Result,
-    Service,
-    SNMPTree,
-    state,
-    type_defs,
-)
+from typing import Any, Iterable, List, Mapping, Sequence, Tuple, TypedDict
+
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 from .utils.netscaler import SNMP_DETECT
 
 netscaler_vserver_states = {
@@ -124,28 +112,28 @@ def _to_vserver(line: Iterable[str]) -> Tuple[str, VServer]:
     return full_name or name, vserver
 
 
-def parse_netscaler_vserver(string_table: type_defs.SNMPStringTable) -> Section:
+def parse_netscaler_vserver(string_table: List[type_defs.StringTable]) -> Section:
     """
     >>> import pprint
     >>> pprint.pprint(parse_netscaler_vserver([[
     ... ['lb_eas', '0.0.0.0', '0', '14', '7', '100', '1', '0', '0', '0', 'lb_eas'],
-    ... ['citrix.ehg.directory', '10.101.6.11', '443', '14', '7', '0', '3', '0', '0', '0', 'citrix.ehg.directory'],
-    ... ['cag.erwinhymergroup.com', '10.101.6.12', '443', '14', '7', '0', '3', '0', '0', '0', 'cag.erwinhymergroup.com'],
+    ... ['citrix.comp.directory', '1.2.3.4', '443', '14', '7', '0', '3', '0', '0', '0', 'citrix.comp.directory'],
+    ... ['cag.company.com', '1.2.3.5', '443', '14', '7', '0', '3', '0', '0', '0', 'cag.company.com'],
     ... ]]))
-    {'cag.erwinhymergroup.com': {'entity_service_type': 'ssl vpn',
-                                 'protocol': 'ssl',
-                                 'request_rate': 0,
-                                 'rx_bytes': 0,
-                                 'service_state': (0, 'up'),
-                                 'socket': '10.101.6.12:443',
-                                 'tx_bytes': 0},
-     'citrix.ehg.directory': {'entity_service_type': 'ssl vpn',
-                              'protocol': 'ssl',
-                              'request_rate': 0,
-                              'rx_bytes': 0,
-                              'service_state': (0, 'up'),
-                              'socket': '10.101.6.11:443',
-                              'tx_bytes': 0},
+    {'cag.company.com': {'entity_service_type': 'ssl vpn',
+                         'protocol': 'ssl',
+                         'request_rate': 0,
+                         'rx_bytes': 0,
+                         'service_state': (0, 'up'),
+                         'socket': '1.2.3.5:443',
+                         'tx_bytes': 0},
+     'citrix.comp.directory': {'entity_service_type': 'ssl vpn',
+                               'protocol': 'ssl',
+                               'request_rate': 0,
+                               'rx_bytes': 0,
+                               'service_state': (0, 'up'),
+                               'socket': '1.2.3.4:443',
+                               'tx_bytes': 0},
      'lb_eas': {'entity_service_type': 'loadbalancing',
                 'health': 100.0,
                 'protocol': 'ssl',
@@ -161,7 +149,7 @@ def parse_netscaler_vserver(string_table: type_defs.SNMPStringTable) -> Section:
 register.snmp_section(
     name="netscaler_vserver",
     parse_function=parse_netscaler_vserver,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.5951.4.1.3.1.1",
             oids=[  # nsVserverGroup.vserverTable.vserverEntry
@@ -183,27 +171,26 @@ register.snmp_section(
 )
 
 
-def discover_netscaler_vserver(section: Section) -> type_defs.DiscoveryGenerator:
+def discover_netscaler_vserver(section: Section) -> type_defs.DiscoveryResult:
     """
     >>> import pprint
     >>> pprint.pprint(list(discover_netscaler_vserver({
-    ... 'cag.erwinhymergroup.com': {},
-    ... 'citrix.ehg.directory': {},
+    ... 'cag.company.com': {},
+    ... 'citrix.comp.directory': {},
     ... })))
-    [Service(item='cag.erwinhymergroup.com', parameters={}, labels=[]),
-     Service(item='citrix.ehg.directory', parameters={}, labels=[])]
+    [Service(item='cag.company.com'), Service(item='citrix.comp.directory')]
     """
     for srv_name in section:
         yield Service(item=srv_name)
 
 
 def _check_netscaler_vservers(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     vsevers: Sequence[VServer],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     """
     >>> for result in _check_netscaler_vservers(
-    ...     type_defs.Parameters({"health_levels": (100.0, 0.1), "cluster_status": "best"}),
+    ...     {"health_levels": (100.0, 0.1), "cluster_status": "best"},
     ...     [{
     ...         'entity_service_type': 'loadbalancing',
     ...         'health': 100.0,
@@ -215,16 +202,16 @@ def _check_netscaler_vservers(
     ...         'tx_bytes': 0,
     ...     }]):
     ...     print(result)
-    Result(state=<state.OK: 0>, summary='Status: up', details='Status: up')
-    Result(state=<state.OK: 0>, summary='Health: 100%', details='Health: 100%')
-    Metric('health_perc', 100.0, levels=(None, None), boundaries=(0.0, 100.0))
-    Result(state=<state.OK: 0>, summary='Type: loadbalancing, Protocol: ssl, Socket: 0.0.0.0:0', details='Type: loadbalancing, Protocol: ssl, Socket: 0.0.0.0:0')
-    Result(state=<state.OK: 0>, summary='Request rate: 0/s', details='Request rate: 0/s')
-    Metric('request_rate', 0.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='In: 0.00 Bit/s', details='In: 0.00 Bit/s')
-    Metric('if_in_octets', 0.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='Out: 0.00 Bit/s', details='Out: 0.00 Bit/s')
-    Metric('if_out_octets', 0.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<State.OK: 0>, summary='Status: up')
+    Result(state=<State.OK: 0>, summary='Health: 100.00%')
+    Metric('health_perc', 100.0, boundaries=(0.0, 100.0))
+    Result(state=<State.OK: 0>, summary='Type: loadbalancing, Protocol: ssl, Socket: 0.0.0.0:0')
+    Result(state=<State.OK: 0>, summary='Request rate: 0/s')
+    Metric('request_rate', 0.0)
+    Result(state=<State.OK: 0>, summary='In: 0.00 Bit/s')
+    Metric('if_in_octets', 0.0)
+    Result(state=<State.OK: 0>, summary='Out: 0.00 Bit/s')
+    Metric('if_out_octets', 0.0)
     """
     if not vsevers:
         return
@@ -283,11 +270,11 @@ def _check_netscaler_vservers(
 
 def check_netscaler_vserver(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     """
-    >>> par = type_defs.Parameters({"health_levels": (100.0, 0.1), "cluster_status": "best"})
+    >>> par = {"health_levels": (100.0, 0.1), "cluster_status": "best"}
     >>> assert list(check_netscaler_vserver('item', par, {})) == []
     >>> vserver = {
     ...     'entity_service_type': 'loadbalancing',
@@ -310,11 +297,11 @@ def check_netscaler_vserver(
 
 def cluster_check_netscaler_vserver(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     """
-    >>> par = type_defs.Parameters({"health_levels": (100.0, 0.1), "cluster_status": "best"})
+    >>> par = {"health_levels": (100.0, 0.1), "cluster_status": "best"}
     >>> vserver = {
     ...     'entity_service_type': 'loadbalancing',
     ...     'health': 100.0,

@@ -94,6 +94,8 @@ def check_oracle_performance(item, params, parsed):
         sga_info = data.get('SGA_info')
         if sga_info:
             for sga_field in oracle_constants.oracle_sga_fields:
+                if sga_field.name not in sga_info:
+                    continue
                 value = sga_info[sga_field.name]
                 yield 0, "%s: %s" % (sga_field.name, get_bytes_human_readable(value))
                 perfdata.append((sga_field.metric, value))

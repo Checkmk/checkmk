@@ -6,7 +6,7 @@ Date: 1593521588
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 You can now filter for hostgroups having certain host or service problems. It
 is possible to define, what states should be taken into account.

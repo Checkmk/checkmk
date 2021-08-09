@@ -5,27 +5,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
+)
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     ListOf,
     ListOfStrings,
     MonitoringState,
-    TextAscii,
-)
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
-    RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
+    TextInput,
 )
 
 
 def _valuespec_discovery_systemd_units_services_rules():
     return Dictionary(
-        title=_("Systemd single services siscovery"),
+        title=_("Systemd single services discovery"),
         elements=[
             ('descriptions', ListOfStrings(title=_("Descriptions"))),
             ('names', ListOfStrings(title=_("Service unit names"))),
@@ -98,7 +97,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="systemd_services",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of the service")),
+        item_spec=lambda: TextInput(title=_("Name of the service")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_systemd_services,
         title=lambda: _("Systemd single services"),

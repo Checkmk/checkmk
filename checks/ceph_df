@@ -4,6 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery, FSBlocks
+
 
 def _sanitize_line(line):
     """Merges units to values in case values and units are contained in separate line elements."""
@@ -17,18 +30,17 @@ def _sanitize_line(line):
     return sanitized_line
 
 
-def parse_ceph_df(info):
+def parse_ceph_df(info) -> FSBlocks:
     parsed = {}
     section = None
     global_headers = None
     pools_headers = None
 
     for line in info:
-        if line[0] in ["GLOBAL:", "RAW"]:
+        if line[0] in ["GLOBAL:", "RAW"] or re.sub("[-: ]", "", ''.join(line)) == 'RAWSTORAGE':
             section = "global"
             continue
-
-        elif line[0] == "POOLS:":
+        elif re.sub("[-: ]", "", ''.join(line)) == "POOLS":
             section = "pools"
             continue
 
@@ -71,6 +83,37 @@ def parse_ceph_df(info):
                     'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
                 ]
 
+            elif line == [
+                    'POOL', 'ID', 'PGS', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX', 'AVAIL',
+                    'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES', 'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+            ]:
+                pools_headers = [
+                    'POOL', 'ID', 'PGS', 'STORED', 'OBJECTS', 'USED', '%USED', 'MAX AVAIL',
+                    'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
+                ]
+
+            elif line == [
+                    'POOL', 'ID', 'STORED', '(DATA)', '(OMAP)', 'OBJECTS', 'USED', '(DATA)',
+                    '(OMAP)', '%USED', 'MAX', 'AVAIL', 'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES',
+                    'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+            ]:
+                pools_headers = [
+                    'POOL', 'ID', 'STORED', '(DATA)', '(OMAP)', 'OBJECTS', 'USED', '(DATA)',
+                    '(OMAP)', '%USED', 'MAX AVAIL', 'QUOTA OBJECTS', 'QUOTA BYTES', 'DIRTY',
+                    'USED COMPR', 'UNDER COMPR'
+                ]
+
+            elif line == [
+                    'POOL', 'ID', 'PGS', 'STORED', '(DATA)', '(OMAP)', 'OBJECTS', 'USED', '(DATA)',
+                    '(OMAP)', '%USED', 'MAX', 'AVAIL', 'QUOTA', 'OBJECTS', 'QUOTA', 'BYTES',
+                    'DIRTY', 'USED', 'COMPR', 'UNDER', 'COMPR'
+            ]:
+                pools_headers = [
+                    'POOL', 'ID', 'PGS', 'STORED', 'STORED (DATA)', 'STORED (OMAP)', 'OBJECTS',
+                    'USED', 'USED (DATA)', 'USED (OMAP)', '%USED', 'MAX AVAIL', 'QUOTA OBJECTS',
+                    'QUOTA BYTES', 'DIRTY', 'USED COMPR', 'UNDER COMPR'
+                ]
+
             elif pools_headers is not None:
                 parsed.setdefault(line[0], dict(zip(pools_headers[1:], line[1:])))
 
@@ -111,13 +154,19 @@ def parse_ceph_df(info):
             avail_mb = parse_byte_values(data["AVAIL"])
         else:
             avail_mb = parse_byte_values(data["MAX AVAIL"])
-            size_mb = avail_mb + parse_byte_values(data["USED"])
+
+            # from ceph version pacific STORED is a notional amount of data stored
+            # USED is the total data stored (incl. replication)
+            # https://docs.ceph.com/en/latest/rados/operations/monitoring/
+            # werk 12199
+            used_size = data["STORED"] if "STORED" in data else data["USED"]
+            size_mb = avail_mb + parse_byte_values(used_size)
         mps.append((mp, size_mb, avail_mb, 0))
     return mps
 
 
 def inventory_ceph_df(mps):
-    return df_inventory([x[0] for x in mps])
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), [x[0] for x in mps])
 
 
 check_info['ceph_df'] = {
@@ -126,7 +175,6 @@ check_info['ceph_df'] = {
     'check_function': df_check_filesystem_list,
     'service_description': 'Ceph Pool %s',
     'has_perfdata': True,
-    'includes': ['df.include', 'size_trend.include'],
     'group': 'filesystem',
     'default_levels_variable': 'filesystem_default_levels',
 }

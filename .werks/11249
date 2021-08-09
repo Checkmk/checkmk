@@ -6,7 +6,7 @@ Date: 1594237191
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When using Linux in VMs it is the recommended way to use the open-vm-tools.  In
 this situation the system reports "tools are not managed by VMWare", which is

@@ -6,34 +6,37 @@
 
 import pprint
 import time
-from typing import Any, Dict
 from pathlib import Path
+from typing import Any, Dict
+
 from OpenSSL import crypto  # type: ignore[import]
 
 import cmk.utils.render
 import cmk.utils.store as store
+from cmk.utils.site import omd_site
 
-from cmk.gui.table import table_element
-import cmk.gui.config as config
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.valuespec import (
-    Dictionary,
-    Password,
-    TextAreaUnicode,
-    FileUpload,
-    CascadingDropdown,
-    TextUnicode,
-)
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import FinalizeRequest, MKUserError
+from cmk.gui.globals import html, request, response, transactions, user
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
+    PageMenuTopic,
+)
+from cmk.gui.plugins.wato.utils.base_modes import ActionResult, mode_url, redirect
+from cmk.gui.table import table_element
+from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri_contextless
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    FileUpload,
+    Password,
+    TextAreaUnicode,
+    TextInput,
 )
 
 
@@ -41,14 +44,13 @@ class KeypairStore:
     def __init__(self, path: str, attr: str) -> None:
         self._path = Path(path)
         self._attr = attr
-        super(KeypairStore, self).__init__()
+        super().__init__()
 
     def load(self):
         if not self._path.exists():
             return {}
 
         variables: Dict[str, Any] = {self._attr: {}}
-        # TODO: Can be changed to text IO with Python 3
         with self._path.open("rb") as f:
             exec(f.read(), variables, variables)
         return variables[self._attr]
@@ -82,7 +84,7 @@ class PageKeyManagement:
 
     def __init__(self):
         self.keys = self.load()
-        super(PageKeyManagement, self).__init__()
+        super().__init__()
 
     def title(self):
         raise NotImplementedError()
@@ -110,7 +112,7 @@ class PageKeyManagement:
                                     title=_("Add key"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([("mode", self.edit_mode)])),
+                                        makeuri_contextless(request, [("mode", self.edit_mode)])),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -118,7 +120,7 @@ class PageKeyManagement:
                                     title=_("Upload key"),
                                     icon_name="upload",
                                     item=make_simple_link(
-                                        html.makeuri_contextless([("mode", self.upload_mode)])),
+                                        makeuri_contextless(request, [("mode", self.upload_mode)])),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -133,31 +135,23 @@ class PageKeyManagement:
     def _may_edit_config(self):
         return True
 
-    def action(self):
-        if self._may_edit_config() and html.request.has_var("_delete"):
-            key_id_as_str = html.request.var("_delete")
+    def action(self) -> ActionResult:
+        if self._may_edit_config() and request.has_var("_delete"):
+            key_id_as_str = request.var("_delete")
             if key_id_as_str is None:
                 raise Exception("cannot happen")
             key_id = int(key_id_as_str)
             if key_id not in self.keys:
-                return
+                return None
 
             key = self.keys[key_id]
 
             if self._key_in_use(key_id, key):
                 raise MKUserError("", _("This key is still used."))
 
-            message = self._delete_confirm_msg()
-            if key["owner"] != config.user.id:
-                message += _(
-                    "<br><b>Note</b>: this key has created by user <b>%s</b>") % key["owner"]
-            c = html.confirm(message, add_header=self.title())
-            if c:
-                self.delete(key_id)
-                self.save(self.keys)
-
-            elif c is False:
-                return ""
+            self.delete(key_id)
+            self.save(self.keys)
+        return None
 
     def delete(self, key_id):
         del self.keys[key_id]
@@ -180,15 +174,25 @@ class PageKeyManagement:
                 table.row()
                 table.cell(_("Actions"), css="buttons")
                 if self._may_edit_config():
-                    delete_url = html.makeactionuri([("_delete", key_id)])
+                    message = self._delete_confirm_msg()
+                    if key["owner"] != user.id:
+                        message += _("<br><b>Note</b>: this key has created by user <b>%s</b>"
+                                    ) % key["owner"]
+
+                    delete_url = make_confirm_link(
+                        url=makeactionuri(request, transactions, [("_delete", key_id)]),
+                        message=message,
+                    )
                     html.icon_button(delete_url, _("Delete this key"), "delete")
-                download_url = html.makeuri_contextless([("mode", self.download_mode),
-                                                         ("key", key_id)])
+                download_url = makeuri_contextless(
+                    request,
+                    [("mode", self.download_mode), ("key", key_id)],
+                )
                 html.icon_button(download_url, _("Download this key"), "download")
-                table.cell(_("Description"), html.render_text(key["alias"]))
+                table.cell(_("Description"), key["alias"])
                 table.cell(_("Created"), cmk.utils.render.date(key["date"]))
-                table.cell(_("By"), html.render_text(key["owner"]))
-                table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5").decode("ascii")))
+                table.cell(_("By"), key["owner"])
+                table.cell(_("Digest (MD5)"), cert.digest("md5").decode("ascii"))
 
 
 class PageEditKey:
@@ -204,23 +208,23 @@ class PageEditKey:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="key",
-            button_name="create",
-            save_title=_("Create"),
-        )
+        return make_simple_form_page_menu(_("Key"),
+                                          breadcrumb,
+                                          form_name="key",
+                                          button_name="create",
+                                          save_title=_("Create"))
 
-    def action(self):
-        if html.check_transaction():
+    def action(self) -> ActionResult:
+        if transactions.check_transaction():
             value = self._vs_key().from_html_vars("key")
             # Remove the secret key from known URL vars. Otherwise later constructed URLs
             # which use the current page context will contain the passphrase which could
             # leak the secret information
-            html.request.del_var("key_p_passphrase")
+            request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
             self._create_key(value)
-            return self.back_mode
+            return redirect(mode_url(self.back_mode))
+        return None
 
     def _create_key(self, value):
         keys = self.load()
@@ -243,7 +247,7 @@ class PageEditKey:
             "private_key": crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey, "AES256",
                                                   passphrase.encode("utf-8")).decode("ascii"),
             "alias": alias,
-            "owner": config.user.id,
+            "owner": user.id,
             "date": time.time(),
         }
 
@@ -260,7 +264,7 @@ class PageEditKey:
         return Dictionary(
             title=_("Properties"),
             elements=[
-                ("alias", TextUnicode(
+                ("alias", TextInput(
                     title=_("Description or comment"),
                     size=64,
                     allow_empty=False,
@@ -292,17 +296,16 @@ class PageUploadKey:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="key",
-            button_name="upload",
-            save_title=_("Upload"),
-        )
+        return make_simple_form_page_menu(_("Key"),
+                                          breadcrumb,
+                                          form_name="key",
+                                          button_name="upload",
+                                          save_title=_("Upload"))
 
-    def action(self):
-        if html.check_transaction():
+    def action(self) -> ActionResult:
+        if transactions.check_transaction():
             value = self._vs_key().from_html_vars("key")
-            html.request.del_var("key_p_passphrase")
+            request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
 
             key_file = self._get_uploaded(value, "key_file")
@@ -316,7 +319,8 @@ class PageUploadKey:
                 raise MKUserError(None, _("The file does not look like a valid key file."))
 
             self._upload_key(key_file, value)
-            return self.back_mode
+            return redirect(mode_url(self.back_mode))
+        return None
 
     def _get_uploaded(self, cert_spec, key):
         if key in cert_spec:
@@ -362,7 +366,7 @@ class PageUploadKey:
             "certificate": cert_pem,
             "private_key": key_pem,
             "alias": value["alias"],
-            "owner": config.user.id,
+            "owner": user.id,
             "date": created,
         }
 
@@ -381,7 +385,7 @@ class PageUploadKey:
         return Dictionary(
             title=_("Properties"),
             elements=[
-                ("alias", TextUnicode(
+                ("alias", TextInput(
                     title=_("Description or comment"),
                     size=64,
                     allow_empty=False,
@@ -418,19 +422,18 @@ class PageDownloadKey:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="key",
-            button_name="download",
-            save_title=_("Download"),
-        )
+        return make_simple_form_page_menu(_("Key"),
+                                          breadcrumb,
+                                          form_name="key",
+                                          button_name="download",
+                                          save_title=_("Download"))
 
-    def action(self):
-        if html.check_transaction():
+    def action(self) -> ActionResult:
+        if transactions.check_transaction():
             keys = self.load()
 
             try:
-                key_id_str = html.request.var("key")
+                key_id_str = request.var("key")
                 if key_id_str is None:
                     raise Exception("cannot happen")  # is this really the case?
                 key_id = int(key_id_str)
@@ -447,15 +450,15 @@ class PageDownloadKey:
             decrypt_private_key(private_key, value["passphrase"])
 
             self._send_download(keys, key_id)
-            return False
+            return FinalizeRequest(code=200)
+        return None
 
     def _send_download(self, keys, key_id):
         key = keys[key_id]
-        html.response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
+        response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
             key_id, key)
-        html.response.headers["Content-type"] = "application/x-pem-file"
-        html.write_text(key["private_key"])
-        html.write_text(key["certificate"])
+        response.headers["Content-type"] = "application/x-pem-file"
+        response.set_data(key["private_key"] + key["certificate"])
 
     def _file_name(self, key_id, key):
         raise NotImplementedError()
@@ -490,8 +493,8 @@ class PageDownloadKey:
 
 def create_self_signed_cert(pkey):
     cert = crypto.X509()
-    cert.get_subject().O = "Check_MK Site %s" % config.omd_site()
-    cert.get_subject().CN = config.user.id or "### Check_MK ###"
+    cert.get_subject().O = "Check_MK Site %s" % omd_site()
+    cert.get_subject().CN = user.id or "### Check_MK ###"
     cert.set_serial_number(1)
     cert.gmtime_adj_notBefore(0)
     cert.gmtime_adj_notAfter(30 * 365 * 24 * 60 * 60)  # valid for 30 years.

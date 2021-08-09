@@ -5,22 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from typing import (
-    Dict,
-    Iterator,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
-from .agent_based_api.v1 import (
-    register,
-    Result,
-    state,
-    type_defs,
-)
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
+
+from .agent_based_api.v1 import register, Result
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 from .utils import interfaces
 
 # Example output from agent
@@ -187,7 +176,7 @@ def _parse_winperf_if_agent_section_timestamp_and_instance_names(
 
 
 def _parse_winperf_if_section(
-    string_table: type_defs.AgentStringTable
+    string_table: type_defs.StringTable
 ) -> Tuple[AgentTimestamp, NICNames, AgentSection, RawSubSection, RawSubSection, RawSubSection]:
     agent_timestamp = None
     raw_nic_names: NICNames = []
@@ -395,7 +384,7 @@ def _parse_winperf_if_nic_attrs(
     return nic_attrs
 
 
-def parse_winperf_if(string_table: type_defs.AgentStringTable) -> Section:
+def parse_winperf_if(string_table: type_defs.StringTable) -> Section:
     (agent_timestamp, raw_nic_names, agent_section, plugin_section, dhcp_section,
      teaming_section) = _parse_winperf_if_section(string_table)
 
@@ -414,13 +403,14 @@ def parse_winperf_if(string_table: type_defs.AgentStringTable) -> Section:
 register.agent_section(
     name='winperf_if',
     parse_function=parse_winperf_if,
+    supersedes=["if", "if64"],
 )
 
 
 def discover_winperf_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     yield from interfaces.discover_interfaces(
         params,
         section[1],
@@ -429,9 +419,9 @@ def discover_winperf_if(
 
 def check_winperf_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     agent_timestamp, if_table, dhcp_info = section
     yield from interfaces.check_multiple_interfaces(
         item,
@@ -476,7 +466,7 @@ register.check_plugin(
     name="winperf_if",
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_winperf_if,
     check_ruleset_name="if",

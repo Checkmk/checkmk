@@ -1,0 +1,15 @@
+Title: Fix adding of graphs to custom graphs or graph collections
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1610970419
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Adding of graphs to custom graphs or graph collections was not possible on some
+browser. Furthermore, if you added a graph to custom graphs, the landing page
+was not the edit page of the custom graph.
+
+Both issues have been fixed.

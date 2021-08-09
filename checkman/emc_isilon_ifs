@@ -9,6 +9,6 @@ description:
 item:
  The fixed statement {{Cluster}}
 
-inventory:
+discovery:
  One service is created.
 

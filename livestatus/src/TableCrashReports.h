@@ -20,7 +20,7 @@ public:
     explicit TableCrashReports(MonitoringCore *mc);
     [[nodiscard]] std::string name() const final;
     [[nodiscard]] std::string namePrefix() const final;
-    void answerQuery(Query *) final;
+    void answerQuery(Query *query) final;
 };
 
 #endif  // TableCrashReports_h

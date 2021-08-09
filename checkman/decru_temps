@@ -15,5 +15,5 @@ description:
 item:
  The name of the temperature sensor as defined in the SNMP data.
 
-inventory:
+discovery:
  One service is created for each sensor.

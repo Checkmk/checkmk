@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Float,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Float, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_couchbase_cache():
@@ -46,7 +40,7 @@ rulespec_registry.register(
         check_group_name="couchbase_cache",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Node or bucket name')),
+        item_spec=lambda: TextInput(title=_('Node or bucket name')),
         parameter_valuespec=_parameter_valuespec_couchbase_cache,
         title=lambda: _("Couchbase Cache"),
     ))

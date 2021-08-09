@@ -12,5 +12,5 @@ description:
 item:
  Name of the condition
 
-inventory:
+discovery:
  One service is created for each condition and one for the readiness status.

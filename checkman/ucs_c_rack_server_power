@@ -37,7 +37,7 @@ description:
 
  The input current and input voltage are not checked but provided for information purposes only.
 
-inventory:
+discovery:
  One service is created for each motherboard of the rack server.
 
 item:

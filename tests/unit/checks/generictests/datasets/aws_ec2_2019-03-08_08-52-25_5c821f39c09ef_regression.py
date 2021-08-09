@@ -11,17 +11,15 @@
 checkname = 'aws_ec2'
 
 parsed = {
-    'Summary': {
-        'CPUUtilization': 0.1,
-        'NetworkIn': 3540.4,
-        'StatusCheckFailed_Instance': 0.0,
-        'NetworkOut': 27942.1,
-        'StatusCheckFailed_System': 0.0,
-        'DiskReadOps': 1000,
-        'DiskWriteOps': 2000,
-        'DiskReadBytes': 3000,
-        'DiskWriteBytes': 4000,
-    }
+    'CPUUtilization': 0.1,
+    'NetworkIn': 3540.4,
+    'StatusCheckFailed_Instance': 0.0,
+    'NetworkOut': 27942.1,
+    'StatusCheckFailed_System': 0.0,
+    'DiskReadOps': 1000,
+    'DiskWriteOps': 2000,
+    'DiskReadBytes': 3000,
+    'DiskWriteBytes': 4000,
 }
 
 discovery = {
@@ -51,17 +49,4 @@ checks = {
            (0, 'Read operations: 16.67 1/s', [('disk_read_ios', 16.666666666666668, None, None)]),
            (0, 'Write operations: 33.33 1/s', [('disk_write_ios', 33.333333333333336, None, None)]),
            ])],
-    'network_io':
-        [('Summary',
-          {'errors_in': (0.01, 0.1), 'errors_out': (0.01, 0.1)},
-          [(0, '[0] (up) speed unknown, In: 59.01 B/s, Out: 465.70 B/s',
-            [('in', 59.00666666666667, None, None, 0, None),
-             ('inmcast', 0.0, None, None, None, None), ('inbcast', 0.0, None, None, None, None),
-             ('inucast', 0.0, None, None, None, None), ('innucast', 0.0, None, None, None, None),
-             ('indisc', 0.0, None, None, None, None), ('inerr', 0.0, 0.01, 0.1, None, None),
-             ('out', 465.70166666666665, None, None, 0, None),
-             ('outmcast', 0.0, None, None, None, None), ('outbcast', 0.0, None, None, None, None),
-             ('outucast', 0.0, None, None, None, None), ('outnucast', 0.0, None, None, None, None),
-             ('outdisc', 0.0, None, None, None, None), ('outerr', 0.0, 0.01, 0.1, None, None),
-             ('outqlen', 0)])])]
 }

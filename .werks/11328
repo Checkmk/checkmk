@@ -1,0 +1,14 @@
+Title: hr_mem: avoid crash when evaluating irrelevant OID
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1601276767
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The hr_mem plugin used to crash when trying to evaluate OID
+.1.3.6.1.2.1.25.3.9, which maps to information about the filesystem types
+available on the host. This OID has been deemed irrelevant for memory related
+checks and is now ignored, so that the checks continue to run normally.

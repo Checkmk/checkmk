@@ -6,7 +6,7 @@ Date: 1578559822
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously the plugins and local check were always called using <i>Windows 
 System account</i>. Such approach could restrict access to some resources, 

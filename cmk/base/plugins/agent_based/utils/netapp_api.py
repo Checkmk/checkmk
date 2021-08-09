@@ -4,15 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Callable,
-    Dict,
-    List,
-    Mapping,
-    Optional,
-    Sequence,
-)
+from typing import Callable, Dict, List, Mapping, Optional, Sequence, TypedDict
+
 from ..agent_based_api.v1 import type_defs
+
+CPUSection = TypedDict(
+    'CPUSection',
+    {
+        'clustermode': Dict[str, Dict[str, str]],
+        '7mode': Dict[str, str],
+    },
+    total=False,
+)
 
 Instance = Dict[str, str]
 SectionMultipleInstances = Dict[str, List[Instance]]
@@ -22,7 +25,7 @@ ItemFunc = Optional[Callable[[str, Instance], str]]
 
 
 def parse_netapp_api_multiple_instances(
-    string_table: type_defs.AgentStringTable,
+    string_table: type_defs.StringTable,
     custom_keys: CustomKeys = None,
     item_func: ItemFunc = None,
 ) -> SectionMultipleInstances:
@@ -81,6 +84,8 @@ def parse_netapp_api_multiple_instances(
     instances: SectionMultipleInstances = {}
     for line in string_table:
         instance = {}
+        if len(line) < 2:
+            continue
         name = line[0].split(" ", 1)[1]
         for element in line:
             tokens = element.split(" ", 1)
@@ -103,7 +108,7 @@ def parse_netapp_api_multiple_instances(
 
 
 def parse_netapp_api_single_instance(
-    string_table: type_defs.AgentStringTable,
+    string_table: type_defs.StringTable,
     custom_keys: CustomKeys = None,
     item_func: ItemFunc = None,
 ) -> SectionSingleInstance:

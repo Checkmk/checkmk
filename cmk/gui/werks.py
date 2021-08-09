@@ -11,46 +11,43 @@ import itertools
 import os
 import re
 import time
-from typing import Any, Dict, Union, Iterator
+from typing import Any, Dict, Iterator, List, Union
 
 from six import ensure_str
 
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
 import cmk.utils.werks
+from cmk.utils.version import __version__
 
 import cmk.gui.pages
 import cmk.gui.utils as utils
-import cmk.gui.config as config
-from cmk.gui.table import table_element
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.valuespec import (
-    ListChoice,
-    Timerange,
-    TextAscii,
-    DropdownChoice,
-    Tuple,
-    Integer,
-    TextUnicode,
-)
 from cmk.gui.breadcrumb import (
-    make_main_menu_breadcrumb,
-    make_current_page_breadcrumb_item,
-    BreadcrumbItem,
     Breadcrumb,
+    BreadcrumbItem,
+    make_current_page_breadcrumb_item,
+    make_main_menu_breadcrumb,
 )
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html, output_funnel, request, theme, transactions, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
+    make_display_options_dropdown,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuSidePopup,
-    make_simple_link,
-    make_display_options_dropdown,
+    PageMenuTopic,
 )
+from cmk.gui.page_state import PageState
+from cmk.gui.table import table_element
+from cmk.gui.utils.escaping import escape_html, escape_html_permissive
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
+from cmk.gui.utils.urls import make_confirm_link, makeactionuri, makeuri, makeuri_contextless
+from cmk.gui.valuespec import DropdownChoice, Integer, ListChoice, TextInput, Timerange, Tuple
 
 acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
@@ -58,25 +55,88 @@ acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 g_werks: Dict[int, Dict[str, Any]] = {}
 
 
-@cmk.gui.pages.register("version")
-def page_version():
-    breadcrumb = _release_notes_breadcrumb()
+def _release_switch(major: bool) -> PageState:
+    patch_link = html.render_a(_("Patch release"),
+                               href=makeuri(request, [], remove_prefix=""),
+                               class_="active" if not major else None)
+    major_link = html.render_a(_("Major release"),
+                               href=makeuri(request, [("major", 1)]),
+                               class_="active" if major else None)
+    content = html.render_span(patch_link + major_link, id_="release_version_switch")
+    return PageState(text=content)
 
-    load_werks()
-    werk_table_options = _werk_table_options_from_request()
 
-    html.header(_("Release notes"), breadcrumb,
-                _release_notes_page_menu(breadcrumb, werk_table_options))
+@cmk.gui.pages.page_registry.register_page("version")
+class ModeReleaseNotesPage(cmk.gui.pages.Page):
+    def _title(self) -> str:
+        return _("Welcome to Checkmk %s") % __version__
 
-    handle_acknowledgement()
-    render_werks_table(werk_table_options)
+    def page(self) -> cmk.gui.pages.PageResult:
+        if request.get_integer_input_mandatory("major", 0):
+            self._major_page()
+        else:
+            self._patch_page()
 
-    html.footer()
+    def _major_page(self) -> None:
+        html.header(self._title(),
+                    breadcrumb=_release_notes_breadcrumb(),
+                    page_state=_release_switch(major=True))
+
+        html.open_div(id_="release_title")
+        html.h1(escape_html(_("Everything")) + html.render_br() + escape_html(_("monitored")))
+        html.img(theme.url("images/tribe29.svg"))
+        html.close_div()
+
+        html.div(None, id_="release_underline")
+
+        html.open_div(id_="release_content")
+        for icon, headline, subline in [
+            ("release_deploy", _("Deploy in minutes"), _("From 0 to Monitoring in <10min")),
+            ("release_scale", _("With unlimited scale"), _("Hundred thousands of hosts")),
+            ("release_automated", _("Highly automated"), _("Let Checkmk do the work for you")),
+        ]:
+            html.open_div(class_="container")
+            html.img(theme.url(f'images/{icon}.svg'))
+            html.div(headline)
+            html.div(subline)
+            html.close_div()
+        html.close_div()
+
+        html.open_div(id_="release_footer")
+        html.span(_("© 2020 tribe29 GmbH. All Rights Reserved."))
+        html.a(_("License aggreement"), href="https://checkmk.com/legal.html", target="_blank")
+        html.a(_("Imprint"), href="https://checkmk.com/impressum.html", target="_blank")
+        html.close_div()
+
+    def _patch_page(self) -> None:
+        breadcrumb = _release_notes_breadcrumb()
+
+        load_werks()
+        werk_table_options = _werk_table_options_from_request()
+
+        html.header(self._title(),
+                    breadcrumb,
+                    _release_notes_page_menu(breadcrumb, werk_table_options),
+                    page_state=_release_switch(major=False))
+
+        for message in get_flashed_messages():
+            html.show_message(message)
+
+        handle_acknowledgement()
+
+        html.open_div(class_="wato")
+        render_werks_table(werk_table_options)
+        html.close_div()
+
+        html.footer()
 
 
 def handle_acknowledgement():
-    if html.request.var("_werk_ack") and html.check_transaction():
-        werk_id = html.request.get_integer_input_mandatory("_werk_ack")
+    if not transactions.check_transaction():
+        return
+
+    if request.var("_werk_ack"):
+        werk_id = request.get_integer_input_mandatory("_werk_ack")
         if werk_id not in g_werks:
             raise MKUserError("werk", _("This werk does not exist."))
         werk = g_werks[werk_id]
@@ -86,19 +146,15 @@ def handle_acknowledgement():
             html.show_message(
                 _("Werk %s - %s has been acknowledged.") %
                 (render_werk_id(werk, with_link=True), render_werk_title(werk)))
-            html.reload_sidebar()
             load_werks()  # reload ack states after modification
+            render_unacknowleged_werks()
 
-    elif html.request.var("_ack_all"):
-        if html.confirm(_("Do you really want to acknowledge <b>all</b> incompatible werks?"),
-                        method="GET"):
-            num = len(unacknowledged_incompatible_werks())
-            acknowledge_all_werks()
-            html.show_message(_("%d incompatible Werks have been acknowledged.") % num)
-            html.reload_sidebar()
-            load_werks()  # reload ack states after modification
-
-    render_unacknowleged_werks()
+    elif request.var("_ack_all"):
+        num = len(unacknowledged_incompatible_werks())
+        acknowledge_all_werks()
+        flash(_("%d incompatible Werks have been acknowledged.") % num)
+        load_werks()  # reload ack states after modification
+        html.reload_whole_page()
 
 
 def _release_notes_breadcrumb() -> Breadcrumb:
@@ -145,7 +201,13 @@ def _page_menu_entries_ack_all_werks() -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Acknowledge all"),
         icon_name="werk_ack",
-        item=make_simple_link(html.makeactionuri([("_ack_all", "1")])),
+        is_shortcut=True,
+        is_suggested=True,
+        item=make_simple_link(
+            make_confirm_link(
+                url=makeactionuri(request, transactions, [("_ack_all", "1")]),
+                message=_("Do you really want to acknowledge <b>all</b> incompatible werks?"),
+            )),
         is_enabled=bool(unacknowledged_incompatible_werks()),
     )
 
@@ -158,8 +220,8 @@ def _extend_display_dropdown(menu, werk_table_options: Dict[str, Any]) -> None:
             title=_("Filter"),
             entries=[
                 PageMenuEntry(
-                    title=_("Filter view"),
-                    icon_name="filters",
+                    title=_("Filter"),
+                    icon_name="filter",
                     item=PageMenuSidePopup(_render_werk_options_form(werk_table_options)),
                     name="filters",
                     is_shortcut=True,
@@ -168,8 +230,8 @@ def _extend_display_dropdown(menu, werk_table_options: Dict[str, Any]) -> None:
         ))
 
 
-def _render_werk_options_form(werk_table_options: Dict[str, Any]) -> str:
-    with html.plugged():
+def _render_werk_options_form(werk_table_options: Dict[str, Any]) -> HTML:
+    with output_funnel.plugged():
         html.begin_form("werks")
         html.hidden_field("wo_set", "set")
 
@@ -183,7 +245,7 @@ def _render_werk_options_form(werk_table_options: Dict[str, Any]) -> str:
         html.hidden_fields()
         html.end_form()
 
-        return html.drain()
+        return HTML(output_funnel.drain())
 
 
 def _show_werk_options_controls() -> None:
@@ -191,7 +253,7 @@ def _show_werk_options_controls() -> None:
 
     html.open_div(class_="update_buttons")
     html.button("apply", _("Apply"), "submit")
-    html.buttonlink(html.makeuri([], remove_prefix=""), _("Reset"))
+    html.buttonlink(makeuri(request, [], remove_prefix=""), _("Reset"))
     html.close_div()
 
     html.close_div()
@@ -200,7 +262,7 @@ def _show_werk_options_controls() -> None:
 @cmk.gui.pages.register("werk")
 def page_werk():
     load_werks()
-    werk_id = html.request.get_integer_input_mandatory("werk")
+    werk_id = request.get_integer_input_mandatory("werk")
     if werk_id not in g_werks:
         raise MKUserError("werk", _("This werk does not exist."))
     werk = g_werks[werk_id]
@@ -216,9 +278,7 @@ def page_werk():
     def werk_table_row(caption, content, css=None):
         html.open_tr()
         html.th(caption)
-        html.open_td(class_=css)
-        html.write(content)
-        html.close_td()
+        html.td(content, class_=css)
         html.close_tr()
 
     translator = cmk.utils.werks.WerkTranslator()
@@ -265,12 +325,16 @@ def _page_menu_entries_ack_werk(werk: Dict[str, Any]) -> Iterator[PageMenuEntry]
     if not may_acknowledge():
         return
 
-    ack_url = html.makeactionuri([("_werk_ack", werk["id"])], filename="version.py")
+    ack_url = makeactionuri(request,
+                            transactions, [("_werk_ack", werk["id"])],
+                            filename="version.py")
     yield PageMenuEntry(
         title=_("Acknowledge"),
         icon_name="werk_ack",
         item=make_simple_link(ack_url),
         is_enabled=werk["compatible"] == "incomp_unack",
+        is_shortcut=True,
+        is_suggested=True,
     )
 
 
@@ -289,7 +353,7 @@ def load_werks():
 
 
 def may_acknowledge():
-    return config.user.may("general.acknowledge_werks")
+    return user.may("general.acknowledge_werks")
 
 
 def acknowledge_werk(werk):
@@ -298,7 +362,7 @@ def acknowledge_werk(werk):
 
 def acknowledge_werks(werks, check_permission=True):
     if check_permission:
-        config.user.need_permission("general.acknowledge_werks")
+        user.need_permission("general.acknowledge_werks")
 
     ack_ids = load_acknowledgements()
     for werk in werks:
@@ -348,7 +412,7 @@ def _werk_table_option_entries():
             choices=sorted(translator.levels()),
         ), [1, 2, 3]),
         ("date", "double", Timerange(title=_("Date")), ('date', (1383149313, int(time.time())))),
-        ("id", "single", TextAscii(
+        ("id", "single", TextInput(
             title=_("Werk ID"),
             label="#",
             regex="^[0-9]{1,5}$",
@@ -381,7 +445,7 @@ def _werk_table_option_entries():
                  ("cre", _("Werks also concerning the Raw Edition")),
              ],
          ), None),
-        ("werk_content", "single", TextUnicode(
+        ("werk_content", "single", TextInput(
             title=_("Werk title or content"),
             size=41,
         ), ""),
@@ -389,8 +453,8 @@ def _werk_table_option_entries():
          Tuple(title=_("Checkmk Version"),
                orientation="float",
                elements=[
-                   TextAscii(label=_("from:"), size=12),
-                   TextAscii(label=_("to:"), size=12),
+                   TextInput(label=_("from:"), size=12),
+                   TextInput(label=_("to:"), size=12),
                ]), ("", "")),
         ("grouping", "single",
          DropdownChoice(
@@ -413,14 +477,14 @@ def _werk_table_option_entries():
 
 def render_unacknowleged_werks():
     werks = unacknowledged_incompatible_werks()
-    if werks and not html.request.has_var("show_unack"):
+    if werks and not request.has_var("show_unack"):
         html.open_div(class_=["warning"])
         html.write_text(
             _("<b>Warning:</b> There are %d unacknowledged incompatible werks:") % len(werks))
         html.br()
         html.br()
         html.a(_("Show unacknowledged incompatible werks"),
-               href=html.makeuri_contextless([("show_unack", "1"), ("wo_compatibility", "3")]))
+               href=makeuri_contextless(request, [("show_unack", "1"), ("wo_compatibility", "3")]))
         html.close_div()
 
 
@@ -483,7 +547,7 @@ def render_werks_table_row(table, translator, werk):
 
 def werk_matches_options(werk, werk_table_options):
     # TODO: Fix this silly typing chaos below!
-    # check if werk id is int because valuespec is TextAscii
+    # check if werk id is int because valuespec is TextInput
     # else, set empty id to return all results beside input warning
     try:
         werk_to_match: Union[int, str] = int(werk_table_options["id"])
@@ -526,20 +590,20 @@ def _default_werk_table_options():
         name: default_value  #
         for name, _height, _vs, default_value in _werk_table_option_entries()
     }
-    werk_table_options["date_range"] = (1, time.time())
+    werk_table_options["date_range"] = (1, int(time.time()))
     werk_table_options["compatibility"] = ["incomp_unack"]
     return werk_table_options
 
 
 def _werk_table_options_from_request() -> Dict[str, Any]:
-    if html.request.var("show_unack") and not html.request.has_var("wo_set"):
+    if request.var("show_unack") and not request.has_var("wo_set"):
         return _default_werk_table_options()
 
     werk_table_options: Dict[str, Any] = {}
     for name, _height, vs, default_value in _werk_table_option_entries():
         value = default_value
         try:
-            if html.request.has_var("wo_set"):
+            if request.has_var("wo_set"):
                 value = vs.from_html_vars("wo_" + name)
                 vs.validate_value(value, "wo_" + name)
         except MKUserError as e:
@@ -547,16 +611,16 @@ def _werk_table_options_from_request() -> Dict[str, Any]:
 
         werk_table_options.setdefault(name, value)
 
-    from_date, until_date = Timerange().compute_range(werk_table_options["date"])[0]
+    from_date, until_date = Timerange.compute_range(werk_table_options["date"]).range
     werk_table_options["date_range"] = from_date, until_date
 
     return werk_table_options
 
 
-def render_werk_id(werk, with_link):
+def render_werk_id(werk, with_link) -> Union[HTML, str]:
     if with_link:
-        url = html.makeuri([("werk", werk["id"])], filename="werk.py")
-        return html.render_a(render_werk_id(werk, with_link=False), url)
+        url = makeuri_contextless(request, [("werk", werk["id"])], filename="werk.py")
+        return html.render_a("#%04d" % werk["id"], href=url)
     return "#%04d" % werk["id"]
 
 
@@ -564,71 +628,80 @@ def render_werk_date(werk):
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(werk["date"]))
 
 
-def render_werk_title(werk):
+def render_werk_title(werk) -> HTML:
     title = werk["title"]
     # if the title begins with the name or names of check plugins, then
     # we link to the man pages of those checks
     if ":" in title:
         parts = title.split(":", 1)
-        title = insert_manpage_links(parts[0]) + ":" + parts[1]
-    return title
+        return insert_manpage_links(parts[0]) + escape_html_permissive(":" + parts[1])
+    return escape_html_permissive(title)
 
 
-def render_werk_description(werk):
-    html_code = "<p>"
-    in_list = False
-    in_code = False
-    for line in werk["body"]:
-        if line.startswith("LI:"):
-            if not in_list:
-                html_code += "<ul>"
-                in_list = True
-            html_code += "<li>%s</li>\n" % line[3:]
-        else:
-            if in_list:
-                html_code += "</ul>"
-                in_list = False
-
-            if line.startswith("H2:"):
-                html_code += "<h3>%s</h3>\n" % line[3:]
-            elif line.startswith("C+:"):
-                html_code += "<pre class=code>"
-                in_code = True
-            elif line.startswith("F+:"):
-                file_name = line[3:]
-                if file_name:
-                    html_code += "<div class=filename>%s</div>" % file_name
-                html_code += "<pre class=file>"
-                in_code = True
-            elif line.startswith("C-:") or line.startswith("F-:"):
-                html_code += "</pre>"
-                in_code = False
-            elif line.startswith("OM:"):
-                html_code += "OMD[mysite]:~$ <b>" + line[3:] + "</b>\n"
-            elif line.startswith("RP:"):
-                html_code += "root@myhost:~# <b>" + line[3:] + "</b>\n"
-            elif not line.strip() and not in_code:
-                html_code += "</p><p>"
+def render_werk_description(werk) -> HTML:
+    with output_funnel.plugged():
+        html.open_p()
+        in_list = False
+        in_code = False
+        for line in werk["body"]:
+            if line.startswith("LI:"):
+                if not in_list:
+                    html.open_ul()
+                    in_list = True
+                html.li(line[3:])
             else:
-                html_code += line + "\n"
+                if in_list:
+                    html.close_ul()
+                    in_list = False
 
-    if in_list:
-        html_code += "</ul>"
+                if line.startswith("H2:"):
+                    html.h3(line[3:])
+                elif line.startswith("C+:"):
+                    html.open_pre(class_="code")
+                    in_code = True
+                elif line.startswith("F+:"):
+                    file_name = line[3:]
+                    if file_name:
+                        html.div(file_name, class_="filename")
+                    html.open_pre(class_="file")
+                    in_code = True
+                elif line.startswith("C-:") or line.startswith("F-:"):
+                    html.close_pre()
+                    in_code = False
+                elif line.startswith("OM:"):
+                    html.write_text("OMD[mysite]:~$ ")
+                    html.b(line[3:])
+                elif line.startswith("RP:"):
+                    html.write_text("root@myhost:~# ")
+                    html.b(line[3:])
+                elif not line.strip() and not in_code:
+                    html.p("")
+                else:
+                    html.write_text(line + "\n")
 
-    html_code = html_code.replace("<script>",
-                                  "&lt;script&gt;").replace("</script>", "&lt;/script&gt;")
+        if in_list:
+            html.close_ul()
 
-    html_code += "</p>"
-    return html_code
+        html.close_p()
+        return HTML(output_funnel.drain())
 
 
-def insert_manpage_links(text):
+def insert_manpage_links(text: str) -> HTML:
     parts = text.replace(",", " ").split()
-    new_parts = []
+    new_parts: List[HTML] = []
     check_regex = re.compile(r"[-_\.a-z0-9]")
     for part in parts:
-        if check_regex.match(part) and os.path.exists(cmk.utils.paths.check_manpages_dir + "/" +
-                                                      part):
-            part = '<a href="wato.py?mode=check_manpage&check_type=%s">%s</a>' % (part, part)
-        new_parts.append(part)
-    return " ".join(new_parts)
+        if (check_regex.match(part) and
+                os.path.exists(cmk.utils.paths.check_manpages_dir + "/" + part)):
+            url = makeuri_contextless(
+                request,
+                [
+                    ("mode", "check_manpage"),
+                    ("check_type", part),
+                ],
+                filename="wato.py",
+            )
+            new_parts.append(html.render_a(content=part, href=url))
+        else:
+            new_parts.append(escape_html(part))
+    return HTML(" ").join(new_parts)

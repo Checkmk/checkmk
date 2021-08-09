@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If the command {{ethtool}} provides information about interfaces the
 operational state of an interfaces is UP if ethtool outputs

@@ -9,33 +9,44 @@ import abc
 import os
 import pprint
 import re
-from typing import Dict, Any, Optional, Type, Iterable
+from typing import Any, Dict, Iterable, Optional, Type
 
-from cmk.gui.htmllib import Choices
-import cmk.gui.config as config
+import cmk.utils.store as store
+
 import cmk.gui.forms as forms
-from cmk.gui.table import table_element
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
-import cmk.utils.store as store
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import html
-from cmk.gui.i18n import _
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import load_config
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html, request, transactions
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
+    PageMenuSearch,
+    PageMenuTopic,
 )
+from cmk.gui.plugins.wato import (
+    ActionResult,
+    add_change,
+    make_confirm_link,
+    mode_registry,
+    mode_url,
+    redirect,
+    WatoMode,
+)
+from cmk.gui.table import table_element
+from cmk.gui.type_defs import Choices
+from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.watolib.host_attributes import (
     host_attribute_topic_registry,
     transform_pre_16_host_topics,
 )
 from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.plugins.wato import WatoMode, add_change, mode_registry, wato_confirm
 
 
 def update_user_custom_attrs():
@@ -44,7 +55,7 @@ def update_user_custom_attrs():
 
 
 def _update_host_custom_attrs():
-    config.load_config()
+    load_config()
     Folder.invalidate_caches()
     Folder.root_folder().rewrite_hosts_files()
 
@@ -73,7 +84,7 @@ def save_custom_attrs_to_mk_file(attrs):
             output += "wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what]))
 
     store.mkdir(watolib.multisite_dir())
-    store.save_file(watolib.multisite_dir() + "custom_attrs.mk", output)
+    store.save_text_to_file(watolib.multisite_dir() + "custom_attrs.mk", output)
 
 
 def custom_attr_types() -> Choices:
@@ -89,13 +100,13 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         return self._all_attrs[self._type]
 
     def _from_vars(self):
-        self._name = html.request.get_ascii_input("edit")  # missing -> new custom attr
+        self._name = request.get_ascii_input("edit")  # missing -> new custom attr
         self._new = self._name is None
 
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
         #       custom user attributes and vice versa. The only reason they now about
         #       each other now is that they are stored in one file.
-        self._all_attrs = load_custom_attrs_from_mk_file(lock=html.is_transaction())
+        self._all_attrs = load_custom_attrs_from_mk_file(lock=transactions.is_transaction())
 
         if not self._new:
             matching_attrs = [a for a in self._attrs if a['name'] == self._name]
@@ -105,23 +116,28 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         else:
             self._attr = {}
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _type(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _topics(self) -> Choices:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _default_topic(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _macro_help(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _macro_label(self) -> str:
         raise NotImplementedError()
 
@@ -145,7 +161,10 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="attr", button_name="save")
+        return make_simple_form_page_menu(_("Attribute"),
+                                          breadcrumb,
+                                          form_name="attr",
+                                          button_name="save")
 
     def _add_extra_attrs_from_html_vars(self):
         pass
@@ -153,12 +172,12 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
     def _add_extra_form_sections(self):
         pass
 
-    def action(self):
+    def action(self) -> ActionResult:
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
-        if not html.check_transaction():
-            return
+        if not transactions.check_transaction():
+            return None
 
-        title = html.request.get_unicode_input_mandatory("title").strip()
+        title = request.get_unicode_input_mandatory("title").strip()
         if not title:
             raise MKUserError("title", _("Please specify a title."))
 
@@ -168,13 +187,13 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
                     "alias",
                     _("This alias is already used by the attribute %s.") % this_attr['name'])
 
-        topic = html.request.get_unicode_input_mandatory('topic', '').strip()
-        help_txt = html.request.get_unicode_input_mandatory('help', '').strip()
+        topic = request.get_unicode_input_mandatory('topic', '').strip()
+        help_txt = request.get_unicode_input_mandatory('help', '').strip()
         show_in_table = html.get_checkbox('show_in_table')
         add_custom_macro = html.get_checkbox('add_custom_macro')
 
         if self._new:
-            self._name = html.request.get_ascii_input_mandatory("name", '').strip()
+            self._name = request.get_ascii_input_mandatory("name", '').strip()
             if not self._name:
                 raise MKUserError("name", _("Please specify a name for the new attribute."))
             if ' ' in self._name:
@@ -187,7 +206,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
             if [a for a in self._attrs if a['name'] == self._name]:
                 raise MKUserError("name", _("Sorry, there is already an attribute with that name."))
 
-            ty = html.request.get_ascii_input_mandatory('type', '').strip()
+            ty = request.get_ascii_input_mandatory('type', '').strip()
             if ty not in [t[0] for t in custom_attr_types()]:
                 raise MKUserError('type', _('The choosen attribute type is invalid.'))
 
@@ -215,13 +234,13 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         save_custom_attrs_to_mk_file(self._all_attrs)
         self._update_config()
 
-        return self._type + "_attrs"
+        return redirect(mode_url(self._type + "_attrs"))
 
     def page(self):
         # TODO: remove subclass specific things specifict things (everything with _type == 'user')
         html.begin_form("attr")
         forms.header(_("Properties"))
-        forms.section(_("Name"), simple=not self._new)
+        forms.section(_("Name"), simple=not self._new, is_required=True)
         html.help(
             _("The name of the attribute is used as an internal key. It cannot be "
               "changed later."))
@@ -232,7 +251,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
             html.write_text(self._name)
             html.set_focus("title")
 
-        forms.section(_("Title") + "<sup>*</sup>")
+        forms.section(_("Title") + "<sup>*</sup>", is_required=True)
         html.help(_("The title is used to label this attribute."))
         html.text_input("title", self._attr.get('title', ''))
 
@@ -249,7 +268,7 @@ class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
         if self._new:
             html.dropdown('type', custom_attr_types(), deflt=self._attr.get('type', ''))
         else:
-            html.write(dict(custom_attr_types())[self._attr.get('type')])
+            html.write_text(dict(custom_attr_types())[self._attr.get('type')])
 
         self._add_extra_form_sections()
         self._show_in_table_option()
@@ -395,17 +414,18 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
 
 class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
     def __init__(self):
-        super(ModeCustomAttrs, self).__init__()
+        super().__init__()
         # TODO: Inappropriate Intimacy: custom host attributes should not now about
         #       custom user attributes and vice versa. The only reason they now about
         #       each other now is that they are stored in one file.
-        self._all_attrs = load_custom_attrs_from_mk_file(lock=html.is_transaction())
+        self._all_attrs = load_custom_attrs_from_mk_file(lock=transactions.is_transaction())
 
     @property
     def _attrs(self):
         return self._all_attrs[self._type]
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def _type(self):
         raise NotImplementedError()
 
@@ -434,6 +454,8 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
                                         watolib.folder_preserving_link([
                                             ("mode", "edit_%s_attr" % self._type)
                                         ])),
+                                    is_shortcut=True,
+                                    is_suggested=True,
                                 ),
                             ],
                         ),
@@ -451,30 +473,28 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     @abc.abstractmethod
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         raise NotImplementedError()
 
-    def action(self):
-        if html.request.var('_delete'):
-            delname = html.request.var("_delete")
+    def action(self) -> ActionResult:
+        if not transactions.check_transaction():
+            return redirect(self.mode_url())
 
-            # FIXME: Raise an error if the attribute is still used
+        if not request.var('_delete'):
+            return redirect(self.mode_url())
 
-            confirm_txt = _('Do you really want to delete the custom attribute "%s"?') % (delname)
-
-            c = wato_confirm(_("Confirm deletion of attribute \"%s\"") % delname, confirm_txt)
-            if c:
-                for index, attr in enumerate(self._attrs):
-                    if attr['name'] == delname:
-                        self._attrs.pop(index)
-                save_custom_attrs_to_mk_file(self._all_attrs)
-                self._update_config()
-                add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
-            elif c is False:
-                return ""
+        delname = request.var("_delete")
+        for index, attr in enumerate(self._attrs):
+            if attr['name'] == delname:
+                self._attrs.pop(index)
+        save_custom_attrs_to_mk_file(self._all_attrs)
+        self._update_config()
+        add_change("edit-%sattrs" % self._type, _("Deleted attribute %s") % (delname))
+        return redirect(self.mode_url())
 
     def page(self):
         if not self._attrs:
@@ -488,12 +508,16 @@ class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
                 table.cell(_("Actions"), css="buttons")
                 edit_url = watolib.folder_preserving_link([("mode", "edit_%s_attr" % self._type),
                                                            ("edit", custom_attr['name'])])
-                delete_url = html.makeactionuri([("_delete", custom_attr['name'])])
+                delete_url = make_confirm_link(
+                    url=makeactionuri(request, transactions, [("_delete", custom_attr['name'])]),
+                    message=_('Do you really want to delete the custom attribute "%s"?') %
+                    custom_attr['name'],
+                )
                 html.icon_button(edit_url, _("Properties"), "edit")
                 html.icon_button(delete_url, _("Delete"), "delete")
 
-                table.text_cell(_("Name"), custom_attr['name'])
-                table.text_cell(_("Title"), custom_attr['title'])
+                table.cell(_("Name"), custom_attr['name'])
+                table.cell(_("Title"), custom_attr['title'])
                 table.cell(_("Type"), dict(custom_attr_types())[custom_attr['type']])
 
 
@@ -521,8 +545,12 @@ class ModeCustomUserAttrs(ModeCustomAttrs):
         yield PageMenuEntry(
             title=_("Users"),
             icon_name="users",
-            item=make_simple_link(html.makeuri_contextless([("mode", "users")],
-                                                           filename="wato.py")),
+            item=make_simple_link(
+                makeuri_contextless(
+                    request,
+                    [("mode", "users")],
+                    filename="wato.py",
+                )),
         )
 
 
@@ -552,7 +580,11 @@ class ModeCustomHostAttrs(ModeCustomAttrs):
     def _page_menu_entries_related(self) -> Iterable[PageMenuEntry]:
         yield PageMenuEntry(
             title=_("Hosts"),
-            icon_name="host",
-            item=make_simple_link(html.makeuri_contextless([("mode", "folder")],
-                                                           filename="wato.py")),
+            icon_name="folder",
+            item=make_simple_link(
+                makeuri_contextless(
+                    request,
+                    [("mode", "folder")],
+                    filename="wato.py",
+                )),
         )

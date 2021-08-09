@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
+
+from tests.testlib import Check
 
 pytestmark = pytest.mark.checks
 
@@ -13,11 +15,11 @@ pytestmark = pytest.mark.checks
     ([[u'29', u'0']], 'Board', {}),
     ([[u'0', u'29']], 'CPU', {}),
 ])
-def test_inventory_function(check_manager, info, item_expected, data_expected):
+def test_inventory_function(info, item_expected, data_expected):
     """
     Verifies if the item is detected corresponding to info content.
     """
-    check = check_manager.get_check("alcatel_temp")
+    check = Check("alcatel_temp")
     result = list(check.run_discovery(info))
     assert result[0][0] == item_expected
     assert result[0][1] == data_expected
@@ -32,12 +34,12 @@ def test_inventory_function(check_manager, info, item_expected, data_expected):
         ((30, 40), u'Slot 1 CPU', [[u'0', u'31']], 1, '31', [('temp', 31, 30, 40)]),
         ((30, 40), u'Slot 1 CPU', [[u'0', u'41']], 2, '41', [('temp', 41, 30, 40)]),
     ])
-def test_check_function(check_manager, parameters, item, info, state_expected, infotext_expected,
+def test_check_function(parameters, item, info, state_expected, infotext_expected,
                         perfdata_expected):
     """
     Verifies if check function asserts warn and crit Board and CPU temperature levels.
     """
-    check = check_manager.get_check("alcatel_temp")
+    check = Check("alcatel_temp")
     state, infotext, perfdata = check.run_check(item, parameters, info)
     assert state == state_expected
     assert infotext_expected in infotext

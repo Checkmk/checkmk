@@ -4,28 +4,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.paths
 import cmk.utils.defines as defines
+import cmk.utils.paths
 
+from cmk.gui.i18n import _
+from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
+from cmk.gui.plugins.wato import (
+    HostRulespec,
+    rulespec_group_registry,
+    rulespec_registry,
+    RulespecGroup,
+)
 from cmk.gui.valuespec import (
     Age,
+    CascadingDropdown,
     Dictionary,
     DropdownChoice,
     DualListChoice,
+    ListOf,
     ListOfStrings,
     MonitoringState,
     RegExp,
-    TextAscii,
+    TextInput,
     Transform,
-)
-
-from cmk.gui.i18n import _
-
-from cmk.gui.plugins.wato import (
-    rulespec_group_registry,
-    RulespecGroup,
-    rulespec_registry,
-    HostRulespec,
+    ValueSpec,
 )
 
 
@@ -109,25 +111,25 @@ rulespec_registry.register(
     ))
 
 
-def _valuespec_inv_exports_software_csv():
+def _valuespec_inv_exports_software_csv() -> Dictionary:
     return Dictionary(
         title=_("Export List of Software packages as CSV file"),
         elements=[
             ("filename",
-             TextAscii(
+             TextInput(
                  title=_(
                      "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"),
                  help=_(
-                     "Please specify the path to the export file. The text <tt><HOST></tt> "
+                     "Please specify the path to the export file. The text <tt>[HOST]</tt> "
                      "will be replaced with the host name the inventory has been done for. "
                      "If you use a relative path then that will be relative to Check_MK's directory "
                      "for variable data, which is <tt>%s</tt>.") % cmk.utils.paths.var_dir,
                  allow_empty=False,
                  size=64,
-                 default_value="csv-export/<HOST>.csv",
+                 default_value="csv-export/[HOST].csv",
              )),
             ("separator",
-             TextAscii(
+             TextInput(
                  title=_("Separator"),
                  allow_empty=False,
                  size=1,
@@ -237,4 +239,54 @@ rulespec_registry.register(
         match_type="dict",
         name="inv_parameters:lnx_sysctl",
         valuespec=_valuespec_inv_parameters_lnx_sysctl,
+    ))
+
+
+def _valuespec_inv_retention_intervals() -> ValueSpec:
+    def vs_choices(title):
+        return CascadingDropdown(
+            title=title,
+            choices=[
+                ("all", _("Choose all")),
+                ("choices", _("Choose the following keys"),
+                 ListOfStrings(
+                     orientation="horizontal",
+                     size=15,
+                     allow_empty=True,
+                 )),
+            ],
+            default_value="choices",
+        )
+
+    return ListOf(
+        Dictionary(
+            elements=[
+                ("interval",
+                 Age(
+                     title=_("How long single values or table columns are kept."),
+                     minvalue=1,
+                     default_value=3600 * 2,
+                     display=["days", "hours", "minutes"],
+                 )),
+                vs_element_inventory_visible_raw_path(),
+                ("attributes", vs_choices(_("Choose single values"))),
+                ("columns", vs_choices(_("Choose table columns"))),
+            ],
+            optional_keys=["attributes", "columns"],
+        ),
+        title=_("Retention intervals for HW/SW inventory entities"),
+        help=vs_inventory_path_or_keys_help() +
+        _("<br>With these intervals specific single values or table columns can be kept"
+          " from the previous inventory tree if the current agent output does not"
+          " provide any new data for these entries."
+          "<br>Only entries corresponding to chosen single values or columns are added."),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupInventory,
+        match_type="all",
+        name="inv_retention_intervals",
+        valuespec=_valuespec_inv_retention_intervals,
     ))

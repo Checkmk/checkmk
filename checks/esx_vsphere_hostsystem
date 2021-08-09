@@ -4,17 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# TODO: The extra_sections part is only transitional code to avoid
-# duplicate CPU services.
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Previously, the duplicate services were handled in the agent_vsphere
 # directly. Starting with 1.5.0 this is problematic since multiple
-# datasources can be defined in Check_MK natively. Therefore we shift
+# datasources can be defined in Checkmk natively. Therefore we shift
 # the detection of the duplicate services directly to this check.
 # When it is possible to handle duplicate services for different
 # datasources correctly at the cmk.base level this code can be removed.
-# NOTE: By design the extra_sections are passed to EVERY subcheck and
-# therefore have to be removed in every subcheck!
-# Change-Id: I3b6a56efcff4c75bbd05a051242e18deaa499d9e
 
 #.
 #   .--Mem-Cluster---------------------------------------------------------.
@@ -58,7 +65,6 @@ check_info['esx_vsphere_hostsystem.mem_usage_cluster'] = {
     "service_description": "Memory",
     "group": "mem_cluster",
     "has_perfdata": True,
-    "includes": ["mem.include"],
 }
 
 #.
@@ -130,7 +136,6 @@ check_info['esx_vsphere_hostsystem.cpu_util_cluster'] = {
     "service_description": "CPU utilization",
     "group": "cpu_utilization_cluster",
     "has_perfdata": True,
-    "includes": ["cpu_util.include"],
 }
 #.
 #   .--Memory--------------------------------------------------------------.
@@ -311,60 +316,58 @@ def check_esx_vsphere_hostsystem_multipath(item, params, parsed):
     message = ""
     path_names = []
 
-    for path, states in esx_vsphere_multipath_convert(parsed).items():
-        if path == item:
-            # Collect states
-            for path_state, path_name in states:
-                state_item = state_infos.get(path_state)
-                path_info = path_name
-                if state_item:
-                    state_item[1] += 1
-                    state = max(state_item[0], state)
-                    path_info += state_markers[state_item[0]]
-                path_names.append(path_info)
+    states = esx_vsphere_multipath_convert(parsed).get(item)
+    if states is None:
+        return states
 
-            # Check warn, critical
-            if not params or isinstance(params, list):
-                if state_infos["standby"][1] > 0 and \
-                   state_infos["standby"][1] != state_infos["active"][1]:
-                    state = max(state_infos["standby"][0], state)
-            else:
-                state = 0
-                for state_name, state_values in state_infos.items():
-                    if params.get(state_name):
-                        limits = params.get(state_name)
-                        if len(limits) == 2:
-                            warn_max, crit_max = limits
-                            crit_min, warn_min = 0, 0
-                        else:
-                            crit_min, warn_min, warn_max, crit_max = limits
+    # Collect states
+    for path_state, path_name in states:
+        state_item = state_infos.get(path_state)
+        path_info = path_name
+        if state_item:
+            state_item[1] += 1
+            state = max(state_item[0], state)
+            path_info += state_markers[state_item[0]]
+        path_names.append(path_info)
 
-                        count = state_values[1]
-                        if count < crit_min:
-                            state = max(state, 2)
-                            state_values[2] = "(!!)(less than %d)" % crit_min
-                        elif count > crit_max:
-                            state = max(state, 2)
-                            state_values[2] = "(!!)(more than %d)" % crit_max
-                        elif count < warn_min:
-                            state = max(state, 1)
-                            state_values[2] = "(!)(less than %d)" % warn_min
-                        elif count > warn_max:
-                            state = max(state, 1)
-                            state_values[2] = "(!)(more than %d)" % warn_max
-
-            # Output message
-            message = ""
-
-            element_text = []
-            for element in "active", "dead", "disabled", "standby", "unknown":
-                element_text.append("%d %s%s" %
-                                    (state_infos[element][1], element, state_infos[element][2]))
-            message += ", ".join(element_text)
-            message += "\nIncluded Paths:\n" + "\n".join(path_names)
-            break
+    # Check warn, critical
+    if not params or isinstance(params, list):
+        if state_infos["standby"][1] > 0 and \
+           state_infos["standby"][1] != state_infos["active"][1]:
+            state = max(state_infos["standby"][0], state)
     else:
-        return 3, "Path not found in agent output"
+        state = 0
+        for state_name, state_values in state_infos.items():
+            if params.get(state_name):
+                limits = params.get(state_name)
+                if len(limits) == 2:
+                    warn_max, crit_max = limits
+                    crit_min, warn_min = 0, 0
+                else:
+                    crit_min, warn_min, warn_max, crit_max = limits
+
+                count = state_values[1]
+                if count < crit_min:
+                    state = max(state, 2)
+                    state_values[2] = "(!!)(less than %d)" % crit_min
+                elif count > crit_max:
+                    state = max(state, 2)
+                    state_values[2] = "(!!)(more than %d)" % crit_max
+                elif count < warn_min:
+                    state = max(state, 1)
+                    state_values[2] = "(!)(less than %d)" % warn_min
+                elif count > warn_max:
+                    state = max(state, 1)
+                    state_values[2] = "(!)(more than %d)" % warn_max
+
+    # Output message
+    message = ""
+
+    element_text = []
+    for element in "active", "dead", "disabled", "standby", "unknown":
+        element_text.append("%d %s%s" % (state_infos[element][1], element, state_infos[element][2]))
+    message += ", ".join(element_text)
+    message += "\nIncluded Paths:\n" + "\n".join(path_names)
 
     return state, message
 

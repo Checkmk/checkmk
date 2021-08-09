@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The check was showing "rule event limit active" for rules which have not
 reached the rule event limit. This happened for rules that had a rule

@@ -6,7 +6,7 @@ Date: 1595521984
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 With SLE 15, the file /etc/SuSE-release has been removed. Previously, this file
 contained information on the version of the SUSE Linux Enterprise host. Version

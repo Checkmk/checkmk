@@ -279,10 +279,7 @@ void Device::mainThread() noexcept {
 
                     if (counter > 3)
                         mainThreadReporter("Can't Send", ec, ip_address, port);
-
-                } else if (port == 0)
-                    XLOG::l.i("Trace out '{}' Address='{}'", raw_data,
-                              ip_address);
+                }
             }
 
             // wait for stop here TOO

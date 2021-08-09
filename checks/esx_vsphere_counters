@@ -6,6 +6,25 @@
 
 import cmk.base.plugins.agent_based.esx_vsphere_counters as esx_vsphere_counters
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.df import df_discovery
+
 # Example output:
 # <<<esx_vsphere_counters:sep(124)>>>
 # net.broadcastRx|vmnic0|11|number
@@ -31,69 +50,6 @@ import cmk.base.plugins.agent_based.esx_vsphere_counters as esx_vsphere_counters
 # net.droppedTx|vmnic1|0|number
 # ...
 # sys.uptime||630664|second
-
-#   .--Disk IO-------------------------------------------------------------.
-#   |                     ____  _     _      ___ ___                       |
-#   |                    |  _ \(_)___| | __ |_ _/ _ \                      |
-#   |                    | | | | / __| |/ /  | | | | |                     |
-#   |                    | |_| | \__ \   <   | | |_| |                     |
-#   |                    |____/|_|___/_|\_\ |___\___/                      |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-# Example output:
-# disk.deviceLatency|naa.600605b002db9f7018d0a40c2a1444b0|0|millisecond
-# disk.numberRead|naa.600605b002db9f7018d0a40c2a1444b0|8|number
-# disk.numberWrite|naa.600605b002db9f7018d0a40c2a1444b0|47|number
-# disk.read|naa.600605b002db9f7018d0a40c2a1444b0|12|kiloBytesPerSecond
-# disk.read||12|kiloBytesPerSecond
-# disk.write|naa.600605b002db9f7018d0a40c2a1444b0|51|kiloBytesPerSecond
-# disk.write||51|kiloBytesPerSecond
-
-
-def inventory_esx_vsphere_counters_diskio(parsed):
-    if "" in parsed.get("disk.read", {}):
-        yield "SUMMARY", {}
-
-
-def _concat_instance_multivalues(parsed, key):
-    all_multivalues = []
-    for data in parsed.get(key, {}).values():
-        multivalues, _unit = data[0]
-        all_multivalues.extend(multivalues)
-    return all_multivalues
-
-
-def check_esx_vsphere_counters_diskio(item, params, parsed):
-    summary = {}
-
-    for op_type in ("read", "write"):
-        # summed up in key ""
-        data = parsed.get("disk.%s" % op_type, {}).get("")
-        multivalues, _unit = data[0] if data else (None, None)
-        if multivalues is not None:
-            summary['%s_throughput' % op_type] = esx_vsphere_get_average(multivalues) * 1024
-
-        # sum up all instances
-        op_counts = _concat_instance_multivalues(parsed, "disk.number%s" % op_type.title())
-        if op_counts:
-            # these are absolute counts, every 20 seconds.
-            summary["%s_ios" % op_type] = esx_vsphere_get_average(op_counts) / 20.0
-
-    latencies = _concat_instance_multivalues(parsed, "disk.deviceLatency")
-    if latencies:
-        summary['latency'] = max(int(l) for l in latencies) / 1000.0
-
-    return check_diskstat_dict(item, params, {"SUMMARY": summary})
-
-
-check_info['esx_vsphere_counters.diskio'] = {
-    'inventory_function': inventory_esx_vsphere_counters_diskio,
-    'check_function': check_esx_vsphere_counters_diskio,
-    'service_description': 'Disk IO %s',
-    'has_perfdata': True,
-    'group': 'diskstat',
-    'includes': ["diskstat.include"],
-}
 
 #.
 #   .--Datastore IO--------------------------------------------------------.
@@ -169,7 +125,6 @@ check_info['esx_vsphere_counters'] = {
     'check_function': check_esx_vsphere_counters_datastoreio,
     'service_description': 'Datastore IO %s',
     'has_perfdata': True,
-    'includes': ['diskstat.include'],
     'group': 'diskstat'
 }
 
@@ -203,7 +158,6 @@ check_info['esx_vsphere_counters.uptime'] = {
     'check_function': check_esx_vsphere_counters_uptime,
     'service_description': 'Uptime',
     'has_perfdata': True,
-    'includes': ['uptime.include'],
     'group': 'uptime',
 }
 
@@ -239,7 +193,7 @@ def inventory_esx_vsphere_counters_ramdisk(parsed):
         if instance.startswith('host/system/kernel/kmanaged/visorfs/'):
             ramdisks.append(instance.split('/')[-1])
 
-    return df_inventory(ramdisks)
+    return df_discovery(host_extra_conf(host_name(), filesystem_groups), ramdisks)
 
 
 def check_esx_vsphere_counters_ramdisk(item, params, parsed):
@@ -269,7 +223,6 @@ check_info['esx_vsphere_counters.ramdisk'] = {
     'check_function': check_esx_vsphere_counters_ramdisk,
     'service_description': 'Ramdisk %s',
     'has_perfdata': True,
-    'includes': ['size_trend.include', 'df.include'],
     'group': 'filesystem',
     'default_levels_variable': 'filesystem_default_levels',
 }
@@ -300,7 +253,7 @@ def _parse_esx_vsphere_counters_swap(parsed):
 def inventory_esx_vsphere_counters_swap(parsed):
     SWAP = _parse_esx_vsphere_counters_swap(parsed)
 
-    if any([elem for elem in SWAP.values()]):
+    if any(elem for elem in SWAP.values()):
         return [(None, {})]
 
 

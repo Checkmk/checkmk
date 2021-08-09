@@ -11,31 +11,26 @@
 #juniper-trpz-wlc-800-2 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.1.13
 #juniper-trpz-wlc-800-3 :.1.3.6.1.2.1.1.2.0 .1.3.6.1.4.1.14525.3.3.4
 
-from typing import Mapping, Dict, Tuple, List, TypedDict
 import time
 from contextlib import suppress
+from typing import Any, Dict, List, Mapping, MutableMapping, Tuple, TypedDict
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    SNMPTree,
-    OIDEnd,
-    Service,
-    Metric,
-    Result,
-    state,
-    register,
+from .agent_based_api.v1 import (
     any_of,
-    startswith,
     get_rate,
     get_value_store,
     GetRateError,
+    Metric,
+    OIDEnd,
+    register,
     render,
+    Result,
+    Service,
+    SNMPTree,
+    startswith,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    SNMPStringTable,
-    DiscoveryGenerator,
-    CheckGenerator,
-    ValueStore,
-)
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 RadioCounters = List[float]
 
@@ -67,7 +62,7 @@ AP_STATES = {
 }
 
 
-def parse_juniper_trpz_aps_sessions(string_table: SNMPStringTable) -> Section:
+def parse_juniper_trpz_aps_sessions(string_table: List[StringTable]) -> Section:
     """
     >>> aps, radios = parse_juniper_trpz_aps_sessions(
     ...     [[['12.109.103.48.50.49.50.48.51.48.50.54.50', '7', 'ap1'],
@@ -111,16 +106,16 @@ def parse_juniper_trpz_aps_sessions(string_table: SNMPStringTable) -> Section:
     }, radios
 
 
-def discovery_juniper_trpz_aps_sessions(section: Section) -> DiscoveryGenerator:
+def discovery_juniper_trpz_aps_sessions(section: Section) -> DiscoveryResult:
     yield from (Service(item=name) for name in section[0])
 
 
 def _check_common_juniper_trpz_aps_sessions(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     now: float,
     item: str,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> now = time.time()
     >>> vs = {}
@@ -141,20 +136,20 @@ def _check_common_juniper_trpz_aps_sessions(
     ...           '2': ([0, 0, 0, 0, 0, 0, 0, 0, 0], 0, 0)}
     ...       })}):
     ...     if i: print(result)
-    Result(state=<state.OK: 0>, summary='Status: operational', details='Status: operational')
-    Result(state=<state.OK: 0>, summary='Radio 1: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm', details='Radio 1: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm')
-    Result(state=<state.OK: 0>, summary='Radio 2: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm', details='Radio 2: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm')
-    Metric('if_out_unicast', 0.0, levels=(None, None), boundaries=(None, None))
-    Metric('if_out_unicast_octets', 0.0, levels=(None, None), boundaries=(None, None))
-    Metric('if_out_non_unicast', 0.0, levels=(None, None), boundaries=(None, None))
-    Metric('if_out_non_unicast_octets', 0.0, levels=(None, None), boundaries=(None, None))
-    Metric('if_in_pkts', 0.0, levels=(None, None), boundaries=(None, None))
-    Metric('if_in_octets', 0.0, levels=(None, None), boundaries=(None, None))
-    Metric('wlan_physical_errors', 0.0, levels=(None, None), boundaries=(None, None))
-    Metric('wlan_resets', 0.0, levels=(None, None), boundaries=(None, None))
-    Metric('wlan_retries', 0.0, levels=(None, None), boundaries=(None, None))
-    Metric('total_sessions', 0.0, levels=(None, None), boundaries=(None, None))
-    Metric('noise_floor', 0.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<State.OK: 0>, summary='Status: operational')
+    Result(state=<State.OK: 0>, summary='Radio 1: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm')
+    Result(state=<State.OK: 0>, summary='Radio 2: Input: 0.00 Bit/s, Output: 0.00 Bit/s, Errors: 0, Resets: 0, Retries: 0, Sessions: 0, Noise: 0 dBm')
+    Metric('if_out_unicast', 0.0)
+    Metric('if_out_unicast_octets', 0.0)
+    Metric('if_out_non_unicast', 0.0)
+    Metric('if_out_non_unicast_octets', 0.0)
+    Metric('if_in_pkts', 0.0)
+    Metric('if_in_octets', 0.0)
+    Metric('wlan_physical_errors', 0.0)
+    Metric('wlan_resets', 0.0)
+    Metric('wlan_retries', 0.0)
+    Metric('total_sessions', 0.0)
+    Metric('noise_floor', 0.0)
     """
     if all(item not in node_aps for node_aps, _ in section.values()):
         yield Result(state=state.WARN, summary="Access point not reachable")
@@ -228,7 +223,7 @@ def _check_common_juniper_trpz_aps_sessions(
 def check_juniper_trpz_aps_sessions(
     item: str,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _check_common_juniper_trpz_aps_sessions(
         get_value_store(),
         time.time(),
@@ -240,7 +235,7 @@ def check_juniper_trpz_aps_sessions(
 def cluster_check_juniper_trpz_aps_sessions(
     item: str,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _check_common_juniper_trpz_aps_sessions(
         get_value_store(),
         time.time(),
@@ -254,7 +249,7 @@ register.snmp_section(
     detect=any_of(startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.1"),
                   startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.3")),
     parse_function=parse_juniper_trpz_aps_sessions,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.14525.4.5.1.1.2.1",
             oids=[

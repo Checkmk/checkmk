@@ -5,11 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
+from cmk.gui.plugins.metrics import graph_info, metric_info, MONITORING_STATUS_COLORS
 
 #.
 #   .--Metrics-------------------------------------------------------------.
@@ -98,6 +94,18 @@ metric_info["helper_usage_cmk"] = {
     "color": "15/a",
 }
 
+metric_info["helper_usage_fetcher"] = {
+    "title": _("Fetcher helper usage"),
+    "unit": "%",
+    "color": "15/a",
+}
+
+metric_info["helper_usage_checker"] = {
+    "title": _("Checker helper usage"),
+    "unit": "%",
+    "color": "15/a",
+}
+
 metric_info["helper_usage_generic"] = {
     "title": _("Generic helper usage"),
     "unit": "%",
@@ -106,6 +114,12 @@ metric_info["helper_usage_generic"] = {
 
 metric_info["average_latency_cmk"] = {
     "title": _("Checkmk check latency"),
+    "unit": "s",
+    "color": "15/a",
+}
+
+metric_info["average_latency_fetcher"] = {
+    "title": _("Checkmk fetcher latency"),
     "unit": "s",
     "color": "15/a",
 }
@@ -206,7 +220,7 @@ def register_omd_apache_metrics():
         }
 
         metric_info[ty + "_cmk_snapins"] = {
-            "title": _("Checkmk: Snapins"),
+            "title": _("Checkmk: Sidebar elements"),
             "unit": unit,
             "color": "#ff4040",
         }
@@ -224,7 +238,7 @@ def register_omd_apache_metrics():
         }
 
         metric_info[ty + "_nagvis_snapin"] = {
-            "title": _("NagVis: Snapin"),
+            "title": _("NagVis: Sidebar element"),
             "unit": unit,
             "color": "#f2904e",
         }
@@ -268,6 +282,78 @@ def register_omd_apache_metrics():
 
 register_omd_apache_metrics()
 
+metric_info["cmk_hosts_up"] = {
+    "title": _("UP hosts"),
+    "unit": "count",
+    "color": MONITORING_STATUS_COLORS["ok/up"],
+}
+
+metric_info["cmk_hosts_down"] = {
+    "title": _("DOWN hosts"),
+    "unit": "count",
+    "color": MONITORING_STATUS_COLORS["critical/down"],
+}
+
+metric_info["cmk_hosts_unreachable"] = {
+    "title": _("Unreachable hosts"),
+    "unit": "count",
+    "color": MONITORING_STATUS_COLORS["unknown/unreachable"],
+}
+
+metric_info["cmk_hosts_in_downtime"] = {
+    "title": _("Hosts in downtime"),
+    "unit": "count",
+    "color": MONITORING_STATUS_COLORS["in_downtime"],
+}
+
+metric_info["cmk_services_ok"] = {
+    "title": _("OK services"),
+    "unit": "count",
+    "color": MONITORING_STATUS_COLORS["ok/up"],
+}
+
+metric_info["cmk_services_in_downtime"] = {
+    "title": _("Services in downtime"),
+    "unit": "count",
+    "color": MONITORING_STATUS_COLORS["in_downtime"],
+}
+
+metric_info["cmk_services_on_down_hosts"] = {
+    "title": _("Services of down hosts"),
+    "unit": "count",
+    "color": MONITORING_STATUS_COLORS["on_down_host"],
+}
+
+metric_info["cmk_services_warning"] = {
+    "title": _("WARNING services"),
+    "unit": "count",
+    "color": MONITORING_STATUS_COLORS["warning"],
+}
+
+metric_info["cmk_services_unknown"] = {
+    "title": _("UNKNOWN services"),
+    "unit": "count",
+    "color": MONITORING_STATUS_COLORS["unknown/unreachable"],
+}
+
+metric_info["cmk_services_critical"] = {
+    "title": _("CRITICAL services"),
+    "unit": "count",
+    "color": MONITORING_STATUS_COLORS["critical/down"],
+}
+
+metric_info["age_oldest"] = {
+    "title": _("Oldest age"),
+    "unit": "s",
+    "color": "35/a",
+}
+
+metric_info["age_youngest"] = {
+    "title": _("Youngest age"),
+    "unit": "s",
+    "color": "21/a",
+}
+
 #.
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -287,16 +373,31 @@ graph_info["livestatus_requests_per_connection"] = {
 }
 
 graph_info["livestatus_usage"] = {
+    "title": _("Livestatus usage"),
     "metrics": [("livestatus_usage", "area"),],
     "range": (0, 100),
 }
 
 graph_info["helper_usage_cmk"] = {
+    "title": _("Checkmk helper usage"),
     "metrics": [("helper_usage_cmk", "area"),],
     "range": (0, 100),
 }
 
+graph_info["helper_usage_fetcher"] = {
+    "title": _("Fetcher helper usage"),
+    "metrics": [("helper_usage_fetcher", "area"),],
+    "range": (0, 100),
+}
+
+graph_info["helper_usage_checker"] = {
+    "title": _("Checker helper usage"),
+    "metrics": [("helper_usage_checker", "area"),],
+    "range": (0, 100),
+}
+
 graph_info["helper_usage_generic"] = {
+    "title": _("Generic helper usage"),
     "metrics": [("helper_usage_generic", "area"),],
     "range": (0, 100),
 }
@@ -305,6 +406,14 @@ graph_info["average_check_latency"] = {
     "title": _("Average check latency"),
     "metrics": [
         ("average_latency_cmk", "line"),
+        ("average_latency_generic", "line"),
+    ],
+}
+
+graph_info["average_fetcher_latency"] = {
+    "title": _("Average check latency"),
+    "metrics": [
+        ("average_latency_fetcher", "line"),
         ("average_latency_generic", "line"),
     ],
 }
@@ -423,4 +532,78 @@ graph_info["inbound_and_outbound_messages"] = {
         ("messages_outbound", "stack"),
         ("messages_inbound", "stack"),
     ],
+}
+
+graph_info["cmk_hosts_total"] = {
+    "title": _("Total number of hosts"),
+    "metrics": [(
+        "cmk_hosts_up,"
+        "cmk_hosts_down,"
+        "cmk_hosts_unreachable,"
+        "cmk_hosts_in_downtime,"
+        "+,+,+#0485d1",
+        "stack",
+        _("Total"),
+    ),],
+}
+
+graph_info["cmk_hosts_not_up"] = {
+    "title": _("Number of problematic hosts"),
+    "metrics": [
+        (
+            "cmk_hosts_down",
+            "stack",
+        ),
+        (
+            "cmk_hosts_unreachable",
+            "stack",
+        ),
+        (
+            "cmk_hosts_in_downtime",
+            "stack",
+        ),
+    ],
+    "omit_zero_metrics": True,
+}
+
+graph_info["cmk_services_total"] = {
+    "title": _("Total number of services"),
+    "metrics": [(
+        "cmk_services_ok,"
+        "cmk_services_in_downtime,"
+        "cmk_services_on_down_hosts,"
+        "cmk_services_warning,"
+        "cmk_services_unknown,"
+        "cmk_services_critical,"
+        "+,+,+,+,+#0485d1",
+        "stack",
+        _("Total"),
+    ),],
+}
+
+graph_info["cmk_services_not_ok"] = {
+    "title": _("Number of problematic services"),
+    "metrics": [
+        (
+            "cmk_services_in_downtime",
+            "stack",
+        ),
+        (
+            "cmk_services_on_down_hosts",
+            "stack",
+        ),
+        (
+            "cmk_services_warning",
+            "stack",
+        ),
+        (
+            "cmk_services_unknown",
+            "stack",
+        ),
+        (
+            "cmk_services_critical",
+            "stack",
+        ),
+    ],
+    "omit_zero_metrics": True,
 }

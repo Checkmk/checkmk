@@ -4,11 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from itertools import repeat
 import os
-import pytest  # type: ignore[import]
 import re
-from local import actual_output, make_yaml_config, local_test, wait_agent, write_config
+from itertools import repeat
+
+import pytest  # type: ignore[import]
+
+from .local import local_test
 
 
 class Globals(object):
@@ -16,8 +18,8 @@ class Globals(object):
     alone = True
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
@@ -37,8 +39,8 @@ def testconfig(request, testconfig_sections):
     return testconfig_sections
 
 
-@pytest.fixture
-def expected_output():
+@pytest.fixture(name="expected_output")
+def expected_output_engine():
     re_str = (r'\<\<\<winperf_(if|phydisk|processor|test)\>\>\>'
               r'|\d+\.\d{2} \d+ \d+'
               r'|\d+ instances\:( [^ ]+)+'

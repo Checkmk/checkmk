@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    MonitoringState,
-    TextAscii,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Dictionary, MonitoringState, TextInput, Tuple
 
 
 def _parameter_valuespec_splunk_license_state():
@@ -41,7 +35,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="splunk_license_state",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of license")),
+        item_spec=lambda: TextInput(title=_("Name of license")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_splunk_license_state,
         title=lambda: _("Splunk License State"),

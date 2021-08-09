@@ -6,7 +6,7 @@ Date: 1589437402
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Generates service info from basic BGP information provided via SNMP (LocalAddr, LocalIdentifier,
 RemoteAs, RemoteIdentifier, AdminStatus, (Peer)State, LastErrorReceivedText). Check is always OK

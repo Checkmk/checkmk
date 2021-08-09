@@ -5,8 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+
 import requests
+
 from cmk.notification_plugins import utils
+
 api_url = "https://api.pushover.net/1/messages.json"
 
 
@@ -76,7 +79,7 @@ def send_push_notification(api_key, recipient_key, subject, text, context):
         ("user", recipient_key),
         ("title", subject.encode("utf-8")),
         ("message", text.encode("utf-8")),
-        ("timestamp", int(context["MICROTIME"] / 1000000.0)),
+        ("timestamp", int(float(context["MICROTIME"]) / 1000000.0)),
         ("html", 1),
     ]
 

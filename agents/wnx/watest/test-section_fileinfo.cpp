@@ -2,7 +2,8 @@
 
 //
 #include "pch.h"
-
+#define _SILENCE_EXPERIMENTAL_FILESYSTEM_DEPRECATION_WARNING
+#include <experimental/filesystem>
 #include <filesystem>
 
 #include "cfg.h"
@@ -142,64 +143,112 @@ TEST(FileInfoTest, Globs) {
     }
 }
 
-TEST(FileInfoTest, Base) {
-    using namespace cma::provider;
-    using namespace cma::cfg;
-    cma::OnStartTest();
-    ON_OUT_OF_SCOPE(cma::OnStartTest());
-    constexpr const char* hdr = "<<<fileinfo:sep(124)>>>\n";
+TEST(FileInfoTest, ValidFileInfoPathEntry) {
+    EXPECT_TRUE(!details::ValidFileInfoPathEntry("a\\x"));
+    EXPECT_TRUE(!details::ValidFileInfoPathEntry("c:a\\x"));
+    EXPECT_TRUE(!details::ValidFileInfoPathEntry("\\a\\x"));
+    EXPECT_TRUE(details::ValidFileInfoPathEntry("\\\\a\\x"));
+    EXPECT_TRUE(details::ValidFileInfoPathEntry("d:\\a\\x"));
+    EXPECT_TRUE(details::ValidFileInfoPathEntry("D:\\a\\x"));
+}
 
-    //
-    {
-        EXPECT_TRUE(!details::ValidFileInfoPathEntry("a\\x"));
-        EXPECT_TRUE(!details::ValidFileInfoPathEntry("c:a\\x"));
-        EXPECT_TRUE(!details::ValidFileInfoPathEntry("\\a\\x"));
-        EXPECT_TRUE(details::ValidFileInfoPathEntry("\\\\a\\x"));
-        EXPECT_TRUE(details::ValidFileInfoPathEntry("d:\\a\\x"));
-        EXPECT_TRUE(details::ValidFileInfoPathEntry("D:\\a\\x"));
+namespace {
+constexpr const char* hdr = "<<<fileinfo:sep(124)>>>";
+}
+TEST(FileInfoTest, ValidateConfig) {
+    auto test_fs{tst::TempCfgFs::Create()};
+    ASSERT_TRUE(test_fs->loadConfig(tst::GetFabricYml()));
 
-    }  // namespace cma::provider
+    auto cfg = cma::cfg::GetLoadedConfig();
+    auto x = cfg[cfg::groups::kFileInfo];
+    ASSERT_TRUE(x);
+    ASSERT_TRUE(x.IsMap());
 
-    {
+    auto p = x[cfg::vars::kFileInfoPath];
+    ASSERT_TRUE(p);
+    ASSERT_TRUE(p.IsSequence());
+}
+
+class FileInfoFixture : public ::testing::Test {
+public:
+    void loadFilesInConfig() {
         auto cfg = cma::cfg::GetLoadedConfig();
-        auto x = cfg[groups::kFileInfo];
-        ASSERT_TRUE(x);
-        x.remove(vars::kFileInfoPath);
-        FileInfo fi;
-        auto out = fi.makeBody();
-        EXPECT_TRUE(!out.empty());
-        EXPECT_EQ(out.back(), '\n');
-        out.pop_back();
-        auto val = std::stoll(out);
-        EXPECT_TRUE(val > 100000);
-        cfg.remove(groups::kFileInfo);
-        out = fi.makeBody();
-        EXPECT_TRUE(!out.empty());
+
+        cfg[cfg::groups::kFileInfo][cfg::vars::kFileInfoPath] = YAML::Load(
+            "['c:\\windows\\notepad.exe','c:\\windows\\explorer.exe']");
     }
-    // reload config
-    cma::OnStartTest();
 
-    {
+    std::vector<std::string> generate() {
         FileInfo fi;
-        auto out_h = fi.makeHeader(cma::section::kUseEmbeddedName);
-        ASSERT_TRUE(!out_h.empty());
-        EXPECT_EQ(out_h, hdr);
+        auto result = fi.generateContent();
 
-        auto cfg = cma::cfg::GetLoadedConfig();
-        auto x = cfg[groups::kFileInfo];
-        ASSERT_TRUE(x);
-        ASSERT_TRUE(x.IsMap());
-
-        auto p = x[vars::kFileInfoPath];
-        ASSERT_TRUE(p);
-        ASSERT_TRUE(p.IsSequence());
-
-        p.reset();
-        p.push_back(groups::global.fullLogFileNameAsString());
-
-        auto out = fi.makeBody();
-        ASSERT_TRUE(!out.empty());
+        EXPECT_EQ(result.back(), '\n');
+        return cma::tools::SplitString(result, "\n");
     }
+
+protected:
+    void SetUp() override {
+        test_fs_ = tst::TempCfgFs::Create();
+        ASSERT_TRUE(test_fs_->loadConfig(tst::GetFabricYml()));
+    }
+
+    void TearDown() override {}
+    tst::TempCfgFs::ptr test_fs_;
+};
+
+TEST_F(FileInfoFixture, ValidateConfig) {
+    auto cfg = cma::cfg::GetLoadedConfig();
+
+    auto fileinfo_node = cfg[cfg::groups::kFileInfo];
+    ASSERT_TRUE(fileinfo_node.IsDefined());
+    ASSERT_TRUE(fileinfo_node.IsMap());
+
+    EXPECT_TRUE(
+        cfg::GetVal(cfg::groups::kFileInfo, cfg::vars::kEnabled, false));
+
+    auto paths = cfg::GetArray<std::string>(cfg::groups::kFileInfo,
+                                            cfg::vars::kFileInfoPath);
+    EXPECT_EQ(paths.size(), 0);
+}
+
+TEST_F(FileInfoFixture, ConfigWithoutFiles) {
+    // we generate data using fabric config
+    auto table = generate();
+
+    // The expected Result
+    // <<<fileinfo:sep(124)>>>\n
+    // 123456788\n
+    EXPECT_EQ(table[0], hdr);
+    EXPECT_TRUE(!table[1].empty());
+
+    auto val = std::stoll(table[1]);
+    EXPECT_TRUE(val > 100000);
+
+    // retry generation, results should be same
+    table = generate();
+
+    EXPECT_EQ(table[0], hdr);
+    EXPECT_TRUE(!table[1].empty());
+}
+
+TEST_F(FileInfoFixture, ConfigWithFiles) {
+    // we simulate changing in config
+    loadFilesInConfig();
+    // we generate data using changed config
+    auto table = generate();
+
+    // The expected Result
+    // <<<fileinfo:sep(124)>>>\n
+    // 123456788\n
+    // c:\windows\notepad.exe|1345|123456788\n
+    // c:\windows\explorer.exe|1345|123456788\n
+
+    // check is simplified now
+    EXPECT_EQ(table[0], hdr);
+    EXPECT_EQ(table.size(), 4);
+
+    auto val = std::stoll(table[1]);
+    EXPECT_TRUE(val > 100000);
 }
 
 TEST(FileInfoTest, Misc) {
@@ -229,7 +278,7 @@ TEST(FileInfoTest, CheckDriveLetter) {
     std::tuple<fs::path, std::string_view> data[] = {{a / "a1.txt", "a1"},
                                                      {a / "a2.txt", "a2"}};
 
-    for (const auto& [path, content] : data) tst::ConstructFile(path, content);
+    for (const auto& [path, content] : data) tst::CreateTextFile(path, content);
 
     auto cfg = cma::cfg::GetLoadedConfig();
     auto fileinfo_node = cfg[groups::kFileInfo];
@@ -288,7 +337,7 @@ TEST(FileInfoTest, CheckOutput) {
                                                      {b / "b3.txt", "b3"},
                                                      {a / "a2.cmd", "a2"}};
 
-    for (const auto& [path, content] : data) tst::ConstructFile(path, content);
+    for (const auto& [path, content] : data) tst::CreateTextFile(path, content);
 
     auto cfg = cma::cfg::GetLoadedConfig();
     auto fileinfo_node = cfg[groups::kFileInfo];
@@ -390,21 +439,6 @@ TEST(FileInfoTest, CheckOutput) {
             EXPECT_TRUE(f);
         }
     }
-}
-
-TEST(FileInfoTest, YmlCheck) {
-    using namespace cma::cfg;
-    tst::YamlLoader w;
-    auto cfg = cma::cfg::GetLoadedConfig();
-
-    auto fileinfo_node = cfg[groups::kFileInfo];
-    ASSERT_TRUE(fileinfo_node.IsDefined());
-    ASSERT_TRUE(fileinfo_node.IsMap());
-
-    auto enabled = GetVal(groups::kFileInfo, vars::kEnabled, false);
-    EXPECT_TRUE(enabled);
-    auto paths = GetArray<std::string>(groups::kFileInfo, vars::kFileInfoPath);
-    EXPECT_EQ(paths.size(), 0);
 }
 
 TEST(FileInfoTest, Reality) {
@@ -523,7 +557,7 @@ TEST(FileInfoTest, Reality) {
         auto p = BuildTestUNC();
         std::error_code ec;
         if (fs::exists(p, ec)) {
-            fs::path path = fs::u8path(test_u8_name);
+            fs::path path{test_u8_name};
             std::string path_string = path.u8string();
             auto w_string = path.wstring();
 
@@ -535,7 +569,7 @@ TEST(FileInfoTest, Reality) {
                 auto russian_file = p / test_russian_file;
                 auto w_name = russian_file.wstring();
                 auto ut8_name = russian_file.u8string();
-                auto utf8_name_2 = wtools::ConvertToUTF8(w_name);
+                auto utf8_name_2 = wtools::ToUtf8(w_name);
                 EXPECT_TRUE(std::find(files.begin(), files.end(), w_name) !=
                             std::end(files));
             } catch (const std::exception& e) {
@@ -567,12 +601,29 @@ TEST(FileInfoTest, MakeFileInfoMissing) {
     }
 }
 
+namespace {
+/// \brief - returns Unix time of the file
+///
+/// function which was valid in 1.6 and still valid
+/// because experimental is deprecated we can't it use anymore, but we can test
+int64_t SecondsSinceEpoch(const std::string& name) {
+    namespace fs = std::experimental::filesystem::v1;
+    fs::path fp{name};
+
+    auto write_time = fs::last_write_time(fp);
+    auto time_since_epoch = std::chrono::duration_cast<std::chrono::seconds>(
+        write_time.time_since_epoch());
+    return time_since_epoch.count();
+}
+}  // namespace
+
 TEST(FileInfoTest, MakeFileInfoPresented) {
     // EXPECTED strings
     // "fname|ok|500|153334455\n"
     // "fname|500|153334455\n"
 
-    const std::string fname = "c:\\Windows\\noTepad.exE";
+    const std::string fname{"c:\\Windows\\noTepad.exE"};
+    auto age_since_epoch = SecondsSinceEpoch(fname);
     FileInfo::Mode modes[] = {FileInfo::Mode::legacy, FileInfo::Mode::modern};
 
     for (auto mode : modes) {
@@ -583,6 +634,11 @@ TEST(FileInfoTest, MakeFileInfoPresented) {
 
         auto table = cma::tools::SplitString(x, "|");
         CheckTablePresent(table, name, mode);
+        auto tt = std::atoll(table[table.size() - 1].c_str());
+        const auto now = std::chrono::system_clock::now();
+        auto obtained_time = std::chrono::system_clock::to_time_t(now);
+        EXPECT_GT(obtained_time, tt);
+        EXPECT_EQ(age_since_epoch, tt);
     }
 }
 

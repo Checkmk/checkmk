@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Every GUI page loaded more slowly if you had configured custom host attributes in versions <=1.5.
 The slowdown effect scaled with the number of host tag groups, especially when the number of groups exceeded 100.

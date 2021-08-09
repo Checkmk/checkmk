@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersEnvironment,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_apc_ats_output():
@@ -56,7 +50,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="apc_ats_output",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("ID of phase"),),
+        item_spec=lambda: TextInput(title=_("ID of phase"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_apc_ats_output,
         title=lambda: _("APC Automatic Transfer Switch Output"),

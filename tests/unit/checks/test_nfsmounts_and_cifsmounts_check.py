@@ -5,14 +5,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
-import pytest  # type: ignore[import]
-from checktestlib import (
+
+import pytest
+
+from tests.testlib import Check
+
+from .checktestlib import (
+    assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
     BasicCheckResult,
     CheckResult,
     DiscoveryResult,
     PerfValue,
-    assertCheckResultsEqual,
-    assertDiscoveryResultsEqual,
 )
 
 # since both nfsmounts and cifsmounts use the parse, inventory
@@ -90,9 +94,9 @@ size2 = Size(
                 #BasicCheckResult(0, "server is responding", [PerfValue('fs_size', 0), PerfValue('fs_used', 0)]))]
                 BasicCheckResult(2, "Stale fs handle", None))]),
     ])
-def test_nfsmounts(check_manager, info, discovery_expected, check_expected):
-    check_nfs = check_manager.get_check("nfsmounts")
-    check_cifs = check_manager.get_check("cifsmounts")
+def test_nfsmounts(info, discovery_expected, check_expected):
+    check_nfs = Check("nfsmounts")
+    check_cifs = Check("cifsmounts")
 
     # assure that the code of both checks is identical
     assert (check_nfs.info['parse_function'].__code__.co_code ==

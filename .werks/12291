@@ -1,0 +1,13 @@
+Title: Fix exception on logo upload page (UnsupportedOperation)
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1615374434
+Edition: cme
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The logo upload / management page failed with an exception
+(UnsupportedOperation).

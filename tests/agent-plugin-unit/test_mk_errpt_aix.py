@@ -6,7 +6,8 @@
 
 import os
 import subprocess
-import pytest  # type: ignore[import]
+
+import pytest
 from utils import plugin_path
 
 PLUGIN = os.path.join(plugin_path(), 'mk_errpt.aix')

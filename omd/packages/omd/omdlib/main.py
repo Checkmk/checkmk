@@ -24,64 +24,100 @@
 # Boston, MA 02110-1301 USA.
 """The command line tool specific implementations of the omd command and main entry point"""
 
-import os
-import re
-import sys
 import abc
-import pwd
-import time
 import errno
 import fcntl
-import random
-import shutil
-import string
-import tarfile
-import traceback
-import subprocess
-import signal
 import io
 import logging
+import os
+import pwd
+import random
+import re
+import shutil
+import signal
+import string
+import subprocess
+import sys
+import tarfile
+import time
+import traceback
 from pathlib import Path
-from typing import NoReturn, IO, cast, Iterable, Union, Tuple, Optional, Callable, List, NamedTuple, Dict
+from typing import (
+    Callable,
+    cast,
+    Dict,
+    IO,
+    Iterable,
+    List,
+    NamedTuple,
+    NoReturn,
+    Optional,
+    Tuple,
+    Union,
+)
 
-from passlib.hash import sha256_crypt  # type: ignore[import]
 import psutil  # type: ignore[import]
+from passlib.hash import sha256_crypt  # type: ignore[import]
 from six import ensure_str
+
+import omdlib
+import omdlib.backup
+import omdlib.certs
+import omdlib.utils
+from omdlib.config_hooks import (
+    call_hook,
+    ConfigHook,
+    ConfigHooks,
+    create_config_environment,
+    hook_exists,
+    load_config_hooks,
+    load_hook_dependencies,
+    save_site_conf,
+    sort_hooks,
+)
+from omdlib.contexts import AbstractSiteContext, RootContext, SiteContext
+from omdlib.dialog import (
+    ask_user_choices,
+    dialog_menu,
+    dialog_message,
+    dialog_regex,
+    dialog_yesno,
+    user_confirms,
+)
+from omdlib.init_scripts import call_init_scripts, check_status
+from omdlib.skel_permissions import Permissions, read_skel_permissions, skel_permissions_file_path
+from omdlib.tmpfs import (
+    add_to_fstab,
+    mark_tmpfs_initialized,
+    prepare_tmpfs,
+    remove_from_fstab,
+    restore_tmpfs_dump,
+    save_tmpfs_dump,
+    tmpfs_mounted,
+    unmount_tmpfs,
+)
+from omdlib.type_defs import CommandOptions, Config, Replacements
+from omdlib.users_and_groups import (
+    find_processes_of_user,
+    group_exists,
+    group_id,
+    groupdel,
+    switch_to_site_user,
+    user_exists,
+    user_id,
+    user_logged_in,
+    user_verify,
+    useradd,
+    userdel,
+)
+from omdlib.utils import chdir, delete_user_file, ok
+from omdlib.version_info import VersionInfo
 
 import cmk.utils.log
 import cmk.utils.tty as tty
-from cmk.utils.log import VERBOSE
 from cmk.utils.exceptions import MKTerminate
-
-import omdlib
-import omdlib.certs
-import omdlib.backup
-from omdlib.utils import chdir, ok, delete_user_file
-from omdlib.version_info import VersionInfo
-from omdlib.dialog import (
-    dialog_menu,
-    dialog_regex,
-    dialog_yesno,
-    dialog_message,
-    user_confirms,
-    ask_user_choices,
-)
-from omdlib.init_scripts import call_init_scripts, check_status
-from omdlib.contexts import AbstractSiteContext, SiteContext, RootContext
-from omdlib.type_defs import Config, CommandOptions, Replacements
-from omdlib.skel_permissions import (
-    Permissions,
-    read_skel_permissions,
-    skel_permissions_file_path,
-)
-from omdlib.config_hooks import (create_config_environment, save_site_conf, load_config_hooks,
-                                 load_hook_dependencies, sort_hooks, hook_exists, call_hook,
-                                 ConfigHook, ConfigHooks)
-from omdlib.users_and_groups import (find_processes_of_user, groupdel, useradd, userdel, user_id,
-                                     user_exists, group_exists, group_id, user_logged_in,
-                                     switch_to_site_user, user_verify)
-from omdlib.tmpfs import (tmpfs_mounted, prepare_tmpfs, mark_tmpfs_initialized, unmount_tmpfs,
-                          add_to_fstab, remove_from_fstab, restore_tmpfs_dump, save_tmpfs_dump)
+from cmk.utils.log import VERBOSE
+from cmk.utils.paths import mkbackup_lock_dir
 
 Arguments = List[str]
 ConfigChangeCommands = List[Tuple[str, str]]
@@ -184,11 +220,8 @@ def is_root() -> bool:
 
 
 def all_sites() -> Iterable[str]:
-    return sorted([
-        s  #
-        for s in os.listdir("/omd/sites")  #
-        if os.path.isdir(os.path.join("/omd/sites/", s))
-    ])
+    basedir = os.path.join(omdlib.utils.omd_base_path(), "omd/sites")
+    return sorted([s for s in os.listdir(basedir) if os.path.isdir(os.path.join(basedir, s))])
 
 
 def start_site(version_info: VersionInfo, site: SiteContext) -> None:
@@ -765,6 +798,19 @@ def update_file(relpath: str, site: SiteContext, conflict_mode: str, old_version
     old_skel = site.version_skel_dir
     new_skel = "/omd/versions/%s/skel" % new_version
 
+    ignored_prefixes = [
+        # We removed dokuwiki from the OMD packages with 2.0.0i1. To prevent users from
+        # accidentally removing configs or their dokuwiki content, we skip the questions to
+        # remove the dokuwiki files here.
+        "etc/dokuwiki",
+        "var/dokuwiki",
+        "local/share/dokuwiki",
+    ]
+    for prefix in ignored_prefixes:
+        if relpath.startswith(prefix):
+            sys.stdout.write(f"{StateMarkers.good} Keeping your   {relpath}\n")
+            return
+
     replacements = site.replacements
 
     old_path = old_skel + "/" + relpath
@@ -1228,7 +1274,8 @@ def _config_set(site: SiteContext, hook_name: str) -> None:
 
     if output and output != value:
         site.conf[hook_name] = output
-        putenv("CONFIG_" + hook_name, output)
+
+    putenv("CONFIG_" + hook_name, site.conf[hook_name])
 
 
 def config_set_value(site: SiteContext,
@@ -1236,22 +1283,11 @@ def config_set_value(site: SiteContext,
                      hook_name: str,
                      value: str,
                      save: bool = True) -> None:
-    # TODO: Warum wird hier nicht call_hook() aufgerufen!!
-
-    # Call hook with 'set'. If it outputs something, that will
-    # be our new value (i.e. hook disagrees with the new setting!)
-    commandline = "%s/lib/omd/hooks/%s set '%s'" % (site.dir, hook_name, value)
-    if is_root():
-        sys.stderr.write("I am root. This should never happen!\n")
-        sys.exit(1)
-
-        # commandline = 'su -p -l %s -c "%s"' % (site.name, commandline)
-    answer = os.popen(commandline).read()  # nosec
-    if len(answer) > 0:
-        value = answer.strip()
-
     site.conf[hook_name] = value
-    putenv("CONFIG_" + hook_name, value)
+    _config_set(site, hook_name)
+
+    if hook_name in ["CORE", "MKEVENTD", "PNP4NAGIOS"]:
+        _update_cmk_core_config(site)
 
     if save:
         save_site_conf(site)
@@ -1587,14 +1623,21 @@ def call_scripts(site: SiteContext, phase: str) -> None:
                 encoding="utf-8")
             if p.stdout is None:
                 raise Exception("stdout needs to be set")
-            stdout = p.stdout.read()
+
+            wrote_output = False
+            for line in p.stdout:
+                if not wrote_output:
+                    sys.stdout.write("\n")
+                    wrote_output = True
+
+                sys.stdout.write(f"-| {line}")
+                sys.stdout.flush()
+
             exitcode = p.wait()
             if exitcode == 0:
                 sys.stdout.write(tty.ok + '\n')
             else:
                 sys.stdout.write(tty.error + ' (exit code: %d)\n' % exitcode)
-            if stdout:
-                sys.stdout.write('Output: %s\n' % stdout)
 
 
 def check_site_user(site: AbstractSiteContext, site_must_exist: int) -> None:
@@ -1631,6 +1674,8 @@ def main_help(version_info: VersionInfo,
         args = []
     if options is None:
         options = {}
+    sys.stdout.write("Manage multiple monitoring sites comfortably with OMD. "
+                     "The Open Monitoring Distribution.\n")
 
     if is_root():
         sys.stdout.write("Usage (called as root):\n\n")
@@ -1722,12 +1767,16 @@ def main_versions(version_info: VersionInfo, site: AbstractSiteContext,
 
 
 def default_version() -> str:
-    return os.path.basename(os.path.realpath("/omd/versions/default"))
+    return os.path.basename(
+        os.path.realpath(os.path.join(omdlib.utils.omd_base_path(), "omd/versions/default")))
 
 
 def omd_versions() -> Iterable[str]:
     try:
-        return sorted([v for v in os.listdir("/omd/versions") if v != "default"])
+        return sorted([
+            v for v in os.listdir(os.path.join(omdlib.utils.omd_base_path(), "omd/versions"))
+            if v != "default"
+        ])
     except OSError as e:
         if e.errno == errno.ENOENT:
             return []
@@ -1965,6 +2014,7 @@ def finalize_site_as_user(version_info: VersionInfo,
     # Run all hooks in order to setup things according to the
     # configuration settings
     config_set_all(site, ignored_hooks)
+    _update_cmk_core_config(site)
     initialize_site_ca(site)
     save_site_conf(site)
 
@@ -2159,6 +2209,9 @@ def main_mv_or_cp(version_info: VersionInfo, old_site: SiteContext, global_opts:
     if not reuse:
         add_to_fstab(new_site, tmpfs_size=options.get('tmpfs-size'))
 
+    # Needed by the post-rename-site script
+    putenv("OLD_OMD_SITE", old_site.name)
+
     finalize_site(version_info, new_site, what, "apache-reload" in options)
 
 
@@ -2347,13 +2400,13 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
     # is different from the current version of the site.
     if not global_opts.force and not dialog_yesno(
             "You are going to update the site %s from version %s to version %s. "
-            "This will include updating all of you configuration files and merging "
+            "This will include updating all of your configuration files and merging "
             "changes in the default files with changes made by you. In case of conflicts "
             "your help will be needed." %
         (site.name, from_version, to_version), "Update!", "Abort"):
         bail_out("Aborted.")
 
-    # In case the user changes the installed Check_MK Edition during update let the
+    # In case the user changes the installed Checkmk Edition during update let the
     # user confirm this step.
     from_edition, to_edition = _get_edition(from_version), _get_edition(to_version)
     if from_edition != to_edition and not global_opts.force and not dialog_yesno(
@@ -2416,31 +2469,22 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
     initialize_livestatus_tcp_tls_after_update(site)
     initialize_site_ca(site)
 
-    # Let hooks of the new(!) version do their work and update configuration.  Explicitly skip the
-    # CORE hook here, because it executes "cmk -U" which needs the tmpfs to be mounted first (is
-    # done in the next step).
-    #
-    # We can not simply move config_set_all after prepare_and_populate_tmpfs, because
-    # prepare_and_populate_tmpfs needs this to be executed, because it may introduce new config
-    # variables and set their default setting during update
-    #
-    # The CORE hook is explicitly called after prepare_and_populate_tmpfs.
-    #
-    # TODO: We should check whether or not we can move the "cmk" command from the CORE hook to
-    # another place. Then we could really execute all hooks here.
-    config_set_all(site, ignored_hooks=["CORE"])
+    # Let hooks of the new(!) version do their work and update configuration.
+    config_set_all(site)
 
-    # Before the hooks can be executed the tmpfs needs to be mounted, e.g. the Checkmk configuration
-    # is being updated (cmk -U). This requires access to the initialized tmpfs.
+    # Before the hooks can be executed the tmpfs needs to be mounted. This requires access to the
+    # initialized tmpfs.
     prepare_and_populate_tmpfs(version_info, site)
 
     call_scripts(site, 'update-pre-hooks')
 
-    # Now executed the postponed CORE hook
+    # We previously executed "cmk -U" multiple times in the hooks CORE, MKEVENTD, PNP4NAGIOS to
+    # update the core configuration. To only execute it once, we do it here.
+    #
     # Please note that this is explicitly done AFTER update-pre-hooks, because that executes
     # "cmk-update-config" which updates e.g. the autochecks from previous versions to make it
     # loadable by the code of the NEW version
-    _config_set(site, "CORE")
+    _update_cmk_core_config(site)
 
     save_site_conf(site)
 
@@ -2448,6 +2492,14 @@ def main_update(version_info: VersionInfo, site: SiteContext, global_opts: 'Glob
 
     sys.stdout.write('Finished update.\n\n')
     stop_logging()
+
+
+def _update_cmk_core_config(site: SiteContext):
+    if site.conf["CORE"] == "none":
+        return  # No core config is needed in this case
+
+    sys.stdout.write("Updating core configuration...\n")
+    subprocess.call(["cmk", "-U"], shell=False)
 
 
 def initialize_livestatus_tcp_tls_after_update(site: SiteContext) -> None:
@@ -2811,17 +2863,7 @@ def main_restore(version_info: VersionInfo, site: SiteContext, global_opts: 'Glo
         if global_opts.verbose:
             sys.stdout.write("Restoring %s...\n" % tarinfo.name)
 
-        # Handle hard links from var/check_mk/core/autochecks/*.mk
-        # to -> var/check_mk/autochecks/*.mk files.
-        #
-        # Same for:
-        # * discovered labels hard links
-        # * local dir as the mkp mechanism may have resolved symlinks to hardlinks (in case --deference was used)
-        if tarinfo.islnk() and (tarinfo.name.startswith("var/check_mk/core/autochecks/") or
-                                tarinfo.name.startswith("var/check_mk/autochecks/") or
-                                tarinfo.name.startswith("var/check_mk/core/discovered_host_labels/")
-                                or tarinfo.name.startswith("var/check_mk/discovered_host_labels/")
-                                or tarinfo.name.startswith("local")):
+        if tarinfo.islnk():
             parts = tarinfo.linkname.split('/')
 
             if parts[0] == sitename:
@@ -2848,6 +2890,9 @@ def main_restore(version_info: VersionInfo, site: SiteContext, global_opts: 'Glo
     # Now switch over to the new site as currently active site
     os.chdir(site.dir)
     set_environment(site)
+
+    # Needed by the post-rename-site script
+    putenv("OLD_OMD_SITE", sitename)
 
     if is_root():
         postprocess_restore_as_root(version_info, site, options)
@@ -3602,7 +3647,11 @@ commands.append(
         args_text="...",
         handler=main_config,
         options=[],
-        description="Show and set site configuration parameters",
+        description="Show and set site configuration parameters.\n\n\
+Usage:\n\
+ omd config [site]\t\t\tinteractive mode\n\
+ omd config [site] show\t\t\tshow configuration settings\n\
+ omd config [site] set VAR VAL\t\tset specific setting VAR to VAL",
         confirm_text="",
     ))
 
@@ -3771,7 +3820,10 @@ def _parse_command_options(args: Arguments,
     # Give a short overview over the command specific options
     # when the user specifies --help:
     if len(args) and args[0] in ['-h', '--help']:
-        sys.stdout.write("Possible options for this command:\n")
+        if options:
+            sys.stdout.write("Possible options for this command:\n")
+        else:
+            sys.stdout.write("No options for this command\n")
         for option in options:
             args_text = "%s--%s" % ("-%s," % option.short_opt if option.short_opt else "",
                                     option.long_opt)
@@ -3852,6 +3904,20 @@ def hash_password(password: str) -> str:
     return sha256_crypt.hash(password)
 
 
+def ensure_mkbackup_lock_dir_rights() -> None:
+    try:
+        mkbackup_lock_dir.mkdir(mode=0o0770, exist_ok=True)
+        shutil.chown(mkbackup_lock_dir, group="omd")
+        mkbackup_lock_dir.chmod(0o0770)
+    except PermissionError:
+        logger.log(
+            VERBOSE, "Unable to create %s needed for mkbackup. "
+            "This may be due to the fact that your SITE "
+            "User isn't allowed to create the backup directory. "
+            "You could resolve this issue by running 'sudo omd start' as root "
+            "(and not as SITE user).", mkbackup_lock_dir)
+
+
 #.
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
@@ -3872,6 +3938,8 @@ def hash_password(password: str) -> str:
 # TODO: Refactor these global variables
 # TODO: Refactor to argparse. Be aware of the pitfalls of the OMD command line scheme
 def main() -> None:
+    ensure_mkbackup_lock_dir_rights()
+
     main_args = sys.argv[1:]
     site: AbstractSiteContext = RootContext()
 
@@ -3904,6 +3972,10 @@ def main() -> None:
 
     # Parse command options. We need to do this now in order to know,
     # if a site name has been specified or not
+
+    # Give a short description for the command when the user specifies --help:
+    if len(args) and args[0] in ['-h', '--help']:
+        sys.stdout.write("%s\n\n" % command.description)
     args, command_options = _parse_command_options(args, command.options)
 
     # Some commands need a site to be specified. If we are
@@ -3960,11 +4032,11 @@ def main() -> None:
         set_environment(site)
 
     if (global_opts.interactive or command.confirm) and not global_opts.force:
-        sys.stdout.write("%s (yes/NO): " % command.confirm_text)
-        sys.stdout.flush()
-        a = sys.stdin.readline().strip()
-        if a.lower() != "yes":
-            sys.exit(0)
+        answer = None
+        while answer not in ["", "yes", "no"]:
+            answer = input(f"{command.confirm_text} [yes/NO]: ").strip().lower()
+        if answer in ["", "no"]:
+            bail_out(tty.normal + "Aborted.")
 
     try:
         command.handler(version_info, site, global_opts, args, command_options)

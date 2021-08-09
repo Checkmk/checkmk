@@ -8,44 +8,60 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+// We use `std::transform` but IWYU does not want the header.
+#include <algorithm>  // IWYU pragma: keep
 #include <chrono>
+#include <functional>
 #include <string>
-#include <utility>
 #include <vector>
 
-#include "Column.h"
-#include "ListColumn.h"
+#include "ListLambdaColumn.h"
+#include "MonitoringCore.h"
+#include "Row.h"
+#ifdef CMC
 #include "contact_fwd.h"
-struct CommentData;
-class MonitoringCore;
+#else
+#include "nagios.h"
+#endif
 class RowRenderer;
-class Row;
+class ColumnOffsets;
 
-class CommentColumn : public ListColumn {
+class CommentRenderer {
+    using function_type = std::function<std::vector<CommentData>(Row)>;
+
 public:
-    CommentColumn(const std::string &name, const std::string &description,
-                  ColumnOffsets offsets, MonitoringCore *mc, bool is_service,
-                  bool with_info, bool with_extra_info)
-        : ListColumn(name, description, std::move(offsets))
-        , _mc(mc)
-        , _is_service(is_service)
-        , _with_info(with_info)
-        , _with_extra_info(with_extra_info) {}
-
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
-
-    std::vector<std::string> getValue(
-        Row row, const contact *auth_user,
-        std::chrono::seconds timezone_offset) const override;
+    enum class verbosity { none, medium, full };
+    CommentRenderer(const function_type &f, verbosity v)
+        : f_{f}, verbosity_{v} {}
+    void operator()(Row row, RowRenderer &r) const;
 
 private:
-    MonitoringCore *_mc;
-    bool _is_service;
-    bool _with_info;
-    bool _with_extra_info;
-
-    [[nodiscard]] std::vector<CommentData> comments_for_row(Row row) const;
+    function_type f_;
+    verbosity verbosity_;
 };
 
-#endif  // CommentColumn_h
+template <class T, class U>
+class CommentColumn : public ListColumn::Callback<T, U> {
+public:
+    CommentColumn(const std::string &name, const std::string &description,
+                  const ColumnOffsets &offsets, CommentRenderer::verbosity v,
+                  const typename ListColumn::Callback<T, U>::function_type &f)
+        : ListColumn::Callback<T, U>{name, description, offsets, f}
+        , renderer_{[this](Row row) { return this->getEntries(row); }, v} {}
+
+    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+                std::chrono::seconds /*timezone_offset*/) const override {
+        renderer_(row, r);
+    }
+
+private:
+    friend class CommentRenderer;
+    CommentRenderer renderer_;
+};
+
+template <>
+inline std::string detail::column::serialize(const CommentData &data) {
+    return std::to_string(data._id);
+}
+
+#endif

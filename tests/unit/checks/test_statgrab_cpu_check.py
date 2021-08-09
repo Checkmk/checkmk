@@ -4,12 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from checktestlib import (
-    CheckResult,
+import pytest
+
+from tests.testlib import Check
+
+from .checktestlib import (
     assertCheckResultsEqual,
-    MockItemState,
     assertMKCounterWrapped,
+    CheckResult,
+    mock_item_state,
 )
 
 pytestmark = pytest.mark.checks
@@ -72,12 +75,12 @@ expected_result_2 = CheckResult([
     (info_statgrab_cpu_hpux, mock_state_tuple, expected_result_1),
     (info_statgrab_cpu_hpux, mock_state_dict, expected_result_2),
 ])
-def test_statgrab_cpu_check(check_manager, info, mockstate, expected_result):
+def test_statgrab_cpu_check(info, mockstate, expected_result):
 
-    check = check_manager.get_check("statgrab_cpu")
+    check = Check("statgrab_cpu")
 
     # set up mocking of `get_item_state`
-    with MockItemState(mockstate):
+    with mock_item_state(mockstate):
         result = CheckResult(check.run_check(None, {}, info))
     assertCheckResultsEqual(result, expected_result)
 
@@ -85,11 +88,11 @@ def test_statgrab_cpu_check(check_manager, info, mockstate, expected_result):
 @pytest.mark.parametrize("info,mockstate", [
     (info_statgrab_cpu_hpux, mock_state_function),
 ])
-def test_statgrab_cpu_check_error(check_manager, info, mockstate):
+def test_statgrab_cpu_check_error(info, mockstate):
 
-    check = check_manager.get_check("statgrab_cpu")
+    check = Check("statgrab_cpu")
 
-    with MockItemState(mockstate):
+    with mock_item_state(mockstate):
         # the mock values are designed to raise an exception.
         # to make sure it is raised, use this:
         with assertMKCounterWrapped('Too short time difference since last check'):

@@ -3,9 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import pytest  # type: ignore[import]
+import pytest
 
-from cmk.base.api.agent_based.inventory_classes import TableRow, Attributes
+from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 
 
 @pytest.mark.parametrize("class_", [TableRow, Attributes])
@@ -26,7 +26,7 @@ def test_atrributes_wrong_types():
     with pytest.raises(TypeError):
         _ = Attributes(
             path=["software", "os"],
-            inventory_attributes={"version": 42},  # type: ignore[dict-item]
+            inventory_attributes={"version": (42, 23)},  # type: ignore[dict-item]
         )
 
 
@@ -65,7 +65,6 @@ def test_attributes_instanciated():
 def test_tablerow_missing_key_columns():
     with pytest.raises(TypeError):
         _ = TableRow(path=["hardware"], key_columns=None)  # type: ignore[arg-type]
-    with pytest.raises(ValueError):
         _ = TableRow(path=["hardware"], key_columns={})
 
 

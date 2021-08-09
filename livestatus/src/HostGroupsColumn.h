@@ -18,11 +18,11 @@ class ColumnOffsets;
 class MonitoringCore;
 class Row;
 
-class HostGroupsColumn : public ListColumn {
+class HostGroupsColumn : public deprecated::ListColumn {
 public:
     HostGroupsColumn(const std::string &name, const std::string &description,
                      const ColumnOffsets &offsets, MonitoringCore *mc)
-        : ListColumn(name, description, offsets), _mc(mc) {}
+        : deprecated::ListColumn(name, description, offsets), _mc(mc) {}
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,

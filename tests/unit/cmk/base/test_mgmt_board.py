@@ -6,9 +6,10 @@
 
 # TODO: This should be realized as unit tests
 
-import pytest  # type: ignore[import]
+import pytest
+
 # No stub file
-from testlib.base import Scenario  # type: ignore[import]
+from tests.testlib.base import Scenario
 
 
 @pytest.mark.parametrize("protocol,cred_attribute,credentials", [

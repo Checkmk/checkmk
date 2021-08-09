@@ -4,76 +4,70 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    Service,
-    state,
-    type_defs,
-)
+import pytest
+
 from cmk.base.plugins.agent_based import brocade_optical
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 from cmk.base.plugins.agent_based.utils import interfaces
 
 
 @pytest.mark.parametrize('params, expect_service', [
     (
-        [type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
+        [(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
         True,
     ),
     (
         [
-            type_defs.Parameters(
-                {
-                    'discovery_single': (False, {}),
-                    'matching_conditions': (True, {}),
-                },),
-            type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+            {
+                'discovery_single': (False, {}),
+                'matching_conditions': (True, {}),
+            },
+            (interfaces.DISCOVERY_DEFAULT_PARAMETERS),
         ],
         False,
     ),
     (
         [
-            type_defs.Parameters(
-                {
-                    'discovery_single': (
-                        True,
-                        {
-                            'item_appearance': 'alias',
-                            'pad_portnumbers': True,
-                        },
-                    ),
-                    'matching_conditions': (
-                        False,
-                        {
-                            'porttypes': ['6'],
-                            'portstates': ['1', '3']
-                        },
-                    ),
-                },),
-            type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+            {
+                'discovery_single': (
+                    True,
+                    {
+                        'item_appearance': 'alias',
+                        'pad_portnumbers': True,
+                    },
+                ),
+                'matching_conditions': (
+                    False,
+                    {
+                        'porttypes': ['6'],
+                        'portstates': ['1', '3']
+                    },
+                ),
+            },
+            (interfaces.DISCOVERY_DEFAULT_PARAMETERS),
         ],
         True,
     ),
     (
         [
-            type_defs.Parameters(
-                {
-                    'discovery_single': (
-                        True,
-                        {
-                            'item_appearance': 'index',
-                            'pad_portnumbers': True,
-                        },
-                    ),
-                    'matching_conditions': (
-                        False,
-                        {
-                            'match_desc': ['10GigabitEthernet']
-                        },
-                    ),
-                },),
-            type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+            {
+                'discovery_single': (
+                    True,
+                    {
+                        'item_appearance': 'index',
+                        'pad_portnumbers': True,
+                    },
+                ),
+                'matching_conditions': (
+                    False,
+                    {
+                        'match_desc': ['10GigabitEthernet']
+                    },
+                ),
+            },
+            (interfaces.DISCOVERY_DEFAULT_PARAMETERS),
         ],
         True,
     ),
@@ -99,6 +93,85 @@ def test_discover_brocade_optical(params, expect_service):
     )) == (expect_service and services or [])
 
 
+@pytest.mark.parametrize('item,params,section,expected', [
+    (
+        '001410',
+        {},
+        {
+            '1410': {
+                'description': '10GigabitEthernet23/2',
+                'operational_status': '2',
+                'part': '57-0000076-01',
+                'port_type': '6',
+                'rx_light': (-36.9897, 'Low-Alarm'),
+                'serial': 'ADF2094300014UN',
+                'temp': (31.4882, 'Normal'),
+                'tx_light': (-1.4508, 'Normal'),
+                'type': '10GE LR 10km SFP+'
+            }
+        },
+        [
+            Result(state=state.OK,
+                   summary='[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down'),
+            Metric('temp', 31.4882),
+            Result(state=state.OK, summary='Temperature: 31.5°C'),
+            Result(state=state.OK,
+                   notice='Configuration: prefer user levels over device levels (no levels found)'),
+            Result(state=state.OK, summary='TX Light -1.5 dBm (Normal)'),
+            Metric('tx_light', -1.4508),
+            Result(state=state.OK, summary='RX Light -37.0 dBm (Low-Alarm)'),
+            Metric('rx_light', -36.9897),
+        ],
+    ),
+    (
+        '1409',
+        {
+            'rx_light': True,
+            'tx_light': True,
+            'lanes': True
+        },
+        {
+            '1409': {
+                'description': '10GigabitEthernet23/1',
+                'lanes': {
+                    1: {
+                        'rx_light': (-2.2504, 'Normal'),
+                        'temp': (31.4531, 'Normal'),
+                        'tx_light': (-1.6045, 'Normal')
+                    }
+                },
+                'operational_status': '1',
+                'part': '57-0000076-01',
+                'port_type': '6',
+                'rx_light': (-2.2504, 'Normal'),
+                'serial': 'ADF2094300014TL',
+                'temp': (None, None),
+                'tx_light': (-1.6045, 'Normal'),
+                'type': '10GE LR 10km SFP+'
+            }
+        },
+        [
+            Result(state=state.OK,
+                   summary='[S/N ADF2094300014TL, P/N 57-0000076-01] Operational up'),
+            Result(state=state.OK, summary='TX Light -1.6 dBm (Normal)'),
+            Metric('tx_light', -1.6045),
+            Result(state=state.OK, summary='RX Light -2.3 dBm (Normal)'),
+            Metric('rx_light', -2.2504),
+            Result(state=state.OK, notice='Temperature (Lane 1) Temperature: 31.5°C'),
+            Metric('port_temp_1', 31.4531),
+            Result(state=state.OK, notice='TX Light (Lane 1) -1.6 dBm (Normal)'),
+            Metric('tx_light_1', -1.6045),
+            Result(state=state.OK, notice='RX Light (Lane 1) -2.3 dBm (Normal)'),
+            Metric('rx_light_1', -2.2504),
+        ],
+    ),
+])
+def test_check_brocade_optical(item, params, section, expected):
+    assert list(brocade_optical.check_brocade_optical(item, params, section)) == expected
+
+
+# Disable yapf here as it takes ages
+# yapf: disable
 @pytest.mark.parametrize('string_table, discovery_results, items_params_results', [
     (
         [
@@ -471,11 +544,11 @@ def test_discover_brocade_optical(params, expect_service):
                     Result(state=state.OK,
                            summary='TX Light -1.6 dBm (Normal)',
                            details='TX Light -1.6 dBm (Normal)'),
-                    Metric('tx_light', -1.6045, levels=(None, None), boundaries=(None, None)),
+                    Metric('tx_light', -1.6045),
                     Result(state=state.OK,
                            summary='RX Light -2.3 dBm (Normal)',
                            details='RX Light -2.3 dBm (Normal)'),
-                    Metric('rx_light', -2.2504, levels=(None, None), boundaries=(None, None)),
+                    Metric('rx_light', -2.2504),
                 ],
             ),
             (
@@ -485,22 +558,22 @@ def test_discover_brocade_optical(params, expect_service):
                     Result(state=state.OK,
                            summary='[S/N AGA07AJ, P/N FTRX-3811-353-F1] Operational up',
                            details='[S/N AGA07AJ, P/N FTRX-3811-353-F1] Operational up'),
-                    Metric('temp', 31.7695, levels=(None, None), boundaries=(None, None)),
+                    Metric('temp', 31.7695),
                     Result(state=state.OK,
                            summary='Temperature: 31.8°C',
                            details='Temperature: 31.8°C'),
                     Result(
                         state=state.OK,
-                        details=
+                        notice=
                         'Configuration: prefer user levels over device levels (no levels found)'),
                     Result(state=state.OK,
                            summary='TX Light 1.5 dBm (Normal)',
                            details='TX Light 1.5 dBm (Normal)'),
-                    Metric('tx_light', 1.4924, levels=(None, None), boundaries=(None, None)),
+                    Metric('tx_light', 1.4924),
                     Result(state=state.OK,
                            summary='RX Light -4.7 dBm (High-Alarm)',
                            details='RX Light -4.7 dBm (High-Alarm)'),
-                    Metric('rx_light', -4.6711, levels=(None, None), boundaries=(None, None)),
+                    Metric('rx_light', -4.6711),
                 ],
             ),
             (
@@ -510,22 +583,22 @@ def test_discover_brocade_optical(params, expect_service):
                     Result(state=state.OK,
                            summary='[S/N AG800UB, P/N FTRX-3811-354-F1] Operational up',
                            details='[S/N AG800UB, P/N FTRX-3811-354-F1] Operational up'),
-                    Metric('temp', 34.8203, levels=(None, None), boundaries=(None, None)),
+                    Metric('temp', 34.8203),
                     Result(state=state.OK,
                            summary='Temperature: 34.8°C',
                            details='Temperature: 34.8°C'),
                     Result(
                         state=state.OK,
-                        details=
+                        notice=
                         'Configuration: prefer user levels over device levels (no levels found)'),
                     Result(state=state.OK,
                            summary='TX Light 1.8 dBm (Normal)',
                            details='TX Light 1.8 dBm (Normal)'),
-                    Metric('tx_light', 1.7943, levels=(None, None), boundaries=(None, None)),
+                    Metric('tx_light', 1.7943),
                     Result(state=state.OK,
                            summary='RX Light -5.3 dBm (High-Warn)',
                            details='RX Light -5.3 dBm (High-Warn)'),
-                    Metric('rx_light', -5.2841, levels=(None, None), boundaries=(None, None)),
+                    Metric('rx_light', -5.2841),
                 ],
             ),
             (
@@ -535,22 +608,22 @@ def test_discover_brocade_optical(params, expect_service):
                     Result(state=state.OK,
                            summary='[S/N PRG041, P/N FIM31060/210W55] Operational up',
                            details='[S/N PRG041, P/N FIM31060/210W55] Operational up'),
-                    Metric('temp', 34.1445, levels=(None, None), boundaries=(None, None)),
+                    Metric('temp', 34.1445),
                     Result(state=state.OK,
                            summary='Temperature: 34.1°C',
                            details='Temperature: 34.1°C'),
                     Result(
                         state=state.OK,
-                        details=
+                        notice=
                         'Configuration: prefer user levels over device levels (no levels found)'),
                     Result(state=state.OK,
                            summary='TX Light 1.7 dBm (Normal)',
                            details='TX Light 1.7 dBm (Normal)'),
-                    Metric('tx_light', 1.7117, levels=(None, None), boundaries=(None, None)),
+                    Metric('tx_light', 1.7117),
                     Result(state=state.OK,
                            summary='RX Light -4.4 dBm (High-Warn)',
                            details='RX Light -4.4 dBm (High-Warn)'),
-                    Metric('rx_light', -4.4117, levels=(None, None), boundaries=(None, None)),
+                    Metric('rx_light', -4.4117),
                 ],
             ),
             (
@@ -560,22 +633,22 @@ def test_discover_brocade_optical(params, expect_service):
                     Result(state=state.OK,
                            summary='[S/N SPG153, P/N FIM31060/210W56] Operational up',
                            details='[S/N SPG153, P/N FIM31060/210W56] Operational up'),
-                    Metric('temp', 33.2734, levels=(None, None), boundaries=(None, None)),
+                    Metric('temp', 33.2734),
                     Result(state=state.OK,
                            summary='Temperature: 33.3°C',
                            details='Temperature: 33.3°C'),
                     Result(
                         state=state.OK,
-                        details=
+                        notice=
                         'Configuration: prefer user levels over device levels (no levels found)'),
                     Result(state=state.OK,
                            summary='TX Light 2.0 dBm (Normal)',
                            details='TX Light 2.0 dBm (Normal)'),
-                    Metric('tx_light', 1.981, levels=(None, None), boundaries=(None, None)),
+                    Metric('tx_light', 1.981),
                     Result(state=state.OK,
                            summary='RX Light -3.8 dBm (High-Alarm)',
                            details='RX Light -3.8 dBm (High-Alarm)'),
-                    Metric('rx_light', -3.8048, levels=(None, None), boundaries=(None, None)),
+                    Metric('rx_light', -3.8048),
                 ],
             ),
             (
@@ -585,22 +658,22 @@ def test_discover_brocade_optical(params, expect_service):
                     Result(state=state.OK,
                            summary='[S/N PHG020, P/N FIM31060/210W50] Operational up',
                            details='[S/N PHG020, P/N FIM31060/210W50] Operational up'),
-                    Metric('temp', 30.7734, levels=(None, None), boundaries=(None, None)),
+                    Metric('temp', 30.7734),
                     Result(state=state.OK,
                            summary='Temperature: 30.8°C',
                            details='Temperature: 30.8°C'),
                     Result(
                         state=state.OK,
-                        details=
+                        notice=
                         'Configuration: prefer user levels over device levels (no levels found)'),
                     Result(state=state.OK,
                            summary='TX Light 1.0 dBm (Normal)',
                            details='TX Light 1.0 dBm (Normal)'),
-                    Metric('tx_light', 0.9642, levels=(None, None), boundaries=(None, None)),
+                    Metric('tx_light', 0.9642),
                     Result(state=state.OK,
                            summary='RX Light -15.2 dBm (Normal)',
                            details='RX Light -15.2 dBm (Normal)'),
-                    Metric('rx_light', -15.2143, levels=(None, None), boundaries=(None, None)),
+                    Metric('rx_light', -15.2143),
                 ],
             ),
             (
@@ -610,22 +683,22 @@ def test_discover_brocade_optical(params, expect_service):
                     Result(state=state.OK,
                            summary='[S/N PRG015, P/N FIM31060/210W51] Operational up',
                            details='[S/N PRG015, P/N FIM31060/210W51] Operational up'),
-                    Metric('temp', 32.6914, levels=(None, None), boundaries=(None, None)),
+                    Metric('temp', 32.6914),
                     Result(state=state.OK,
                            summary='Temperature: 32.7°C',
                            details='Temperature: 32.7°C'),
                     Result(
                         state=state.OK,
-                        details=
+                        notice=
                         'Configuration: prefer user levels over device levels (no levels found)'),
                     Result(state=state.OK,
                            summary='TX Light 1.8 dBm (Normal)',
                            details='TX Light 1.8 dBm (Normal)'),
-                    Metric('tx_light', 1.7545, levels=(None, None), boundaries=(None, None)),
+                    Metric('tx_light', 1.7545),
                     Result(state=state.OK,
                            summary='RX Light -14.9 dBm (Normal)',
                            details='RX Light -14.9 dBm (Normal)'),
-                    Metric('rx_light', -14.8811, levels=(None, None), boundaries=(None, None)),
+                    Metric('rx_light', -14.8811),
                 ],
             ),
             (
@@ -635,27 +708,28 @@ def test_discover_brocade_optical(params, expect_service):
                     Result(state=state.OK,
                            summary='[S/N UL30HQ5, P/N XFP-DWLR08-52] Operational up',
                            details='[S/N UL30HQ5, P/N XFP-DWLR08-52] Operational up'),
-                    Metric('temp', 32.5, levels=(None, None), boundaries=(None, None)),
+                    Metric('temp', 32.5),
                     Result(state=state.OK,
                            summary='Temperature: 32.5°C',
                            details='Temperature: 32.5°C'),
                     Result(
                         state=state.OK,
-                        details=
+                        notice=
                         'Configuration: prefer user levels over device levels (no levels found)'),
                     Result(state=state.OK,
                            summary='TX Light 1.4 dBm (Normal)',
                            details='TX Light 1.4 dBm (Normal)'),
-                    Metric('tx_light', 1.3653, levels=(None, None), boundaries=(None, None)),
+                    Metric('tx_light', 1.3653),
                     Result(state=state.OK,
                            summary='RX Light -15.5 dBm (Normal)',
                            details='RX Light -15.5 dBm (Normal)'),
-                    Metric('rx_light', -15.4515, levels=(None, None), boundaries=(None, None)),
+                    Metric('rx_light', -15.4515),
                 ],
             ),
         ],
     )
 ])
+# yapf: enable
 def test_regression(
     string_table,
     discovery_results,
@@ -665,13 +739,13 @@ def test_regression(
 
     assert list(
         brocade_optical.discover_brocade_optical(
-            [type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
+            [(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
             section,
         )) == discovery_results
 
     for item, par, res in items_params_results:
         assert list(brocade_optical.check_brocade_optical(
             item,
-            type_defs.Parameters(par),
+            (par),
             section,
         )) == res

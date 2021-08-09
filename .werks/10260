@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The stunnel daemon of the site, that is used for serving the encrypted
 livestatus communication was activated just by enabling the LIVESTATUS_TCP,

@@ -15,5 +15,5 @@ description:
 item:
  Number of the blade (as string, not int).
 
-inventory:
+discovery:
  One service is created for each powered blade.

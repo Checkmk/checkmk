@@ -9,7 +9,6 @@
 #include <chrono>
 #include <cstdint>
 #include <map>
-#include <memory>
 #include <mutex>
 #include <optional>
 #include <stdexcept>
@@ -19,22 +18,23 @@
 #include "IntLambdaColumn.h"
 #include "LogCache.h"
 #include "LogEntry.h"
-#include "LogEntryStringColumn.h"
-#include "Logfile.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
-#include "StringLambdaColumn.h"
+#include "StringColumn.h"
 #include "TableCommands.h"
 #include "TableContacts.h"
 #include "TableHosts.h"
 #include "TableServices.h"
-#include "TimeLambdaColumn.h"
+#include "TimeColumn.h"
+#include "auth.h"
 
 #ifdef CMC
 #include "cmc.h"
+class Contact;
+class Host;
+class Service;
 #else
-#include "auth.h"
 #include "nagios.h"
 #endif
 
@@ -42,8 +42,6 @@ namespace {
 
 class LogRow {
 public:
-    // cppcheck confuses "command" and "Command" below! o_O
-    // cppcheck-suppress uninitMemberVar
     LogRow(LogEntry *entry_, host *hst_, service *svc_, const contact *ctc_,
            const Command *command_)
         : entry{entry_}, hst{hst_}, svc{svc_}, ctc{ctc_}, command{command_} {};
@@ -62,69 +60,70 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     ColumnOffsets offsets{};
     auto offsets_entry{
         offsets.add([](Row r) { return r.rawData<LogRow>()->entry; })};
-    addColumn(std::make_unique<TimeLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<TimeColumn::Callback<LogEntry>>(
         "time", "Time of the log event (UNIX timestamp)", offsets_entry,
         [](const LogEntry &r) {
             return std::chrono::system_clock::from_time_t(r._time);
         }));
-    addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
         "lineno", "The number of the line in the log file", offsets_entry,
         [](const LogEntry &r) { return r._lineno; }));
-    addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
         "class",
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
         offsets_entry,
         [](const LogEntry &r) { return static_cast<int32_t>(r._class); }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "message", "The complete message line including the timestamp",
         offsets_entry, [](const LogEntry &r) { return r._message; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "type",
         "The type of the message (text before the colon), the message itself for info messages",
         offsets_entry,
         [](const LogEntry &r) { return r._type == nullptr ? "" : r._type; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "options", "The part of the message after the ':'", offsets_entry,
         [](const LogEntry &r) {
             return r._options == nullptr ? "" : r._options;
         }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "comment", "A comment field used in various message types",
         offsets_entry, [](const LogEntry &r) { return r._comment; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "plugin_output",
         "The output of the check, if any is associated with the message",
         offsets_entry, [](const LogEntry &r) { return r._plugin_output; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "long_plugin_output",
         "The complete output of the check, if any is associated with the message",
         offsets_entry,
         [](const LogEntry &r) { return r._long_plugin_output; }));
-    addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
         "state", "The state of the host or service in question", offsets_entry,
         [](const LogEntry &r) { return r._state; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "state_type", "The type of the state (varies on different log classes)",
         offsets_entry, [](const LogEntry &r) { return r._state_type; }));
-    addColumn(std::make_unique<LogEntryStringColumn>(
-        "state_info", "Additional information about the state", offsets_entry));
-    addColumn(std::make_unique<IntLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
+        "state_info", "Additional information about the state", offsets_entry,
+        [](const LogEntry &r) { return r.state_info(); }));
+    addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
         "attempt", "The number of the check attempt", offsets_entry,
         [](const LogEntry &r) { return r._attempt; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "service_description",
         "The description of the service log entry is about (might be empty)",
         offsets_entry,
         [](const LogEntry &r) { return r._service_description; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "host_name",
         "The name of the host the log entry is about (might be empty)",
         offsets_entry, [](const LogEntry &r) { return r._host_name; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "contact_name",
         "The name of the contact the log entry is about (might be empty)",
         offsets_entry, [](const LogEntry &r) { return r._contact_name; }));
-    addColumn(std::make_unique<StringLambdaColumn<LogEntry>>(
+    addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "command_name",
         "The name of the command of the log entry (e.g. for notifications)",
         offsets_entry, [](const LogEntry &r) { return r._command_name; }));
@@ -152,7 +151,7 @@ std::string TableLog::namePrefix() const { return "log_"; }
 void TableLog::answerQuery(Query *query) {
     std::lock_guard<std::mutex> lg(_log_cache->_lock);
     _log_cache->update();
-    if (_log_cache->begin() == _log_cache->end()) {
+    if (_log_cache->empty()) {
         return;
     }
 
@@ -231,22 +230,26 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
     return true;
 }
 
+namespace {
+bool rowWithoutHost(const LogRow *lr) {
+    auto clazz = lr->entry->_class;
+    return clazz == LogEntry::Class::info ||
+           clazz == LogEntry::Class::program ||
+           clazz == LogEntry::Class::ext_command;
+}
+
+}  // namespace
+
 bool TableLog::isAuthorized(Row row, const contact *ctc) const {
     const auto *lr = rowData<LogRow>(row);
-    service *svc = lr->svc;
-    host *hst = lr->hst;
-
-    if (hst != nullptr || svc != nullptr) {
-        return is_authorized_for(core(), ctc, hst, svc);
-        // suppress entries for messages that belong to hosts that do not exist
-        // anymore.
-    }
-    auto clazz = lr->entry->_class;
-    return !(clazz == LogEntry::Class::alert ||
-             clazz == LogEntry::Class::hs_notification ||
-             clazz == LogEntry::Class::passivecheck ||
-             clazz == LogEntry::Class::alert_handlers ||
-             clazz == LogEntry::Class::state);
+    // If we have an AuthUser, suppress entries for messages with hosts that do
+    // not exist anymore.
+    return lr->hst == nullptr  //
+               ? ctc == no_auth_user() || rowWithoutHost(lr)
+               : lr->svc == nullptr
+                     ? is_authorized_for_hst(ctc, lr->hst)
+                     : is_authorized_for_svc(core()->serviceAuthorization(),
+                                             ctc, lr->svc);
 }
 
 std::shared_ptr<Column> TableLog::column(std::string colname) const {

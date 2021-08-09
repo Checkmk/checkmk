@@ -15,5 +15,5 @@ description:
 item:
  "ID of the enclosure" - "ID of the sensor"
 
-inventory:
+discovery:
  One service is created for each sensor found on the device.

@@ -4,6 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.brocade import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_brocade_sfp(info):
     parsed = {}
@@ -77,7 +89,6 @@ check_info['brocade_sfp.temp'] = {
     'service_description': "SFP Temperature %s",
     'has_perfdata': True,
     'group': "temperature",
-    'includes': ["brocade.include", "temperature.include"],
 }
 
 #.
@@ -101,24 +112,33 @@ def check_brocade_sfp(item, params, parsed):
     port_index = int(item.split()[0]) + 1
     port_info = parsed[port_index]
 
+    def sort_params(key):
+        # levels are given in an uncommon order at the rulespec
+        # We have crit_lower, warn_lower, warn_upper, crit_upper,
+        # but we need warn_upper, warn_upper, warn_lower, crit_lower
+        if key not in params:
+            return None
+
+        return params[key][2], params[key][3], params[key][1], params[key][0]
+
     yield check_levels(port_info["rx_power"],
                        "input_signal_power_dbm",
-                       params.get("rx_power"),
+                       sort_params("rx_power"),
                        infoname="Rx",
                        unit="dBm")
     yield check_levels(port_info["tx_power"],
                        "output_signal_power_dbm",
-                       params.get("tx_power"),
+                       sort_params("tx_power"),
                        infoname="Tx",
                        unit="dBm")
     yield check_levels(port_info["current"],
                        "current",
-                       params.get("current"),
+                       sort_params("current"),
                        infoname="Current",
                        unit="A")
     yield check_levels(port_info["voltage"],
                        "voltage",
-                       params.get("voltage"),
+                       sort_params("voltage"),
                        infoname="Voltage",
                        unit="V")
 
@@ -161,6 +181,5 @@ check_info['brocade_sfp'] = {
                                      ]),
                            ],
     'has_perfdata'       : True,
-    'includes'           : [ "brocade.include" ],
     'group'              : "brocade_sfp",
 }

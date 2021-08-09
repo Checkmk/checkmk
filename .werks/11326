@@ -6,7 +6,7 @@ Date: 1599488358
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When initiating the discovery for the DRDB check, the parameter
 'diskstates_inventory' is reported as an unidentified key. This has been fixed.

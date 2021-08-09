@@ -1,5 +1,6 @@
-ARG DOCKER_REGISTRY
-FROM ${DOCKER_REGISTRY}/sles-12sp3-base
+ARG IMAGE_SLES_12SP3
+# hadolint ignore=DL3006
+FROM ${IMAGE_SLES_12SP3}
 
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"
@@ -78,6 +79,7 @@ RUN zypper ref -s \
     texinfo \
     tk-devel \
     unzip \
+    valgrind \
     wget \
     which \
     chrpath \
@@ -101,12 +103,14 @@ ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NE
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
 RUN /opt/install-cmake.sh
+RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python2.sh
 RUN /opt/install-python.sh
 RUN /opt/install-pipenv.sh
 RUN /opt/install-nodejs.sh
 RUN /opt/install-freetds.sh
+RUN /opt/install-cmk-dependencies.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container

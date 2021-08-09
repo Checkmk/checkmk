@@ -6,9 +6,22 @@
 
 
 def agent_bi_arguments(params, hostname, ipaddress):
+    # There is an inconsistency between the WATO rule and the webapi.
+    # WATO <-> API
+    #  aggr_groups / aggr_group_prefix <-> groups
+    #  aggr_name_regex / aggr_name <-> names
+    for param_set in params:
+        filter_ = param_set.get('filter', {})
+        for replacement, name in (
+            ("groups", "aggr_group_prefix"),
+            ("names", "aggr_name"),
+        ):
+            if name in filter_:
+                filter_[replacement] = filter_.pop(name)
+
     # TODO: Cleanup this separation violation. This should be accessed through the check API
-    import cmk.base.data_sources.programs
-    return cmk.base.data_sources.programs.SpecialAgentConfiguration("", repr(params))
+    import cmk.base.config
+    return cmk.base.config.SpecialAgentConfiguration([], repr(params))
 
 
 special_agent_info['bi'] = agent_bi_arguments

@@ -5,21 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _item_spec_storcli_pdisks():
-    return TextAscii(
+    return TextInput(
         title=_("PDisk EID:Slot-Device"),
         allow_empty=False,
     )

@@ -7,23 +7,19 @@
 # pylint: disable=redefined-outer-name
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib import CheckManager
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName
 
+import cmk.base.agent_based.discovery as discovery
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
-import cmk.base.discovery as discovery
 from cmk.base.check_utils import Service
-from cmk.base.discovered_labels import (
-    DiscoveredServiceLabels,
-    ServiceLabel,
-)
+from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 
 @pytest.fixture(autouse=True)
@@ -33,11 +29,11 @@ def autochecks_dir(monkeypatch, tmp_path):
 
 @pytest.fixture()
 def test_config(monkeypatch):
-    CheckManager().load(["df", "cpu", "chrony", "lnx_if"])
     ts = Scenario().add_host("host")
     return ts.apply(monkeypatch)
 
 
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "autochecks_content,expected_result",
     [
@@ -138,6 +134,7 @@ def test_parse_autochecks_file_not_existing():
     assert autochecks.parse_autochecks_file("host", config.service_description) == []
 
 
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "autochecks_content,expected_result",
     [
@@ -213,8 +210,7 @@ def test_parse_autochecks_file_not_existing():
             ],
         ),
     ])
-def test_parse_autochecks_file(config_check_variables, test_config, autochecks_content,
-                               expected_result):
+def test_parse_autochecks_file(fix_plugin_legacy, test_config, autochecks_content, expected_result):
     autochecks_file = Path(cmk.utils.paths.autochecks_dir, "host.mk")
     with autochecks_file.open("w", encoding="utf-8") as f:
         f.write(autochecks_content)
@@ -224,14 +220,14 @@ def test_parse_autochecks_file(config_check_variables, test_config, autochecks_c
             autochecks.parse_autochecks_file(
                 "host",
                 config.service_description,
-                config_check_variables,
+                fix_plugin_legacy.check_variables,
             )
         return
 
     parsed = autochecks.parse_autochecks_file(
         "host",
         config.service_description,
-        config_check_variables,
+        fix_plugin_legacy.check_variables,
     )
     assert len(parsed) == len(expected_result)
 

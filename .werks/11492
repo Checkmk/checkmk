@@ -1,0 +1,20 @@
+Title: Auth cookies: Specify SameSite attribute to improve cookie security
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1599816877
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The authentication cookies of the Checkmk GUI (auth_[site]) previously relied
+on the browsers default behaviour regarding the same site policy. This resulted
+in a) an inconsistent cookie handling across the different browsers and b)
+allow some sort of Cross-site request forgery (CSRF) attacks.
+
+With this change we explicitly set the "SameSite=Lax" setting for all
+authentication cookies created by logins after updating Checkmk.
+
+For more information about this HTTP cookie setting have a look at
+https://web.dev/samesite-cookies-explained/.

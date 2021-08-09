@@ -20,5 +20,5 @@ description:
 item:
  The unit name and the name of the temperature sensor
 
-inventory:
+discovery:
  One service is created for each temperature sensor on all cmciii lcp fanpack units.

@@ -1,17 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+__version__ = "2.1.0i1"
+
+# this file has to work with both Python 2 and 3
+# pylint: disable=super-with-arguments
+
+import io
 import os
 import socket
 import sys
 
+# For Python 3 sys.stdout creates \r\n as newline for Windows.
+# Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
+# If you want to use the old behaviour just use old_stdout.
+if sys.version_info[0] >= 3:
+    new_stdout = io.TextIOWrapper(sys.stdout.buffer,
+                                  newline='\n',
+                                  encoding=sys.stdout.encoding,
+                                  errors=sys.stdout.errors)
+    old_stdout, sys.stdout = sys.stdout, new_stdout
+
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from typing import List, Dict, Tuple, Any, Optional, Union, Callable
-except:
+    from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+except ImportError:
     pass
 
 if sys.version_info[0] >= 3:
@@ -169,7 +185,7 @@ class SkipMBean(RuntimeError):
 
 
 def get_default_config_dict():
-    return dict([(elem[0], elem[1]) for elem in DEFAULT_CONFIG_TUPLES])
+    return {elem[0]: elem[1] for elem in DEFAULT_CONFIG_TUPLES}
 
 
 def write_section(name, iterable):
@@ -191,7 +207,7 @@ def cached(function):
     return cached_function
 
 
-class JolokiaInstance(object):
+class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
     # use this to filter headers whien recording via vcr trace
     FILTER_SENSITIVE = {'filter_headers': [('authorization', '****')]}
 

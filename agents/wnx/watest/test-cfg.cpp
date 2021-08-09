@@ -23,13 +23,16 @@
 #include "tools/_tgt.h"
 #include "upgrade.h"
 
+using namespace std::chrono_literals;
+namespace fs = std::filesystem;
+
 // we want to avoid those data public
 namespace cma {
 void ResetCleanOnExit();
 
 namespace details {
-extern bool G_Service;
-extern bool G_Test;
+extern bool g_is_service;
+extern bool g_is_test;
 }  // namespace details
 }  // namespace cma
 
@@ -48,8 +51,10 @@ static void SetEnabledFlag(bool flag) {
 }
 
 TEST(Cma, Commander) {
-    using namespace std::chrono;
+    using namespace std::chrono_literals;
     //
+    auto temp_cfg = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_cfg->loadFactoryConfig());
     auto yaml = cma::cfg::GetLoadedConfig();
     auto yaml_global = yaml[cma::cfg::groups::kGlobal];
     EXPECT_TRUE(yaml_global[cma::cfg::vars::kEnabled].IsScalar());
@@ -79,7 +84,9 @@ TEST(Cma, Commander) {
     auto internal_port =
         BuildPortName(kCarrierMailslotName, mailbox.GetName());  // port here
     cma::srv::ServiceProcessor processor;
-    mailbox.ConstructThread(cma::srv::SystemMailboxCallback, 20, &processor);
+    mailbox.ConstructThread(
+        cma::srv::SystemMailboxCallback, 20, &processor,
+        wtools::SecurityLevel::standard);  // standard is intentional
     ON_OUT_OF_SCOPE(mailbox.DismantleThread());
     cma::tools::sleep(100ms);
 
@@ -104,29 +111,6 @@ TEST(Cma, Commander) {
 namespace cma::cfg {
 
 std::string packaged_ini(kIniFromInstallMarker);
-
-std::string wato_ini =
-    "# Created by Check_MK Agent Bakery.\n"
-    "# This file is managed via WATO, do not edit manually or you \n"
-    "# lose your changes next time when you update the agent.\n"
-    "\n"
-    "[global]\n"
-    "    # TCP port the agent is listening on\n"
-    "    port = 6556\n"
-    "\n";
-
-[[nodiscard]] static bool CreateFileTest(std::filesystem::path Path,
-                                         std::string Content) {
-    std::error_code ec;
-    std::filesystem::remove(Path, ec);
-    if (ec.value() != 0 && ec.value() != 2) return false;
-
-    std::ofstream ofs(Path);
-    ofs << Content;
-    return true;
-}
-
-extern void SetTestInstallationType(InstallationType);
 
 namespace details {
 TEST(CmaCfg, InitEnvironment) {
@@ -312,38 +296,24 @@ TEST(CmaCfg, ProcessPluginEnvironment) {
 TEST(CmaCfg, InstallationTypeCheck) {
     namespace fs = std::filesystem;
     //
-    cma::OnStartTest();
-    ASSERT_TRUE(cma::IsTest());
-    ON_OUT_OF_SCOPE(SetTestInstallationType(InstallationType::packaged));
-    ON_OUT_OF_SCOPE(cma::details::G_Test = true;);
+    auto temp_fs{tst::TempCfgFs::Create()};
 
-    EXPECT_EQ(DetermineInstallationType(), InstallationType::packaged);
+    fs::path install_yml{fs::path(dirs::kFileInstallDir) /
+                         files::kInstallYmlFileW};
 
-    auto to_test = InstallationType::wato;
-    cma::cfg::SetTestInstallationType(to_test);
-    EXPECT_EQ(cma::cfg::DetermineInstallationType(), to_test);
-
-    cma::details::G_Test = false;
-
-    fs::path install_ini = cma::cfg::GetRootInstallDir();
-    std::error_code ec;
-    fs::create_directories(install_ini, ec);
-    install_ini /= files::kIniFile;
-
-    auto backup_file = install_ini;
-    backup_file.replace_extension("in_");
-    fs::remove(backup_file, ec);
-    fs::copy_file(install_ini, backup_file, ec);
-    ON_OUT_OF_SCOPE(fs::rename(backup_file, install_ini, ec);)
-
-    ASSERT_TRUE(CreateFileTest(install_ini, wato_ini));
+    // without
+    ASSERT_TRUE(temp_fs->createRootFile(install_yml,
+                                        "# Wato\nglobal:\n  enabled: yes\n"));
 
     EXPECT_EQ(DetermineInstallationType(), InstallationType::wato);
-
-    ASSERT_TRUE(CreateFileTest(install_ini, packaged_ini));
+    ASSERT_TRUE(temp_fs->createRootFile(
+        install_yml, "# packaged\nglobal:\n  install: no\n  enabled: yes\n"));
 
     EXPECT_EQ(DetermineInstallationType(), InstallationType::packaged);
-    // fs::remove(install_ini, ec);
+
+    // Absent:
+    temp_fs->removeRootFile(install_yml);
+    EXPECT_EQ(DetermineInstallationType(), InstallationType::wato);
 }
 
 namespace details {
@@ -370,43 +340,85 @@ TEST(CmaToolsDetails, ExtractPathFromServiceName) {
                                         "c:\\Program Files (x86)\\check_mk"));
     }
 }
+
+TEST(CmaToolsDetails, FindRootByExePath) {
+    using namespace std::literals;
+    auto x = ExtractPathFromServiceName(L"checkmkservice");
+    if (std::filesystem::exists(x)) {
+        auto x_no_ext = x / "check_mk_agent";
+        auto x_with_ext = x / "check_mk_agent.exe";
+        auto path = L"\""s + x_with_ext.wstring() + L"\""s;
+        auto upper_path = path;
+        cma::tools::WideUpper(upper_path);
+
+        auto valid_path = x.wstring();
+
+        EXPECT_EQ(valid_path, FindRootByExePath(path));
+        EXPECT_EQ(valid_path, FindRootByExePath(upper_path));
+        EXPECT_EQ(valid_path, FindRootByExePath(x_no_ext.wstring()));
+    } else {
+        GTEST_SKIP() << "agent not installed test is not possible";
+    }
+}
+
 }  // namespace details
 
-TEST(Cma, OnStart) {
-    {
-        auto [r, d] = cma::FindAlternateDirs(L"");
-        EXPECT_TRUE(r.empty());
-        EXPECT_TRUE(d.empty());
+TEST(Cma, FindAlternateDirs) {
+    for (auto app_type :
+         {AppType::exe, AppType::automatic, AppType::failed, AppType::srv}) {
+        auto [r, d] = cma::FindAlternateDirs(app_type);
+        EXPECT_EQ(r, "");
+        EXPECT_EQ(d, "");
     }
-    {
-        auto [r, d] = cma::FindAlternateDirs(kRemoteMachine);
-        EXPECT_EQ(r, cma::tools::win::GetEnv(kRemoteMachine));
-        EXPECT_EQ(d,
-                  cma::tools::win::GetEnv(kRemoteMachine) + L"\\ProgramData");
+
+    auto expected = tools::win::GetEnv(env::test_root);
+    auto [r, d] = cma::FindAlternateDirs(AppType::test);
+    EXPECT_TRUE(r.wstring().find(expected) != std::wstring::npos);
+    EXPECT_TRUE(d.wstring().find(expected) != std::wstring::npos);
+}
+
+class CmaFixture : public ::testing::Test {
+public:
+    void SetUp() override {
+        expected_ = tst::MakeTempFolderInTempPath(L"special_dir");
+        fs::create_directories(expected_ / "test" / "root");
+        fs::create_directories(expected_ / "test" / "data");
+        tools::win::SetEnv(std::wstring{env::test_integration_root},
+                           expected_.wstring());
     }
+    void TearDown() override {
+        tools::win::SetEnv(std::wstring{env::test_integration_root}, {});
+        fs::remove_all(expected_);
+    }
+    fs::path expected_;
+};
+TEST_F(CmaFixture, FindAlternateDirsExeEnvVar) {
+    auto [r, d] = cma::FindAlternateDirs(AppType::exe);
+    EXPECT_TRUE(r.wstring().find(expected_) != std::wstring::npos);
+    EXPECT_TRUE(d.wstring().find(expected_) != std::wstring::npos);
 }
 
 TEST(CmaCfg, ReloadCfg) {
     cma::OnStartTest();
     auto id = GetCfg().uniqId();
     EXPECT_TRUE(id > 0);
-    cma::LoadConfig(AppType::test, {});
+    cma::LoadConfigFull({});
     auto id2 = GetCfg().uniqId();
     EXPECT_TRUE(id2 > id);
 }
 
 TEST(Cma, CleanApi) {
-    auto& alert = cma::G_UninstallALert;
+    auto& alert = cma::g_uninstall_alert;
     ASSERT_FALSE(alert.isSet()) << "initial always false";
     alert.clear();
     ASSERT_FALSE(alert.isSet());
     alert.set();
     ASSERT_FALSE(alert.isSet())
         << "forbidden to set for non service executable";
-    cma::details::G_Service = true;
+    cma::details::g_is_service = true;
     alert.set();
     EXPECT_TRUE(alert.isSet());
-    cma::details::G_Service = false;
+    cma::details::g_is_service = false;
     alert.clear();
     EXPECT_FALSE(alert.isSet());
 }
@@ -453,9 +465,9 @@ namespace cma::cfg {
 TEST(CmaCfg, ConfigManagement) {
     auto node = CreateNode("test");
     ASSERT_TRUE(node);
-    node->setLogFileDir(L"test");
+    node->setConfiguredLogFileDir(L"test");
     auto node2 = GetNode("test");
-    EXPECT_EQ(node2->getLogFileDir(), L"test");
+    EXPECT_EQ(node2->getConfiguredLogFileDir(), L"test");
     ASSERT_TRUE(node2);
     RemoveNode("test");
     auto node3 = GetNode("test");
@@ -482,30 +494,23 @@ namespace cma::cfg {
 class CmaCfg_F : public ::testing::Test {
 protected:
     void SetUp() override {
-        cma::OnStartTest();
-        tst::SafeCleanTempDir();
-        cap_base_ = cma::cfg::GetUserDir();
-        cap_base_ /= "plugins.test.cap";
+        temp_fs_ = tst::TempCfgFs::Create();
+        ASSERT_TRUE(temp_fs_->loadFactoryConfig());
+        cap_base_ = tst::MakePathToCapTestFiles() / "plugins.test.cap";
 
-        auto [r, u] = tst::CreateInOut();
-        root_ = r.wstring();
-        user_ = u.wstring();
-        GetCfg().pushFolders(root_, user_);
+        root_ = temp_fs_->root().wstring();
+        user_ = temp_fs_->data().wstring();
     }
 
-    void TearDown() override {
-        GetCfg().popFolders();
-        tst::SafeCleanTempDir();
-    }
+    void TearDown() override {}
 
     auto prepareAll() {
-        namespace fs = std::filesystem;
         fs::path pd = GetUserDir();
         details::CreateTree(pd);
         auto table = details::AllDirTable();
         auto table_removed = details::RemovableDirTable();
         for (auto& n : table) {
-            tst::ConstructFile(pd / n / "1.tmp", wtools::ConvertToUTF8(n));
+            tst::CreateTextFile(pd / n / "1.tmp", wtools::ToUtf8(n));
         }
 
         user_folders_count_ = table.size() - table_removed.size();
@@ -517,10 +522,11 @@ protected:
     std::wstring user_;
     std::filesystem::path cap_base_;
     size_t user_folders_count_ = 0;
+
+    tst::TempCfgFs::ptr temp_fs_;
 };
 
 TEST_F(CmaCfg_F, CreateTree) {
-    namespace fs = std::filesystem;
     ASSERT_TRUE(GetRootDir() == root_);
     ASSERT_TRUE(GetUserDir() == user_);
     fs::path pd = GetUserDir();
@@ -532,8 +538,6 @@ TEST_F(CmaCfg_F, CreateTree) {
 }
 
 TEST_F(CmaCfg_F, CleanInstallOnInvalidFolder) {
-    namespace fs = std::filesystem;
-
     // prepare damaged folder
     fs::path user_dir = cma::cfg::GetUserDir();
     fs::remove_all(user_dir / dirs::kBakery);
@@ -545,9 +549,6 @@ TEST_F(CmaCfg_F, CleanInstallOnInvalidFolder) {
 }
 
 TEST_F(CmaCfg_F, CleanDataFolderNoneAllSmartEmpty) {
-    namespace fs = std::filesystem;
-    ASSERT_TRUE(GetRootDir() == root_);
-    ASSERT_TRUE(GetUserDir() == user_);
     auto [pd, table, table_removed] = prepareAll();
 
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::none));
@@ -572,14 +573,15 @@ TEST_F(CmaCfg_F, CleanDataFolderNoneAllSmartEmpty) {
     details::CleanDataFolder(details::CleanMode::smart);
 
     for (auto& n : table) {
-        EXPECT_TRUE(!fs::exists(pd / n));
+        if (n == dirs::kLog) {
+            continue;
+        }
+        EXPECT_EQ(fs::exists(pd / n), !details::g_remove_dirs_on_clean)
+            << (pd / n).string();
     }
 }
 
 TEST_F(CmaCfg_F, CleanDataFolderSmart) {
-    namespace fs = std::filesystem;
-    ASSERT_TRUE(GetRootDir() == root_);
-    ASSERT_TRUE(GetUserDir() == user_);
     auto [pd, table, table_removed] = prepareAll();
 
     // test additional preparation
@@ -595,8 +597,8 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
     }
 
     auto [target_yml_example, ignore_it_again] = cap::GetExampleYmlNames();
-    tst::ConstructFile(target_yml_example, "aaa");
-    tst::ConstructFile(pd / files::kUserYmlFile, "aaa");
+    tst::CreateTextFile(target_yml_example, "aaa");
+    tst::CreateTextFile(pd / files::kUserYmlFile, "aaa");
 
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::smart));
     for (auto& f : files) {
@@ -606,15 +608,16 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
     EXPECT_TRUE(!fs::exists(pd / files::kUserYmlFile));
 
     for (auto& n : table_removed) {
-        EXPECT_TRUE(!fs::exists(pd / n)) << "directory exists: " << n.data();
+        EXPECT_EQ(fs::exists(pd / n), !details::g_remove_dirs_on_clean)
+            << "directory state is invalid : " << n.data();
     }
 
     // restore removed folders
     details::CreateTree(pd);
 
     // different user and example yml
-    tst::ConstructFile(target_yml_example, "aaa");
-    tst::ConstructFile(pd / files::kUserYmlFile, "aaabb");
+    tst::CreateTextFile(target_yml_example, "aaa");
+    tst::CreateTextFile(pd / files::kUserYmlFile, "aaabb");
 
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::smart));
 
@@ -627,8 +630,79 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
         if (fs::exists(pd / n / "1.tmp")) ++exists_count;
     }
 
-    EXPECT_EQ(exists_count, user_folders_count_)
+    EXPECT_EQ(exists_count == user_folders_count_,
+              details::g_remove_dirs_on_clean)
         << "you delete wrong count of folders";
+}
+
+namespace {
+class JobToCheckEnvironment {
+public:
+    JobToCheckEnvironment(const std::string& case_name)
+        : dirs{case_name}
+        , cmd_file_{dirs.in() / "printer.cmd"}
+        , results_file_{dirs.out() / "results.txt"} {}
+
+    std::vector<std::string> getEnvironment() {
+        createScript();
+        return runScript();
+    }
+
+private:
+    void createScript() {
+        auto bat_file = fmt::format(
+            "@echo start>{0}\n"
+            "@if defined MK_STATEDIR echo %MK_STATEDIR%>>{0}\n"
+            "@if defined MK_CONFDIR echo %MK_CONFDIR%>>{0}\n"
+            "@if defined MK_LOCALDIR echo %MK_LOCALDIR%>>{0}\n"
+            "@if defined MK_TEMPDIR echo %MK_TEMPDIR%>>{0}\n"
+            "@if defined MK_SPOOLDIR echo %MK_SPOOLDIR%>>{0}\n"
+            "@if defined MK_PLUGINSDIR echo %MK_PLUGINSDIR%>>{0}\n"
+            "@if defined MK_LOGDIR echo %MK_LOGDIR%>>{0}\n"
+            "@if defined REMOTE_HOST echo %REMOTE_HOST%>>{0}\n"
+            "@if defined REMOTE echo %REMOTE%>>{0}\n"
+            "@if defined MK_INSTALLDIR echo %MK_INSTALLDIR%>>{0}\n"
+            "@if defined MK_MODULESDIR echo %MK_MODULESDIR%>>{0}\n"
+            "@if defined MK_MSI_PATH echo %MK_MSI_PATH%>>{0}\n",
+            results_file_);
+
+        std::ofstream ofs(cmd_file_);
+
+        ofs << bat_file;
+    }
+
+    std::vector<std::string> runScript() {
+        auto [pid, job, process] =
+            tools::RunStdCommandAsJob(cmd_file_.wstring());
+        tst::WaitForSuccessSilent(1000ms, [process]() {
+            DWORD code = 0;
+            auto success = ::GetExitCodeProcess(process, &code);
+            return success == TRUE && code != STILL_ACTIVE;
+        });
+
+        ::TerminateJobObject(job, 21);
+        ::CloseHandle(job);
+        ::CloseHandle(process);
+        return tst::ReadFileAsTable(results_file_);
+    }
+
+    tst::TempDirPair dirs;
+    fs::path cmd_file_;
+    fs::path results_file_;
+};
+}  // namespace
+
+TEST(CmaCfg, SetupPluginEnvironmentIntegration) {
+    JobToCheckEnvironment job(test_info_->name());
+    cfg::SetupPluginEnvironment();
+    auto table = job.getEnvironment();
+
+    // check for uniqueness
+    std::set<std::string> all;
+    for (auto const& raw : table) {
+        all.insert(raw);
+    }
+    EXPECT_EQ(all.size(), 11);
 }
 
 }  // namespace cma::cfg

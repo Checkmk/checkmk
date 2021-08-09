@@ -5,12 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    DropdownChoice,
-    MonitoringState,
-    Tuple,
-)
+from cmk.gui.valuespec import Age, DropdownChoice, MonitoringState, Tuple
 
 run_duration = Tuple(
     title=_("Maximum run duration for last execution"),
@@ -22,7 +17,7 @@ run_duration = Tuple(
     ],
 )
 
-consider_db_status = DropdownChoice(
+ignore_db_status = DropdownChoice(
     title=_("Job State"),
     help=_("The state of the job is ignored by default."),
     choices=[

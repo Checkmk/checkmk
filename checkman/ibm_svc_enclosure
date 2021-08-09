@@ -23,5 +23,5 @@ description:
 item:
  The ID of the enclosure.
 
-inventory:
+discovery:
  One service is created for each enclosure.

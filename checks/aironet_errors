@@ -8,25 +8,25 @@ aironet_default_error_levels = (1.0, 10.0)  # per second
 
 
 def inventory_aironet_errors(info):
-    return [(int(line[0]), 'aironet_default_error_levels') for line in info]
+    yield from ((line[0], 'aironet_default_error_levels') for line in info)
 
 
 def check_aironet_errors(item, params, info):
     for line in info:
-        if int(line[0]) == item:
+        if line[0] == item:
             value = int(line[1])
             this_time = time.time()
             persec = get_rate("aironet_errors.%s" % item, this_time, value)
             warn, crit = params
             perfdata = [("errors", persec, None, None, warn, crit)]
             infotxt = "%.2f errors/s" % persec
-            if persec >= crit:
-                return (2, infotxt, perfdata)
-            elif persec >= warn:
-                return (1, infotxt, perfdata)
-            return (0, infotxt, perfdata)
-
-    return (3, "No radio %s available" % item)
+            return (
+                2 if persec >= crit else  #
+                1 if persec >= warn else  #
+                0,
+                infotxt,
+                perfdata,
+            )
 
 
 check_info["aironet_errors"] = {

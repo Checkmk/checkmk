@@ -6,7 +6,7 @@ Date: 1583755132
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The ESX 4.1 compatibility mode of the ESX vSphere special agent has been
 removed.  This separate implementation, which was based on the pysphere python

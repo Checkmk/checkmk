@@ -3,19 +3,18 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Code for processing Check_MK werks. This is needed by several components,
+"""Code for processing Checkmk werks. This is needed by several components,
 so it's best place is in the central library."""
 
 import itertools
 import json
-from pathlib import Path
 import re
+from pathlib import Path
 from typing import Any, Dict
 
 from six import ensure_str
 
 import cmk.utils.paths
-
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
@@ -24,7 +23,7 @@ from cmk.utils.i18n import _
 # *all* translation values.
 class WerkTranslator:
     def __init__(self):
-        super(WerkTranslator, self).__init__()
+        super().__init__()
         self._classes = {
             "feature": _("New feature"),
             "fix": _("Bug fix"),
@@ -35,7 +34,7 @@ class WerkTranslator:
             "core": _("Core & setup"),
             "checks": _("Checks & agents"),
             "multisite": _("User interface"),
-            "wato": _("WATO"),
+            "wato": _("Setup"),
             "notifications": _("Notifications"),
             "bi": _("BI"),
             "reporting": _("Reporting & availability"),
@@ -52,6 +51,8 @@ class WerkTranslator:
             "agents": _("Agent bakery"),
             "metrics": _("Metrics system"),
             "alerts": _("Alert handlers"),
+            "dcd": _("Dynamic host configuration"),
+            "ntopng_integration": _("Ntopng integration"),
 
             # CMK-OMD
             "omd": _("Site management"),
@@ -256,11 +257,11 @@ def sort_by_date(werks):
 VERSION_PATTERN = re.compile(r'^([.\-a-z]+)?(\d+)')
 
 
-# Parses versions of Check_MK and converts them into comparable integers.
+# Parses versions of Checkmk and converts them into comparable integers.
 def parse_check_mk_version(v: str) -> int:
     """Figure out how to compare versions semantically.
 
-    Parses versions of Check_MK and converts them into comparable integers.
+    Parses versions of Checkmk and converts them into comparable integers.
 
     >>> p = parse_check_mk_version
 

@@ -146,6 +146,7 @@ drbd_cs_map = {
     'WFConnection': 2,
     'WFReportParams': 1,
     'Connected': 0,
+    'Established': 0,
     'StartingSyncS': 1,
     'StartingSyncT': 1,
     'WFBitMapS': 1,
@@ -186,7 +187,7 @@ drbd_ds_map = {
 def inventory_drbd(info, checktype):
     inventory = []
     for line in info[2:]:
-        if _drbd_block_start_match.search(line[0]) > 0:
+        if _drbd_block_start_match.search(line[0]):
             parsed = drbd_parse_block(drbd_extract_block('drbd%s' % line[0][:-1], info), checktype)
             # Skip unconfigured drbd devices
             if parsed['cs'] == 'Unconfigured':
@@ -239,8 +240,7 @@ def drbd_extract_block(item, info):
     for line in info[2:]:
         if "drbd" + line[0][:-1] == item:
             inBlock = True
-        elif inBlock and _drbd_block_start_match.search(line[0]) > 0 \
-                     and "drbd" + line[0][:-1] != item:
+        elif inBlock and _drbd_block_start_match.search(line[0]) and "drbd" + line[0][:-1] != item:
             # Another block starts. So the requested block is finished
             break
 

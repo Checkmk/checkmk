@@ -1,0 +1,12 @@
+Title: BI 1.6->2.0 Conversion: Fixed invalid conversion of aggregation function "Count Nodes"
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1614073155
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+The conversion of "Count the number of nodes in state OK" was incorrect.
+An exception was displayed when an aggregation used this aggregation function.

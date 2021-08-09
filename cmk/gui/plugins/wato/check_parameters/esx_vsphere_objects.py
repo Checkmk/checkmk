@@ -5,21 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _item_spec_esx_vsphere_objects():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the VM/HostSystem"),
         help=_(
             "Please do not forget to specify either <tt>VM</tt> or <tt>HostSystem</tt>. Example: <tt>VM abcsrv123</tt>. Also note, "
@@ -79,5 +74,5 @@ rulespec_registry.register(
         item_spec=_item_spec_esx_vsphere_objects,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_esx_vsphere_objects,
-        title=lambda: _("State of ESX hosts and virtual machines"),
+        title=lambda: _("ESX host and virtual machine states"),
     ))

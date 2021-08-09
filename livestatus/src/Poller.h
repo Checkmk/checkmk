@@ -11,6 +11,7 @@
 #include <poll.h>
 
 #include <asio/basic_socket.hpp>
+#include <cassert>
 #include <cerrno>
 #include <chrono>
 #include <string>
@@ -23,21 +24,11 @@
 enum class PollEvents { in = 1 << 0, out = 1 << 1, hup = 1 << 2 };
 IS_BIT_MASK(PollEvents);
 
-namespace {
-template <class Protocol, class SocketService>
-int native_handle(const asio::basic_socket<Protocol, SocketService>& sock) {
-    // socket::native_handle is not const but we just want
-    // the copy of an int here.
-    return const_cast<asio::basic_socket<Protocol, SocketService>&>(sock)
-        .native_handle();
-}
-}  // namespace
-
 class Poller {
 public:
     template <typename Rep, typename Period>
     int poll(std::chrono::duration<Rep, Period> timeout) {
-        int retval;
+        int retval{0};
         // I/O primitives can fail when interrupted by a signal, so we should
         // retry the operation. In the plain C world, this is already
         // encapsulated in e.g. glibc's TEMP_FAILURE_RETRY macro, see:
@@ -101,7 +92,7 @@ public:
     }
 
     void addFileDescriptor(int fd, PollEvents e) {
-        // TODO (ml): potential problem with same fd
+        assert(_fd_to_pollfd.find(fd) == std::cend(_fd_to_pollfd));
         _fd_to_pollfd[fd] = _pollfds.size();
         _pollfds.push_back({fd, toMask(e), 0});
     }
@@ -140,5 +131,41 @@ private:
             (is_empty_bit_mask(e & PollEvents::out) ? 0 : POLLOUT) |
             (is_empty_bit_mask(e & PollEvents::hup) ? 0 : POLLHUP));
     }
+
+    template <class Protocol, class SocketService>
+    static int native_handle(
+        const asio::basic_socket<Protocol, SocketService>& sock) {
+        // socket::native_handle is not const but we just want the copy of an
+        // int here.
+        return const_cast<asio::basic_socket<Protocol, SocketService>&>(sock)
+            .native_handle();
+    }
 };
+
+struct POSIXPollEvents {
+    short value;
+};
+
+inline std::ostream& operator<<(std::ostream& os, const POSIXPollEvents& e) {
+    os << "{";
+    auto emit_separator{false};
+    for (const auto& [mask, description] : {std::pair{POLLIN, "in"},
+                                            {POLLPRI, "pri"},
+                                            {POLLOUT, "out"},
+                                            {POLLERR, "err"},
+                                            {POLLHUP, "hup"},
+                                            {POLLNVAL, "nval"}}) {
+        if ((e.value & mask) != 0) {
+            os << (emit_separator ? "," : "") << description;
+            emit_separator = true;
+        }
+    }
+    return os << "}";
+}
+
+inline std::ostream& operator<<(std::ostream& os, const pollfd& p) {
+    return os << "pollfd{fd=" << p.fd << ",events=" << POSIXPollEvents{p.events}
+              << ",revents=" << POSIXPollEvents{p.revents} << "}";
+}
+
 #endif  // Poller_h

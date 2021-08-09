@@ -10,12 +10,12 @@ used as base for the list of supported checks and catalogs of checks.
 These man pages are in a Check_MK specific format an not real
 Linux/Unix man pages"""
 
-from io import StringIO
 import os
 import re
-import sys
-from pathlib import Path
 import subprocess
+import sys
+from io import StringIO
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from six import ensure_str
@@ -23,7 +23,6 @@ from six import ensure_str
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
-
 from cmk.utils.check_utils import maincheckify
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
@@ -64,6 +63,7 @@ catalog_titles = {
             "stulz"        : "STULZ",
             "teracom"      : "Teracom",
             "tinkerforge"  : "Tinkerforge",
+            "vutlan"       : "Vutlan EMS",
             "wagner"       : "WAGNER Group",
             "wut"          : "Wiesemann & Theis",
         "time"        : "Clock Devices",
@@ -172,6 +172,7 @@ catalog_titles = {
         "exchange"      : "Microsoft Exchange",
         "graylog"       : "Graylog",
         "haproxy"       : "HAProxy Loadbalancer",
+        "iis"           : "Microsoft Internet Information Service",
         "informix"      : "IBM Informix",
         "java"          : "Java (Tomcat, Weblogic, JBoss, etc.)",
         "jenkins"       : "Jenkins",
@@ -190,6 +191,7 @@ catalog_titles = {
         "nullmailer"    : "Nullmailer",
         "nutanix"       : "Nutanix",
         "cmk"           : "Checkmk",
+        "opentextfuse"  : "OpenText Fuse Management Central",
         "oracle"        : "ORACLE Database",
         "plesk"         : "Plesk",
         "pfsense"       : "pfsense",
@@ -200,6 +202,7 @@ catalog_titles = {
         "qmail"         : "qmail",
         "rabbitmq"      : "RabbitMQ",
         "redis"         : "Redis",
+        "robotframework": "Robot Framework",
         "ruckus"        : "Ruckus Spot",
         "sap"           : "SAP R/3",
         "sap_hana"      : "SAP HANA",
@@ -243,6 +246,7 @@ catalog_titles = {
         "azure"       : "Microsoft Azure",
         "aws"         : "Amazon Web Services",
         "quanta"      : "Quanta Cloud Technology",
+        "datadog"     : "Datadog",
     "containerization" : "Containerization",
         "cadvisor"     : "cAdvisor",
         "docker"       : "Docker",
@@ -557,7 +561,7 @@ def load_man_page(name: str) -> Optional[ManPage]:
     header["agents"] = [a.strip() for a in header["agents"].split(",")]
 
     if 'catalog' not in header:
-        header['catalog'] = ['unsorted']
+        header['catalog'] = 'unsorted'
     man_page['header'] = header
 
     return man_page
@@ -642,7 +646,7 @@ def _console_stream():
 
 class ConsoleManPageRenderer(ManPageRenderer):
     def __init__(self, name):
-        super(ConsoleManPageRenderer, self).__init__(name)
+        super().__init__(name)
         self.__output = _console_stream()
         # NOTE: We must use instance variables for the TTY stuff because TTY-related
         # stuff might have been changed since import time, consider e.g. pytest.
@@ -772,7 +776,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
 class NowikiManPageRenderer(ManPageRenderer):
     def __init__(self, name):
-        super(NowikiManPageRenderer, self).__init__(name)
+        super().__init__(name)
         self.__output = StringIO()
 
     def _flush(self):
@@ -796,7 +800,7 @@ class NowikiManPageRenderer(ManPageRenderer):
     def _print_header(self):
         self.__output.write("TI:Check manual page of %s\n" % self.name)
         # It does not make much sense to print the date of the HTML generation
-        # of the man page here. More useful would be the Check_MK version where
+        # of the man page here. More useful would be the Checkmk version where
         # the plugin first appeared. But we have no access to that - alas.
         # self.__output.write("DT:%s\n" % (time.strftime("%Y-%m-%d")))
         self.__output.write("SA:check_plugins_catalog,check_plugins_list\n")

@@ -11,7 +11,7 @@
 
 namespace mk {
 
-/// Replace \\ with \ and \s with space
+/// Replace \\\\ with \\, and \\s with space.
 std::string unescape_filename(const std::string& filename);
 
 /// Return true if path is in directory, otherwise return false.

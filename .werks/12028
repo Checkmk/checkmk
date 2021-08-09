@@ -1,0 +1,14 @@
+Title: Linux, Solaris, AIX: Asynchronous Execution of Python Agent Plugins
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1613722725
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+This werk fixes an issue with the asynchronous execution of python-based
+agent plugins. Due to a bug, the corresponding cache files might have been
+empty. Users need to update the main Checkmk agent for this fix to come
+into effect.

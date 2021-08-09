@@ -6,7 +6,7 @@ Date: 1571736596
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
  This change allows the configuration of the Zerto Special Agent
  which in turn allows retrieval and monitoring of RPO data. The required

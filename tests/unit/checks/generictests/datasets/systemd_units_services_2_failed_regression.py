@@ -33,9 +33,17 @@ info = [['[list-unit-files]'],
 discovery = {'': [], 'services': [], 'services_summary': [('Summary', {})]}
 
 
-checks = {'services_summary': [('Summary',
-                                {'else': 2,
-                                 'states': {'active': 0, 'failed': 2, 'inactive': 0},
-                                 'states_default': 2},
-                                [(0, '2 services in total', []),
-                                 (2, '2 services failed (bar, foo)', [])])]}
+checks = {
+    'services_summary': [
+        ('Summary', {
+            'else': 2,
+            'states': {'active': 0, 'failed': 2, 'inactive': 0},
+            'states_default': 2,
+        }, [
+            (0, 'Total: 2', []),
+            (0, 'Disabled: 0', []),
+            (0, 'Failed: 2', []),
+            (2, '2 services failed (bar, foo)', []),
+        ]),
+    ],
+}

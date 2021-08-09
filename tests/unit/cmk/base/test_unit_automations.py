@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
+
 import cmk.base.automations
 import cmk.base.automations.check_mk as automations
 import cmk.base.config as config
@@ -24,7 +25,6 @@ def test_registered_automations():
         'get-check-information',
         'get-configuration',
         'get-labels-of',
-        'get-real-time-checks',
         'get-section-information',
         'get-service-configurations',
         'inventory',

@@ -6,7 +6,7 @@ Date: 1594651208
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously, the agent plugin "mk_postgres" and the check plugin "postgres_connections" were not differentiating between "idle" and "active" connections.
 With this werk, the data to differentiate those states is obtained and evaluated accordingly.

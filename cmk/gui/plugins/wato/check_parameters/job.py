@@ -5,21 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    DropdownChoice,
-    TextAscii,
-    Tuple,
-    ListOf,
-    Integer,
-    MonitoringState,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
+)
+from cmk.gui.valuespec import (
+    Age,
+    Dictionary,
+    DropdownChoice,
+    Integer,
+    ListOf,
+    MonitoringState,
+    TextInput,
+    Tuple,
 )
 
 
@@ -68,8 +67,8 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="job",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Job name"),),
+        item_spec=lambda: TextInput(title=_("Job name"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_job,
-        title=lambda: _("Age of jobs controlled by mk-job"),
+        title=lambda: _("mk-job job age"),
     ))

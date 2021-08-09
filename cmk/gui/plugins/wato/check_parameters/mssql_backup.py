@@ -5,6 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
+)
+from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_tablespace
 from cmk.gui.valuespec import (
     Age,
     Alternative,
@@ -12,22 +20,13 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     MonitoringState,
-    TextAscii,
     Transform,
     Tuple,
 )
 
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
-    RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
-)
 
-
-def _vs_mssql_backup_age(title):
-    return Alternative(title=_("%s" % title),
+def _vs_mssql_backup_age(title: str) -> Alternative:
+    return Alternative(title=title,
                        elements=[
                            Tuple(title=_("Set levels"),
                                  elements=[
@@ -74,14 +73,14 @@ def _parameter_valuespec_mssql_backup():
                "Backup</i>, etc.) you can use the option <i>Database Backup"
                "</i> to set a general limit"),
         elements=[
-            ("database", _vs_mssql_backup_age("Database backup")),
-            ("database_diff", _vs_mssql_backup_age("Database diff backup")),
-            ("log", _vs_mssql_backup_age("Log backup")),
-            ("file_or_filegroup", _vs_mssql_backup_age("File or filegroup backup")),
-            ("file_diff", _vs_mssql_backup_age("File diff backup")),
-            ("partial", _vs_mssql_backup_age("Partial backup")),
-            ("partial_diff", _vs_mssql_backup_age("Partial diff backup")),
-            ("unspecific", _vs_mssql_backup_age("Unspecific backup")),
+            ("database", _vs_mssql_backup_age(_("Database backup"))),
+            ("database_diff", _vs_mssql_backup_age(_("Database diff backup"))),
+            ("log", _vs_mssql_backup_age(_("Log backup"))),
+            ("file_or_filegroup", _vs_mssql_backup_age(_("File or filegroup backup"))),
+            ("file_diff", _vs_mssql_backup_age(_("File diff backup"))),
+            ("partial", _vs_mssql_backup_age(_("Partial backup"))),
+            ("partial_diff", _vs_mssql_backup_age(_("Partial diff backup"))),
+            ("unspecific", _vs_mssql_backup_age(_("Unspecific backup"))),
             ("not_found", MonitoringState(title=_("State if no backup found"))),
         ]),
                      forth=lambda params: (params if isinstance(params, dict) else {
@@ -96,7 +95,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_backup",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Service descriptions"), allow_empty=False),
+        item_spec=mssql_item_spec_instance_tablespace,
         parameter_valuespec=_parameter_valuespec_mssql_backup,
         title=lambda: _("MSSQL Backup summary"),
     ))

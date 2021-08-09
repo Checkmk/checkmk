@@ -4,26 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from itertools import chain, repeat
 import os
-import pytest  # type: ignore[import]
 import re
-from local import (actual_output, make_yaml_config, local_test, src_exec_dir, wait_agent,
-                   write_config)
+from itertools import chain, repeat
+
+import pytest  # type: ignore[import]
+
+from .local import local_test
 
 
-class Globals(object):
+class Globals():
     section = 'services'
     alone = True
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(params=['alone', 'with_systemtime'])
-def testconfig(request, make_yaml_config):
+@pytest.fixture(name="testconfig", params=['alone', 'with_systemtime'])
+def testconfig_engine(request, make_yaml_config):
     Globals.alone = request.param == 'alone'
     if Globals.alone:
         make_yaml_config['global']['sections'] = Globals.section
@@ -32,8 +33,8 @@ def testconfig(request, make_yaml_config):
     return make_yaml_config
 
 
-@pytest.fixture
-def expected_output():
+@pytest.fixture(name="expected_output")
+def expected_output_engine():
     re_str = (r'[\(\)$\w\.-]+ (unknown|continuing|pausing|paused|running|starting'
               r'|stopping|stopped)/(invalid1|invalid2|invalid3|invalid4|auto'
               r'|boot|demand|disabled|system|other) .+')

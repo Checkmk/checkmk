@@ -5,6 +5,7 @@
 #pragma once
 #include <mutex>
 #include <string>
+#include <unordered_map>
 
 namespace cma {
 constexpr std::string_view kMainObject = "main";
@@ -25,15 +26,6 @@ public:
             if (val) val.reset();
             it = map_.erase(it);
         }
-    }
-
-    [[deprecated]] std::shared_ptr<T> addObject(const std::string& name,
-                                                T* object) {
-        if (object == nullptr) return {};
-
-        std::lock_guard lk(lock_);
-        map_[name].reset(object);
-        return map_[name];
     }
 
     template <typename... Types>

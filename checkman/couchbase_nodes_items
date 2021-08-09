@@ -11,7 +11,7 @@ description:
  You can configure levels on each using the WATO rule
  "Couchbase Items"
 
-inventory:
+discovery:
  One service is created for each node.
 
 item:

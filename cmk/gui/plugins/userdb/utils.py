@@ -6,28 +6,41 @@
 
 import abc
 import os
-from typing import List, Optional, Dict, Any, Tuple, Type
+from contextlib import suppress
+from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union
 
 from livestatus import SiteId
 
-import cmk.utils.store as store
 import cmk.utils.plugin_registry
-
-from cmk.gui.globals import g
-from cmk.gui.i18n import _
-import cmk.gui.config as config
+import cmk.utils.store as store
+from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
-UserSpec = Dict[str, Any]  # TODO: Improve this type
+from cmk.gui.config import builtin_role_ids
+from cmk.gui.globals import config, g, user
+from cmk.gui.i18n import _
+from cmk.gui.sites import get_site_config, is_wato_slave_site, site_is_local
+from cmk.gui.type_defs import UserSpec
+from cmk.gui.utils.logged_in import LoggedInUser, save_user_file
+
+# count this up, if new user attributes are used or old are marked as
+# incompatible
+USER_SCHEME_SERIAL = 0
+
 RoleSpec = Dict[str, Any]  # TODO: Improve this type
 Roles = Dict[str, RoleSpec]  # TODO: Improve this type
 UserConnectionSpec = Dict[str, Any]  # TODO: Improve this type
 UserSyncConfig = Optional[str]
+CheckCredentialsResult = Union[UserId, None, Literal[False]]
 
 
 def load_cached_profile(user_id: UserId) -> Optional[UserSpec]:
-    user = config.LoggedInUser(user_id) if user_id != config.user.id else config.user
-    return user.load_file("cached_profile", None)
+    usr = LoggedInUser(user_id) if user_id != user.id else user
+    return usr.load_file("cached_profile", None)
+
+
+def save_cached_profile(user_id: UserId, cached_profile: UserSpec) -> None:
+    save_user_file("cached_profile", cached_profile, user_id=user_id)
 
 
 def _multisite_dir() -> str:
@@ -45,8 +58,8 @@ def release_users_lock() -> None:
 def user_sync_config() -> UserSyncConfig:
     # use global option as default for reading legacy options and on remote site
     # for reading the value set by the WATO master site
-    default_cfg = user_sync_default_config(config.omd_site())
-    return config.site(config.omd_site()).get("user_sync", default_cfg)
+    default_cfg = user_sync_default_config(omd_site())
+    return get_site_config(omd_site()).get("user_sync", default_cfg)
 
 
 # Legacy option config.userdb_automatic_sync defaulted to "master".
@@ -56,7 +69,7 @@ def user_sync_config() -> UserSyncConfig:
 def user_sync_default_config(site_name: SiteId) -> UserSyncConfig:
     global_user_sync = _transform_userdb_automatic_sync(config.userdb_automatic_sync)
     if global_user_sync == "master":
-        if config.site_is_local(site_name) and not config.is_wato_slave_site():
+        if site_is_local(site_name) and not is_wato_slave_site():
             user_sync_default: UserSyncConfig = "all"
         else:
             user_sync_default = None
@@ -106,6 +119,10 @@ def new_user_template(connection_id: str) -> UserSpec:
     return new_user
 
 
+def add_internal_attributes(usr: UserSpec) -> UserSpec:
+    return usr.setdefault("user_scheme_serial", USER_SCHEME_SERIAL)
+
+
 #   .--Connections---------------------------------------------------------.
 #   |        ____                            _   _                         |
 #   |       / ___|___  _ __  _ __   ___  ___| |_(_) ___  _ __  ___         |
@@ -122,8 +139,8 @@ def cleanup_connection_id(connection_id: Optional[str]) -> str:
     if connection_id is None:
         return 'htpasswd'
 
-    # Old Check_MK used a static "ldap" connector id for all LDAP users.
-    # Since Check_MK now supports multiple LDAP connections, the ID has
+    # Old Checkmk used a static "ldap" connector id for all LDAP users.
+    # Since Checkmk now supports multiple LDAP connections, the ID has
     # been changed to "default". But only transform this when there is
     # no connection existing with the id LDAP.
     if connection_id == 'ldap' and not get_connection('ldap'):
@@ -146,6 +163,11 @@ def get_connection(connection_id: Optional[str]) -> 'Optional[UserConnector]':
         g.user_connections[connection_id] = connections_with_id[0] if connections_with_id else None
 
     return g.user_connections[connection_id]
+
+
+def clear_user_connection_cache() -> None:
+    with suppress(AttributeError):
+        del g.user_connections
 
 
 def active_connections() -> 'List[Tuple[str, UserConnector]]':
@@ -218,6 +240,8 @@ def save_connection_config(connections: List[UserConnectionSpec],
     for connector_class in user_connector_registry.values():
         connector_class.config_changed()
 
+    clear_user_connection_cache()
+
 
 #.
 #   .-Roles----------------------------------------------------------------.
@@ -268,7 +292,7 @@ def _get_builtin_roles() -> Roles:
             "alias": builtin_role_names.get(rid, rid),
             "permissions": {},  # use default everywhere
             "builtin": True,
-        } for rid in config.builtin_role_ids
+        } for rid in builtin_role_ids
     }
 
 
@@ -289,7 +313,7 @@ def _get_builtin_roles() -> Roles:
 
 class UserConnector(metaclass=abc.ABCMeta):
     def __init__(self, cfg):
-        super(UserConnector, self).__init__()
+        super().__init__()
         self._config = cfg
 
     @classmethod
@@ -316,10 +340,6 @@ class UserConnector(metaclass=abc.ABCMeta):
     # USERDB API METHODS
     #
 
-    @classmethod
-    def migrate_config(cls):
-        pass
-
     @abc.abstractmethod
     def is_enabled(self):
         raise NotImplementedError()
@@ -332,7 +352,7 @@ class UserConnector(metaclass=abc.ABCMeta):
     #     False       -> Login failed
     #     None        -> Unknown user
     @abc.abstractmethod
-    def check_credentials(self, user_id, password):
+    def check_credentials(self, user_id, password) -> CheckCredentialsResult:
         return None
 
     # Optional: Hook function can be registered here to be executed
@@ -426,9 +446,6 @@ class UserConnectorRegistry(cmk.utils.plugin_registry.Registry[Type[UserConnecto
     def plugin_name(self, instance):
         return instance.type()
 
-    def registration_hook(self, instance):
-        instance.migrate_config()
-
 
 user_connector_registry = UserConnectorRegistry()
 
@@ -443,5 +460,14 @@ class UserAttributeRegistry(cmk.utils.plugin_registry.Registry[Type[UserAttribut
 user_attribute_registry = UserAttributeRegistry()
 
 
-def get_user_attributes():
+def get_user_attributes() -> List[Tuple[str, UserAttribute]]:
     return [(name, attribute_class()) for name, attribute_class in user_attribute_registry.items()]
+
+
+def get_user_attributes_by_topic() -> Dict[str, List[Tuple[str, UserAttribute]]]:
+    topics: Dict[str, List[Tuple[str, UserAttribute]]] = {}
+    for name, attr_class in user_attribute_registry.items():
+        topic = attr_class().topic()
+        topics.setdefault(topic, []).append((name, attr_class()))
+
+    return topics

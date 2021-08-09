@@ -1,0 +1,14 @@
+Title: cadvisor_if: Item not found in monitoring data
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1606900403
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The check plugin <tt>cadvisor_if</tt> always reports
+"UNKN - Item not found in monitoring data".
+This has been fixed.

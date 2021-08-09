@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import subprocess
-import re
 import logging
-import pytest  # type: ignore[import]
+import os
+import re
+import subprocess
+
+import pytest
+
+from cmk.utils.misc import is_daily_build_version
 
 LOGGER = logging.getLogger()
 
@@ -16,13 +19,11 @@ LOGGER = logging.getLogger()
 def _get_omd_version(cmk_version, package_path):
     # Extract the files edition
     edition_short = _edition_short_from_pkg_path(package_path)
-    demo_suffix = ".demo" if _is_demo(package_path) else ""
-    return "%s.%s%s" % (cmk_version, edition_short, demo_suffix)
+    return "%s.%s" % (cmk_version, edition_short)
 
 
 def _is_demo(package_path):
-    # Is this a demo package?
-    return ".demo" in os.path.basename(package_path)
+    return "cfe" == _edition_short_from_pkg_path(package_path)
 
 
 def _edition_short_from_pkg_path(package_path):
@@ -33,6 +34,8 @@ def _edition_short_from_pkg_path(package_path):
         return "cee"
     if file_name.startswith("check-mk-managed-"):
         return "cme"
+    if file_name.startswith("check-mk-free-"):
+        return "cfe"
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
 
 
@@ -110,6 +113,7 @@ def test_files_not_in_version_path(package_path, cmk_version):
             "/opt/omd$",
             "/opt/omd/apache$",
             "/opt/omd/sites$",
+            "/var/lock/mkbackup$",
         ] + version_allowed_patterns
 
         paths = subprocess.check_output(["rpm", "-qlp", package_path],
@@ -126,15 +130,15 @@ def test_files_not_in_version_path(package_path, cmk_version):
             "/usr/share/man/$",
             "/usr/share/man/man8/$",
             "/usr/share/doc/$",
-            "/usr/share/doc/check-mk-(raw|enterprise|managed)-.*/$",
-            "/usr/share/doc/check-mk-(raw|enterprise|managed)-.*/changelog.gz$",
-            "/usr/share/doc/check-mk-(raw|enterprise|managed)-.*/COPYING.gz$",
-            "/usr/share/doc/check-mk-(raw|enterprise|managed)-.*/TEAM$",
-            "/usr/share/doc/check-mk-(raw|enterprise|managed)-.*/copyright$",
-            "/usr/share/doc/check-mk-(raw|enterprise|managed)-.*/README.md$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed)-.*/$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed)-.*/changelog.gz$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed)-.*/COPYING.gz$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed)-.*/TEAM$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed)-.*/copyright$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed)-.*/README.md$",
             "/etc/$",
             "/etc/init.d/$",
-            "/etc/init.d/check-mk-(raw|enterprise|managed)-.*$",
+            "/etc/init.d/check-mk-(raw|free|enterprise|managed)-.*$",
         ] + version_allowed_patterns
 
         paths = []

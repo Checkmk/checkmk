@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Transform,
-    Dictionary,
-    MonitoringState,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput, Transform
 
 
 def _oracle_instance_transform_oracle_instance_params(p):
@@ -82,7 +76,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="oracle_instance",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Database SID"), size=12, allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Database SID"), size=12, allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_instance,
         title=lambda: _("Oracle Instance"),

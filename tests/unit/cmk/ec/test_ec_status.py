@@ -10,13 +10,15 @@ import pathlib  # pylint: disable=import-error
 import threading
 import time
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib import CMKEventConsole
+from tests.testlib import CMKEventConsole
+
 import cmk.utils.paths
+
+import cmk.ec.export as ec
 import cmk.ec.history
 import cmk.ec.main
-import cmk.ec.export as ec
 
 
 class FakeStatusSocket:
@@ -147,3 +149,62 @@ def test_mkevent_check_query_perf(config, event_status, status_server):
     assert "event_id" in response[0]
 
     assert duration < 0.2
+
+
+@pytest.mark.parametrize('event, status_socket, is_match', [
+    (
+        {
+            'host': 'abc',
+            'text': 'not important',
+            'core_host': 'abc',
+        },
+        FakeStatusSocket(b'GET events\n'
+                         b'Filter: event_host in abc 127.0.0.1\n'
+                         b'Filter: event_phase in open ack\n'),
+        True,
+    ),
+    (
+        {
+            'host': '127.0.0.1',
+            'text': 'not important',
+            'core_host': '127.0.0.1',
+        },
+        FakeStatusSocket(b'GET events\n'
+                         b'Filter: event_host in abc 127.0.0.1\n'
+                         b'Filter: event_phase in open ack\n'),
+        True,
+    ),
+    (
+        {
+            'host': 'ABC',
+            'text': 'not important',
+            'core_host': 'ABC',
+        },
+        FakeStatusSocket(b'GET events\n'
+                         b'Filter: event_host in abc 127.0.0.1\n'
+                         b'Filter: event_phase in open ack\n'),
+        True,
+    ),
+    (
+        {
+            'host': 'ABC1',
+            'text': 'not important',
+            'core_host': 'ABC',
+        },
+        FakeStatusSocket(b'GET events\n'
+                         b'Filter: event_host in abc 127.0.0.1\n'
+                         b'Filter: event_phase in open ack\n'),
+        False,
+    ),
+])
+def test_mkevent_query_filters(
+    event_status,
+    status_server,
+    event,
+    status_socket,
+    is_match,
+):
+    event_status.new_event(CMKEventConsole.new_event(event))
+    status_server.handle_client(status_socket, True, '127.0.0.1')
+    response = status_socket.get_response()
+    assert (len(response) == 2) is is_match

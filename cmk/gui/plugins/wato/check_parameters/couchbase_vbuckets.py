@@ -5,19 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Filesize,
-    Percentage,
-    Integer,
-    TextAscii,
-    Tuple,
-    Dictionary,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Filesize, Integer, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_couchbase_vbuckets():
@@ -65,7 +58,7 @@ rulespec_registry.register(
         check_group_name="couchbase_vbuckets",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Bucket name')),
+        item_spec=lambda: TextInput(title=_('Bucket name')),
         parameter_valuespec=_parameter_valuespec_couchbase_vbuckets,
         title=lambda: _("Couchbase vBuckets"),
     ))

@@ -5,11 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+import shlex
 
-import cmk.gui.config as config
-from cmk.gui.globals import html
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
+from cmk.gui.sites import get_alias_of_host, get_site_config
+from cmk.gui.utils.urls import urlencode_vars
 
 
 @icon_and_action_registry.register
@@ -17,6 +19,10 @@ class MkeventdIcon(Icon):
     @classmethod
     def ident(cls):
         return "mkeventd"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Events")
 
     def default_toplevel(self):
         return False
@@ -50,9 +56,8 @@ class MkeventdIcon(Icon):
         host = None
         app = None
 
-        # Extract parameters from check_command:
-        # TODO: Use better argument string splitting (shlex.split())
-        args = splitted_command[1].split()
+        # Extract parameters from check_command
+        args = shlex.split(splitted_command[1])
         if not args:
             return
 
@@ -64,12 +69,7 @@ class MkeventdIcon(Icon):
             args = args[1:]
 
         if len(args) >= 1:
-            if args[0] == '$HOSTNAME$':
-                host = row['host_name']
-            elif args[0] == '$HOSTADDRESS$':
-                host = row['host_address']
-            else:
-                host = args[0]
+            host = _get_hostname(args, row)
 
         # If we have no host then the command line from the check_command seems
         # to be garbled. Better show nothing in this case.
@@ -82,7 +82,7 @@ class MkeventdIcon(Icon):
         # constructed here
         url_prefix = ''
         if getattr(config, 'mkeventd_distributed', False):
-            site = config.site(row["site"])
+            site = get_site_config(row["site"])
             url_prefix = site['url_prefix'] + 'check_mk/'
 
         url_vars = [
@@ -98,6 +98,17 @@ class MkeventdIcon(Icon):
             title = _('Events of Application "%s" on Host %s') % (app, host)
             url_vars.append(("event_application", app))
 
-        url = 'view.py?' + html.urlencode_vars(url_vars)
+        url = 'view.py?' + urlencode_vars(url_vars)
 
         return 'mkeventd', title, url_prefix + url
+
+
+def _get_hostname(args, row) -> str:
+    args_splitted = args[0].split("/")
+    if args_splitted[0] == '$HOSTNAME$':
+        return row['host_name']
+    if args_splitted[0] == '$HOSTADDRESS$':
+        return row['host_address']
+    if args_splitted[0] == '$HOSTALIAS$':
+        return get_alias_of_host(row["site"], row["host_name"])
+    return args[0]

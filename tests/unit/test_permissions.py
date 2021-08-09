@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 from typing import Callable, List, Tuple
 
-from testlib import cmk_path
+from tests.testlib import cmk_path
 
 
 def is_executable(path: Path) -> bool:
@@ -41,7 +41,6 @@ _PERMISSIONS: List[Tuple[str, Callable[[Path], bool], List[str]]] = [
     # Enterprise specific
     ('enterprise/bin/*', is_executable, []),
     ('enterprise/active_checks/*', is_executable, []),
-    ('enterprise/agents/bakery/*', is_not_executable, []),
     ('enterprise/agents/plugins/*', is_executable, [
         "chroot_version", "Dockerfile", "Makefile", "pyinstaller-deps.make", "chroot", "src",
         "cmk_update_agent.pyc", "pip-deps-32.make", "pip-deps.make", "dist",

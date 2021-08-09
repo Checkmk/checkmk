@@ -4,33 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-factory_settings['if_default_levels'] = IF_CHECK_DEFAULT_PARAMETERS
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-EC2DefaultItemName = "Summary"
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
 
-
-def parse_aws_ec2(info):
-    metrics = _extract_aws_metrics_by_labels([
-        'CPUCreditUsage',
-        'CPUCreditBalance',
-        'CPUUtilization',
-        'DiskReadOps',
-        'DiskWriteOps',
-        'DiskReadBytes',
-        'DiskWriteBytes',
-        'NetworkIn',
-        'NetworkOut',
-        'StatusCheckFailed_Instance',
-        'StatusCheckFailed_System',
-    ], parse_aws(info))
-    # We get exactly one entry: {INST-ID: METRICS}
-    # INST-ID is the piggyback host name
-    try:
-        inst_metrics = list(metrics.values())[-1]
-    except IndexError:
-        inst_metrics = {}
-    return {EC2DefaultItemName: inst_metrics}
-
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.aws_ec2 import EC2DefaultItemName
 
 #   .--status check--------------------------------------------------------.
 #   |           _        _                    _               _            |
@@ -45,17 +36,14 @@ def parse_aws_ec2(info):
 
 
 def check_aws_ec2_status_check(item, params, parsed):
-    # item is None, therefore we cannot use @get_parsed_item_data
     go_stale = True
 
-    metrics = parsed.get(EC2DefaultItemName)
     for title, key in [
         ('System', 'StatusCheckFailed_System'),
         ('Instance', 'StatusCheckFailed_Instance'),
     ]:
         try:
-            state, state_readable =\
-                _get_status_check_readable(metrics[key])
+            state, state_readable = _get_status_check_readable(parsed[key])
         except KeyError:
             continue
         yield state, "%s: %s" % (title, state_readable)
@@ -72,12 +60,12 @@ def _get_status_check_readable(value):
 
 
 check_info['aws_ec2'] = {
-    'parse_function': parse_aws_ec2,
-    'inventory_function': lambda p: inventory_aws_generic_single(p[
-        EC2DefaultItemName], ['StatusCheckFailed_System', 'StatusCheckFailed_Instance']),
+    'inventory_function': lambda p: inventory_aws_generic_single(
+        p,
+        ['StatusCheckFailed_System', 'StatusCheckFailed_Instance'],
+    ),
     'check_function': check_aws_ec2_status_check,
     'service_description': 'AWS/EC2 Status Check',
-    'includes': ['aws.include'],
 }
 
 #.
@@ -96,10 +84,8 @@ factory_settings['aws_cpu_credits'] = {
 
 
 def check_aws_ec2_cpu_credits(item, params, parsed):
-    # item is None, therefore we cannot use @get_parsed_item_data
-    metrics = parsed.get(EC2DefaultItemName)
     return check_aws_metrics([{
-        'metric_val': metrics.get(cw_metric_name),
+        'metric_val': parsed.get(cw_metric_name),
         'metric_name': metric_name,
         'levels': levels,
         'human_readable_func': human_readable_func,
@@ -114,12 +100,13 @@ def check_aws_ec2_cpu_credits(item, params, parsed):
 
 
 check_info['aws_ec2.cpu_credits'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(p[
-        EC2DefaultItemName], ['CPUCreditUsage', 'CPUCreditBalance']),
+    'inventory_function': lambda p: inventory_aws_generic_single(
+        p,
+        ['CPUCreditUsage', 'CPUCreditBalance'],
+    ),
     'check_function': check_aws_ec2_cpu_credits,
     'service_description': 'AWS/EC2 CPU Credits',
     'group': 'aws_ec2_cpu_credits',
-    'includes': ['aws.include'],
     'default_levels_variable': 'aws_cpu_credits',
     'has_perfdata': True,
 }
@@ -140,22 +127,21 @@ factory_settings['aws_ec2_cpu_util_default_levels'] = {
 
 
 def check_aws_ec2_cpu_util(item, params, parsed):
-    # item is None, therefore we cannot use @get_parsed_item_data
-    metrics = parsed.get(EC2DefaultItemName)
-    if metrics is None or 'CPUUtilization' not in metrics:
+    if 'CPUUtilization' not in parsed:
         raise MKCounterWrapped("Currently no data from AWS")
-    return check_cpu_util(metrics['CPUUtilization'], params, time.time())
+    return check_cpu_util(parsed['CPUUtilization'], params, time.time())
 
 
 check_info['aws_ec2.cpu_util'] = {
-    'inventory_function': lambda p: inventory_aws_generic_single(p[EC2DefaultItemName],
-                                                                 ['CPUUtilization']),
+    'inventory_function': lambda p: inventory_aws_generic_single(
+        p,
+        ['CPUUtilization'],
+    ),
     'check_function': check_aws_ec2_cpu_util,
     'service_description': 'AWS/EC2 CPU utilization',
     'group': 'cpu_utilization',
     'default_levels_variable': 'aws_ec2_cpu_util_default_levels',
     'has_perfdata': True,
-    'includes': ['cpu_util.include', 'aws.include'],
 }
 
 #.
@@ -179,7 +165,6 @@ check_info['aws_ec2.cpu_util'] = {
 # corresponding to a 5-minute interval by 10 minutes. Note that this problem does not occur when
 # collecting the metrics for a 10-minute interval further in the past (for example from -20 min to
 # -10 min).
-@aws_get_parsed_item_data
 def check_aws_ec2_disk_io(item, params, metrics):
     disk_data = {}
     for key, metrics_key in [
@@ -200,67 +185,12 @@ def check_aws_ec2_disk_io(item, params, metrics):
 
 
 check_info['aws_ec2.disk_io'] = {
-    'inventory_function': lambda p: inventory_aws_generic(p, [
-        'DiskReadOps',
-        'DiskWriteOps',
-        'DiskReadBytes',
-        'DiskWriteBytes',
-    ]),
+    'inventory_function': lambda p: inventory_aws_generic(
+        {EC2DefaultItemName: p},
+        ['DiskReadOps', 'DiskWriteOps', 'DiskReadBytes', 'DiskWriteBytes'],
+    ),
     'check_function': check_aws_ec2_disk_io,
     'service_description': 'AWS/EC2 Disk IO %s',
-    'includes': ['diskstat.include', 'aws.include'],
     'group': 'diskstat',
-    'has_perfdata': True,
-}
-
-#.
-#   .--network IO----------------------------------------------------------.
-#   |                     _                      _      ___ ___            |
-#   |          _ __   ___| |___      _____  _ __| | __ |_ _/ _ \           |
-#   |         | '_ \ / _ \ __\ \ /\ / / _ \| '__| |/ /  | | | | |          |
-#   |         | | | |  __/ |_ \ V  V / (_) | |  |   <   | | |_| |          |
-#   |         |_| |_|\___|\__| \_/\_/ \___/|_|  |_|\_\ |___\___/           |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-# See the comment for disk_io
-@aws_get_parsed_item_data
-def check_aws_ec2_network_io(item, params, metrics):
-    try:
-        interfaces = [[
-            "0",
-            item,
-            "1",
-            "",
-            "1",
-            metrics['NetworkIn'] / 60,
-            "",
-            "",
-            "",
-            "",
-            "",
-            metrics['NetworkOut'] / 60,
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
-            item,
-            "",
-        ]]
-    except KeyError:
-        raise MKCounterWrapped("Currently no data from AWS")
-    return check_if_common_single(item, params, interfaces, input_is_rate=True)
-
-
-check_info['aws_ec2.network_io'] = {
-    'inventory_function': lambda p: inventory_aws_generic(p, ['NetworkIn', 'NetworkOut']),
-    'check_function': check_aws_ec2_network_io,
-    'service_description': 'AWS/EC2 Network IO %s',
-    'includes': ['aws.include', 'if.include'],
-    'default_levels_variable': "if_default_levels",
-    'group': 'if',
     'has_perfdata': True,
 }

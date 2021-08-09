@@ -312,7 +312,7 @@ class LiveStatus(object):
         self.__livestatus_path = socket_path
 
     def query(self, lql):
-        sock = socket(AF_UNIX, SOCK_STREAM)
+        sock = ::socket(AF_UNIX, SOCK_STREAM)
         sock.connect(self.__livestatus_path)
 
         sock.send(lql + "\n")
@@ -327,7 +327,7 @@ class LiveStatus(object):
         return ast.literal_eval(obj_string) if obj_string else []
 
     def execute(self, lql):
-        sock = socket(AF_UNIX, SOCK_STREAM)
+        sock = ::socket(AF_UNIX, SOCK_STREAM)
         sock.connect(self.__livestatus_path)
 
         sock.send(lql + "\n")

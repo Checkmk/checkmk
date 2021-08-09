@@ -4,16 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-    TypedDict,
-    Union,
-)
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, TypedDict, Union
+
 from .agent_based_api.v1 import (
+    get_value_store,
     Metric,
     OIDEnd,
     register,
@@ -21,13 +15,10 @@ from .agent_based_api.v1 import (
     Service,
     SNMPTree,
     startswith,
-    state,
-    type_defs,
 )
-from .utils import (
-    interfaces,
-    temperature,
-)
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
+from .utils import interfaces, temperature
 
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.1  41.4960 C: Normal
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.2  50.9531 C: Normal
@@ -136,7 +127,7 @@ def _parse_value(value_string: str) -> ValueAndStatus:
         return None, None
 
 
-def parse_brocade_optical(string_table: type_defs.SNMPStringTable) -> Section:
+def parse_brocade_optical(string_table: List[type_defs.StringTable]) -> Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_brocade_optical([
@@ -233,7 +224,7 @@ def parse_brocade_optical(string_table: type_defs.SNMPStringTable) -> Section:
 register.snmp_section(
     name="brocade_optical",
     parse_function=parse_brocade_optical,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",
             oids=[
@@ -290,25 +281,23 @@ def _check_matching_conditions(
 
 
 def discover_brocade_optical(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     if section:
         pad_width = max(map(len, section))
     else:
         pad_width = 0
 
-    rulesets = [interfaces.transform_discovery_rules(par) for par in params]
-
     for key, entry in section.items():
         # find the most specific rule which applies to this interface and which has single-interface
         # discovery settings
-        for ruleset in rulesets:
-            if 'discovery_single' in ruleset and _check_matching_conditions(
+        for rule in params:
+            if 'discovery_single' in rule and _check_matching_conditions(
                     entry,
-                    ruleset['matching_conditions'][1],
+                    rule['matching_conditions'][1],
             ):
-                if ruleset['discovery_single'][0]:
+                if rule['discovery_single'][0]:
                     # if pad_width == 0 then "0" * -X == ""
                     yield Service(item="0" * (pad_width - len(key)) + key)
                 break
@@ -346,9 +335,9 @@ def _infotext(
 def _check_light(
     reading: ValueAndStatus,
     metric_name: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     lane_num: Optional[int] = None,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     if any(x is None for x in reading):
         return
     txt = _infotext(
@@ -378,62 +367,9 @@ def _check_light(
 
 def check_brocade_optical(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckGenerator:
-    """
-    >>> from pprint import pprint
-    >>> for output in check_brocade_optical(
-    ... '001410',
-    ... type_defs.Parameters({}),
-    ... {'1410': {'description': '10GigabitEthernet23/2',
-    ...           'operational_status': '2',
-    ...           'part': '57-0000076-01',
-    ...           'port_type': '6',
-    ...           'rx_light': (-36.9897, 'Low-Alarm'),
-    ...           'serial': 'ADF2094300014UN',
-    ...           'temp': (31.4882, 'Normal'),
-    ...           'tx_light': (-1.4508, 'Normal'),
-    ...           'type': '10GE LR 10km SFP+'}}
-    ... ):
-    ...     pprint(output)
-    Result(state=<state.OK: 0>, summary='[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down', details='[S/N ADF2094300014UN, P/N 57-0000076-01] Operational down')
-    Metric('temp', 31.4882, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='Temperature: 31.5°C', details='Temperature: 31.5°C')
-    Result(state=<state.OK: 0>, summary='', details='Configuration: prefer user levels over device levels (no levels found)')
-    Result(state=<state.OK: 0>, summary='TX Light -1.5 dBm (Normal)', details='TX Light -1.5 dBm (Normal)')
-    Metric('tx_light', -1.4508, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='RX Light -37.0 dBm (Low-Alarm)', details='RX Light -37.0 dBm (Low-Alarm)')
-    Metric('rx_light', -36.9897, levels=(None, None), boundaries=(None, None))
-    >>> for output in check_brocade_optical(
-    ... '1409',
-    ... type_defs.Parameters({'rx_light': True, 'tx_light': True, 'lanes': True}),
-    ... {'1409': {'description': '10GigabitEthernet23/1',
-    ...           'lanes': {1: {'rx_light': (-2.2504, 'Normal'),
-    ...                         'temp': (31.4531, 'Normal'),
-    ...                         'tx_light': (-1.6045, 'Normal')}},
-    ...           'operational_status': '1',
-    ...           'part': '57-0000076-01',
-    ...           'port_type': '6',
-    ...           'rx_light': (-2.2504, 'Normal'),
-    ...           'serial': 'ADF2094300014TL',
-    ...           'temp': (None, None),
-    ...           'tx_light': (-1.6045, 'Normal'),
-    ...           'type': '10GE LR 10km SFP+'}}
-    ... ):
-    ...     pprint(output)
-    Result(state=<state.OK: 0>, summary='[S/N ADF2094300014TL, P/N 57-0000076-01] Operational up', details='[S/N ADF2094300014TL, P/N 57-0000076-01] Operational up')
-    Result(state=<state.OK: 0>, summary='TX Light -1.6 dBm (Normal)', details='TX Light -1.6 dBm (Normal)')
-    Metric('tx_light', -1.6045, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='RX Light -2.3 dBm (Normal)', details='RX Light -2.3 dBm (Normal)')
-    Metric('rx_light', -2.2504, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='', details='Temperature (Lane 1) Temperature: 31.5°C')
-    Metric('port_temp_1', 31.4531, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='', details='TX Light (Lane 1) -1.6 dBm (Normal)')
-    Metric('tx_light_1', -1.6045, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='', details='RX Light (Lane 1) -2.3 dBm (Normal)')
-    Metric('rx_light_1', -2.2504, levels=(None, None), boundaries=(None, None))
-    """
+) -> type_defs.CheckResult:
     item = item.lstrip('0')
     if item not in section:
         return
@@ -467,6 +403,7 @@ def check_brocade_optical(
             temp,
             None,
             unique_name="brocade_optical_%s" % item,
+            value_store=get_value_store(),
             dev_status=_monitoring_state(iface['temp'], params.get('temp', False)),
         )
     yield from _check_light(
@@ -489,6 +426,7 @@ def check_brocade_optical(
                     temp,
                     None,
                     unique_name="brocade_optical_lane%d_%s" % (num, item),
+                    value_store=get_value_store(),
                     dev_status=_monitoring_state(lane['temp'], params.get('temp', False)),
                 ))
             lane_temp_result = [res for res in lane_temp_output if isinstance(res, Result)][0]
@@ -518,7 +456,7 @@ register.check_plugin(
     name="brocade_optical",
     service_name="Interface %s Optical",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_brocade_optical,
     check_ruleset_name="brocade_optical",

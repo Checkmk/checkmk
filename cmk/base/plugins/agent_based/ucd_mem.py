@@ -79,7 +79,7 @@ def parse_ucd_mem(string_table):
 register.snmp_section(
     name="ucd_mem",
     parse_function=parse_ucd_mem,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2021.4",
             oids=[

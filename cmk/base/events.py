@@ -9,29 +9,23 @@
 
 import logging
 import os
-import sys
 import select
 import socket
+import sys
 import time
-from urllib.parse import quote
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
-
-from six import ensure_str
+from urllib.parse import quote
 
 import livestatus
-import cmk.utils.version as cmk_version
-from cmk.utils.regex import regex
-import cmk.utils.debug
+
 import cmk.utils.daemon
-from cmk.utils.type_defs import EventRule
+import cmk.utils.debug
+from cmk.utils.regex import regex
+from cmk.utils.site import omd_site
+from cmk.utils.type_defs import EventRule, HostName, ServiceName
 
 import cmk.base.config as config
 import cmk.base.core
-
-from cmk.utils.type_defs import (
-    HostName,
-    ServiceName,
-)
 
 ContactList = List  # TODO Improve this
 EventContext = Dict[str, Any]  # TODO Improve this
@@ -40,7 +34,11 @@ EventContext = Dict[str, Any]  # TODO Improve this
 Matcher = Callable[[EventRule, EventContext], Optional[str]]
 
 logger = logging.getLogger('cmk.base.events')
-logger.addHandler(logging.NullHandler())
+
+
+def _send_reply_ready():
+    sys.stdout.write("*\n")
+    sys.stdout.flush()
 
 
 def event_keepalive(event_function: Callable,
@@ -53,8 +51,7 @@ def event_keepalive(event_function: Callable,
     # not after a config-reload-restart (see below)
     if os.getenv("CMK_EVENT_RESTART") != "1":
         logger.info("Starting in keepalive mode with PID %d", os.getpid())
-        sys.stdout.write("*")
-        sys.stdout.flush()
+        _send_reply_ready()
     else:
         logger.info("We are back after a restart.")
 
@@ -108,7 +105,7 @@ def event_keepalive(event_function: Callable,
                     data += new_data
 
                 try:
-                    context = raw_context_from_string(data.rstrip(b'\n'))
+                    context = raw_context_from_string(data.rstrip(b'\n').decode('utf-8'))
                     event_function(context)
                 except Exception:
                     if cmk.utils.debug.enabled():
@@ -116,8 +113,7 @@ def event_keepalive(event_function: Callable,
                     logger.exception("ERROR:")
 
                 # Signal that we are ready for the next event
-                sys.stdout.write("*")
-                sys.stdout.flush()
+                _send_reply_ready()
 
         # Fix vor Python 2.4:
         except SystemExit as e:
@@ -176,12 +172,12 @@ def pipe_decode_raw_context(raw_context: EventContext) -> None:
         raw_context['LONGSERVICEOUTPUT'] = _remove_pipe_encoding(long_output)
 
 
-def raw_context_from_string(data: bytes) -> EventContext:
+def raw_context_from_string(data: str) -> EventContext:
     # Context is line-by-line in g_notify_readahead_buffer
     context: EventContext = {}
     try:
-        for line in data.split(b'\n'):
-            varname, value = ensure_str(line.strip()).split("=", 1)
+        for line in data.split('\n'):
+            varname, value = line.strip().split("=", 1)
             context[varname] = expand_backslashes(value)
     except Exception:  # line without '=' ignored or alerted
         if cmk.utils.debug.enabled():
@@ -278,9 +274,9 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
 
         raw_context.setdefault("MONITORING_HOST", socket.gethostname())
         raw_context.setdefault("OMD_ROOT", cmk.utils.paths.omd_root)
-        raw_context.setdefault("OMD_SITE", cmk_version.omd_site())
+        raw_context.setdefault("OMD_SITE", omd_site())
 
-        # The Check_MK Micro Core sends the MICROTIME and no other time stamps. We add
+        # The Checkmk Micro Core sends the MICROTIME and no other time stamps. We add
         # a few Nagios-like variants in order to be compatible
         if "MICROTIME" in raw_context:
             microtime = int(raw_context["MICROTIME"])
@@ -368,6 +364,16 @@ def complete_raw_context(raw_context: EventContext, with_dump: bool) -> None:
             raw_context['SERVICEFORURL'] = quote(raw_context['SERVICEDESC'])
         raw_context['HOSTFORURL'] = quote(raw_context['HOSTNAME'])
 
+        config_cache = config.get_config_cache()
+        labels = config_cache.labels
+        ruleset_matcher = config_cache.ruleset_matcher
+        for k, v in labels.labels_of_host(ruleset_matcher, raw_context['HOSTNAME']).items():
+            raw_context['HOSTLABEL_' + k] = v
+        if raw_context['WHAT'] == 'SERVICE':
+            for k, v in labels.labels_of_service(ruleset_matcher, raw_context['HOSTNAME'],
+                                                 raw_context['SERVICEDESC']).items():
+                raw_context['SERVICELABEL_' + k] = v
+
     except Exception as e:
         logger.info("Error on completing raw context: %s", e)
 
@@ -437,7 +443,7 @@ def event_match_site(rule: EventRule, context: EventContext) -> Optional[str]:
     required_site_ids = rule["match_site"]
 
     # Fallback to local site ID in case there is none in the context
-    site_id = context.get("OMD_SITE", cmk_version.omd_site())
+    site_id = context.get("OMD_SITE", omd_site())
 
     if site_id not in required_site_ids:
         return "The site '%s' is not in the required sites list: %s" % \

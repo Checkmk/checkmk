@@ -4,14 +4,35 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Literal, Optional, Tuple, Union
-from ..agent_based_api.v1.type_defs import CheckGenerator
+from typing import Literal, Mapping, Optional, Tuple, TypedDict, Union
 
-from ..agent_based_api.v1 import Metric, render, Result, state
+from ..agent_based_api.v1 import Metric, render, Result
+from ..agent_based_api.v1 import State as state
+from ..agent_based_api.v1.type_defs import CheckResult
+
+SectionMem = Mapping[str, int]
 
 
-def is_linux_section(section: Dict[str, int]) -> bool:
-    return {"PageTables", "Writeback", "Committed_AS"} <= section.keys()
+class SectionMemUsed(TypedDict, total=False):
+    Cached: int
+    MemFree: int
+    MemTotal: int
+    SwapFree: int
+    SwapTotal: int
+
+
+def is_linux_section(section: SectionMem) -> bool:
+    # match these to the keys required by checks/mem
+    return {
+        "Buffers",
+        "Cached",
+        "Dirty",
+        "MemFree",
+        "MemTotal",
+        "SwapFree",
+        "SwapTotal",
+        "Writeback",
+    } <= section.keys()
 
 
 def get_levels_mode_from_value(
@@ -54,7 +75,7 @@ def normalize_levels(
     Normalize levels to absolute posive levels and return formatted levels text
 
         >>> normalize_levels("perc_used", 12, 42, 200)
-        (24.0, 84.0, 'warn/crit at 12.0%/42.0% used')
+        (24.0, 84.0, 'warn/crit at 12.00%/42.00% used')
 
     """
     # TODO: remove this weird case of different reference values.
@@ -93,7 +114,7 @@ def compute_state(value: float, warn: Optional[float], crit: Optional[float]) ->
     """get state according to levels
 
         >>> print(compute_state(23., 12, 42))
-        state.WARN
+        State.WARN
 
     """
     if crit is not None and value >= crit:
@@ -112,7 +133,7 @@ def check_element(
     show_free: bool = False,
     metric_name: Optional[str] = None,
     create_percent_metric: bool = False,
-) -> CheckGenerator:
+) -> CheckResult:
     """Yield a check result and metric for one memory element
 
         >>> result, metric = check_element(
@@ -123,9 +144,9 @@ def check_element(
         ...     create_percent_metric=True,
         ... )
         >>> print(result.summary)
-        Short term memory: 23.0% - 46 B of 200 B (warn/crit at 12.0%/42.0% used)
+        Short term memory: 23.00% - 46 B of 200 B (warn/crit at 12.00%/42.00% used)
         >>> print(result.state)
-        state.WARN
+        State.WARN
         >>> print(metric)
         Metric('mem_used_percent', 23.0, levels=(12.0, 42.0), boundaries=(0.0, None))
 

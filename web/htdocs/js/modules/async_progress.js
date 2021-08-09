@@ -20,20 +20,18 @@ import * as utils from "utils";
 
 // Is called after the activation has been started (got the activation_id) and
 // then in interval of 500 ms for updating the dialog state
-export function monitor(handler_data)
-{
+export function monitor(handler_data) {
     ajax.call_ajax(handler_data.update_url, {
-        response_handler : handle_update,
-        error_handler    : handle_error,
-        handler_data     : handler_data,
-        method           : "POST",
-        post_data        : handler_data.post_data,
-        add_ajax_id      : false
+        response_handler: handle_update,
+        error_handler: handle_error,
+        handler_data: handler_data,
+        method: "POST",
+        post_data: handler_data.post_data,
+        add_ajax_id: false,
     });
 }
 
-function handle_update(handler_data, response_json)
-{
+function handle_update(handler_data, response_json) {
     var response = JSON.parse(response_json);
     if (response.result_code == 1) {
         handler_data.error_function(response.result);
@@ -42,37 +40,40 @@ function handle_update(handler_data, response_json)
         handler_data.update_function(handler_data, response.result);
 
         if (!handler_data.is_finished_function(response.result)) {
-            setTimeout(function() {
+            setTimeout(function () {
                 return monitor(handler_data);
             }, 500);
-        }
-        else {
+        } else {
             handler_data.finish_function(response.result);
         }
     }
 }
 
-function handle_error(handler_data, status_code, error_msg)
-{
+function handle_error(handler_data, status_code, error_msg) {
     if (utils.time() - handler_data.start_time <= 10 && status_code == 503) {
         show_info("Failed to fetch state. This may be normal for a period of some seconds.");
     } else if (status_code == 0) {
         return; // not really an error. Reached when navigating away from the page
     } else {
-        show_error("Failed to fetch state ["+status_code+"]: " + error_msg + ". " +
-                              "Retrying in 1 second." +
-                              "<br><br>" +
-                              "In case this error persists for more than some seconds, please verify that all " +
-                              "processes of the site are running.");
+        show_error(
+            "Failed to fetch state [" +
+                status_code +
+                "]: " +
+                error_msg +
+                ". " +
+                "Retrying in 1 second." +
+                "<br><br>" +
+                "In case this error persists for more than some seconds, please verify that all " +
+                "processes of the site are running."
+        );
     }
 
-    setTimeout(function() {
+    setTimeout(function () {
         return monitor(handler_data);
     }, 1000);
 }
 
-export function show_error(text)
-{
+export function show_error(text) {
     var container = document.getElementById("async_progress_msg");
     container.style.display = "block";
     var msg = container.childNodes[0];
@@ -83,8 +84,7 @@ export function show_error(text)
     msg.innerHTML = text;
 }
 
-export function show_info(text)
-{
+export function show_info(text) {
     var container = document.getElementById("async_progress_msg");
     container.style.display = "block";
     var msg = container.childNodes[0];
@@ -95,9 +95,7 @@ export function show_info(text)
     msg.innerHTML = text;
 }
 
-export function hide_msg()
-{
+export function hide_msg() {
     var msg = document.getElementById("async_progress_msg");
-    if (msg)
-        msg.style.display = "none";
+    if (msg) msg.style.display = "none";
 }

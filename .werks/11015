@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If a role was renamed, current users of that rule did not got the new rule.
 This resulted in a crash, e.g. on the users page. This has been fixed.

@@ -11,6 +11,6 @@ description:
 item:
  The component where the fans are located, e.g chassis or switch
 
-inventory:
+discovery:
  One summary service is created for each component.
 

@@ -1,0 +1,48 @@
+Title: Plugin development: make all includes imports
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1603093483
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+This Werk only affects users who have developed their own check or inventory plugins
+*and* are using some of the shipped includes in them.
+
+The *.include files have been moved to a dedicated module and are replaced with imports.
+
+Note that the "include" mechanism is still available. If you are using your own
+include file you can continue to to so. However, if you are using (or shadowing)
+one of the shipped include files, you will need to change your plugins.
+
+Users who are using code from a shipped include file should adapt their plugin in
+the following way:
+
+<ul>
+<li>drop the "includes" keyword from the <tt>check_info</tt></li>
+<li>import the required names from the module coresponding to the former include file</li>
+</ul>
+
+For example: If you used the line
+
+<tt>"includes": ["temperature.include"],</tt>
+
+to access the <tt>check_temperature</tt> function, you should now add the line
+
+<tt>from cmk.base.check_legacy_includes.temperature import check_temperature</tt>
+
+at the top of your plugin.
+
+You can grep for "temperature import" in the checks directory for some examples.
+The checks/ directory can be found either at the top level of the git repository, or
+in in the share/check_mk/ folder of your site.
+Note that a wildcard import is used currently, but this is considered bad practice.
+You should explicitly import the required names.
+
+If you have made local changes to an include file *but not to the plugin that should
+be affected*, you need to do the reverse: Locally change said plugin to re-introduce
+the "includes" key to the <tt>check_info</tt> *and* remove the corresponding import
+statement.
+

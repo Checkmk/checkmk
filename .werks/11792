@@ -1,0 +1,34 @@
+Title: mail: adjustments to the number of graphs
+Class: feature
+Compatible: incomp
+Component: notifications
+Date: 1614189184
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.0.0b8
+
+This werk affects all users who use the mail (not asciimail)
+plugin. If your emails contain performance graphs only the
+first 5 graphs will be sent by default. Additionally, if you
+use notification bulking only graphs for the first 5
+notifications in a bulk will be sent.
+
+You can adjust these settings with the options "Graphs per
+notification" and "Bulk notifications with graphs" either
+directly in the notification rule or with the ruleset
+"Parameters for HTML Email".
+
+Reason behind this werk:
+Each graph in a bulk increases the size of the mail and takes
+time to render on the monitoring server. For very large bulks
+the mail size may exceed the maximum size for attachements or
+the plugin may run into a timeout so that a failed notification
+is produced. This werk will therefore increase the liability
+and performance of HTML emails.
+Since most services have fewer than five graphs and the most
+important information is displayed in the first graphs a total
+number of 5 graphs should be sufficient even in single
+notifications. Furthermore, for a detailed analysis the data
+displayed in emails is usually not sufficient and a look into
+the user interface is necessary.

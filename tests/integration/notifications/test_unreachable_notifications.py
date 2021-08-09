@@ -9,9 +9,9 @@ import os
 import time
 from typing import Optional
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib import web, WatchLog, wait_until  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import wait_until, WatchLog, web  # noqa: F401 # pylint: disable=unused-import
 
 STATE_UP = 0
 STATE_DOWN = 1
@@ -43,10 +43,10 @@ class Scenario:
 @pytest.fixture(name="scenario",
                 scope="module",
                 params=[
-                    Scenario(core="nagios", unreachable_enabled=True),
                     Scenario(core="cmc", unreachable_enabled=True),
-                    Scenario(core="nagios", unreachable_enabled=False),
                     Scenario(core="cmc", unreachable_enabled=False),
+                    Scenario(core="nagios", unreachable_enabled=True),
+                    Scenario(core="nagios", unreachable_enabled=False),
                 ],
                 ids=Scenario.get_test_id)
 def scenario_fixture(request, web, site):  # noqa: F811 # pylint: disable=redefined-outer-name
@@ -82,16 +82,18 @@ def scenario_fixture(request, web, site):  # noqa: F811 # pylint: disable=redefi
         }
         web.set_ruleset("extra_host_conf:notification_options", rule_result)
 
-        # Make nagios check more often for incoming commands and add more
-        # details to the log
-        site.write_file("etc/nagios/nagios.d/zzz_test_unreachable_notifications.cfg",
-                        "log_passive_checks=1\n"
-                        "command_check_interval=1s\n")
-
         web.activate_changes()
 
         site.live.command("[%d] DISABLE_HOST_CHECK;notify-test-parent" % time.time())
+        site.live.command("[%d] DISABLE_SVC_CHECK;notify-test-parent;PING" % time.time())
+        site.live.command("[%d] DISABLE_SVC_CHECK;notify-test-parent;Check_MK Discovery" %
+                          time.time())
+
         site.live.command("[%d] DISABLE_HOST_CHECK;notify-test-child" % time.time())
+        site.live.command("[%d] DISABLE_SVC_CHECK;notify-test-child;PING" % time.time())
+        site.live.command("[%d] DISABLE_SVC_CHECK;notify-test-child;Check_MK Discovery" %
+                          time.time())
+
         site.live.command("[%d] DISABLE_FLAP_DETECTION" % time.time())
 
         yield request.param
@@ -104,8 +106,6 @@ def scenario_fixture(request, web, site):  # noqa: F811 # pylint: disable=redefi
         site.live.command("[%d] ENABLE_FLAP_DETECTION" % time.time())
         site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-child" % time.time())
         site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-parent" % time.time())
-
-        site.delete_file("etc/nagios/nagios.d/zzz_test_unreachable_notifications.cfg")
 
         web.delete_host("notify-test-child")
         web.delete_host("notify-test-parent")
@@ -136,8 +136,6 @@ def initial_state_fixture(site, scenario):
         wait_until(rotated_log, timeout=10)
     else:
         site.delete_file("var/nagios/nagios.log")
-
-    time.sleep(1)  # TODO: Add check for rotation
 
 
 def _send_child_down(scenario, site, log):

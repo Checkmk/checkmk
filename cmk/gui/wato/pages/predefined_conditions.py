@@ -7,41 +7,40 @@
 
 from typing import List, Optional, Type
 
-import cmk.gui.config as config
 import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html, request, user
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.plugins.wato import (
+    ConfigDomainCore,
+    mode_registry,
+    SimpleEditMode,
+    SimpleListMode,
+    SimpleModeType,
+    WatoMode,
+)
+from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupMonitoringConfiguration
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
-    FixedValue,
     Alternative,
     DropdownChoice,
     DualListChoice,
+    FixedValue,
     Transform,
+    ValueSpec,
 )
-
-from cmk.gui.plugins.wato.check_mk_configuration import RulespecGroupUserInterface
-from cmk.gui.wato.pages.rulesets import VSExplicitConditions, RuleConditions
-from cmk.gui.watolib.rulesets import AllRulesets, SearchedRulesets, FolderRulesets
-from cmk.gui.watolib.hosts_and_folders import Folder
-from cmk.gui.watolib.rulespecs import ServiceRulespec
+from cmk.gui.wato.pages.rulesets import RuleConditions, VSExplicitConditions
 from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ConfigDomainGUI,
-    SimpleModeType,
-    SimpleListMode,
-    SimpleEditMode,
-    mode_registry,
-)
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, SearchedRulesets
+from cmk.gui.watolib.rulespecs import ServiceRulespec
 
 
 def dummy_rulespec() -> ServiceRulespec:
     return ServiceRulespec(
         name="dummy",
-        group=RulespecGroupUserInterface,
+        group=RulespecGroupMonitoringConfiguration,
         valuespec=lambda: FixedValue(None),
     )
 
@@ -68,7 +67,7 @@ class PredefinedConditionModeType(SimpleModeType):
         return False
 
     def affected_config_domains(self):
-        return [ConfigDomainGUI]
+        return [ConfigDomainCore]
 
 
 @mode_registry.register
@@ -82,7 +81,7 @@ class ModePredefinedConditions(SimpleListMode):
         return ["rulesets"]
 
     def __init__(self):
-        super(ModePredefinedConditions, self).__init__(
+        super().__init__(
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )
@@ -113,31 +112,34 @@ class ModePredefinedConditions(SimpleListMode):
               "You can then refer to these conditions from different rulesets. Using these predefined "
               "conditions may save you a lot of redundant conditions when you need them in multiple "
               "rulesets."))
-        super(ModePredefinedConditions, self).page()
+        super().page()
 
     def _show_action_cell(self, table, ident):
-        super(ModePredefinedConditions, self)._show_action_cell(table, ident)
+        super()._show_action_cell(table, ident)
 
         html.icon_button(self._search_url(ident),
                          _("Show rules using this %s") % self._mode_type.name_singular(), "search")
 
     def _search_url(self, ident):
-        return html.makeuri_contextless([("mode", "rulesets"),
-                                         ("search_p_rule_predefined_condition",
-                                          DropdownChoice.option_id(ident)),
-                                         ("search_p_rule_predefined_condition_USE", "on")])
+        return makeuri_contextless(
+            request,
+            [("mode", "rule_search"), ("filled_in", "rule_search"),
+             ("search_p_rule_predefined_condition", DropdownChoice.option_id(ident)),
+             ("search_p_rule_predefined_condition_USE", "on")],
+        )
 
     def _show_entry_cells(self, table, ident, entry):
-        table.cell(_("Title"), html.render_text(entry["title"]))
+        table.cell(_("Title"), entry["title"])
 
         table.cell(_("Conditions"))
         html.open_ul(class_="conditions")
         html.open_li()
-        html.write("%s: %s" %
-                   (_("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path()))
+        html.write_text(
+            "%s: %s" %
+            (_("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path()))
         html.close_li()
         html.close_ul()
-        html.write(vs_conditions().value_to_text(entry["conditions"]))
+        html.write_text(vs_conditions().value_to_text(entry["conditions"]))
 
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
@@ -172,13 +174,13 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         return ModePredefinedConditions
 
     def __init__(self):
-        super(ModeEditPredefinedCondition, self).__init__(
+        super().__init__(
             mode_type=PredefinedConditionModeType(),
             store=PredefinedConditionStore(),
         )
 
     def _vs_individual_elements(self):
-        if config.user.may("wato.edit_all_predefined_conditions"):
+        if user.may("wato.edit_all_predefined_conditions"):
             admin_element: List[ValueSpec] = [
                 FixedValue(
                     None,
@@ -232,7 +234,7 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         if self._ident in old_entries:
             old_path = self._store.load_for_reading()[self._ident]["conditions"]["host_folder"]
 
-        super(ModeEditPredefinedCondition, self)._save(entries)
+        super()._save(entries)
 
         conditions = RuleConditions("").from_config(entries[self._ident]["conditions"])
 
@@ -287,8 +289,8 @@ class ModeEditPredefinedCondition(SimpleEditMode):
         contact_groups = load_contact_group_information()
 
         if only_own:
-            assert config.user.id is not None
-            user_groups = userdb.contactgroups_of_user(config.user.id)
+            assert user.id is not None
+            user_groups = userdb.contactgroups_of_user(user.id)
         else:
             user_groups = []
 

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previous versions showed a message like "The selected element is no longer available"
 when first performing a bulk search for a tag and then trying to perform a bulk action.

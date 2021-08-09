@@ -15,5 +15,5 @@ description:
 item:
  Chassis
 
-inventory:
+discovery:
  One service is created per device.

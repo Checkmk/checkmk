@@ -9,6 +9,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -19,19 +20,19 @@
 #include "contact_fwd.h"
 class Row;
 class RowRenderer;
-class StringColumn;
 
 class PerfdataAggregator : public Aggregator {
 public:
-    PerfdataAggregator(AggregationFactory factory, const StringColumn *column)
-        : _factory(std::move(factory)), _column(column) {}
+    PerfdataAggregator(AggregationFactory factory,
+                       std::function<std::string(Row)> getValue)
+        : _factory(std::move(factory)), _getValue{std::move(getValue)} {}
     void consume(Row row, const contact *auth_user,
                  std::chrono::seconds timezone_offset) override;
     void output(RowRenderer &r) const override;
 
 private:
     AggregationFactory _factory;
-    const StringColumn *const _column;
+    const std::function<std::string(Row)> _getValue;
     std::map<std::string, std::unique_ptr<Aggregation>> _aggregations;
 };
 

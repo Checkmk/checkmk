@@ -17,5 +17,5 @@ description:
 item:
  If available the identifier of the CPU, otherwise the index of the module.
 
-inventory:
+discovery:
  One service is created for each slot

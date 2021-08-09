@@ -16,5 +16,5 @@ description:
  'inconsistent', 'peered' or 'stale', otherwise
  UNKNOWN.
 
-inventory:
+discovery:
  One service is created.

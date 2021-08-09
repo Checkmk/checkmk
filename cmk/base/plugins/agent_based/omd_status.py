@@ -21,19 +21,16 @@ crontab 1
 OVERALL 2
 """
 
-from typing import Mapping, Dict, Optional, Any
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    state,
-)
-from .agent_based_api.v1.type_defs import AgentStringTable, DiscoveryGenerator, CheckGenerator
+from typing import Any, Dict, Mapping, Optional
+
+from .agent_based_api.v1 import register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Dict[str, Dict[str, Any]]
 
 
-def parse_omd_status(string_table: AgentStringTable) -> Optional[Section]:
+def parse_omd_status(string_table: StringTable) -> Optional[Section]:
     """
     >>> for site, status in parse_omd_status([
     ...     ['[heute]'],
@@ -74,7 +71,7 @@ register.agent_section(name="omd_status", parse_function=parse_omd_status)
 def discovery_omd_status(
     section_omd_status: Optional[Section],
     section_omd_info: Optional[Section],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
     """
     >>> for service in discovery_omd_status(
     ...     {'heute': {
@@ -98,7 +95,7 @@ def discovery_omd_status(
     ...          'autostart': '0'},},
     ... }):
     ...     print(service)
-    Service(item='heute', parameters={}, labels=[])
+    Service(item='heute')
     """
     for site in (section_omd_status or {}).keys():
         # if we have omd_info we want to ensure that checks are only executed for sites
@@ -112,7 +109,7 @@ def _check_omd_status(
     site_services: Mapping[str, Any],
     others_running: bool,
     extra_text: str,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for result in _check_omd_status(
     ...       "stable",
@@ -120,7 +117,7 @@ def _check_omd_status(
     ...       False,
     ...       ""):
     ...     print(result)
-    Result(state=<state.OK: 0>, summary='running', details='running')
+    Result(state=<State.OK: 0>, summary='running')
     """
     if "overall" not in site_services:
         yield Result(state=state.CRIT, summary="defective installation")
@@ -141,7 +138,7 @@ def check_omd_status(
     item: str,
     section_omd_status: Optional[Section],
     section_omd_info: Optional[Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for result in check_omd_status(
     ...       "production",
@@ -151,7 +148,7 @@ def check_omd_status(
     ...          "overall": 'running'}},
     ...       {}):
     ...     print(result)
-    Result(state=<state.OK: 0>, summary='running', details='running')
+    Result(state=<State.OK: 0>, summary='running')
     """
     if not section_omd_status or item not in section_omd_status:
         return
@@ -162,7 +159,7 @@ def cluster_check_omd_status(
     item: str,
     section_omd_status: Mapping[str, Section],
     section_omd_info: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for result in cluster_check_omd_status(
     ...       "production",
@@ -173,11 +170,12 @@ def cluster_check_omd_status(
     ...            "overall": 'running'}}},
     ...       {"monitoring": {}}):
     ...     print(result)
-    Result(state=<state.OK: 0>, summary='running', details='running')
+    Result(state=<State.OK: 0>, summary='running')
     """
     # TODO(frans)(question): shouldn't it be better to look for =="running" ?
-    any_running = any(
-        section[item]["overall"] != "stopped" for section in section_omd_status.values())
+    any_running = any(section[item]["overall"] != "stopped"
+                      for section in section_omd_status.values()
+                      if item in section)
 
     for node, section in section_omd_status.items():
         if item not in section:

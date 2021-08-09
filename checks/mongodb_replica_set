@@ -7,8 +7,8 @@
 # <<<mongodb_replica_status>>>
 # <json>
 
-import json
 import datetime
+import json
 
 # levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)
 factory_settings["mongodb_replica_set_levels"] = {"levels_mongdb_replication_lag": (10, 60, 3600)}
@@ -90,7 +90,8 @@ def check_mongodb_replica_set_lag(_item, params, status_dict):
 def _check_lag_over_time(new_timestamp, member_name, name, lag_in_sec, levels):
     member_state_name = "mongodb.replica.set.lag.%s" % member_name
     if lag_in_sec > levels[0]:
-        last_timestamp = get_item_state(member_state_name, ZERO)
+        # I don't think getting zero by default is the right thing to do here.
+        last_timestamp = get_item_state(member_state_name, 0.0)
         lag_duration = (new_timestamp - last_timestamp)
         state, infotext, _ = check_levels(lag_duration,
                                           None,
@@ -105,7 +106,9 @@ def _check_lag_over_time(new_timestamp, member_name, name, lag_in_sec, levels):
 
         return 0, "", []
 
-    clear_item_state(member_state_name)
+    # zero? see above!
+    set_item_state(member_state_name, 0.0)
+
     return 0, "", []
 
 

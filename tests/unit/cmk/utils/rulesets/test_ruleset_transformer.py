@@ -6,12 +6,12 @@
 
 from typing import Dict, List, NamedTuple, Tuple, Union
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.paths
-import cmk.utils.tags
-import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
+import cmk.utils.tags
 from cmk.utils.exceptions import MKGeneralException
 
 

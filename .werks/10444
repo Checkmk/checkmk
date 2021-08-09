@@ -6,6 +6,6 @@ Date: 1574927716
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 There is a new flag '--oratestversion' in the mk_oracle agent that can be used to set a custom Oracleversion during execution. This parameter is supposed to be for development and debuggin only.

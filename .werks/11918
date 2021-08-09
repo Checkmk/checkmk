@@ -1,0 +1,12 @@
+Title: Fix default value of "Number of columns" in display options of views
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1611064302
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+The default value was always "1" but should be the same as the property of the
+currently viewed view.

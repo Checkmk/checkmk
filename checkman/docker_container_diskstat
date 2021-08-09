@@ -8,18 +8,11 @@ description:
  containers. You can either have a single check for every single disk or a
  summary check (which is the default) summing up the throughput of all disks.
 
- This check measures the memory usage of a docker container respecting
- either the memory limits of the docker node or the limit configured
- for the container.
-
- Use the "Main memory usage (UNIX / Other Devices)" rule set to configure
- thresholds on the memory usage.
-
 item:
  Either {"SUMMARY"} for a summarized check of all disks or the name of the
  disk device, e.g. {"sda"}.
 
-inventory:
+discovery:
   One service is created for each disk if the configuration is set to {"single"}.
   If the configuration is set to {"summary"} one service is created for each host.
   If set to {"legacy"} then two services one for read and one for write

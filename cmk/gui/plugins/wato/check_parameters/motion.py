@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    defines,
-    Dictionary,
-    ListOfTimeRanges,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import defines, Dictionary, ListOfTimeRanges, TextInput
 
 
 def _item_spec_motion():
-    return TextAscii(
+    return TextInput(
         title=_("Sensor name"),
         help=_("The identifier of the sensor."),
     )

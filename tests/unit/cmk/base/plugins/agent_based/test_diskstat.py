@@ -4,29 +4,122 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+from typing import Any, MutableMapping
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    IgnoreResultsError,
-    Metric,
-    Result,
-    state,
-    type_defs,
-)
+import pytest
+from pytest_mock import MockerFixture
+
+from tests.testlib import get_value_store_fixture
+
+from cmk.utils.type_defs import CheckPluginName
+
+from cmk.base import plugin_contexts
+from cmk.base.check_utils import Service
 from cmk.base.plugins.agent_based import diskstat
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 
-
-@pytest.fixture(name="value_store")
-def value_store_fixture(monkeypatch):
-    value_store: type_defs.ValueStore = {}
-    monkeypatch.setattr(diskstat, 'get_value_store', lambda: value_store)
-    yield value_store
+value_store_fixture = get_value_store_fixture(diskstat)
 
 
 def test_parse_diskstat_minimum():
     assert diskstat.parse_diskstat([
         ['12341241243'],
     ]) == {}
+
+
+def test_parse_diskstat_predictive(value_store: MutableMapping[str, Any], mocker: MockerFixture):
+    # SUP-5924
+    DATA = [
+        ['1617784511'],
+        [
+            '259', '0', 'nvme0n1', '131855', '42275', '8019303', '34515', '386089', '166344',
+            '13331634', '138121', '0', '185784', '177210', '0', '0', '0', '0', '41445', '4574'
+        ],
+        [
+            '53', '0', 'dm-0', '172574', '0', '7980626', '74812', '548159', '0', '12443656',
+            '706944', '0', '189576', '781756', '0', '0', '0', '0', '0', '0'
+        ],
+        [
+            '53', '1', 'dm-1', '171320', '0', '7710074', '74172', '546564', '0', '12514416',
+            '674352', '0', '186452', '748524', '0', '0', '0', '0', '0', '0'
+        ],
+        [
+            '53', '2', 'dm-2', '194', '0', '8616', '68', '0', '0', '0', '0', '0', '72', '68', '0',
+            '0', '0', '0', '0', '0'
+        ],
+        ['[dmsetup_info]'],
+        ['vme0n1p3_crypt', '253:0'],
+        ['buntu--vg-swap_1', '253:2', 'ubuntu-vg', 'swap_1'],
+        ['buntu--vg-root', '253:1', 'ubuntu-vg', 'root'],
+    ]
+
+    PARAMS = {
+        'average': 300,
+        'latency': (80.0, 160.0),
+        'read': {
+            'horizon': 90,
+            'levels_lower': ('absolute', (2.0, 4.0)),
+            'levels_upper': ('relative', (10.0, 20.0)),
+            'levels_upper_min': (10.0, 15.0),
+            'period': 'wday'
+        },
+        'read_ios': (400.0, 600.0),
+        'read_latency': (80.0, 160.0),
+        'read_wait': (30.0, 50.0),
+        'utilization': (80.0, 90.0),
+        'write': (50.0, 100.0),
+        'write_ios': (300.0, 400.0),
+        'write_latency': (80.0, 160.0),
+        'write_wait': (30.0, 50.0)
+    }
+
+    mocker.patch("cmk.base.check_api._prediction.get_levels",
+                 return_value=(None, (2.1, 4.1, None, None)))
+    dummy_service = Service(
+        CheckPluginName("unittest_sd"),
+        parameters={},
+        item="item-nvme0n1",
+        description="unittest_sd_description",
+    )
+    with plugin_contexts.current_host("unittest-hn"), plugin_contexts.current_service(
+            dummy_service):
+
+        with pytest.raises(IgnoreResultsError):
+            list(diskstat.check_diskstat("nvme0n1", PARAMS, diskstat.parse_diskstat(DATA), None))
+        DATA[0][0] = '1617784512'
+        assert list(diskstat.check_diskstat(
+            "nvme0n1",
+            PARAMS,
+            diskstat.parse_diskstat(DATA),
+            None,
+        )) == [
+            Result(state=state.OK, notice='All values averaged over 5 minutes 0 seconds'),
+            Result(state=state.OK, notice='Utilization: 0%'),
+            Metric('disk_utilization', 0.0, levels=(0.8, 0.9)),
+            Result(state=state.OK, summary='Read: 0.00 B/s (no reference for prediction yet)'),
+            Metric('disk_read_throughput', 0.0, levels=(2.1, 4.1)),  # fake levels are quite low
+            Result(state=state.OK, summary='Write: 0.00 B/s'),
+            Metric('disk_write_throughput', 0.0, levels=(50000000.0, 100000000.0)),
+            Result(state=state.OK, notice='Average wait: 0 seconds'),
+            Metric('disk_average_wait', 0.0),
+            Result(state=state.OK, notice='Average read wait: 0 seconds'),
+            Metric('disk_average_read_wait', 0.0, levels=(0.03, 0.05)),
+            Result(state=state.OK, notice='Average write wait: 0 seconds'),
+            Metric('disk_average_write_wait', 0.0, levels=(0.03, 0.05)),
+            Result(state=state.OK, notice='Average queue length: 0.00'),
+            Metric('disk_queue_length', 0.0),
+            Result(state=state.OK, notice='Read operations: 0.00/s'),
+            Metric('disk_read_ios', 0.0, levels=(400.0, 600.0)),
+            Result(state=state.OK, notice='Write operations: 0.00/s'),
+            Metric('disk_write_ios', 0.0, levels=(300.0, 400.0)),
+            Result(state=state.OK, summary='Latency: 0 seconds'),
+            Metric('disk_latency', 0.0, levels=(0.08, 0.16)),
+            Metric('disk_average_read_request_size', 0.0),
+            Metric('disk_average_request_size', 0.0),
+            Metric('disk_average_write_request_size', 0.0),
+        ]
 
 
 def test_parse_diskstat_simple():
@@ -939,104 +1032,57 @@ def test_check_diskstat_single_item(value_store):
     with pytest.raises(IgnoreResultsError):
         list(diskstat.check_diskstat(
             'item',
-            type_defs.Parameters({}),
+            {},
             {'item': DISK_HALF},
             None,
         ))
     assert list(diskstat.check_diskstat(
         'item',
-        type_defs.Parameters({}),
+        {},
         {'item': DISK},
         None,
     )) == [
-        Result(state=state.OK, summary='Utilization: 0.00%', details='Utilization: 0.00%'),
-        Metric('disk_utilization',
-               3.933167173747347e-06,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Read throughput: 17.7 B/s',
-               details='Read throughput: 17.7 B/s'),
-        Metric('disk_read_throughput',
-               17.650547892925093,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Write throughput: 55.4 B/s',
-               details='Write throughput: 55.4 B/s'),
-        Metric('disk_write_throughput',
-               55.40544625529087,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Average wait: 540 microseconds',
-               details='Average wait: 540 microseconds'),
-        Metric('disk_average_wait',
-               0.0005402843870952481,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Average read wait: 39 microseconds',
-               details='Average read wait: 39 microseconds'),
-        Metric('disk_average_read_wait',
-               3.987349554326878e-05,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Average write wait: 691 microseconds',
-               details='Average write wait: 691 microseconds'),
-        Metric('disk_average_write_wait',
-               0.0006915664158721743,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Latency: 223 microseconds',
-               details='Latency: 223 microseconds'),
-        Metric('disk_latency', 0.00022327168360432604, levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Average queue length: 10.00',
-               details='Average queue length: 10.00'),
-        Metric('disk_queue_length', 10.0, levels=(None, None), boundaries=(None, None)),
-        Result(state=state.OK, summary='Read operations: 0.00/s',
-               details='Read operations: 0.00/s'),
-        Metric('disk_read_ios', 0.004089338822905689, levels=(None, None), boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Write operations: 0.01/s',
-               details='Write operations: 0.01/s'),
-        Metric('disk_write_ios', 0.013526720277170622, levels=(None, None),
-               boundaries=(None, None)),
-        Metric('disk_average_read_request_size',
-               4316.235131718299,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Metric('disk_average_request_size',
-               4147.124719166019,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Metric('disk_average_write_request_size',
-               4096.0,
-               levels=(None, None),
-               boundaries=(None, None)),
+        Result(state=state.OK, notice='Utilization: <0.01%'),
+        Metric('disk_utilization', 3.933167173747347e-06),
+        Result(state=state.OK, summary='Read: 17.7 B/s'),
+        Metric('disk_read_throughput', 17.650547892925093),
+        Result(state=state.OK, summary='Write: 55.4 B/s'),
+        Metric('disk_write_throughput', 55.40544625529087),
+        Result(state=state.OK, notice='Average wait: 540 microseconds'),
+        Metric('disk_average_wait', 0.0005402843870952481),
+        Result(state=state.OK, notice='Average read wait: 40 microseconds'),
+        Metric('disk_average_read_wait', 3.987349554326878e-05),
+        Result(state=state.OK, notice='Average write wait: 692 microseconds'),
+        Metric('disk_average_write_wait', 0.0006915664158721743),
+        Result(state=state.OK, notice='Average queue length: 10.00'),
+        Metric('disk_queue_length', 10.0),
+        Result(state=state.OK, notice='Read operations: 0.00/s'),
+        Metric('disk_read_ios', 0.004089338822905689),
+        Result(state=state.OK, notice='Write operations: 0.01/s'),
+        Metric('disk_write_ios', 0.013526720277170622),
+        Result(state=state.OK, summary='Latency: 223 microseconds'),
+        Metric('disk_latency', 0.00022327168360432604),
+        Metric('disk_average_read_request_size', 4316.235131718299),
+        Metric('disk_average_request_size', 4147.124719166019),
+        Metric('disk_average_write_request_size', 4096.0),
     ]
 
 
 def test_check_diskstat_summary(value_store):
     with pytest.raises(IgnoreResultsError):
-        list(
-            diskstat.check_diskstat(
-                'SUMMARY',
-                type_defs.Parameters({}),
-                {
-                    'disk1': DISK_HALF,
-                    'disk2': DISK_HALF,
-                },
-                {},
-            ))
+        list(diskstat.check_diskstat(
+            'SUMMARY',
+            {},
+            {
+                'disk1': DISK_HALF,
+                'disk2': DISK_HALF,
+            },
+            {},
+        ))
     results_summary = list(
         diskstat.check_diskstat(
             'SUMMARY',
-            type_defs.Parameters({}),
+            {},
             {
                 'disk1': DISK,
                 'disk2': DISK,
@@ -1044,93 +1090,46 @@ def test_check_diskstat_summary(value_store):
             None,
         ))
     assert results_summary == [
-        Result(state=state.OK, summary='Utilization: 0.00%', details='Utilization: 0.00%'),
-        Metric('disk_utilization',
-               3.933167173747347e-06,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Read throughput: 35.3 B/s',
-               details='Read throughput: 35.3 B/s'),
-        Metric('disk_read_throughput',
-               35.30109578585019,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Write throughput: 111 B/s',
-               details='Write throughput: 111 B/s'),
-        Metric('disk_write_throughput',
-               110.81089251058174,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Average wait: 540 microseconds',
-               details='Average wait: 540 microseconds'),
-        Metric('disk_average_wait',
-               0.0005402843870952481,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Average read wait: 39 microseconds',
-               details='Average read wait: 39 microseconds'),
-        Metric('disk_average_read_wait',
-               3.987349554326878e-05,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Average write wait: 691 microseconds',
-               details='Average write wait: 691 microseconds'),
-        Metric('disk_average_write_wait',
-               0.0006915664158721743,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Latency: 223 microseconds',
-               details='Latency: 223 microseconds'),
-        Metric('disk_latency', 0.00022327168360432604, levels=(None, None),
-               boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Average queue length: 10.00',
-               details='Average queue length: 10.00'),
-        Metric('disk_queue_length', 10.0, levels=(None, None), boundaries=(None, None)),
-        Result(state=state.OK, summary='Read operations: 0.01/s',
-               details='Read operations: 0.01/s'),
-        Metric('disk_read_ios', 0.008178677645811379, levels=(None, None), boundaries=(None, None)),
-        Result(state=state.OK,
-               summary='Write operations: 0.03/s',
-               details='Write operations: 0.03/s'),
-        Metric('disk_write_ios', 0.027053440554341245, levels=(None, None),
-               boundaries=(None, None)),
-        Metric('disk_average_read_request_size',
-               4316.235131718299,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Metric('disk_average_request_size',
-               4147.124719166019,
-               levels=(None, None),
-               boundaries=(None, None)),
-        Metric('disk_average_write_request_size',
-               4096.0,
-               levels=(None, None),
-               boundaries=(None, None)),
+        Result(state=state.OK, notice='Utilization: <0.01%'),
+        Metric('disk_utilization', 3.933167173747347e-06),
+        Result(state=state.OK, summary='Read: 35.3 B/s'),
+        Metric('disk_read_throughput', 35.30109578585019),
+        Result(state=state.OK, summary='Write: 111 B/s'),
+        Metric('disk_write_throughput', 110.81089251058174),
+        Result(state=state.OK, notice='Average wait: 540 microseconds'),
+        Metric('disk_average_wait', 0.0005402843870952481),
+        Result(state=state.OK, notice='Average read wait: 40 microseconds'),
+        Metric('disk_average_read_wait', 3.987349554326878e-05),
+        Result(state=state.OK, notice='Average write wait: 692 microseconds'),
+        Metric('disk_average_write_wait', 0.0006915664158721743),
+        Result(state=state.OK, notice='Average queue length: 10.00'),
+        Metric('disk_queue_length', 10.0),
+        Result(state=state.OK, notice='Read operations: 0.01/s'),
+        Metric('disk_read_ios', 0.008178677645811379),
+        Result(state=state.OK, notice='Write operations: 0.03/s'),
+        Metric('disk_write_ios', 0.027053440554341245),
+        Result(state=state.OK, summary='Latency: 223 microseconds'),
+        Metric('disk_latency', 0.00022327168360432604),
+        Metric('disk_average_read_request_size', 4316.235131718299),
+        Metric('disk_average_request_size', 4147.124719166019),
+        Metric('disk_average_write_request_size', 4096.0),
     ]
 
     # compare against single-item output
     with pytest.raises(IgnoreResultsError):
-        list(
-            diskstat.check_diskstat(
-                'disk1',
-                type_defs.Parameters({}),
-                {
-                    'disk1': DISK_HALF,
-                    'disk2': DISK_HALF,
-                },
-                None,
-            ))
+        list(diskstat.check_diskstat(
+            'disk1',
+            {},
+            {
+                'disk1': DISK_HALF,
+                'disk2': DISK_HALF,
+            },
+            None,
+        ))
     results_single_disk = list(
         diskstat.check_diskstat(
             'disk1',
-            type_defs.Parameters({}),
+            {},
             {
                 'disk1': DISK,
                 'disk2': DISK,
@@ -1150,7 +1149,7 @@ def test_cluster_check_diskstat_single_item(value_store):
         list(
             diskstat.cluster_check_diskstat(
                 'disk1',
-                type_defs.Parameters({}),
+                {},
                 {
                     'node1': {
                         'disk1': DISK_HALF,
@@ -1163,7 +1162,7 @@ def test_cluster_check_diskstat_single_item(value_store):
     results_cluster = list(
         diskstat.cluster_check_diskstat(
             'disk1',
-            type_defs.Parameters({}),
+            {},
             {
                 'node_overwritten': {
                     'disk1': DISK_HALF,
@@ -1178,24 +1177,22 @@ def test_cluster_check_diskstat_single_item(value_store):
             },
         ))
     with pytest.raises(IgnoreResultsError):
-        list(
-            diskstat.check_diskstat(
-                'disk1',
-                type_defs.Parameters({}),
-                {
-                    'disk1': DISK_HALF,
-                },
-                None,
-            ))
-    results_non_cluster = list(
-        diskstat.check_diskstat(
+        list(diskstat.check_diskstat(
             'disk1',
-            type_defs.Parameters({}),
+            {},
             {
-                'disk1': DISK,
+                'disk1': DISK_HALF,
             },
             None,
         ))
+    results_non_cluster = list(diskstat.check_diskstat(
+        'disk1',
+        {},
+        {
+            'disk1': DISK,
+        },
+        None,
+    ))
     assert results_cluster == results_non_cluster
 
 
@@ -1204,7 +1201,7 @@ def test_cluster_check_diskstat_summary(value_store):
         list(
             diskstat.cluster_check_diskstat(
                 'SUMMARY',
-                type_defs.Parameters({}),
+                {},
                 {
                     'node1': {
                         'disk1': DISK_HALF,
@@ -1221,7 +1218,7 @@ def test_cluster_check_diskstat_summary(value_store):
     results_cluster = list(
         diskstat.cluster_check_diskstat(
             'SUMMARY',
-            type_defs.Parameters({}),
+            {},
             {
                 'node1': {
                     'disk1': DISK,
@@ -1239,7 +1236,7 @@ def test_cluster_check_diskstat_summary(value_store):
         list(
             diskstat.check_diskstat(
                 'SUMMARY',
-                type_defs.Parameters({}),
+                {},
                 {
                     'disk1': DISK_HALF,
                     'disk2': DISK_HALF,
@@ -1249,7 +1246,7 @@ def test_cluster_check_diskstat_summary(value_store):
     results_non_cluster = list(
         diskstat.check_diskstat(
             'SUMMARY',
-            type_defs.Parameters({}),
+            {},
             {
                 'disk1': DISK,
                 'disk2': DISK,
@@ -1257,3 +1254,42 @@ def test_cluster_check_diskstat_summary(value_store):
             None,
         ))
     assert results_cluster == results_non_cluster
+
+
+def test_check_latency_calculation(value_store):
+    with pytest.raises(IgnoreResultsError):
+        list(
+            diskstat.check_diskstat(
+                'SUMMARY',
+                {},
+                {
+                    'disk1': {
+                        'timestamp': 5000000,
+                        'average_write_wait': 10000,
+                        'average_read_wait': 20000
+                    },
+                },
+                {},
+            ))
+    results_summary = list(
+        diskstat.check_diskstat(
+            'SUMMARY',
+            {'latency': (3, 5)},
+            {
+                'disk1': {
+                    'timestamp': 10000000,
+                    'average_write_wait': 20000,
+                    'average_read_wait': 40000
+                },
+            },
+            None,
+        ))
+
+    assert results_summary == [
+        Result(state=state.OK, notice='Average read wait: 4 milliseconds'),
+        Metric('disk_average_read_wait', 0.004),
+        Result(state=state.OK, notice='Average write wait: 2 milliseconds'),
+        Metric('disk_average_write_wait', 0.002),
+        Result(state=state.WARN,
+               notice='Latency: 4 milliseconds (warn/crit at 3 milliseconds/5 milliseconds)')
+    ]

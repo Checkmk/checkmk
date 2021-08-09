@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The ruleset intended for the nfsiostat plugin did not apply to the check.
 This has been fixed.

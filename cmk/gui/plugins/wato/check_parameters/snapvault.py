@@ -5,19 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    ListOf,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
+    HostRulespec,
     rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Age, Checkbox, Dictionary, ListOf, TextInput, Tuple
 
 
 def _parameter_valuespec_snapvault():
@@ -37,7 +32,7 @@ def _parameter_valuespec_snapvault():
              Tuple(
                  orientation="horizontal",
                  elements=[
-                     TextAscii(title=_("Policy name")),
+                     TextInput(title=_("Policy name")),
                      Tuple(
                          title=_("Maximum age"),
                          elements=[
@@ -61,8 +56,38 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="snapvault",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Source Path"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Source Path"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_snapvault,
         title=lambda: _("NetApp Snapvaults / Snapmirror Lag Time"),
+    ))
+
+
+def _discovery_valuespec_snapvault():
+    return Dictionary(
+        elements=[
+            (
+                "exclude_destination_vserver",
+                Checkbox(
+                    title=_("Exclude destination vserver"),
+                    help=_("Only applicable to clustermode installations. "
+                           "The service description of snapvault services is composed of the "
+                           "destination vserver (SVM) and the destination volume by default. Check "
+                           "this box if you would like to use the destination volume as the "
+                           "service description on its own. "
+                           "Please be advised that this may lead to a service description that is "
+                           "not unique, resulting in some services, which are not shown!"),
+                ),
+            ),
+        ],
+        title=_('NetApp snapvault discovery'),
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupCheckParametersDiscovery,
+        match_type="list",
+        name="discovery_snapvault",
+        valuespec=_discovery_valuespec_snapvault,
     ))

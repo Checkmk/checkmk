@@ -19,13 +19,15 @@ class ColumnOffsets;
 class MonitoringCore;
 class Row;
 
-class CustomVarsNamesColumn : public ListColumn {
+class CustomVarsNamesColumn : public deprecated::ListColumn {
 public:
     CustomVarsNamesColumn(const std::string &name,
                           const std::string &description,
                           const ColumnOffsets &offsets,
                           const MonitoringCore *mc, AttributeKind kind)
-        : ListColumn(name, description, offsets), _mc(mc), _kind(kind) {}
+        : deprecated::ListColumn(name, description, offsets)
+        , _mc(mc)
+        , _kind(kind) {}
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,

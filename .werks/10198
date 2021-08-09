@@ -6,7 +6,7 @@ Date: 1573725532
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously the Bakery could not set "use_wmi" option to "no" (false) in the Windows 
 Agent's configuration file. This error force the Agent to use only WMI API to 

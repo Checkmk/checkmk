@@ -5,20 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Alternative,
-    Dictionary,
-    FixedValue,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Alternative, Dictionary, FixedValue, TextInput, Tuple
 
 
 def _parameter_valuespec_postgres_maintenance():
@@ -70,7 +62,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="postgres_maintenance",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of the database"),),
+        item_spec=lambda: TextInput(title=_("Name of the database"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_postgres_maintenance,
         title=lambda: _("PostgreSQL VACUUM and ANALYZE"),

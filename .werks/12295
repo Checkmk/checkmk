@@ -1,0 +1,14 @@
+Title: View editor: Fix title of custom host attribute painter
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1615555292
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The custom host attribute painter had the title of one of the custom attributes
+"Hosts: My attribute title" in the column list instead of "Hosts: Host custom
+attribute".

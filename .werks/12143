@@ -1,0 +1,19 @@
+Title: Graph dashlets: Optionally disable time range synchronization
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1614239986
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+When a dashboard has multiple graph dashlets showing different time ranges, it
+may be not intended to synchronize the time ranges by zooming into a single
+graph. By default Checkmk synchronizes the time ranges and pins of all graphs
+on a page.
+
+This can now be disabled for each graph dashlet individually by setting the
+graph rendering option "Do not follow timerange changes of other graphs on the
+current page".

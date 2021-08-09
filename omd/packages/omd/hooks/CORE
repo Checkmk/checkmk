@@ -10,75 +10,69 @@
 
 # Helper function that creates a symlink only if the
 # target of the link exists
-make_link ()
-{
+make_link() {
     rel_dir=${2%/*}
-    if [ -e "$rel_dir/$1" ] ; then
+    if [ -e "$rel_dir/$1" ]; then
         ln -sfn "$1" "$2"
     fi
 }
 
 case "$1" in
-    default)
-            if [ -e $OMD_ROOT/bin/cmc ] ; then echo "cmc"
-            elif [ -e $OMD_ROOT/bin/nagios ] ; then echo "nagios"
-            else echo "none"
-            fi
+default)
+    if [ -e $OMD_ROOT/bin/cmc ]; then
+        echo "cmc"
+    elif [ -e $OMD_ROOT/bin/nagios ]; then
+        echo "nagios"
+    else
+        echo "none"
+    fi
     ;;
-    choices)
-            [ ! -e $OMD_ROOT/bin/cmc ] || echo "cmc: Check_MK Micro core"
-            [ ! -e $OMD_ROOT/bin/nagios ] || echo "nagios: Nagios"
-            echo "none: No monitoring core"
+choices)
+    [ ! -e $OMD_ROOT/bin/cmc ] || echo "cmc: Check_MK Micro core"
+    [ ! -e $OMD_ROOT/bin/nagios ] || echo "nagios: Nagios"
+    echo "none: No monitoring core"
     ;;
-    set)
-        # cleanup the former selection
-        if [ -h $OMD_ROOT/etc/apache/conf.d/shinken.conf ] ; then
-            rm -f $OMD_ROOT/etc/apache/conf.d/shinken.conf
+set)
+    # cleanup the former selection
+    if [ -h $OMD_ROOT/etc/apache/conf.d/shinken.conf ]; then
+        rm -f $OMD_ROOT/etc/apache/conf.d/shinken.conf
+    fi
+    if [ -h $OMD_ROOT/etc/apache/conf.d/nagios.conf ]; then
+        rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
+    fi
+    # NOTE: Although we don't ship Icinga anymore, we leave this to make
+    # sure there is no dangling symlink and keep Apache happy.
+    if [ -h $OMD_ROOT/etc/apache/conf.d/icinga.conf ]; then
+        rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
+    fi
+    if [ "$2" != "cmc" ]; then
+        rm -f $OMD_ROOT/etc/check_mk/conf.d/microcore.mk
+        # Re-add links to logs
+        if [ ! -L $OMD_ROOT/var/log/livestatus.log ]; then
+            ln -sf ../nagios/livestatus.log $OMD_ROOT/var/log/livestatus.log
         fi
-        if [ -h $OMD_ROOT/etc/apache/conf.d/nagios.conf ] ; then
-            rm -f $OMD_ROOT/etc/apache/conf.d/nagios.conf
+        if [ ! -L $OMD_ROOT/var/log/nagios.log ]; then
+            ln -sf ../nagios/nagios.log $OMD_ROOT/var/log/nagios.log
         fi
-        # NOTE: Although we don't ship Icinga anymore, we leave this to make
-        # sure there is no dangling symlink and keep Apache happy.
-        if [ -h $OMD_ROOT/etc/apache/conf.d/icinga.conf ] ; then
-            rm -f $OMD_ROOT/etc/apache/conf.d/icinga.conf
-        fi
-        if [ "$2" != "cmc" ] ; then
-            rm -f $OMD_ROOT/etc/check_mk/conf.d/microcore.mk
-            # Re-add links to logs
-            if [ ! -L $OMD_ROOT/var/log/livestatus.log ]; then
-                ln -sf ../nagios/livestatus.log $OMD_ROOT/var/log/livestatus.log
-            fi
-            if [ ! -L $OMD_ROOT/var/log/nagios.log ]; then
-                ln -sf ../nagios/nagios.log $OMD_ROOT/var/log/nagios.log
-            fi
-        fi
+    fi
 
-        rm -f $OMD_ROOT/etc/init.d/core
+    rm -f $OMD_ROOT/etc/init.d/core
 
-        # now setup the new selection
-        if [ "$2" == "nagios" ]
-        then
-            make_link nagios $OMD_ROOT/etc/init.d/core
-            # Refresh Check_MK Configuration after changing back from CMC
-            if [ -e $OMD_ROOT/var/check_mk/core/config ] ; then
-                cmk -U >/dev/null
-            fi
-        elif [ "$2" == "cmc" ]
-        then
-            make_link cmc $OMD_ROOT/etc/init.d/core
-            echo "# Created by OMD hook CORE. Change with 'omd config'." > $OMD_ROOT/etc/check_mk/conf.d/microcore.mk
-            echo "monitoring_core = 'cmc'"                              >> $OMD_ROOT/etc/check_mk/conf.d/microcore.mk
-            # Make sure that object configuration for core is present. Remove the old one
-            # in advance to prevent problems with old configs during update when new config
-            # creation fails
-            [ -f $OMD_ROOT/var/check_mk/core/config ] && rm -f $OMD_ROOT/var/check_mk/core/config
-            cmk -U >/dev/null
-            # Remove non relevant links to logs
-            [ -L $OMD_ROOT/var/log/livestatus.log ] && rm -f $OMD_ROOT/var/log/livestatus.log
-            [ -L $OMD_ROOT/var/log/nagios.log ] && rm -f $OMD_ROOT/var/log/nagios.log
-            true # make final exit code 0
-        fi
+    # now setup the new selection
+    if [ "$2" == "nagios" ]; then
+        make_link nagios $OMD_ROOT/etc/init.d/core
+    elif [ "$2" == "cmc" ]; then
+        make_link cmc $OMD_ROOT/etc/init.d/core
+        echo "# Created by OMD hook CORE. Change with 'omd config'." >$OMD_ROOT/etc/check_mk/conf.d/microcore.mk
+        echo "monitoring_core = 'cmc'" >>$OMD_ROOT/etc/check_mk/conf.d/microcore.mk
+        # Make sure that object configuration for core is present. Remove the old one
+        # in advance to prevent problems with old configs during update when new config
+        # creation fails
+        [ -f $OMD_ROOT/var/check_mk/core/config ] && rm -f $OMD_ROOT/var/check_mk/core/config
+        # Remove non relevant links to logs
+        [ -L $OMD_ROOT/var/log/livestatus.log ] && rm -f $OMD_ROOT/var/log/livestatus.log
+        [ -L $OMD_ROOT/var/log/nagios.log ] && rm -f $OMD_ROOT/var/log/nagios.log
+        true # make final exit code 0
+    fi
     ;;
 esac
-

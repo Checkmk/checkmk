@@ -6,6 +6,12 @@
 
 import json
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<graylog_sources>>>
 # {"sources": {"klappclub": 81216}, "range": 0, "total": 1, "took_ms": 28}
 
@@ -46,5 +52,4 @@ check_info["graylog_sources"] = {
     "service_description": "Graylog Source %s",
     "has_perfdata": True,
     "group": "graylog_sources",
-    "includes": ["graylog.include"],
 }

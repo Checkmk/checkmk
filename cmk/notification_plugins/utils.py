@@ -4,21 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from email.utils import formataddr
-from html import escape as html_escape
 import os
-from quopri import encodestring
 import re
 import socket
 import subprocess
 import sys
-from typing import Dict, List, Tuple
+from email.utils import formataddr
+from html import escape as html_escape
+from http.client import responses as http_responses
+from quopri import encodestring
+from typing import Dict, List, NamedTuple, Tuple
 
 import requests
 
-from cmk.utils.notify import find_wato_folder
-import cmk.utils.paths
 import cmk.utils.password_store
+import cmk.utils.paths
+import cmk.utils.version as cmk_version
+from cmk.utils.notify import find_wato_folder
+from cmk.utils.store import load_text_from_file
 
 
 def collect_context() -> Dict[str, str]:
@@ -56,7 +59,12 @@ def format_address(display_name: str, email_address: str) -> str:
 
 
 def default_from_address():
-    return os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
+    environ_default = os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
+    if cmk_version.is_cma():
+        return load_text_from_file("/etc/nullmailer/default-from",
+                                   environ_default).replace('\n', '')
+
+    return environ_default
 
 
 def _base_url(context: Dict[str, str]) -> str:
@@ -101,20 +109,30 @@ def format_plugin_output(output):
     return output
 
 
-def html_escape_context(context):
+def html_escape_context(context: Dict[str, str]) -> Dict[str, str]:
     unescaped_variables = {
+        'CONTACTALIAS',
+        'CONTACTNAME',
+        'CONTACTEMAIL',
         'PARAMETER_INSERT_HTML_SECTION',
         'PARAMETER_BULK_SUBJECT',
         'PARAMETER_HOST_SUBJECT',
         'PARAMETER_SERVICE_SUBJECT',
-        'PARAMETER_FROM',
+        'PARAMETER_FROM_ADDRESS',
         'PARAMETER_FROM_DISPLAY_NAME',
         'PARAMETER_REPLY_TO',
+        'PARAMETER_REPLY_TO_ADDRESS',
         'PARAMETER_REPLY_TO_DISPLAY_NAME',
     }
-    for variable, value in context.items():
-        if variable not in unescaped_variables:
-            context[variable] = html_escape(value)
+    if context.get("SERVICE_ESCAPE_PLUGIN_OUTPUT") == "0":
+        unescaped_variables |= {"SERVICEOUTPUT", "LONGSERVICEOUTPUT"}
+    if context.get("HOST_ESCAPE_PLUGIN_OUTPUT") == "0":
+        unescaped_variables |= {"HOSTOUTPUT", "LONGHOSTOUTPUT"}
+
+    return {
+        variable: html_escape(value) if variable not in unescaped_variables else value
+        for variable, value in context.items()
+    }
 
 
 def add_debug_output(template, context):
@@ -278,22 +296,75 @@ def retrieve_from_passwordstore(parameter):
     return value
 
 
-def post_request(message_constructor, success_code=200):
+def post_request(message_constructor, url=None, headers=None):
     context = collect_context()
 
-    url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
+    if not url:
+        url = retrieve_from_passwordstore(context.get("PARAMETER_WEBHOOK_URL"))
     proxy_url = context.get("PARAMETER_PROXY_URL")
     proxies = {"http": proxy_url, "https": proxy_url} if proxy_url else None
 
+    verify: bool = True
+    if "PARAMETER_IGNORE_SSL" in context:
+        verify = False
+
     try:
-        r = requests.post(url=url, json=message_constructor(context), proxies=proxies)
+        response = requests.post(url=url,
+                                 json=message_constructor(context),
+                                 proxies=proxies,
+                                 headers=headers,
+                                 verify=verify)
     except requests.exceptions.ProxyError:
         sys.stderr.write("Cannot connect to proxy: %s\n" % proxy_url)
         sys.exit(2)
 
-    if r.status_code == success_code:
+    return response
+
+
+def process_by_status_code(response: requests.models.Response, success_code: int = 200):
+    status_code = response.status_code
+    summary = f"{status_code}: {http_responses[status_code]}"
+
+    if status_code == success_code:
+        sys.stderr.write(summary)
         sys.exit(0)
+    elif 500 <= status_code <= 599:
+        sys.stderr.write(summary)
+        sys.exit(1)  # Checkmk gives a retry if exited with 1. Makes sense in case of a server error
     else:
-        sys.stderr.write("Failed to send notification. Status: %i, Response: %s\n" %
-                         (r.status_code, r.text))
+        sys.stderr.write(f"Failed to send notification.\nResponse: {response.text}\n{summary}")
         sys.exit(2)
+
+
+StateInfo = NamedTuple('StateInfo', [('state', int), ('type', str), ('title', str)])
+StatusCodeRange = Tuple[int, int]
+
+
+def process_by_result_map(response: requests.models.Response, result_map: Dict[StatusCodeRange,
+                                                                               StateInfo]):
+    def get_details_from_json(json_response, what):
+        for key, value in json_response.items():
+            if key == what:
+                return value
+            if isinstance(value, dict):
+                result = get_details_from_json(value, what)
+                if result:
+                    return result
+
+    status_code = response.status_code
+    summary = f"{status_code}: {http_responses[status_code]}"
+    details = ""
+
+    for status_code_range, state_info in result_map.items():
+        if status_code_range[0] <= status_code <= status_code_range[1]:
+            if state_info.type == 'json':
+                details = response.json()
+                details = get_details_from_json(details, state_info.title)
+            elif state_info.type == 'str':
+                details = response.text
+
+            sys.stderr.write(f"{state_info.title}: {details}\n{summary}\n")
+            sys.exit(state_info.state)
+
+    sys.stderr.write(f"Details for Status Code are not defined\n{summary}\n")
+    sys.exit(3)

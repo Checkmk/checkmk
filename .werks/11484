@@ -1,0 +1,22 @@
+Title: Management Board: Remove explicit check plugins
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1601364919
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The only difference of check plugins for Management Boards was the resulting
+service description. In case, the plugin was related to a Management Board, the
+prefix "Management Interface:" was set by the check plugin.
+
+As the discovery now handles this scenario, the explicit check plugins are not
+needed any more.
+
+Note:
+If you use local checks that use plugin sections that have an equivalent
+Management Board section, changes on that checks also affect the processing of
+the Management Board plugin section, e.g. <<<snmp_info>>> on
+<<<mgmt_snmp_info>>>.

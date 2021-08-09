@@ -11,6 +11,6 @@ description:
 item:
  Channel ID
 
-inventory:
+discovery:
  One service is created for each channel.
 

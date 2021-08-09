@@ -13,5 +13,5 @@ description:
  During discovery the security groups are remembered and if
  one changes the service state goes {CRIT}.
 
-inventory:
+discovery:
  One service is created.

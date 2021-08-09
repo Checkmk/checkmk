@@ -6,7 +6,7 @@ Date: 1573730508
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously the Bakery configured Windows Agent using <tt>check_mk.ini</tt>
 configuration file: every script in <tt>enterprise/agents/bakery</tt> directory

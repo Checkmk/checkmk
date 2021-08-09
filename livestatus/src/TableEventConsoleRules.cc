@@ -5,17 +5,17 @@
 
 #include "TableEventConsoleRules.h"
 
-#include <memory>
-
 #include "Column.h"
+#include "IntLambdaColumn.h"
+#include "StringColumn.h"
 
 TableEventConsoleRules::TableEventConsoleRules(MonitoringCore *mc)
     : TableEventConsole(mc) {
     ColumnOffsets offsets{};
-    addColumn(std::make_unique<StringEventConsoleColumn>(
-        "rule_id", "The ID of the rule", offsets));
+    addColumn(
+        ECRow::makeStringColumn("rule_id", "The ID of the rule", offsets));
 
-    addColumn(std::make_unique<IntEventConsoleColumn>(
+    addColumn(ECRow::makeIntColumn(
         "rule_hits", "The times rule matched an incoming message", offsets));
 }
 

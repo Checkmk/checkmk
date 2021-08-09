@@ -6,24 +6,19 @@
 
 import abc
 
-import cmk.gui.config as config
-import cmk.gui.views as views
 import cmk.gui.sites as sites
+from cmk.gui.globals import html, request
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.plugins.sidebar import (
-    link,
-    SidebarSnapin,
-    snapin_registry,
-)
+from cmk.gui.plugins.sidebar import link, SidebarSnapin, snapin_registry
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 class HostSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def _host_mode_ident(self):
+    def _host_mode_ident(self) -> str:
         raise NotImplementedError()
 
-    def show(self):
+    def show(self) -> None:
         mode = self._host_mode_ident()
         sites.live().set_prepend_site(True)
         query = "GET hosts\nColumns: name state worst_service_state\nLimit: 100\n"
@@ -54,7 +49,6 @@ class HostSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
         else:
             num_columns = 2
 
-        target = views.get_context_link(config.user.id, view)
         html.open_table(class_="allhosts")
         col = 1
         for site, host, state, worstsvc in hosts:
@@ -73,7 +67,16 @@ class HostSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
             html.open_div(class_=["statebullet", "state%d" % statecolor])
             html.nbsp()
             html.close_div()
-            link(host, target + "&host=%s&site=%s" % (html.urlencode(host), html.urlencode(site)))
+            link(text=host,
+                 url=makeuri_contextless(
+                     request,
+                     [
+                         ("view_name", view),
+                         ("host", host),
+                         ("site", site),
+                     ],
+                     filename="view.py",
+                 ))
             html.close_td()
             if col == num_columns:
                 html.close_tr()
@@ -86,46 +89,46 @@ class HostSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
         html.close_table()
 
     @classmethod
-    def refresh_on_restart(cls):
+    def refresh_on_restart(cls) -> bool:
         return True
 
 
 @snapin_registry.register
 class Hosts(HostSnapin):
-    def _host_mode_ident(self):
+    def _host_mode_ident(self) -> str:
         return "hosts"
 
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "hosts"
 
     @classmethod
-    def title(cls):
-        return _("All Hosts")
+    def title(cls) -> str:
+        return _("All hosts")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("A summary state of each host with a link to the view showing its services")
 
 
 @snapin_registry.register
 class ProblemHosts(HostSnapin):
-    def _host_mode_ident(self):
+    def _host_mode_ident(self) -> str:
         return "problems"
 
     @staticmethod
-    def type_name():
+    def type_name() -> str:
         return "problem_hosts"
 
     @classmethod
-    def title(cls):
-        return _("Problem Hosts")
+    def title(cls) -> str:
+        return _("Problem hosts")
 
     @classmethod
-    def description(cls):
+    def description(cls) -> str:
         return _("A summary state of all hosts that have a problem, with "
                  "links to problems of those hosts")
 
     @classmethod
-    def refresh_regularly(cls):
+    def refresh_regularly(cls) -> bool:
         return True

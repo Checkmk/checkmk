@@ -5,37 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import json.encoder
 
-import pytest  # type: ignore[import]
+import pytest
 from six import ensure_str
 
 from cmk.gui.utils.html import HTML
 
 
-# TODO: Cleanup this dirty hack. Import of htmllib must not magically modify the behaviour of
-# the json module. Better would be to create a JSON wrapper in cmk.utils.json which uses a
-# custom subclass of the JSONEncoder.
-#
-# Monkey patch in order to make the HTML class below json-serializable without changing the default json calls.
-def _default(self: json.JSONEncoder, obj: object) -> str:
-    # ignore attr-defined: See hack below
-    return getattr(obj.__class__, "to_json", _default.default)(obj)  # type: ignore[attr-defined]
-
-
-# TODO: suppress mypy warnings for this monkey patch right now. See also:
-# https://github.com/python/mypy/issues/2087
-# Save unmodified default:
-_default.default = json.JSONEncoder().default  # type: ignore[attr-defined]
-# replacement:
-json.JSONEncoder.default = _default  # type: ignore[assignment]
-
-
 @pytest.mark.parametrize("value", [
-    None,
     "",
-    123,
-    123.4,
     "one",
     "Oneüლ,ᔑ•ﺪ͟͠•ᔐ.ლ",
 ])

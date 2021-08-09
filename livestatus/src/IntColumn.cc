@@ -5,25 +5,32 @@
 
 #include "IntColumn.h"
 
-#include "Aggregator.h"
-#include "Filter.h"
 #include "IntAggregator.h"
 #include "IntFilter.h"
 #include "Renderer.h"
 #include "Row.h"
 
-void IntColumn::output(Row row, RowRenderer &r, const contact *auth_user,
-                       std::chrono::seconds /*timezone_offset*/) const {
+void deprecated::IntColumn::output(
+    Row row, RowRenderer &r, const contact *auth_user,
+    std::chrono::seconds /*timezone_offset*/) const {
     r.output(getValue(row, auth_user));
 }
 
-std::unique_ptr<Filter> IntColumn::createFilter(
+std::unique_ptr<Filter> deprecated::IntColumn::createFilter(
     Filter::Kind kind, RelationalOperator relOp,
     const std::string &value) const {
-    return std::make_unique<IntFilter>(kind, *this, relOp, value);
+    return std::make_unique<IntFilter>(
+        kind, name(),
+        [this](Row row, const contact *auth_user) {
+            return this->getValue(row, auth_user);
+        },
+        relOp, value);
 }
 
-std::unique_ptr<Aggregator> IntColumn::createAggregator(
+std::unique_ptr<Aggregator> deprecated::IntColumn::createAggregator(
     AggregationFactory factory) const {
-    return std::make_unique<IntAggregator>(factory, this);
+    return std::make_unique<IntAggregator>(
+        factory, [this](Row row, const contact *auth_user) {
+            return getValue(row, auth_user);
+        });
 }

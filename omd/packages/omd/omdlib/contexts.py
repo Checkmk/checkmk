@@ -28,20 +28,21 @@ import os
 import sys
 from typing import cast, Optional
 
-from cmk.utils.exceptions import MKTerminate
-
 import omdlib
-from omdlib.init_scripts import check_status
+import omdlib.utils
 from omdlib.config_hooks import call_hook, sort_hooks
-from omdlib.utils import is_dockerized
-from omdlib.type_defs import Config, Replacements
+from omdlib.init_scripts import check_status
 from omdlib.skel_permissions import load_skel_permissions, load_skel_permissions_from, Permissions
+from omdlib.type_defs import Config, Replacements
+from omdlib.utils import is_dockerized
+
+from cmk.utils.exceptions import MKTerminate
 
 
 class AbstractSiteContext(metaclass=abc.ABCMeta):
     """Object wrapping site specific information"""
     def __init__(self, sitename: Optional[str]) -> None:
-        super(AbstractSiteContext, self).__init__()
+        super().__init__()
         self._sitename = sitename
         self._config_loaded = False
         self._config: Config = {}
@@ -50,24 +51,29 @@ class AbstractSiteContext(metaclass=abc.ABCMeta):
     def name(self) -> Optional[str]:
         return self._sitename
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def version(self) -> Optional[str]:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def dir(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def tmp_dir(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def real_dir(self):
         # type: () -> str
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def real_tmp_dir(self):
         # type: () -> str
         raise NotImplementedError()
@@ -108,7 +114,7 @@ class SiteContext(AbstractSiteContext):
 
     @property
     def dir(self) -> str:
-        return "/omd/sites/" + cast(str, self._sitename)
+        return os.path.join(omdlib.utils.omd_base_path(), "omd/sites", cast(str, self._sitename))
 
     @property
     def tmp_dir(self) -> str:
@@ -116,7 +122,7 @@ class SiteContext(AbstractSiteContext):
 
     @property
     def real_dir(self) -> str:
-        return "/opt/" + self.dir
+        return "/opt/" + self.dir.lstrip("/")
 
     @property
     def real_tmp_dir(self) -> str:
@@ -206,7 +212,7 @@ class SiteContext(AbstractSiteContext):
 
     def is_disabled(self) -> bool:
         """Whether or not this site has been disabled with 'omd disable'"""
-        apache_conf = "/omd/apache/%s.conf" % self.name
+        apache_conf = os.path.join(omdlib.utils.omd_base_path(), "omd/apache/%s.conf" % self.name)
         return not os.path.exists(apache_conf)
 
     def is_stopped(self) -> bool:
@@ -253,10 +259,11 @@ class SiteContext(AbstractSiteContext):
 
 class RootContext(AbstractSiteContext):
     def __init__(self) -> None:
-        super(RootContext, self).__init__(sitename=None)
+        super().__init__(sitename=None)
 
     @property
     def dir(self) -> str:
+        """Absolute base path (without trailing slash)"""
         return "/"
 
     @property
@@ -265,7 +272,8 @@ class RootContext(AbstractSiteContext):
 
     @property
     def real_dir(self) -> str:
-        return "/" + self.dir
+        """Absolute base path (without trailing slash)"""
+        return "/" + self.dir.lstrip("/")
 
     @property
     def real_tmp_dir(self) -> str:

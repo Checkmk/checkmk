@@ -21,15 +21,30 @@ required variables manually (as in ''veritas_vcs_*.py''), or create a
 regression test dataset as described in ''checks/generictests/regression.py''
 """
 from importlib import import_module
-import pytest  # type: ignore[import]
-import testlib  # type: ignore[import]
-import generictests
+
+import pytest
+
+from tests.testlib import on_time
+
+from . import generictests
 
 pytestmark = pytest.mark.checks
 
 
+# TODO: Shouldn't we enable this by default for all unit tests?
+@pytest.fixture(name="mock_time", scope="module")
+def fixture_mock_time():
+    """Use this fixture for simple time + zone mocking
+
+    Use this fixture instead of directly invoking on_time in case you don't need a specific time.
+    Calling this once instead of on_time() a lot of times saves execution time.
+    """
+    with on_time(1572247138, "CET"):
+        yield
+
+
+@pytest.mark.usefixtures("mock_time")
 @pytest.mark.parametrize("datasetname", generictests.DATASET_NAMES)
-def test_dataset(check_manager, datasetname, config_check_info):
-    with testlib.on_time(1572247138, "CET"):
-        dataset = import_module("generictests.datasets.%s" % datasetname)
-        generictests.run(config_check_info, check_manager, dataset)
+def test_dataset(datasetname, fix_plugin_legacy):
+    dataset = import_module("tests.unit.checks.generictests.datasets.%s" % datasetname)
+    generictests.run(fix_plugin_legacy.check_info, dataset)

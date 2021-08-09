@@ -8,29 +8,16 @@ import contextlib
 import os
 import shutil
 
-import pytest  # type: ignore[import]
-from werkzeug.test import create_environ
+import pytest
 
-import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
-import cmk.gui.htmllib as htmllib
+from cmk.gui.watolib.search import MatchItem
 from cmk.gui.watolib.utils import has_agent_bakery
-
-from cmk.gui.http import Request
-from cmk.gui.globals import AppContext, RequestContext
-
-from testlib.utils import DummyApplication
-
-
-@pytest.fixture(name="mocked_user")
-def fixture_mocked_user(monkeypatch):
-    # Write/Read operations always require a valid user
-    monkeypatch.setattr(config, "user", config.LoggedInSuperUser())
 
 
 @pytest.fixture(autouse=True)
-def test_env(mocked_user, load_config, load_plugins):
+def test_env(with_admin_login, load_config, load_plugins):
     # Ensure we have clean folder/host caches
     hosts_and_folders.Folder.invalidate_caches()
 
@@ -61,34 +48,35 @@ def fake_start_bake_agents(monkeypatch):
         "site": "ding",
     }, {
         'address_family': 'ip-v4-only',
-        'ip-v4': 'ip-v4',
         'agent': 'no-agent',
-        'snmp_ds': 'no-snmp',
+        'ip-v4': 'ip-v4',
+        'piggyback': 'auto-piggyback',
         'ping': 'ping',
         'site': 'ding',
-        'piggyback': 'auto-piggyback',
+        'snmp_ds': 'no-snmp',
     }),
     ({
         "tag_snmp": "no-snmp",
         "tag_agent": "no-agent",
         "tag_address_family": "no-ip",
     }, {
-        'agent': 'no-agent',
         'address_family': 'no-ip',
-        'snmp_ds': 'no-snmp',
-        'site': 'NO_SITE',
+        'agent': 'no-agent',
         'piggyback': 'auto-piggyback',
+        'site': 'NO_SITE',
+        'snmp_ds': 'no-snmp',
     }),
     ({
         "site": False,
     }, {
-        'agent': 'cmk-agent',
         'address_family': 'ip-v4-only',
+        'agent': 'cmk-agent',
+        'checkmk-agent': 'checkmk-agent',
         'ip-v4': 'ip-v4',
-        'snmp_ds': 'no-snmp',
-        'site': '',
-        'tcp': 'tcp',
         'piggyback': 'auto-piggyback',
+        'site': '',
+        'snmp_ds': 'no-snmp',
+        'tcp': 'tcp',
     }),
 ])
 def test_host_tags(attributes, expected_tags):
@@ -126,31 +114,25 @@ def test_host_is_ping_host(attributes, result):
     "alias": "testalias",
     "parents": ["ding", "dong"],
 }])
-def test_write_and_read_host_attributes(tmp_path, attributes, monkeypatch):
+def test_write_and_read_host_attributes(tmp_path, attributes):
     folder_path = str(tmp_path)
-    # Write/Read operations always require a valid user
-    monkeypatch.setattr(config, "user", config.LoggedInSuperUser())
-
     # Used to write the data
     write_data_folder = watolib.Folder("testfolder", folder_path=folder_path, parent_folder=None)
 
     # Used to read the previously written data
     read_data_folder = watolib.Folder("testfolder", folder_path=folder_path, parent_folder=None)
 
-    environ = dict(create_environ(), REQUEST_URI='')
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ))):
-        # Write data
-        # Note: The create_hosts function modifies the attributes dict, adding a meta_data key inplace
-        write_data_folder.create_hosts([("testhost", attributes, [])])
-        write_folder_hosts = write_data_folder.hosts()
-        assert len(write_folder_hosts) == 1
+    # Write data
+    # Note: The create_hosts function modifies the attributes dict, adding a meta_data key inplace
+    write_data_folder.create_hosts([("testhost", attributes, [])])
+    write_folder_hosts = write_data_folder.hosts()
+    assert len(write_folder_hosts) == 1
 
-        # Read data back
-        read_folder_hosts = read_data_folder.hosts()
-        assert len(read_folder_hosts) == 1
-        for _, host in read_folder_hosts.items():
-            assert host.attributes() == attributes
+    # Read data back
+    read_folder_hosts = read_data_folder.hosts()
+    assert len(read_folder_hosts) == 1
+    for _, host in read_folder_hosts.items():
+        assert host.attributes() == attributes
 
 
 @contextlib.contextmanager
@@ -161,7 +143,7 @@ def in_chdir(directory):
     os.chdir(cur)
 
 
-def test_create_nested_folders(register_builtin_html):
+def test_create_nested_folders(request_context):
     with in_chdir("/"):
         root = watolib.Folder.root_folder()
 
@@ -172,6 +154,25 @@ def test_create_nested_folders(register_builtin_html):
         folder2.persist_instance()
 
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
+
+
+def test_eq_operation(request_context):
+    with in_chdir("/"):
+        root = watolib.Folder.root_folder()
+        folder1 = watolib.Folder("folder1", parent_folder=root)
+        folder1.persist_instance()
+
+        folder1_new = watolib.Folder("folder1")
+        folder1_new.load_instance()
+
+        assert folder1 == folder1_new
+        assert id(folder1) != id(folder1_new)
+        assert folder1 in [folder1_new]
+
+        folder2 = watolib.Folder("folder2", parent_folder=folder1)
+        folder2.persist_instance()
+
+        assert folder1 not in [folder2]
 
 
 @pytest.mark.parametrize("protocol,host_attribute,base_variable,credentials,folder_credentials", [
@@ -271,15 +272,11 @@ def test_mgmt_inherit_protocol(protocol, host_attribute, base_variable, folder_c
 
 
 @pytest.fixture(name="make_folder")
-def fixture_make_folder(mocker, fs):
+def fixture_make_folder(mocker):
     """
     Returns a function to create patched folders for tests. Note that the global setting
     "Hide folders without read permissions" will currently always be set during setup.
     """
-    # Set the disk size of the fake in memory filesystem to zero bytes to ensure that no
-    # files are written by accident e.g. in CREFolder.__init__:
-    fs.set_disk_usage(0)
-
     mocker.patch.object(hosts_and_folders.config,
                         'wato_hide_folders_without_read_permissions',
                         True,
@@ -391,3 +388,27 @@ def test_subfolder_creation():
     # Upon instantiation, all the subfolders should be already known.
     folder = hosts_and_folders.Folder.root_folder()
     assert len(folder._subfolders) == 1
+
+
+def test_match_item_generator_hosts():
+    assert list(
+        hosts_and_folders.MatchItemGeneratorHosts(
+            "hosts",
+            lambda: {
+                "host": {
+                    "edit_url": "some_url",
+                    "alias": "alias",
+                    "ipaddress": "1.2.3.4",
+                    "ipv6address": "",
+                    "additional_ipv4addresses": ["5.6.7.8"],
+                    "additional_ipv6addresses": [],
+                },
+            },
+        ).generate_match_items()) == [
+            MatchItem(
+                title='host',
+                topic='Hosts',
+                url='some_url',
+                match_texts=['host', 'alias', '1.2.3.4', '5.6.7.8'],
+            )
+        ]

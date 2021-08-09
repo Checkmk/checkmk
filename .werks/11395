@@ -1,0 +1,14 @@
+Title: Filter for multiple sites
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1601644411
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+Views can now be filtered by multiple sites instead of one only at the
+time. This filter "Multiple Sites" is not complatible with the existing
+sites filters "Site" and "Site (enforced)" and will only be applied if the
+other site filters are removed from the view.

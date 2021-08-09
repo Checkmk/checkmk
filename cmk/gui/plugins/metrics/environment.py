@@ -5,12 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-    indexed_color,
-)
+from cmk.gui.plugins.metrics import graph_info, indexed_color, metric_info
 
 #.
 #   .--Metrics-------------------------------------------------------------.
@@ -160,6 +155,7 @@ metric_info["output_load"] = {
 }
 
 metric_info["voltage_percent"] = {
+    # xgettext: no-python-format
     "title": _("Electrical tension in % of normal value"),
     "unit": "%",
     "color": "#ffc020",
@@ -210,7 +206,7 @@ metric_info["frequency"] = {
 metric_info["battery_capacity"] = {
     "title": _("Battery capacity"),
     "unit": "%",
-    "color": "11/c",
+    "color": "13/a",
 }
 
 metric_info["battery_current"] = {
@@ -223,6 +219,12 @@ metric_info["battery_temp"] = {
     "title": _("Battery temperature"),
     "unit": "c",
     "color": "#ffb030",
+}
+
+metric_info["battery_seconds_remaining"] = {
+    "title": _("Battery time remaining"),
+    "unit": "s",
+    "color": "21/a",
 }
 
 metric_info["o2_percentage"] = {
@@ -295,6 +297,7 @@ graph_info["battery_currents"] = {
 }
 
 graph_info["battery_capacity"] = {
+    "title": _("Battery capacity"),
     "metrics": [("battery_capacity", "area"),],
     "range": (0, 100),
 }

@@ -4,18 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,
-    Iterable,
-    Mapping,
-    Sequence,
-    Tuple,
-    Union,
-)
-from .agent_based_api.v1 import (
-    register,
-    type_defs,
-)
+from typing import Any, Dict, Iterable, Mapping, Sequence, Tuple, Union
+
+from .agent_based_api.v1 import register, type_defs
 from .utils import interfaces
 
 # Example output from agent:
@@ -102,7 +93,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
     return ip_stats
 
 
-def _parse_lnx_if_sections(string_table: type_defs.AgentStringTable):
+def _parse_lnx_if_sections(string_table: type_defs.StringTable):
     ip_stats = {}
     ethtool_stats: Dict[str, Dict[str, Union[str, int, Sequence[int]]]] = {}
     iface = None
@@ -140,7 +131,7 @@ def _parse_lnx_if_sections(string_table: type_defs.AgentStringTable):
     return ip_stats, ethtool_stats
 
 
-def parse_lnx_if(string_table: type_defs.AgentStringTable) -> Section:
+def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
     ip_stats, ethtool_stats = _parse_lnx_if_sections(string_table)
 
     nic_info = []
@@ -210,7 +201,11 @@ def parse_lnx_if(string_table: type_defs.AgentStringTable) -> Section:
                 else:
                     ifOperStatus = 4  # unknown (NIC has never been used)
             else:
-                if "UP" in state_infos:
+                # Assumption:
+                # abc: <BROADCAST,MULTICAST,UP,LOWER_UP>    UP + LOWER_UP   => really UP
+                # def: <NO-CARRIER,BROADCAST,MULTICAST,UP>  NO-CARRIER + UP => DOWN, but admin UP
+                # ghi: <BROADCAST,MULTICAST>                unconfigured    => DOWN
+                if "UP" in state_infos and "LOWER_UP" in state_infos:
                     ifOperStatus = 1
                 else:
                     ifOperStatus = 2
@@ -253,13 +248,14 @@ def parse_lnx_if(string_table: type_defs.AgentStringTable) -> Section:
 register.agent_section(
     name="lnx_if",
     parse_function=parse_lnx_if,
+    supersedes=["if", "if64"],
 )
 
 
 def discover_lnx_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     # Always exclude dockers veth* interfaces on docker nodes
     if_table = [iface for iface in section[0] if not iface.descr.startswith("veth")]
     yield from interfaces.discover_interfaces(
@@ -270,9 +266,9 @@ def discover_lnx_if(
 
 def check_lnx_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from interfaces.check_multiple_interfaces(
         item,
         params,
@@ -282,9 +278,9 @@ def check_lnx_if(
 
 def cluster_check_lnx_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from interfaces.cluster_check(
         item,
         params,
@@ -296,7 +292,7 @@ register.check_plugin(
     name="lnx_if",
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_lnx_if,
     check_ruleset_name="if",

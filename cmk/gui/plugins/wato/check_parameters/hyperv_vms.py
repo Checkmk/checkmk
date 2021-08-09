@@ -5,13 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import Dictionary, FixedValue, Alternative, MonitoringState, TextAscii
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, MonitoringState, TextInput
 
 # these default values were suggested by Aldi Sued
 VM_STATES_DEFVALS = [('FastSaved', 0), ('FastSavedCritical', 2), ('FastSaving', 0),
@@ -24,14 +23,14 @@ VM_STATES_DEFVALS = [('FastSaved', 0), ('FastSavedCritical', 2), ('FastSaving', 
 
 
 def _item_spec_hyperv_vms():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the VM"),
         help=_("Specify the name of the VM, for example z4065012."),
         allow_empty=False,
     )
 
 
-def _parameter_valuespec_hyperv_vms():
+def _parameter_valuespec_hyperv_vms() -> Alternative:
     return Alternative(
         title=_("Translation of VM state to monitoring state"),
         elements=[
@@ -41,7 +40,7 @@ def _parameter_valuespec_hyperv_vms():
                        "states, i.e. to the result of the check. This overwrites the default "
                        "mapping used by the check."),
                 elements=[(vm_state,
-                           MonitoringState(title=_("Monitoring state if VM state is %s" % vm_state),
+                           MonitoringState(title=_("Monitoring state if VM state is %s") % vm_state,
                                            default_value=default_value))
                           for vm_state, default_value in VM_STATES_DEFVALS]),
             FixedValue(
@@ -63,5 +62,5 @@ rulespec_registry.register(
         item_spec=_item_spec_hyperv_vms,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hyperv_vms,
-        title=lambda: _("State of Microsoft Hyper-V Server VMs"),
+        title=lambda: _("Microsoft Hyper-V Server VM state"),
     ))

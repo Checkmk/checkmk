@@ -3,53 +3,40 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping
 import time
+from typing import Any, Mapping, MutableMapping
 
-from .agent_based_api.v1 import (
-    IgnoreResults,
-    register,
-    check_levels,
-    get_value_store,
-)
-
-from .agent_based_api.v1.type_defs import (
-    Parameters,
-    CheckGenerator,
-    DiscoveryGenerator,
-    ValueStore,
-)
-
+from .agent_based_api.v1 import check_levels, get_value_store, IgnoreResults, register
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.mssql_counters import (
-    Section,
+    accumulate_node_results,
     discovery_mssql_counters_generic,
-    get_rate_or_none,
     get_item,
+    get_rate_or_none,
+    Section,
 )
 
 
-def discovery_mssql_counters_transactions(section: Section) -> DiscoveryGenerator:
+def discovery_mssql_counters_transactions(section: Section) -> DiscoveryResult:
     """
     >>> for result in discovery_mssql_counters_transactions({
     ...     ('MSSQL_VEEAMSQL2012', 'tempdb'): {'transactions/sec': 24410428, 'tracked_transactions/sec': 0, 'write_transactions/sec': 10381607},
     ... }):
     ...   print(result)
-    Service(item='MSSQL_VEEAMSQL2012 tempdb transactions/sec', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012 tempdb tracked_transactions/sec', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012 tempdb write_transactions/sec', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012 tempdb')
     """
     yield from discovery_mssql_counters_generic(
         section, {'transactions/sec', 'write_transactions/sec', 'tracked_transactions/sec'})
 
 
 def _check_common(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     time_point: float,
     node_name: str,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     counters, _counter = get_item(item, section)
     now = counters.get("utc_time", time_point)
     for counter_key, title in (
@@ -76,16 +63,17 @@ def _check_common(
             levels_upper=params.get(counter_key),
             render_func=lambda v, n=node_name, t=title: "%s%s: %.1f/s" % (n and "[%s] " % n, t, v),
             metric_name=counter_key.replace("/sec", "_per_second"),
+            boundaries=(0, None),
         )
 
 
 def _check_base(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     time_point: float,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> vs = {}
     >>> for i in range(2):
@@ -96,31 +84,31 @@ def _check_base(
     Cannot calculate rates yet
     Cannot calculate rates yet
     Cannot calculate rates yet
-    Result(state=<state.OK: 0>, summary='Transactions: 1.0/s', details='Transactions: 1.0/s')
-    Metric('transactions_per_second', 1.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='Write Transactions: 1.0/s', details='Write Transactions: 1.0/s')
-    Metric('write_transactions_per_second', 1.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='Tracked Transactions: 1.0/s', details='Tracked Transactions: 1.0/s')
-    Metric('tracked_transactions_per_second', 1.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<State.OK: 0>, summary='Transactions: 1.0/s')
+    Metric('transactions_per_second', 1.0, boundaries=(0.0, None))
+    Result(state=<State.OK: 0>, summary='Write Transactions: 1.0/s')
+    Metric('write_transactions_per_second', 1.0, boundaries=(0.0, None))
+    Result(state=<State.OK: 0>, summary='Tracked Transactions: 1.0/s')
+    Metric('tracked_transactions_per_second', 1.0, boundaries=(0.0, None))
     """
     yield from _check_common(value_store, time_point, "", item, params, section)
 
 
 def check_mssql_counters_transactions(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _check_base(get_value_store(), time.time(), item, params, section)
 
 
 def _cluster_check_base(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     time_point: float,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> vs = {}
     >>> for i in range(2):
@@ -131,22 +119,25 @@ def _cluster_check_base(
     Cannot calculate rates yet
     Cannot calculate rates yet
     Cannot calculate rates yet
-    Result(state=<state.OK: 0>, summary='[node1] Transactions: 1.0/s', details='[node1] Transactions: 1.0/s')
-    Metric('transactions_per_second', 1.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='[node1] Write Transactions: 1.0/s', details='[node1] Write Transactions: 1.0/s')
-    Metric('write_transactions_per_second', 1.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='[node1] Tracked Transactions: 1.0/s', details='[node1] Tracked Transactions: 1.0/s')
-    Metric('tracked_transactions_per_second', 1.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<State.OK: 0>, summary='[node1] Transactions: 1.0/s')
+    Metric('transactions_per_second', 1.0, boundaries=(0.0, None))
+    Result(state=<State.OK: 0>, summary='[node1] Write Transactions: 1.0/s')
+    Metric('write_transactions_per_second', 1.0, boundaries=(0.0, None))
+    Result(state=<State.OK: 0>, summary='[node1] Tracked Transactions: 1.0/s')
+    Metric('tracked_transactions_per_second', 1.0, boundaries=(0.0, None))
     """
-    for node_name, node_section in section.items():
-        yield from _check_common(value_store, time_point, node_name, item, params, node_section)
+    yield from accumulate_node_results(
+        node_check_function=lambda node_name, node_section: _check_common(
+            value_store, time_point, node_name, item, params, node_section),
+        section=section,
+    )
 
 
 def cluster_check_mssql_counters_transactions(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _cluster_check_base(get_value_store(), time.time(), item, params, section)
 
 

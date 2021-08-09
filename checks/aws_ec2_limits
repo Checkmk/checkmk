@@ -6,6 +6,12 @@
 
 import cmk.utils.aws_constants as aws_types
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 default_running_ondemand_instances = [
     (inst_type, (None, 80.0, 90.0)) for inst_type in aws_types.AWSEC2InstTypes
 ]
@@ -59,7 +65,6 @@ check_info['aws_ec2_limits'] = {
     'inventory_function': discover(),
     'check_function': check_aws_ec2_limits,
     'service_description': 'AWS/EC2 Limits %s',
-    'includes': ['aws.include'],
     'group': 'aws_ec2_limits',
     'default_levels_variable': 'aws_ec2_limits_default_levels',
     'has_perfdata': True,

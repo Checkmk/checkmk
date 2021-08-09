@@ -17,8 +17,8 @@
 
 
 def inventory_msoffice_serviceplans(info):
-    for bundle, _plan, _status in info:
-        yield bundle, {}
+    for line in info:
+        yield line[0], {}
 
 
 def check_msoffice_serviceplans(item, params, info):
@@ -26,7 +26,8 @@ def check_msoffice_serviceplans(item, params, info):
     pending = 0
     pending_list = []
     warn, crit = params.get("levels", (None, None))
-    for bundle, plan, status in info:
+    for line in info:
+        bundle, plan, status = line[0], " ".join(line[1:-1]), line[-1]
         if bundle == item:
             if status == "Success":
                 success += 1

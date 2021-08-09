@@ -4,26 +4,28 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from itertools import chain, repeat
 import os
-import pytest  # type: ignore
 import re
-from local import actual_output, make_yaml_config, local_test, wait_agent, write_config
-import it_utils
+from itertools import chain, repeat
+
+import pytest  # type: ignore
+
+from . import it_utils
+from .local import local_test
 
 
-class Globals(object):
+class Globals():
     section = 'dotnet_clrmemory'
     alone = True
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(params=['alone', 'with_systemtime'])
-def testconfig(request, make_yaml_config):
+@pytest.fixture(name="testconfig", params=['alone', 'with_systemtime'])
+def testconfig_engine(request, make_yaml_config):
     Globals.alone = request.param == 'alone'
     if Globals.alone:
         make_yaml_config['global']['sections'] = Globals.section
@@ -32,8 +34,8 @@ def testconfig(request, make_yaml_config):
     return make_yaml_config
 
 
-@pytest.fixture
-def expected_output():
+@pytest.fixture(name="expected_output")
+def expected_output_engine():
     base = [
         re.escape(r'<<<%s:sep(124)>>>' % Globals.section),
         (r'AllocatedBytesPersec,Caption,Description,FinalizationSurvivors,'

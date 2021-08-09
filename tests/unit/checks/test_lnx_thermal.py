@@ -4,9 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
-from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual
+from tests.testlib import Check
+
+from .checktestlib import assertDiscoveryResultsEqual, DiscoveryResult
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks
@@ -36,8 +38,8 @@ result_discovery = [  # type: ignore
 
 
 @pytest.mark.parametrize("info, result", list(zip(agent_info, result_discovery)))
-def test_parse_and_discovery_function(check_manager, info, result):
-    check = check_manager.get_check("lnx_thermal")
+def test_parse_and_discovery_function(info, result):
+    check = Check("lnx_thermal")
     parsed = check.run_parse(info)
     discovery = DiscoveryResult(check.run_discovery(parsed))
     assertDiscoveryResultsEqual(check, discovery, DiscoveryResult(result))
@@ -62,8 +64,8 @@ result_check = [
 
 @pytest.mark.parametrize("info, discovered, checked",
                          list(zip(agent_info, result_discovery, result_check)))
-def test_check_functions_perfdata(check_manager, info, discovered, checked):
-    check = check_manager.get_check("lnx_thermal")
+def test_check_functions_perfdata(info, discovered, checked):
+    check = Check("lnx_thermal")
     parsed = check.run_parse(info)
     for (item, _params), result in zip(discovered, checked):
         assert check.run_check(item, {}, parsed) == result

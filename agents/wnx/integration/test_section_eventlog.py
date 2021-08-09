@@ -5,21 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
-from itertools import chain, repeat
 import math
 import os
 import platform
 import re
-import win32evtlog  # type: ignore
-from local import (actual_output, assert_subprocess, make_yaml_config, user_dir, local_test,
-                   wait_agent, write_config, host)
-import sys
+import winreg  # type: ignore
+from itertools import chain, repeat
 
 import pytest  # type: ignore
-import winreg  # type: ignore
+import win32evtlog  # type: ignore
+
+from .local import assert_subprocess, host, local_test, user_dir
 
 
-class Globals(object):
+class Globals():
     local_statefile = 'eventstate.txt'
     state_pattern = re.compile(r'^(?P<logtype>[^\|]+)\|(?P<record>\d+)$')
     section = 'logwatch'
@@ -31,7 +30,7 @@ class Globals(object):
     testeventtype = 'Warning'
     testdescription = 'Something might happen!'
     tolerance = 10
-    testids = range(1, 3)
+    testids = [1, 2, 3]
 
 
 def generate_logs():
@@ -43,30 +42,31 @@ def generate_logs():
                 try:
                     yield winreg.EnumKey(key, index)
                     index += 1
-                except WindowsError:
+
+                except OSError:
                     break
 
 
 # Windows SSH agent and COM spoil tests by omitting occasional events to
 # Security and System logs. Ignore those logs as they are too unstable during a
 # test run.
-logs = list(l for l in generate_logs() if l != 'Security' and l != 'System')
+logs = list(l for l in generate_logs() if l not in ['Security', 'System'])
 
 
 @contextlib.contextmanager
 def eventlog(logtype):
-    handle = win32evtlog.OpenEventLog(host, logtype)
+    handle = win32evtlog.OpenEventLog(host, logtype)  # pylint: disable=c-extension-no-member
     try:
         yield handle
     finally:
-        win32evtlog.CloseEventLog(handle)
+        win32evtlog.CloseEventLog(handle)  # pylint: disable=c-extension-no-member
 
 
 def get_last_record(logtype):
     try:
         with eventlog(logtype) as log_handle:
-            oldest = win32evtlog.GetOldestEventLogRecord(log_handle)
-            total = win32evtlog.GetNumberOfEventLogRecords(log_handle)
+            oldest = win32evtlog.GetOldestEventLogRecord(log_handle)  # pylint: disable=c-extension-no-member
+            total = win32evtlog.GetNumberOfEventLogRecords(log_handle)  # pylint: disable=c-extension-no-member
             result = oldest + total - 1
             return result if result >= 0 else 0
     except Exception:
@@ -100,8 +100,8 @@ def create_events():
         create_event(i)
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
@@ -110,22 +110,22 @@ def setup_section(config, section, alone):
     return config
 
 
-@pytest.fixture(params=['alone', 'with_systemtime'])
-def testconfig_sections(request, make_yaml_config):
+@pytest.fixture(name="testconfig_sections", params=['alone', 'with_systemtime'])
+def testconfig_sections_engine(request, make_yaml_config):
     Globals.alone = request.param == 'alone'
     return setup_section(make_yaml_config, Globals.section, Globals.alone)
 
 
-@pytest.fixture(params=['yes', 'no'], ids=['vista_api=yes', 'vista_api=no'])
-def testconfig(request, testconfig_sections):
+@pytest.fixture(name="testconfig", params=['yes', 'no'], ids=['vista_api=yes', 'vista_api=no'])
+def testconfig_engine(request, testconfig_sections):
     log_files = [{Globals.testlog: 'warn'}, {'Security': 'off'}, {'System': 'off'}, {'*': 'off'}]
     testconfig_sections[Globals.section] = {'vista_api': request.param, 'logfile': log_files}
 
     return testconfig_sections
 
 
-@pytest.fixture
-def expected_output_no_events():
+@pytest.fixture(name="expected_output_no_events")
+def expected_output_no_events_engine():
     if platform.system() != 'Windows':
         return
 
@@ -135,8 +135,8 @@ def expected_output_no_events():
     return expected
 
 
-@pytest.fixture
-def expected_output_application_events():
+@pytest.fixture(name="expected_output_application_events")
+def expected_output_application_events_engine():
     if platform.system() != 'Windows':
         return
 

@@ -4,70 +4,77 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Tuple as TupleType
+from typing import Union
+
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+)
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     Float,
     Integer,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
-    CheckParameterRulespecWithItem,
-    CheckParameterRulespecWithoutItem,
-    rulespec_registry,
 )
 
 
 def _item_spec_azure_agent_info():
-    return TextAscii(title=_("Azure Agent Info"))
+    return TextInput(title=_("Azure Agent Info"))
 
 
 def _parameter_valuespec_azure_agent_info():
-    return Dictionary(elements=[
-        ("resource_pinning",
-         DropdownChoice(
-             title=_("Resource pinning: Ensure monitored resources are unchanged"),
-             help=_("If this option is selected, the resources being monitored are stored during"
-                    " discovery. The service will go to a warning state, if they change."),
-             choices=[
-                 (True, _("Warn if resources appear or vanish")),
-                 (False, _("Silently ignore new or missing resources")),
-             ],
-         )),
-        ("warning_levels",
-         Tuple(
-             title=_("Upper levels for encountered warnings"),
-             elements=[
-                 Integer(title=_("Warning at"), default_value=1),
-                 Integer(title=_("Critical at"), default_value=10),
-             ],
-         )),
-        ("exception_levels",
-         Tuple(
-             title=_("Upper levels for encountered exceptions"),
-             elements=[
-                 Integer(title=_("Warning at"), default_value=1),
-                 Integer(title=_("Critical at"), default_value=1),
-             ],
-         )),
-        ("remaining_reads_levels_lower",
-         Tuple(
-             title=_("Lower levels for remaining API reads"),
-             elements=[
-                 Integer(title=_("Warning below"), default_value=6000),
-                 Integer(title=_("Critical below"), default_value=3000),
-             ],
-         )),
-        ("remaining_reads_unknown_state",
-         MonitoringState(
-             title=_("State if remaining API reads are unknown"),
-             default_value=1,
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            ("resource_pinning",
+             DropdownChoice(
+                 title=_("Resource pinning: Ensure monitored resources are unchanged"),
+                 help=_(
+                     "If this option is selected, the resources being monitored are stored during"
+                     " discovery. The service will go to a warning state, if they change."),
+                 choices=[
+                     (True, _("Warn if resources appear or vanish")),
+                     (False, _("Silently ignore new or missing resources")),
+                 ],
+             )),
+            ("warning_levels",
+             Tuple(
+                 title=_("Upper levels for encountered warnings"),
+                 elements=[
+                     Integer(title=_("Warning at"), default_value=1),
+                     Integer(title=_("Critical at"), default_value=10),
+                 ],
+             )),
+            ("exception_levels",
+             Tuple(
+                 title=_("Upper levels for encountered exceptions"),
+                 elements=[
+                     Integer(title=_("Warning at"), default_value=1),
+                     Integer(title=_("Critical at"), default_value=1),
+                 ],
+             )),
+            ("remaining_reads_levels_lower",
+             Tuple(
+                 title=_("Lower levels for remaining API reads"),
+                 elements=[
+                     Integer(title=_("Warning below"), default_value=6000),
+                     Integer(title=_("Critical below"), default_value=3000),
+                 ],
+             )),
+            ("remaining_reads_unknown_state",
+             MonitoringState(
+                 title=_("State if remaining API reads are unknown"),
+                 default_value=1,
+             )),
+        ],
+        ignored_keys=["discovered_resources"],
+    )
 
 
 rulespec_registry.register(
@@ -82,7 +89,7 @@ rulespec_registry.register(
 
 
 def _item_spec_webserver():
-    return TextAscii(title=_("Name of the service"))
+    return TextInput(title=_("Name of the service"))
 
 
 def _parameter_valuespec_webserver():
@@ -126,7 +133,7 @@ rulespec_registry.register(
 
 
 def _item_spec_azure_storageaccounts():
-    return TextAscii(
+    return TextInput(
         title=_("Storage account name"),
         help=_("Specify storage account names that the rule should apply to"),
     )
@@ -207,7 +214,7 @@ rulespec_registry.register(
 
 
 def _item_spec_azure_databases():
-    return TextAscii(
+    return TextInput(
         title=_("Database Name"),
         help=_("Specify database names that the rule should apply to"),
     )
@@ -257,7 +264,7 @@ rulespec_registry.register(
 
 
 def _item_spec_azure_vms():
-    return TextAscii(title=_("VM name"))
+    return TextInput(title=_("VM name"))
 
 
 def _parameter_valuespec_azure_vms():
@@ -301,54 +308,71 @@ rulespec_registry.register(
     ))
 
 
-def _azure_vms_summary_levels(title, lower=(None, None), upper=(None, None)):
-    return Dictionary(title=_(title),
-                      elements=[
-                          ("levels_lower",
-                           Tuple(title=_("Lower levels"),
-                                 elements=[
-                                     Integer(title=_("Warning below"), default_value=lower[0]),
-                                     Integer(title=_("Critical below"), default_value=lower[1]),
-                                 ])),
-                          ("levels",
-                           Tuple(title=_("Upper levels"),
-                                 elements=[
-                                     Integer(title=_("Warning at"), default_value=upper[0]),
-                                     Integer(title=_("Critical at"), default_value=upper[1]),
-                                 ])),
-                      ])
+def _azure_vms_summary_levels(
+        title: str,
+        lower: Union[TupleType[None, None], TupleType[int, int]] = (None, None),
+        upper: Union[TupleType[None, None], TupleType[int, int]] = (None, None),
+) -> Dictionary:
+    return Dictionary(
+        title=title,
+        elements=[
+            ("levels_lower",
+             Tuple(title=_("Lower levels"),
+                   elements=[
+                       Integer(title=_("Warning below"), default_value=lower[0]),
+                       Integer(title=_("Critical below"), default_value=lower[1]),
+                   ])),
+            ("levels",
+             Tuple(title=_("Upper levels"),
+                   elements=[
+                       Integer(title=_("Warning at"), default_value=upper[0]),
+                       Integer(title=_("Critical at"), default_value=upper[1]),
+                   ])),
+        ],
+    )
 
 
-def _parameter_valuespec_azure_vms_summary():
+def _parameter_valuespec_azure_vms_summary() -> Dictionary:
     return Dictionary(
         help=_("To obtain the data required for this check, please configure"
                " the datasource program \"Microsoft Azure\"."),
         elements=[
-            ('levels_provisioning',
-             Dictionary(
-                 title=_("Levels for provisioning count"),
-                 elements=[
-                     ("succeeded", _azure_vms_summary_levels("Succeeded provionings", (0, -1))),
-                     ("failed", _azure_vms_summary_levels(
-                         "Failed provisionings",
-                         (-1, -1),
-                         (1, 1),
-                     )),
-                 ],
-             )),
-            ('levels_power',
-             Dictionary(
-                 title=_("Levels for power state count"),
-                 elements=[
-                     ("starting", _azure_vms_summary_levels("Starting VMs")),
-                     ("running", _azure_vms_summary_levels("Running VMs")),
-                     ("stopping", _azure_vms_summary_levels("Stopping VMs")),
-                     ("stopped", _azure_vms_summary_levels("Stopped VMs")),
-                     ("deallocating", _azure_vms_summary_levels("Deallocating VMs")),
-                     ("deallocated", _azure_vms_summary_levels("Deallocated VMs")),
-                     ("unknown", _azure_vms_summary_levels("VMs in unknown state", upper=(1, 1))),
-                 ],
-             )),
+            (
+                'levels_provisioning',
+                Dictionary(
+                    title=_("Levels for provisioning count"),
+                    elements=[
+                        (
+                            "succeeded",
+                            _azure_vms_summary_levels(_("Succeeded provionings"), (0, -1)),
+                        ),
+                        (
+                            "failed",
+                            _azure_vms_summary_levels(
+                                _("Failed provisionings"),
+                                (-1, -1),
+                                (1, 1),
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                'levels_power',
+                Dictionary(
+                    title=_("Levels for power state count"),
+                    elements=[
+                        ("starting", _azure_vms_summary_levels(_("Starting VMs"))),
+                        ("running", _azure_vms_summary_levels(_("Running VMs"))),
+                        ("stopping", _azure_vms_summary_levels(_("Stopping VMs"))),
+                        ("stopped", _azure_vms_summary_levels(_("Stopped VMs"))),
+                        ("deallocating", _azure_vms_summary_levels(_("Deallocating VMs"))),
+                        ("deallocated", _azure_vms_summary_levels(_("Deallocated VMs"))),
+                        ("unknown",
+                         _azure_vms_summary_levels(_("VMs in unknown state"), upper=(1, 1))),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -364,7 +388,7 @@ rulespec_registry.register(
 
 
 def _item_spec_azure_virtualnetworkgateways():
-    return TextAscii(
+    return TextInput(
         title=_("Virtual network gateway name"),
         help=_("Specify virtual network gateway names that the rule should apply to"),
     )
@@ -457,7 +481,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="azure_usagedetails",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Service Type")),
+        item_spec=lambda: TextInput(title=_("Service Type")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_azure_usagedetails,
         title=lambda: _("Azure Usage Details (Costs)"),

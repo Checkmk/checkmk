@@ -6,14 +6,14 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksVirtualization,
     ManualCheckParameterRulespec,
     rulespec_registry,
+    RulespecGroupEnforcedServicesVirtualization,
 )
 
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="vm_state",
-        group=RulespecGroupManualChecksVirtualization,
+        group=RulespecGroupEnforcedServicesVirtualization,
         title=lambda: _("Overall state of a virtual machine (for example ESX VMs)"),
     ))

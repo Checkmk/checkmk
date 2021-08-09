@@ -6,7 +6,7 @@ Date: 1569592362
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When trying to view the parameters of newly discoverd logwatch service,
 a 'Invalid parameters' message was issued. This was purely a rendering

@@ -6,7 +6,7 @@ Date: 1570622303
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Empty output of "<<<ps_lnx>>>" causes an incorrect format in the agent output
 of the next section, eg. "[header] <<<docker_container_mem>>>".

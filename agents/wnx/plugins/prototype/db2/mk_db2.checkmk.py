@@ -4,14 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
 import argparse
-import platform
 import os
+import platform
+import sys
 import time
-from subprocess import Popen, PIPE, DEVNULL
-
-from typing import List, Iterable, Dict, Optional
+from subprocess import DEVNULL, PIPE, Popen
+from typing import Dict, Iterable, List, Optional
 
 LISTER = "db2ilist.exe"
 

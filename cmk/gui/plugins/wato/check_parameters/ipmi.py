@@ -5,64 +5,111 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupCheckParametersEnvironment,
+)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
+    FixedValue,
     Float,
     ListOf,
     ListOfStrings,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
 
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersDiscovery,
-    RulespecGroupCheckParametersEnvironment,
-    HostRulespec,
-)
-
 
 def transform_ipmi_inventory_rules(p):
-    if not isinstance(p, dict):
-        return p
-    if p.get("summarize", True):
-        return 'summarize'
-    if p.get('ignored_sensors', []):
-        return ('single', {'ignored_sensors': p["ignored_sensors"]})
-    return ('single', {})
+    # this rule once was a Dictionary, then it became a CascadingDropdown, now we are back to a
+    # Dictionary
+    if isinstance(p, dict):
+        if "discovery_mode" in p:
+            return p
+        if p.get("summarize", True):
+            return {
+                "discovery_mode": (
+                    "summarize",
+                    {},
+                ),
+            }
+        return {
+            "discovery_mode": (
+                "single",
+                "ignored_sensors" in p and {
+                    "ignored_sensors": p["ignored_sensors"]
+                } or {},
+            ),
+        }
+    if p == "summarize":
+        return {
+            "discovery_mode": (
+                "summarize",
+                {},
+            ),
+        }
+    return {
+        "discovery_mode": p,
+    }
+
+
+def _valuespec_inventory_ipmi_rules_single():
+    return Dictionary(elements=[
+        (
+            "ignored_sensors",
+            ListOfStrings(title=_("Ignore the following IPMI sensors"),
+                          help=_("Names of IPMI sensors that should be ignored during discovery. "
+                                 "The pattern specified here must match exactly the beginning of "
+                                 "the actual ensor name (case sensitive)."),
+                          orientation="horizontal"),
+        ),
+        (
+            "ignored_sensorstates",
+            ListOfStrings(
+                title=_("Ignore the following IPMI sensor states"),
+                help=_("IPMI sensors with these states that should be gnored during discovery. "
+                       "The pattern specified here must match exactly the beginning of the actual "
+                       "sensor state (case sensitive)."),
+                orientation="horizontal",
+            ),
+        ),
+    ],)
 
 
 def _valuespec_inventory_ipmi_rules():
     return Transform(
-        CascadingDropdown(
+        Dictionary(
             title=_("IPMI sensor discovery"),
-            orientation="vertical",
-            choices=[
-                ("summarize", _("Summary")),
-                ("single", _("Single"),
-                 Dictionary(elements=[
-                     ("ignored_sensors",
-                      ListOfStrings(
-                          title=_("Ignore the following IPMI sensors"),
-                          help=_("Names of IPMI sensors that should be ignored during discovery."
-                                 "The pattern specified here must match exactly the beginning of "
-                                 "the actual sensor name (case sensitive)."),
-                          orientation="horizontal")),
-                     ("ignored_sensorstates",
-                      ListOfStrings(
-                          title=_("Ignore the following IPMI sensor states"),
-                          help=
-                          _("IPMI sensors with these states that should be ignored during discovery."
-                            "The pattern specified here must match exactly the beginning of "
-                            "the actual sensor state (case sensitive)."),
-                          orientation="horizontal",
-                      )),
-                 ]))
-            ]),
+            elements=[
+                (
+                    "discovery_mode",
+                    CascadingDropdown(
+                        title=_("Discovery mode"),
+                        orientation="vertical",
+                        choices=[
+                            (
+                                "summarize",
+                                _("Summary of all sensors"),
+                                FixedValue({}, totext=""),
+                            ),
+                            (
+                                "single",
+                                _("One service per sensor"),
+                                _valuespec_inventory_ipmi_rules_single(),
+                            ),
+                        ],
+                        sorted=False,
+                    ),
+                ),
+            ],
+            optional_keys=False,
+        ),
         forth=transform_ipmi_inventory_rules,
     )
 
@@ -80,7 +127,7 @@ def _parameter_valuespec_ipmi():
         elements=[
             ("sensor_states",
              ListOf(
-                 Tuple(elements=[TextAscii(), MonitoringState()],),
+                 Tuple(elements=[TextInput(), MonitoringState()],),
                  title=_("Set states of IPMI sensor status texts"),
                  help=_("The pattern specified here must match exactly the beginning of "
                         "the sensor state (case sensitive)."),
@@ -102,7 +149,7 @@ def _parameter_valuespec_ipmi():
              )),
             ("numerical_sensor_levels",
              ListOf(Tuple(elements=[
-                 TextAscii(title=_("Sensor name"),
+                 TextInput(title=_("Sensor name"),
                            help=_(
                                "Enter the name of the sensor. In single mode, this can be read off "
                                "from the service descriptions of the services 'IPMI Sensor ...'.")),
@@ -127,7 +174,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="ipmi",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("The sensor name")),
+        item_spec=lambda: TextInput(title=_("The sensor name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ipmi,
         title=lambda: _("IPMI sensors"),

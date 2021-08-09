@@ -6,5 +6,5 @@ distribution: check_mk
 description:
  This Check monitors the temperature for the included Temperature Sensor on the Camera.
 
-inventory:
+discovery:
  One service is created for each sensor.

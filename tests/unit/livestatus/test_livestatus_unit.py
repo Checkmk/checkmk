@@ -11,10 +11,17 @@ import socket
 import ssl
 from contextlib import closing
 
-import pytest  # type: ignore[import]
+import pytest
+
+import livestatus
 
 import omdlib.certs as certs
-import livestatus
+
+
+# Override top level fixture to make livestatus connects possible here
+@pytest.fixture(autouse=True)
+def prevent_livestatus_connect():
+    pass
 
 
 @pytest.fixture
@@ -130,14 +137,12 @@ def test_livestatus_ipv6_connection():
     ("xyz:bla", None),
 ])
 def test_single_site_connection_socketurl(socket_url, result, monkeypatch):
-    live = livestatus.SingleSiteConnection(socket_url)
-
     if result is None:
         with pytest.raises(livestatus.MKLivestatusConfigError, match="Invalid livestatus"):
-            live._parse_socket_url(socket_url)
+            livestatus._parse_socket_url(socket_url)
         return
 
-    assert live._parse_socket_url(socket_url) == result
+    assert livestatus._parse_socket_url(socket_url) == result
 
 
 @pytest.mark.parametrize("tls", [True, False])
@@ -195,3 +200,16 @@ def test_create_socket_no_cert(tmp_path):
     with pytest.raises(livestatus.MKLivestatusConfigError,
                        match="(unknown error|no certificate or crl found)"):
         live._create_socket(socket.AF_INET)
+
+
+def test_local_connection(mock_livestatus):
+    live = mock_livestatus
+    live.set_sites(['local'])
+    live.add_table("status", [
+        {
+            'program_start': 1,
+        },
+    ])
+    live.expect_query("GET status\nColumns: program_start\nColumnHeaders: off")
+    with mock_livestatus(expect_status_query=False):
+        livestatus.LocalConnection().query_value("GET status\nColumns: program_start")

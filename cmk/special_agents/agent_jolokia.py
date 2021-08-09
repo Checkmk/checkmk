@@ -5,14 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK Special agent to monitor JMX using Mbeans exposed by jolokia
 """
+import argparse
 import os
 import sys
-import argparse
 from typing import List
-from cmk.special_agents.utils import vcrtrace
 
 # TODO: is there a better way to do this?
 import cmk.utils.paths
+
+from cmk.special_agents.utils import vcrtrace
+
 sys.path.append(str(cmk.utils.paths.local_agents_dir / 'plugins'))
 sys.path.append(os.path.join(cmk.utils.paths.agents_dir, 'plugins'))
 import mk_jolokia  # type:ignore  # pylint: disable=import-error,wrong-import-position

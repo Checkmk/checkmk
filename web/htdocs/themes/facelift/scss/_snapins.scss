@@ -12,8 +12,8 @@ div.bookmark {
   overflow: hidden;
   color: $font-color;
   text-overflow: ellipsis;
-  -o-text-overflow: ellipsis;
   white-space: nowrap;
+  -o-text-overflow: ellipsis;
 }
 
 /*
@@ -24,13 +24,9 @@ div.bookmark {
     padding-left: 10px;
   }
 
-  img {
-    margin-right: 5px;
-
-    &.icon {
-      width: 16px;
-      height: 16px;
-    }
+  img.icon {
+    width: 14px;
+    height: 14px;
   }
 }
 
@@ -38,39 +34,18 @@ div.bookmark {
  * Host matrix snapin
  */
 table.hostmatrix {
-  border-spacing: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
 
-  tr {
+  tr,
+  td {
     padding: 0;
-    border-spacing: 0;
   }
 
   a {
     display: block;
-    width: 100%;
-    height: 100%;
-    line-height: 100%;
+    border-radius: 1px;
   }
-
-  td {
-    padding: 0;
-    border: 1px solid rgb(18, 58, 74);
-    border-spacing: 0;
-  }
-}
-
-.hostmatrix td.state1 a,
-/* TODO: Reproduce these two html elements */
-.hostmatrix td.state1 body.main .popup_menu span,
-body.main .popup_menu .hostmatrix td.state1 span {
-  background-color: $yellow;
-}
-
-.hostmatrix td.state0 a,
-/* TODO: Reproduce these two html elements */
-.hostmatrix td.state0 body.main .popup_menu span,
-body.main .popup_menu .hostmatrix td.state0 span {
-  background-color: $color-nuance-12;
 }
 
 /*
@@ -85,14 +60,14 @@ body.main .popup_menu .hostmatrix td.state0 span {
   }
 
   .statebullet {
-    margin: 2px;
+    margin: 5px 2px 2px;
   }
 }
 
 /*
  * Master control snapin
  */
-div.snapin table.master_control {
+table.master_control {
   width: 100%;
   margin: 0;
   border-spacing: 0;
@@ -100,34 +75,29 @@ div.snapin table.master_control {
   td {
     div.toggle_switch {
       float: right;
-      background-color: $bg-color-default;
 
       a {
         font-weight: $font-weight-bold;
+        text-transform: lowercase;
       }
     }
 
     &.left {
       display: inline-block;
-      font-size: $font-size-default;
       font-weight: $font-weight-default;
-      line-height: 22px;
       letter-spacing: $letter-spacing-table;
       text-align: left;
 
       a {
-        font-size: 11px;
         font-weight: normal;
         text-align: left;
       }
     }
-
-    /* TODO: Reproduce this html element */
-    img.iconbutton {
-      width: 60px;
-      height: 16px;
-    }
   }
+}
+
+div#snapin_master_control div.foldable:not(:last-child) {
+  margin-bottom: 4px;
 }
 
 /* Styles shared/inherited by different performance tables */
@@ -151,7 +121,6 @@ table.mkeventd_performance {
 
   td {
     padding: 0;
-    font-size: 11px;
 
     &:nth-of-type(2) {
       padding: 0;
@@ -172,18 +141,21 @@ table.mkeventd_performance {
  * NagVis maps snapin
  */
 div.state1 {
-  &.statea, &.stated {
+  &.statea,
+  &.stated {
     border-color: rgb(255, 255, 0);
   }
 }
 
 div.state2 {
-  &.statea, &.stated {
+  &.statea,
+  &.stated {
     border-color: rgb(255, 0, 0);
   }
 }
 
-div.statea, div.stated {
+div.statea,
+div.stated {
   background-color: rgb(0, 187, 51);
 }
 
@@ -196,7 +168,6 @@ table.performance {
 
   td {
     padding: 0;
-    font-size: 11px;
 
     &.right {
       padding: 0;
@@ -217,14 +188,16 @@ table.performance {
  */
 #snapin_time div.time {
   width: $theme-snapin-width - 2px;
-  padding: 0;
+  padding: 4px 0 0;
   margin: 0 auto;
   font-size: 24px;
   font-weight: bold;
   letter-spacing: $letter-spacing-table;
   color: $font-color;
+  background-color: $server-time-div-bg-color;
   text-align: center;
   border-spacing: 4px;
+  border-radius: $theme-border-radius;
 }
 
 /*
@@ -248,7 +221,7 @@ table.sitestate {
 
     &.state {
       width: 60px;
-      font-size: 9px;
+      font-size: $font-size-small;
     }
   }
 }
@@ -266,10 +239,15 @@ div.speedometer {
   position: relative;
   top: 0;
   left: 0;
-  height: 223px;
+  height: 170px;
 }
 
-img#speedometerbg, canvas#speedometer {
+img#speedometerbg {
+  width: $theme-snapin-width;
+  height: auto;
+}
+
+canvas#speedometer {
   position: absolute;
   top: 0;
   left: 0;
@@ -279,28 +257,37 @@ img#speedometerbg, canvas#speedometer {
  * Tactical overview snapin
  */
 div#snapin_tactical_overview {
-  /* remove the border-spacing of the first and last element */
-  width: calc(100% + 2 * #{$spacing});
+  width: 100%;
+}
+
+div.snapin.more table.tacticaloverview th span.more,
+div.snapin.less table.tacticaloverview th span.less {
+  display: inline;
 }
 
 table.tacticaloverview {
-  width: 100%;
   /* remove the border-spacing of the first and last element */
+  width: calc(100% + 2 * #{$spacing});
   margin: 0 (-$spacing);
   border-collapse: separate;
   border-spacing: $spacing 0;
+  table-layout: fixed;
 
   th {
     font-size: $font-size-small;
     font-weight: normal;
     line-height: 1.6;
     letter-spacing: 0;
-    color: $tactical-overview-th-font-color;
+    color: $font-color-dimmed;
     text-align: left;
+
+    span {
+      display: none;
+    }
   }
 
   td {
-    height: 24px;
+    height: $input-field-height;
     text-align: right;
     background: $tactical-overview-td-bg-color;
     border-radius: $popup-filters-border-radius;
@@ -309,7 +296,7 @@ table.tacticaloverview {
       box-shadow: none;
 
       a.link {
-        color: $color-nuance-16;
+        color: $orange-1;
       }
     }
 
@@ -322,7 +309,8 @@ table.tacticaloverview {
     }
   }
 
-  a, span {
+  a,
+  span {
     display: block;
     margin-right: 2px;
   }
@@ -336,25 +324,27 @@ table.tacticaloverview td span,
 table.tacticaloverview td body.main .popup_menu span,
 body.main .popup_menu table.tacticaloverview td span {
   padding: 4px;
-  font-size: $font-size-default;
   font-weight: $font-weight-bold;
   letter-spacing: 0;
   color: $font-color;
 }
 
-table.tacticaloverview td a.link, table.tacticaloverview td a:hover {
-  color: $font-color;
+div.tacticalalert,
+div.tacticalinfo {
+  height: 25px;
+  margin-top: 8px;
+  line-height: 25px;
+  text-align: center;
+  border-radius: $theme-border-radius;
+  box-shadow: none;
 }
 
 div.tacticalalert {
-  height: 25px;
-  margin-top: 8px;
-  font-size: 12px;
-  line-height: 25px;
-  text-align: center;
   background-color: $color-state-2-background;
-  border-radius: $theme-border-radius;
-  box-shadow: none;
+}
+
+div.tacticalinfo {
+  background-color: $overview-info-bg;
 }
 
 div.spacertop {
@@ -380,7 +370,6 @@ div.spacertop {
     float: right;
     margin-top: -2px;
     margin-bottom: 2px;
-    font-size: 11px;
     border: $primary-border;
   }
 
@@ -394,7 +383,6 @@ div.spacertop {
 
   div.tag_tree {
     clear: both;
-    font-size: $font-size-default;
   }
 
   div.statebullet {
@@ -434,18 +422,24 @@ div.spacertop {
 /*
  * Admin mini snapin (WATO)
  */
+#snapin_container_admin_mini.more a.show_more_mode {
+  display: inline;
+}
+
 #snapin_admin_mini {
   padding-top: 6px;
   clear: right;
 
-  img {
-    position: relative;
-    left: 3px;
-    width: 18px;
-    height: 18px;
+  img.icon {
+    width: 14px;
+    height: 14px;
     padding: 0;
-    margin-right: 3.9px;
-    margin-bottom: 4px;
+    margin-right: 5px;
+    margin-bottom: 10px;
+  }
+
+  img.emblem {
+    bottom: 3px;
   }
 
   div.footnotelink {
@@ -457,14 +451,34 @@ div.spacertop {
   }
 }
 
+#snapin_container_admin.less li.sidebar.show_more_mode {
+  display: none;
+}
+
+#snapin_admin {
+  li {
+    line-height: $menu-item-spacing;
+
+    img.icon {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
 /*
  * WATO folder tree snapin
  */
 #snapin_wato_foldertree {
   select {
+    width: $theme-snapin-width;
     margin-bottom: 10px;
     clear: both;
     box-sizing: border-box;
+  }
+  ul {
+    list-style-type: none;
+    padding: 0;
   }
 }
 
@@ -474,15 +488,18 @@ div.spacertop {
   padding: 0;
 
   img {
-    display: none; }
+    display: none;
+  }
 
   input {
-    margin:  0;
-    font-size: 11px;
+    margin: 0;
     background-repeat: no-repeat;
   }
 
-  input, select, textarea, #mk_side_search_field {
+  input,
+  select,
+  textarea,
+  #mk_side_search_field {
     box-sizing: border-box;
   }
 }
@@ -525,16 +542,26 @@ div.spacertop {
 
   input {
     width: 100%;
-    padding: 6px 0 6px $spacing;
-    font-size: 14px;
+    height: $input-field-height;
+    color: $font-color;
     background-image: url("images/icon_quicksearch.png");
-    background-position: right $spacing bottom 6px;
+    background-position: right $spacing bottom 4px;
     background-size: 15px;
   }
 
+  input::placeholder {
+    line-height: 16px;
+    letter-spacing: 0;
+    color: $font-color;
+  }
+
   div.topic {
-    margin: 3px 0 3px 2px;
-    font-size: 125%;
+    margin: 0 0 4px 4px;
+    font-size: $font-size-large;
+
+    &:not(:first-child) {
+      margin-top: $spacing;
+    }
   }
 }
 
@@ -542,28 +569,28 @@ div.spacertop {
   position: absolute;
   z-index: 1;
   width: 223px;
-  padding: 12px;
+  padding: 8px;
   margin-top: 2px;
-  font-size: 80%;
   color: $font-color;
+  background-color: $inpage-highlight-color;
 
   a {
     display: block;
     width: 217px;
     padding-left: 5px;
-    margin-bottom: 5px;
     color: $font-color;
     text-align: left;
     text-decoration: none;
 
-    &:hover, &.active {
+    &:hover,
+    &.active {
       background-color: $snapin-bg-color;
     }
   }
 
-  div.error, div.warning {
+  div.error,
+  div.warning {
     padding: 2px;
-    font-size: 12px;
   }
 }
 
@@ -577,27 +604,35 @@ div.spacertop {
 #snapin_cmc_stats {
   color: $font-color;
 
-  select {
-    margin-bottom: 2px;
-  }
-}
+  table.cmc_stats {
+    width: 100%;
+    border-spacing: 0 4px;
+    box-sizing: border-box;
 
-table.cmc_stats {
-  width: $snapin-cmc-table-width;
-  border-spacing: 0 4px;
-  box-sizing: border-box;
+    tr {
+      &.dark {
+        background-color: lighten($navbar-color, 1%);
+      }
 
-  td {
-    padding: 0;
-    font-size: 11px;
-    font-weight: $font-weight-default;
-    letter-spacing: $letter-spacing-table;
+      &.light {
+        background-color: lighten($navbar-color, 3%);
+      }
+    }
 
-    &.right {
-      padding: 0;
-      padding-right: 1px;
-      text-align: right;
-      white-space: nowrap;
+    td {
+      padding: 0 4px;
+      height: 20px;
+      font-weight: $font-weight-default;
+      font-size: $font-size-normal;
+      letter-spacing: $letter-spacing-table;
+
+      &.right {
+        padding: 0;
+        padding-right: 1px;
+        text-align: right;
+        white-space: nowrap;
+        font-weight: $font-weight-bold;
+      }
     }
   }
 }
@@ -607,13 +642,18 @@ table.cmc_stats {
  */
 #snapin_reports {
   i {
-    color: rgb(0, 0, 0);
+    color: $black;
   }
 
   input {
     padding: 3px 4px;
-    font-size: 9px;
+    font-size: $font-size-small;
     text-align: center;
+  }
+
+  div {
+    font-size: $font-size-small;
+    color: $footnote-link-color;
   }
 
   div.timerange {
@@ -624,15 +664,13 @@ table.cmc_stats {
       display: inline-block;
 
       td {
-	font-size: 11px;
+        &.tuple_td:nth-of-type(2) {
+          padding-left: 8px;
+        }
 
-	&.tuple_td:nth-of-type(2) {
-	  padding-left: 8px;
-	}
-
-	&.tuple_left {
-	  padding-right: 4px;
-	}
+        &.tuple_left {
+          padding-right: 4px;
+        }
       }
 
       span.title {
@@ -646,6 +684,10 @@ table.cmc_stats {
     margin-top: 3px;
     margin-bottom: 5px;
   }
+}
+
+div.snapin select {
+  background-image: url(images/select_arrow.png);
 }
 
 /*

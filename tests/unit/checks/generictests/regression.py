@@ -63,16 +63,17 @@ B. Update all or one selected test to match the current status quo
 
 """
 import ast
-from importlib import import_module
 import os
-from pathlib import Path
 import sys
 import time
+from importlib import import_module
+from pathlib import Path
 from typing import Any, Iterable
 
+import pytest
 import yapf  # type: ignore[import]
 
-import generictests.run
+from .run import run
 
 YAPF_STYLE = {
     'dedent_closing_brackets': 1,
@@ -192,8 +193,7 @@ def _get_out_filename(datasetfile, inplace):
 
     return out_name.replace('.py', '_regression.py')
 
-
-def test_main(config_check_info, check_manager, datasetfile, inplace):
+def test_main(fix_plugin_legacy, datasetfile, inplace):
     """Script to create test datasets.
 
     This is a script. But we need the py.test environment, so it comes in the
@@ -213,6 +213,6 @@ def test_main(config_check_info, check_manager, datasetfile, inplace):
 
     regression = WritableDataset(vars(input_data))
 
-    generictests.run(config_check_info, check_manager, regression, write=True)
+    run(fix_plugin_legacy.check_info, regression, write=True)
 
     regression.write(_get_out_filename(datasetfile, inplace))

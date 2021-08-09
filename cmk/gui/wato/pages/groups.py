@@ -4,58 +4,48 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import abc
+import os
 from typing import Dict, Iterator
 
 import cmk.utils.paths
 
-import cmk.gui.watolib as watolib
-import cmk.gui.userdb as userdb
-import cmk.gui.escaping as escaping
-from cmk.gui.table import table_element
 import cmk.gui.forms as forms
-from cmk.gui.htmllib import HTML
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.valuespec import (
-    Dictionary,
-    CascadingDropdown,
-    ListChoice,
-    ListOfStrings,
-    ListOf,
-    TextAscii,
-)
+import cmk.gui.userdb as userdb
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html, request, transactions
+from cmk.gui.groups import load_host_group_information, load_service_group_information
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
 from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
+    PageMenuSearch,
+    PageMenuTopic,
 )
-
-from cmk.gui.groups import (
-    load_host_group_information,
-    load_service_group_information,
-)
-from cmk.gui.watolib.groups import (
-    load_contact_group_information,
-    GroupType,
-)
-
-from cmk.gui.plugins.wato import ActionResult
 from cmk.gui.plugins.wato import (
-    WatoMode,
+    ActionResult,
+    make_confirm_link,
     mode_registry,
-    wato_confirm,
+    mode_url,
+    redirect,
+    WatoMode,
 )
+from cmk.gui.table import table_element
+from cmk.gui.utils.urls import makeactionuri
+from cmk.gui.valuespec import CascadingDropdown, Dictionary, ListChoice, ListOf, ListOfStrings
+from cmk.gui.watolib.groups import GroupType, load_contact_group_information
 
 
 class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def type_name(self) -> GroupType:
         raise NotImplementedError()
 
@@ -72,7 +62,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def __init__(self) -> None:
-        super(ModeGroups, self).__init__()
+        super().__init__()
         self._groups = self._load_groups()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -123,11 +113,15 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
                 ),
             ],
             breadcrumb=breadcrumb,
+            inpage_search=PageMenuSearch(),
         )
 
     def action(self) -> ActionResult:
-        if html.request.var('_delete'):
-            delname = html.request.get_ascii_input_mandatory("_delete")
+        if not transactions.check_transaction():
+            return redirect(mode_url("%s_groups" % self.type_name))
+
+        if request.var('_delete'):
+            delname = request.get_ascii_input_mandatory("_delete")
             usages = watolib.find_usages_of_group(delname, self.type_name)
 
             if usages:
@@ -139,17 +133,10 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
                 message += "</ul>"
                 raise MKUserError(None, message)
 
-            confirm_txt = _('Do you really want to delete the %s group "%s"?') % (self.type_name,
-                                                                                  delname)
+            watolib.delete_group(delname, self.type_name)
+            self._groups = self._load_groups()
 
-            c = wato_confirm(_("Confirm deletion of group \"%s\"") % delname, confirm_txt)
-            if c:
-                watolib.delete_group(delname, self.type_name)
-                self._groups = self._load_groups()
-            elif c is False:
-                return ""
-
-        return None
+        return redirect(mode_url("%s_groups" % self.type_name))
 
     def _page_no_groups(self) -> None:
         html.div(_("No groups are defined yet."), class_="info")
@@ -161,15 +148,17 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
         table.cell(_("Actions"), css="buttons")
         edit_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
                                                    ("edit", name)])
-        delete_url = html.makeactionuri([("_delete", name)])
+        delete_url = make_confirm_link(
+            url=makeactionuri(request, transactions, [("_delete", name)]),
+            message=_('Do you really want to delete the %s group "%s"?') % (self.type_name, name))
         clone_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
                                                     ("clone", name)])
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
 
-        table.cell(_("Name"), escaping.escape_attribute(name))
-        table.cell(_("Alias"), escaping.escape_attribute(group['alias']))
+        table.cell(_("Name"), name)
+        table.cell(_("Alias"), group['alias'])
 
     def page(self) -> None:
         if not self._groups:
@@ -185,7 +174,8 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
 
 
 class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def type_name(self) -> GroupType:
         raise NotImplementedError()
 
@@ -202,11 +192,11 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
         super().__init__()
 
     def _from_vars(self) -> None:
-        self._name = html.request.get_ascii_input("edit")  # missing -> new group
+        self._name = request.get_ascii_input("edit")  # missing -> new group
         self._new = self._name is None
 
         if self._new:
-            clone_group = html.request.get_ascii_input("clone")
+            clone_group = request.get_ascii_input("clone")
             if clone_group:
                 self._name = clone_group
 
@@ -228,32 +218,35 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
         pass
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
-            return "%s_groups" % self.type_name
+        if not transactions.check_transaction():
+            return redirect(mode_url("%s_groups" % self.type_name))
 
-        alias = html.request.get_unicode_input_mandatory("alias").strip()
+        alias = request.get_unicode_input_mandatory("alias").strip()
         self.group = {"alias": alias}
 
         self._determine_additional_group_data()
 
         if self._new:
-            self._name = html.request.get_ascii_input_mandatory("name").strip()
+            self._name = request.get_ascii_input_mandatory("name").strip()
             watolib.add_group(self._name, self.type_name, self.group)
         else:
             watolib.edit_group(self._name, self.type_name, self.group)
 
-        return "%s_groups" % self.type_name
+        return redirect(mode_url("%s_groups" % self.type_name))
 
     def _show_extra_page_elements(self):
         pass
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(breadcrumb, form_name="group", button_name="save")
+        return make_simple_form_page_menu(_("Group"),
+                                          breadcrumb,
+                                          form_name="group",
+                                          button_name="save")
 
     def page(self) -> None:
         html.begin_form("group")
         forms.header(_("Properties"))
-        forms.section(_("Name"), simple=not self._new)
+        forms.section(_("Name"), simple=not self._new, is_required=True)
         html.help(
             _("The name of the group is used as an internal key. It cannot be "
               "changed later. It is also visible in the status GUI."))
@@ -264,7 +257,7 @@ class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
             html.write_text(self._name)
             html.set_focus("alias")
 
-        forms.section(_("Alias"))
+        forms.section(_("Alias"), is_required=True)
         html.help(_("An alias or description of this group."))
         html.text_input("alias", self.group["alias"])
 
@@ -380,7 +373,7 @@ class ModeContactgroups(ModeGroups):
                 self._members.setdefault(cg, []).append((userid, user.get('alias', userid)))
 
     def _show_row_cells(self, table, name, group):
-        super(ModeContactgroups, self)._show_row_cells(table, name, group)
+        super()._show_row_cells(table, name, group)
         table.cell(_("Members"))
         html.write_html(
             HTML(", ").join([
@@ -472,10 +465,12 @@ class ModeEditContactgroup(ABCModeEditGroup):
         return _("Edit contact group")
 
     def _determine_additional_group_data(self):
-        super(ModeEditContactgroup, self)._determine_additional_group_data()
+        super()._determine_additional_group_data()
 
-        permitted_inventory_paths = self._vs_inventory_paths().from_html_vars('inventory_paths')
-        self._vs_inventory_paths().validate_value(permitted_inventory_paths, 'inventory_paths')
+        permitted_inventory_paths = self._vs_inventory_paths_and_keys().from_html_vars(
+            'inventory_paths')
+        self._vs_inventory_paths_and_keys().validate_value(permitted_inventory_paths,
+                                                           'inventory_paths')
         if permitted_inventory_paths:
             self.group['inventory_paths'] = permitted_inventory_paths
 
@@ -485,41 +480,52 @@ class ModeEditContactgroup(ABCModeEditGroup):
             self.group["nagvis_maps"] = permitted_maps
 
     def _show_extra_page_elements(self):
-        super(ModeEditContactgroup, self)._show_extra_page_elements()
+        super()._show_extra_page_elements()
 
         forms.header(_("Permissions"))
         forms.section(_("Permitted HW/SW inventory paths"))
-        self._vs_inventory_paths().render_input('inventory_paths',
-                                                self.group.get('inventory_paths'))
+        self._vs_inventory_paths_and_keys().render_input('inventory_paths',
+                                                         self.group.get('inventory_paths'))
 
         if self._get_nagvis_maps():
             forms.section(_("Access to NagVis Maps"))
             html.help(_("Configure access permissions to NagVis maps."))
             self._vs_nagvis_maps().render_input('nagvis_maps', self.group.get('nagvis_maps', []))
 
-    def _vs_inventory_paths(self):
+    def _vs_inventory_paths_and_keys(self):
+        def vs_choices(title):
+            return CascadingDropdown(
+                title=title,
+                choices=[
+                    ("nothing", _("Restrict all")),
+                    ("choices", _("Restrict the following keys"),
+                     ListOfStrings(
+                         orientation="horizontal",
+                         size=15,
+                         allow_empty=True,
+                     )),
+                ],
+                default_value="nothing",
+            )
+
         return CascadingDropdown(
             choices=[
                 ("allow_all", _("Allowed to see the whole tree")),
                 ("forbid_all", _("Forbid to see the whole tree")),
-                ("paths", _("Allowed to see the following entries"),
+                ("paths", _("Allowed to see parts of the tree"),
                  ListOf(
                      Dictionary(
-                         elements=[("path", TextAscii(
-                             title=_("Path"),
-                             size=60,
-                             allow_empty=False,
-                         )),
-                                   ("attributes",
-                                    ListOfStrings(
-                                        orientation="horizontal",
-                                        title=_("Attributes"),
-                                        size=15,
-                                        allow_empty=True,
-                                    ))],
-                         optional_keys=["attributes"],
+                         elements=[
+                             vs_element_inventory_visible_raw_path(),
+                             ("attributes", vs_choices(_("Restrict single values"))),
+                             ("columns", vs_choices(_("Restrict table columns"))),
+                             ("nodes", vs_choices(_("Restrict subcategories"))),
+                         ],
+                         optional_keys=["attributes", "columns", "nodes"],
                      ),
-                     allow_empty=False,
+                     help=vs_inventory_path_or_keys_help() +
+                     _("<br>If single values, table columns or subcategories are not"
+                       " restricted, then all entries are added respectively."),
                  )),
             ],
             default_value="allow_all",

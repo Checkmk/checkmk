@@ -11,6 +11,6 @@ description:
  The session counts are purely informational, a threshold can be
  set on the number of requests in processing.
 
-inventory:
+discovery:
  One service is created.
 

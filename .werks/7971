@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1562856099
 
 Sites created with one of the previous 1.6 releases were using a check interval

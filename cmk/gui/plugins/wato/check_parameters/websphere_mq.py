@@ -5,6 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+)
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
@@ -12,15 +17,9 @@ from cmk.gui.valuespec import (
     MonitoringState,
     OptionalDropdownChoice,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
-)
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
 )
 
 
@@ -96,7 +95,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="websphere_mq",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of queue")),
+        item_spec=lambda: TextInput(title=_("Name of queue")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_websphere_mq,
         title=lambda: _("Websphere MQ"),

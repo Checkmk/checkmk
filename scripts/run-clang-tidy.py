@@ -1,18 +1,14 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-# conditions defined in the file COPYING, which is part of this source code package.
-
-# NOTE: This is version182212a plus a few minor tweaks for prettier output.
+# NOTE: This is our YAPF'd version of upstream's version 03ded5497a2.
 #
-#===- run-clang-tidy.py - Parallel clang-tidy runner ---------*- python -*--===#
+#===- run-clang-tidy.py - Parallel clang-tidy runner --------*- python -*--===#
 #
 # Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 # See https://llvm.org/LICENSE.txt for license information.
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 #
-#===------------------------------------------------------------------------===#
+#===-----------------------------------------------------------------------===#
 # FIXME: Integrate with clang-tidy-diff.py
 """
 Parallel clang-tidy runner
@@ -83,15 +79,14 @@ def make_absolute(f, directory):
     return os.path.normpath(os.path.join(directory, f))
 
 
-def get_tidy_invocation(f, clang_tidy_binary, checks, tmpdir, build_path, header_filter, extra_arg,
-                        extra_arg_before, quiet, config):
+def get_tidy_invocation(f, clang_tidy_binary, checks, tmpdir, build_path, header_filter,
+                        allow_enabling_alpha_checkers, extra_arg, extra_arg_before, quiet, config):
     """Gets a command line for clang-tidy."""
     start = [clang_tidy_binary]
+    if allow_enabling_alpha_checkers:
+        start.append('-allow-enabling-analyzer-alpha-checkers')
     if header_filter is not None:
         start.append('-header-filter=' + header_filter)
-    else:
-        # Show warnings in all in-project headers by default.
-        start.append('-header-filter=^' + build_path + '/.*')
     if checks:
         start.append('-checks=' + checks)
     if tmpdir is not None:
@@ -144,9 +139,10 @@ def check_clang_apply_replacements_binary(args):
     try:
         subprocess.check_call([args.clang_apply_replacements_binary, '--version'])
     except:
-        print('Unable to run clang-apply-replacements. Is clang-apply-replacements '
-              'binary correctly specified?',
-              file=sys.stderr)
+        print(
+            'Unable to run clang-apply-replacements. Is clang-apply-replacements '
+            'binary correctly specified?',
+            file=sys.stderr)
         traceback.print_exc()
         sys.exit(1)
 
@@ -167,7 +163,8 @@ def run_tidy(args, tmpdir, build_path, queue, lock, failed_files):
     while True:
         name = queue.get()
         invocation = get_tidy_invocation(name, args.clang_tidy_binary, args.checks, tmpdir,
-                                         build_path, args.header_filter, args.extra_arg,
+                                         build_path, args.header_filter,
+                                         args.allow_enabling_alpha_checkers, args.extra_arg,
                                          args.extra_arg_before, args.quiet, args.config)
 
         proc = subprocess.Popen(invocation, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -187,6 +184,10 @@ def main():
                                      'in a compilation database. Requires '
                                      'clang-tidy and clang-apply-replacements in '
                                      '$PATH.')
+    parser.add_argument('-allow-enabling-alpha-checkers',
+                        action='store_true',
+                        help='allow alpha checkers from '
+                        'clang-analyzer.')
     parser.add_argument('-clang-tidy-binary',
                         metavar='PATH',
                         default='clang-tidy',
@@ -265,6 +266,8 @@ def main():
 
     try:
         invocation = [args.clang_tidy_binary, '-list-checks']
+        if args.allow_enabling_alpha_checkers:
+            invocation.append('-allow-enabling-analyzer-alpha-checkers')
         invocation.append('-p=' + build_path)
         if args.checks:
             invocation.append('-checks=' + args.checks)

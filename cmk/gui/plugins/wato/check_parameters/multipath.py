@@ -5,21 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersStorage,
+)
 from cmk.gui.valuespec import (
     Alternative,
     Checkbox,
     Dictionary,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
-)
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersStorage,
-    HostRulespec,
 )
 
 
@@ -52,7 +51,7 @@ rulespec_registry.register(
 
 
 def _item_spec_multipath():
-    return TextAscii(title=_("Name of the MP LUN"),
+    return TextInput(title=_("Name of the MP LUN"),
                      help=_("For Linux multipathing this is either the UUID (e.g. "
                             "60a9800043346937686f456f59386741), or the configured "
                             "alias."))

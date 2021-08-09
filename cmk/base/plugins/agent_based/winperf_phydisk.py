@@ -40,19 +40,10 @@
 # 1248 2664021277 2664021277 type(40030500)
 # 1250 1330 1330 counter
 
-from typing import (
-    Dict,
-    Mapping,
-    Optional,
-    Sequence,
-)
-from .agent_based_api.v1 import (
-    get_rate,
-    get_value_store,
-    IgnoreResultsError,
-    register,
-    type_defs,
-)
+import time
+from typing import Any, Dict, Mapping, MutableMapping, Optional, Sequence
+
+from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
 from .utils import diskstat
 
 _LINE_TO_METRIC = {
@@ -67,7 +58,7 @@ _LINE_TO_METRIC = {
 }
 
 
-def parse_winperf_phydisk(string_table: type_defs.AgentStringTable) -> Optional[diskstat.Section]:
+def parse_winperf_phydisk(string_table: type_defs.StringTable) -> Optional[diskstat.Section]:
 
     section: Dict[str, Dict[str, float]] = {}
 
@@ -122,9 +113,9 @@ register.agent_section(
 
 
 def discover_winperf_phydisk(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: diskstat.Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     yield from diskstat.discovery_diskstat_generic(
         params,
         section,
@@ -133,7 +124,7 @@ def discover_winperf_phydisk(
 
 def _compute_rates_single_disk(
     disk: diskstat.Disk,
-    value_store: type_defs.ValueStore,
+    value_store: MutableMapping[str, Any],
     value_store_suffix: str = '',
 ) -> diskstat.Disk:
 
@@ -193,21 +184,21 @@ def _compute_rates_single_disk(
     return disk_with_rates
 
 
-def _averaging_to_seconds(params: type_defs.Parameters) -> type_defs.Parameters:
+def _averaging_to_seconds(params: Mapping[str, Any]) -> Mapping[str, Any]:
     key_avg = 'average'
     if key_avg in params:
-        params = type_defs.Parameters({
+        params = {
             **params,
             key_avg: params[key_avg] * 60,
-        })
+        }
     return params
 
 
 def check_winperf_phydisk(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: diskstat.Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     # Unfortunately, summarizing the disks does not commute with computing the rates for this check.
     # Therefore, we have to compute the rates first.
 
@@ -231,17 +222,18 @@ def check_winperf_phydisk(
             return
 
     yield from diskstat.check_diskstat_dict(
-        _averaging_to_seconds(params),
-        disk_with_rates,
-        value_store,
+        params=_averaging_to_seconds(params),
+        disk=disk_with_rates,
+        value_store=value_store,
+        this_time=time.time(),
     )
 
 
 def cluster_check_winperf_phydisk(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, diskstat.Section],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     # We potentially overwrite a disk from an earlier section with a disk with the same name from a
     # later section
     disks_merged: Dict[str, diskstat.Disk] = {}
@@ -258,7 +250,7 @@ def cluster_check_winperf_phydisk(
 register.check_plugin(
     name="winperf_phydisk",
     service_name="Disk IO %s",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={'summary': True},
     discovery_ruleset_name="diskstat_inventory",
     discovery_function=discover_winperf_phydisk,

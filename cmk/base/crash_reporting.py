@@ -8,20 +8,23 @@
 import os
 import sys
 import traceback
-from typing import Any, Dict, Optional, Union
 from pathlib import Path
+from typing import Any, Dict, Mapping, Optional, Union
 
-import cmk.utils.debug
-import cmk.utils.paths
-import cmk.utils.encoding
 import cmk.utils.crash_reporting as crash_reporting
+import cmk.utils.debug
+import cmk.utils.encoding
+import cmk.utils.paths
 from cmk.utils.type_defs import (
     AgentRawData,
     CheckPluginName,
     CheckPluginNameStr,
     HostName,
+    SectionName,
     ServiceName,
 )
+
+from cmk.snmplib.type_defs import SNMPBackendEnum
 
 import cmk.base.config as config
 
@@ -39,18 +42,41 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
             cls,
             details: Optional[Dict] = None,
             type_specific_attributes: Optional[Dict] = None) -> crash_reporting.ABCCrashReport:
-        return super(CMKBaseCrashReport, cls).from_exception(details={
+        return super().from_exception(details={
             "argv": sys.argv,
             "env": dict(os.environ),
         })
 
 
+def create_section_crash_dump(
+    *,
+    operation: str,
+    section_name: SectionName,
+    section_content: object,
+) -> str:
+    """Create a crash dump from an exception raised in a parse or host label function"""
+
+    text = f"{operation.title()} of section {section_name} failed"
+    try:
+        crash = SectionCrashReport.from_exception_and_context(
+            section_name=section_name,
+            section_content=section_content,
+        )
+        CrashReportStore().save(crash)
+        return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
+    except Exception:
+        if cmk.utils.debug.enabled():
+            raise
+        return f"{text} - failed to create a crash report: {traceback.format_exc()}"
+
+
 def create_check_crash_dump(
-    hostname: HostName,
-    check_plugin_name: Union[CheckPluginNameStr, CheckPluginName],
-    check_plugin_kwargs: Dict[str, Any],
-    is_manual_check: bool,
-    description: ServiceName,
+    *,
+    host_name: HostName,
+    service_name: ServiceName,
+    plugin_name: Union[CheckPluginNameStr, CheckPluginName],
+    plugin_kwargs: Mapping[str, Any],
+    is_manual: bool,
 ) -> str:
     """Create a crash dump from an exception occured during check execution
 
@@ -61,11 +87,11 @@ def create_check_crash_dump(
     text = u"check failed - please submit a crash report!"
     try:
         crash = CheckCrashReport.from_exception_and_context(
-            hostname=hostname,
-            check_plugin_name=str(check_plugin_name),
-            check_plugin_kwargs=check_plugin_kwargs,
-            is_manual_check=is_manual_check,
-            description=description,
+            hostname=host_name,
+            check_plugin_name=str(plugin_name),
+            check_plugin_kwargs=plugin_kwargs,
+            is_manual_check=is_manual,
+            description=service_name,
             text=text,
         )
         CrashReportStore().save(crash)
@@ -75,6 +101,25 @@ def create_check_crash_dump(
         if cmk.utils.debug.enabled():
             raise
         return "check failed - failed to create a crash report: %s" % traceback.format_exc()
+
+
+@crash_reporting.crash_report_registry.register
+class SectionCrashReport(crash_reporting.ABCCrashReport):
+    @classmethod
+    def type(cls) -> str:
+        return "section"
+
+    @classmethod
+    def from_exception_and_context(
+        cls,
+        *,
+        section_name: SectionName,
+        section_content: object,
+    ) -> crash_reporting.ABCCrashReport:
+        return cls.from_exception(details={
+            "section_name": str(section_name),
+            "section_content": section_content,
+        },)
 
 
 @crash_reporting.crash_report_registry.register
@@ -88,7 +133,7 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
         cls,
         hostname: HostName,
         check_plugin_name: str,
-        check_plugin_kwargs: Dict[str, Any],
+        check_plugin_kwargs: Mapping[str, Any],
         is_manual_check: bool,
         description: ServiceName,
         text: str,
@@ -106,7 +151,8 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                 "is_cluster": host_config.is_cluster,
                 "description": description,
                 "check_type": check_plugin_name,
-                "inline_snmp": host_config.snmp_config(hostname).is_inline_snmp_host,
+                "inline_snmp": host_config.snmp_config(hostname).snmp_backend ==
+                               SNMPBackendEnum.INLINE,
                 "manual_check": is_manual_check,
                 **check_plugin_kwargs,
             },
@@ -120,13 +166,13 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                  crash_info: Dict,
                  snmp_info: Optional[bytes] = None,
                  agent_output: Optional[bytes] = None) -> None:
-        super(CheckCrashReport, self).__init__(crash_info)
+        super().__init__(crash_info)
         self.snmp_info = snmp_info
         self.agent_output = agent_output
 
     def _serialize_attributes(self) -> Dict:
         """Serialize object type specific attributes for transport"""
-        attributes = super(CheckCrashReport, self)._serialize_attributes()
+        attributes = super()._serialize_attributes()
 
         for key, val in [
             ("snmp_info", self.snmp_info),
@@ -160,7 +206,7 @@ def _read_agent_output(hostname: str) -> Optional[AgentRawData]:
     cache_path = Path(cmk.utils.paths.tcp_cache_dir, hostname)
     try:
         with cache_path.open(mode="rb") as f:
-            return f.read()
+            return AgentRawData(f.read())
     except IOError:
         pass
     return None

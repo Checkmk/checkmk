@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The operation was performing a lot of needless operations. The update of
 several thousands of hosts DNS entries took way too long. The exact time needed

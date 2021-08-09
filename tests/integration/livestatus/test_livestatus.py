@@ -10,15 +10,16 @@ import time as _time
 import uuid as _uuid
 from typing import Dict, List
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib import web, create_linux_test_host  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import create_linux_test_host, web  # noqa: F401 # pylint: disable=unused-import
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
 
 
 @pytest.fixture(name="default_cfg", scope="module", params=["nagios", "cmc"])
 def default_cfg_fixture(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
+    site.ensure_running()
     config = DefaultConfig(core=request.param)
     site.set_config("CORE", config.core, with_restart=True)
 
@@ -62,8 +63,9 @@ def test_host_custom_variables(default_cfg, site):
     custom_variables, tags = rows[0]
     assert custom_variables == {
         u'ADDRESS_FAMILY': u'4',
-        u'TAGS': u'/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:%s tcp' %
-                 site.id,
+        u'TAGS':
+            u'/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:%s tcp'
+            % site.id,
         u'FILENAME': u'/wato/hosts.mk',
         u'ADDRESS_4': u'127.0.0.1',
         u'ADDRESS_6': u'',
@@ -78,6 +80,7 @@ def test_host_custom_variables(default_cfg, site):
         u'site': str(site.id),
         u'snmp_ds': u'no-snmp',
         u'tcp': u'tcp',
+        u'checkmk-agent': u'checkmk-agent'
     }
 
 
@@ -119,6 +122,15 @@ def test_service_table(default_cfg, site):
     assert "Check_MK Discovery" in descriptions
     assert "CPU load" in descriptions
     assert "Memory" in descriptions
+
+
+def test_usage_counters(default_cfg, site):
+    rows = site.live.query(
+        "GET status\nColumns: helper_usage_cmk helper_usage_fetcher helper_usage_checker\n")
+    assert isinstance(rows, list)
+    assert len(rows) == 1
+    assert isinstance(rows[0], list)
+    assert all(isinstance(v, (int, float)) for v in rows[0])
 
 
 @pytest.fixture(name="configure_service_tags")

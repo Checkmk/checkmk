@@ -5,27 +5,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    FixedValue,
-    TextAscii,
-    Transform,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
-    rulespec_registry,
-    Levels,
-    RulespecGroupCheckParametersStorage,
     HostRulespec,
+    Levels,
+    rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Age, Dictionary, FixedValue, TextInput, Transform
+
+
+def transform_diskstat(params):
+    if isinstance(params, list):
+        return {mode: True for mode in params}
+    return params
 
 
 def _valuespec_diskstat_inventory():
     return Transform(
         Dictionary(
-            title=_("Discovery mode for Disk IO check"),
+            title=_("Disk IO discovery"),
             help=_("This rule controls which and how many checks will be created "
                    "for monitoring individual physical and logical disks. "
                    "Note: the option <i>Create a summary for all read, one for "
@@ -65,20 +65,20 @@ def _valuespec_diskstat_inventory():
             ],
             default_keys=['summary'],
         ),
-        forth=lambda vs: {mode: True for mode in vs} if isinstance(vs, list) else vs,
+        forth=transform_diskstat,
     )
 
 
 rulespec_registry.register(
     HostRulespec(
-        group=RulespecGroupCheckParametersStorage,
+        group=RulespecGroupCheckParametersDiscovery,
         name="diskstat_inventory",
         valuespec=_valuespec_diskstat_inventory,
     ))
 
 
 def _item_spec_diskstat():
-    return TextAscii(
+    return TextInput(
         title=_("Device"),
         help=_("For a summarized throughput of all disks, specify <tt>SUMMARY</tt>,  "
                "a per-disk IO is specified by the drive letter, a colon and a slash on Windows "
@@ -156,5 +156,5 @@ rulespec_registry.register(
         item_spec=_item_spec_diskstat,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_diskstat,
-        title=lambda: _("Levels for disk IO"),
+        title=lambda: _("Disk IO levels"),
     ))

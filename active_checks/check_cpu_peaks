@@ -6,11 +6,11 @@
 
 # TODO: Totally ignore type issues for this file. The check is totally broken, because it has not
 # been updated since the TimeSeries refactoring. This will be cleaned up with CMK-3556
-# type: ignore[arg-type,assignment,call-overload,var-annotated]
+# type: ignore[arg-type,assignment,call-overload]
 
+import getopt
 import sys
 import time
-import getopt
 from typing import Optional
 
 import cmk.utils.prediction as prediction

@@ -66,6 +66,7 @@ enum class LogEntryKind {
 
 class LogEntry {
 public:
+    // TODO(sp) Do we have to keep the values in sync with something?
     enum class Class {
         info = 0,             // all messages not in any other class
         alert = 1,            // alerts: the change service/host state
@@ -74,8 +75,8 @@ public:
         passivecheck = 4,     // passive checks
         ext_command = 5,      // external commands
         state = 6,            // initial or current states
-        text = 7,             // specific text passages
-        alert_handlers = 8,   // Started and stopped alert handlers
+        // text = 7,          // specific text passages, seems to be unused
+        alert_handlers = 8,  // Started and stopped alert handlers
 
         // TODO(sp): This class sets different logclasses on match -> fix this
         invalid = 0x7fffffff  // never stored
@@ -134,6 +135,7 @@ private:
         std::vector<Param> params;
     };
 
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     static std::vector<LogDef> log_definitions;
 
     void assign(Param par, const std::string &field);

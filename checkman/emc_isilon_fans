@@ -9,5 +9,5 @@ description:
 item:
  The name of the fan without {Fan}, e.g. {Chassis 1} or {Power Supply 1 1}.
 
-inventory:
+discovery:
  One service is created for each fan.

@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // simple logging
 // see logger.cpp to understand how it works
@@ -14,23 +15,10 @@
 #include <strstream>
 
 #include "common/cfg_info.h"
+#include "common/fmt_ext.h"
 #include "common/wtools.h"
 #include "fmt/color.h"
 #include "tools/_xlog.h"
-
-// User defined converter required to logging correctly data from wstring
-template <>
-struct fmt::formatter<std::wstring> {
-    template <typename ParseContext>
-    constexpr auto parse(ParseContext& ctx) {
-        return ctx.begin();
-    }
-
-    template <typename FormatContext>
-    auto format(const std::wstring& Ws, FormatContext& ctx) {
-        return format_to(ctx.out(), "{}", wtools::ConvertToUTF8(Ws));
-    }
-};
 
 // #TODO put it into internal/details
 // support for windows event log
@@ -166,7 +154,7 @@ inline std::string formatString(int Fl, const char* Prefix,
 namespace internal {
 enum class Colors { dflt, red, green, yellow, pink, cyan, pink_light, white };
 
-static uint16_t GetColorAttribute(Colors color) {
+constexpr uint16_t GetColorAttribute(Colors color) {
     switch (color) {
         case Colors::red:
             return FOREGROUND_RED;
@@ -188,7 +176,7 @@ static uint16_t GetColorAttribute(Colors color) {
     }
 }
 
-static int GetBitOffset(uint16_t color_mask) {
+constexpr int GetBitOffset(uint16_t color_mask) {
     if (color_mask == 0) return 0;
 
     int bit_offset = 0;
@@ -199,20 +187,18 @@ static int GetBitOffset(uint16_t color_mask) {
     return bit_offset;
 }
 
-static uint16_t CalculateColor(Colors color, uint16_t OldColorAttributes) {
+constexpr uint16_t CalculateColor(Colors color, uint16_t OldColorAttributes) {
     // Let's reuse the BG
-    static const uint16_t background_mask = BACKGROUND_BLUE | BACKGROUND_GREEN |
-                                            BACKGROUND_RED |
-                                            BACKGROUND_INTENSITY;
-    static const uint16_t foreground_mask = FOREGROUND_BLUE | FOREGROUND_GREEN |
-                                            FOREGROUND_RED |
-                                            FOREGROUND_INTENSITY;
-    const uint16_t existing_bg = OldColorAttributes & background_mask;
+    constexpr uint16_t background_mask = BACKGROUND_BLUE | BACKGROUND_GREEN |
+                                         BACKGROUND_RED | BACKGROUND_INTENSITY;
+    constexpr uint16_t foreground_mask = FOREGROUND_BLUE | FOREGROUND_GREEN |
+                                         FOREGROUND_RED | FOREGROUND_INTENSITY;
+    uint16_t existing_bg = OldColorAttributes & background_mask;
 
     uint16_t new_color =
         GetColorAttribute(color) | existing_bg | FOREGROUND_INTENSITY;
-    static const int bg_bit_offset = GetBitOffset(background_mask);
-    static const int fg_bit_offset = GetBitOffset(foreground_mask);
+    constexpr const int bg_bit_offset = GetBitOffset(background_mask);
+    constexpr const int fg_bit_offset = GetBitOffset(foreground_mask);
 
     if (((new_color & background_mask) >> bg_bit_offset) ==
         ((new_color & foreground_mask) >> fg_bit_offset)) {
@@ -260,8 +246,9 @@ inline void sendStringToStdio(const char* String,
 namespace XLOG {
 
 namespace setup {
-void DuplicateOnStdio(bool On);
+void DuplicateOnStdio(bool on);
 void ColoredOutputOnStdio(bool On);
+void SetContext(std::string_view context);
 
 }  // namespace setup
 
@@ -319,8 +306,9 @@ class Emitter {
 public:
     enum { kConstructedValue = 0xFFA1B2C0 };
 
-    Emitter(XLOG::LogType t,
-            bool Breakpoint = false)  // future use
+    explicit Emitter(XLOG::LogType t) : Emitter(t, false) {}
+
+    Emitter(XLOG::LogType t, bool breakpoint)
         : type_(t), copy_(false), mods_(Mods::kCopy) {
         // setting up parameters for print in log_param_
         switch (t) {
@@ -328,19 +316,16 @@ public:
                 log_param_.type_ = xlog::Type::kLogOut;
                 log_param_.directions_ = xlog::Directions::kDebuggerPrint |
                                          xlog::Directions::kFilePrint;
-                // other
                 break;
             case LogType::trace:
                 log_param_.type_ = xlog::Type::kVerboseOut;
                 log_param_.directions_ = xlog::Directions::kDebuggerPrint;
-                // other
                 break;
             case LogType::debug:
                 log_param_.type_ = xlog::Type::kDebugOut;
                 log_param_.directions_ = xlog::Directions::kDebuggerPrint;
-                // other
                 break;
-            case LogType::stdio: {
+            case LogType::stdio:
                 log_param_.type_ = xlog::Type::kVerboseOut;
                 log_param_.mark_ = xlog::Marker::kTraceMark;
                 log_param_.directions_ = xlog::Directions::kStdioPrint;
@@ -349,33 +334,36 @@ public:
 
                 log_param_.setFileName(nullptr);
                 log_param_.initPrefix(nullptr);
-            } break;
+                break;
             default:
                 log_param_.type_ = xlog::Type::kDebugOut;
         }
-        if (Breakpoint) mods_ |= Mods::kBp;
+        if (breakpoint) {
+            mods_ |= Mods::kBp;
+        }
         constructed_ = kConstructedValue;
     }
 
     Emitter operator=(const Emitter& Rhs) = delete;
 
     ~Emitter() {
-        if (copy_) flush();
+        if (copy_) {
+            flush();
+        }
     }
 
     // *****************************
     // STREAM OUTPUT
     template <typename T>
-    std::ostream& operator<<(const T& Value) {
-        return (os_ << Value);
+    std::ostream& operator<<(const T& value) {
+        return (os_ << value);
     }
 
     template <>
-    std::ostream& operator<<(const std::wstring& Value) {
-        auto s_wide = fmt::format(L"{}", Value);
-        auto s = wtools::ConvertToUTF8(Value);
+    std::ostream& operator<<(const std::wstring& value) {
+        auto s = wtools::ToUtf8(value);
         if (!constructed()) {
-            auto _ = xlog::l("Attempt to log too early '%s'", s.c_str());
+            xlog::l("Attempt to log too early '%s'", s.c_str());
             return os_;
         }
 
@@ -383,11 +371,10 @@ public:
         return (os_ << s);
     }
 
-    std::ostream& operator<<(const wchar_t* Value) {
-        auto s_wide = fmt::format(L"{}", Value);
-        auto s = wtools::ConvertToUTF8(Value);
+    std::ostream& operator<<(const wchar_t* value) {
+        auto s = wtools::ToUtf8(value);
         if (!constructed()) {
-            auto _ = xlog::l("Attempt to log too early '%s'", s.c_str());
+            xlog::l("Attempt to log too early '%s'", s.c_str());
             return os_;
         }
         std::lock_guard lk(lock_);
@@ -397,25 +384,23 @@ public:
 
     inline std::string SafePrintToDebuggerAndEventLog(
         const std::string& text) noexcept {
-        std::string s;
         try {
-            s = fmt::format(
+            return fmt::format(
                 "[ERROR] [CRITICAL] Invalid parameters for log string \"{}\"\n",
                 text);
-            return s;
         } catch (...) {
-            s = "[ERROR] [CRITICAL] Failed Print\n";
+            xlog::internal_PrintStringDebugger(
+                "[ERROR] [CRITICAL] Failed Print\n");
         }
-        xlog::internal_PrintStringDebugger(s.c_str());
-        return s;
+        return "";
     }
 
     // **********************************
     // STREAM OUTPUT
-    template <typename... T>
-    auto operator()(const std::string& Format, T... args) noexcept {
+    template <typename... Args>
+    auto operator()(const std::string& format, Args&&... args) noexcept {
         try {
-            auto s = fmt::format(Format, args...);
+            auto s = fmt::format(format, std::forward<Args>(args)...);
             if (!constructed()) {
                 xlog::l("Attempt to log too early '%s'", s.c_str());
                 return s;
@@ -425,26 +410,27 @@ public:
             postProcessAndPrint(s);
             return s;
         } catch (...) {
-            return SafePrintToDebuggerAndEventLog(Format);
+            return SafePrintToDebuggerAndEventLog(format);
         }
     }
 
     // #TODO make more versatile
-    template <typename... T>
-    auto operator()(int Flags, const std::string& Format, T... args) noexcept {
+    template <typename... Args>
+    auto operator()(int flags, const std::string& format,
+                    Args&&... args) noexcept {
         try {
-            auto s = fmt::format(Format, args...);
+            auto s = fmt::format(format, std::forward<Args>(args)...);
             if (!constructed()) {
                 xlog::l("Attempt to log too early '%s'", s.c_str());
                 return s;
             }
 
-            auto e = (*this).operator()(Flags);
+            auto e = (*this).operator()(flags);
             std::lock_guard lk(lock_);
             e.postProcessAndPrint(s);
             return s;
         } catch (...) {
-            return SafePrintToDebuggerAndEventLog(Format);
+            return SafePrintToDebuggerAndEventLog(format);
         }
     }
     // **********************************
@@ -472,142 +458,158 @@ public:
     // XLOG::l(XLOG::kInfo)(...);
     // XLOG::d(XLOG::kTrace)(...);
 
-    // #TODO please, Sergey, this is copy-paste and copy-paste is streng
-    // verboten by Check MK
-    template <typename... T>
-    auto exec(int Modifications, const std::string& Format,
-              T... args) noexcept {
+    template <typename... Args>
+    auto exec(int modifications, const std::string& format,
+              Args&&... args) noexcept {
         try {
-            auto s = fmt::format(Format, args...);
+            auto s = fmt::format(format, std::forward<Args>(args)...);
             // check construction
-            if (!this->constructed_) return s;
+            if (!this->constructed_) {
+                return s;
+            }
             auto e = *this;
-            e.mods_ |= Modifications;
+            e.mods_ |= modifications;
             e.postProcessAndPrint(s);
             return s;
         } catch (...) {
-            return SafePrintToDebuggerAndEventLog(Format);
+            return SafePrintToDebuggerAndEventLog(format);
         }
     }
 
 #pragma warning(push)
 #pragma warning(disable : 26444)
     // [Trace]
-    template <typename... T>
-    [[maybe_unused]] auto t(const std::string& Format, T... args) {
-        return exec(XLOG::kTrace, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto t(const std::string& format,
+                            Args&&... args) noexcept {
+        return exec(XLOG::kTrace, format, std::forward<Args>(args)...);
     }
 
     // no prefix, just informational
-    template <typename... T>
-    [[maybe_unused]] auto i(const std::string& Format, T... args) {
-        return exec(XLOG::kInfo, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto i(const std::string& format,
+                            Args&&... args) noexcept {
+        return exec(XLOG::kInfo, format, std::forward<Args>(args)...);
     }
 
-    template <typename... T>
-    [[maybe_unused]] auto i(int Mods, const std::string& Format, T... args) {
-        return exec(XLOG::kInfo | Mods, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto i(int Mods, const std::string& format,
+                            Args&&... args) noexcept {
+        return exec(XLOG::kInfo | Mods, format, std::forward<Args>(args)...);
     }
 
     // [Err  ]
-    template <typename... T>
-    [[maybe_unused]] auto e(const std::string& Format, T... args) {
-        return exec(XLOG::kError, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto e(const std::string& format,
+                            Args&&... args) noexcept {
+        return exec(XLOG::kError, format, std::forward<Args>(args)...);
     }
 
     // [Warn ]
-    template <typename... T>
-    [[maybe_unused]] auto w(const std::string& Format, T... args) {
-        return exec(XLOG::kWarning, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto w(const std::string& format,
+                            Args&&... args) noexcept {
+        return exec(XLOG::kWarning, format, std::forward<Args>(args)...);
     }
 
-    template <typename... T>
-    [[maybe_unused]] auto crit(const std::string& Format, T... args) {
-        return exec(XLOG::kCritError, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto crit(const std::string& format,
+                               Args&&... args) noexcept {
+        return exec(XLOG::kCritError, format, std::forward<Args>(args)...);
     }
     // [ERROR:CRITICAL] +  breakpoint
-    template <typename... T>
-    [[maybe_unused]] auto bp(const std::string& Format, T... args) {
-        return exec(XLOG::kCritError | XLOG::kBp, Format, args...);
+    template <typename... Args>
+    [[maybe_unused]] auto bp(const std::string& format,
+                             Args&&... args) noexcept {
+        return exec(XLOG::kCritError | XLOG::kBp, format,
+                    std::forward<Args>(args)...);
     }
 
     // this if for stream operations
-    [[maybe_unused]] XLOG::Emitter operator()(int Flags = kCopy) {
+    [[maybe_unused]] XLOG::Emitter operator()(int Flags = kCopy) noexcept {
         auto e = *this;
         e.mods_ = Flags;
 
         return e;
     }
 
-    [[maybe_unused]] Emitter t() {
+    [[maybe_unused]] Emitter t() noexcept {
         auto e = *this;
         e.mods_ = XLOG::kTrace;
         return e;
     }
 
-    [[maybe_unused]] Emitter w() {
+    [[maybe_unused]] Emitter w() noexcept {
         auto e = *this;
         e.mods_ = XLOG::kWarning;
         return e;
     }
 
-    [[maybe_unused]] Emitter i() {
+    [[maybe_unused]] Emitter i() noexcept {
         auto e = *this;
         e.mods_ = XLOG::kInfo;
         return e;
     }
 
-    [[maybe_unused]] Emitter e() {
+    [[maybe_unused]] Emitter e() noexcept {
         auto e = *this;
         e.mods_ = XLOG::kError;
         return e;
     }
 
-    [[maybe_unused]] Emitter crit() {
+    [[maybe_unused]] Emitter crit() noexcept {
         auto e = *this;
         e.mods_ = XLOG::kCritError;
         return e;
     }
 #pragma warning(pop)
     // set filename to log
-    void configFile(const std::string& LogFile) {
-        if (LogFile.empty()) {
+    void configFile(const std::string& log_file) {
+        if (log_file.empty()) {
             log_param_.setFileName(nullptr);
         } else {
-            log_param_.setFileName(LogFile.c_str());
+            log_param_.setFileName(log_file.c_str());
         }
     }
 
-    void configPrefix(const std::wstring& Prefix) {
-        if (Prefix.empty()) {
+    void configPrefix(const std::wstring& prefix) {
+        if (prefix.empty()) {
             log_param_.initPrefix(nullptr);
         } else {
-            log_param_.initPrefix(Prefix.c_str());
+            log_param_.initPrefix(prefix.c_str());
         }
     }
 
-    void enableFileLog(bool Enable) {
-        if (Enable)
+    void enableFileLog(bool enable) {
+        if (enable)
             log_param_.directions_ |= xlog::Directions::kFilePrint;
         else
             log_param_.directions_ &= ~xlog::Directions::kFilePrint;
     }
 
-    void enableEventLog(bool Enable) {
+    void enableEventLog(bool enable) {
         if (type_ == LogType::log) {
             // only kLog has right to create event log entries
-            if (Enable)
+            if (enable)
                 log_param_.directions_ |= xlog::Directions::kEventPrint;
             else
                 log_param_.directions_ &= ~xlog::Directions::kEventPrint;
         }
     }
 
-    void enableWinDbg(bool Enable) {
-        if (Enable)
+    void enableWinDbg(bool enable) {
+        if (enable)
             log_param_.directions_ |= xlog::Directions::kDebuggerPrint;
         else
             log_param_.directions_ &= ~xlog::Directions::kDebuggerPrint;
+    }
+
+    bool isWinDbg() const {
+        return (log_param_.directions_ | xlog::Directions::kDebuggerPrint) != 0;
+    }
+
+    bool isFileDbg() const {
+        return (log_param_.directions_ | xlog::Directions::kFilePrint) != 0;
     }
 
     const xlog::LogParam& getLogParam() const noexcept { return log_param_; }
@@ -623,13 +625,13 @@ public:
 private:
     uint32_t constructed_;  // filled during construction
     // private, can be called only from operator ()
-    Emitter(const Emitter& Rhs) {
+    Emitter(const Emitter& rhs) {
         {
-            std::lock_guard lk(Rhs.lock_);
-            log_param_ = Rhs.log_param_;
-            type_ = Rhs.type_;
-            mods_ = Rhs.mods_;
-            constructed_ = Rhs.constructed_;
+            std::lock_guard lk(rhs.lock_);
+            log_param_ = rhs.log_param_;
+            type_ = rhs.type_;
+            mods_ = rhs.mods_;
+            constructed_ = rhs.constructed_;
         }
         copy_ = true;
     }
@@ -640,16 +642,16 @@ private:
         std::lock_guard lk(lock_);
         if (!os_.str().empty()) {
             postProcessAndPrint(os_.str());
-            os_.str() = "";
+            os_.clear();
         }
     }
 
-    void postProcessAndPrint(const std::string& String);
+    void postProcessAndPrint(const std::string& text);
 
     mutable std::mutex lock_;
     xlog::LogParam log_param_;  // this is fixed base
-    std::atomic<int> backup_log_max_count_ = cma::cfg::kBackupLogMaxCount;
-    std::atomic<size_t> backup_log_max_size_ = cma::cfg::kBackupLogMaxSize;
+    std::atomic<int> backup_log_max_count_{cma::cfg::kBackupLogMaxCount};
+    std::atomic<size_t> backup_log_max_size_{cma::cfg::kBackupLogMaxSize};
     std::ostringstream os_;  // stream storage
     XLOG::LogType type_;
 
@@ -674,38 +676,37 @@ extern XLOG::Emitter stdio;  // only print
 // API:
 //
 
-// bad example of engineering.
 // #TODO fix this make one entry point(Global Object)
 namespace setup {
 
 // YOU DO NOT NEED ANYTHING EXCEPT THIS CALL
 void ReConfigure();
 
-void Configure(std::string LogFileName, int DebugLevel, bool WinDbg,
-               bool EventLog);
+void Configure(const std::string& log_file_name, int debug_level, bool windbg,
+               bool event_log);
 
-// switch d to send output into the file
-void EnableDebugLog(bool Enable);
+/// \brief switch d to send output into the file
+void EnableDebugLog(bool enable);
 
-// switch t to send output into the file
-void EnableTraceLog(bool Enable);
+/// \brief switch t to send output into the file
+void EnableTraceLog(bool enable);
 
-// change file name for all loggers
-void ChangeLogFileName(const std::string& Filename);
+/// \brief change file name for all loggers
+void ChangeLogFileName(const std::string& log_file_name);
 
-// change file name for all loggers
-void ChangeDebugLogLevel(int Level);
+/// \brief change debug level
+void ChangeDebugLogLevel(int level);
 
-// disable enable windbg for all loggers
-void EnableWinDbg(bool Enable);
+/// \brief disable enable windbg for all loggers
+void EnableWinDbg(bool enable);
 
-// disable enable event log GLOBALLY
+/// \brief reports log status
 bool IsEventLogEnabled();
 
 }  // namespace setup
 
 namespace internal {
-int Type2Marker(xlog::Type Lt) noexcept;
+int Type2Marker(xlog::Type log_type) noexcept;
 uint32_t Mods2Directions(const xlog::LogParam& lp, uint32_t mods) noexcept;
 }  // namespace internal
 

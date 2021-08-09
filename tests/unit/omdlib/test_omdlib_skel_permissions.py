@@ -6,8 +6,8 @@
 
 # pylint: disable=redefined-outer-name
 
-import omdlib.skel_permissions
 import omdlib.main
+import omdlib.skel_permissions
 
 
 def test_read_skel_permissions(monkeypatch, tmp_path):

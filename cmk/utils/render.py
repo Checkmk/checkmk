@@ -10,8 +10,8 @@ are just for optical output purposes."""
 
 # THIS IS STILL EXPERIMENTAL
 
-import time
 import math
+import time
 from datetime import timedelta
 from typing import Optional, Tuple, Union
 
@@ -53,7 +53,7 @@ def time_since(timestamp: int) -> str:
 class Age:
     """Format time difference seconds into approximated human readable text"""
     def __init__(self, secs: float) -> None:
-        super(Age, self).__init__()
+        super().__init__()
         self.__secs = secs
 
     def __str__(self) -> str:
@@ -80,8 +80,7 @@ class Age:
 
         days = hours / 24.0
         if days < 6:
-            d = ("%.1f" % days).rstrip("0").rstrip(".")
-            return "%s %s" % (d, _("d"))
+            return "%s %s" % (drop_dotzero(days, 1), _("d"))
         if days < 999:
             return "%.0f %s" % (days, _("d"))
         years = days / 365.0
@@ -142,9 +141,12 @@ def fmt_number_with_precision(v: float,
                               base: float = 1000.0,
                               precision: int = 2,
                               drop_zeroes: bool = False,
-                              unit: str = "") -> str:
+                              unit: str = "",
+                              zero_non_decimal: bool = False) -> str:
     factor, prefix = scale_factor_prefix(v, base)
     value = float(v) / factor
+    if zero_non_decimal and value == 0:
+        return '0 %s' % prefix + unit
     number = drop_dotzero(value, precision) if drop_zeroes else '%.*f' % (precision, value)
     return '%s %s' % (number, prefix + unit)
 
@@ -187,38 +189,14 @@ def filesize(size: float) -> str:
 
 def percent(perc: float, scientific_notation: bool = False) -> str:
     """Renders a given number as percentage string"""
-    # 0 / 0.0 -> 0%
-    # 9.0e-05 -> 0.00009%
-    # 0.00009 -> 0.00009%
-    # 0.00103 -> 0.001%
-    # 0.0019  -> 0.002%
-    # 0.129   -> 0.13%
-    # 8.25752 -> 8.26%
-    # 8       -> 8.0%
-    # 80      -> 80.0%
-    # 100.123 -> 100%
-    # 200.123 -> 200%
-    # 1234567 -> 1234567%
-    #
-    # with scientific_notation:
-    # 0.00009 -> 9.0e-05%
-    # 0.00019 -> 0.0002%
-    # 12345 -> 12345%
-    # 1234567 -> 1.2e+06%
-
     # 0 and 0.0 is a special case
     if perc == 0:
         return "0%"
 
     # 1000 < oo
-    if abs(perc) > 999.5:
-        if scientific_notation and abs(perc) >= 100000:
-            result = "%1.e" % perc
-        else:
-            # TODO: in python3 change to >= 999.5
-            # the way python rounds x.5 changed between py2 and py3
-            result = "%d" % perc
-    # 100 < 1000
+    if scientific_notation and abs(perc) >= 100000:
+        result = scientific(perc, 1)
+    # 100 < 1000 < oo
     elif abs(perc) >= 100:
         result = "%d" % perc
     # 0.0 < 0.001
@@ -228,13 +206,12 @@ def percent(perc: float, scientific_notation: bool = False) -> str:
         if float(result) == 0:
             return "0%"
         if scientific_notation and perc < 0.0001:
-            result = "%1.e" % float(result)
+            result = scientific(perc, 1)
         else:
             result = result.rstrip("0")
     # 0.001 < 100
     else:
-        result = "%.2f" % perc
-        result = result.rstrip("0").rstrip(".")
+        result = drop_dotzero(perc, 2)
 
     # add .0 to all integers < 100
     if float(result).is_integer() and float(result) < 100:
@@ -253,9 +230,9 @@ def scientific(v: float, precision: int = 3) -> str:
     mantissa, exponent = _frexp10(float(v))
     # Render small numbers without exponent
     if -3 <= exponent <= 4:
-        return "%%.%df" % max(0, precision - exponent) % v
+        return "%.*f" % (max(0, precision - exponent), v)
 
-    return "%%.%dfe%%d" % precision % (mantissa, exponent)
+    return "%.*fe%+d" % (precision, mantissa, exponent)
 
 
 # Render a physical value with a precision of p
@@ -276,7 +253,7 @@ def physical_precision(v: float, precision: int, unit_symbol: str) -> str:
     scale_symbol, places_after_comma, scale_factor = calculate_physical_precision(v, precision)
 
     scaled_value = float(v) / scale_factor
-    return (u"%%.%df %%s%%s" % places_after_comma) % (scaled_value, scale_symbol, unit_symbol)
+    return "%.*f %s%s" % (places_after_comma, scaled_value, scale_symbol, unit_symbol)
 
 
 def calculate_physical_precision(v: float, precision: int) -> Tuple[str, int, int]:
@@ -299,7 +276,7 @@ def calculate_physical_precision(v: float, precision: int) -> Tuple[str, int, in
         -2: u"µ",
         -1: "m",
         0: "",
-        1: "K",
+        1: "k",
         2: "M",
         3: "G",
         4: "T",

@@ -4,15 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.infoblox_services import (
-    parse_infoblox_services,
-    discovery_infoblox_services,
     check_infoblox_services,
     cluster_check_infoblox_services,
+    discovery_infoblox_services,
+    parse_infoblox_services,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Service, Result, state
 
 example_snmp_string_table = [[
     ['9', '1', 'Running'],

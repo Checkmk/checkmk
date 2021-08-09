@@ -4,14 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.base import Scenario
+from tests.testlib.base import Scenario
 
-from cmk.fetchers.tcp import TCPFetcher
+from cmk.utils.type_defs import result
+
+from cmk.core_helpers.cache import FileCacheFactory
 
 import cmk.base.modes.check_mk as check_mk
-from cmk.base.data_sources import FileCacheConfigurator
+from cmk.base.sources.tcp import TCPSource
 
 
 class TestModeDumpAgent:
@@ -29,7 +31,7 @@ class TestModeDumpAgent:
 
     @pytest.fixture
     def patch_fetch(self, raw_data, monkeypatch):
-        monkeypatch.setattr(TCPFetcher, "fetch", lambda self, mode: raw_data)
+        monkeypatch.setattr(TCPSource, "fetch", lambda self, mode: result.OK(raw_data))
 
     @pytest.fixture
     def scenario(self, hostname, ipaddress, monkeypatch):
@@ -41,7 +43,7 @@ class TestModeDumpAgent:
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")
     def test_success(self, hostname, raw_data, capsys):
-        assert FileCacheConfigurator.disabled is False
+        assert FileCacheFactory.disabled is False
 
         check_mk.mode_dump_agent(hostname)
         assert capsys.readouterr().out == raw_data.decode()

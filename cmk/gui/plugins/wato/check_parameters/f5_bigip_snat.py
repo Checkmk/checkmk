@@ -5,17 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
+    Levels,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    Levels,
 )
+from cmk.gui.valuespec import Dictionary, TextInput
 
 
 def _parameter_valuespec_f5_bigip_snat():
@@ -109,7 +105,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="f5_bigip_snat",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Source NAT Name"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Source NAT Name"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_f5_bigip_snat,
         title=lambda: _("F5 Loadbalancer Source NAT"),

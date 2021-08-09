@@ -13,5 +13,5 @@ description:
 item:
  The name or the description of the routing engine.
 
-inventory:
+discovery:
  One service is created for each routing engine.

@@ -12,16 +12,16 @@ import errno
 import shutil
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 from _pytest.doctest import DoctestItem
 
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
-    "testlib",  #
-    "unit.checks.checktestlib",  #
-    "unit.checks.generictests.run")
+    "tests.testlib",  #
+    "tests.unit.checks.checktestlib",  #
+    "tests.unit.checks.generictests.run")
 
-import testlib
+import tests.testlib as testlib
 
 #TODO Hack: Exclude cee tests in cre repo
 if not Path(testlib.utils.cmc_path()).exists():
@@ -70,9 +70,14 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
-    """Register the type marker to pytest"""
+    """Registers custom markers to pytest"""
     config.addinivalue_line(
         "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types.keys()))
+    config.addinivalue_line(
+        "markers", "non_resilient:"
+        " Tests marked as non-resilient are allowed to fail when run in resilience test.")
+    config.addinivalue_line("markers",
+                            "registry_reset: Marker to add arguments to `registry_reset` fixture.")
 
 
 def pytest_collection_modifyitems(items):

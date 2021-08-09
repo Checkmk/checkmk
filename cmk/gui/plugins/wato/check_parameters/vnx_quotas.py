@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    ListOf,
-    Tuple,
-    TextAscii,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersDiscovery,
-    rulespec_registry,
     HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
 )
+from cmk.gui.valuespec import Dictionary, ListOf, TextInput, Tuple
 
 
 def _valuespec_discovery_rules_vnx_quotas():
@@ -25,8 +20,8 @@ def _valuespec_discovery_rules_vnx_quotas():
             ("dms_names",
              ListOf(
                  Tuple(elements=[
-                     TextAscii(title=_("Exact RWVDMS name or regex")),
-                     TextAscii(title=_("Substitution")),
+                     TextInput(title=_("Exact RWVDMS name or regex")),
+                     TextInput(title=_("Substitution")),
                  ]),
                  title=_("Map RWVDMS names"),
                  help=_("Here you are able to substitute the RWVDMS name. Either you "
@@ -37,8 +32,8 @@ def _valuespec_discovery_rules_vnx_quotas():
             ("mp_names",
              ListOf(
                  Tuple(elements=[
-                     TextAscii(title=_("Exact mount point name or regex")),
-                     TextAscii(title=_("Substitution")),
+                     TextInput(title=_("Exact mount point name or regex")),
+                     TextInput(title=_("Substitution")),
                  ]),
                  title=_("Map mount point names"),
                  help=_("Here you are able to substitute the filesystem name. Either you "

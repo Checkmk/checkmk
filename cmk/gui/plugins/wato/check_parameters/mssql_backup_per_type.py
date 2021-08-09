@@ -5,17 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.check_parameters.mssql_backup import _vs_mssql_backup_age
+from cmk.gui.valuespec import Dictionary, TextInput
 
 
 def _parameter_valuespec_mssql_backup_per_type():
@@ -24,11 +20,20 @@ def _parameter_valuespec_mssql_backup_per_type():
     ],)
 
 
+def _item_spec() -> TextInput:
+    return TextInput(
+        title=_("Instance, tablespace & backup type"),
+        help=_("The MSSQL instance name, the tablespace name and the backup type, each separated "
+               "by a space."),
+        allow_empty=False,
+    )
+
+
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_backup_per_type",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Backup name"), allow_empty=False),
+        item_spec=_item_spec,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_backup_per_type,
         title=lambda: _("MSSQL Backup"),

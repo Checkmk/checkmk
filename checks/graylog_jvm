@@ -4,12 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<graylog_jvm>>>
 # {"jvm.memory.heap.init": 1073741824, "jvm.memory.heap.used": 357154208,
 # "jvm.memory.heap.max": 1020067840, "jvm.memory.heap.committed": 1020067840,
 # "jvm.memory.heap.usage": 0.35012789737592354}
-
-import json
 
 
 def check_graylog_jvm(_no_item, params, parsed):
@@ -43,5 +47,4 @@ check_info["graylog_jvm"] = {
     "service_description": "Graylog JVM",
     "has_perfdata": True,
     "group": "graylog_jvm",
-    "includes": ["graylog.include"],
 }

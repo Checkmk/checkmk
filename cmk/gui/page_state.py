@@ -10,40 +10,38 @@ top right of the page.
 """
 
 from dataclasses import dataclass
-from typing import Union
+from typing import Optional, Union
 
 from cmk.gui.globals import html
-from cmk.gui.utils.html import HTML
 from cmk.gui.type_defs import CSSSpec
+from cmk.gui.utils.html import HTML
 
 
 @dataclass
 class PageState:
-    top_line: Union[str, HTML]
-    bottom_line: Union[str, HTML]
-    icon_name: str
+    text: Union[str, HTML]
+    icon_name: Optional[str] = None
     css_classes: CSSSpec = None
+    url: Optional[str] = None
+    tooltip_text: str = ""
 
 
 class PageStateRenderer:
     def show(self, page_state: PageState) -> None:
-        html.open_div(class_=self._get_css_classes(page_state))
-
-        html.open_div(class_="text")
-
-        html.open_span()
-        html.span(page_state.top_line, id_="page_state_top_line")
-        html.span("", id_="headinfo")
-        html.close_span()
-
-        html.span(page_state.bottom_line)
+        html.open_div(class_=self._get_css_classes(page_state), title=page_state.tooltip_text)
+        if page_state.url:
+            html.open_a(page_state.url)
+            self._show_content(page_state)
+            html.close_a()
+        else:
+            self._show_content(page_state)
         html.close_div()
 
-        html.open_div(class_="icon_container")
-        html.icon(None, page_state.icon_name, id_="page_state_icon")
-        html.close_div()
-
-        html.close_div()
+    def _show_content(self, page_state: PageState) -> None:
+        html.div(page_state.text, class_="text_container")
+        if page_state.icon_name:
+            html.div(html.render_icon(page_state.icon_name, id_="page_state_icon"),
+                     class_="icon_container")
 
     def _get_css_classes(self, page_state: PageState) -> CSSSpec:
         classes = ["page_state"]

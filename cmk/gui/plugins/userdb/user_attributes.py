@@ -5,22 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.utils as utils
-from cmk.gui.config import theme_choices
+from cmk.gui.i18n import _
+from cmk.gui.plugins.userdb import user_attribute_registry, UserAttribute
+from cmk.gui.utils import show_mode_choices
+from cmk.gui.utils.theme import theme_choices
 from cmk.gui.valuespec import (
+    AbsoluteDate,
+    Alternative,
+    Checkbox,
+    Dictionary,
     DropdownChoice,
     FixedValue,
-    Alternative,
+    TextInput,
     Transform,
-    TextAscii,
-    AbsoluteDate,
     Tuple,
-    Dictionary,
-    Checkbox,
-)
-from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb import (
-    UserAttribute,
-    user_attribute_registry,
 )
 
 
@@ -114,7 +112,7 @@ class StartURLUserAttribute(UserAttribute):
                         title=_("Use the default start URL"),
                         totext="",
                     ),
-                    TextAscii(
+                    TextInput(
                         title=_("Use this custom start URL"),
                         help=
                         _("When you point your browser to the Check_MK GUI, usually the dashboard "
@@ -122,7 +120,6 @@ class StartURLUserAttribute(UserAttribute):
                           "URL you like here."),
                         size=80,
                         default_value="dashboard.py",
-                        attrencode=True,
                         allow_empty=False,
                         validate=utils.validate_start_url,
                     ),
@@ -142,7 +139,7 @@ class UIThemeUserAttribute(UserAttribute):
         return "ui_theme"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return Alternative(
@@ -172,7 +169,7 @@ class UISidebarPosition(UserAttribute):
         return "ui_sidebar_position"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return DropdownChoice(
@@ -186,17 +183,41 @@ class UISidebarPosition(UserAttribute):
 
 
 @user_attribute_registry.register
+class UIIconTitle(UserAttribute):
+    @classmethod
+    def name(cls):
+        return "nav_hide_icons_title"
+
+    def topic(self):
+        return "interface"
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_("Navigation bar icons"),
+            help=_("With this option you can define if icons in the navigation "
+                   "bar should show a title or not. This gives you the possibility "
+                   "to save some space in the UI."),
+            choices=[(None, _("Show title")), ("hide", _("Do not show title"))],
+            no_preselect_value=False,
+        )
+
+
+@user_attribute_registry.register
 class UIIconPlacement(UserAttribute):
     @classmethod
     def name(cls):
         return "icons_per_item"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
         return DropdownChoice(
-            title=_("Main menu icons"),
+            title=_("Mega menu icons"),
+            help=_("In the mega menus you can select between two options: "
+                   "Have a green icon only for the headlines – the 'topics' – "
+                   "for lean design. Or have a colored icon for every entry so that "
+                   "over time you can zoom in more quickly to a specific entry."),
             choices=[(None, _("Per topic")), ("entry", _("Per entry"))],
             no_preselect_value=False,
         )
@@ -209,25 +230,31 @@ class UIIconPlacement(UserAttribute):
 class UIBasicAdvancedToggle(UserAttribute):
     @classmethod
     def name(cls):
-        return "ui_basic_advanced_mode"
+        return "show_mode"
 
     def topic(self):
-        return "personal"
+        return "interface"
 
     def valuespec(self):
-        return DropdownChoice(
-            title=_("Basic / advanced mode"),
-            help=_(
-                "In some places like e.g. the main menu Checkmk divides features, "
-                "filters, input fields etc. in two categories - basic and advanced. With this"
-                "option you can set a default mode for unvisited menus. Alternatively, you can "
-                "enforce one mode so that the round button with the three dots is not shown at all."
-            ),
-            choices=[
-                (None, _("Default to basic mode")),
-                ("default_advanced", _("Default to advanced mode")),
-                ("enforce_basic", _("Enforce basic mode")),
-                ("enforce_advanced", _("Enforce advanced mode")),
+        return Alternative(
+            title=_("Show more / Show less"),
+            orientation="horizontal",
+            help=_("In some places like e.g. the main menu Checkmk divides "
+                   "features, filters, input fields etc. in two categories, showing "
+                   "more or less entries. With this option you can set a default "
+                   "mode for unvisited menus. Alternatively, you can enforce to "
+                   "show more, so that the round button with the three dots is not "
+                   "shown at all."),
+            elements=[
+                FixedValue(
+                    None,
+                    title=_("Use the default show mode"),
+                    totext="",
+                ),
+                DropdownChoice(
+                    title=_("Set custom show mode"),
+                    choices=show_mode_choices(),
+                ),
             ],
         )
 

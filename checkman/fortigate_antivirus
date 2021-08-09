@@ -1,0 +1,17 @@
+title: Fortinet FortiGate AntiVirus: Detection and Blocking rate
+agents: snmp
+catalog: hw/network/fortinet
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the virus detection and blocking rate of FortiGate
+ AntiVirus systems. It goes {WARN} or {CRIT} if the detection rate
+ exceeds user-configurable levels (rule "Fortinet FortiGate AntiVirus
+ Detections"). The default thresholds are 100 and 300 detections per
+ second.
+
+item:
+ Internal virtual domain index.
+
+discovery:
+ One service is created per virtual domain.

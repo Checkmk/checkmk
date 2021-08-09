@@ -11,18 +11,18 @@ import re
 import sys
 
 import pytest  # type: ignore
-from local import (actual_output, make_yaml_config, src_exec_dir, local_test, run_subprocess,
-                   wait_agent, write_config)
+
+from .local import local_test, run_subprocess, test_dir, user_dir
 
 
 # ugly hacks to get to know the make_ini_config param and utf encoding in use:
-class Globals(object):
+class Globals():
     config_param_in_use = None
     utf_encoding = None
     section = 'logfiles'
     alone = True
-    testlog1 = os.path.join(src_exec_dir, 'test1.log')
-    testlog2 = os.path.join(src_exec_dir, 'test2.log')
+    testlog1 = os.path.join(test_dir, 'test1.log')
+    testlog2 = os.path.join(test_dir, 'test2.log')
     testentry1 = 'foobar'
     testentry2 = 'error'
     state_pattern = re.compile(
@@ -61,8 +61,8 @@ def logtitle(log):
     return re.escape(r'[[[%s]]]' % log)
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
@@ -136,7 +136,7 @@ def expected_output_with_statefile():
 def no_statefile():
     if platform.system() == 'Windows':
         try:
-            os.unlink(os.path.join(src_exec_dir, 'state', 'logstate.txt'))
+            os.unlink(os.path.join(user_dir, 'state', 'logstate.txt'))
         except OSError:
             # logstate.txt may not exist if this is the first test to be run
             pass
@@ -149,7 +149,7 @@ def with_statefile():
         # simulate new log entries by setting file size & offset
         # to 0 (utf-8) or 2 (utf-16)
         filesize = 2 if Globals.utf_encoding == 'utf-16' else 0
-        with open(os.path.join(src_exec_dir, 'state', 'logstate.txt'), 'w') as statefile:
+        with open(os.path.join(user_dir, 'state', 'logstate.txt'), 'w') as statefile:
             for logfile in [Globals.testlog1, Globals.testlog2]:
                 fileid = get_fileid(logfile)
                 file_state = [str(item) for item in [logfile, fileid, filesize, filesize]]
@@ -164,7 +164,7 @@ def verify_logstate():
         expected_logstate = {
             logfile: get_file_state(logfile) for logfile in [Globals.testlog1, Globals.testlog2]
         }
-        with open(os.path.join(src_exec_dir, 'state', 'logstate.txt')) as statefile:
+        with open(os.path.join(user_dir, 'state', 'logstate.txt')) as statefile:
             actual_logstate = dict(get_log_state(line) for line in statefile)
         for (expected_log, expected_state), (actual_log,
                                              actual_state) in zip(sorted(expected_logstate.items()),

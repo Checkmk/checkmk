@@ -42,7 +42,7 @@ info = [
 discovery = {
     'app_state': [],
     'off_heap': [],
-    'mem': [('MyInstance', {})],
+    'mem': [],
     'bea_threads': [],
     'app_sess': [],
     'writer': [],
@@ -63,23 +63,6 @@ discovery = {
 }
 
 checks = {
-    'mem': [
-        (
-            'MyInstance', {}, [
-                (
-                    0,
-                    'Heap: 2253MB/24.8% used, Nonheap: 96MB/54.8% used, Total: 2350MB/25.3% used',
-                    [
-                        ('heap', 2253.324188232422, None, None, None, 9102.5),
-                        (
-                            'nonheap', 96.39640045166016, None, None, None,
-                            176.0
-                        )
-                    ]
-                )
-            ]
-        )
-    ],
     'uptime': [
         (
             'MyInstance', {}, [

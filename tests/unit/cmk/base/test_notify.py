@@ -4,10 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import io
 import os
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base import notify
 
@@ -52,26 +51,5 @@ def test_os_environment_does_not_override_notification_script_env(monkeypatch):
         },
     ),
 ])
-def test_raw_context_from_env_pipe_decoding(monkeypatch, environ, expected):
-    monkeypatch.setattr(os, 'environ', environ)
-    assert notify.raw_context_from_env() == expected
-
-
-@pytest.mark.parametrize("context,expected", [
-    ("", {}),
-    ("TEST=test", {
-        "TEST": "test"
-    }),
-    ("SERVICEOUTPUT=with_light_vertical_bar_\u2758", {
-        "SERVICEOUTPUT": "with_light_vertical_bar_|"
-    }),
-    ("LONGSERVICEOUTPUT=with_light_vertical_bar_\u2758", {
-        "LONGSERVICEOUTPUT": "with_light_vertical_bar_|"
-    }),
-    ("NOT_INFOTEXT=with_light_vertical_bar_\u2758", {
-        "NOT_INFOTEXT": "with_light_vertical_bar_\u2758"
-    }),
-])
-def test_raw_context_from_stdin(monkeypatch, context, expected):
-    monkeypatch.setattr('sys.stdin', io.StringIO(context))
-    assert notify.raw_context_from_stdin() == expected
+def test_raw_context_from_env_pipe_decoding(environ, expected):
+    assert notify.raw_context_from_env(environ) == expected

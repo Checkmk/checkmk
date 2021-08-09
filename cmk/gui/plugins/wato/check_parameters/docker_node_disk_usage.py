@@ -5,27 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Filesize,
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Filesize, Integer, Tuple
 
 
 def _item_spec_docker_node_disk_usage():
-    return TextAscii(
-        title=_("Type"),
-        help=_("Either Containers, Images, Local Volumes or Build Cache"),
-        allow_empty=True,
-    )
+    return DropdownChoice(title=_("Type"),
+                          help=_("Either Containers, Images, Local Volumes or Build Cache"),
+                          choices=[
+                              ("buildcache", _("Build Cache")),
+                              ("containers", _("Containers")),
+                              ("images", _("Images")),
+                              ("volumes", _("Local Volumes")),
+                          ])
 
 
 def _parameter_valuespec_docker_node_disk_usage():

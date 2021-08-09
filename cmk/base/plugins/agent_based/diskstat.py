@@ -68,27 +68,16 @@
 #  Index 17 -- time spent discarding
 
 import re
-from typing import (
-    Any,
-    Dict,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-)
-from .agent_based_api.v1 import (
-    get_rate,
-    get_value_store,
-    IgnoreResultsError,
-    register,
-    type_defs,
-)
+import time
+from typing import Any, Dict, Mapping, MutableMapping, Optional, Sequence, Tuple
+
+from .agent_based_api.v1 import get_rate, get_value_store, IgnoreResultsError, register, type_defs
 from .utils import diskstat
 
 SectionMultipath = Mapping[str, Any]
 
 
-def parse_diskstat(string_table: type_defs.AgentStringTable) -> diskstat.Section:
+def parse_diskstat(string_table: type_defs.StringTable) -> diskstat.Section:
     timestamp, proc_diskstat, name_info = diskstat_extract_name_info(string_table)
     assert timestamp is not None
 
@@ -206,8 +195,8 @@ def parse_diskstat(string_table: type_defs.AgentStringTable) -> diskstat.Section
 #     (None, 253, 6): 'LVM vgappl-applvol',
 # }
 def diskstat_extract_name_info(
-    string_table: type_defs.AgentStringTable
-) -> Tuple[Optional[int], type_defs.AgentStringTable, Mapping[Tuple[int, int], str]]:
+    string_table: type_defs.StringTable
+) -> Tuple[Optional[int], type_defs.StringTable, Mapping[Tuple[int, int], str]]:
     name_info = {}  # dict from (major, minor) to itemname
     timestamp = None
 
@@ -291,10 +280,10 @@ def diskstat_convert_info(
 
 
 def discover_diskstat(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section_diskstat: Optional[diskstat.Section],
     section_multipath: Optional[SectionMultipath],
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     if section_diskstat is None:
         return
     yield from diskstat.discovery_diskstat_generic(
@@ -308,14 +297,13 @@ def discover_diskstat(
 
 def _compute_rates_single_disk(
     disk: diskstat.Disk,
-    value_store: type_defs.ValueStore,
+    value_store: MutableMapping[str, Any],
     value_store_suffix: str = '',
 ) -> diskstat.Disk:
 
     raised_ignore_res_excpt = False
-    disk_with_rates = {
-        'queue_length': disk['queue_length'],
-    }
+    disk_with_rates = {k: disk[k] for k in ('queue_length',) if k in disk}
+
     for metric in set(disk) - {'queue_length', 'timestamp'}:
         try:
             disk_with_rates[metric] = get_rate(
@@ -330,6 +318,10 @@ def _compute_rates_single_disk(
 
     if raised_ignore_res_excpt:
         raise IgnoreResultsError('Initializing counters')
+
+    # statgrab_disk does not provide these
+    if not all(k in disk for k in ('read_ticks', 'read_ios', 'utilization')):
+        return disk_with_rates
 
     read_ticks_rate = disk_with_rates.pop('read_ticks')
     write_ticks_rate = disk_with_rates.pop('write_ticks')
@@ -374,10 +366,10 @@ def _compute_rates_single_disk(
 
 def check_diskstat(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section_diskstat: Optional[diskstat.Section],
     section_multipath: Optional[SectionMultipath],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     # Unfortunately, summarizing the disks does not commute with computing the rates for this check.
     # Therefore, we have to compute the rates first.
     if section_diskstat is None:
@@ -408,9 +400,10 @@ def check_diskstat(
             return
 
     yield from diskstat.check_diskstat_dict(
-        params,
-        disk_with_rates,
-        value_store,
+        params=params,
+        disk=disk_with_rates,
+        value_store=value_store,
+        this_time=time.time(),
     )
 
 
@@ -425,10 +418,10 @@ def _merge_cluster_sections(
 
 def cluster_check_diskstat(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section_diskstat: Mapping[str, Optional[diskstat.Section]],
     section_multipath: Mapping[str, Optional[SectionMultipath]],
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     yield from check_diskstat(
         item,
         params,
@@ -442,7 +435,7 @@ register.check_plugin(
     sections=["diskstat", "multipath"],
     service_name="Disk IO %s",
     discovery_ruleset_name="diskstat_inventory",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={'summary': True},
     discovery_function=discover_diskstat,
     check_ruleset_name="diskstat",

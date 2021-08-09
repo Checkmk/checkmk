@@ -4,17 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.valuespec import (
-    TextAscii,
-    Checkbox,
-)
-
-from cmk.gui.plugins.dashboard import (
-    IFrameDashlet,
-    dashlet_registry,
-)
+from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard import dashlet_registry, IFrameDashlet
+from cmk.gui.valuespec import Checkbox, TextInput
 
 
 @dashlet_registry.register
@@ -43,7 +36,7 @@ class URLDashlet(IFrameDashlet):
     @classmethod
     def vs_parameters(cls):
         return [
-            ("url", TextAscii(
+            ("url", TextInput(
                 title=_('URL'),
                 size=50,
                 allow_empty=False,
@@ -68,6 +61,6 @@ class URLDashlet(IFrameDashlet):
         # need to calculate an own dynamic function you will have to subclass
         # this dashlet and implement your own _get_iframe_url() method
         if "url" not in self._dashlet_spec:
-            raise MKUserError(None, _("You need to specify a URL in the dashlet properties"))
+            raise MKUserError(None, _("You need to specify a URL in the element properties"))
 
         return self._dashlet_spec['url']

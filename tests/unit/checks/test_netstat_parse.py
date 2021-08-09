@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
+
+from tests.testlib import Check
 
 pytestmark = pytest.mark.checks
 
@@ -22,6 +24,6 @@ pytestmark = pytest.mark.checks
         ([['udp', '-', '-', '*.*', '0.0.0.0:*']], [('UDP', ['*', '*'], ['0.0.0.0', '*'
                                                                        ], 'LISTENING')]),
     ])
-def test_parse_netstat(check_manager, info, expected_parsed):
-    parsed = check_manager.get_check('netstat').run_parse(info)
+def test_parse_netstat(info, expected_parsed):
+    parsed = Check('netstat').run_parse(info)
     assert parsed == expected_parsed

@@ -12,11 +12,11 @@
 #  - Rate counters (per second)
 """
 
-from typing import Dict, Tuple, Set, Optional
 from contextlib import suppress
+from typing import Any, Callable, Dict, Mapping, MutableMapping, Optional, Set, Tuple, TypeVar
 
-from ..agent_based_api.v1 import Service, IgnoreResultsError, get_rate, GetRateError
-from ..agent_based_api.v1.type_defs import DiscoveryGenerator, ValueStore
+from ..agent_based_api.v1 import get_rate, GetRateError, IgnoreResultsError, Service
+from ..agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 Counters = Dict[str, float]
 Section = Dict[Tuple[str, str], Counters]
@@ -26,15 +26,14 @@ def discovery_mssql_counters_generic(
     section: Section,
     want_counters: Set[str],
     dflt: Optional[Dict[str, str]] = None,
-) -> DiscoveryGenerator:
-    yield from (Service(item="%s %s %s" % (obj, instance, counter), parameters=dflt)
+) -> DiscoveryResult:
+    yield from (Service(item="%s %s" % (obj, instance), parameters=dflt)
                 for (obj, instance), counters in section.items()
-                for counter in counters
                 if want_counters.intersection(counters))
 
 
 def get_rate_or_none(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     key: str,
     point_in_time: float,
     value: float,
@@ -64,3 +63,24 @@ def get_item(item: str, section: Section) -> Tuple[Counters, str]:
     if (obj, instance) not in section:
         raise IgnoreResultsError("Item not found in monitoring data")
     return section[(obj, instance)], counter[0] if counter else ""
+
+
+_NodeSection = TypeVar("_NodeSection")
+
+
+def accumulate_node_results(
+    *,
+    node_check_function: Callable[[str, _NodeSection], CheckResult],
+    section: Mapping[str, _NodeSection],
+) -> CheckResult:
+
+    found_any = False
+    for node_name, node_section in section.items():
+        try:
+            yield from node_check_function(node_name, node_section)
+            found_any = True
+        except IgnoreResultsError:
+            pass
+    if not found_any:
+        # Note: Usually we just return nothing (-> UNKNOWN). In this case we prefer staleness:
+        raise IgnoreResultsError("Item not found in monitoring data")

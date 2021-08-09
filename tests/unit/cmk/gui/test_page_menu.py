@@ -5,15 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.page_menu import (
+    make_external_link,
+    make_form_submit_link,
+    make_javascript_link,
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
     PageMenuLink,
-    make_simple_link,
-    make_external_link,
-    make_javascript_link,
-    make_form_submit_link,
+    PageMenuTopic,
 )
 
 
@@ -45,7 +45,7 @@ def test_make_form_submit_link():
     assert item.link.onclick == 'cmk.page_menu.form_submit("frm", "btn");cmk.page_menu.close_active_dropdown();'
 
 
-def test_simple_page_menu(register_builtin_html):
+def test_simple_page_menu(request_context):
     pm = PageMenu([
         PageMenuDropdown(
             name="hallo",
@@ -76,7 +76,7 @@ def test_simple_page_menu(register_builtin_html):
     assert dropdown.name == "hallo"
     assert dropdown.title == "HALLO"
     assert len(dropdown.topics) == 1
-    assert dropdown.any_advanced_entries is False
+    assert dropdown.any_show_more_entries is False
     assert dropdown.is_empty is False
 
     for topic in dropdown.topics:

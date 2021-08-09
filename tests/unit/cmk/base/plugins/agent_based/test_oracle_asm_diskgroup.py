@@ -4,19 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import on_time
+import pytest
+
+from tests.testlib import on_time
+
 from cmk.utils.type_defs import CheckPluginName
 
-from cmk.base.api.agent_based import value_store
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    state,
-    Result,
-    Metric,
-    IgnoreResults,
-)
 import cmk.base.plugins.agent_based.oracle_asm_diskgroup as oracle_asm_diskgroup
+from cmk.base.api.agent_based import value_store
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+
 NOW_SIMULATED = 581792400, "UTC"
 
 ITEM = "DISK_GROUP"
@@ -70,7 +68,7 @@ SECTION_WITH_FG = {
 @pytest.fixture(name="value_store_patch")
 def value_store_fixture(monkeypatch):
     value_store_patched = {
-        "oracle_asm_diskgroup.%s.delta" % ITEM: [2000000, 30000000],
+        "%s.delta" % ITEM: [2000000, 30000000],
     }
     monkeypatch.setattr(oracle_asm_diskgroup, 'get_value_store', lambda: value_store_patched)
     yield value_store_patched
@@ -142,31 +140,33 @@ def test_discovery(section, expected):
             oracle_asm_diskgroup.ASM_DISKGROUP_DEFAULT_LEVELS,
             [
                 Metric(
-                    'fs_used', 316283.0, levels=(2097152.0, 2359296.0),
-                    boundaries=(0.0, 2621440.0)),
-                Metric('fs_size', 2621440.0, levels=(None, None), boundaries=(None, None)),
-                Metric('fs_used_percent',
-                       12.065238952636719,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='12.1% used (309  of 2.50 TiB)',
-                       details='12.1% used (309  of 2.50 TiB)'),
-                Metric('growth', -4423.433540694911, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='trend per 1 day 0 hours: -4.32 GiB',
-                       details='trend per 1 day 0 hours: -4.32 GiB'),
-                Result(state=state.OK,
-                       summary='trend per 1 day 0 hours: -0.17%',
-                       details='trend per 1 day 0 hours: -0.17%'),
+                    'fs_used',
+                    316283.0,
+                    levels=(2097152.0, 2359296.0),
+                    boundaries=(0.0, 2621440.0),
+                ),
+                Metric(
+                    'fs_size',
+                    2621440.0,
+                    boundaries=(0.0, None),
+                ),
+                Metric(
+                    'fs_used_percent',
+                    12.065238952636719,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=state.OK, summary='12.07% used (309 GiB of 2.50 TiB)'),
+                Metric('growth', -4423.433540694911),
+                Result(state=state.OK, summary='trend per 1 day 0 hours: -4.32 GiB'),
+                Result(state=state.OK, summary='trend per 1 day 0 hours: -0.17%'),
                 Metric('trend',
                        -4423.433540694911,
                        levels=(None, None),
                        boundaries=(0.0, 109226.66666666667)),
                 Result(
                     state=state.OK,
-                    summary='normal redundancy, old plugin data, possible wrong used and free space',
-                    details='normal redundancy, old plugin data, possible wrong used and free space'
+                    summary='normal redundancy, old plugin data, possible wrong used and free space'
                 ),
             ],
         ),
@@ -174,27 +174,29 @@ def test_discovery(section, expected):
             SECTION_WITH_FG,
             oracle_asm_diskgroup.ASM_DISKGROUP_DEFAULT_LEVELS,
             [
-                Metric('fs_used', 125252.0, levels=(491520.0, 552960.0),
-                       boundaries=(0.0, 614400.0)),
-                Metric('fs_size', 614400.0, levels=(None, None), boundaries=(None, None)),
-                Metric('fs_used_percent',
-                       20.386067708333332,
-                       levels=(None, None),
-                       boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='20.4% used (122  of 600 GiB)',
-                       details='20.4% used (122  of 600 GiB)'),
-                Metric('growth', -4451.90076172092, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='trend per 1 day 0 hours: -4.35 GiB',
-                       details='trend per 1 day 0 hours: -4.35 GiB'),
-                Result(state=state.OK,
-                       summary='trend per 1 day 0 hours: -0.72%',
-                       details='trend per 1 day 0 hours: -0.72%'),
-                Metric('trend', -4451.90076172092, levels=(None, None), boundaries=(0.0, 25600.0)),
-                Result(state=state.OK,
-                       summary='extern redundancy, 1 disks',
-                       details='extern redundancy, 1 disks'),
+                Metric(
+                    'fs_used',
+                    125252.0,
+                    levels=(491520.0, 552960.0),
+                    boundaries=(0.0, 614400.0),
+                ),
+                Metric(
+                    'fs_size',
+                    614400.0,
+                    boundaries=(0.0, None),
+                ),
+                Metric(
+                    'fs_used_percent',
+                    20.386067708333332,
+                    levels=(80.0, 90.0),
+                    boundaries=(0.0, 100.0),
+                ),
+                Result(state=state.OK, summary='20.39% used (122 of 600 GiB)'),
+                Metric('growth', -4451.90076172092),
+                Result(state=state.OK, summary='trend per 1 day 0 hours: -4.35 GiB'),
+                Result(state=state.OK, summary='trend per 1 day 0 hours: -0.72%'),
+                Metric('trend', -4451.90076172092, boundaries=(0.0, 25600.0)),
+                Result(state=state.OK, summary='extern redundancy, 1 disks'),
             ],
         ),
         (
@@ -203,36 +205,41 @@ def test_discovery(section, expected):
                 "req_mir_free": True,  # Ignore Requirre mirror free space in DG
             },
             [
-                Metric('fs_used', 125252.0, levels=(491520.0, 552960.0),
-                       boundaries=(0.0, 614400.0)),
-                Metric('fs_size', 614400.0, levels=(None, None), boundaries=(None, None)),
-                Metric('fs_used_percent',
-                       20.386067708333332,
-                       levels=(None, None),
-                       boundaries=(None, None)),
+                Metric(
+                    'fs_used',
+                    125252.0,
+                    levels=(491520.0, 552960.0),
+                    boundaries=(0.0, 614400.0),
+                ),
+                Metric(
+                    'fs_size',
+                    614400.0,
+                    boundaries=(0.0, None),
+                ),
+                Metric(
+                    'fs_used_percent',
+                    20.386067708333332,
+                    levels=(80.0, 90.0),
+                    boundaries=(0, 100.0),
+                ),
+                Result(state=state.OK, summary='20.39% used (122 of 600 GiB)'),
+                Metric('growth', -4451.90076172092),
+                Result(state=state.OK, summary='trend per 1 day 0 hours: -4.35 GiB'),
+                Result(state=state.OK, summary='trend per 1 day 0 hours: -0.72%'),
+                Metric(
+                    'trend',
+                    -4451.90076172092,
+                    boundaries=(0.0, 25600.0),
+                ),
                 Result(state=state.OK,
-                       summary='20.4% used (122  of 600 GiB)',
-                       details='20.4% used (122  of 600 GiB)'),
-                Metric('growth', -4451.90076172092, levels=(None, None), boundaries=(None, None)),
-                Result(state=state.OK,
-                       summary='trend per 1 day 0 hours: -4.35 GiB',
-                       details='trend per 1 day 0 hours: -4.35 GiB'),
-                Result(state=state.OK,
-                       summary='trend per 1 day 0 hours: -0.72%',
-                       details='trend per 1 day 0 hours: -0.72%'),
-                Metric('trend', -4451.90076172092, levels=(None, None), boundaries=(0.0, 25600.0)),
-                Result(state=state.OK,
-                       summary='extern redundancy, 1 disks, required mirror free space used',
-                       details='extern redundancy, 1 disks, required mirror free space used'),
+                       summary='extern redundancy, 1 disks, required mirror free space used'),
             ],
         ),
     ])
 def test_check(value_store_patch, section, params, expected):
     with on_time(*NOW_SIMULATED):
-        with value_store.context(CheckPluginName("oracle_asm_diskgroup"), None):
-            yielded_results = list(
-                oracle_asm_diskgroup.check_oracle_asm_diskgroup(ITEM, params, section))
-            assert yielded_results == expected
+        assert expected == list(
+            oracle_asm_diskgroup.check_oracle_asm_diskgroup(ITEM, params, section))
 
 
 @pytest.mark.parametrize("section, params, expected", [
@@ -243,35 +250,39 @@ def test_check(value_store_patch, section, params, expected):
         },
         oracle_asm_diskgroup.ASM_DISKGROUP_DEFAULT_LEVELS,
         [
-            Metric('fs_used', 316283.0, levels=(2097152.0, 2359296.0), boundaries=(0.0, 2621440.0)),
-            Metric('fs_size', 2621440.0, levels=(None, None), boundaries=(None, None)),
             Metric(
-                'fs_used_percent', 12.065238952636719, levels=(None, None),
-                boundaries=(None, None)),
-            Result(state=state.OK,
-                   summary='12.1% used (309  of 2.50 TiB)',
-                   details='12.1% used (309  of 2.50 TiB)'),
-            Metric('growth', -4423.433540694911, levels=(None, None), boundaries=(None, None)),
-            Result(state=state.OK,
-                   summary='trend per 1 day 0 hours: -4.32 GiB',
-                   details='trend per 1 day 0 hours: -4.32 GiB'),
-            Result(state=state.OK,
-                   summary='trend per 1 day 0 hours: -0.17%',
-                   details='trend per 1 day 0 hours: -0.17%'),
+                'fs_used',
+                316283.0,
+                levels=(2097152.0, 2359296.0),
+                boundaries=(0.0, 2621440.0),
+            ),
+            Metric(
+                'fs_size',
+                2621440.0,
+                boundaries=(0.0, None),
+            ),
+            Metric(
+                'fs_used_percent',
+                12.065238952636719,
+                levels=(80.0, 90.0),
+                boundaries=(0.0, 100.0),
+            ),
+            Result(state=state.OK, summary='12.07% used (309 GiB of 2.50 TiB)'),
+            Metric('growth', -4423.433540694911),
+            Result(state=state.OK, summary='trend per 1 day 0 hours: -4.32 GiB'),
+            Result(state=state.OK, summary='trend per 1 day 0 hours: -0.17%'),
             Metric('trend',
                    -4423.433540694911,
                    levels=(None, None),
                    boundaries=(0.0, 109226.66666666667)),
             Result(
                 state=state.OK,
-                summary='normal redundancy, old plugin data, possible wrong used and free space',
-                details='normal redundancy, old plugin data, possible wrong used and free space'),
+                summary='normal redundancy, old plugin data, possible wrong used and free space'),
         ],
     ),
 ])
 def test_cluster(value_store_patch, section, params, expected):
     with on_time(*NOW_SIMULATED):
-        with value_store.context(CheckPluginName("oracle_asm_diskgroup"), None):
-            yielded_results = list(
-                oracle_asm_diskgroup.cluster_check_oracle_asm_diskgroup(ITEM, params, section))
-            assert yielded_results == expected
+        yielded_results = list(
+            oracle_asm_diskgroup.cluster_check_oracle_asm_diskgroup(ITEM, params, section))
+        assert yielded_results == expected

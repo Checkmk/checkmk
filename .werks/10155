@@ -6,7 +6,7 @@ Date: 1571225986
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The plugin crashed with a KeyError if no auto-tiering is not available for the system.
 This has been fixed.

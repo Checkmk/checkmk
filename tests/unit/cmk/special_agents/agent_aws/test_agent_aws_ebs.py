@@ -6,23 +6,23 @@
 
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore[import]
-
-from agent_aws_fake_clients import (
-    FakeCloudwatchClient,
-    EC2DescribeInstancesIB,
-    EC2DescribeVolumesIB,
-    EC2DescribeSnapshotsIB,
-    EC2DescribeVolumeStatusIB,
-)
+import pytest
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
-    ResultDistributor,
-    EC2Summary,
+    EBS,
     EBSLimits,
     EBSSummary,
-    EBS,
+    EC2Summary,
+    ResultDistributor,
+)
+
+from .agent_aws_fake_clients import (
+    EC2DescribeInstancesIB,
+    EC2DescribeSnapshotsIB,
+    EC2DescribeVolumesIB,
+    EC2DescribeVolumeStatusIB,
+    FakeCloudwatchClient,
 )
 
 
@@ -42,7 +42,7 @@ class FakeEC2Client:
             'NextToken': 'string',
         }
 
-    def describe_snapshots(self):
+    def describe_snapshots(self, OwnerIds=None):
         return {
             'Snapshots': EC2DescribeSnapshotsIB.create_instances(amount=3),
             'NextToken': 'string',
@@ -112,6 +112,7 @@ def test_agent_aws_ebs_limits(get_ebs_sections, names, tags, found_ebs):
     ebs_limits_results = ebs_limits.run().results
 
     assert ebs_limits.cache_interval == 300
+    assert ebs_limits.period == 600
     assert ebs_limits.name == "ebs_limits"
 
     assert len(ebs_limits_results) == 1
@@ -140,6 +141,7 @@ def test_agent_aws_ebs_summary(get_ebs_sections, names, tags, found_ebs):
     ebs_summary_results = ebs_summary.run().results
 
     assert ebs_summary.cache_interval == 300
+    assert ebs_summary.period == 600
     assert ebs_summary.name == "ebs_summary"
 
     assert len(ebs_summary_results) == found_ebs
@@ -154,6 +156,7 @@ def test_agent_aws_ebs(get_ebs_sections, names, tags, found_ebs):
     ebs_results = ebs.run().results
 
     assert ebs.cache_interval == 300
+    assert ebs.period == 600
     assert ebs.name == "ebs"
 
     assert len(ebs_results) == found_ebs
@@ -170,6 +173,7 @@ def test_agent_aws_ebs_summary_without_limits(get_ebs_sections):
     ebs_summary_results = ebs_summary.run().results
 
     assert ebs_summary.cache_interval == 300
+    assert ebs_summary.period == 600
     assert ebs_summary.name == "ebs_summary"
 
     assert len(ebs_summary_results) == 3
@@ -182,6 +186,7 @@ def test_agent_aws_ebs_without_limits(get_ebs_sections):
     ebs_results = ebs.run().results
 
     assert ebs.cache_interval == 300
+    assert ebs.period == 600
     assert ebs.name == "ebs"
 
     assert len(ebs_results) == 3

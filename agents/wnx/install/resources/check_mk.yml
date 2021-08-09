@@ -1,8 +1,11 @@
+# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
 #
 # Default Check MK configuration file
 #
-
-# Copyright Mathias Kettner GmbH
 
 # $CUSTOM_PLUGINS_PATH$  -> is ProgramData/checkmk/agent/plugins
 # $BUILTIN_PLUGINS_PATH$ -> is Program Files(x86)/checkmk/service/plugins
@@ -103,7 +106,7 @@ global:
 
     # Windows may be slow during WMI, increase the value when you have problems
     # In seconds 
-    wmi_timeout: 3 
+    wmi_timeout: 5 
 
     # Internal log of agent
     # Write a logfile for tackling down crashes of the agent
@@ -135,6 +138,12 @@ winperf:
 
     # default value,  do not change it if do not know what are you douing
     exe: agent
+
+    # no - nothing(default), yes output trace to the log/winperf.log
+    trace: no
+
+    # yes - separate process for winnperf to prevent ahndle leaking, no - locally
+    fork: yes
     
     # changes only section name winperf_******
     prefix: winperf
@@ -194,6 +203,8 @@ plugins:
 
     # what to execute    
     execution:
+        - pattern     : '$CUSTOM_PLUGINS_PATH$\cmk-update-agent.exe'    # since 2.0 not possible to use exe, only checkmk.py
+          run         : no                                              # 
 
         # Default behavior as in 1.5
         - pattern     : '$CUSTOM_PLUGINS_PATH$\*.*'         # Look for executable files in the ProgramData folder. 
@@ -252,6 +263,8 @@ modules:
     enabled: yes
 
     python: auto                          # allowed auto or system, system prevents module usage to execute *.py files
+
+    quick_reinstall: yes                  # use %temp% as temporary storage for modules when Windows agent is updated
 
     table:
         - name: 'python-3.8'              # this is name of the zip file and folder where  zip is installed to

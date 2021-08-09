@@ -16,7 +16,13 @@ description:
 item:
  A combination of the instance-, database- and (logical) file-name.
 
-inventory:
+discovery:
  One service is created for each datafile.
  Alternatively there is a rule to summarize files for one database.
  In this case one summary service is created for each database.
+
+cluster:
+ On a cluster we aggregate over all node results -- but we
+ expect to only get data from the active node.
+ Note that the plugin will not warn you if more than one
+ node sends data.

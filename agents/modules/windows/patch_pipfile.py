@@ -8,7 +8,8 @@
 # Deprecated now
 
 import sys
-from colorama import init, Fore, Style  # type: ignore[import]  # pylint: disable=import-error
+
+from colorama import Fore, init, Style  # type: ignore[import]  # pylint: disable=import-error
 
 init()
 
@@ -29,9 +30,7 @@ try:
     # Replace the target string
     with open(sys.argv[1], 'w') as f:
         for l in lines:
-            if l.find('python_version = ') == 0:
-                f.write('python_version = "3.8" \n')
-            elif l.find('psycopg2 = ') == 0:
+            if l.find('psycopg2 = ') == 0:
                 f.write('psycopg2 = "*" # windows need new version \n')
             elif l.find('pymssql = ') == 0:
                 f.write('# ' + l)

@@ -6,36 +6,80 @@
 
 # yapf: disable
 from collections import namedtuple
-import pytest  # type: ignore[import]
 
-import cmk.utils.version as cmk_version
+import pytest
+
+from tests.testlib import on_time
+
 import cmk.utils.tags
+import cmk.utils.version as cmk_version
 
-import cmk.gui.config
 import cmk.gui.inventory
-from cmk.gui.globals import html
 import cmk.gui.plugins.visuals
 
 # Triggers plugin loading
 import cmk.gui.views
 import cmk.gui.visuals
+from cmk.gui.globals import config, output_funnel
+from cmk.gui.plugins.visuals.wato import FilterWatoFolder
+from cmk.gui.type_defs import VisualContext
 
-from testlib import on_time
+
+# mock_livestatus does not support Stats queries at the moment. We need to mock the function away
+# for the "wato_folder" filter test to pass.
+@pytest.fixture(name="mock_wato_folders")
+def fixture_mock_wato_folders(monkeypatch):
+    monkeypatch.setattr(FilterWatoFolder, "_fetch_folders", lambda s: {""})
+
+
+@pytest.fixture(name="live")
+def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
+    live = mock_livestatus
+    live.add_table('hostgroups', [
+        {"name": "hg", "alias": "HG",},
+        {"name": "hg1", "alias": "HG 1",},
+    ])
+    live.add_table('servicegroups', [
+        {"name": "sg", "alias": "SG",},
+        {"name": "sg1", "alias": "SG 1",},
+    ])
+    live.add_table('contactgroups', [
+        {"name": "cg", "alias": "CG",},
+        {"name": "cg1", "alias": "CG 1",},
+    ])
+    live.add_table('commands', [
+        {"name": "cmd", "alias": "CMD",},
+        {"name": "cmd1", "alias": "CMD 1",},
+    ])
+    live.add_table('hosts', [{
+        'name': 'example.com',
+        'alias': 'example.com alias',
+        'address': 'server.example.com',
+        'custom_variables': {
+            "FILENAME": "/wato/hosts.mk",
+            "ADDRESS_FAMILY": "4",
+            "ADDRESS_4": "127.0.0.1",
+            "ADDRESS_6": "",
+            "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
+        },
+        'contacts': [],
+        'contact_groups': ['all'],
+        'filename': "/wato/hosts.mk",
+    }])
+    return live
 
 
 # In general filters should not affect livestatus query in case there is no variable set for them
 @pytest.mark.parametrize("filter_ident", cmk.gui.plugins.visuals.utils.filter_registry.keys())
-def test_filters_filter_with_empty_request(register_builtin_html, filter_ident):
+def test_filters_filter_with_empty_request(request_context, filter_ident, live):
     if filter_ident == "hostgroupvisibility":
         expected_filter = "Filter: hostgroup_num_hosts > 0\n"
     else:
         expected_filter = ""
 
-    with html.stashed_vars():
-        html.request.del_vars()
-
+    with live(expect_status_query=False):
         filt = cmk.gui.plugins.visuals.utils.filter_registry[filter_ident]
-        assert filt.filter(infoname="bla") == expected_filter
+        assert filt.filter({}) == expected_filter
 
 
 FilterTest = namedtuple("FilterTest", [
@@ -349,26 +393,22 @@ filter_tests = [
         ),
     ),
     FilterTest(
+        ident="hostsgroups_having_problems",
+        request_vars=[("hostgroups_having_hosts_down", "on")],
+        expected_filters=("Filter: num_hosts_down > 0\n")
+    ),
+    FilterTest(
         ident="hoststate",
         request_vars=[
             ('hoststate_filled', "1"),
-            ('hst0', ""),
-            ('hst1', ""),
+            ('hst0', "on"),
+            ('hst1', "on"),
         ],
-        expected_filters=(
-            "Filter: host_state = 0\n"
-            "Filter: host_has_been_checked = 1\n"
-            "And: 2\n"
-            "Negate:\n"
-            "Filter: host_state = 1\n"
-            "Filter: host_has_been_checked = 1\n"
-            "And: 2\n"
-            "Negate:\n"
-            "Filter: host_state = 2\n"
-            "Filter: host_has_been_checked = 1\n"
-            "And: 2\n"
-            "Negate:\n"
-        ),
+        expected_filters=("Filter: host_state = 2\n"
+                          "Filter: host_has_been_checked = 1\n"
+                          "And: 2\n"
+                          "Negate:\n"
+                          "Filter: host_has_been_checked = 1\n"),
     ),
     # Testing base class FilterECServiceLevelRange
     FilterTest(
@@ -477,6 +517,7 @@ filter_tests = [
             "Filter: service_has_been_checked = 1\n"
             "And: 2\n"
             "Negate:\n"
+            "Filter: service_has_been_checked = 1\n"
         ),
     ),
     FilterTest(
@@ -494,6 +535,23 @@ filter_tests = [
         request_vars=[('wato_folder', "abc/xyz")],
         expected_filters="Filter: host_filename ~ ^/wato/abc/xyz/\n",
     ),
+    # Testing FilterHostnameOrAlias
+    FilterTest(
+        ident="hostnameoralias",
+        request_vars=[('hostnameoralias', "horst")],
+        expected_filters="Filter: host_name ~~ horst\nFilter: alias ~~ horst\nOr: 2\n",
+    ),
+    # Testing FilterCommaSeparatedStringList
+    FilterTest(
+        ident="log_contact_name",
+        request_vars=[('log_contact_name', "gottlob")],
+        expected_filters="Filter: log_contact_name ~ (,|^)gottlob(,|$)\n",
+    ),
+    FilterTest(
+        ident="log_contact_name",
+        request_vars=[('log_contact_name', "gott.lob"),('neg_log_contact_name', "on")],
+        expected_filters="Filter: log_contact_name ~ (,|^)gott\\.lob(,|$)\n",
+    ),
 ]
 
 
@@ -502,20 +560,19 @@ def filter_test_id(t):
 
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
-def test_filters_filter(register_builtin_html, test, monkeypatch):
+def test_filters_filter(request_context, test, monkeypatch):
     # Needed for ABCFilterCustomAttribute
-    monkeypatch.setattr(cmk.gui.config, "wato_host_attrs", [{"name": "bla", "title": "Bla"}])
+    monkeypatch.setattr(config, "wato_host_attrs", [{"name": "bla", "title": "Bla"}])
 
     # Need for ABCTagFilter
-    monkeypatch.setattr(cmk.gui.config, "tags", cmk.utils.tags.BuiltinTagConfig())
+    monkeypatch.setattr(config, "tags", cmk.utils.tags.BuiltinTagConfig())
 
-    with html.stashed_vars(), on_time('2018-04-15 16:50', 'CET'):
-        html.request.del_vars()
-        for key, val in test.request_vars:
-            html.request.set_var(key, val)
-
+    with on_time('2018-04-15 16:50', 'CET'):
         filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
-        assert filt.filter(infoname="bla") == test.expected_filters
+        filter_vars = dict(filt.value())  # Default empty vars, exhaustive
+        filter_vars.update(dict(test.request_vars))
+        assert filt.filter(filter_vars) == test.expected_filters
+
 
 FilterTableTest = namedtuple("FilterTableTest", [
     "ident",
@@ -525,7 +582,7 @@ FilterTableTest = namedtuple("FilterTableTest", [
 ])
 
 
-def get_inventory_data_patch(inventory, path):
+def get_inventory_table_patch(inventory, path):
     return inventory[path]
 
 
@@ -628,12 +685,10 @@ filter_table_tests = [
             {"site": "s", "host_name": "h", "service_description": "srv1"},
             {"site": "s", "host_name": "h", "service_description": "srv2"},
             {"site": "s", "host_name": "h2", "service_description": "srv2"},
-            {"site": "b", "host_name": "h", "service_description": "srv1"},
         ],
         expected_rows=[
             {'host_name': 'h', 'service_description': 'srv2', 'site': 's'},
             {'host_name': 'h2', 'service_description': 'srv2', 'site': 's'},
-            {'host_name': 'h', 'service_description': 'srv1', 'site': 'b'},
         ],
     ),
     FilterTableTest(
@@ -643,7 +698,6 @@ filter_table_tests = [
             {"site": "s", "host_name": "h", "service_description": "srv1"},
             {"site": "s", "host_name": "h", "service_description": "srv2"},
             {"site": "s", "host_name": "h2", "service_description": "srv2"},
-            {"site": "b", "host_name": "h", "service_description": "srv1"},
         ],
         expected_rows=[
             {"site": "s", "host_name": "h", "service_description": "srv1"},
@@ -982,7 +1036,7 @@ filter_table_tests = [
 
 @pytest.mark.parametrize("test", filter_table_tests)
 @pytest.mark.usefixtures("load_plugins")
-def test_filters_filter_table(register_builtin_html, test, monkeypatch):
+def test_filters_filter_table(request_context, test, monkeypatch):
     # Needed for DeploymentTristateFilter test
     def deployment_states(host_name):
         return {
@@ -997,32 +1051,68 @@ def test_filters_filter_table(register_builtin_html, test, monkeypatch):
         monkeypatch.setattr(agent_bakery, "get_cached_deployment_status", deployment_states)
 
     # Needed for FilterInvFloat test
-    monkeypatch.setattr(cmk.gui.inventory, "get_inventory_data", get_inventory_data_patch)
+    monkeypatch.setattr(cmk.gui.inventory, "get_inventory_table", get_inventory_table_patch)
+    monkeypatch.setattr(cmk.gui.inventory, "get_inventory_attribute", get_inventory_table_patch)
 
     # Needed for FilterAggrServiceUsed test
-    def is_part_of_aggregation_patch(what, site, host, service):
+    def is_part_of_aggregation_patch(host, service):
         return {
-            ("s", "h", "srv1"): True
-        }.get((site, host, service), False)
+            ("h", "srv1"): True
+        }.get((host, service), False)
 
     monkeypatch.setattr(cmk.gui.bi, "is_part_of_aggregation", is_part_of_aggregation_patch)
 
-    with html.stashed_vars(), on_time('2018-04-15 16:50', 'CET'):
-        html.request.del_vars()
-        for key, val in test.request_vars:
-            html.request.set_var(key, val)
+    with on_time('2018-04-15 16:50', 'CET'):
+        context: VisualContext = {test.ident: dict(test.request_vars)}
 
         # TODO: Fix this for real...
         if not cmk_version.is_raw_edition or test.ident != "deployment_has_agent":
             filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
-            assert filt.filter_table(test.rows) == test.expected_rows
+            assert filt.filter_table(context, test.rows) == test.expected_rows
 
 
 # Filter form is not really checked. Only checking that no exception occurs
-def test_filters_display_with_empty_request(register_builtin_html):
-    with html.stashed_vars():
-        html.request.del_vars()
-
+def test_filters_display_with_empty_request(request_context, live):
+    with live:
         for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
-            with html.plugged():
-                filt.display()
+            with output_funnel.plugged():
+                _set_expected_queries(filt.ident, live)
+                filt.display({k:"" for k in filt.htmlvars})
+
+
+def _set_expected_queries(filt_ident, live):
+    if filt_ident in ["hostgroups", "opthostgroup", "hostgroup"]:
+        live.expect_query(
+            'GET hostgroups\nCache: reload\nColumns: name alias\n'
+        )
+        if filt_ident == "hostgroups":
+            live.expect_query(
+                'GET hostgroups\nCache: reload\nColumns: name alias\n'
+            )
+        return
+
+    if filt_ident in [ "servicegroups", "optservicegroup", "servicegroup" ]:
+        live.expect_query(
+            'GET servicegroups\nCache: reload\nColumns: name alias\n'
+        )
+        if filt_ident == "servicegroups":
+            live.expect_query(
+                'GET servicegroups\nCache: reload\nColumns: name alias\n'
+            )
+        return
+
+    if filt_ident in ["contactgroups", "optcontactgroup", "opthost_contactgroup",
+            "optservice_contactgroup", "optevent_effective_contactgroup"]:
+        live.expect_query(
+            'GET contactgroups\nCache: reload\nColumns: name alias\n'
+        )
+        if filt_ident == "contactgroups":
+            live.expect_query(
+                'GET contactgroups\nCache: reload\nColumns: name alias\n'
+            )
+        return
+
+    if filt_ident in ["host_check_command", "check_command"]:
+        live.expect_query(
+            'GET commands\nCache: reload\nColumns: name\nColumnHeaders: off'
+        )

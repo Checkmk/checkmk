@@ -4,62 +4,91 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import abc
-from collections.abc import Mapping
+import errno
 import io
 import operator
 import os
-import time
+import pickle
 import re
 import shutil
+import time
 import uuid
-from typing import Any, Dict, List, Optional, Set, Tuple, Type, Union
+from collections.abc import Mapping as ABCMapping
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    TypedDict,
+    Union,
+)
 
 from livestatus import SiteId
 
-import cmk.gui.config as config
-import cmk.gui.userdb as userdb
-import cmk.gui.hooks as hooks
-import cmk.gui.escaping as escaping
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import (
-    MKGeneralException,
-    MKAuthException,
-    MKUserError,
-)
-from cmk.gui.htmllib import HTML
-from cmk.gui.globals import g, html
-from cmk.gui.type_defs import HTTPVariables, SetOnceDict
-from cmk.gui.valuespec import Choices
-from cmk.gui.watolib.utils import (
-    wato_root_dir,
-    rename_host_in_list,
-    convert_cgroups_from_tuple,
-    host_attribute_matches,
-    default_site,
-    format_config_value,
-    ALL_HOSTS,
-    ALL_SERVICES,
-    has_agent_bakery,
-)
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.automations import check_mk_automation
-from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
-from cmk.gui.watolib.host_attributes import (
-    host_attribute_registry,
-    collect_attributes,
-)
-from cmk.gui.plugins.watolib.utils import wato_fileheader
-from cmk.gui.background_job import BackgroundJobAlreadyRunning
-from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-
+import cmk.utils.paths
 import cmk.utils.version as cmk_version
-
 from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
+from cmk.utils.site import omd_site
+from cmk.utils.type_defs import ContactgroupName, HostName
+
+import cmk.gui.hooks as hooks
+import cmk.gui.userdb as userdb
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
+from cmk.gui.config import get_storage_format
+from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError, RequestTimeout
+from cmk.gui.globals import config, g, html, request, transactions, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.plugins.watolib.utils import wato_fileheader
+from cmk.gui.sites import allsites, is_wato_slave_site
+from cmk.gui.type_defs import HTTPVariables, SetOnceDict
+from cmk.gui.utils import urls
+from cmk.gui.valuespec import Choices
+from cmk.gui.watolib.automations import check_mk_automation
+from cmk.gui.watolib.changes import add_change, make_diff_text, ObjectRef, ObjectRefType
+from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    match_item_generator_registry,
+    MatchItem,
+    MatchItems,
+)
+from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
+from cmk.gui.watolib.utils import (
+    ALL_HOSTS,
+    ALL_SERVICES,
+    convert_cgroups_from_tuple,
+    format_config_value,
+    host_attribute_matches,
+    HostContactGroupSpec,
+    rename_host_in_list,
+    try_bake_agents_for_hosts,
+    wato_root_dir,
+)
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+
+HostAttributes = Mapping[str, Any]
+HostsWithAttributes = Mapping[HostName, HostAttributes]
+AttributeType = Tuple[str, str, Dict[str, Any], str]  # host attr, cmk.base var name, value, title
+
+
+class GroupRuleType(TypedDict):
+    value: ContactgroupName
+    condition: Dict[str, List[str]]
+
 
 # Names:
 # folder_path: Path of the folders directory relative to etc/check_mk/conf.d/wato
@@ -79,12 +108,12 @@ class WithPermissions:
         except MKAuthException:
             return False
 
-    def reason_why_may_not(self, how: str) -> Union[bool, HTML]:
+    def reason_why_may_not(self, how: str) -> Optional[str]:
         try:
             self._user_needs_permission(how)
-            return False
+            return None
         except MKAuthException as e:
-            return HTML("%s" % e)
+            return str(e)
 
     def need_permission(self, how: str) -> None:
         self._user_needs_permission(how)
@@ -103,7 +132,7 @@ class WithUniqueIdentifier(metaclass=abc.ABCMeta):
         # Furthermore, mypy is currently too dumb to understand mixins the way
         # we implement them, see e.g.
         # https://github.com/python/mypy/issues/5887 and related issues.
-        super(WithUniqueIdentifier, self).__init__(*args, **kw)  # type: ignore[call-arg]
+        super().__init__(*args, **kw)  # type: ignore[call-arg]
 
     def id(self) -> str:
         """The unique identifier of this particular instance.
@@ -113,7 +142,7 @@ class WithUniqueIdentifier(metaclass=abc.ABCMeta):
         """
         # TODO: Improve the API + the typing, this is horrible...
         if self._id is None:
-            raise Exception("unique identifier not set")
+            raise ValueError("unique identifier not set")
         return self._id
 
     @classmethod
@@ -207,7 +236,7 @@ class WithAttributes:
         # Furthermore, mypy is currently too dumb to understand mixins the way
         # we implement them, see e.g.
         # https://github.com/python/mypy/issues/5887 and related issues.
-        super(WithAttributes, self).__init__(*args, **kw)  # type: ignore[call-arg]
+        super().__init__(*args, **kw)  # type: ignore[call-arg]
         self._attributes: Dict[str, Any] = {'meta_data': {}}
         self._effective_attributes = None
 
@@ -301,6 +330,12 @@ class BaseFolder:
     def path(self):
         raise NotImplementedError()
 
+    def __eq__(self, other):
+        return id(self) == id(other) or self.path() == other.path()
+
+    def __hash__(self):
+        return id(self)
+
     def is_current_folder(self):
         return self.is_same_as(Folder.current())
 
@@ -358,7 +393,7 @@ class BaseFolder:
     def locked(self):
         raise NotImplementedError()
 
-    def create_hosts(self, entries):
+    def create_hosts(self, entries, bake_hosts=True):
         raise NotImplementedError()
 
     def site_id(self):
@@ -394,7 +429,7 @@ def deep_update(original, update, overwrite=True):
     """
     # Adapted from https://stackoverflow.com/a/3233356
     for k, v in update.items():
-        if isinstance(v, Mapping):
+        if isinstance(v, ABCMapping):
             original[k] = deep_update(original.get(k, {}), v, overwrite=overwrite)
         else:
             if overwrite or k not in original or original[k] is None:
@@ -452,6 +487,241 @@ def update_metadata(
     return attributes
 
 
+class ABCHostsStorage(abc.ABC):
+    @abc.abstractmethod
+    def write(self, filename: str) -> None:
+        raise NotImplementedError()
+
+    def save_group_rules_list(self, group_rules_list: List[Tuple[List[GroupRuleType], bool]]):
+        for group_rules, use_for_service in group_rules_list:
+            self._save_group_rules(group_rules, use_for_service)
+
+    @abc.abstractmethod
+    def _save_group_rules(self, group_rules: List[GroupRuleType], use_for_services: bool) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_all_hosts(self, all_hosts: List[str]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_clusters(self, clusters: Dict[str, List[str]]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_host_tags(self, host_tags: Dict[str, Any]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_host_labels(self, host_labels: Dict[str, Any]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_extra_host_conf(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_explicit_host_settings(self, explicit_host_settings: Dict[str, Dict[str, str]]):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_attributes(self, attribute_mappings: List[AttributeType]):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_contact_groups(self, groups: Tuple[Set[bool], Set[bool], bool]):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def save_cleaned_hosts(self, cleaned_hosts: Dict[str, Dict[str, Any]]) -> None:
+        """Write information about all host attributes into special variable - even
+        values stored for check_mk as well."""
+        raise NotImplementedError()
+
+
+class ABCHumanReadableHostStorage(ABCHostsStorage):
+    __slots__ = ['_out']
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._out = io.StringIO()
+
+    def getvalue(self) -> str:
+        return self._out.getvalue()
+
+    def save(self, s: str) -> None:
+        self._out.write(s)
+
+    def write(self, filename: str) -> None:
+        store.save_text_to_file(filename, self.getvalue())
+
+
+class StandardHostsStorage(ABCHumanReadableHostStorage):
+    def __init__(self) -> None:
+        super().__init__()
+        self.save(wato_fileheader())
+
+    def _save_group_rules(self, group_rules: List[GroupRuleType], use_for_services: bool) -> None:
+        self.save("\nhost_contactgroups += %s\n\n" % format_config_value(group_rules))
+
+        if use_for_services:
+            self.save("\nservice_contactgroups += %s\n\n" % format_config_value(group_rules))
+
+    def save_all_hosts(self, all_hosts: List[str]) -> None:
+        if all_hosts:
+            self.save("all_hosts += %s\n" % format_config_value(all_hosts))
+
+    def save_clusters(self, clusters: Dict[str, List[str]]) -> None:
+        if clusters:
+            self.save("\nclusters.update(%s)\n" % format_config_value(clusters))
+
+    def save_host_tags(self, host_tags: Dict[str, Any]) -> None:
+        self.save("\nhost_tags.update(%s)\n" % format_config_value(host_tags))
+
+    def save_host_labels(self, host_labels: Dict[str, Any]) -> None:
+        self.save("\nhost_labels.update(%s)\n" % format_config_value(host_labels))
+
+    def save_extra_host_conf(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
+        for custom_varname, entries in custom_macros.items():
+            macrolist = []
+            for hostname, nagstring in entries.items():
+                macrolist.append((nagstring, [hostname]))
+            if len(macrolist) > 0:
+                self.save("\n# Settings for %s\n" % custom_varname)
+                self.save("extra_host_conf.setdefault(%r, []).extend(\n" % custom_varname)
+                self.save("  %s)\n" % format_config_value(macrolist))
+
+    def save_explicit_host_settings(self, explicit_host_settings: Dict[str, Dict[str, str]]):
+        for varname, entries in explicit_host_settings.items():
+            if len(entries) > 0:
+                self.save("\n# Explicit settings for %s\n" % varname)
+                self.save("explicit_host_conf.setdefault(%r, {})\n" % varname)
+                self.save("explicit_host_conf['%s'].update(%r)\n" % (varname, entries))
+
+    def save_attributes(self, attribute_mappings: List[AttributeType]):
+        for _host_attr, cmk_base_varname, dictionary, title in attribute_mappings:
+            if dictionary:
+                self.save("\n# %s\n" % title)
+                self.save("%s.update(" % cmk_base_varname)
+                self.save(format_config_value(dictionary))
+                self.save(")\n")
+
+    def save_contact_groups(self, groups: Tuple[Set[bool], Set[bool], bool]):
+        # If the contact groups of the folder are set to be used for the monitoring,
+        # we create an according rule for the folder here and an according rule for
+        # each host that has an explicit setting for that attribute (see above).
+        _permitted_groups, contact_groups, use_for_services = groups
+        if contact_groups:
+            self.save("\nhost_contactgroups.insert(0, \n"
+                      "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
+                      list(contact_groups))
+            if use_for_services:
+                self.save(
+                    "\nservice_contactgroups.insert(0, \n"
+                    "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
+                    list(contact_groups))
+
+    def save_cleaned_hosts(self, cleaned_hosts: Dict[str, Dict[str, Any]]) -> None:
+        """Write information about all host attributes into special variable - even
+        values stored for check_mk as well."""
+        self.save("\n# Host attributes (needed for WATO)\n")
+        self.save("host_attributes.update(\n%s)\n" % format_config_value(cleaned_hosts))
+
+
+def make_experimental_storage() -> Optional[ABCHostsStorage]:
+    if get_storage_format() == store.StorageFormat.RAW:
+        return RawHostsStorage()
+    return None
+
+
+class RawHostsStorage(ABCHumanReadableHostStorage):
+    def __init__(self) -> None:
+        super().__init__()
+        self.save("{\n")
+
+    def write(self, filename: str) -> None:
+        self.save("}\n")
+        store.save_text_to_file(filename + ".cfg", self.getvalue())
+
+    def _save_group_rules(self, group_rules: List[GroupRuleType], use_for_services: bool) -> None:
+        self.save("    'host_contactgroups': %s,\n" % format_config_value(group_rules))
+
+        if use_for_services:
+            self.save("   'service_contactgroups': %s,\n" % format_config_value(group_rules))
+
+    def save_all_hosts(self, all_hosts: List[str]) -> None:
+        if all_hosts:
+            self.save("    'all_hosts': %s,\n" % format_config_value(all_hosts))
+
+    def save_clusters(self, clusters: Dict[str, List[str]]) -> None:
+        if clusters:
+            self.save("    'clusters': %s,\n" % format_config_value(clusters))
+
+    def save_host_tags(self, host_tags: Dict[str, Any]) -> None:
+        self.save("    'host_tags': %s,\n" % format_config_value(host_tags))
+
+    def save_host_labels(self, host_labels: Dict[str, Any]) -> None:
+        self.save("    'host_labels': %s,\n" % format_config_value(host_labels))
+
+    def save_extra_host_conf(self, custom_macros: Dict[str, Dict[str, str]]) -> None:
+        self.save("    'custom_macros': {\n")
+        for custom_varname, entries in custom_macros.items():
+            macrolist = []
+            for hostname, nagstring in entries.items():
+                macrolist.append((nagstring, [hostname]))
+            if len(macrolist) > 0:
+                self.save("        '%r': %s, \n" % (
+                    custom_varname,
+                    format_config_value(macrolist),
+                ))
+        self.save("    },\n")
+
+    def save_explicit_host_settings(self, explicit_host_settings: Dict[str, Dict[str, str]]):
+        self.save("    'explicit_host_conf': {\n")
+        for varname, entries in explicit_host_settings.items():
+            if len(entries) > 0:
+                self.save("        '%s': %r,\n" % (varname, entries))
+        self.save("    },\n")
+
+    def save_attributes(self, attribute_mappings: List[AttributeType]):
+        self.save("    'attributes': {\n")
+        for _host_attr, cmk_base_varname, dictionary, _title in attribute_mappings:
+            if dictionary:
+                self.save("        '%s': %s,\n" % (
+                    cmk_base_varname,
+                    format_config_value(dictionary),
+                ))
+        self.save("    },\n")
+
+    def save_contact_groups(self, groups: Tuple[Set[bool], Set[bool], bool]):
+        # If the contact groups of the folder are set to be used for the monitoring,
+        # we create an according rule for the folder here and an according rule for
+        # each host that has an explicit setting for that attribute (see above).
+        _permitted_groups, contact_groups, use_for_services = groups
+        self.save("    'contact_groups': {\n")
+        if contact_groups:
+            self.save("        'host_contactgroups':"
+                      "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}}\n" %
+                      list(contact_groups))
+            if use_for_services:
+                self.save(
+                    "        'service_contactgroups':"
+                    "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}}\n" %
+                    list(contact_groups))
+        self.save("    },\n")
+
+    def save_cleaned_hosts(self, cleaned_hosts: Dict[str, Dict[str, Any]]) -> None:
+        """Write information about all host attributes into special variable - even
+        values stored for check_mk as well."""
+        self.save("    'host_attributes': %s,\n" % format_config_value(cleaned_hosts))
+
+
+def make_hosts_storage() -> ABCHostsStorage:
+    """Factory creates a storage suitable for current distribution.
+    The flag will be located, probably in cee.py"""
+    return StandardHostsStorage()
+
+
 class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolder):
     """This class represents a WATO folder that contains other folders and hosts."""
 
@@ -505,7 +775,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return os.path.exists(wato_root_dir() + folder_path)
 
     @staticmethod
-    def root_folder():
+    def root_folder() -> 'CREFolder':
         return Folder.folder("")
 
     # Need this for specifying the correct type
@@ -514,10 +784,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     @staticmethod
     def invalidate_caches():
+        Folder.root_folder().drop_caches()
         g.pop('wato_folders', {})
         for cache_id in ["folder_choices", "folder_choices_full_title"]:
             g.pop(cache_id, None)
-        Folder.root_folder().drop_caches()
 
     # Find folder that is specified by the current URL. This is either by a folder
     # path in the variable "folder" or by a host name in the variable "host". In the
@@ -534,13 +804,13 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if folder:
             return folder
 
-        if html.request.has_var("folder"):
+        if request.has_var("folder"):
             try:
-                folder = Folder.folder(html.request.var("folder"))
+                folder = Folder.folder(request.var("folder"))
             except MKGeneralException as e:
                 raise MKUserError("folder", "%s" % e)
         else:
-            host_name = html.request.var("host")
+            host_name = request.var("host")
             folder = Folder.root_folder()
             if host_name:  # find host with full scan. Expensive operation
                 host = Host.host(host_name)
@@ -568,7 +838,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                  title=None,
                  attributes=None,
                  root_dir=None):
-        super(CREFolder, self).__init__()
+        super().__init__()
         self._name = name
         self._parent = parent_folder
         self._subfolders = {}
@@ -640,18 +910,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         nodes_of = {}
         for cluster_with_tags, nodes in variables["clusters"].items():
             variables["all_hosts"].append(cluster_with_tags)
-            # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
-            # strings.  After reading the config into the GUI ensure we really
-            # process the host names as str. TODO: Can be removed with Python 3.
-            nodes_of[str(cluster_with_tags.split('|')[0])] = list(map(str, nodes))
+            nodes_of[cluster_with_tags.split('|')[0]] = list(map(str, nodes))
 
         # Build list of individual hosts
         for host_name_with_tags in variables["all_hosts"]:
             parts = host_name_with_tags.split('|', 1)
-            # Werk #10863: In 1.6 some hosts / rulesets were saved as unicode
-            # strings.  After reading the config into the GUI ensure we really
-            # process the host names as str. TODO: Can be removed with Python 3.
-            host_name = str(parts[0])
+            host_name = parts[0]
             host = self._create_host_from_variables(host_name, nodes_of, variables)
             self._hosts[host_name] = host
 
@@ -793,6 +1057,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             "clusters": {},
             "ipaddresses": {},
             "ipv6addresses": {},
+            "cmk_agent_connection": {},
             "explicit_snmp_communities": {},
             "management_snmp_credentials": {},
             "management_ipmi_credentials": {},
@@ -832,9 +1097,6 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 os.remove(self.hosts_file_path())
             return
 
-        out = io.StringIO()
-        out.write(wato_fileheader())
-
         all_hosts: List[str] = []
         clusters: Dict[str, List[str]] = {}
         hostnames = sorted(self.hosts().keys())
@@ -845,11 +1107,13 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         cleaned_hosts = {}
         host_tags = {}
         host_labels = {}
+        group_rules_list: List[Tuple[List[GroupRuleType], bool]] = []
 
-        attribute_mappings: List[Tuple[str, str, Dict[str, Any], str]] = [
+        attribute_mappings: List[AttributeType] = [
             # host attr, cmk.base variable name, value, title
             ("ipaddress", "ipaddresses", {}, "Explicit IPv4 addresses"),
             ("ipv6address", "ipv6addresses", {}, "Explicit IPv6 addresses"),
+            ("cmk_agent_connection", "cmk_agent_connection", {}, "Checkmk agent connection mode"),
             ("snmp_community", "explicit_snmp_communities", {}, "Explicit SNMP communities"),
             ("management_snmp_community", "management_snmp_credentials", {},
              "Management board SNMP credentials"),
@@ -862,8 +1126,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             host = self.hosts()[hostname]
             effective = host.effective_attributes()
             cleaned_hosts[hostname] = host.attributes()
-            cleaned_hosts[hostname] = update_metadata(cleaned_hosts[hostname],
-                                                      created_by=config.user.id)
+            cleaned_hosts[hostname] = update_metadata(cleaned_hosts[hostname], created_by=user.id)
 
             tag_groups = host.tag_groups()
             if tag_groups:
@@ -880,7 +1143,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
             # Save the effective attributes of a host to the related attribute maps.
             # These maps are saved directly in the hosts.mk to transport the effective
-            # attributes to Check_MK base.
+            # attributes to Checkmk base.
             for attribute_name, _unused_cmk_var_name, dictionary, _unused_title in attribute_mappings:
                 value = effective.get(attribute_name)
                 if value:
@@ -902,7 +1165,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 cgconfig = convert_cgroups_from_tuple(host.attribute("contactgroups"))
                 cgs = cgconfig["groups"]
                 if cgs and cgconfig["use"]:
-                    group_rules = []
+                    group_rules: List[GroupRuleType] = []
                     for cg in cgs:
                         group_rules.append({
                             "value": cg,
@@ -910,12 +1173,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                                 "host_name": [hostname]
                             },
                         })
-
-                    out.write("\nhost_contactgroups += %s\n\n" % format_config_value(group_rules))
-
-                    if cgconfig.get("use_for_services"):
-                        out.write("\nservice_contactgroups += %s\n\n" %
-                                  format_config_value(group_rules))
+                    group_rules_list.append((group_rules, cgconfig["use_for_services"]))
 
             for attr in host_attribute_registry.attributes():
                 attrname = attr.name()
@@ -932,59 +1190,27 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                                 custom_macros.setdefault(custom_varname, {})
                                 custom_macros[custom_varname][hostname] = nagstring
 
-        if all_hosts:
-            out.write("all_hosts += %s\n" % format_config_value(all_hosts))
+        storage_list: List[ABCHostsStorage] = [StandardHostsStorage()]
 
-        if clusters:
-            out.write("\nclusters.update(%s)\n" % format_config_value(clusters))
+        if storage := make_experimental_storage():
+            storage_list.append(storage)
 
-        out.write("\nhost_tags.update(%s)\n" % format_config_value(host_tags))
+        for storage in storage_list:  # = make_hosts_storage()
+            storage.save_group_rules_list(group_rules_list)
+            storage.save_all_hosts(all_hosts)
 
-        out.write("\nhost_labels.update(%s)\n" % format_config_value(host_labels))
+            storage.save_clusters(clusters)
+            storage.save_host_tags(host_tags)
+            storage.save_host_labels(host_labels)
 
-        for attribute_name, cmk_base_varname, dictionary, title in attribute_mappings:
-            if dictionary:
-                out.write("\n# %s\n" % title)
-                out.write("%s.update(" % cmk_base_varname)
-                out.write(format_config_value(dictionary))
-                out.write(")\n")
+            storage.save_attributes(attribute_mappings)
+            storage.save_extra_host_conf(custom_macros)
+            storage.save_explicit_host_settings(explicit_host_settings)
 
-        for custom_varname, entries in custom_macros.items():
-            macrolist = []
-            for hostname, nagstring in entries.items():
-                macrolist.append((nagstring, [hostname]))
-            if len(macrolist) > 0:
-                out.write("\n# Settings for %s\n" % custom_varname)
-                out.write("extra_host_conf.setdefault(%r, []).extend(\n" % custom_varname)
-                out.write("  %s)\n" % format_config_value(macrolist))
+            storage.save_contact_groups(self.groups())
+            storage.save_cleaned_hosts(cleaned_hosts)
 
-        for varname, entries in explicit_host_settings.items():
-            if len(entries) > 0:
-                out.write("\n# Explicit settings for %s\n" % varname)
-                out.write("explicit_host_conf.setdefault(%r, {})\n" % varname)
-                out.write("explicit_host_conf['%s'].update(%r)\n" % (varname, entries))
-
-        # If the contact groups of the folder are set to be used for the monitoring,
-        # we create an according rule for the folder here and an according rule for
-        # each host that has an explicit setting for that attribute (see above).
-        _permitted_groups, contact_groups, use_for_services = self.groups()
-        if contact_groups:
-            out.write("\nhost_contactgroups.insert(0, \n"
-                      "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
-                      list(contact_groups))
-            if use_for_services:
-                # Currently service_contactgroups requires single values. Lists are not supported
-                for cg in contact_groups:
-                    out.write(
-                        "\nservice_contactgroups.insert(0, \n"
-                        "  {'value': %r, 'condition': {'host_folder': '/%%s/' %% FOLDER_PATH}})\n" %
-                        cg)
-
-        # Write information about all host attributes into special variable - even
-        # values stored for check_mk as well.
-        out.write("\n# Host attributes (needed for WATO)\n")
-        out.write("host_attributes.update(\n%s)\n" % format_config_value(cleaned_hosts))
-        store.save_file(self.hosts_file_path(), out.getvalue())
+            storage.write(self.hosts_file_path())
 
     def _get_alias_from_extra_conf(self, host_name, variables):
         aliases = self._host_extra_conf(host_name, variables["extra_host_conf"]["alias"])
@@ -993,7 +1219,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return
 
     # This is a dummy implementation which works without tags
-    # and implements only a special case of Check_MK's real logic.
+    # and implements only a special case of Checkmk's real logic.
     def _host_extra_conf(self, host_name, conflist):
         for value, hostlist in conflist:
             if host_name in hostlist:
@@ -1072,7 +1298,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             subfolder.add_to_dictionary(dictionary)
 
     def drop_caches(self):
-        super(CREFolder, self).drop_caches()
+        super().drop_caches()
         self._choices_for_moving_host = None
 
         for subfolder in self._subfolders.values():
@@ -1109,10 +1335,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             return "/"
         return "/wato/%s/" % self.path()
 
-    def linkinfo(self):
-        return self.path() + ":"
+    def object_ref(self) -> ObjectRef:
+        return ObjectRef(ObjectRefType.Folder, self.path())
 
-    def hosts(self):
+    def hosts(self) -> Dict[str, 'CREHost']:
         self._load_hosts_on_demand()
         return self._hosts
 
@@ -1126,7 +1352,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             num += subfolder.num_hosts_recursively()
         return num
 
-    def all_hosts_recursively(self):
+    def all_hosts_recursively(self) -> Dict[str, 'CREHost']:
         hosts = {}
         hosts.update(self.hosts())
         for subfolder in self.subfolders():
@@ -1188,7 +1414,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return choices
 
     def _prefixed_title(self, current_depth, pretty):
-        if pretty:
+        if not pretty:
             return HTML(
                 escaping.escape_attribute("/".join(str(p) for p in self.title_path_without_root())))
 
@@ -1250,7 +1476,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             if what == "folder":
                 if folder.is_same_as(self.parent()):
                     continue  # We are already in that folder
-                if folder.name() in folder.subfolders():
+                if folder in folder.subfolders():
                     continue  # naming conflict
                 if self.is_transitive_parent_of(folder):
                     continue  # we cannot be moved in our child folder
@@ -1262,14 +1488,23 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return choices
 
     def site_id(self) -> SiteId:
+        """Returns the ID of the site that responsible for hosts in this folder
+
+        - Use explicitly set site attribute
+        - Go down the folder hierarchy to find a folder with set site attribute
+        - Remote sites: Use "" -> Assigned to central site
+        - Standalone and central sites: Use the ID of the local site
+        """
         if "site" in self._attributes:
             return self._attributes["site"]
         if self.has_parent():
             return self.parent().site_id()
-        ds = default_site()
-        if isinstance(ds, SiteId):
-            return ds
-        raise Exception("unknown site ID")
+        if not is_wato_slave_site():
+            return omd_site()
+
+        # Placeholder for "central site". This is only relevant when using WATO on a remote site
+        # and a host / folder has no site set.
+        return SiteId("")
 
     def all_site_ids(self) -> List[SiteId]:
         site_ids: Set[SiteId] = set()
@@ -1282,11 +1517,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         if withlinks:
             # In this case, we return a List[HTML]
             return [
-                html.render_a(folder.title(),
-                              href=html.makeuri_contextless([("mode", "folder"),
-                                                             ("folder", folder.path())],
-                                                            filename="wato.py"))
-                for folder in self.parent_folder_chain() + [self]
+                html.render_a(
+                    folder.title(),
+                    href=urls.makeuri_contextless(
+                        request,
+                        [("mode", "folder"), ("folder", folder.path())],
+                        filename="wato.py",
+                    ),
+                ) for folder in self.parent_folder_chain() + [self]
             ]
         # In this case, we return a List[str]
         return [folder.title() for folder in self.parent_folder_chain() + [self]]
@@ -1331,7 +1569,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             effective_folder_attributes = host.effective_attributes()
         else:
             effective_folder_attributes = self.effective_attributes()
-        cgconf = self._get_cgconf_from_attributes(effective_folder_attributes)
+        cgconf = _get_cgconf_from_attributes(effective_folder_attributes)
 
         # First set explicit groups
         permitted_groups.update(cgconf["groups"])
@@ -1345,7 +1583,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         while parent:
             effective_folder_attributes = parent.effective_attributes()
-            parconf = self._get_cgconf_from_attributes(effective_folder_attributes)
+            parconf = _get_cgconf_from_attributes(effective_folder_attributes)
             parent_permitted_groups, parent_host_contact_groups, _parent_use_for_services = parent.groups(
             )
 
@@ -1370,16 +1608,106 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 return host
         return None
 
+    @staticmethod
+    def host_lookup_cache_path():
+        return os.path.join(cmk.utils.paths.tmp_dir, "wato", "wato_host_folder_lookup.cache")
+
+    @staticmethod
+    def find_host_by_lookup_cache(host_name):
+        """This function tries to create a host object using its name from a lookup cache.
+        If this does not work (cache miss), the regular search for the host is started.
+        If the host was found by the regular search, the lookup cache is updated accordingly."""
+
+        try:
+            folder_lookup_cache = Folder.get_folder_lookup_cache()
+            folder_hint = folder_lookup_cache.get(host_name)
+            if folder_hint is not None and Folder.folder_exists(folder_hint):
+                folder_instance = Folder.folder(folder_hint)
+                host_instance = folder_instance.host(host_name)
+                if host_instance is not None:
+                    return host_instance
+
+            # The hostname was not found in the lookup cache
+            # Use find_host_recursively to search this host in the configuration
+            host_instance = Folder.root_folder().find_host_recursively(host_name)
+            if not host_instance:
+                return None
+
+            # Save newly found host instance to cache
+            folder_lookup_cache[host_name] = host_instance.folder().path()
+            Folder.save_host_lookup_cache(Folder.host_lookup_cache_path(), folder_lookup_cache)
+            return host_instance
+        except RequestTimeout:
+            raise
+        except Exception:
+            logger.warning(
+                "Unexpected exception in find_host_by_lookup_cache. Falling back to recursive host lookup",
+                exc_info=True)
+            return Folder.root_folder().find_host_recursively(host_name)
+
+    @staticmethod
+    def get_folder_lookup_cache() -> Dict[HostName, str]:
+        if "folder_lookup_cache" not in g:
+            cache_path = Folder.host_lookup_cache_path()
+            if not os.path.exists(cache_path) or os.stat(cache_path).st_size == 0:
+                Folder.build_host_lookup_cache(cache_path)
+            try:
+                g.folder_lookup_cache = pickle.loads(store.load_bytes_from_file(cache_path))
+            except (TypeError, pickle.UnpicklingError) as e:
+                logger.warning("Unable to read folder_lookup_cache from disk: %s", str(e))
+                g.folder_lookup_cache = {}
+        return g.folder_lookup_cache
+
+    @staticmethod
+    def build_host_lookup_cache(cache_path):
+        store.aquire_lock(cache_path)
+        folder_lookup = {}
+        for host_name, host in Folder.root_folder().all_hosts_recursively().items():
+            folder_lookup[host_name] = host.folder().path()
+        Folder.save_host_lookup_cache(cache_path, folder_lookup)
+
+    @staticmethod
+    def save_host_lookup_cache(cache_path, folder_lookup):
+        store.save_bytes_to_file(cache_path, pickle.dumps(folder_lookup))
+
+    @staticmethod
+    def delete_host_lookup_cache():
+        try:
+            os.unlink(Folder.host_lookup_cache_path())
+        except OSError as e:
+            if e.errno == errno.ENOENT:
+                return  # Not existant -> OK
+            raise
+
+    @staticmethod
+    def add_hosts_to_lookup_cache(host2path_list):
+        cache_path = Folder.host_lookup_cache_path()
+        folder_lookup_cache = Folder.get_folder_lookup_cache()
+        for (hostname, folder_path) in host2path_list:
+            folder_lookup_cache[hostname] = folder_path
+        Folder.save_host_lookup_cache(cache_path, folder_lookup_cache)
+
+    @staticmethod
+    def delete_hosts_from_lookup_cache(hostnames):
+        cache_path = Folder.host_lookup_cache_path()
+        folder_lookup_cache = Folder.get_folder_lookup_cache()
+        for hostname in hostnames:
+            try:
+                del folder_lookup_cache[hostname]
+            except KeyError:
+                pass
+        Folder.save_host_lookup_cache(cache_path, folder_lookup_cache)
+
     def _user_needs_permission(self, how: str) -> None:
-        if how == "write" and config.user.may("wato.all_folders"):
+        if how == "write" and user.may("wato.all_folders"):
             return
 
-        if how == "read" and config.user.may("wato.see_all_folders"):
+        if how == "read" and user.may("wato.see_all_folders"):
             return
 
         permitted_groups, _folder_contactgroups, _use_for_services = self.groups()
-        assert config.user.id is not None
-        user_contactgroups = userdb.contactgroups_of_user(config.user.id)
+        assert user.id is not None
+        user_contactgroups = userdb.contactgroups_of_user(user.id)
 
         for c in user_contactgroups:
             if c in permitted_groups:
@@ -1436,10 +1764,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 break
         if not have_mode:
             url_vars.append(("mode", "folder"))
-        if html.request.var("debug") == "1":
+        if request.var("debug") == "1":
             add_vars.append(("debug", "1"))
         url_vars += add_vars
-        return html.makeuri_contextless(url_vars, filename="wato.py")
+        return urls.makeuri_contextless(request, url_vars, filename="wato.py")
 
     def edit_url(self, backfolder: 'Optional[CREFolder]' = None) -> str:
         if backfolder is None:
@@ -1447,11 +1775,15 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 backfolder = self.parent()
             else:
                 backfolder = self
-        return html.makeuri_contextless([
-            ("mode", "editfolder"),
-            ("folder", self.path()),
-            ("backfolder", backfolder.path()),
-        ])
+        return urls.makeuri_contextless(
+            request,
+            [
+                ("mode", "editfolder"),
+                ("folder", self.path()),
+                ("backfolder", backfolder.path()),
+            ],
+            filename="wato.py",
+        )
 
     def locked(self) -> Union[bool, str]:
         return self._locked
@@ -1566,12 +1898,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             Created Folder instance.
         """
         # 1. Check preconditions
-        config.user.need_permission("wato.manage_folders")
+        user.need_permission("wato.manage_folders")
         self.need_permission("write")
         self.need_unlocked_subfolders()
-        must_be_in_contactgroups(attributes.get("contactgroups"))
+        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
 
-        attributes = update_metadata(attributes, created_by=config.user.id)
+        attributes = update_metadata(attributes, created_by=user.id)
 
         # 2. Actual modification
         new_subfolder = Folder(name, parent_folder=self, title=title, attributes=attributes)
@@ -1579,8 +1911,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         new_subfolder.save()
         add_change("new-folder",
                    _("Created new folder %s") % new_subfolder.alias_path(),
-                   obj=new_subfolder,
-                   sites=[new_subfolder.site_id()])
+                   object_ref=new_subfolder.object_ref(),
+                   sites=[new_subfolder.site_id()],
+                   diff_text=make_diff_text(
+                       make_folder_audit_log_object({}),
+                       make_folder_audit_log_object(new_subfolder.attributes())))
         hooks.call("folder-created", new_subfolder)
         self._clear_id_cache()
         need_sidebar_reload()
@@ -1588,7 +1923,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def delete_subfolder(self, name):
         # 1. Check preconditions
-        config.user.need_permission("wato.manage_folders")
+        user.need_permission("wato.manage_folders")
         self.need_permission("write")
         self.need_unlocked_subfolders()
 
@@ -1607,17 +1942,18 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         hooks.call("folder-deleted", subfolder)
         add_change("delete-folder",
                    _("Deleted folder %s") % subfolder.alias_path(),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=subfolder.all_site_ids())
         del self._subfolders[name]
         shutil.rmtree(subfolder.filesystem_path())
         self._clear_id_cache()
         Folder.invalidate_caches()
         need_sidebar_reload()
+        Folder.delete_host_lookup_cache()
 
     def move_subfolder_to(self, subfolder, target_folder):
         # 1. Check preconditions
-        config.user.need_permission("wato.manage_folders")
+        user.need_permission("wato.manage_folders")
         self.need_permission("write")
         self.need_unlocked_subfolders()
         target_folder.need_permission("write")
@@ -1628,6 +1964,24 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                 None,
                 _("Cannot move folder: A folder with this name already exists in the target folder."
                  ))
+
+        if subfolder.path() == target_folder.path():
+            raise MKUserError(
+                None,
+                _("Cannot move folder: A folder can not be moved into itself."),
+            )
+
+        if self.path() == target_folder.path():
+            raise MKUserError(
+                None,
+                _("Cannot move folder: A folder can not be moved to it's own parent folder."),
+            )
+
+        if subfolder in target_folder.parent_folder_chain():
+            raise MKUserError(
+                None,
+                _("Cannot move folder: A folder can not be moved to a folder within itself."),
+            )
 
         original_alias_path = subfolder.alias_path()
 
@@ -1644,9 +1998,10 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         affected_sites = list(set(affected_sites + subfolder.all_site_ids()))
         add_change("move-folder",
                    _("Moved folder %s to %s") % (original_alias_path, target_folder.alias_path()),
-                   obj=subfolder,
+                   object_ref=subfolder.object_ref(),
                    sites=affected_sites)
         need_sidebar_reload()
+        Folder.delete_host_lookup_cache()
 
     def edit(self, new_title, new_attributes):
         # 1. Check preconditions
@@ -1654,9 +2009,11 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self.need_unlocked()
 
         # For changing contact groups user needs write permission on parent folder
-        if self._get_cgconf_from_attributes(new_attributes) != \
-           self._get_cgconf_from_attributes(self.attributes()):
-            must_be_in_contactgroups(self.attributes().get("contactgroups"))
+        new_cgconf = _get_cgconf_from_attributes(new_attributes)
+        old_cgconf = _get_cgconf_from_attributes(self.attributes())
+        if new_cgconf != old_cgconf:
+            _validate_contact_group_modification(old_cgconf["groups"], new_cgconf["groups"])
+
             if self.has_parent():
                 if not self.parent().may("write"):
                     raise MKAuthException(
@@ -1672,6 +2029,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # to the new mapping.
         affected_sites = self.all_site_ids()
 
+        old_object = make_folder_audit_log_object(self._attributes)
+
         self._title = new_title
         self._attributes = new_attributes
 
@@ -1684,51 +2043,64 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         affected_sites = list(set(affected_sites + self.all_site_ids()))
         add_change("edit-folder",
                    _("Edited properties of folder %s") % self.title(),
-                   obj=self,
-                   sites=affected_sites)
+                   object_ref=self.object_ref(),
+                   sites=affected_sites,
+                   diff_text=make_diff_text(old_object,
+                                            make_folder_audit_log_object(self._attributes)))
         self._clear_id_cache()
 
-    def _get_cgconf_from_attributes(self, attributes):
-        v = attributes.get("contactgroups", (False, []))
-        cgconf = convert_cgroups_from_tuple(v)
-        return cgconf
-
-    def create_hosts(self, entries):
-        # 1. Check preconditions
-        config.user.need_permission("wato.manage_hosts")
+    def prepare_create_hosts(self):
+        user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
         self.need_permission("write")
 
-        for host_name, attributes, cluster_nodes in entries:
-            must_be_in_contactgroups(attributes.get("contactgroups"))
-            validate_host_uniqueness("host", host_name)
-            attributes = update_metadata(attributes, created_by=config.user.id)
+    def create_hosts(self, entries, bake_hosts=True):
+        # 1. Check preconditions
+        self.prepare_create_hosts()
 
+        for host_name, attributes, _cluster_nodes in entries:
+            self.verify_host_details(host_name, attributes)
+
+        self.create_validated_hosts(entries, bake_hosts)
+
+    def create_validated_hosts(self, entries, bake_hosts):
         # 2. Actual modification
         self._load_hosts_on_demand()
         for host_name, attributes, cluster_nodes in entries:
-            host = Host(self, host_name, attributes, cluster_nodes)
-            self._hosts[host_name] = host
-            self._num_hosts = len(self._hosts)
-            add_change("create-host",
-                       _("Created new host %s.") % host_name,
-                       obj=host,
-                       sites=[host.site_id()])
+            self.propagate_hosts_changes(host_name, attributes, cluster_nodes)
+
         self.persist_instance()  # num_hosts has changed
         self.save_hosts()
 
         # 3. Prepare agents for the new hosts
-        if has_agent_bakery():
-            import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
-            try:
-                agent_bakery.start_bake_agents(host_names=[e[0] for e in entries],
-                                               signing_credentials=None)
-            except BackgroundJobAlreadyRunning:
-                pass
+        if bake_hosts:
+            try_bake_agents_for_hosts([e[0] for e in entries])
+
+        folder_path = self.path()
+        Folder.add_hosts_to_lookup_cache([(x[0], folder_path) for x in entries])
+
+    @staticmethod
+    def verify_host_details(name, attributes):
+        # MKAuthException, MKUserError
+        _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
+        validate_host_uniqueness("host", name)
+        update_metadata(attributes, created_by=user.id)
+
+    def propagate_hosts_changes(self, host_name, attributes, cluster_nodes):
+        host = Host(self, host_name, attributes, cluster_nodes)
+        self._hosts[host_name] = host
+        self._num_hosts = len(self._hosts)
+        add_change("create-host",
+                   _("Created new host %s.") % host_name,
+                   object_ref=host.object_ref(),
+                   sites=[host.site_id()],
+                   diff_text=make_diff_text({},
+                                            make_host_audit_log_object(
+                                                host.attributes(), host.cluster_nodes())))
 
     def delete_hosts(self, host_names):
         # 1. Check preconditions
-        config.user.need_permission("wato.manage_hosts")
+        user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
         self.need_permission("write")
 
@@ -1752,11 +2124,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             self._num_hosts = len(self._hosts)
             add_change("delete-host",
                        _("Deleted host %s") % host_name,
-                       obj=host,
+                       object_ref=host.object_ref(),
                        sites=[host.site_id()])
 
         self.persist_instance()  # num_hosts has changed
         self.save_hosts()
+        Folder.delete_hosts_from_lookup_cache(host_names)
 
     def _get_parents_of_hosts(self, host_names):
         # Note: Deletion of chosen hosts which are parents
@@ -1786,9 +2159,9 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def move_hosts(self, host_names, target_folder):
         # 1. Check preconditions
-        config.user.need_permission("wato.manage_hosts")
-        config.user.need_permission("wato.edit_hosts")
-        config.user.need_permission("wato.move_hosts")
+        user.need_permission("wato.manage_hosts")
+        user.need_permission("wato.edit_hosts")
+        user.need_permission("wato.move_hosts")
         self.need_permission("write")
         self.need_unlocked_hosts()
         target_folder.need_permission("write")
@@ -1804,20 +2177,26 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             target_folder._add_host(host)
 
             affected_sites = list(set(affected_sites + [host.site_id()]))
+            old_folder_text = self.path() or _("Main directory")
+            new_folder_text = target_folder.path() or _("Main directory")
             add_change("move-host",
-                       _("Moved host from %s to %s") % (self.path(), target_folder.path()),
-                       obj=host,
+                       _("Moved host from \"%s\" to \"%s\"") % (old_folder_text, new_folder_text),
+                       object_ref=host.object_ref(),
                        sites=affected_sites)
 
         self.persist_instance()  # num_hosts has changed
         self.save_hosts()
+
         target_folder.persist_instance()
         target_folder.save_hosts()
 
+        folder_path = target_folder.path()
+        Folder.add_hosts_to_lookup_cache([(x, folder_path) for x in host_names])
+
     def rename_host(self, oldname, newname):
         # 1. Check preconditions
-        config.user.need_permission("wato.manage_hosts")
-        config.user.need_permission("wato.edit_hosts")
+        user.need_permission("wato.manage_hosts")
+        user.need_permission("wato.edit_hosts")
         self.need_unlocked_hosts()
         host = self.hosts()[oldname]
         host.need_permission("write")
@@ -1828,8 +2207,12 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         self._hosts[newname] = host
         add_change("rename-host",
                    _("Renamed host from %s to %s") % (oldname, newname),
-                   obj=host,
+                   object_ref=host.object_ref(),
                    sites=[host.site_id()])
+
+        Folder.delete_hosts_from_lookup_cache([oldname])
+        Folder.add_hosts_to_lookup_cache([(newname, self.path())])
+
         self.save_hosts()
 
     def rename_parent(self, oldname, newname):
@@ -1842,7 +2225,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         add_change("rename-parent",
                    _("Renamed parent from %s to %s in folder \"%s\"") %
                    (oldname, newname, self.alias_path()),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=self.all_site_ids())
         self.save_hosts()
         self.save()
@@ -1937,11 +2320,16 @@ def validate_host_uniqueness(varname, host_name):
             (host_name, host.folder().url(), host.folder().alias_path()))
 
 
+def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupSpec:
+    v = attributes.get("contactgroups", (False, []))
+    return convert_cgroups_from_tuple(v)
+
+
 class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     """A virtual folder representing the result of a search."""
     @staticmethod
     def criteria_from_html_vars():
-        crit = {".name": html.request.var("host_search_host")}
+        crit = {".name": request.var("host_search_host")}
         crit.update(
             collect_attributes("host_search",
                                new=False,
@@ -1952,8 +2340,8 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     # This method is allowed to return None when no search is currently performed.
     @staticmethod
     def current_search_folder():
-        if html.request.has_var("host_search"):
-            base_folder = Folder.folder(html.request.var("folder", ""))
+        if request.has_var("host_search"):
+            base_folder = Folder.folder(request.var("folder", ""))
             search_criteria = SearchFolder.criteria_from_html_vars()
             folder = SearchFolder(base_folder, search_criteria)
             Folder.set_current(folder)
@@ -1964,7 +2352,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
     # '--------------------------------------------------------------------'
 
     def __init__(self, base_folder, criteria):
-        super(SearchFolder, self).__init__()
+        super().__init__()
         self._criteria = criteria
         self._base_folder = base_folder
         self._found_hosts = None
@@ -2026,7 +2414,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):
 
         url_vars = [("host_search", "1")] + add_vars
 
-        for varname, value in html.request.itervars():
+        for varname, value in request.itervars():
             if varname.startswith("host_search_") \
                 or varname.startswith("_change"):
                 url_vars.append((varname, value))
@@ -2122,7 +2510,7 @@ class CREHost(WithPermissions, WithAttributes):
 
     @staticmethod
     def host(host_name):
-        return Folder.root_folder().find_host_recursively(host_name)
+        return Folder.find_host_by_lookup_cache(host_name)
 
     @staticmethod
     def all():
@@ -2137,7 +2525,7 @@ class CREHost(WithPermissions, WithAttributes):
     # '--------------------------------------------------------------------'
 
     def __init__(self, folder, host_name, attributes, cluster_nodes):
-        super(CREHost, self).__init__()
+        super().__init__()
         self._folder = folder
         self._name = host_name
         self._attributes = attributes
@@ -2148,7 +2536,7 @@ class CREHost(WithPermissions, WithAttributes):
         return "Host(%r)" % (self._name)
 
     def drop_caches(self):
-        super(CREHost, self).drop_caches()
+        super().drop_caches()
         self._cached_host_tags = None
 
     # .--------------------------------------------------------------------.
@@ -2171,8 +2559,8 @@ class CREHost(WithPermissions, WithAttributes):
     def folder(self) -> CREFolder:
         return self._folder
 
-    def linkinfo(self):
-        return self.folder().path() + ":" + self.name()
+    def object_ref(self) -> ObjectRef:
+        return ObjectRef(ObjectRefType.Host, self.name())
 
     def locked(self):
         return self.folder().locked_hosts()
@@ -2293,18 +2681,18 @@ class CREHost(WithPermissions, WithAttributes):
         return self.folder().groups(self)
 
     def _user_needs_permission(self, how: str) -> None:
-        if how == "write" and config.user.may("wato.all_folders"):
+        if how == "write" and user.may("wato.all_folders"):
             return
 
-        if how == "read" and config.user.may("wato.see_all_folders"):
+        if how == "read" and user.may("wato.see_all_folders"):
             return
 
         if how == "write":
-            config.user.need_permission("wato.edit_hosts")
+            user.need_permission("wato.edit_hosts")
 
         permitted_groups, _host_contact_groups, _use_for_services = self.groups()
-        assert config.user.id is not None
-        user_contactgroups = userdb.contactgroups_of_user(config.user.id)
+        assert user.id is not None
+        user_contactgroups = userdb.contactgroups_of_user(user.id)
 
         for c in user_contactgroups:
             if c in permitted_groups:
@@ -2316,32 +2704,48 @@ class CREHost(WithPermissions, WithAttributes):
         raise MKAuthException(reason)
 
     def edit_url(self):
-        return html.makeuri_contextless([
-            ("mode", "edit_host"),
-            ("folder", self.folder().path()),
-            ("host", self.name()),
-        ])
+        return urls.makeuri_contextless(
+            request,
+            [
+                ("mode", "edit_host"),
+                ("folder", self.folder().path()),
+                ("host", self.name()),
+            ],
+            filename="wato.py",
+        )
 
     def params_url(self):
-        return html.makeuri_contextless([
-            ("mode", "object_parameters"),
-            ("folder", self.folder().path()),
-            ("host", self.name()),
-        ])
+        return urls.makeuri_contextless(
+            request,
+            [
+                ("mode", "object_parameters"),
+                ("folder", self.folder().path()),
+                ("host", self.name()),
+            ],
+            filename="wato.py",
+        )
 
     def services_url(self):
-        return html.makeuri_contextless([
-            ("mode", "inventory"),
-            ("folder", self.folder().path()),
-            ("host", self.name()),
-        ])
+        return urls.makeuri_contextless(
+            request,
+            [
+                ("mode", "inventory"),
+                ("folder", self.folder().path()),
+                ("host", self.name()),
+            ],
+            filename="wato.py",
+        )
 
     def clone_url(self):
-        return html.makeuri_contextless([
-            ("mode", "newcluster" if self.is_cluster() else "newhost"),
-            ("folder", self.folder().path()),
-            ("clone", self.name()),
-        ])
+        return urls.makeuri_contextless(
+            request,
+            [
+                ("mode", "newcluster" if self.is_cluster() else "newhost"),
+                ("folder", self.folder().path()),
+                ("clone", self.name()),
+            ],
+            filename="wato.py",
+        )
 
     # .--------------------------------------------------------------------.
     # | MODIFICATIONS                                                      |
@@ -2356,7 +2760,13 @@ class CREHost(WithPermissions, WithAttributes):
             self._need_folder_write_permissions()
         self.need_permission("write")
         self.need_unlocked()
-        must_be_in_contactgroups(attributes.get("contactgroups"))
+
+        _validate_contact_group_modification(
+            _get_cgconf_from_attributes(self._attributes)["groups"],
+            _get_cgconf_from_attributes(attributes)["groups"])
+
+        old_object = make_host_audit_log_object(self._attributes, self._cluster_nodes)
+        new_object = make_host_audit_log_object(attributes, cluster_nodes)
 
         # 2. Actual modification
         affected_sites = [self.site_id()]
@@ -2366,8 +2776,9 @@ class CREHost(WithPermissions, WithAttributes):
         self.folder().save_hosts()
         add_change("edit-host",
                    _("Modified host %s.") % self.name(),
-                   obj=self,
-                   sites=affected_sites)
+                   object_ref=self.object_ref(),
+                   sites=affected_sites,
+                   diff_text=make_diff_text(old_object, new_object))
 
     def update_attributes(self, changed_attributes):
         new_attributes = self.attributes().copy()
@@ -2380,6 +2791,8 @@ class CREHost(WithPermissions, WithAttributes):
             self._need_folder_write_permissions()
         self.need_unlocked()
 
+        old = make_host_audit_log_object(self._attributes.copy(), self._cluster_nodes)
+
         # 2. Actual modification
         affected_sites = [self.site_id()]
         for attrname in attrnames_to_clean:
@@ -2389,8 +2802,10 @@ class CREHost(WithPermissions, WithAttributes):
         self.folder().save_hosts()
         add_change("edit-host",
                    _("Removed explicit attributes of host %s.") % self.name(),
-                   obj=self,
-                   sites=affected_sites)
+                   object_ref=self.object_ref(),
+                   sites=affected_sites,
+                   diff_text=make_diff_text(
+                       old, make_host_audit_log_object(self._attributes, self._cluster_nodes)))
 
     def _need_folder_write_permissions(self):
         if not self.folder().may("write"):
@@ -2431,7 +2846,7 @@ class CREHost(WithPermissions, WithAttributes):
 
         add_change("rename-node",
                    _("Renamed cluster node from %s into %s.") % (oldname, newname),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=[self.site_id()])
         self.folder().save_hosts()
         return True
@@ -2444,7 +2859,7 @@ class CREHost(WithPermissions, WithAttributes):
 
         add_change("rename-parent",
                    _("Renamed parent from %s into %s.") % (oldname, newname),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=[self.site_id()])
         self.folder().save_hosts()
         return True
@@ -2452,29 +2867,58 @@ class CREHost(WithPermissions, WithAttributes):
     def rename(self, new_name):
         add_change("rename-host",
                    _("Renamed host from %s into %s.") % (self.name(), new_name),
-                   obj=self,
+                   object_ref=self.object_ref(),
                    sites=[self.site_id()])
         self._name = new_name
 
 
-# Make sure that the user is in all of cgs contact groups.
-# This is needed when the user assigns contact groups to
-# objects. He may only assign such groups he is member himself.
-def must_be_in_contactgroups(cgspec):
-    if config.user.may("wato.all_folders"):
+def make_host_audit_log_object(attributes, cluster_nodes):
+    """The resulting object is used for building object diffs"""
+    obj = attributes.copy()
+    if cluster_nodes:
+        obj["nodes"] = cluster_nodes
+    obj.pop("meta_data", None)
+    return obj
+
+
+def make_folder_audit_log_object(attributes):
+    """The resulting object is used for building object diffs"""
+    obj = attributes.copy()
+    obj.pop("meta_data", None)
+    return obj
+
+
+def _validate_contact_group_modification(old_groups: Sequence[ContactgroupName],
+                                         new_groups: Sequence[ContactgroupName]) -> None:
+    """Verifies if a user is allowed to modify the contact groups.
+
+    A user must not be member of all groups assigned to a host/folder, but a user can only add or
+    remove the contact groups if he is a member of.
+
+    This is necessary to provide the user a consistent experience: In case he is able to add a
+    group, he should also be able to remove it. And vice versa.
+    """
+    if diff_groups := set(old_groups) ^ set(new_groups):
+        _must_be_in_contactgroups(diff_groups)
+
+
+def _must_be_in_contactgroups(cgs: Iterable[ContactgroupName]) -> None:
+    """Make sure that the user is in all of cgs contact groups
+
+    This is needed when the user assigns contact groups to
+    objects. He may only assign such groups he is member himself.
+    """
+    if user.may("wato.all_folders"):
         return
 
-    # No contact groups specified
-    if cgspec is None:
-        return
+    if not cgs:
+        return  # No contact groups specified
 
-    cgconf = convert_cgroups_from_tuple(cgspec)
-    cgs = cgconf["groups"]
     users = userdb.load_users()
-    if config.user.id not in users:
+    if user.id not in users:
         user_cgs = []
     else:
-        user_cgs = users[config.user.id]["contactgroups"]
+        user_cgs = users[user.id]["contactgroups"]
     for c in cgs:
         if c not in user_cgs:
             raise MKAuthException(
@@ -2509,7 +2953,7 @@ class CMEFolder(CREFolder):
                 parent._check_parent_customer_conflicts(site_id)
             self._check_childs_customer_conflicts(site_id)
 
-        super(CMEFolder, self).edit(new_title, new_attributes)
+        super().edit(new_title, new_attributes)
         self._clear_id_cache()
 
     def _check_parent_customer_conflicts(self, site_id):
@@ -2528,13 +2972,13 @@ class CMEFolder(CREFolder):
         # The parents customer id may be the default customer or the same customer
         customer_id = self._get_customer_id()
         if customer_id not in [managed.default_customer_id(), new_customer_id]:
-            folder_sites = ", ".join(managed.get_sites_of_customer(customer_id))
+            folder_sites = ", ".join(list(managed.get_sites_of_customer(customer_id).keys()))
             raise MKUserError(
                 None,
                 _("The configured target site <i>%s</i> for this folder is invalid. The folder <i>%s</i> already belongs "
                   "to the customer <i>%s</i>. This violates the CME folder hierarchy. You may choose the "
                   "following sites <i>%s</i>.") %
-                (config.allsites()[site_id]["alias"], self.title(),
+                (allsites()[site_id]["alias"], self.title(),
                  managed.get_customer_name_by_id(customer_id), folder_sites))
 
     def _check_childs_customer_conflicts(self, site_id):
@@ -2552,7 +2996,7 @@ class CMEFolder(CREFolder):
                         None,
                         _("The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
                           "customer <i>%s</i>. This violates the CME folder hierarchy.") %
-                        (subfolder.title(), config.allsites()[subfolder_explicit_site]["alias"],
+                        (subfolder.title(), allsites()[subfolder_explicit_site]["alias"],
                          managed.get_customer_name_by_id(subfolder_customer)))
 
             subfolder._check_childs_customer_conflicts(site_id)
@@ -2568,13 +3012,13 @@ class CMEFolder(CREFolder):
                         None,
                         _("The host <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
                           "customer <i>%s</i>. This violates the CME folder hierarchy.") %
-                        (host.name(), config.allsites()[host_explicit_site]["alias"],
+                        (host.name(), allsites()[host_explicit_site]["alias"],
                          managed.get_customer_name_by_id(host_customer)))
 
     def create_subfolder(self, name, title, attributes):
         if "site" in attributes:
             self._check_parent_customer_conflicts(attributes["site"])
-        return super(CMEFolder, self).create_subfolder(name, title, attributes)
+        return super().create_subfolder(name, title, attributes)
 
     def move_subfolder_to(self, subfolder, target_folder):
         target_folder_customer = target_folder._get_customer_id()
@@ -2595,15 +3039,15 @@ class CMEFolder(CREFolder):
                       "This violates the CME folder hierarchy.") % other_customers_text)
 
         # The site attribute is not explicitely set. The new inheritance might brake something..
-        super(CMEFolder, self).move_subfolder_to(subfolder, target_folder)
+        super().move_subfolder_to(subfolder, target_folder)
 
-    def create_hosts(self, entries):
+    def create_hosts(self, entries, bake_hosts=True):
         customer_id = self._get_customer_id()
         if customer_id != managed.default_customer_id():
             for hostname, attributes, _cluster_nodes in entries:
                 self.check_modify_host(hostname, attributes)
 
-        super(CMEFolder, self).create_hosts(entries)
+        super().create_hosts(entries, bake_hosts=bake_hosts)
 
     def check_modify_host(self, hostname, attributes):
         if "site" not in attributes:
@@ -2619,8 +3063,7 @@ class CMEFolder(CREFolder):
                     _("Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the customer <i>%s</i>, "
                       "which owns this folder. This violates the CME folder hierarchy. You may "
                       "choose the sites: %s") %
-                    (hostname, config.allsites()[attributes["site"]]["alias"], customer_id,
-                     folder_sites))
+                    (hostname, allsites()[attributes["site"]]["alias"], customer_id, folder_sites))
 
     def move_hosts(self, host_names, target_folder):
         # Check if the target folder may have this host
@@ -2642,11 +3085,11 @@ class CMEFolder(CREFolder):
                         _("Unable to move host <i>%s</i>. Its explicit set site attribute <i>%s</i> "
                           "belongs to customer <i>%s</i>. The target folder however, belongs to customer <i>%s</i>. "
                           "This violates the folder CME folder hierarchy.") %
-                        (hostname, config.allsites()[host_site]["alias"],
+                        (hostname, allsites()[host_site]["alias"],
                          managed.get_customer_of_site(host_site),
                          managed.get_customer_of_site(target_site_id)))
 
-        super(CMEFolder, self).move_hosts(host_names, target_folder)
+        super().move_hosts(host_names, target_folder)
 
     def _get_customer_id(self):
         customer_id = managed.get_customer_of_site(self.site_id())
@@ -2681,7 +3124,7 @@ class CMEHost(CREHost):
         f = self.folder()
         if isinstance(f, CMEFolder):
             f.check_modify_host(self.name(), attributes)
-        super(CMEHost, self).edit(attributes, cluster_nodes)
+        super().edit(attributes, cluster_nodes)
 
 
 # TODO: Change to factory?
@@ -2726,14 +3169,14 @@ def folders_by_id() -> Dict[str, Type[CREFolder]]:
     return mapping
 
 
-def call_hook_hosts_changed(folder):
+def call_hook_hosts_changed(folder: CREFolder) -> None:
     if hooks.registered("hosts-changed"):
-        hosts = collect_hosts(folder)
+        hosts = _collect_hosts(folder)
         hooks.call("hosts-changed", hosts)
 
     # The same with all hosts!
     if hooks.registered("all-hosts-changed"):
-        hosts = collect_hosts(Folder.root_folder())
+        hosts = _collect_hosts(Folder.root_folder())
         hooks.call("all-hosts-changed", hosts)
 
 
@@ -2744,7 +3187,7 @@ def call_hook_hosts_changed(folder):
 def validate_all_hosts(hostnames, force_all=False):
     if hooks.registered('validate-all-hosts') and (len(hostnames) > 0 or force_all):
         hosts_errors = {}
-        all_hosts = collect_hosts(Folder.root_folder())
+        all_hosts = _collect_hosts(Folder.root_folder())
 
         if force_all:
             hostnames = list(all_hosts.keys())
@@ -2762,15 +3205,16 @@ def validate_all_hosts(hostnames, force_all=False):
     return {}
 
 
-def collect_all_hosts():
-    return collect_hosts(Folder.root_folder())
+def collect_all_hosts() -> HostsWithAttributes:
+    return _collect_hosts(Folder.root_folder())
 
 
-def collect_hosts(folder):
+def _collect_hosts(folder: CREFolder) -> HostsWithAttributes:
     hosts_attributes = {}
-    for host_name, host in Host.all().items():
+    for host_name, host in folder.all_hosts_recursively().items():
         hosts_attributes[host_name] = host.effective_attributes()
         hosts_attributes[host_name]["path"] = host.folder().path()
+        hosts_attributes[host_name]["edit_url"] = host.edit_url()
     return hosts_attributes
 
 
@@ -2779,7 +3223,7 @@ def folder_preserving_link(add_vars: HTTPVariables) -> str:
 
 
 def make_action_link(vars_: HTTPVariables) -> str:
-    return folder_preserving_link(vars_ + [("_transid", html.transaction_manager.get())])
+    return folder_preserving_link(vars_ + [("_transid", transactions.get())])
 
 
 def get_folder_title_path(path, with_links=False):
@@ -2836,3 +3280,45 @@ def _ensure_trailing_slash(path: str) -> str:
 
     """
     return path.rstrip("/") + "/"
+
+
+class MatchItemGeneratorHosts(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        host_collector: Callable[[], HostsWithAttributes],
+    ) -> None:
+        super().__init__(name)
+        self._host_collector = host_collector
+
+    @staticmethod
+    def _get_additional_match_texts(host_attributes: HostAttributes) -> Iterable[str]:
+        yield from (val for key in ['alias', 'ipaddress', 'ipv6address']
+                    for val in [host_attributes[key]] if val)
+        yield from (ip_address for key in ['additional_ipv4addresses', 'additional_ipv6addresses']
+                    for ip_address in host_attributes[key])
+
+    def generate_match_items(self) -> MatchItems:
+        yield from (MatchItem(
+            title=host_name,
+            topic=_('Hosts'),
+            url=host_attributes["edit_url"],
+            match_texts=[
+                host_name,
+                *self._get_additional_match_texts(host_attributes),
+            ],
+        ) for host_name, host_attributes in self._host_collector().items())
+
+    @staticmethod
+    def is_affected_by_change(change_action_name: str) -> bool:
+        return 'host' in change_action_name
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return False
+
+
+match_item_generator_registry.register(MatchItemGeneratorHosts(
+    'hosts',
+    collect_all_hosts,
+))

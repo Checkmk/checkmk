@@ -5,18 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAscii,
-    MonitoringState,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
+    Levels,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
-    Levels,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _parameter_valuespec_f5_bigip_vserver():
@@ -138,7 +133,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="f5_bigip_vserver",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("VServer name"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("VServer name"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_f5_bigip_vserver,
         title=lambda: _("F5 Loadbalancer VServer"),

@@ -6,7 +6,7 @@ Date: 1589456367
 Edition: cee
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The Dynamic configuration is now loading plugins that are located below
 the path <tt>local/lib/check_mk/cee/dcd/plugins/connectors/</tt>.

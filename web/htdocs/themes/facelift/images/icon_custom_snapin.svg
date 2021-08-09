@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 330 330" style="enable-background:new 0 0 330 330;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#8F5ED8;}
+	.st1{fill-rule:evenodd;clip-rule:evenodd;fill:#7C44D0;}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#5A24AB;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-326.000000, -485.000000)">
+		<g id="snapin" transform="translate(326.000000, 485.000000)">
+			<path id="Rectangle" class="st0" d="M60,0h210c33.1,0,60,26.9,60,60v210c0,33.1-26.9,60-60,60H60c-33.1,0-60-26.9-60-60V60
+				C0,26.9,26.9,0,60,0z"/>
+			<rect id="Rectangle_1_" x="30" y="30" class="st1" width="270" height="30"/>
+			<rect id="Rectangle_2_" x="60" y="120" class="st2" width="90" height="30"/>
+			<rect id="Rectangle_3_" x="60" y="180" class="st2" width="90" height="30"/>
+			<rect id="Rectangle_4_" x="180" y="120" class="st2" width="90" height="30"/>
+			<rect id="Rectangle_5_" x="180" y="180" class="st2" width="90" height="30"/>
+			<rect id="Rectangle_6_" x="60" y="240" class="st2" width="90" height="30"/>
+			<rect id="Rectangle_7_" x="180" y="240" class="st2" width="90" height="30"/>
+		</g>
+	</g>
+</g>
+</svg>

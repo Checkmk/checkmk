@@ -9,14 +9,27 @@ of Check_MK. The GUI is e.g. accessing this module for gathering the default
 configuration.
 """
 
-from collections.abc import MutableMapping
 import copy
-from enum import Enum
 import logging
 import os
 import pprint
-from typing import Any, Dict, Iterable, List, Optional, Union
+from enum import Enum
 from pathlib import Path
+from typing import (
+    AbstractSet,
+    Any,
+    cast,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from six import ensure_str
 
@@ -25,20 +38,21 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException
 
+from .config import ConfigFromWATO
 from .defaults import default_config, default_rule_pack
-from .settings import Settings, settings as create_settings
+from .settings import Settings
+from .settings import settings as create_settings
 
 ECRuleSpec = Dict[str, Any]
 ECRulePackSpec = Dict[str, Any]  # TODO: improve this type
 ECRulePack = Union[ECRulePackSpec, "MkpRulePackProxy"]
-ECRulePacks = List[ECRulePack]
 
 
 class MkpRulePackBindingError(MKException):
     """Base class for exceptions related to rule pack binding"""
 
 
-class MkpRulePackProxy(MutableMapping):
+class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-ancestors
     """
     An object of this class represents an entry (i.e. a rule pack) in
     mkp_rule_packs. It is used as a reference to an EC rule pack
@@ -48,52 +62,48 @@ class MkpRulePackProxy(MutableMapping):
     This is achieved via the method bind_to.
     """
     def __init__(self, rule_pack_id: str) -> None:
-        super(MkpRulePackProxy, self).__init__()
+        super().__init__()
         # Ideally the 'id_' would not be necessary and the proxy object would
         # be bound to it's referenced object upon initialization. Unfortunately,
         # this is not possible because the mknotifyd.mk could specify referenced
         # objects as well.
         self.id_ = rule_pack_id
-        self.rule_pack: Optional[ECRulePack] = None
+        self.rule_pack: Optional[ECRulePackSpec] = None
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str) -> Any:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         return self.rule_pack[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key: str, value: Any) -> None:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         self.rule_pack[key] = value
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: str) -> None:
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         del self.rule_pack[key]
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return '%s("%s")' % (self.__class__.__name__, self.id_)
 
     # __iter__ and __len__ are only defined as a workaround for a buggy entry
     # in the typeshed
-    def __iter__(self):
+    def __iter__(self) -> Iterator[str]:
         for k in self.keys():
             yield k
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.keys())
 
-    # NOTE: One cannot portably give a type for this method because of the
-    # braindead incompatible type changes of Mapping.keys(): In Python 2 it has
-    # to be a List[K], while in Python 3 it has to be an AbstractSet[K] (it's a
-    # KeysView[K], actually).
-    def keys(self):
+    def keys(self) -> AbstractSet[str]:
         """List of keys of this rule pack"""
         if self.rule_pack is None:
             raise MkpRulePackBindingError("Proxy is not bound")
         return self.rule_pack.keys()
 
-    def bind_to(self, mkp_rule_pack: ECRulePack) -> None:
+    def bind_to(self, mkp_rule_pack: ECRulePackSpec) -> None:
         """Binds this rule pack to the given MKP rule pack"""
         if self.id_ != mkp_rule_pack['id']:
             raise MkpRulePackBindingError('The IDs of %s and %s cannot be different.' %
@@ -173,7 +183,8 @@ def remove_exported_rule_pack(id_: str) -> None:
     export_file.unlink()
 
 
-def _bind_to_rule_pack_proxies(rule_packs: Any, mkp_rule_packs: Any) -> None:
+def _bind_to_rule_pack_proxies(rule_packs: Iterable[Any], mkp_rule_packs: Mapping[Any,
+                                                                                  Any]) -> None:
     """
     Binds all proxy rule packs of the variable rule_packs to
     the corresponding mkp_rule_packs.
@@ -187,15 +198,17 @@ def _bind_to_rule_pack_proxies(rule_packs: Any, mkp_rule_packs: Any) -> None:
                                           rule_pack.id_)
 
 
-def load_config(settings: Settings) -> Dict[str, Any]:
+def load_config(settings: Settings) -> ConfigFromWATO:
     """Load event console configuration."""
-    config = default_config()
-    config["MkpRulePackProxy"] = MkpRulePackProxy
+    # TODO: Do not use exec and the funny MkpRulePackProxy Kung Fu, removing the need for the two casts below.
+    global_context = cast(Dict[str, Any], default_config())
+    global_context["MkpRulePackProxy"] = MkpRulePackProxy
     for path in [settings.paths.main_config_file.value] + \
             sorted(settings.paths.config_dir.value.glob('**/*.mk')):
         with open(str(path), mode="rb") as file_object:
-            exec(file_object.read(), config)  # pylint: disable=exec-used
-    config.pop("MkpRulePackProxy", None)
+            exec(file_object.read(), global_context)  # pylint: disable=exec-used
+    global_context.pop("MkpRulePackProxy", None)
+    config = cast(ConfigFromWATO, global_context)
     _bind_to_rule_pack_proxies(config['rule_packs'], config['mkp_rule_packs'])
 
     # Convert livetime fields in rules into new format
@@ -240,21 +253,25 @@ def load_config(settings: Settings) -> Dict[str, Any]:
         levels["cmk.mkeventd.lock"] = levels["cmk.mkeventd"]
     config["log_level"] = levels
 
+    # TODO: Move this up to avoid the need for casting?
     # Convert pre 1.4 hostname translation config
     translation = config["hostname_translation"]
-    if "regex" in translation and not isinstance(translation["regex"], list):
-        translation["regex"] = [translation["regex"]]
+    if isinstance(translation.get('regex'), tuple):
+        translation["regex"] = [cast(Tuple[str, str], translation.get('regex'))]
+
+    if config.get("translate_snmptraps") is True:  # type: ignore[comparison-overlap]
+        config["translate_snmptraps"] = (True, {})  # convert from pre-1.6.0 format
 
     return config
 
 
-def load_rule_packs() -> ECRulePacks:
+def load_rule_packs() -> Sequence[ECRulePackSpec]:
     """Returns all rule packs (including MKP rule packs) of a site. Proxy objects
     in the rule packs are already bound to the referenced object."""
     return load_config(_default_settings())["rule_packs"]
 
 
-def save_rule_packs(rule_packs: ECRulePacks,
+def save_rule_packs(rule_packs: Iterable[ECRulePack],
                     pretty_print: bool = False,
                     dir_: Optional[Path] = None) -> None:
     """Saves the given rule packs to rules.mk. By default they are saved to the
@@ -316,7 +333,7 @@ def add_rule_pack_proxies(file_names: Iterable[str]) -> None:
     of file names. The file names without the file extension are used as
     the ID of the rule pack.
     """
-    rule_packs: ECRulePacks = []
+    rule_packs: List[ECRulePack] = []
     rule_packs += load_rule_packs()
     rule_pack_ids = {rp['id']: i for i, rp in enumerate(rule_packs)}
     ids = [os.path.splitext(fn)[0] for fn in file_names]
@@ -354,7 +371,7 @@ def release_packaged_rule_packs(file_names: Iterable[str]) -> None:
     if not file_names:
         return
 
-    rule_packs: ECRulePacks = []
+    rule_packs: List[ECRulePack] = []
     rule_packs += load_rule_packs()
     rule_pack_ids = [rp['id'] for rp in rule_packs]
     affected_ids = [os.path.splitext(fn)[0] for fn in file_names]
@@ -362,9 +379,10 @@ def release_packaged_rule_packs(file_names: Iterable[str]) -> None:
     save = False
     for id_ in affected_ids:
         index = rule_pack_ids.index(id_)
-        if not isinstance(rule_packs[index], MkpRulePackProxy):
+        rp = rule_packs[index]
+        if not isinstance(rp, MkpRulePackProxy):
             save = True
-            export_rule_pack(rule_packs[index])
+            export_rule_pack(rp)
             rule_packs[index] = MkpRulePackProxy(id_)
 
     if save:

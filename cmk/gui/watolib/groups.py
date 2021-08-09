@@ -4,46 +4,37 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
 import copy
-from typing import Any, Dict, List, Tuple, Union, Literal
+import re
+from typing import Any, Dict, List, Literal, Tuple
 
-import cmk.utils.version as cmk_version
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import timeperiod_spec_alias
 
-import cmk.gui.config as config
-import cmk.gui.userdb as userdb
-import cmk.gui.plugins.userdb.utils as userdb_utils
-from cmk.gui.groups import load_group_information, load_contact_group_information
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import html, g
+import cmk.gui.plugins.userdb.utils as userdb_utils
+import cmk.gui.userdb as userdb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import g, html, request, user
+from cmk.gui.groups import load_contact_group_information, load_group_information
 from cmk.gui.i18n import _
+from cmk.gui.plugins.watolib.utils import config_variable_registry, wato_fileheader
 from cmk.gui.utils.html import HTML
-
-from cmk.gui.watolib.utils import convert_cgroups_from_tuple
+from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.utils import format_config_value
-from cmk.gui.watolib.rulesets import AllRulesets
-from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.host_attributes import (
-    host_attribute_registry,
     ABCHostAttribute,
+    host_attribute_registry,
     HostAttributeTopicBasicSettings,
 )
-from cmk.gui.plugins.watolib.utils import (
-    config_variable_registry,
-    wato_fileheader,
-)
-from cmk.gui.watolib.notifications import (
-    load_notification_rules,
-    load_user_notification_rules,
-)
-from cmk.gui.valuespec import DualListChoice
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link
+from cmk.gui.watolib.notifications import load_notification_rules, load_user_notification_rules
+from cmk.gui.watolib.rulesets import AllRulesets
+from cmk.gui.watolib.utils import convert_cgroups_from_tuple, format_config_value
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -141,7 +132,7 @@ def _add_group_change(group, action_name, text):
         if not managed.is_global(cid):
             if cid is None:  # conditional caused by bad typing
                 raise Exception("cannot happen: no customer ID")
-            group_sites = managed.get_sites_of_customer(cid)
+            group_sites = list(managed.get_sites_of_customer(cid).keys())
 
     add_change(action_name, text, sites=group_sites)
 
@@ -158,7 +149,7 @@ def _check_modify_group_permissions(group_type: GroupType) -> None:
     if perms is None:
         raise Exception("invalid group type %r" % (group_type,))
     for permission in perms:
-        config.user.need_permission(permission)
+        user.need_permission(permission)
 
 
 def _set_group(all_groups, group_type: GroupType, name, extra_info):
@@ -181,7 +172,7 @@ def _set_group(all_groups, group_type: GroupType, name, extra_info):
 
 
 def save_group_information(all_groups, custom_default_config_dir=None):
-    # Split groups data into Check_MK/Multisite parts
+    # Split groups data into Checkmk/Multisite parts
     check_mk_groups: Dict[str, Dict[Any, Any]] = {}
     multisite_groups: Dict[str, Dict[Any, Any]] = {}
 
@@ -203,7 +194,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
                     multisite_groups[what].setdefault(gid, {})
                     multisite_groups[what][gid][attr] = value
 
-    # Save Check_MK world related parts
+    # Save Checkmk world related parts
     store.makedirs(check_mk_config_dir)
     output = wato_fileheader()
     for what in ["host", "service", "contact"]:
@@ -211,7 +202,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
             output += "if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what)
             output += "define_%sgroups.update(%s)\n\n" % (
                 what, format_config_value(check_mk_groups[what]))
-    store.save_file("%s/groups.mk" % check_mk_config_dir, output)
+    store.save_text_to_file("%s/groups.mk" % check_mk_config_dir, output)
 
     # Users with passwords for Multisite
     store.makedirs(multisite_config_dir)
@@ -220,7 +211,7 @@ def save_group_information(all_groups, custom_default_config_dir=None):
         if multisite_groups.get(what):
             output += "multisite_%sgroups = \\\n%s\n\n" % (
                 what, format_config_value(multisite_groups[what]))
-    store.save_file("%s/groups.mk" % multisite_config_dir, output)
+    store.save_text_to_file("%s/groups.mk" % multisite_config_dir, output)
 
     _clear_group_information_request_cache()
 
@@ -256,10 +247,10 @@ def _find_usages_of_contact_group_in_users(name):
     """Is the contactgroup assigned to a user?"""
     used_in = []
     users = userdb.load_users()
-    for userid, user in sorted(users.items(), key=lambda x: x[1].get("alias", x[0])):
-        cgs = user.get("contactgroups", [])
+    for userid, user_spec in sorted(users.items(), key=lambda x: x[1].get("alias", x[0])):
+        cgs = user_spec.get("contactgroups", [])
         if name in cgs:
-            used_in.append(('%s: %s' % (_('User'), user.get('alias', userid)),
+            used_in.append(('%s: %s' % (_('User'), user_spec.get('alias', userid)),
                             folder_preserving_link([('mode', 'edit_user'), ('edit', userid)])))
     return used_in
 
@@ -400,16 +391,20 @@ class HostAttributeContactGroups(ABCHostAttribute):
     def sort_index(cls):
         return 25
 
-    def is_advanced(self):
+    def is_show_more(self):
         return True
 
     def help(self):
-        url = "wato.py?mode=rulesets&group=grouping"
+        url = makeuri_contextless(
+            request,
+            [("mode", "edit_ruleset"), ("varname", "host_contactgroups")],
+            filename="wato.py",
+        )
         return _("Only members of the contact groups listed here have WATO permission "
                  "to the host / folder. If you want, you can make those contact groups "
                  "automatically also <b>monitoring contacts</b>. This is completely "
-                 "optional. Assignment of host and services to contact groups "
-                 "can be done by <a href='%s'>rules</a> as well.") % url
+                 "optional. Assignment of host to contact groups can be done by "
+                 "<a href='%s'>rules</a> as well.") % url
 
     def show_in_table(self):
         return False
@@ -422,7 +417,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
 
     def paint(self, value, hostname):
         value = convert_cgroups_from_tuple(value)
-        texts: List[str] = []
+        texts: List[HTML] = []
         self.load_data()
         if self._contactgroups is None:  # conditional caused by horrible API
             raise Exception("invalid contact groups")
@@ -430,9 +425,14 @@ class HostAttributeContactGroups(ABCHostAttribute):
         for name, cgroup in sorted(items, key=lambda x: x[1]['alias']):
             if name in value["groups"]:
                 display_name = cgroup.get("alias", name)
-                texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' %
-                             (name, display_name))
-        result: Union[str, HTML] = ", ".join(texts)
+                texts.append(
+                    html.render_a(display_name,
+                                  href=makeuri_contextless(
+                                      request,
+                                      [("mode", "edit_contact_group"), ("edit", name)],
+                                      filename="wato.py",
+                                  )))
+        result: HTML = HTML(", ").join(texts)
         if texts and value["use"]:
             result += html.render_span(
                 html.render_b("*"),
@@ -445,7 +445,7 @@ class HostAttributeContactGroups(ABCHostAttribute):
         # If we're just editing a host, then some of the checkboxes will be missing.
         # This condition is not very clean, but there is no other way to savely determine
         # the context.
-        is_host = bool(html.request.var("host")) or html.request.var("mode") == "newhost"
+        is_host = bool(request.var("host")) or request.var("mode") == "newhost"
         is_search = varprefix == "host_search"
 
         # Only show contact groups I'm currently in and contact
@@ -468,11 +468,14 @@ class HostAttributeContactGroups(ABCHostAttribute):
             html.checkbox(
                 varprefix + self.name() + "_use",
                 value["use"],
-                label=_("Add these groups as <b>contacts</b> to all hosts in this folder"))
+                label=_("Add these groups as <b>contacts</b> to all hosts <b>in this folder</b>"))
             html.br()
-            html.checkbox(varprefix + self.name() + "_recurse_use",
-                          value["recurse_use"],
-                          label=_("Add these groups as <b>contacts in all subfolders</b>"))
+            html.checkbox(
+                varprefix + self.name() + "_recurse_use",
+                value["recurse_use"],
+                label=
+                _("Add these groups as <b>contacts</b> to all hosts <b>in all subfolders of this folder</b>"
+                 ))
 
         html.hr()
         html.help(
@@ -481,9 +484,12 @@ class HostAttributeContactGroups(ABCHostAttribute):
               "assigned other contact groups to services via rules in <i>Host & Service Parameters</i>. "
               "As long as you do not have any such rule a service always inherits all contact groups "
               "from its host."))
-        html.checkbox(varprefix + self.name() + "_use_for_services",
-                      value.get("use_for_services", False),
-                      label=_("Always add host contact groups also to its services"))
+        html.checkbox(
+            varprefix + self.name() + "_use_for_services",
+            value.get("use_for_services", False),
+            label=_("Always add host contact groups also to its services") if is_host else
+            _("Always add these groups as <b>contacts</b> to all services <b>in all subfolders of this folder</b>"
+             ))
 
     def load_data(self):
         # Make cache valid only during this HTTP request

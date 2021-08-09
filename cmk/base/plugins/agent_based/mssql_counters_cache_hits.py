@@ -4,27 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Any, Mapping
 
-from .agent_based_api.v1 import (
-    Service,
-    register,
-    render,
-    check_levels,
-)
-from .agent_based_api.v1.type_defs import (
-    Parameters,
-    CheckGenerator,
-    DiscoveryGenerator,
-)
-
-from .utils.mssql_counters import Section, get_int, get_item
+from .agent_based_api.v1 import check_levels, register, render, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.mssql_counters import accumulate_node_results, get_int, get_item, Section
 
 
 def discovery_mssql_counters_cache_hits(
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
     """
     >>> for result in discovery_mssql_counters_cache_hits({}, {
     ...     ('MSSQL_VEEAMSQL2012:Memory_Broker_Clerks', 'Buffer_Pool'): {'memory_broker_clerk_size': 180475, 'simulation_benefit': 0},
@@ -34,8 +24,8 @@ def discovery_mssql_counters_cache_hits(
     ...     ('MSSQL_VEEAMSQL2012:Catalog_Metadata', 'tempdb'): {'cache_hit_ratio': 29305065, 'cache_hit_ratio_base': 29450560},
     ... }):
     ...   print(result)
-    Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None buffer_cache_hit_ratio', parameters={}, labels=[])
-    Service(item='MSSQL_VEEAMSQL2012:Catalog_Metadata tempdb cache_hit_ratio', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None buffer_cache_hit_ratio')
+    Service(item='MSSQL_VEEAMSQL2012:Catalog_Metadata tempdb cache_hit_ratio')
     """
     want_counters = {'cache_hit_ratio', 'log_cache_hit_ratio', 'buffer_cache_hit_ratio'}
     yield from (
@@ -50,7 +40,7 @@ def _check_common(
     node_name: str,
     item: str,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     counters, counter = get_item(item, section)
     value = get_int(counters, counter)
     base = get_int(counters, "%s_base" % counter)
@@ -64,7 +54,7 @@ def _check_common(
 def check_mssql_counters_cache_hits(
     item: str,
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for result in check_mssql_counters_cache_hits(
     ...   "MSSQL_VEEAMSQL2012:Catalog_Metadata mssqlsystemresource cache_hit_ratio", {
@@ -73,8 +63,8 @@ def check_mssql_counters_cache_hits(
     ...     ('MSSQL_VEEAMSQL2012:Catalog_Metadata', 'mssqlsystemresource'): {'cache_hit_ratio': 77478, 'cache_hit_ratio_base': 77796, 'cache_entries_count': 73, 'cache_entries_pinned_count': 0},
     ... }):
     ...   print(result)
-    Result(state=<state.OK: 0>, summary='99.6%', details='99.6%')
-    Metric('cache_hit_ratio', 99.59123862409379, levels=(None, None), boundaries=(None, None))
+    Result(state=<State.OK: 0>, summary='99.59%')
+    Metric('cache_hit_ratio', 99.59123862409379)
     """
     yield from _check_common("", item, section)
 
@@ -82,7 +72,7 @@ def check_mssql_counters_cache_hits(
 def cluster_check_mssql_counters_cache_hits(
     item: str,
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> for result in cluster_check_mssql_counters_cache_hits(
     ...   "MSSQL_VEEAMSQL2012:Catalog_Metadata mssqlsystemresource cache_hit_ratio", {
@@ -93,11 +83,14 @@ def cluster_check_mssql_counters_cache_hits(
     ...     },
     ... }):
     ...   print(result)
-    Result(state=<state.OK: 0>, summary='[node1] 99.6%', details='[node1] 99.6%')
-    Metric('cache_hit_ratio', 99.59123862409379, levels=(None, None), boundaries=(None, None))
+    Result(state=<State.OK: 0>, summary='[node1] 99.59%')
+    Metric('cache_hit_ratio', 99.59123862409379)
     """
-    for node_name, node_section in section.items():
-        yield from _check_common(node_name, item, node_section)
+    yield from accumulate_node_results(
+        node_check_function=lambda node_name, node_section: _check_common(
+            node_name, item, node_section),
+        section=section,
+    )
 
 
 register.check_plugin(
@@ -107,7 +100,6 @@ register.check_plugin(
     discovery_function=discovery_mssql_counters_cache_hits,
     discovery_ruleset_name='inventory_mssql_counters_rules',
     discovery_default_parameters={},
-    discovery_ruleset_type='merged',
     check_function=check_mssql_counters_cache_hits,
     cluster_check_function=cluster_check_mssql_counters_cache_hits,
 )

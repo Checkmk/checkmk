@@ -5,42 +5,33 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
+
 from six import ensure_str
 
 import livestatus
+from livestatus import SiteId
 
-import cmk.gui.config as config
 import cmk.gui.sites as sites
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.escaping import escape_text
-
+from cmk.gui.globals import html, request
+from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.views import (
+    cmp_simple_number,
+    Command,
+    command_registry,
+    CommandActionResult,
     data_source_registry,
     DataSourceLivestatus,
-    RowTable,
-)
-
-from cmk.gui.plugins.views import (
-    painter_registry,
-    Painter,
     paint_age,
-    sorter_registry,
+    Painter,
+    painter_registry,
+    RowTable,
     Sorter,
-    cmp_simple_number,
+    sorter_registry,
 )
-
-from cmk.gui.permissions import (
-    permission_registry,
-    Permission,
-)
-
 from cmk.gui.plugins.views.commands import PermissionSectionAction
-from cmk.gui.plugins.views import (
-    command_registry,
-    Command,
-)
+from cmk.gui.utils.urls import makeuri_contextless
 
 
 @data_source_registry.register
@@ -91,7 +82,7 @@ class CrashReportsRowTable(RowTable):
             })
         return sorted(rows, key=lambda r: r["crash_time"])
 
-    def get_crash_report_rows(self, only_sites: Optional[List[config.SiteId]],
+    def get_crash_report_rows(self, only_sites: Optional[List[SiteId]],
                               filter_headers: str) -> List[Dict[str, str]]:
 
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
@@ -116,7 +107,7 @@ class CrashReportsRowTable(RowTable):
 
             try:
                 sites.live().set_prepend_site(False)
-                sites.live().set_only_sites([config.SiteId(ensure_str(crash_info["site"]))])
+                sites.live().set_only_sites([SiteId(ensure_str(crash_info["site"]))])
 
                 raw_row = sites.live().query_row(
                     "GET crashreports\n"
@@ -133,7 +124,7 @@ class CrashReportsRowTable(RowTable):
         return rows
 
     def _get_crash_report_info(self,
-                               only_sites: Optional[List[config.SiteId]],
+                               only_sites: Optional[List[SiteId]],
                                filter_headers: Optional[str] = None) -> List[Dict[str, str]]:
         try:
             sites.live().set_prepend_site(True)
@@ -165,7 +156,8 @@ class PainterCrashIdent(Painter):
         return ["crash_id"]
 
     def render(self, row, cell):
-        url = html.makeuri_contextless(
+        url = makeuri_contextless(
+            request,
             [
                 ("crash_id", row["crash_id"]),
                 ("site", row["site"]),
@@ -192,7 +184,7 @@ class PainterCrashType(Painter):
         return ["crash_type"]
 
     def render(self, row, cell):
-        return (None, escape_text(row["crash_type"]))
+        return (None, row["crash_type"])
 
 
 @painter_registry.register
@@ -236,7 +228,7 @@ class PainterCrashVersion(Painter):
         return ["crash_version"]
 
     def render(self, row, cell):
-        return (None, escape_text(row["crash_version"]))
+        return (None, row["crash_version"])
 
 
 @painter_registry.register
@@ -256,8 +248,7 @@ class PainterCrashException(Painter):
         return ["crash_exc_type", "crash_exc_value"]
 
     def render(self, row, cell):
-        return (None, "%s: %s" %
-                (escape_text(row["crash_exc_type"]), escape_text(row["crash_exc_value"])))
+        return (None, "%s: %s" % (row["crash_exc_type"], row["crash_exc_value"]))
 
 
 @sorter_registry.register
@@ -278,27 +269,14 @@ class SorterCrashTime(Sorter):
         return cmp_simple_number("crash_time", r1, r2)
 
 
-@permission_registry.register
-class PermissionActionDeleteCrashReport(Permission):
-    @property
-    def section(self):
-        return PermissionSectionAction
-
-    @property
-    def permission_name(self):
-        return "delete_crash_report"
-
-    @property
-    def title(self):
-        return _("Delete crash reports")
-
-    @property
-    def description(self):
-        return _("Delete crash reports created by Checkmk")
-
-    @property
-    def defaults(self):
-        return ["admin"]
+PermissionActionDeleteCrashReport = permission_registry.register(
+    Permission(
+        section=PermissionSectionAction,
+        name="delete_crash_report",
+        title=_l("Delete crash reports"),
+        description=_l("Delete crash reports created by Checkmk"),
+        defaults=["admin"],
+    ))
 
 
 @command_registry.register
@@ -319,10 +297,18 @@ class CommandDeleteCrashReports(Command):
     def tables(self):
         return ["crash"]
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        return title + _(" the following %d crash %s") % (
+            len_action_rows,
+            ungettext("report", "reports", len_action_rows),
+        )
+
     def render(self, what):
         html.button("_delete_crash_reports", _("Delete"))
 
-    def action(self, cmdtag, spec, row, row_index, num_rows):
-        if html.request.has_var("_delete_crash_reports"):
+    def _action(self, cmdtag: str, spec: str, row: dict, row_index: int,
+                num_rows: int) -> CommandActionResult:
+        if request.has_var("_delete_crash_reports"):
             commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
             return commands, _("remove")
+        return None

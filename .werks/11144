@@ -7,6 +7,6 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The checkplugin "sap_hana_license" was not generating the graphs for "Used licenses" and "Size of license". This was fixed with this werk.

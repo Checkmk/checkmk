@@ -7,34 +7,30 @@
 checks and tells the user what could be improved."""
 
 import traceback
-from typing import Dict, Type, Iterator, Optional, List, Any
+from typing import Any, Dict, Iterator, List, Optional, Type
 
 from livestatus import LocalConnection
+
 import cmk.utils.defines
+from cmk.utils.site import omd_site
 
 import cmk.gui.sites
-import cmk.gui.config as config
-import cmk.gui.escaping as escaping
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKGeneralException
-
-from cmk.gui.watolib.global_settings import load_configuration_settings
-from cmk.gui.watolib.sites import SiteManagementFactory
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain
-from cmk.gui.watolib.automation_commands import (
-    AutomationCommand,
-    automation_command_registry,
-)
+from cmk.gui.sites import is_wato_slave_site
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.sites import get_effective_global_setting
 
 
 class ACResult:
     status: Optional[int] = None
 
     def __init__(self, text: str) -> None:
-        super(ACResult, self).__init__()
+        super().__init__()
         self.text = text
-        self.site_id = config.omd_site()
+        self.site_id = omd_site()
 
     def from_test(self, test):
         self.test_id = test.id()
@@ -202,20 +198,11 @@ class ACTest:
         return version.startswith("Check_MK")
 
     def _get_effective_global_setting(self, varname: str) -> Any:
-        global_settings = load_configuration_settings()
-        default_values = ABCConfigDomain.get_all_default_globals()
-
-        if cmk.gui.config.is_wato_slave_site():
-            current_settings = load_configuration_settings(site_specific=True)
-        else:
-            sites = SiteManagementFactory.factory().load_sites()
-            current_settings = sites[config.omd_site()].get("globals", {})
-
-        if varname in current_settings:
-            return current_settings[varname]
-        if varname in global_settings:
-            return global_settings[varname]
-        return default_values[varname]
+        return get_effective_global_setting(
+            omd_site(),
+            is_wato_slave_site(),
+            varname,
+        )
 
 
 class ACTestRegistry(cmk.utils.plugin_registry.Registry[Type[ACTest]]):

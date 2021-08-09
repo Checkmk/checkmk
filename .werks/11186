@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If cmc is used as core, the default host check command is smart ping, not ping as shown before.
 Also the normal and retry check interval for host checks is 6 seconds, not 1 minute.

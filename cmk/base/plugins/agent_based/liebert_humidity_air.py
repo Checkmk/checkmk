@@ -12,25 +12,12 @@
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.20.1.2.1.5028 21.0
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5028 % RH
 
-from typing import Any, Dict, Tuple, Optional
-from cmk.base.plugins.agent_based.utils.liebert import (
-    DETECT_LIEBERT,
-    parse_liebert,
-)
-from cmk.base.api.agent_based.utils import check_levels
-from .agent_based_api.v1 import (
-    register,
-    SNMPTree,
-    Service,
-    Result,
-    state,
-)
-from .agent_based_api.v1.type_defs import (
-    SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
-    Parameters,
-)
+from typing import Any, Dict, List, Mapping, Optional, Tuple
+
+from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.liebert import DETECT_LIEBERT, parse_liebert
 
 LIEBERT_HUMIDITY_AIR_DEFAULT_PARAMETERS = {
     'levels': (50, 55),
@@ -54,14 +41,14 @@ def _get_item_data(
     return (None, None)
 
 
-def parse_liebert_humidity_air(string_table: SNMPStringTable) -> ParsedSection:
+def parse_liebert_humidity_air(string_table: List[StringTable]) -> ParsedSection:
     return parse_liebert(string_table, str)
 
 
 def discover_liebert_humidity_air(
     section_liebert_humidity_air: Optional[ParsedSection],
     section_liebert_system: Optional[Dict[str, str]],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
 
     if section_liebert_humidity_air is None:
         return
@@ -73,10 +60,10 @@ def discover_liebert_humidity_air(
 
 def check_liebert_humidity_air(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section_liebert_humidity_air: Optional[ParsedSection],
     section_liebert_system: Optional[Dict[str, str]],
-) -> CheckGenerator:
+) -> CheckResult:
 
     if section_liebert_humidity_air is None or section_liebert_system is None:
         return
@@ -101,6 +88,7 @@ def check_liebert_humidity_air(
         levels_upper=params['levels'],
         levels_lower=params['levels_lower'],
         render_func=lambda retval: '%.2f %s' % (retval, unit),
+        boundaries=(0, None),
     )
 
 
@@ -108,7 +96,7 @@ register.snmp_section(
     name='liebert_humidity_air',
     detect=DETECT_LIEBERT,
     parse_function=parse_liebert_humidity_air,
-    trees=[
+    fetch=[
         SNMPTree(
             base='.1.3.6.1.4.1.476.1.42.3.9.20.1',
             oids=[

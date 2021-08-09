@@ -4,20 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
+from typing import Any, Dict, Mapping
 
-from .agent_based_api.v1.type_defs import (
-    AgentStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
-    Parameters,
-)
-from .agent_based_api.v1 import IgnoreResults, register, Result, Service, state
+from .agent_based_api.v1 import IgnoreResults, register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 SectionDatabases = Dict[str, Dict[str, str]]
 
 
-def parse_mssql_databases(string_table: AgentStringTable) -> SectionDatabases:
+def parse_mssql_databases(string_table: StringTable) -> SectionDatabases:
     """
         >>> from pprint import pprint
         >>> pprint(parse_mssql_databases([
@@ -56,16 +52,16 @@ register.agent_section(
 )
 
 
-def discover_mssql_databases(section: SectionDatabases) -> DiscoveryGenerator:
+def discover_mssql_databases(section: SectionDatabases) -> DiscoveryResult:
     for key in section:
         yield Service(item=key)
 
 
 def check_mssql_databases(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: SectionDatabases,
-) -> CheckGenerator:
+) -> CheckResult:
     data = section.get(item)
     if data is None:
         yield IgnoreResults("Login into database failed")
@@ -92,9 +88,9 @@ def check_mssql_databases(
 
 def cluster_check_mssql_databases(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Dict[str, SectionDatabases],
-) -> CheckGenerator:
+) -> CheckResult:
 
     conflated_section: SectionDatabases = {}
     for node_data in section.values():

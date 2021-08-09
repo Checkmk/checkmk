@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Optional,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Integer, Optional, TextInput, Tuple
 
 
 def _item_spec_ruckus_ap():
-    return TextAscii(
+    return TextInput(
         title=_("Band"),
         help=_("Name of the band, e.g. 5 GHz"),
     )

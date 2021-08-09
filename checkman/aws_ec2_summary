@@ -14,5 +14,5 @@ description:
 
  Otherwise the service is {OK}.
 
-inventory:
+discovery:
  One service is created.

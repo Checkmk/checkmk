@@ -8,6 +8,6 @@ description:
  Theres no configuration. The check displayes all faulty paths. In
  OK state the check always display the number of paths.
 
-inventory:
+discovery:
  One service is created.
 

@@ -8,43 +8,59 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+// We use `std::transform` but IWYU does not want the header.
+#include <algorithm>  // IWYU pragma: keep
 #include <chrono>
+#include <functional>
 #include <string>
 #include <vector>
 
-#include "ListColumn.h"
+#include "ListLambdaColumn.h"
+#include "MonitoringCore.h"
+#include "Row.h"
+#ifdef CMC
 #include "contact_fwd.h"
+#else
+#include "nagios.h"
+#endif
 class ColumnOffsets;
-struct DowntimeData;
-class MonitoringCore;
-class Row;
 class RowRenderer;
 
-class DowntimeColumn : public ListColumn {
+class DowntimeRenderer {
+    using function_type = std::function<std::vector<DowntimeData>(Row)>;
+
 public:
-    enum class info { none, medium, full };
-
-    DowntimeColumn(const std::string &name, const std::string &description,
-                   const ColumnOffsets &offsets, MonitoringCore *mc,
-                   bool is_service, info with_info)
-        : ListColumn(name, description, offsets)
-        , _mc(mc)
-        , _is_service(is_service)
-        , _with_info(with_info) {}
-
-    void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
-
-    std::vector<std::string> getValue(
-        Row row, const contact *auth_user,
-        std::chrono::seconds timezone_offset) const override;
+    enum class verbosity { none, medium, full };
+    DowntimeRenderer(const function_type &f, verbosity v)
+        : f_{f}, verbosity_{v} {}
+    void operator()(Row row, RowRenderer &r) const;
 
 private:
-    MonitoringCore *_mc;
-    bool _is_service;
-    info _with_info;
-
-    [[nodiscard]] std::vector<DowntimeData> downtimes_for_row(Row row) const;
+    function_type f_;
+    verbosity verbosity_;
 };
 
+template <class T, class U>
+class DowntimeColumn : public ListColumn::Callback<T, U> {
+public:
+    DowntimeColumn(const std::string &name, const std::string &description,
+                   const ColumnOffsets &offsets, DowntimeRenderer::verbosity v,
+                   const typename ListColumn::Callback<T, U>::function_type &f)
+        : ListColumn::Callback<T, U>{name, description, offsets, f}
+        , renderer_{[this](Row row) { return this->getEntries(row); }, v} {}
+
+    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
+                std::chrono::seconds /*timezone_offset*/) const override {
+        renderer_(row, r);
+    }
+
+private:
+    friend class DowntimeRenderer;
+    DowntimeRenderer renderer_;
+};
+
+template <>
+inline std::string detail::column::serialize(const DowntimeData &data) {
+    return std::to_string(data._id);
+}
 #endif  // DowntimeColumn_h

@@ -6,16 +6,16 @@
 
 import argparse
 import hashlib
-from html.parser import HTMLParser
 import logging
 import sys
+import xml.etree.ElementTree as ET
+from html.parser import HTMLParser
 from typing import Dict
 from urllib.parse import urljoin
-import xml.etree.ElementTree as ET
 
 import requests
-from requests.structures import CaseInsensitiveDict
 import urllib3  # type: ignore[import]
+from requests.structures import CaseInsensitiveDict
 
 LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ def parse_arguments(argv):
 
     args = parser.parse_args(argv)
 
-    if args.verbose >= 2:
+    if args.verbose and args.verbose >= 2:
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s %(message)s"
         lvl = logging.DEBUG
     elif args.verbose:
@@ -144,7 +144,7 @@ class HPMSAConnection:
 
     def _get_session_key(self, hash_class, username, password):
         login_hash = hash_class()
-        login_hash.update("%s_%s" % (username, password))
+        login_hash.update(f"{username}_{password}".encode('utf-8'))
         login_url = "login/%s" % login_hash.hexdigest()
         response = self.get(login_url)
         xml_tree = ET.fromstring(response.text)
@@ -190,6 +190,6 @@ def main(argv=None):
     # Output sections
     for section, lines in sections.items():
         print("<<<hp_msa_%s>>>" % section)
-        print("\n".join(x.encode("utf-8") for x in lines))
+        print("\n".join(x for x in lines))
 
     return 0

@@ -4,17 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
+
+from tests.testlib import ActiveCheck
 
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("params,expected_args",
-                         [(["foo", {}], ["-H", "foo", "-s", "$HOSTADDRESS$"]),
-                          (["foo", {
-                              "timeout": 1
-                          }], ["-H", "foo", "-s", "$HOSTADDRESS$", "-t", 1])])
-def test_check_dns_argument_parsing(check_manager, params, expected_args):
+@pytest.mark.parametrize("params,expected_args", [
+    (["foo", {}], ["-H", "foo", "-s", "$HOSTADDRESS$", "-L"]),
+    (["foo", {
+        "timeout": 1
+    }], ["-H", "foo", "-s", "$HOSTADDRESS$", "-L", "-t", 1]),
+])
+def test_check_dns_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    active_check = check_manager.get_active_check("check_dns")
+    active_check = ActiveCheck("check_dns")
     assert active_check.run_argument_function(params) == expected_args

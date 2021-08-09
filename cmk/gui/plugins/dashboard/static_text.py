@@ -4,14 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
 from cmk.gui.globals import html
-from cmk.gui.valuespec import TextUnicode
-
-from cmk.gui.plugins.dashboard import (
-    Dashlet,
-    dashlet_registry,
-)
+from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard import Dashlet, dashlet_registry
+from cmk.gui.valuespec import TextInput
 
 
 @dashlet_registry.register
@@ -34,14 +30,18 @@ class StaticTextDashlet(Dashlet):
         return 100
 
     @classmethod
+    def initial_size(cls):
+        return (30, 18)
+
+    @classmethod
     def vs_parameters(cls):
         return [
             ("text",
-             TextUnicode(
+             TextInput(
                  title=_('Text'),
                  size=50,
                  help=_(
-                     "You can enter a text here that will be displayed in the dashlet when "
+                     "You can enter a text here that will be displayed in the element when "
                      "viewing the dashboard. It is also possible to insert a limited set of HTML "
                      "tags, some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."),
              )),
@@ -53,21 +53,3 @@ class StaticTextDashlet(Dashlet):
         html.write_text(self._dashlet_spec.get("text", ""))
         html.close_div()
         html.close_div()
-
-    @classmethod
-    def styles(cls):
-        return """
-div.dashlet_inner div.nodata {
-    width: 100%;
-    height: 100%;
-}
-
-div.dashlet_inner.background div.nodata div.msg {
-    color: #000;
-}
-
-div.dashlet_inner div.nodata div.msg {
-    padding: 10px;
-}
-
-}"""

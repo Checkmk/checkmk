@@ -5,16 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-    TextAscii,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersNetworking,
-    register_check_parameters,
     Levels,
+    register_check_parameters,
+    RulespecGroupCheckParametersNetworking,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 register_check_parameters(
     RulespecGroupCheckParametersNetworking, "checkpoint_packets",
@@ -82,7 +78,7 @@ register_check_parameters(
             default_value=1,
         )),
     ]),
-    TextAscii(
+    TextInput(
         title=_("Name of VPN tunnel"),
         allow_empty=True,
     ),

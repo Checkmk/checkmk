@@ -12,7 +12,6 @@
 #include <string>
 
 #include "nagios.h"
-class MonitoringCore;
 
 /* The structs for downtime and comment are so similar, that
    we handle them with the same logic */
@@ -77,7 +76,7 @@ public:
     virtual ~DowntimeOrComment();
 
 protected:
-    DowntimeOrComment(MonitoringCore *mc, nebstruct_downtime_struct *dt,
+    DowntimeOrComment(host *hst, service *svc, nebstruct_downtime_struct *dt,
                       unsigned long id);
 };
 
@@ -86,11 +85,9 @@ public:
     time_t _start_time;
     time_t _end_time;
     int _fixed;
-    // TODO(sp): Wrong types, caused by TableDowntimes accessing it via
-    // OffsetIntColumn, should be unsigned long
-    int _duration;
-    int _triggered_by;
-    explicit Downtime(MonitoringCore *mc, nebstruct_downtime_struct *dt);
+    unsigned long _duration;
+    unsigned long _triggered_by;
+    Downtime(host *hst, service *svc, nebstruct_downtime_struct *dt);
 };
 
 class Comment : public DowntimeOrComment {
@@ -100,7 +97,7 @@ public:
     int _source;
     int _entry_type;
     int _expires;
-    explicit Comment(MonitoringCore *mc, nebstruct_comment_struct *co);
+    Comment(host *hst, service *svc, nebstruct_comment_struct *co);
 };
 
 #endif  // DowntimeOrComment_h

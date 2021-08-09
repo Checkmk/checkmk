@@ -20,6 +20,6 @@ item:
  Name of the instance and region name (to avoid duplicate services
  in case of multi-region monitoring).
 
-inventory:
+discovery:
  One service is created for each database if all required metrics
  (ReplicaLag) are given.

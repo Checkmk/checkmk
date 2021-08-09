@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.utils import postgres
+
 # OLD FORMAT - with idle filter
 # <<<postgres_connections:sep(59)>>>
 # [databases_start]
@@ -83,7 +85,7 @@ def check_postgres_connections(item, params, parsed):
     database_connections = database[0]
     # New agent output differentiates between active and idle connections.
     # Previously, only number of active connections were sent
-    has_active_and_idle = all([key in database_connections.keys() for key in ("active", "idle")])
+    has_active_and_idle = all(key in database_connections.keys() for key in ("active", "idle"))
     maximum = float(database_connections["mc"])
 
     connections = {
@@ -116,12 +118,11 @@ def check_postgres_connections(item, params, parsed):
 
 
 check_info['postgres_connections'] = {
-    "parse_function": parse_postgres_dbs,
+    "parse_function": postgres.parse_dbs,
     "check_function": check_postgres_connections,
     "inventory_function": inventory_postgres_connections,
     "service_description": "PostgreSQL Connections %s",
     "group": "db_connections",
     "has_perfdata": True,
     "default_levels_variable": "postgres_connections_default_levels",
-    "includes": ["postgres.include"]
 }

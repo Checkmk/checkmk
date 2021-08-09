@@ -70,7 +70,7 @@ def fc_port_getitem(num_ports, index, portname):
 
 def fc_parse_counter(value):
     # The counters are sent via SNMP as OCTETSTR, which is converted to
-    # a byte string by Check_MKs SNMP code. The counters seem to be
+    # a byte string by Checkmks SNMP code. The counters seem to be
     # 64 bit big endian values, which are converted to integers here
     if len(value) == 23:
         # recover from "00 00 00 00 00 C0 FE FE"

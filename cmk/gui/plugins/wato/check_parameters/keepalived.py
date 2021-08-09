@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAscii,
-    MonitoringState,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _parameter_valuespec_keepalived():
@@ -47,7 +42,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="keepalived",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("VRRP Instance"),),
+        item_spec=lambda: TextInput(title=_("VRRP Instance"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_keepalived,
         title=lambda: _("Keepalived Parameters"),

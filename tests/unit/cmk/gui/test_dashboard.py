@@ -4,12 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.version as cmk_version
+
+import cmk.gui.dashboard
 import cmk.gui.dashboard as dashboard
+from cmk.gui.config import builtin_role_ids
 from cmk.gui.globals import html
-import cmk.gui.config as config
 
 
 class DummyDashlet(dashboard.Dashlet):
@@ -30,21 +32,16 @@ class DummyDashlet(dashboard.Dashlet):
         return 123
 
     def show(self):
-        html.write("dummy")
+        html.write_text("dummy")
 
 
 def test_dashlet_registry_plugins():
     expected_plugins = [
-        'average_scatterplot',
-        'alerts_bar_chart',
-        'barplot',
-        'gauge',
-        'notifications_bar_chart',
         'hoststats',
+        'servicestats',
+        'eventstats',
         'notify_failed_notifications',
         'mk_logo',
-        'network_topology',
-        'servicestats',
         'url',
         'overview',
         'pnpgraph',
@@ -52,15 +49,28 @@ def test_dashlet_registry_plugins():
         'linked_view',
         'notify_users',
         'nodata',
-        'single_metric',
         'snapin',
     ]
 
     if not cmk_version.is_raw_edition():
         expected_plugins += [
+            'alerts_bar_chart',
+            'alert_statistics',
+            'average_scatterplot',
+            'barplot',
+            'gauge',
+            'notifications_bar_chart',
+            'problem_graph',
+            'single_metric',
+            'site_overview',
             'custom_graph',
+            'combined_graph',
             'ntop_alerts',
             'ntop_flows',
+            'ntop_top_talkers',
+            'single_timeseries',
+            'state_service',
+            'state_host',
         ]
 
     dashboard._transform_old_dict_based_dashlets()
@@ -69,15 +79,14 @@ def test_dashlet_registry_plugins():
 
 def _expected_intervals():
     expected = [
-        ('hoststats', 60),
+        ('hoststats', False),
         ('mk_logo', False),
-        ('network_topology', False),
         ('nodata', False),
         ('notify_failed_notifications', 60),
         ('notify_users', False),
         ('overview', False),
         ('pnpgraph', 60),
-        ('servicestats', 60),
+        ('servicestats', False),
         ('snapin', 30),
         ('url', False),
         ('view', False),
@@ -93,7 +102,7 @@ def _expected_intervals():
 
 
 @pytest.mark.parametrize("type_name,expected_refresh_interval", _expected_intervals())
-def test_dashlet_refresh_intervals(register_builtin_html, type_name, expected_refresh_interval,
+def test_dashlet_refresh_intervals(request_context, type_name, expected_refresh_interval,
                                    monkeypatch):
     dashlet_type = dashboard.dashlet_registry[type_name]
     assert dashlet_type.initial_refresh_interval() == expected_refresh_interval
@@ -103,6 +112,12 @@ def test_dashlet_refresh_intervals(register_builtin_html, type_name, expected_re
     }
     if dashlet_type.has_context():
         dashlet_spec["context"] = {}
+    if type_name in ["pnpgraph", "custom_graph"]:
+        monkeypatch.setattr(dashlet_type, "graph_identification", lambda s, c: ("template", {}))
+        monkeypatch.setattr("cmk.gui.plugins.metrics.html_render.resolve_graph_recipe",
+                            lambda g, d: [{
+                                "title": '1'
+                            }])
 
     monkeypatch.setattr(dashboard.Dashlet, "_get_context", lambda s: {})
 
@@ -112,6 +127,17 @@ def test_dashlet_refresh_intervals(register_builtin_html, type_name, expected_re
                            dashlet=dashlet_spec)
 
     assert dashlet.refresh_interval() == expected_refresh_interval
+
+
+@pytest.fixture
+def reset_dashlet_types():
+    default_entries = list(dashboard.dashlet_types)
+    try:
+        yield
+    finally:
+        for entry in list(dashboard.dashlet_types):
+            if entry not in default_entries:
+                del dashboard.dashlet_types[entry]
 
 
 def _legacy_dashlet_type(attrs=None):
@@ -127,7 +153,8 @@ def _legacy_dashlet_type(attrs=None):
     return dashboard.dashlet_registry["test123"]
 
 
-def test_registry_of_old_dashlet_plugins():
+@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+def test_registry_of_old_dashlet_plugins(registry_reset, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type()
     assert dashlet_type.title() == "Test dashlet"
     assert dashlet_type.description() == "Descr"
@@ -145,21 +172,23 @@ _attr_map = [
     ("opt_params", "opt_parameters", False),
     ("validate_params", "validate_parameters_func", None),
     ("refresh", "initial_refresh_interval", False),
-    ("allowed", "allowed_roles", config.builtin_role_ids),
+    ("allowed", "allowed_roles", builtin_role_ids),
     ("styles", "styles", None),
     ("script", "script", None),
     ("title", "title", "Test dashlet"),
 ]
 
 
-def test_old_dashlet_defaults():
+@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+def test_old_dashlet_defaults(registry_reset, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type()
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
     for _attr, new_method, deflt in _attr_map:
         assert getattr(dashlet, new_method)() == deflt
 
 
-def test_old_dashlet_title_func():
+@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+def test_old_dashlet_title_func(registry_reset, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type({
         "title_func": lambda d: "xyz",
     })
@@ -169,7 +198,8 @@ def test_old_dashlet_title_func():
     assert dashlet.display_title() == "xyz"
 
 
-def test_old_dashlet_on_resize():
+@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+def test_old_dashlet_on_resize(registry_reset, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type({
         "on_resize": lambda x, y: "xyz",
     })
@@ -178,7 +208,8 @@ def test_old_dashlet_on_resize():
     assert dashlet.on_resize() == "xyz"
 
 
-def test_old_dashlet_on_refresh():
+@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+def test_old_dashlet_on_refresh(registry_reset, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type({
         "on_refresh": lambda nr, the_dashlet: "xyz",
     })
@@ -187,7 +218,8 @@ def test_old_dashlet_on_refresh():
     assert dashlet.on_refresh() == "xyz"
 
 
-def test_old_dashlet_iframe_render(mocker, register_builtin_html):
+@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+def test_old_dashlet_iframe_render(mocker, request_context, reset_dashlet_types, registry_reset):
     iframe_render_mock = mocker.Mock()
 
     dashlet_type = _legacy_dashlet_type({
@@ -206,7 +238,8 @@ def test_old_dashlet_iframe_render(mocker, register_builtin_html):
         == "dashboard_dashlet.py?id=1&mtime=123&name=main"
 
 
-def test_old_dashlet_iframe_urlfunc(mocker, register_builtin_html):
+@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+def test_old_dashlet_iframe_urlfunc(mocker, request_context, registry_reset, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type({
         "iframe_urlfunc": lambda x: "blaurl",
     })
@@ -216,7 +249,8 @@ def test_old_dashlet_iframe_urlfunc(mocker, register_builtin_html):
         == "blaurl"
 
 
-def test_old_dashlet_render(mocker, register_builtin_html):
+@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+def test_old_dashlet_render(mocker, request_context, registry_reset, reset_dashlet_types):
     render_mock = mocker.Mock()
 
     dashlet_type = _legacy_dashlet_type({
@@ -232,13 +266,15 @@ def test_old_dashlet_render(mocker, register_builtin_html):
     assert render_mock.called_once()
 
 
-def test_old_dashlet_add_urlfunc(mocker):
+@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+def test_old_dashlet_add_urlfunc(mocker, registry_reset, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type({"add_urlfunc": lambda: "xyz"})
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
     assert dashlet.add_url() == "xyz"
 
 
-def test_old_dashlet_position(mocker):
+@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+def test_old_dashlet_position(mocker, registry_reset, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type({})
     assert dashlet_type.initial_position() == (1, 1)
 
@@ -252,9 +288,10 @@ def test_old_dashlet_position(mocker):
     assert dashlet.position() == (10, 12)
 
 
-def test_old_dashlet_size(mocker):
+@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+def test_old_dashlet_size(mocker, registry_reset, reset_dashlet_types):
     dashlet_type = _legacy_dashlet_type({})
-    assert dashlet_type.initial_size() == (10, 5)
+    assert dashlet_type.initial_size() == (12, 10)
 
     dashlet_type = _legacy_dashlet_type({"size": (25, 10)})
     assert dashlet_type.initial_size() == (25, 10)
@@ -269,7 +306,8 @@ def test_old_dashlet_size(mocker):
     assert dashlet.size() == (30, 20)
 
 
-def test_old_dashlet_settings():
+@pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
+def test_old_dashlet_settings(registry_reset, reset_dashlet_types):
     dashlet_attrs = {}
     for attr, _new_method, _deflt in _attr_map:
         dashlet_attrs[attr] = attr
@@ -281,7 +319,7 @@ def test_old_dashlet_settings():
         assert getattr(dashlet, new_method)() == attr
 
 
-def test_dashlet_type_defaults(register_builtin_html):
+def test_dashlet_type_defaults(request_context):
     assert dashboard.Dashlet.single_infos() == []
     assert dashboard.Dashlet.is_selectable() is True
     assert dashboard.Dashlet.is_resizable() is True
@@ -294,7 +332,7 @@ def test_dashlet_type_defaults(register_builtin_html):
     assert dashboard.Dashlet.validate_parameters_func() is None
     assert dashboard.Dashlet.styles() is None
     assert dashboard.Dashlet.script() is None
-    assert dashboard.Dashlet.allowed_roles() == config.builtin_role_ids
+    assert dashboard.Dashlet.allowed_roles() == builtin_role_ids
 
     assert DummyDashlet.add_url() == "edit_dashlet.py?back=index.py%3Fedit%3D1&type=dummy"
 
@@ -408,14 +446,18 @@ def test_refresh_interval():
     assert dashlet.refresh_interval() == 22
 
 
-def test_dashlet_context_inheritance(register_builtin_html):
-    HostStats = dashboard.dashlet_registry["hoststats"]
-
-    # Set some context filter vars from URL
-    html.request.set_var("host", "bla")
-    html.request.set_var("wato_folder", "/aaa/eee")
-
-    dashboard_spec = dashboard._add_context_to_dashboard({})
+def test_dashlet_context_inheritance():
+    dashboard_spec = dashboard._add_context_to_dashboard({
+        'context': {
+            'wato_folder': {
+                'wato_folder': '/aaa/eee'
+            },
+            'host': {
+                'host': 'bla',
+                'neg_host': ''
+            },
+        }
+    })
 
     dashlet_spec = {
         'type': 'hoststats',
@@ -434,6 +476,7 @@ def test_dashlet_context_inheritance(register_builtin_html):
         'size': (30, 18),
     }
 
+    HostStats = dashboard.dashlet_registry["hoststats"]
     dashlet = HostStats(dashboard_name="bla",
                         dashboard=dashboard_spec,
                         dashlet_id=1,
@@ -441,11 +484,13 @@ def test_dashlet_context_inheritance(register_builtin_html):
 
     assert dashlet.context == {
         'host': {
-            'host': 'bla'
+            'host': 'bla',
+            'neg_host': ''
         },
         'wato_folder': {
             'wato_folder': ''
         },
     }
 
-    assert sorted(dashlet._dashlet_context_vars()) == sorted([('host', 'bla'), ('wato_folder', '')])
+    assert sorted(dashlet._dashlet_context_vars()) == sorted([('host', 'bla'), ('neg_host', ''),
+                                                              ('wato_folder', '')])

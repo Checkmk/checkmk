@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    ListOf,
-    Percentage,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksNetworking,
-    rulespec_registry,
     ManualCheckParameterRulespec,
+    rulespec_registry,
+    RulespecGroupEnforcedServicesNetworking,
 )
+from cmk.gui.valuespec import Integer, ListOf, Percentage, Tuple
 
 
 def _parameter_valuespec_mem_cluster():
@@ -37,7 +32,7 @@ def _parameter_valuespec_mem_cluster():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="mem_cluster",
-        group=RulespecGroupManualChecksNetworking,
+        group=RulespecGroupEnforcedServicesNetworking,
         parameter_valuespec=_parameter_valuespec_mem_cluster,
         title=lambda: _("Memory Usage of Clusters"),
     ))

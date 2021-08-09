@@ -5,20 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Core for getting the actual raw data points via Livestatus from RRD"""
 
-import time
 import collections
-from typing import Any, Callable, Dict, List, Set, Tuple, Union, Optional, Iterator
+import time
+from typing import Any, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 import livestatus
 
 import cmk.utils.version as cmk_version
-from cmk.gui.plugins.metrics.utils import check_metrics
-from cmk.gui.plugins.metrics.timeseries import op_func_wrapper, time_series_operators
 from cmk.utils.prediction import livestatus_lql, TimeSeries
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException
-import cmk.gui.sites as sites
 
+import cmk.gui.plugins.metrics.timeseries as ts
+import cmk.gui.sites as sites
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics.utils import check_metrics, reverse_translate_metric_name
 from cmk.gui.type_defs import ColumnName
 
 
@@ -26,9 +26,7 @@ def fetch_rrd_data_for_graph(graph_recipe, graph_data_range):
     needed_rrd_data = get_needed_sources(graph_recipe["metrics"])
 
     by_service = group_needed_rrd_data_by_service(needed_rrd_data)
-    # TODO: The Unions below are horrible! Fix this by making this a NewType/class.
-    rrd_data: Dict[Union[str, Tuple[Any, Any, Any, Any, Any, Any]],
-                   Union[Tuple[float, float, float], TimeSeries]] = {}
+    rrd_data: Dict[Tuple[str, str, str, str, str, str], TimeSeries] = {}
     for (site, host_name, service_description), entries in by_service.items():
         try:
             for (perfvar, cf, scale), data in \
@@ -38,15 +36,9 @@ def fetch_rrd_data_for_graph(graph_recipe, graph_data_range):
         except livestatus.MKLivestatusNotFoundError:
             pass
 
-    start_time, end_time, step = align_and_resample_rrds(rrd_data,
-                                                         graph_recipe["consolidation_function"])
-    if start_time is None:  # Empty graph
-        start_time, end_time = graph_data_range["time_range"]
-        step = 60
-    elif chop_last_empty_step(graph_data_range, step, rrd_data):
-        end_time -= step
+    align_and_resample_rrds(rrd_data, graph_recipe["consolidation_function"])
+    chop_last_empty_step(graph_data_range, rrd_data)
 
-    rrd_data['__range'] = (start_time, end_time, step)
     return rrd_data
 
 
@@ -76,8 +68,6 @@ def align_and_resample_rrds(rrd_data, cf):
                 elif step < rrddata.twindow[2]:
                     rrddata.values = rrddata.bfill_upsample((start_time, end_time, step), 0)
 
-    return start_time, end_time, step
-
 
 # The idea is to omit the empty last step of graphs which are showing the
 # last data which ends now (at the current time) where there is not yet
@@ -86,21 +76,24 @@ def align_and_resample_rrds(rrd_data, cf):
 #
 # This makes only sense for graphs which are ending "now". So disable this
 # for the other graphs.
-def chop_last_empty_step(graph_data_range, step, rrd_data):
-    # Disable graph chop for graphs which do not end within the current step
-    if abs(time.time() - graph_data_range["time_range"][1]) > step:
-        return False
+def chop_last_empty_step(graph_data_range, rrd_data):
+    if rrd_data:
+        sample_data = next(iter(rrd_data.values()))
+        step = sample_data.twindow[2]
+        # Disable graph chop for graphs which do not end within the current step
+        if abs(time.time() - graph_data_range["time_range"][1]) > step:
+            return
 
     # Chop of one step from the end of the graph if that is None
     # for all curves. This is in order to avoid a gap when querying
     # up to the current time.
     for data in rrd_data.values():
         if not data or data[-1] is not None:
-            return False
+            return
+
     for data in rrd_data.values():
         del data.values[-1]
         data.end -= step
-    return True
 
 
 def needed_elements_of_expression(expression):
@@ -111,7 +104,8 @@ def needed_elements_of_expression(expression):
             yield from needed_elements_of_expression(operand)
     elif expression[0] == "combined" and not cmk_version.is_raw_edition():
         # Suppression is needed to silence pylint in CRE environment
-        from cmk.gui.cee.plugins.metrics.graphs import resolve_combined_single_metric_spec  # pylint: disable=no-name-in-module
+        from cmk.gui.cee.plugins.metrics.graphs import (  # pylint: disable=no-name-in-module # isort: skip
+            resolve_combined_single_metric_spec,)
         metrics = resolve_combined_single_metric_spec(expression[1])
 
         for out in (needed_elements_of_expression(m['expression']) for m in metrics):
@@ -159,7 +153,7 @@ def fetch_rrd_data(site, host_name, service_description, entries, graph_recipe, 
 
 def rrd_columns(metrics: List[Tuple[str, Optional[str], float]], rrd_consolidation: str,
                 data_range: str) -> Iterator[ColumnName]:
-    """RRD data columns for all metrics
+    """RRD data columns for each metric
 
     Include scaling of metric directly in query"""
 
@@ -169,6 +163,17 @@ def rrd_columns(metrics: List[Tuple[str, Optional[str], float]], rrd_consolidati
         if scale != 1.0:
             rpn += ",%f,*" % scale
         yield "rrddata:%s:%s:%s" % (perfvar, rpn, data_range)
+
+
+def metric_in_all_rrd_columns(metric: str, rrd_consolidation: str, from_time: int,
+                              until_time: int) -> List[ColumnName]:
+    """Translate metric name to all perf_data names and construct RRD data columns for each"""
+
+    data_range = "%s:%s:%s" % (from_time, until_time, 60)
+    _metrics: List[Tuple[str, Optional[str], float]] = [
+        (name, None, scale) for name, scale in reverse_translate_metric_name(metric)
+    ]
+    return list(rrd_columns(_metrics, rrd_consolidation, data_range))
 
 
 def merge_multicol(row: Dict, rrdcols: List[ColumnName], params: Dict) -> TimeSeries:
@@ -208,7 +213,7 @@ def merge_multicol(row: Dict, rrdcols: List[ColumnName], params: Dict) -> TimeSe
     if not relevant_ts:
         return TimeSeries([0, 0, 0])
 
-    _op_title, op_func = time_series_operators()['MERGE']
-    single_value_series = [op_func_wrapper(op_func, tsp) for tsp in zip(*relevant_ts)]
+    _op_title, op_func = ts.time_series_operators()['MERGE']
+    single_value_series = [ts.op_func_wrapper(op_func, tsp) for tsp in zip(*relevant_ts)]
 
     return TimeSeries(single_value_series)

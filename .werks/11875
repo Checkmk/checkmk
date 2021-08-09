@@ -1,0 +1,16 @@
+Title: Linux agent: Fix random broken pipe error in agent output
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1610743516
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+The agent output may randomly contain errors like this in the first line of the
+agent output "line 12: echo: write error: Broken pipe" which would confuse the
+Checkmk server side and result in Check_MK services reporting CRITICAL states
+with an error message like "Unsupported protocol version" or "Agent output is
+encrypted but encryption is disabled by configuration".

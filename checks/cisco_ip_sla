@@ -15,10 +15,7 @@ factory_settings['cisco_ip_sla_default_levels'] = {
 
 
 def parse_cisco_ip_sla(info):
-    # since the RTT Index, Owner and Tag don't have to be set we use
-    # indices for the different items
-    precisions = (line[-1] for line in info[0])
-    precisions = ['ms' if p[0] == '1' else 'us' for p in precisions]
+    precisions = {line[0]: 'ms' if line[-1] == '1' else 'us' for line in info[0]}
 
     rtt_types = {
         '1': 'echo',
@@ -107,9 +104,10 @@ def parse_cisco_ip_sla(info):
         if not entries:
             continue
 
-        for index, entry in enumerate(entries):
-            data = parsed.setdefault(str(index), [])
-            for (description, parser, unit, type_), value in zip(content, entry):
+        for entry in entries:
+            index, values = entry[0], entry[1:]
+            data = parsed.setdefault(index, [])
+            for (description, parser, unit, type_), value in zip(content, values):
                 if parser:
                     value = parser(value)
                 if unit == 'ms/us':
@@ -175,6 +173,7 @@ check_info['cisco_ip_sla'] = {
         (
             '.1.3.6.1.4.1.9.9.42.1.2.2.1',
             [
+                OID_END,
                 BINARY(2),  # rttMonEchoAdminTargetAddress
                 BINARY(6),  # rttMonEchoAdminSourceAddress
                 # only needed to determine the unit (ms/us)
@@ -183,6 +182,7 @@ check_info['cisco_ip_sla'] = {
         (
             '.1.3.6.1.4.1.9.9.42.1.2.1.1',
             [
+                OID_END,
                 2,  # rttMonCtrlAdminOwner
                 3,  # rttMonCtrlAdminTag
                 4,  # rttMonCtrlAdminRttType
@@ -191,6 +191,7 @@ check_info['cisco_ip_sla'] = {
         (
             '.1.3.6.1.4.1.9.9.42.1.2.9.1',
             [
+                OID_END,
                 10,  # rttMonCtrlOperState
                 2,  # rttMonCtrlOperDiagText
                 5,  # rttMonCtrlOperConnectionLostOccurred
@@ -200,6 +201,7 @@ check_info['cisco_ip_sla'] = {
         (
             '.1.3.6.1.4.1.9.9.42.1.2.10.1',
             [
+                OID_END,
                 1,  # rttMonLatestRttOperCompletionTime
                 2,  # rttMonLatestRttOperSense
             ]),

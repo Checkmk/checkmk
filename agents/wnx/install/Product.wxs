@@ -59,7 +59,22 @@ just to signal that real build script was not called -->
     <!-- Support Link in the Control Panel -->
     <Property Id="ARPURLINFOABOUT" Value="https://checkmk.com" />
     
-    <!-- Other links
+     <!-- Administrative rights is mandatory -->
+    <Property Id="MSIUSEREALADMINDETECTION" Value="1" />
+
+      <!-- ATTENTION: we do not support OS earlier as Windows Vista -->
+      <Condition Message="This version supports only Windows Vista, Windows Server 2008, or higher. Windows Build: [WindowsBuild], Version: [VersionNT]">
+          <![CDATA[Installed OR  (VersionNT >= 600)]]>
+      </Condition>
+
+      <!-- ATTENTION: keep string below exactly ( VersionNT >= 600 ) -->
+      <!-- This string may be patched by WATO, check cmk/utils/msi_patch.py -->
+      <!-- See: https://docs.microsoft.com/de-at/windows/win32/msi/operating-system-property-values -->
+      <Condition Message="Agent update failed: OS is too old. Please, check the agent rule &quot;Python environment&quot; and set it to &quot;Deploy legacy environment&quot;">
+          <![CDATA[Installed OR  ( VersionNT >= 600 )]]>
+      </Condition>
+
+      <!-- Other links
     <Property Id="ARPURLUPDATEINFO" Value="https://checkmk.com" />
     <Property Id="ARPAUTHORIZEDCDFPREFIX" Value="https://checkmk.com/ARPAUTHORIZEDCDFPREFIX" />
      -->
@@ -69,6 +84,8 @@ just to signal that real build script was not called -->
     this code is disabled, because bakery/msi-update is not able to upgrade versions correctly 
     -->
     <MajorUpgrade AllowDowngrades="yes" />
+    <Icon Id="tribe29.ico" SourceFile="tribe29.ico" />
+    <Property Id="ARPPRODUCTICON" Value="tribe29.ico" />      
 
     <Upgrade Id="$(var.ProductUpgradeCode)">
       <UpgradeVersion Minimum="$(var.ProductVersion)"
@@ -307,14 +324,26 @@ just to signal that real build script was not called -->
         </Component>
 
         <!-- Modules -->
-        <Component Id="python_3.8.zip" Guid="{7E376854-A4C0-43F1-BA93-170EDF3679A5}">
-            <File Id="python_3.8.zip"
-                Source="resources\modules\python-3.8.zip"
+        <Component Id="python_3.8.cab" Guid="{7E376854-A4C0-43F1-BA93-170EDF3679A5}">
+            <File Id="python_3.8.cab"
+                Source="resources\modules\python-3.8.cab"
                 KeyPath="yes"
                 Checksum="yes"
                 DiskId="2"/>
         </Component>
 
+
+    </DirectoryRef>
+
+    <DirectoryRef Id="utils">
+
+        <Component Id="execute_update.cmd" Guid="{3DD686FF-B151-4498-B853-3EB591EBB0C3}">
+              <File Id="execute_update.cmd"
+                      Source="resources\execute_update.cmd"
+                      KeyPath="yes"
+                      Checksum="yes"
+                      DiskId="1" />
+            </Component>
 
     </DirectoryRef>
 
@@ -441,10 +470,11 @@ just to signal that real build script was not called -->
       <ComponentRef Id="check_mk_install_yml_" />
       <ComponentRef Id="plugins_cap_" />
       <ComponentRef Id="checkmk.dat" />
+      <ComponentRef Id="execute_update.cmd" />
       <ComponentRef Id="check_mk.user.yml" />
         
       <!-- Modules -->
-      <ComponentRef Id="python_3.8.zip" />
+      <ComponentRef Id="python_3.8.cab" />
     </Feature>
 
     <Feature Id="plugins_binaries" Title="Plugins for Windows" Level="1">
@@ -600,17 +630,21 @@ just to signal that real build script was not called -->
                          Name="Remove_Legacy"
                          Value="[WIXUI_REMOVELEGACY]"/>
 
-            <RegistryValue Type="string"
-                           Name="Clean_Installation"
-                           Value="[WIXUI_CLEANINSTALL]"/>
+          <RegistryValue Type="string"
+                         Name="Clean_Installation"
+                         Value="[WIXUI_CLEANINSTALL]"/>
 
-            <RegistryValue Type="string"
-                           Name="Migration"
-                           Value="[WIXUI_MIGRATELEGACY]"/>
+          <RegistryValue Type="string"
+                         Name="Migration_Required"
+                         Value="[WIXUI_MIGRATELEGACY]"/>
 
-            <RegistryValue Type="string"
+          <RegistryValue Type="string"
                          Name="Install_Service"
                          Value="[INSTALLSERVICE]"/>
+            
+          <RegistryValue Type="string"
+                         Name="PostInstall_Required"
+                         Value="yes"/>
         </RegistryKey>
       </Component>
     </ComponentGroup>

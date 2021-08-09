@@ -5,6 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersStorage,
+)
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
@@ -12,14 +17,8 @@ from cmk.gui.valuespec import (
     FixedValue,
     ListOf,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
-)
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersStorage,
 )
 
 
@@ -101,7 +100,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="drbd",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("DRBD device")),
+        item_spec=lambda: TextInput(title=_("DRBD device")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_drbd,
         title=lambda: _("DR:BD roles and diskstates"),

@@ -6,7 +6,7 @@ Date: 1578382797
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The color of graphs and perfometers are sometimes too bright or too dark compared to the rest of the interface, depending on the user interface theme that was used (classic, modern, dark).
 The opacity can now be defined. Added support of the 'rgba' notation for the color of graphs. (rgba: '#aabbccff')

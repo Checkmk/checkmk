@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.config as config
-from cmk.gui.globals import html
+from cmk.gui.globals import config, display_options, request, response, user
 from cmk.gui.i18n import _
-from cmk.gui.plugins.views import display_options
 from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
+from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 
 
 @icon_and_action_registry.register
@@ -17,15 +17,19 @@ class WatoIcon(Icon):
     def ident(cls):
         return "wato"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Wato")
+
     def host_columns(self):
         return ['filename']
 
     def render(self, what, row, tags, custom_vars):
         def may_see_hosts():
-            return config.user.may("wato.use") and \
-              (config.user.may("wato.seeall") or config.user.may("wato.hosts"))
+            return user.may("wato.use") and \
+                (user.may("wato.seeall") or user.may("wato.hosts"))
 
-        if not may_see_hosts() or html.mobile:
+        if not may_see_hosts() or is_mobile(request, response):
             return None
 
         wato_folder = _wato_folder_from_filename(row["host_filename"])
@@ -44,7 +48,7 @@ class WatoIcon(Icon):
 
         if display_options.enabled(display_options.X):
             url = "wato.py?folder=%s&host=%s" % \
-              (html.urlencode(folder), html.urlencode(hostname))
+                (urlencode(folder), urlencode(hostname))
             if where == "inventory":
                 url += "&mode=inventory"
                 help_txt = _("Edit services")
@@ -65,6 +69,10 @@ class DownloadAgentOutputIcon(Icon):
     def ident(cls):
         return "download_agent_output"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Download agent output")
+
     def default_sort_index(self):
         return 50
 
@@ -82,6 +90,10 @@ class DownloadSnmpWalkIcon(Icon):
     def ident(cls):
         return "download_snmp_walk"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Download snmp walk")
+
     def host_columns(self):
         return ["filename", "check_type"]
 
@@ -94,7 +106,7 @@ class DownloadSnmpWalkIcon(Icon):
 
 def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
     if (what == "host" or (what == "service" and row["service_description"] == "Check_MK")) \
-       and config.user.may("wato.download_agent_output") \
+       and user.may("wato.download_agent_output") \
        and not row["host_check_type"] == 2:  # Not for shadow hosts
 
         # Not 100% acurate to use the tags here, but this is the best we can do
@@ -116,8 +128,8 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
 
         # When the download icon is part of the host/service action menu, then
         # the _back_url set in paint_action_menu() needs to be used. Otherwise
-        # html.makeuri([]) (not html.requested_uri()) is the right choice.
-        back_url = html.get_url_input("_back_url", html.makeuri([]))
+        # makeuri(request, []) (not request.requested_uri()) is the right choice.
+        back_url = request.get_url_input("_back_url", makeuri(request, []))
         if back_url:
             params.append(("back_url", back_url))
 
@@ -126,8 +138,8 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
         else:
             title = _("Download SNMP walk")
 
-        url = html.makeuri_contextless(params, filename="fetch_agent_output.py")
-        return "agent_output", title, url
+        url = makeuri_contextless(request, params, filename="fetch_agent_output.py")
+        return "agents", title, url
 
 
 def _wato_folder_from_filename(filename):

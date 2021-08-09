@@ -1,0 +1,14 @@
+Title: Check Email Delivery: Also match 'RE: ...' instead of 'Re: ...'
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1612543627
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+This werk fixes a bug in the active check 'Check Email Delivery'.
+Previously, emails with a matching subject which contained 'Re:'
+instead of 'RE:' were not recognized by the active check. This has
+been fixed.

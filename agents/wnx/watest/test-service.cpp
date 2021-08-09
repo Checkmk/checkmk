@@ -6,6 +6,7 @@
 #include "common/wtools.h"
 #include "firewall.h"
 #include "service_processor.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 #include "windows_service_api.h"
@@ -122,26 +123,8 @@ TEST(ServiceControllerTest, StartStop) {
 
 }  // namespace wtools
 
-TEST(Misc, All) {
-    {
-        std::string a = "a";
-        cma::tools::AddDirSymbol(a);
-        EXPECT_TRUE(a == "a\\");
-        cma::tools::AddDirSymbol(a);
-        EXPECT_TRUE(a == "a\\");
-    }
-    {
-        std::string b = "b\\";
-        cma::tools::AddDirSymbol(b);
-        EXPECT_TRUE(b == "b\\");
-        b = "b/";
-        cma::tools::AddDirSymbol(b);
-        EXPECT_TRUE(b == "b/");
-    }
-}
-
 namespace cma::srv {
-extern bool global_stop_signaled;
+extern bool g_global_stop_signaled;
 TEST(SelfConfigure, Checker) {
     auto handle = SelfOpen();
     if (handle == nullptr) {
@@ -162,7 +145,7 @@ TEST(CmaSrv, GlobalApi) {
     ServiceProcessor sp;
     sp.stopService();
     EXPECT_TRUE(cma::srv::IsGlobalStopSignaled());
-    global_stop_signaled = false;
+    g_global_stop_signaled = false;
 }
 
 static void SetStartMode(std::string_view mode) {
@@ -303,21 +286,19 @@ TEST(CmaSrv, ServiceChange) {
                                                     : SERVICE_DEMAND_START);
 }
 
-static void SetCfgMode(YAML::Node cfg, std::string_view mode) {
-    using namespace cma::cfg;
-    cfg[groups::kSystem] =
+namespace {
+void SetCfgMode(YAML::Node cfg, std::string_view mode) {
+    cfg[cfg::groups::kSystem] =
         YAML::Load(fmt::format("firewall:\n  mode: {}\n", mode));
 }
 
-static void SetCfgMode(YAML::Node cfg, std::string_view mode, bool all_ports) {
-    using namespace cma::cfg;
-    cfg[groups::kSystem] =
+void SetCfgMode(YAML::Node cfg, std::string_view mode, bool all_ports) {
+    cfg[cfg::groups::kSystem] =
         YAML::Load(fmt::format("firewall:\n  mode: {}\n  port: {}\n", mode,
                                all_ports ? "all" : "auto"));
 }
 
-static std::wstring getPortValue(std::wstring_view name,
-                                 std::wstring_view app_name) {
+std::wstring getPortValue(std::wstring_view name, std::wstring_view app_name) {
     auto rule = cma::fw::FindRule(kSrvFirewallRuleName, app_name);
     ON_OUT_OF_SCOPE(if (rule) rule->Release());
     if (rule == nullptr) return {};
@@ -328,23 +309,24 @@ static std::wstring getPortValue(std::wstring_view name,
     ::SysFreeString(bstr);
     return port;
 }
+}  // namespace
 
-TEST(CmaSrv, Firewall) {
-    using namespace cma::cfg;
-    OnStartTest();
-    ON_OUT_OF_SCOPE(OnStartTest());
+TEST(CmaSrv, FirewallIntegration) {
+    auto test_fs = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(test_fs->loadFactoryConfig());
     auto cfg = cma::cfg::GetLoadedConfig();
     constexpr std::wstring_view app_name = L"test.exe.exe";
 
     // remove all from the Firewall
-    SetCfgMode(cfg, values::kModeRemove);
+    SetCfgMode(cfg, cfg::values::kModeRemove);
 
-    auto fw_node = GetNode(groups::kSystem, vars::kFirewall);
-    auto value = GetVal(fw_node, vars::kFirewallMode, std::string(""));
-    ASSERT_TRUE(value == values::kModeRemove);
+    auto fw_node = cfg::GetNode(cfg::groups::kSystem, cfg::vars::kFirewall);
+    auto value =
+        cfg::GetVal(fw_node, cfg::vars::kFirewallMode, std::string(""));
+    ASSERT_TRUE(value == cfg::values::kModeRemove);
     ProcessFirewallConfiguration(app_name);
 
-    SetCfgMode(cfg, values::kModeConfigure, false);
+    SetCfgMode(cfg, cfg::values::kModeConfigure, false);
     for (auto i = 0; i < 2; ++i) {
         ProcessFirewallConfiguration(app_name);
         auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);
@@ -353,7 +335,7 @@ TEST(CmaSrv, Firewall) {
         EXPECT_TRUE(p == L"6556");
     }
 
-    SetCfgMode(cfg, values::kModeConfigure, true);
+    SetCfgMode(cfg, cfg::values::kModeConfigure, true);
     for (auto i = 0; i < 2; ++i) {
         ProcessFirewallConfiguration(app_name);
         auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);
@@ -362,21 +344,21 @@ TEST(CmaSrv, Firewall) {
         EXPECT_TRUE(p == L"*");
     }
 
-    SetCfgMode(cfg, values::kModeNone);
+    SetCfgMode(cfg, cfg::values::kModeNone);
     for (auto i = 0; i < 2; ++i) {
         ProcessFirewallConfiguration(app_name);
         auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);
         EXPECT_EQ(count, 1);
     }
 
-    SetCfgMode(cfg, values::kModeRemove);
+    SetCfgMode(cfg, cfg::values::kModeRemove);
     for (auto i = 0; i < 2; ++i) {
         ProcessFirewallConfiguration(app_name);
         auto count = cma::fw::CountRules(kSrvFirewallRuleName, app_name);
         EXPECT_EQ(count, 0);
     }
 
-    SetCfgMode(cfg, values::kModeNone);
+    SetCfgMode(cfg, cfg::values::kModeNone);
     ProcessFirewallConfiguration(app_name);
     EXPECT_EQ(0, cma::fw::CountRules(cma::srv::kSrvFirewallRuleName, app_name));
 }

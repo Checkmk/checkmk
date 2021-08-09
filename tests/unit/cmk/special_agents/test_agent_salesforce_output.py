@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-import pytest  # type: ignore[import]
+
+import pytest
 import responses  # type: ignore[import]
 
 from cmk.special_agents.agent_salesforce import main
@@ -20,14 +21,15 @@ def test_wrong_arguments(capsys):
 
 
 @responses.activate
-def test_agent_output(capsys):
+def test_agent_output(capsys, monkeypatch):
     responses.add(
         responses.GET,
         URL,
         json={'random_answer': 'foo-bar'},
         status=200,
     )
-    sys.argv = ["agent_salesforce", "--section_url", "salesforce_instances,%s" % URL]
+    monkeypatch.setattr("sys.argv",
+                        ["agent_salesforce", "--section_url", f"salesforce_instances,{URL}"])
     main()
     assert capsys.readouterr() == (
         '<<<salesforce_instances>>>\n{"random_answer": "foo-bar"}\n\n',

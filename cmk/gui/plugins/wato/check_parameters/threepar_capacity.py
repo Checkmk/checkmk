@@ -5,18 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Percentage,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
 from cmk.gui.plugins.wato.check_parameters.utils import vs_filesystem
+from cmk.gui.valuespec import Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_threepar_capacity():
@@ -38,8 +33,8 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="threepar_capacity",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Device type"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Device type"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_threepar_capacity,
-        title=lambda: _("3Par Capacity (used space and growth)"),
+        title=lambda: _("3PAR Capacity (used space and growth)"),
     ))

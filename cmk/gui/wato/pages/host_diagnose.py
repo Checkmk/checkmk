@@ -10,41 +10,32 @@ from typing import List, Optional, Type
 
 from six import ensure_str
 
-import cmk.gui.pages
-import cmk.gui.config as config
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.valuespec import (
-    TextAscii,
-    DropdownChoice,
-    Integer,
-    Float,
-    Dictionary,
-    Password,
-    HostAddress,
-    FixedValue,
-    DictionaryEntry,
-)
+import cmk.gui.pages
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import html, request, transactions, user, user_errors
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_form_submit_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_form_submit_link,
+    PageMenuTopic,
 )
-from cmk.gui.pages import page_registry, AjaxPage
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.wato import ActionResult, flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.valuespec import (
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
+    Float,
+    HostAddress,
+    Integer,
+    Password,
+)
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
-
-from cmk.gui.plugins.wato import ActionResult
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
-    monitoring_macro_help,
-)
 
 
 @mode_registry.register
@@ -74,7 +65,7 @@ class ModeDiagHost(WatoMode):
         ]
 
     def _from_vars(self):
-        self._hostname = html.request.get_ascii_input_mandatory("host")
+        self._hostname = request.get_ascii_input_mandatory("host")
         self._host = watolib.Folder.current().host(self._hostname)
         self._host.need_permission("read")
 
@@ -89,7 +80,7 @@ class ModeDiagHost(WatoMode):
             dropdowns=[
                 PageMenuDropdown(
                     name="actions",
-                    title=_("Actions"),
+                    title=_("Test"),
                     topics=[
                         PageMenuTopic(
                             title=_("Host properties"),
@@ -107,8 +98,8 @@ class ModeDiagHost(WatoMode):
                             title=_("Options"),
                             entries=[
                                 PageMenuEntry(
-                                    title=_("Test"),
-                                    icon_name="save",
+                                    title=_("Run tests"),
+                                    icon_name="connection_tests",
                                     item=make_form_submit_link("diag_host", "_try"),
                                     is_shortcut=True,
                                     is_suggested=True,
@@ -132,17 +123,17 @@ class ModeDiagHost(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             return None
 
-        if html.request.var('_try'):
+        if request.var('_try'):
             try:
                 self._validate_diag_html_vars()
             except MKUserError as e:
-                html.add_user_error(e.varname, e)
+                user_errors.add(e)
             return None
 
-        if html.request.var('_save'):
+        if request.var('_save'):
             # Save the ipaddress and/or community
             vs_host = self._vs_host()
             new = vs_host.from_html_vars('vs_host')
@@ -161,13 +152,14 @@ class ModeDiagHost(WatoMode):
             elif "snmp_community" in new:
                 return_message.append(_("SNMP credentials"))
 
-            msg = _("Updated attributes: ") + ", ".join(return_message)
-
             self._host.update_attributes(new)
-            html.request.del_vars()
-            html.request.set_var("host", self._hostname)
-            html.request.set_var("folder", watolib.Folder.current().path())
-            return "edit_host", msg
+            flash(_("Updated attributes: ") + ", ".join(return_message))
+            return redirect(
+                mode_url(
+                    "edit_host",
+                    host=self._hostname,
+                    folder=watolib.Folder.current().path(),
+                ))
         return None
 
     def _validate_diag_html_vars(self):
@@ -222,7 +214,7 @@ class ModeDiagHost(WatoMode):
 
         # When clicking "Save & Test" on the "Edit host" page, this will be set
         # to immediately execute the tests using the just saved settings
-        if html.request.has_var("_start_on_load"):
+        if request.has_var("_start_on_load"):
             html.final_javascript("cmk.page_menu.form_submit('diag_host', '_try');")
 
         html.hidden_fields()
@@ -234,7 +226,7 @@ class ModeDiagHost(WatoMode):
         self._show_diagnose_output()
 
     def _show_diagnose_output(self):
-        if not html.request.var('_try'):
+        if not request.var('_try'):
             html.show_message(
                 _('You can diagnose the connection to a specific host using this dialog. '
                   'You can either test whether your current configuration is still working '
@@ -243,7 +235,7 @@ class ModeDiagHost(WatoMode):
                   'press the "Test" button. The results will be displayed here.'))
             return
 
-        if html.has_user_errors():
+        if user_errors:
             html.show_user_errors()
             return
 
@@ -257,10 +249,10 @@ class ModeDiagHost(WatoMode):
 
             html.open_td(class_="icons")
             html.open_div()
-            html.icon(title=None, icon="reload", id_="%s_img" % ident)
+            html.icon("reload", id_="%s_img" % ident)
             html.open_a(href="")
-            html.icon(title=_('Retry this test'),
-                      icon="reload",
+            html.icon("reload",
+                      title=_('Retry this test'),
                       cssclass="retry",
                       id_="%s_retry" % ident)
             html.close_a()
@@ -274,8 +266,8 @@ class ModeDiagHost(WatoMode):
             html.close_tr()
             html.close_table()
             html.javascript('cmk.host_diagnose.start_test(%s, %s, %s)' %
-                            (json.dumps(ident), json.dumps(self._hostname),
-                             json.dumps(html.transaction_manager.fresh_transid())))
+                            (json.dumps(ident), json.dumps(
+                                self._hostname), json.dumps(transactions.fresh_transid())))
 
     def _vs_host(self):
         return Dictionary(
@@ -287,7 +279,7 @@ class ModeDiagHost(WatoMode):
                 )),
                 ('ipaddress',
                  HostAddress(
-                     title=_("IPv4 Address"),
+                     title=_("IPv4 address"),
                      allow_empty=False,
                      allow_ipv6_address=False,
                  )),
@@ -304,25 +296,6 @@ class ModeDiagHost(WatoMode):
         )
 
     def _vs_rules(self):
-        if config.user.may('wato.add_or_modify_executables'):
-            ds_option: List[DictionaryEntry] = [(
-                'datasource_program',
-                TextAscii(
-                    title=_("Individual program call (<a href=\"%s\">Rules</a>)") %
-                    watolib.folder_preserving_link([('mode', 'edit_ruleset'),
-                                                    ('varname', 'datasource_programs')]),
-                    help=
-                    _("For agent based checks Check_MK allows you to specify an alternative "
-                      "program that should be called by Check_MK instead of connecting the agent "
-                      "via TCP. That program must output the agent's data on standard output in "
-                      "the same format the agent would do. This is for example useful for monitoring "
-                      "via SSH.") + monitoring_macro_help() + " " +
-                    _("This option can only be used with the permission \"Can add or modify executables\"."
-                     ),
-                ))]
-        else:
-            ds_option = []
-
         return Dictionary(
             optional_keys = False,
             elements = [
@@ -364,7 +337,7 @@ class ModeDiagHost(WatoMode):
                     minvalue = 0,
                     maxvalue = 50,
                 )),
-            ] + ds_option,
+            ],
         )
 
 
@@ -373,15 +346,15 @@ class ModeAjaxDiagHost(AjaxPage):
     def page(self):
         watolib.init_wato_datastructures(with_wato_lock=True)
 
-        if not config.user.may('wato.diag_host'):
+        if not user.may('wato.diag_host'):
             raise MKAuthException(_('You are not permitted to perform this action.'))
 
-        if not html.check_transaction():
+        if not transactions.check_transaction():
             raise MKAuthException(_("Invalid transaction"))
 
-        request = self.webapi_request()
+        api_request = self.webapi_request()
 
-        hostname = request.get("host")
+        hostname = api_request.get("host")
         if not hostname:
             raise MKGeneralException(_('The hostname is missing.'))
 
@@ -394,7 +367,7 @@ class ModeAjaxDiagHost(AjaxPage):
 
         host.need_permission("read")
 
-        _test = request.get('_test')
+        _test = api_request.get('_test')
         if not _test:
             raise MKGeneralException(_('The test is missing.'))
 
@@ -412,44 +385,41 @@ class ModeAjaxDiagHost(AjaxPage):
                 'snmp_retries',
                 'tcp_connect_timeout',
         ]):
-            args[idx] = request.get(what, u"")
+            args[idx] = api_request.get(what, u"")
 
-        if config.user.may('wato.add_or_modify_executables'):
-            args[6] = request.get("datasource_program", "")
-
-        if request.get("snmpv3_use"):
+        if api_request.get("snmpv3_use"):
             snmpv3_use = {
                 u"0": u"noAuthNoPriv",
                 u"1": u"authNoPriv",
                 u"2": u"authPriv",
-            }.get(request.get("snmpv3_use", u""), u"")
+            }.get(api_request.get("snmpv3_use", u""), u"")
 
             args[7] = snmpv3_use
             if snmpv3_use != u"noAuthNoPriv":
                 snmpv3_auth_proto = {
                     str(DropdownChoice.option_id("md5")): u"md5",
                     str(DropdownChoice.option_id("sha")): u"sha"
-                }.get(request.get("snmpv3_auth_proto", u""), u"")
+                }.get(api_request.get("snmpv3_auth_proto", u""), u"")
 
                 args[8] = snmpv3_auth_proto
-                args[9] = request.get("snmpv3_security_name", u"")
-                args[10] = request.get("snmpv3_security_password", u"")
+                args[9] = api_request.get("snmpv3_security_name", u"")
+                args[10] = api_request.get("snmpv3_security_password", u"")
 
                 if snmpv3_use == "authPriv":
                     snmpv3_privacy_proto = {
                         str(DropdownChoice.option_id("DES")): u"DES",
                         str(DropdownChoice.option_id("AES")): u"AES"
-                    }.get(request.get("snmpv3_privacy_proto", u""), u"")
+                    }.get(api_request.get("snmpv3_privacy_proto", u""), u"")
 
                     args[11] = snmpv3_privacy_proto
 
-                    args[12] = request.get("snmpv3_privacy_password", u"")
+                    args[12] = api_request.get("snmpv3_privacy_password", u"")
             else:
-                args[9] = request.get("snmpv3_security_name", u"")
+                args[9] = api_request.get("snmpv3_security_name", u"")
 
         result = watolib.check_mk_automation(host.site_id(), "diag-host", [hostname, _test] + args)
         return {
-            "next_transid": html.transaction_manager.fresh_transid(),
+            "next_transid": transactions.fresh_transid(),
             "status_code": result[0],
             "output": ensure_str(result[1], errors="replace"),
         }

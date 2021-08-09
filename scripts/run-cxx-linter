@@ -9,7 +9,7 @@ PATCHSET_REVISION=$2
 SCRIPT_PATH="${BASH_SOURCE[0]}"
 REPO_DIR="$(dirname "$(cd "$(dirname "$SCRIPT_PATH")" >/dev/null 2>&1 && pwd)")"
 
-function execute_test() {
+execute_test() {
     # Prevpare Makefiles, otherwise "make compile_commands.json" will fail
     make -C "$REPO_DIR" config.h
 

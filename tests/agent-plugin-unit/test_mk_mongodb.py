@@ -7,13 +7,14 @@
 # pylint: disable=protected-access,redefined-outer-name
 
 import os
-import pytest  # type: ignore[import]
+
+import pytest
 from utils import import_module
 
 
 @pytest.fixture(scope="module")
 def mk_mongodb():
-    return import_module("mk_mongodb")
+    return import_module("mk_mongodb.py")
 
 
 def read_dataset(filename):

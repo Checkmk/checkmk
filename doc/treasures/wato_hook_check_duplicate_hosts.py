@@ -7,7 +7,7 @@
 # This hook scans the whole WATO configuration for duplicate hosts having
 # duplicate names or IP addresses and warns the admin about this fact.
 
-# Put this script into local/share/check_mk/web/plugins/wato on a Check_MK site
+# Put this script into local/share/check_mk/web/plugins/wato on a Checkmk site
 # and run "omd reload apache" as site user to ensure the plugin is loaded.
 from cmk.gui.log import logger
 

@@ -4,6 +4,24 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<hp_msa_controller>>>
 # controller-statistics 1 durable-id controller_A
 # controller-statistics 1 cpu-load 3
@@ -42,12 +60,14 @@
 #   |                           main check                                 |
 #   '----------------------------------------------------------------------'
 
-hp_msa_controller_cpu_default_levels = (80.0, 90.0)
+factory_settings['hp_msa_controller'] = {
+    'levels': (80.0, 90.0),
+}
 
 
 def inventory_hp_msa_controller_cpu(parsed):
     for key in parsed:
-        yield key, "hp_msa_controller_cpu_default_levels"
+        yield key, {}
 
 
 def check_hp_msa_controller_cpu(item, params, parsed):
@@ -64,7 +84,6 @@ check_info['hp_msa_controller'] = {
     'service_description': 'CPU Utilization %s',
     'has_perfdata': True,
     'group': 'cpu_utilization_multiitem',
-    'includes': ["hp_msa.include", "cpu_util.include"],
 }
 
 #.
@@ -83,5 +102,4 @@ check_info['hp_msa_controller.io'] = {
     'service_description': 'Controller IO %s',
     'has_perfdata': True,
     'group': 'diskstat',
-    'includes': ["hp_msa.include", "diskstat.include"],
 }

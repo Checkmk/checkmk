@@ -17,17 +17,14 @@
 #include "contact_fwd.h"
 class ColumnOffsets;
 enum class HostState;
-class MonitoringCore;
 class Row;
 class RowRenderer;
 
-class HostListColumn : public ListColumn {
+class HostListColumn : public deprecated::ListColumn {
 public:
     HostListColumn(const std::string &name, const std::string &description,
-                   const ColumnOffsets &offsets, MonitoringCore *mc,
-                   bool show_state)
-        : ListColumn(name, description, offsets)
-        , _mc(mc)
+                   const ColumnOffsets &offsets, bool show_state)
+        : deprecated::ListColumn(name, description, offsets)
         , _show_state(show_state) {}
 
     void output(Row row, RowRenderer &r, const contact *auth_user,
@@ -38,11 +35,10 @@ public:
         std::chrono::seconds timezone_offset) const override;
 
 private:
-    MonitoringCore *_mc;
     const bool _show_state;
 
-    struct Member {
-        Member(std::string hn, HostState cs, bool hbc)
+    struct Entry {
+        Entry(std::string hn, HostState cs, bool hbc)
             : host_name(std::move(hn))
             , current_state(cs)
             , has_been_checked(hbc) {}
@@ -52,7 +48,7 @@ private:
         bool has_been_checked;
     };
 
-    std::vector<Member> getMembers(Row row, const contact *auth_user) const;
+    std::vector<Entry> getEntries(Row row, const contact *auth_user) const;
 };
 
 #endif  // HostListColumn_h

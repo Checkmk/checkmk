@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously it was necessary to specify an IP for the Kubernetes master.
 If the option 'No IP' was used, the special agent was not able to connect

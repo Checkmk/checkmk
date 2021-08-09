@@ -11,25 +11,21 @@ import argparse
 import datetime
 import json
 import logging
-from multiprocessing import Process, Lock, Queue
-from pathlib import Path
-from queue import Empty as QueueEmpty
 import string
 import sys
 import time
+from multiprocessing import Lock, Process, Queue
+from pathlib import Path
+from queue import Empty as QueueEmpty
 from typing import Any, List, Tuple
 
 import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
 
+import cmk.utils.password_store
 from cmk.utils.paths import tmp_dir
 
-from cmk.special_agents.utils import (
-    DataCache,
-    vcrtrace,
-    get_seconds_since_midnight,
-)
-import cmk.utils.password_store
+from cmk.special_agents.utils import DataCache, get_seconds_since_midnight, vcrtrace
 
 cmk.utils.password_store.replace_passwords()
 
@@ -97,7 +93,7 @@ def parse_arguments(argv):
     # REQUIRED
     parser.add_argument("--client", required=True, help="Azure client ID")
     parser.add_argument("--tenant", required=True, help="Azure tenant ID")
-    parser.add_argument("--secret", required=True, help="Azure authentication secret")
+    parser.add_argument("--secret", help="Azure authentication secret")
     # CONSTRAIN DATA TO REQUEST
     parser.add_argument("--require-tag",
                         default=[],
@@ -126,18 +122,18 @@ def parse_arguments(argv):
         args.sequential = True
 
     # LOGGING
-    if args.verbose >= 3:
+    if args.verbose and args.verbose >= 3:
         # this will show third party log messages as well
         fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
-    elif args.verbose == 2:
+    elif args.verbose and args.verbose == 2:
         # be verbose, but silence msrest, urllib3 and requests_oauthlib
         fmt = "%(levelname)s: %(funcName)s: %(lineno)s: %(message)s"
         lvl = logging.DEBUG
         logging.getLogger('msrest').setLevel(logging.WARNING)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
         logging.getLogger('requests_oauthlib').setLevel(logging.WARNING)
-    elif args.verbose == 1:
+    elif args.verbose:
         fmt = "%(levelname)s: %(funcName)s: %(message)s"
         lvl = logging.INFO
     else:
@@ -170,7 +166,8 @@ class BaseApiClient(metaclass=abc.ABCMeta):
         self._headers = {}
         self._base_url = base_url
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def resource(self):
         pass
 
@@ -196,14 +193,33 @@ class BaseApiClient(metaclass=abc.ABCMeta):
         self._ratelimit = min(self._ratelimit, new_value)
 
     def _get(self, uri_end, key=None, params=None):
-        request_url = self._base_url + uri_end
-        response = requests.get(request_url, params=params, headers=self._headers)
-        self._update_ratelimit(response)
-        json_data = response.json()
-        LOGGER.debug('response: %r', json_data)
+        json_data = self._get_json_from_url(self._base_url + uri_end, params=params)
 
         if key is None:
             return json_data
+
+        data = self._lookup(json_data, key)
+
+        # The API will not send more than 1000 recources at once.
+        # See if we must fetch another page:
+        next_link = json_data.get('nextLink')
+        while next_link is not None:
+            json_data = self._get_json_from_url(next_link)
+            # we only know of lists. Let exception happen otherwise
+            data += self._lookup(json_data, key)
+            next_link = json_data.get('nextLink')
+
+        return data
+
+    def _get_json_from_url(self, url, *, params=None):
+        response = requests.get(url, params=params, headers=self._headers)
+        self._update_ratelimit(response)
+        json_data = response.json()
+        LOGGER.debug('response: %r', json_data)
+        return json_data
+
+    @staticmethod
+    def _lookup(json_data, key):
         try:
             return json_data[key]
         except KeyError:
@@ -214,7 +230,7 @@ class BaseApiClient(metaclass=abc.ABCMeta):
 class GraphApiClient(BaseApiClient):
     def __init__(self):
         base_url = '%s/v1.0/' % self.resource
-        super(GraphApiClient, self).__init__(base_url)
+        super().__init__(base_url)
 
     @property
     def resource(self):
@@ -247,7 +263,7 @@ class GraphApiClient(BaseApiClient):
 class MgmtApiClient(BaseApiClient):
     def __init__(self, subscription):
         base_url = '%s/subscriptions/%s/' % (self.resource, subscription)
-        super(MgmtApiClient, self).__init__(base_url)
+        super().__init__(base_url)
 
     @staticmethod
     def _get_available_metrics_from_exception(desired_names, api_error):
@@ -298,7 +314,7 @@ class MgmtApiClient(BaseApiClient):
 
 class GroupConfig:
     def __init__(self, name):
-        super(GroupConfig, self).__init__()
+        super().__init__()
         if not name:
             raise ValueError("falsey group name: %r" % name)
         self.name = name
@@ -322,7 +338,7 @@ class GroupConfig:
 
 class ExplicitConfig:
     def __init__(self, raw_list=()):
-        super(ExplicitConfig, self).__init__()
+        super().__init__()
         self.groups = {}
         self.current_group = None
         for item in raw_list:
@@ -361,7 +377,7 @@ class ExplicitConfig:
 
 class TagBasedConfig:
     def __init__(self, required, key_values):
-        super(TagBasedConfig, self).__init__()
+        super().__init__()
         self._required = required
         self._values = key_values
 
@@ -384,7 +400,7 @@ class TagBasedConfig:
 
 class Selector:
     def __init__(self, args):
-        super(Selector, self).__init__()
+        super().__init__()
         self._explicit_config = ExplicitConfig(raw_list=args.explicit_config)
         self._tag_based_config = TagBasedConfig(args.require_tag, args.require_tag_value)
 
@@ -407,12 +423,12 @@ class Section:
     LOCK = Lock()
 
     def __init__(self, name, piggytargets, separator, options):
-        super(Section, self).__init__()
+        super().__init__()
         self._sep = chr(separator)
         self._piggytargets = list(piggytargets)
         self._cont = []
         section_options = ':'.join(['sep(%d)' % separator] + options)
-        self._title = '<<<%s:%s>>>\n' % (name, section_options)
+        self._title = f"<<<{name.replace('-', '_')}:{section_options}>>>\n"
 
     def formatline(self, tokens):
         return self._sep.join(map(str, tokens)) + '\n'
@@ -431,7 +447,7 @@ class Section:
             return
         with self.LOCK:
             for piggytarget in self._piggytargets:
-                sys.stdout.write('<<<<%s>>>>\n' % piggytarget)
+                sys.stdout.write(f'<<<<{piggytarget}>>>>\n')
                 sys.stdout.write(self._title)
                 sys.stdout.writelines(self._cont)
             sys.stdout.write('<<<<>>>>\n')
@@ -440,30 +456,27 @@ class Section:
 
 class AzureSection(Section):
     def __init__(self, name, piggytargets=('',)):
-        super(AzureSection, self).__init__('azure_%s' % name,
-                                           piggytargets,
-                                           separator=124,
-                                           options=[])
+        super().__init__('azure_%s' % name, piggytargets, separator=124, options=[])
 
 
 class LabelsSection(Section):
     def __init__(self, piggytarget):
-        super(LabelsSection, self).__init__("labels", [piggytarget], separator=0, options=[])
+        super().__init__("labels", [piggytarget], separator=0, options=[])
 
 
 class UsageSection(Section):
     def __init__(self, usage_details, piggytargets, cacheinfo):
         options = ['cached(%d,%d)' % cacheinfo]
-        super(UsageSection, self).__init__('azure_%s' % usage_details.section,
-                                           piggytargets,
-                                           separator=124,
-                                           options=options)
+        super().__init__('azure_%s' % usage_details.section,
+                         piggytargets,
+                         separator=124,
+                         options=options)
         self.add(usage_details.dumpinfo())
 
 
 class IssueCollecter:
     def __init__(self):
-        super(IssueCollecter, self).__init__()
+        super().__init__()
         self._list = []
 
     def add(self, issue_type, issued_by, issue_msg):
@@ -533,7 +546,7 @@ def get_attrs_from_uri(uri):
 
 class AzureResource:
     def __init__(self, info):
-        super(AzureResource, self).__init__()
+        super().__init__()
         self.info = info
         self.info.update(get_attrs_from_uri(info["id"]))
         self.tags = self.info.get("tags", {})
@@ -571,7 +584,7 @@ class MetricCache(DataCache):
     def __init__(self, resource, metric_definition, ref_time, debug=False):
         self.metric_definition = metric_definition
         metricnames = metric_definition[0]
-        super(MetricCache, self).__init__(self.get_cache_path(resource), metricnames, debug=debug)
+        super().__init__(self.get_cache_path(resource), metricnames, debug=debug)
         self.remaining_reads = None
         self.timedelta = {
             "PT1M": datetime.timedelta(minutes=1),
@@ -631,9 +644,7 @@ class UsageClient(DataCache):
     )
 
     def __init__(self, client, subscription, debug=False):
-        super(UsageClient, self).__init__(AZURE_CACHE_FILE_PATH,
-                                          "%s-usage" % subscription,
-                                          debug=debug)
+        super().__init__(AZURE_CACHE_FILE_PATH, "%s-usage" % subscription, debug=debug)
         self._client = client
 
     @property
@@ -773,7 +784,7 @@ def write_group_info(mgmt_client, monitored_groups, monitored_resources):
 
 def write_exception_to_agent_info_section(exception, component):
     # those exeptions are quite noisy. try to make them more concise:
-    msg = str(exception).split('Trace ID')[0]
+    msg = str(exception).split('Trace ID', 1)[0]
     msg = msg.split(':', 2)[-1].strip(' ,')
 
     if "does not have authorization to perform action" in msg:
@@ -849,10 +860,10 @@ def get_mapper(debug, sequential, timeout):
     return async_mapper
 
 
-def main_graph_client(args):
+def main_graph_client(args, secret):
     graph_client = GraphApiClient()
     try:
-        graph_client.login(args.tenant, args.client, args.secret)
+        graph_client.login(args.tenant, args.client, secret)
         write_section_ad(graph_client)
     except Exception as exc:
         if args.debug:
@@ -860,10 +871,11 @@ def main_graph_client(args):
         write_exception_to_agent_info_section(exc, "Graph client")
 
 
-def main_subscription(args, selector, subscription):
+def main_subscription(args, secret, selector, subscription):
     mgmt_client = MgmtApiClient(subscription)
+
     try:
-        mgmt_client.login(args.tenant, args.client, args.secret)
+        mgmt_client.login(args.tenant, args.client, secret)
 
         all_resources = (AzureResource(r) for r in mgmt_client.resources())
 
@@ -897,10 +909,19 @@ def main(argv=None):
         return
     LOGGER.debug("%s", selector)
 
-    main_graph_client(args)
+    # secrets can be passed in as a command line argument for testing,
+    # BUT the standard method is to pass them via stdin so that they
+    # are not accessible from outside, e.g. visible on the ps output
+    stdin_args = json.loads(sys.stdin.read() or '{}')
+    secret = stdin_args.get('secret') or args.secret
+
+    if not secret:
+        raise RuntimeError('secret is not set')
+
+    main_graph_client(args, secret)
 
     for subscription in args.subscriptions:
-        main_subscription(args, selector, subscription)
+        main_subscription(args, secret, selector, subscription)
 
 
 if __name__ == "__main__":

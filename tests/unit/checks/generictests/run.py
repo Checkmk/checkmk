@@ -6,18 +6,29 @@
 """Submodule providing the `run` function of generictests package"""
 from ast import literal_eval
 from contextlib import contextmanager
-import freezegun  # type: ignore[import]
 
-from checktestlib import DiscoveryResult, assertDiscoveryResultsEqual, \
-                         CheckResult, assertCheckResultsEqual, \
-                         MockHostExtraConf, MockItemState, \
-                         Immutables, assertEqual
-from testlib import MissingCheckInfoError
-from generictests.checkhandler import checkhandler
+import freezegun
 
+from tests.testlib import Check, MissingCheckInfoError
+
+from cmk.utils.check_utils import maincheckify
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based import value_store
+from cmk.base.check_utils import Service
+from cmk.base.plugin_contexts import current_host, current_service
+
+from ..checktestlib import (
+    assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
+    assertEqual,
+    CheckResult,
+    DiscoveryResult,
+    Immutables,
+    mock_item_state,
+    MockHostExtraConf,
+)
+from .checkhandler import checkhandler
 
 # TODO CMK-4180
 #from cmk.gui.watolib.rulespecs import rulespec_registry
@@ -154,7 +165,7 @@ def validate_discovered_params(check, params):
     # spec.validate_value(params, "")
 
 
-def run_test_on_parse(check_manager, dataset, immu):
+def run_test_on_parse(dataset, immu):
     """Test parse function
 
     If dataset has .info attribute and the check has parse function defined,
@@ -170,7 +181,7 @@ def run_test_on_parse(check_manager, dataset, immu):
 
     immu.register(dataset.info, 'info')
     try:
-        main_check = check_manager.get_check(dataset.checkname)
+        main_check = Check(dataset.checkname)
         parse_function = main_check.info.get("parse_function")
     except MissingCheckInfoError:
         # this could be ok -
@@ -206,15 +217,24 @@ def run_test_on_checks(check, subcheck, dataset, info_arg, immu, write):
     """Run check for test case listed in dataset"""
     test_cases = getattr(dataset, 'checks', {}).get(subcheck, [])
     check_func = check.info.get("check_function")
+    check_plugin_name = CheckPluginName(maincheckify(check.name))
 
     for item, params, results_expected_raw in test_cases:
 
         print("Dataset item %r in check %r" % (item, check.name))
         immu.register(params, 'params')
-        result_raw = check.run_check(item, params, info_arg)
+
+        with current_service(
+                Service(
+                    item=item,
+                    check_plugin_name=check_plugin_name,
+                    description="unit test description",
+                    parameters={},
+                )):
+            result = CheckResult(check.run_check(item, params, info_arg))
+
         immu.test(' after check (%s): ' % check_func.__name__)
 
-        result = CheckResult(result_raw)
         result_expected = CheckResult(results_expected_raw)
 
         if write:
@@ -238,7 +258,7 @@ def optional_freeze_time(dataset):
         yield
 
 
-def run(check_info, check_manager, dataset, write=False):
+def run(check_info, dataset, write=False):
     """Run all possible tests on 'dataset'"""
     print("START: %r" % (dataset,))
     checklist = checkhandler.get_applicables(dataset.checkname, check_info)
@@ -248,12 +268,12 @@ def run(check_info, check_manager, dataset, write=False):
 
     with optional_freeze_time(dataset):
 
-        parsed = run_test_on_parse(check_manager, dataset, immu)
+        parsed = run_test_on_parse(dataset, immu)
 
         # LOOP OVER ALL (SUB)CHECKS
         for sname in checklist:
             subcheck = (sname + '.').split('.')[1]
-            check = check_manager.get_check(sname)
+            check = Check(sname)
 
             info_arg = get_info_argument(dataset, subcheck, parsed)
             immu.test(' after get_info_argument ')
@@ -261,10 +281,11 @@ def run(check_info, check_manager, dataset, write=False):
 
             mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
-            with value_store.context(CheckPluginName("test"), "unit-test"), \
-                 MockItemState(mock_is), \
-                 MockHostExtraConf(check, mock_hec), \
-                 MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
+            with \
+                current_host("non-existent-testhost"), \
+                mock_item_state(mock_is), \
+                MockHostExtraConf(check, mock_hec), \
+                MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
 
                 run_test_on_discovery(check, subcheck, dataset, info_arg, immu, write)
 

@@ -20,5 +20,5 @@ description:
 item:
  The name or description of the power supply.
 
-inventory:
+discovery:
  One service is created for each power supply.

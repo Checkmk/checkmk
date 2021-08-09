@@ -37,13 +37,13 @@ def _get_custom_query(jql_values, prefix):
             options.append('--%s-field' % prefix)
             options.append(values["result"][1][0])
             options.append('--%s-limit' % prefix)
-            options.append(values["result"][1][1])
+            options.append("%d" % values["result"][1][1])
         else:
             options.append(values["result"])
             options.append('--%s-field' % prefix)
             options.append('None')
             options.append('--%s-limit' % prefix)
-            options.append(0)
+            options.append("0")
     return options
 
 

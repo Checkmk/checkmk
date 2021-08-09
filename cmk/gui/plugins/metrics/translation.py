@@ -4,14 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.plugins.metrics import (
-    check_metrics,
-    KB,
-    MB,
-    #GB,
-    #TB,
-    m,
-)
+from cmk.gui.plugins.metrics import check_metrics, KB, m, MB  # GB,; TB,
+
 #.
 #   .--Checks--------------------------------------------------------------.
 #   |                    ____ _               _                            |
@@ -35,7 +29,7 @@ check_metrics["check_mk_active-icmp"] = {
         "scale": m
     },
 }
-# This metric is not for an official Check_MK check
+# This metric is not for an official Checkmk check
 # It may be provided by an check_icmp check configured as mrpe
 check_metrics["check_icmp"] = {
     "~.*rta": {
@@ -272,7 +266,7 @@ check_metrics["check_mk-ibm_svc_nodestats_diskio"] = {
 memory_simple_translation = {
     "memory_used": {
         "name": "mem_used",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
 }
 check_metrics["check_mk-hp_procurve_mem"] = memory_simple_translation
@@ -283,7 +277,7 @@ ram_used_swap_translation = {
     "ramused": {
         "name": "mem_used",
         "scale": MB,
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
     "mem_used_percent": {
         "auto_graph": False,
@@ -291,13 +285,13 @@ ram_used_swap_translation = {
     "swapused": {
         "name": "swap_used",
         "scale": MB,
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
     "memused": {
         "name": "mem_lnx_total_used",
         "auto_graph": False,
         "scale": MB,
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
     "mem_lnx_total_used": {
         "auto_graph": False,
@@ -308,22 +302,22 @@ ram_used_swap_translation = {
     },
     "shared": {
         "name": "mem_lnx_shmem",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
         "scale": MB
     },
     "pagetables": {
         "name": "mem_lnx_page_tables",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
         "scale": MB
     },
     "mapped": {
         "name": "mem_lnx_mapped",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
         "scale": MB
     },
     "committed_as": {
         "name": "mem_lnx_committed_as",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
         "scale": MB
     },
 }
@@ -431,7 +425,7 @@ check_metrics["check_mk-mem_win"] = {
     "memory": {
         "name": "mem_used",
         "scale": MB,
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
     "pagefile": {
         "name": "pagefile_used",
@@ -455,7 +449,7 @@ check_metrics["check_mk-mem_win"] = {
 check_metrics["check_mk-brocade_mlx_module_mem"] = {
     "memused": {
         "name": "mem_used",
-        "deprecated": "1.7.0i1",
+        "deprecated": "2.0.0i1",
     },
 }
 check_metrics["check_mk-jolokia_metrics_mem"] = {
@@ -687,13 +681,13 @@ check_metrics["check_mk_active-disk_smb"] = {
 }
 df_basic_perfvarnames = [
     "inodes_used", "fs_size", "growth", "trend", "reserved", "fs_free", "fs_provisioning",
-    "uncommitted", "overprovisioned"
+    "uncommitted", "overprovisioned", "dedup_rate", "file_count"
 ]
 df_translation = {
     "~(?!%s).*$" % "|".join(df_basic_perfvarnames): {
         "name": "fs_used",
         "scale": MB,
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
     "fs_used": {
         "scale": MB
@@ -760,11 +754,17 @@ check_metrics["check_mk-3par_volumes"] = df_translation
 check_metrics["check_mk-storeonce_clusterinfo_space"] = df_translation
 check_metrics["check_mk-storeonce_servicesets_capacity"] = df_translation
 check_metrics["check_mk-storeonce4x_appliances_storage"] = df_translation
+check_metrics["check_mk-storeonce4x_cat_stores"] = df_translation
 check_metrics["check_mk-numble_volumes"] = df_translation
 check_metrics["check_mk-zpool"] = df_translation
 check_metrics["check_mk-vnx_quotas"] = df_translation
 check_metrics["check_mk-k8s_stats_fs"] = df_translation
+check_metrics["check_mk-sap_hana_diskusage"] = df_translation
 check_metrics["check_mk-fjdarye200_pools"] = df_translation
+check_metrics["check_mk-dell_compellent_folder"] = df_translation
+check_metrics["check_mk-nimble_volumes"] = df_translation
+check_metrics["check_mk-ceph_df"] = df_translation
+
 check_metrics["check_mk-netapp_api_volumes"] = {
     "fs_used": {
         "scale": MB
@@ -864,6 +864,10 @@ if_translation = {
         "name": "if_out_bps",
         "scale": 8
     },
+    "total": {
+        "name": "if_total_bps",
+        "scale": 8
+    },
     "indisc": {
         "name": "if_in_discards"
     },
@@ -901,33 +905,23 @@ if_translation = {
         "name": "if_out_non_unicast"
     },
 }
-check_metrics["check_mk-esx_vsphere_counters"] = if_translation
+check_metrics["check_mk-interfaces"] = if_translation
+check_metrics["check_mk-aws_ec2_network_io"] = if_translation
+check_metrics["check_mk-aws_rds_network_io"] = if_translation
+check_metrics["check_mk-cadvisor_if"] = if_translation
 check_metrics["check_mk-esx_vsphere_counters_if"] = if_translation
+check_metrics["check_mk-esx_vsphere_counters"] = if_translation
 check_metrics["check_mk-fritz"] = if_translation
 check_metrics["check_mk-fritz_wan_if"] = if_translation
 check_metrics["check_mk-hitachi_hnas_fc_if"] = if_translation
-check_metrics["check_mk-if64"] = if_translation
-check_metrics["check_mk-if64adm"] = if_translation
 check_metrics["check_mk-hpux_if"] = if_translation
-check_metrics["check_mk-if64_tplink"] = if_translation
-check_metrics["check_mk-if_lancom"] = if_translation
-check_metrics["check_mk-if_brocade"] = if_translation
-check_metrics["check_mk-if"] = if_translation
+check_metrics["check_mk-huawei_osn_if"] = if_translation
+check_metrics["check_mk-if64"] = if_translation
+check_metrics["check_mk-k8s_stats_network"] = if_translation
 check_metrics["check_mk-lnx_if"] = if_translation
-check_metrics["check_mk-cadvisor_if"] = if_translation
 check_metrics["check_mk-mcdata_fcport"] = if_translation
 check_metrics["check_mk-netapp_api_if"] = if_translation
-check_metrics["check_mk-statgrab_net"] = if_translation
-check_metrics["check_mk-ucs_bladecenter_if"] = if_translation
-check_metrics["check_mk-vms_if"] = if_translation
 check_metrics["check_mk-winperf_if"] = if_translation
-check_metrics["check_mk-emc_vplex_if"] = if_translation
-check_metrics["check_mk-huawei_osn_if"] = if_translation
-check_metrics["check_mk-if_fortigate"] = if_translation
-check_metrics["check_mk-aix_if"] = if_translation
-check_metrics["check_mk-k8s_stats_network"] = if_translation
-check_metrics["check_mk-aws_ec2_network_io"] = if_translation
-check_metrics["check_mk-aws_rds_network_io"] = if_translation
 check_metrics["check_mk-brocade_fcport"] = {
     "in": {
         "name": "fc_rx_bytes",
@@ -1254,13 +1248,16 @@ check_metrics["check_mk-brocade_mlx_module_cpu"] = {
 }
 check_metrics["check_mk-dell_powerconnect_cpu"] = {
     "load": {
-        "name": "util"
+        "name": "util",
+        "deprecated": "2.0.0p4"
     },
     "loadavg 60s": {
-        "name": "util1"
+        "name": "util1",
+        "deprecated": "2.0.0p4"
     },
     "loadavg 5m": {
-        "name": "util5"
+        "name": "util5",
+        "deprecated": "2.0.0p4"
     },
 }
 check_metrics["check_mk-ibm_svc_nodestats_cache"] = {
@@ -1282,7 +1279,7 @@ check_metrics["check_mk-ibm_svc_systemstats_cache"] = {
 mem_vsphere_hostsystem = {
     "usage": {
         "name": "mem_used",
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
     "mem_total": {
         "auto_graph": False
@@ -1310,7 +1307,7 @@ check_metrics["check_mk-ibm_svc_host"] = {
 juniper_mem = {
     "usage": {
         "name": "mem_used",
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
 }
 check_metrics["check_mk-juniper_screenos_mem"] = juniper_mem
@@ -1347,6 +1344,8 @@ check_metrics["check_mk-f5_bigip_conns"] = {
         "name": "connections_ssl"
     },
 }
+check_metrics["check_mk-f5_bigip_mem"] = memory_simple_translation
+check_metrics["check_mk-f5_bigip_mem_tmm"] = memory_simple_translation
 check_metrics["check_mk-mbg_lantime_state"] = {
     "offset": {
         "name": "time_offset",
@@ -1668,7 +1667,7 @@ check_metrics["check_mk-db2_logsize"] = {
     "~[_/]": {
         "name": "fs_used",
         "scale": MB,
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
     "fs_used": {
         "scale": MB
@@ -1986,7 +1985,6 @@ check_metrics["check_mk-smart_stats"] = {
     },
 }
 check_metrics["check_mk-ps"] = ps_translation
-check_metrics["check_mk-ps_perf"] = ps_translation
 check_metrics["check_mk-mssql_counters_sqlstats"] = {
     "batch_requests/sec": {
         "name": "requests_per_second"
@@ -2042,7 +2040,7 @@ check_metrics["check_mk-mssql_counters_transactions"] = {
 cisco_mem_translation = {
     "mem_used": {
         "name": "mem_used_percent",
-        "deprecated": "1.7.0i1"
+        "deprecated": "2.0.0i1"
     },
 }
 check_metrics["check_mk-cisco_cpu_memory"] = cisco_mem_translation
@@ -2116,5 +2114,15 @@ check_metrics["check_mk-aws_s3_requests_http_errors"] = {
     },
     "http_5xx_perc": {
         "name": "aws_http_5xx_perc"
+    },
+}
+check_metrics["check_mk-ups_capacity"] = {
+    "capacity": {
+        "name": "battery_seconds_remaining",
+        "deprecated": "2.0.0b2",
+    },
+    "percent": {
+        "name": "battery_capacity",
+        "deprecated": "2.0.0b2",
     },
 }

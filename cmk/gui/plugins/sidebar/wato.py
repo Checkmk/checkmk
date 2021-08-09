@@ -4,39 +4,40 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, List, Dict
+from typing import Callable, Dict, Iterable, List, Optional
 
-import cmk.gui.config as config
-import cmk.gui.views as views
 import cmk.gui.dashboard as dashboard
-import cmk.gui.watolib as watolib
 import cmk.gui.sites as sites
-from cmk.gui.htmllib import HTML, Choices
+import cmk.gui.views as views
+import cmk.gui.watolib as watolib
+from cmk.gui.globals import config, html, user
+from cmk.gui.htmllib import foldable_container, HTML
 from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
-from cmk.gui.globals import html
-
 from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
     footnotelinks,
     make_topic_menu,
+    search,
     show_topic_menu,
+    SidebarSnapin,
+    snapin_registry,
 )
-
-from cmk.gui.plugins.wato.utils.main_menu import (
-    MainModuleTopic,
-    main_module_registry,
+from cmk.gui.plugins.wato.utils.main_menu import main_module_registry, MainModuleTopic
+from cmk.gui.type_defs import Choices, MegaMenu, TopicMenuItem, TopicMenuTopic
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    match_item_generator_registry,
+    MatchItem,
+    MatchItems,
 )
 
 
 def render_wato(mini):
     if not config.wato_enabled:
-        html.write_text(_("WATO is disabled."))
+        html.write_text(_("Setup is disabled."))
         return False
-    if not config.user.may("wato.use"):
-        html.write_text(_("You are not allowed to use Checkmk's web configuration GUI."))
+    if not user.may("wato.use"):
+        html.write_text(_("You are not allowed to use the setup."))
         return False
 
     menu = get_wato_menu_items()
@@ -45,8 +46,9 @@ def render_wato(mini):
         for topic in menu:
             for item in topic.items:
                 html.icon_button(url=item.url,
+                                 class_="show_more_mode" if item.is_show_more else None,
                                  title=item.title,
-                                 icon=item.icon_name or "wato",
+                                 icon=item.icon or "wato",
                                  target="main")
     else:
         show_topic_menu(treename="wato", menu=menu, show_item_icons=True)
@@ -70,17 +72,17 @@ def get_wato_menu_items() -> List[TopicMenuTopic]:
             TopicMenuTopic(
                 name=module.topic.name,
                 title=module.topic.title,
-                icon_name=module.topic.icon_name,
+                icon=module.topic.icon_name,
                 items=[],
             ))
         topic.items.append(
             TopicMenuItem(
                 name=module.mode_or_url,
                 title=module.title,
-                icon_name=module.icon,
                 url=module.get_url(),
                 sort_index=module.sort_index,
-                is_advanced=module.is_advanced,
+                is_show_more=module.is_show_more,
+                icon=module.icon,
             ))
 
     # Sort the items of all topics
@@ -95,9 +97,45 @@ mega_menu_registry.register(
     MegaMenu(
         name="setup",
         title=_l("Setup"),
-        icon_name="main_setup",
+        icon="main_setup",
         sort_index=15,
         topics=get_wato_menu_items,
+        search=search.SetupSearch("setup_search"),
+    ))
+
+
+class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        topic_generator: Callable[[], Iterable[TopicMenuTopic]],
+    ) -> None:
+        super().__init__(name)
+        self._topic_generator = topic_generator
+
+    def generate_match_items(self) -> MatchItems:
+        yield from (MatchItem(
+            title=topic_menu_item.title,
+            topic=_("Setup"),
+            url=topic_menu_item.url,
+            match_texts=[topic_menu_item.title],
+        )
+                    for topic_menu_topic in self._topic_generator()
+                    for topic_menu_item in topic_menu_topic.items)
+
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
+        return False
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True
+
+
+match_item_generator_registry.register(
+    MatchItemGeneratorSetupMenu(
+        "setup",
+        mega_menu_registry["setup"].topics,
     ))
 
 
@@ -109,11 +147,15 @@ class SidebarSnapinWATO(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("WATO - Configuration")
+        return _("Setup")
+
+    @classmethod
+    def has_show_more_items(cls):
+        return True
 
     @classmethod
     def description(cls):
-        return _("Direct access to WATO - the web administration GUI of Checkmk")
+        return _("Direct access to the setup menu")
 
     @classmethod
     def allowed_roles(cls):
@@ -136,11 +178,15 @@ class SidebarSnapinWATOMini(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("WATO - Quickaccess")
+        return _("Quick setup")
+
+    @classmethod
+    def has_show_more_items(cls):
+        return True
 
     @classmethod
     def description(cls):
-        return _("Access to WATO modules with only icons (saves space)")
+        return _("Access to the setup menu with only icons (saves space)")
 
     @classmethod
     def allowed_roles(cls):
@@ -246,10 +292,16 @@ def render_tree_folder(tree_id, folder, js_func):
                           onclick="%s(this, \'%s\');" % (js_func, folder[".path"]))
 
     if not is_leaf:
-        html.begin_foldable_container(tree_id, "/" + folder[".path"], False, HTML(title))
-        for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
-            render_tree_folder(tree_id, subfolder, js_func)
-        html.end_foldable_container()
+        with foldable_container(
+                treename=tree_id,
+                id_="/" + folder[".path"],
+                isopen=False,
+                title=HTML(title),
+                icon="foldable_sidebar",
+                padding=6,
+        ):
+            for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
+                render_tree_folder(tree_id, subfolder, js_func)
     else:
         html.li(title)
 
@@ -283,8 +335,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         #
         # Render link target selection
         #
-        selected_topic, selected_target = config.user.load_file("foldertree",
-                                                                (_('Hosts'), 'allhosts'))
+        selected_topic, selected_target = user.load_file("foldertree", (_('Hosts'), 'allhosts'))
 
         # Apply some view specific filters
         views_to_show = [(name, view)
@@ -300,7 +351,6 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
 
         html.open_table()
         html.open_tr()
-        html.td(_('Topic:'), class_="label")
         html.open_td()
         html.dropdown("topic",
                       topic_choices,
@@ -310,13 +360,12 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
         html.close_tr()
 
         html.open_tr()
-        html.td(_("View:"), class_="label")
         html.open_td()
 
         for topic in topics:
             targets: Choices = []
             for item in topic.items:
-                if item.url.startswith("dashboards.py"):
+                if item.url and item.url.startswith("dashboard.py"):
                     name = 'dashboard|' + item.name
                 else:
                     name = item.name

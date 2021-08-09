@@ -6,7 +6,7 @@ Date: 1594970316
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When a non-sticky acknowledgement has been set for a host/service in a soft
 non-OK state, it has been removed when it stayed in a soft non-OK state in

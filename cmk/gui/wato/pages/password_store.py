@@ -6,29 +6,28 @@
 
 from typing import List, Optional, Type
 
-import cmk.gui.config as config
-import cmk.gui.userdb as userdb
+from cmk.gui.globals import html, user
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.valuespec import ValueSpec, DictionaryEntry
+from cmk.gui.plugins.wato import (
+    ConfigDomainCore,
+    mode_registry,
+    SimpleEditMode,
+    SimpleListMode,
+    SimpleModeType,
+    WatoMode,
+)
 from cmk.gui.valuespec import (
-    FixedValue,
-    PasswordSpec,
     Alternative,
+    DictionaryEntry,
     DropdownChoice,
     DualListChoice,
+    FixedValue,
+    Password,
+    ValueSpec,
 )
-
 from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.password_store import PasswordStore
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ConfigDomainCore,
-    SimpleModeType,
-    SimpleListMode,
-    SimpleEditMode,
-    mode_registry,
-)
+from cmk.gui.watolib.passwords import sorted_contact_group_choices
 
 
 class PasswordStoreModeType(SimpleModeType):
@@ -59,7 +58,7 @@ class ModePasswords(SimpleListMode):
         return ["passwords"]
 
     def __init__(self):
-        super(ModePasswords, self).__init__(
+        super().__init__(
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )
@@ -75,7 +74,7 @@ class ModePasswords(SimpleListMode):
         return " ".join([
             _("The password may be used in checks. If you delete the password, "
               "the checks won't be able to authenticate with this password anymore."),
-            super(ModePasswords, self)._delete_confirm_message()
+            super()._delete_confirm_message()
         ])
 
     def page(self):
@@ -88,10 +87,10 @@ class ModePasswords(SimpleListMode):
               "including this password store, are needed in plain text to contact remote systems "
               "for monitoring. So all those passwords have to be stored readable by the monitoring."
              ))
-        super(ModePasswords, self).page()
+        super().page()
 
     def _show_entry_cells(self, table, ident, entry):
-        table.cell(_("Title"), html.render_text(entry["title"]))
+        table.cell(_("Title"), entry["title"])
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
             html.write_text(
@@ -124,13 +123,13 @@ class ModeEditPassword(SimpleEditMode):
         return ModePasswords
 
     def __init__(self):
-        super(ModeEditPassword, self).__init__(
+        super().__init__(
             mode_type=PasswordStoreModeType(),
             store=PasswordStore(),
         )
 
     def _vs_individual_elements(self):
-        if config.user.may("wato.edit_all_passwords"):
+        if user.may("wato.edit_all_passwords"):
             admin_element: List[ValueSpec] = [
                 FixedValue(
                     None,
@@ -143,7 +142,7 @@ class ModeEditPassword(SimpleEditMode):
             admin_element = []
 
         elements: List[DictionaryEntry] = [
-            ("password", PasswordSpec(
+            ("password", Password(
                 title=_("Password"),
                 allow_empty=False,
             )),
@@ -155,7 +154,7 @@ class ModeEditPassword(SimpleEditMode):
                  elements=admin_element + [
                      DropdownChoice(
                          title=_("Members of the contact group:"),
-                         choices=lambda: self._contact_group_choices(only_own=True),
+                         choices=lambda: sorted_contact_group_choices(only_own=True),
                          invalid_choice="complain",
                          empty_text=_(
                              "You need to be member of at least one contact group to be able to "
@@ -172,23 +171,9 @@ class ModeEditPassword(SimpleEditMode):
                  help=_("By default only the members of the owner contact group are permitted "
                         "to use a a configured password. It is possible to share a password with "
                         "other groups of users to make them able to use a password in checks."),
-                 choices=self._contact_group_choices,
+                 choices=sorted_contact_group_choices,
                  autoheight=False,
              )),
         ]
 
         return elements
-
-    def _contact_group_choices(self, only_own=False):
-        contact_groups = load_contact_group_information()
-
-        if only_own:
-            assert config.user.id is not None
-            user_groups = userdb.contactgroups_of_user(config.user.id)
-        else:
-            user_groups = []
-
-        entries = [
-            (c, g['alias']) for c, g in contact_groups.items() if not only_own or c in user_groups
-        ]
-        return sorted(entries, key=lambda x: x[1])

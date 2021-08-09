@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any
 
-from connexion import ProblemException  # type: ignore[import]
+from cmk.gui.plugins.openapi.utils import ProblemException
 
 
 class ProblemKeyError(ProblemException, KeyError):  # pylint: disable=too-many-ancestors
-    """Composite Exception representing a connexion ProblemException and a dict KeyError"""
+    """Composite Exception representing a ProblemException and a dict KeyError"""
 
 
 class ParameterDict(dict):

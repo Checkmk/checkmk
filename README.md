@@ -17,13 +17,20 @@ details.
 
 ## Getting started
 
-Please have a look at the [official
-handbook](https://checkmk.com/cms_intro.html) on how to get
+Please have a look at the [beginners
+guide](https://docs.checkmk.com/master/en/intro.html) on how to get
 started with Checkmk.
 
 ## Want to contribute?
 
-Nice! Have a look at our [contribution guidelines](CONTRIBUTING.md).
+**Thank you for your interest in contributing to Checkmk! Unfortunately, due to our current work
+load, we can at the moment only consider pure bugfixes, sorry for that. Thus, any new pull request
+which is not a pure bugfix will be closed. Instead of creating a PR, please consider sharing new
+check plugins, agent plugins, special agents or notification plugins via the
+[Checkmk Exchange](https://exchange.checkmk.com/).**
+
+For pure bugfixes, have a look at our [contribution guidelines](CONTRIBUTING.md).
+<!-- Nice! Have a look at our [contribution guidelines](CONTRIBUTING.md). -->
 
 ## Building on your own packages
 
@@ -39,7 +46,7 @@ To prepare your system for building, you need to execute this command:
 
 This will install the missing build dependencies, at least if you are working on
 a supported Linux distribution. Then you can either create RPM or DEB packages,
-depending on your Linux-distribution.
+depending on your Linux distribution.
 
 To build an RPM:
 
@@ -49,6 +56,6 @@ To create a DEB package:
 
     DEBFULLNAME="Mr. Buildmaster" DEBEMAIL="mail@buildmaster.com" make deb
 
-Don't forget to insert your name and mail address. As a result your should find
+Don't forget to insert your name and mail address. As a result you should find
 packages of the form `check-mk-[edition]-[version].[deb|rpm]` in your current
 directory.

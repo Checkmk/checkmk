@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If you configure multiple LDAP connections with the same suffix, the 'Users'
 page is broken and can not be accessed any more. From now on, you will be

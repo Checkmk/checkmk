@@ -6,7 +6,7 @@ Date: 1593418762
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werk enables the monitoring of Posgres DBs under Linux as well as under Windows.
 The previously existing agent plugin "mk_postgres" (written in bash), was therefore ported to Python.

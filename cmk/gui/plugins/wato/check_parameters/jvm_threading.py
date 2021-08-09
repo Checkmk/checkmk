@@ -5,21 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
-    rulespec_registry,
     Levels,
+    rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, TextInput
 
 
 def _item_spec_jvm_threading():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the virtual machine"),
         help=_("The name of the application server"),
         allow_empty=False,

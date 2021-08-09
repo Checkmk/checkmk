@@ -6,7 +6,7 @@ Date: 1599054410
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Requesting a VM snapshot summary for the vCenter or each ESX host would lead
 to multiply reported VM snapshots if the respective VM had been configured

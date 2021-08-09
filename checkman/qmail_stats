@@ -16,6 +16,6 @@ description:
 item:
  An empty string
 
-inventory:
+discovery:
  One service is created on each system which provides the {qmail-qstat} command.
 

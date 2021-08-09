@@ -6,45 +6,25 @@
 
 import abc
 import re
-import json
 from typing import Any, Dict, List, Optional, Tuple
 
 from six import ensure_str
 
 import cmk.gui.utils as utils
-import cmk.gui.config as config
-import cmk.gui.weblib as weblib
-from cmk.gui.table import table_element
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
-
+from cmk.gui.globals import config, html, theme, user
+from cmk.gui.i18n import _
 from cmk.gui.plugins.views import (
-    PainterOptions,
-    is_stale,
-    row_id,
-    layout_registry,
-    Layout,
-    group_value,
     EmptyCell,
+    group_value,
+    is_stale,
+    Layout,
+    layout_registry,
     output_csv_headers,
+    PainterOptions,
+    row_id,
 )
-
-
-def init_rowselect(view):
-    # Don't make rows selectable when no commands can be fired
-    # Ignore "C" display option here. Otherwise the rows will not be selectable
-    # after view reload.
-    if not config.user.may("general.act"):
-        return
-
-    selected = config.user.get_rowselection(weblib.selection_id(), 'view-' + view['name'])
-    selection_properties = {
-        "page_id": "view-%s" % view['name'],
-        "selection_id": weblib.selection_id(),
-        "selected_rows": selected,
-    }
-    html.javascript("cmk.selection.init_rowselect(%s);" % (json.dumps(selection_properties)))
+from cmk.gui.table import init_rowselect, table_element
 
 
 def render_checkbox(view, row, num_tds):
@@ -101,9 +81,7 @@ class LayoutSingleDataset(Layout):
                 odd = "even" if odd == "odd" else "odd"
                 html.open_tr(class_="data %s0" % odd)
                 if view.get("column_headers") != "off":
-                    html.open_td(class_="left")
-                    html.write(cell.title(use_short=False))
-                    html.close_td()
+                    html.td(cell.title(use_short=False), class_="left")
 
                 for row in thispart:
                     cell.paint(row)
@@ -168,15 +146,8 @@ class GroupedBoxesLayout(Layout):
                       show_checkboxes):
         repeat_heading_every = 20  # in case column_headers is "repeat"
 
-        html.open_table(class_="groupheader", cellspacing="0", cellpadding="0", border="0")
-        html.open_tr(class_="groupheader")
-        painted = False
-        for cell in group_cells:
-            if painted:
-                html.td(",&nbsp;")
-            painted = cell.paint(rows_with_ids[0][1])
-        html.close_tr()
-        html.close_table()
+        if group_cells:
+            self._show_group_header_table(group_cells, rows_with_ids[0][1])
 
         html.open_table(class_="data")
         odd = "odd"
@@ -242,7 +213,24 @@ class GroupedBoxesLayout(Layout):
             html.close_tr()
 
         html.close_table()
-        init_rowselect(view)
+        # Don't make rows selectable when no commands can be fired
+        # Ignore "C" display option here. Otherwise the rows will not be selectable
+        # after view reload.
+        if not user.may("general.act"):
+            return
+
+        init_rowselect(_get_view_name(view))
+
+    def _show_group_header_table(self, group_cells, first_row):
+        html.open_table(class_="groupheader", cellspacing="0", cellpadding="0", border="0")
+        html.open_tr(class_="groupheader")
+        painted = False
+        for cell in group_cells:
+            if painted:
+                html.td(",&nbsp;")
+            painted = cell.paint(first_row)
+        html.close_tr()
+        html.close_table()
 
     def _show_header_line(self, cells, show_checkboxes):
         html.open_tr()
@@ -272,7 +260,7 @@ class GroupedBoxesLayout(Layout):
 
 
 def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
-    is_open = html.foldable_container_is_open("grouped_rows", index, False)
+    is_open = user.get_tree_state("grouped_rows", index, False)
     html.open_tr(
         class_=["data", "grouped_row_header", "closed" if not is_open else '',
                 "%s0" % trclass])
@@ -280,7 +268,7 @@ def grouped_row_title(index, group_spec, num_rows, trclass, num_cells):
                  onclick="cmk.views.toggle_grouped_rows('grouped_rows', '%s', this, %d)" %
                  (index, num_rows))
 
-    html.img(html.theme_url("images/tree_closed.png"),
+    html.img(theme.url("images/tree_closed.svg"),
              align="absbottom",
              class_=["treeangle", "nform", "open" if is_open else "closed"])
     html.write_text("%s (%d)" % (group_spec["title"], num_rows))
@@ -490,32 +478,32 @@ class LayoutTiled(Layout):
             html.open_td(class_=["tl", rendered[1][0]])
             if show_checkboxes:
                 render_checkbox(view, row, len(cells) - 1)
-            html.write("%s" % rendered[1][1])
+            html.write_text(rendered[1][1])
             html.close_td()
             html.open_td(class_=["tr", rendered[2][0]])
-            html.write("%s" % rendered[2][1])
+            html.write_text(rendered[2][1])
             html.close_td()
             html.close_tr()
 
             html.open_tr()
             html.open_td(colspan=2, class_=["center", rendered[0][0]])
-            html.write("%s" % rendered[0][1])
+            html.write_text(rendered[0][1])
             html.close_td()
             html.close_tr()
 
             for css, cont in rendered[5:]:
                 html.open_tr()
                 html.open_td(colspan=2, class_=["cont", css])
-                html.write("%s" % cont)
+                html.write_text(cont)
                 html.close_td()
                 html.close_tr()
 
             html.open_tr()
             html.open_td(class_=["bl", rendered[3][0]])
-            html.write("%s" % rendered[3][1])
+            html.write_text(rendered[3][1])
             html.close_td()
             html.open_td(class_=["br", rendered[4][0]])
-            html.write("%s" % rendered[4][1])
+            html.write_text(rendered[4][1])
             html.close_td()
             html.close_tr()
 
@@ -527,7 +515,10 @@ class LayoutTiled(Layout):
             html.close_tr()
 
         html.close_table()
-        init_rowselect(view)
+        if not user.may("general.act"):
+            return
+
+        init_rowselect(_get_view_name(view))
 
 
 @layout_registry.register
@@ -611,6 +602,7 @@ class LayoutTable(Layout):
                         html.close_table()
                         html.close_td()
                         html.close_tr()
+                        odd = "odd"
 
                     # Table headers
                     if view.get("column_headers") != "off":
@@ -677,9 +669,8 @@ class LayoutTable(Layout):
             if show_checkboxes:
                 render_checkbox_td(view, row, num_cells)
 
-            last_cell = cells[-1]
             for cell in cells:
-                cell.paint(row, is_last_cell=last_cell == cell)
+                cell.paint(row)
 
             column += 1
 
@@ -689,7 +680,10 @@ class LayoutTable(Layout):
                 html.td('', class_="fillup", colspan=num_cells)
             html.close_tr()
         html.close_table()
-        init_rowselect(view)
+        if not user.may("general.act"):
+            return
+
+        init_rowselect(_get_view_name(view))
 
     def _show_header_line(self, cells, num_columns, show_checkboxes):
         html.open_tr()
@@ -700,14 +694,17 @@ class LayoutTable(Layout):
                 else:
                     html.th('')
 
-            last_cell = cells[-1]
             for cell in cells:
-                cell.paint_as_header(is_last_column_header=cell == last_cell)
+                cell.paint_as_header()
 
             if n < num_columns:
                 html.td('', class_="gap")
 
         html.close_tr()
+
+
+def _get_view_name(view) -> str:
+    return "view-%s" % view["name"]
 
 
 @layout_registry.register
@@ -771,7 +768,7 @@ class LayoutMatrix(Layout):
                             _tdclass, content = cell.render(cell_row)
                             if cell_nr:
                                 html.write_text(",")
-                            html.write(content)
+                            html.write_text(content)
 
     def render(self, rows, view, group_cells, cells, num_columns, show_checkboxes):
         header_majorities = self._matrix_find_majorities_for_header(rows, group_cells)
@@ -779,7 +776,7 @@ class LayoutMatrix(Layout):
 
         painter_options = PainterOptions.get_instance()
         for groups, unique_row_ids, matrix_cells in \
-                 create_matrices(rows, group_cells, cells, num_columns):
+                create_matrices(rows, group_cells, cells, num_columns):
 
             # Paint the matrix. Begin with the group headers
             html.open_table(class_="data matrix")
@@ -788,7 +785,7 @@ class LayoutMatrix(Layout):
                 odd = "even" if odd == "odd" else "odd"
                 html.open_tr(class_="data %s0" % odd)
                 html.open_td(class_="matrixhead")
-                html.write(cell.title(use_short=False))
+                html.write_text(cell.title(use_short=False))
                 html.close_td()
                 for _group, group_row in groups:
                     tdclass, content = cell.render(group_row)
@@ -798,7 +795,7 @@ class LayoutMatrix(Layout):
                         if majority_value is not None and majority_value != gv:
                             tdclass += " minority"
                     html.open_td(class_=["left", tdclass])
-                    html.write(content)
+                    html.write_text(content)
                     html.close_td()
                 html.close_tr()
 
@@ -818,7 +815,7 @@ class LayoutMatrix(Layout):
                 html.open_tr(class_="data %s0" % odd)
                 tdclass, content = cells[0].render(list(matrix_cells[rid].values())[0])
                 html.open_td(class_=["left", tdclass])
-                html.write(content)
+                html.write_text(content)
                 html.close_td()
 
                 # Now go through the groups and paint the rest of the
@@ -842,9 +839,7 @@ class LayoutMatrix(Layout):
 
                             if len(cells) > 2:
                                 html.open_tr()
-                            html.open_td(class_=tdclass)
-                            html.write(content)
-                            html.close_td()
+                            html.td(content, class_=tdclass)
                             if len(cells) > 2:
                                 html.close_tr()
 

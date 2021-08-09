@@ -3,20 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import List
 
-from .agent_based_api.v1 import (
-    register,
-    SNMPTree,
-    type_defs,
-)
-from .utils import (
-    hitachi_hnas,
-    if64,
-    interfaces,
-)
+from .agent_based_api.v1 import register, SNMPTree, type_defs
+from .utils import hitachi_hnas, if64, interfaces
 
 
-def parse_hitachi_hnas_fc_if(string_table: type_defs.SNMPStringTable) -> interfaces.Section:
+def parse_hitachi_hnas_fc_if(string_table: List[type_defs.StringTable]) -> interfaces.Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_hitachi_hnas_fc_if([[
@@ -25,10 +18,10 @@ def parse_hitachi_hnas_fc_if(string_table: type_defs.SNMPStringTable) -> interfa
     ... ['2', '0', '1', '4', '34233856', '2300928', '0', '22', '1', '0', '0', '0', '0', '0'],
     ... ['2', '1', '3', '4', '0', '0', '2', '0', '0', '0', '0', '0', '0', '0'],
     ... ]]))
-    [Interface(index='1000', descr='1.0', alias='1.0', type='', speed=4000000000, oper_status='1', in_octets=308224, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=21, out_octets=2162688, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None),
-     Interface(index='1001', descr='1.1', alias='1.1', type='', speed=4000000000, oper_status='2', in_octets=0, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=2, out_octets=0, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='down', speed_as_text='', group=None, node=None, admin_status=None),
-     Interface(index='2000', descr='2.0', alias='2.0', type='', speed=4000000000, oper_status='1', in_octets=34233856, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=23, out_octets=2300928, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None),
-     Interface(index='2001', descr='2.1', alias='2.1', type='', speed=4000000000, oper_status='2', in_octets=0, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=2, out_octets=0, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='down', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='1000', descr='1.0', alias='1.0', type='', speed=4000000000, oper_status='1', in_octets=308224, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=21, out_octets=2162688, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=2470912),
+     Interface(index='1001', descr='1.1', alias='1.1', type='', speed=4000000000, oper_status='2', in_octets=0, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=2, out_octets=0, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='down', speed_as_text='', group=None, node=None, admin_status=None, total_octets=0),
+     Interface(index='2000', descr='2.0', alias='2.0', type='', speed=4000000000, oper_status='1', in_octets=34233856, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=23, out_octets=2300928, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=36534784),
+     Interface(index='2001', descr='2.1', alias='2.1', type='', speed=4000000000, oper_status='2', in_octets=0, in_ucast=0, in_mcast=0, in_bcast=0, in_discards=0, in_errors=2, out_octets=0, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address='', oper_status_name='down', speed_as_text='', group=None, node=None, admin_status=None, total_octets=0)]
     """
     return [
         interfaces.Interface(
@@ -49,7 +42,7 @@ def parse_hitachi_hnas_fc_if(string_table: type_defs.SNMPStringTable) -> interfa
 register.snmp_section(
     name="hitachi_hnas_fc_if",
     parse_function=parse_hitachi_hnas_fc_if,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.11096.6.1.1.1.3.6.25.1",
             oids=[
@@ -77,11 +70,11 @@ register.check_plugin(
     name="hitachi_hnas_fc_if",
     service_name="Interface FC %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=interfaces.discover_interfaces,
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.check_if64,
+    check_function=if64.generic_check_if64,
     cluster_check_function=interfaces.cluster_check,
 )

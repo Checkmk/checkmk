@@ -5,23 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
+)
 from cmk.gui.valuespec import (
     Alternative,
     Checkbox,
     Dictionary,
     Integer,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
-)
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
-    RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
 )
 
 
@@ -50,7 +49,7 @@ rulespec_registry.register(
 
 
 def _item_spec_win_dhcp_pools():
-    return TextAscii(
+    return TextInput(
         title=_("Pool name"),
         allow_empty=False,
     )

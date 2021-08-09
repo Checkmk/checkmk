@@ -6,16 +6,22 @@
 
 # pylint: disable=redefined-outer-name
 
-import sys
 import os
 import subprocess
-import pytest  # type: ignore[import]
+import sys
+
+import pytest
 import requests
 import requests.exceptions
-import docker  # type: ignore[import]
 
-import testlib
-import testlib.utils
+import tests.testlib as testlib
+from tests.testlib.utils import (
+    cmk_path,
+    get_cmk_download_credentials,
+    get_cmk_download_credentials_file,
+)
+
+import docker  # type: ignore[import]
 
 build_path = os.path.join(testlib.repo_path(), "docker")
 image_prefix = "docker-tests"
@@ -48,6 +54,17 @@ def _prepare_build():
     assert subprocess.Popen(["make", "needed-packages"], cwd=build_path).wait() == 0
 
 
+def resolve_image_alias(alias):
+    """Resolves given "Docker image alias" using the common `resolve.sh` and returns an image
+    name which can be used with `docker run`
+    >>> image = resolve_image_alias("IMAGE_CMK_BASE")
+    >>> assert image and isinstance(image, str)
+    """
+    return subprocess.check_output(
+        [os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.sh"), alias],
+        universal_newlines=True).split("\n")[0]
+
+
 def _build(request, client, version, add_args=None):
     _prepare_build()
 
@@ -57,12 +74,10 @@ def _build(request, client, version, add_args=None):
         command=["timeout", "180", "httpd", "-f", "-p", "8000", "-h", "/files"],
         detach=True,
         remove=True,
-        volumes={
-            testlib.utils.get_cmk_download_credentials_file(): {
-                "bind": "/files/secret",
-                "mode": "ro"
-            }
-        },
+        volumes={get_cmk_download_credentials_file(): {
+                     "bind": "/files/secret",
+                     "mode": "ro"
+                 }},
     )
     request.addfinalizer(lambda: secret_container.remove(force=True))
 
@@ -75,7 +90,8 @@ def _build(request, client, version, add_args=None):
             buildargs={
                 "CMK_VERSION": version.version,
                 "CMK_EDITION": version.edition(),
-                "CMK_DL_CREDENTIALS": ":".join(testlib.utils.get_cmk_download_credentials()),
+                "CMK_DL_CREDENTIALS": ":".join(get_cmk_download_credentials()),
+                "IMAGE_CMK_BASE": resolve_image_alias("IMAGE_CMK_BASE"),
             },
         )
     except docker.errors.BuildError as e:
@@ -279,7 +295,7 @@ def test_start_with_custom_command(request, client, version):
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(request, client, version):
-    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "stretch")
+    package_name = "check-mk-%s-%s_0.%s_amd64.deb" % (version.edition(), version.version, "buster")
     pkg_path = os.path.join(build_path, package_name)
     try:
         with open(pkg_path, "w") as f:
@@ -294,7 +310,10 @@ def test_build_using_local_deb(request, client, version):
 # Test that the local GPG file is used by making the build fail because of an empty file
 def test_build_using_local_gpg_pubkey(request, client, version):
     pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
+    pkg_path_sav = os.path.join(build_path, "Check_MK-pubkey.gpg.sav")
     try:
+        os.rename(pkg_path, pkg_path_sav)
+
         with open(pkg_path, "w") as f:
             f.write("")
 
@@ -302,6 +321,7 @@ def test_build_using_local_gpg_pubkey(request, client, version):
             _build(request, client, version)
     finally:
         os.unlink(pkg_path)
+        os.rename(pkg_path_sav, pkg_path)
 
 
 def test_start_enable_mail(request, client):
@@ -412,7 +432,7 @@ def test_container_agent(request, client):
     assert _exec_run(c, ["check_mk_agent"])[-1].startswith("<<<check_mk>>>\n")
 
     # Check whether or not the agent port is opened
-    assert "0.0.0.0:6556" in _exec_run(c, ["netstat", "-tln"])[-1]
+    assert ":::6556" in _exec_run(c, ["netstat", "-tln"])[-1]
 
 
 def test_update(request, client, version):
@@ -470,3 +490,12 @@ def test_update(request, client, version):
     assert _exec_run(c_new, ["test", "-f", "pre-update-marker"],
                      user="cmk",
                      workdir="/omd/sites/cmk")[0] == 0
+
+
+if __name__ == "__main__":
+    # Please keep these lines - they make TDD easy and have no effect on normal test runs.
+    # Just run this file from your IDE and dive into the code.
+    import doctest
+
+    assert not doctest.testmod().failed
+    pytest.main(["-T=docker", "-vvsx", __file__])

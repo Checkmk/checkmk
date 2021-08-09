@@ -1,0 +1,12 @@
+Title: WATO: do not create empty rules.mk files when saving rulesets
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1603287589
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+

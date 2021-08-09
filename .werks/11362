@@ -6,7 +6,7 @@ Date: 1597667064
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The discovery of the services provided by the check <tt>rmon_stats</tt>,
 which monitors RMON statistics, used to be configured via the ruleset

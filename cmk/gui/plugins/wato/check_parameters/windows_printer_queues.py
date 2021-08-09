@@ -7,20 +7,12 @@
 from typing import Any, Dict
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    ListChoice,
-    TextAscii,
-    Transform,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersPrinters,
 )
+from cmk.gui.valuespec import Dictionary, Integer, ListChoice, TextInput, Transform, Tuple
 
 
 def windows_printer_queues_forth(old):
@@ -100,7 +92,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="windows_printer_queues",
         group=RulespecGroupCheckParametersPrinters,
-        item_spec=lambda: TextAscii(title=_("Printer Name"), allow_empty=True),
+        item_spec=lambda: TextInput(title=_("Printer Name"), allow_empty=True),
         parameter_valuespec=_parameter_valuespec_windows_printer_queues,
-        title=lambda: _("Number of open jobs of a printer on windows"),
+        title=lambda: _("Windows printers: number of open jobs"),
     ))

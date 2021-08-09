@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If the same Host/Service ID occurs, e.g. if you replay a notification, an issue
 for the same problem could be created again. This has been fixed.

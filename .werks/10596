@@ -6,7 +6,7 @@ Date: 1580383949
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Due to a regression in version 1.6.0, the "System events" service of Liebert devices
 could not be discovered if no events were listed at the time of the discovery.

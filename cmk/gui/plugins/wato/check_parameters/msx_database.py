@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Float,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 
 def _item_spec_msx_database():
-    return TextAscii(
+    return TextInput(
         title=_("Database Name"),
         help=_("Specify database names that the rule should apply to"),
     )

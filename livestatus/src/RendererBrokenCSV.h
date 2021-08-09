@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "Renderer.h"
-#include "data_encoding.h"
+enum class Encoding;
 class Logger;
 
 class CSVSeparators {

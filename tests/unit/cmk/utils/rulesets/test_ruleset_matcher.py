@@ -4,14 +4,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=redefined-outer-name
-import pytest  # type: ignore[import]
-from testlib.base import Scenario
+from typing import Sequence
 
-from cmk.utils.type_defs import CheckPluginName
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
+
+from tests.testlib.base import Scenario
+
+from cmk.utils.rulesets.ruleset_matcher import matches_tag_condition, RulesetMatchObject
+from cmk.utils.tags import TagConfig
+from cmk.utils.type_defs import CheckPluginName, RuleSpec, RuleValue, TagCondition, TaggroupID
+
 from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 
 
 def test_ruleset_match_object_no_conditions():
@@ -28,6 +33,21 @@ def test_ruleset_match_object_host_name():
 def test_ruleset_match_object_service_description():
     obj = RulesetMatchObject(host_name=None, service_description=u"Ümlaut")
     assert obj.service_description == u"Ümlaut"
+
+
+def test_ruleset_match_object_service_cache_id():
+    obj1 = RulesetMatchObject(host_name="host",
+                              service_description="svc",
+                              service_labels={u"a": u"v1"})
+    obj2 = RulesetMatchObject(host_name="host",
+                              service_description="svc",
+                              service_labels={u"a": u"v2"})
+    assert obj1.service_cache_id != obj2.service_cache_id
+
+
+def test_ruleset_match_object_service_cache_id_no_labels():
+    obj = RulesetMatchObject(host_name="host", service_description="svc")
+    assert obj.service_cache_id == ("svc", hash(None))
 
 
 ruleset = [
@@ -431,6 +451,88 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(monkeypatch, hostname, exp
                                         is_binary=False)) == expected_result
 
 
+@pytest.mark.parametrize(
+    "rule_spec, expected_result",
+    [
+        pytest.param(
+            {
+                "value": "value",
+                "condition": {
+                    "host_tags": {
+                        "grp1": "v1",
+                    },
+                },
+                "options": {},
+            },
+            ["value"],
+            id="should match",
+        ),
+        pytest.param(
+            {
+                "value": "value",
+                "condition": {
+                    "host_tags": {
+                        "grp2": "v1",
+                    },
+                },
+                "options": {},
+            },
+            [],
+            id="should not match",
+        ),
+    ],
+)
+def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
+    monkeypatch: MonkeyPatch,
+    rule_spec: RuleSpec,
+    expected_result: Sequence[RuleValue],
+) -> None:
+    ts = Scenario()
+    add_tag_config = TagConfig()
+    add_tag_config.parse_config({
+        'aux_tags': [],
+        'tag_groups': [
+            {
+                'id': 'grp1',
+                'tags': [{
+                    'aux_tags': [],
+                    'id': 'v1',
+                    'title': 'Value1',
+                },],
+                'title': 'Group 1'
+            },
+            {
+                'id': 'grp2',
+                'tags': [{
+                    'aux_tags': [],
+                    'id': 'v1',
+                    'title': 'Value1',
+                },],
+                'title': 'Group 2'
+            },
+        ],
+    })
+    ts.tags += add_tag_config
+    ts.add_host(
+        "host",
+        tags={
+            "grp1": "v1",
+        },
+    )
+    config_cache = ts.apply(monkeypatch)
+    matcher = config_cache.ruleset_matcher
+
+    assert list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(
+                host_name="host",
+                service_description=None,
+            ),
+            ruleset=[rule_spec],
+            is_binary=False,
+        )) == expected_result
+
+
 service_label_ruleset = [
     # test simple label match
     {
@@ -514,3 +616,109 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname
             hostname, service_description),
                                            ruleset=service_label_ruleset,
                                            is_binary=False)) == expected_result
+
+
+def test_ruleset_optimizer_clear_ruleset_caches(monkeypatch):
+    config_cache = Scenario().apply(monkeypatch)
+    ruleset_optimizer = config_cache.ruleset_matcher.ruleset_optimizer
+    ruleset_optimizer.get_service_ruleset(ruleset, False, False)
+    ruleset_optimizer.get_host_ruleset(ruleset, False, False)
+    assert ruleset_optimizer._host_ruleset_cache
+    assert ruleset_optimizer._service_ruleset_cache
+    ruleset_optimizer.clear_ruleset_caches()
+    assert not ruleset_optimizer._host_ruleset_cache
+    assert not ruleset_optimizer._service_ruleset_cache
+
+
+@pytest.mark.parametrize(
+    "taggroud_id, tag_condition, expected_result",
+    [
+        pytest.param(
+            "t1",
+            "abc",
+            True,
+            id="direct check if tag is present, true",
+        ),
+        pytest.param(
+            "t-1",
+            "abc",
+            False,
+            id="direct check if tag is present, non-existing tag group",
+        ),
+        pytest.param(
+            "t1",
+            "xyz",
+            False,
+            id="direct check if tag is present, wrong tag id",
+        ),
+        pytest.param(
+            "t2",
+            {"$ne": "789"},
+            True,
+            id="negated condition, true",
+        ),
+        pytest.param(
+            "t-2",
+            {"$ne": "789"},
+            True,
+            id="negated condition, non-existing tag group",
+        ),
+        pytest.param(
+            "t2",
+            {"$ne": "xyz"},
+            False,
+            id="negated condition, right tag id",
+        ),
+        pytest.param(
+            "t3",
+            {"$or": ["abc", "123"]},
+            True,
+            id="or condition, true",
+        ),
+        pytest.param(
+            "t-3",
+            {"$or": ["abc", "123"]},
+            False,
+            id="or condition, non-existing tag group",
+        ),
+        pytest.param(
+            "t3",
+            {"$or": ["abc", "456"]},
+            False,
+            id="or condition, wrong tag ids",
+        ),
+        pytest.param(
+            "t4",
+            {"$nor": ["efg", "789"]},
+            True,
+            id="nor condition, true",
+        ),
+        pytest.param(
+            "t-4",
+            {"$nor": ["efg", "789"]},
+            True,
+            id="nor condition, non-existing tag group",
+        ),
+        pytest.param(
+            "t4",
+            {"$nor": ["456", "789"]},
+            False,
+            id="nor condition, one right tag id",
+        ),
+    ],
+)
+def test_matches_tag_condition(
+    taggroud_id: TaggroupID,
+    tag_condition: TagCondition,
+    expected_result: bool,
+) -> None:
+    assert matches_tag_condition(
+        taggroud_id,
+        tag_condition,
+        {
+            ("t1", "abc"),
+            ("t2", "xyz"),
+            ("t3", "123"),
+            ("t4", "456"),
+        },
+    ) is expected_result

@@ -3,6 +3,7 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import math
 
 
 def parse_k8s_surge(value, total):
@@ -29,14 +30,35 @@ def parse_k8s_unavailability(value, total):
 
 
 def inventory_k8s_replicas(parsed):
-    if parsed['ready_replicas'] is not None and parsed['replicas'] is not None:
-        yield HostLabel(u'cmk/kubernetes_object', u'deployment')
+    # the deployment must either be paused or return numbers for running pods
+    if (parsed['ready_replicas'] is not None and
+            parsed['replicas'] is not None) or parsed['paused']:
         yield (None, {})
 
 
-def check_k8s_replicas(_no_item, params, parsed):
+def check_k8s_replicas(_no_item, _params, parsed):
     ready, total = parsed['ready_replicas'], parsed['replicas']
     paused, strategy = parsed['paused'], parsed['strategy_type']
+
+    if total is None or ready is None:
+        first_unavailable_time = get_item_state("unavailable")
+        if first_unavailable_time:
+            age = time.time() - first_unavailable_time
+            if age > 600:  # setting 10 minutes as default threshold for missing replica data
+                yield check_levels(
+                    age,
+                    None,
+                    (None, 600),
+                    human_readable_func=get_age_human_readable,
+                    infoname="The replicas data has been missing",
+                )
+                return
+        set_item_state("unavailable", time.time())
+        raise MKCounterWrapped("The replicas data is currently unavailable")
+
+    # previously missing but now complete data
+    if get_item_state("unavailable"):
+        set_item_state("unavailable", None)
 
     if paused or strategy == 'Recreate':
         crit, crit_lower = None, None
@@ -59,7 +81,7 @@ def check_k8s_replicas(_no_item, params, parsed):
         infotext += " (crit below %d)" % crit_lower
 
     perfdata = [
-        ('ready_replicas', ready, None, crit),
+        ('ready_replicas', ready, None, crit, 0, total),
         ('total_replicas', total),
     ]
     yield state, infotext, perfdata
@@ -75,10 +97,8 @@ def check_k8s_replicas(_no_item, params, parsed):
 
 
 check_info['k8s_replicas'] = {
-    'parse_function': parse_k8s,
+    # section already migrated
     'inventory_function': inventory_k8s_replicas,
     'check_function': check_k8s_replicas,
     'service_description': 'Replicas',
-    'has_perfdata': True,
-    'includes': ['k8s.include'],
 }

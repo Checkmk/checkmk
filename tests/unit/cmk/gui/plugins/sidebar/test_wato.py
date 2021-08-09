@@ -5,10 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List
-import pytest  # type: ignore[import]
+
+import pytest
 
 import cmk.utils.version as cmk_version
-from cmk.gui.plugins.sidebar.wato import get_wato_menu_items
+
+from cmk.gui.plugins.sidebar.wato import get_wato_menu_items, MatchItemGeneratorSetupMenu
+from cmk.gui.type_defs import TopicMenuItem, TopicMenuTopic
+from cmk.gui.watolib.search import MatchItem
 
 
 def expected_items() -> Dict[str, List[str]]:
@@ -26,11 +30,10 @@ def expected_items() -> Dict[str, List[str]]:
 
     agents_items += [
         'download_agents',
-        'wato.py?mode=rulesets&group=vm_cloud_container',
-        'wato.py?mode=rulesets&group=datasource_programs',
-        'wato.py?mode=rulesets&group=custom_integrations',
-        'wato.py?mode=rulesets&group=agent',
-        'wato.py?mode=rulesets&group=snmp',
+        'wato.py?group=vm_cloud_container&mode=rulesets',
+        'wato.py?group=datasource_programs&mode=rulesets',
+        'wato.py?group=agent&mode=rulesets',
+        'wato.py?group=snmp&mode=rulesets',
     ]
 
     events_items = [
@@ -51,12 +54,11 @@ def expected_items() -> Dict[str, List[str]]:
         'diagnostics',
         'analyze_config',
         'background_jobs_overview',
-        'version.py',
     ]
 
     hosts_items = [
         'folder',
-        'wato.py?mode=rulesets&group=host_monconf',
+        'wato.py?group=host_monconf&mode=rulesets',
         'tags',
     ]
 
@@ -66,7 +68,7 @@ def expected_items() -> Dict[str, List[str]]:
     hosts_items += [
         'host_groups',
         'host_attrs',
-        'wato.py?mode=rulesets&group=inventory',
+        'wato.py?group=inventory&mode=rulesets',
     ]
 
     users_items = [
@@ -80,7 +82,7 @@ def expected_items() -> Dict[str, List[str]]:
     if cmk_version.is_managed_edition():
         users_items.insert(0, 'customer_management')
 
-    return {
+    expected_items = {
         'agents': agents_items,
         'events': events_items,
         'general': [
@@ -90,7 +92,6 @@ def expected_items() -> Dict[str, List[str]]:
             'predefined_conditions',
             'timeperiods',
             'passwords',
-            'wato.py?mode=rulesets&group=user_interface',
             'sites',
             'auditlog',
             'icons',
@@ -98,20 +99,25 @@ def expected_items() -> Dict[str, List[str]]:
         'hosts': hosts_items,
         'maintenance': maintenance_items,
         'services': [
-            'wato.py?mode=rulesets&group=monconf',
-            'wato.py?mode=rulesets&group=checkparams',
-            'wato.py?mode=rulesets&group=activechecks',
-            'wato.py?mode=rulesets&group=custom_checks',
-            'static_checks',
+            'wato.py?group=monconf&mode=rulesets',
+            'wato.py?group=checkparams&mode=rulesets',
+            'wato.py?group=static&mode=rulesets',
+            'wato.py?group=activechecks&mode=rulesets',
+            'wato.py?group=custom_checks&mode=rulesets',
             'service_groups',
             'check_plugins',
-            'bi_packs',
         ],
+        'bi': ['bi_packs'],
         'users': users_items,
     }
 
+    if not cmk_version.is_raw_edition():
+        expected_items.update({'custom': ['influxdb_connections']})
 
-@pytest.mark.usefixtures("register_builtin_html", "load_plugins", "with_admin_login")
+    return expected_items
+
+
+@pytest.mark.usefixtures("request_context", "load_plugins", "with_admin_login")
 def test_get_wato_menu_items():
     items_by_topic: Dict[str, List[str]] = {}
     for topic in get_wato_menu_items():
@@ -120,3 +126,33 @@ def test_get_wato_menu_items():
             items.append(item.name)
 
     assert expected_items() == items_by_topic
+
+
+@pytest.mark.usefixtures("load_plugins", "with_admin_login")
+def test_unique_wato_menu_item_titels():
+    titles = [
+        entry.title
+        for topic_menu_topic in get_wato_menu_items()
+        for entry in topic_menu_topic.items
+    ]
+    assert len(titles) == len(set(titles))
+
+
+def test_match_item_generator_setup_menu():
+    assert list(
+        MatchItemGeneratorSetupMenu(
+            "setup",
+            lambda: [
+                TopicMenuTopic(
+                    name="topic",
+                    title="Topic",
+                    items=[
+                        TopicMenuItem(name="item 1", title="Item 1", sort_index=0, url="url 1"),
+                        TopicMenuItem(name="item 2", title="Item 2", sort_index=1, url="url 2"),
+                    ],
+                )
+            ],
+        ).generate_match_items()) == [
+            MatchItem(title='Item 1', topic='Setup', url='url 1', match_texts=['item 1']),
+            MatchItem(title='Item 2', topic='Setup', url='url 2', match_texts=['item 2']),
+        ]

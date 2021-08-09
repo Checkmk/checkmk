@@ -4,17 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from contextlib import nullcontext
 from typing import Any, Dict, List
 
-import cmk.gui.config as config
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.htmllib import HTML
-
+from cmk.gui.globals import config, html, request, response, user
+from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_mk_configuration import transform_virtual_host_trees
+from cmk.gui.utils.urls import makeuri_contextless
+
 from . import SidebarSnapin, snapin_registry
 
 
@@ -35,7 +36,7 @@ class VirtualHostTree(SidebarSnapin):
         }
 
     def _load_user_settings(self):
-        tree_conf = config.user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+        tree_conf = user.load_file("virtual_host_tree", {"tree": 0, "cwd": {}})
         if isinstance(tree_conf, int):
             tree_conf = {"tree": tree_conf, "cwd": {}}  # convert from old style
 
@@ -50,10 +51,7 @@ class VirtualHostTree(SidebarSnapin):
         self._current_tree_path = self._cwds.get(self._current_tree_id, [])
 
     def _save_user_settings(self):
-        config.user.save_file("virtual_host_tree", {
-            "tree": self._current_tree_id,
-            "cwd": self._cwds
-        })
+        user.save_file("virtual_host_tree", {"tree": self._current_tree_id, "cwd": self._cwds})
 
     @classmethod
     def title(cls):
@@ -114,6 +112,7 @@ class VirtualHostTree(SidebarSnapin):
                 not self._is_tag_subdir(path=cwd, cwd=path)):
             return
 
+        container = nullcontext(False)
         if path != cwd and self._is_tag_subdir(path, cwd):
             bullet = self._tag_tree_bullet(self._tag_tree_worst_state(tree), path, False)
             if self._tag_tree_has_svc_problems(tree):
@@ -124,34 +123,39 @@ class VirtualHostTree(SidebarSnapin):
                     target="main")
 
             if path:
-                html.begin_foldable_container("tag-tree", ".".join(map(str, path)), False,
-                                              HTML(bullet + title))
+                container = foldable_container(
+                    treename="tag-tree",
+                    id_=".".join(map(str, path)),
+                    isopen=False,
+                    title=bullet + title,
+                    icon="foldable_sidebar",
+                )
 
-        for (node_title, node_value), subtree in sorted(tree.get("_children", {}).items()):
-            subpath = path + [node_value or ""]
-            url = self._tag_tree_url(tree_spec, subpath, "allhosts")
+        with container:
+            for (node_title, node_value), subtree in sorted(tree.get("_children", {}).items()):
+                subpath = path + [node_value or ""]
+                url = self._tag_tree_url(tree_spec, subpath, "allhosts")
 
-            if "_num_hosts" in subtree:
-                node_title += " (%d)" % subtree["_num_hosts"]
+                if "_num_hosts" in subtree:
+                    node_title += " (%d)" % subtree["_num_hosts"]
 
-            node_title = html.render_a(node_title, href=url, target="main")
+                node_title = html.render_a(node_title, href=url, target="main")
 
-            if "_children" not in subtree:
-                if self._is_tag_subdir(path, cwd):
-                    html.write(self._tag_tree_bullet(subtree.get("_state", 0), subpath, True))
-                    if subtree.get("_svc_problems"):
-                        url = self._tag_tree_url(tree_spec, subpath, "svcproblems")
-                        html.icon_button(url,
-                                         _("Show the service problems contained in this branch"),
-                                         "svc_problems",
-                                         target="main")
-                    html.write(node_title)
-                    html.br()
-            else:
-                self._render_tag_tree_level(tree_spec, subpath, cwd, node_title, subtree)
-
-        if path and path != cwd and self._is_tag_subdir(path, cwd):
-            html.end_foldable_container()
+                if "_children" not in subtree:
+                    if self._is_tag_subdir(path, cwd):
+                        html.write_html(
+                            self._tag_tree_bullet(subtree.get("_state", 0), subpath, True))
+                        if subtree.get("_svc_problems"):
+                            url = self._tag_tree_url(tree_spec, subpath, "svcproblems")
+                            html.icon_button(
+                                url,
+                                _("Show the service problems contained in this branch"),
+                                "svc_problems",
+                                target="main")
+                        html.write_html(node_title)
+                        html.br()
+                else:
+                    self._render_tag_tree_level(tree_spec, subpath, cwd, node_title, subtree)
 
     def _is_tag_subdir(self, path, cwd):
         if not cwd:
@@ -162,23 +166,30 @@ class VirtualHostTree(SidebarSnapin):
             return False
         return self._is_tag_subdir(path[1:], cwd[1:])
 
-    def _tag_tree_bullet(self, state, path, leaf):
-        code = (u'<div class="tagtree %sstatebullet state%d">&nbsp;</div>' %
-                ((leaf and "leaf " or ""), state))
+    def _tag_tree_bullet(self, state, path, leaf) -> HTML:
+        code = html.render_div(
+            "&nbsp;",
+            class_=["tagtree", "leafstatebullet" if leaf else "statebullet",
+                    "state%d" % state])
         if not leaf:
-            code = ('<a title="%s" href="javascript:virtual_host_tree_enter(\'%s\');">%s</a>' %
-                    (_("Display the tree only below this node"), "|".join(path), code))
+            code += html.render_a(code,
+                                  href="javascript:virtual_host_tree_enter('%s');" % "|".join(path),
+                                  title=_("Display the tree only below this node"))
         return code + " "
 
     def _tag_tree_url(self, tree_spec, node_values, viewname):
-        urlvars = [("view_name", viewname), ("filled_in", "filter")]
+        urlvars = [
+            ("view_name", viewname),
+            ("filled_in", "filter"),
+            ("_show_filter_form", "0"),
+        ]
         if viewname == "svcproblems":
             urlvars += [("st1", "on"), ("st2", "on"), ("st3", "on")]
 
         urlvars += self._get_tag_url_vars(tree_spec, node_values)
         urlvars += self._get_folder_url_vars(node_values)
 
-        return html.makeuri_contextless(urlvars, "view.py")
+        return makeuri_contextless(request, urlvars, "view.py")
 
     def _get_tag_url_vars(self, tree_spec, node_values):
         urlvars = []
@@ -451,26 +462,25 @@ function virtual_host_tree_enter(path)
         }
 
     def _ajax_tag_tree(self):
-        html.set_output_format("json")
+        response.set_content_type("application/json")
         self._load()
-        new_tree = html.request.var("tree_id")
+        new_tree = request.var("tree_id")
 
         if new_tree not in self._trees:
             raise MKUserError("conf", _("This virtual host tree does not exist."))
 
         self._current_tree_id = new_tree
         self._save_user_settings()
-        html.write("OK")
+        response.set_data("OK")
 
     # TODO: Validate path in current tree
     def _ajax_tag_tree_enter(self):
-        html.set_output_format("json")
+        response.set_content_type("application/json")
         self._load()
-        path = (html.request.get_str_input_mandatory("path").split("|")
-                if html.request.var("path") else [])
+        path = (request.get_str_input_mandatory("path").split("|") if request.var("path") else [])
         self._cwds[self._current_tree_id] = path
         self._save_user_settings()
-        html.write("OK")
+        response.set_data("OK")
 
     @classmethod
     def refresh_regularly(cls):

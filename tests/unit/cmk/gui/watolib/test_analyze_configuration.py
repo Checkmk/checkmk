@@ -6,6 +6,7 @@
 
 # Triggers plugin loading of plugins.wato which registers all the plugins
 import cmk.utils.version as cmk_version
+
 import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
 import cmk.gui.watolib as watolib
 
@@ -19,8 +20,12 @@ def test_registered_ac_tests():
         'ACTestBackupNotEncryptedConfigured',
         'ACTestBrokenGUIExtension',
         'ACTestCheckMKHelperUsage',
+        'ACTestCheckMKFetcherUsage',
+        'ACTestCheckMKCheckerNumber',
+        'ACTestCheckMKCheckerUsage',
         'ACTestConnectivity',
         'ACTestESXDatasources',
+        'ACTestEscapeHTMLDisabled',
         'ACTestGenericCheckHelperUsage',
         'ACTestHTTPSecured',
         'ACTestLDAPSecured',

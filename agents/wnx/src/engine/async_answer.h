@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // provides basic api to start and stop service
 
@@ -19,7 +20,14 @@
 
 namespace cma::srv {
 using AnswerId = std::chrono::time_point<std::chrono::steady_clock>;
-static AnswerId GenerateAnswerId() { return std::chrono::steady_clock::now(); }
+inline AnswerId GenerateAnswerId() { return std::chrono::steady_clock::now(); }
+
+inline auto AnswerIdToNumber(AnswerId id) {
+    return id.time_since_epoch().count();
+}
+inline std::wstring AnswerIdToWstring(AnswerId id) {
+    return std::to_wstring(AnswerIdToNumber(id));
+}
 
 // MAIN CLASS to gather all data for CMA on kick from Monitor
 // not POD
@@ -77,7 +85,7 @@ public:
     // #TODO gtest
     bool tryBreakWait();
 
-    std::vector<std::string> segmentNameList();
+    std::vector<std::string> segmentNameList() const;
 
     // #TODO gtest
     auto awaitingSegments() const {

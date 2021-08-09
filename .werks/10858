@@ -6,7 +6,7 @@ Date: 1581673895
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This change introduces check plugins for monitoring temperature and fan behaviour
 of Qnap devices. A corresponding service is generated for each device.

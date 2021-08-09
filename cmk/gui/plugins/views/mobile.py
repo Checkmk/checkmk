@@ -4,16 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request, response
 from cmk.gui.htmllib import HTML
-
-from cmk.gui.plugins.views import (
-    multisite_builtin_views,
-    layout_registry,
-    Layout,
-    PainterOptions,
-)
+from cmk.gui.i18n import _
+from cmk.gui.plugins.views import Layout, layout_registry, multisite_builtin_views, PainterOptions
+from cmk.gui.utils.mobile import is_mobile
 
 #   .--Views---------------------------------------------------------------.
 #   |                    __     ___                                        |
@@ -31,13 +26,13 @@ def mobile_view(d):
     x = {
         'mobile': True,
         'browser_reload': 0,
-        'column_headers': 'perpage',
+        'column_headers': 'pergroup',
         'description': 'This view is used by the mobile GUI',
         'hidden': False,
         'hidebutton': False,
         'icon': None,
         'public': True,
-        'topic': _('Mobile'),
+        'topic': 'overview',
         'user_sortable': False,
         'play_sounds': False,
         'show_checkboxes': False,
@@ -109,8 +104,8 @@ multisite_builtin_views.update({
             ('site_host', False),
             ('svcdescr', False),
         ],
-        'title': _('Search'),
-        'topic': _('Services')
+        'title': _('Service search'),
+        'topic': 'overview',
     }),
 
     # View of all current service problems
@@ -153,8 +148,8 @@ multisite_builtin_views.update({
             ('stateage', False),
             ('svcdescr', False),
         ],
-        'title': _('Problems (all)'),
-        'topic': _('Services'),
+        'title': _('Service problems (all)'),
+        'topic': 'problems',
     }),
 
     # View of unhandled service problems
@@ -203,9 +198,8 @@ multisite_builtin_views.update({
             ('stateage', False),
             ('svcdescr', False),
         ],
-        'linktitle': _('Problems (unhandled)'),
-        'title': _('Problems (unhandled)'),
-        'topic': _('Services'),
+        'title': _('Service problems (unhandled)'),
+        'topic': 'problems',
     }),
 
     # Service details
@@ -216,7 +210,6 @@ multisite_builtin_views.update({
         'hard_filtervars': [],
         'hide_filters': ['site', 'service', 'host'],
         'layout': 'mobiledataset',
-        'linktitle': 'Details',
         'name': 'mobile_service',
         'num_columns': 1,
         'hidden': True,
@@ -277,7 +270,6 @@ multisite_builtin_views.update({
         ],
         'show_filters': ['svcstate', 'serviceregex'],
         'sorters': [('svcstate', True), ('stateage', False), ('svcdescr', False)],
-        'linktitle': _('Services of this host'),
         'title': _('Services of host'),
     }),
 
@@ -345,7 +337,6 @@ multisite_builtin_views.update({
         ],
         'hide_filters': [],
         'layout': 'mobilelist',
-        'linktitle': 'Host search',
         'mustsearch': True,
         'num_columns': 2,
         'painters': [
@@ -359,8 +350,8 @@ multisite_builtin_views.update({
             'opthostgroup',
         ],
         'sorters': [],
-        'title': _('Search'),
-        'topic': _('Hosts'),
+        'title': _('Host search'),
+        'topic': 'overview',
     }),
 
     #List all host problems
@@ -398,8 +389,8 @@ multisite_builtin_views.update({
             'host_acknowledged',
         ],
         'sorters': [],
-        'title': _('Problems (all)'),
-        'topic': _('Hosts')
+        'title': _('Host problems (all)'),
+        'topic': 'problems'
     }),
 
     #List unhandled host problems
@@ -436,8 +427,8 @@ multisite_builtin_views.update({
             'opthostgroup',
         ],
         'sorters': [],
-        'title': _('Problems (unhandled)'),
-        'topic': _('Hosts')
+        'title': _('Host problems (unhandled)'),
+        'topic': 'problems'
     }),
 
     # All Nagios Events at all
@@ -451,7 +442,6 @@ multisite_builtin_views.update({
         ],
         'hide_filters': [],
         'layout': 'mobilelist',
-        'linktitle': 'Events',
         'mustsearch': False,
         'name': 'mobile_events',
         'num_columns': 1,
@@ -465,8 +455,8 @@ multisite_builtin_views.update({
         'public': True,
         'show_filters': [],
         'sorters': [('log_time', False), ('log_lineno', False)],
-        'title': 'Events',
-        'topic': _('Events')
+        'title': _('Events'),
+        'topic': 'history'
     }),
 
     # All Notifications at all
@@ -489,9 +479,8 @@ multisite_builtin_views.update({
             ('logtime_from', '24'),
         ],
         'hide_filters': [],
-        'icon': 'notification',
+        'icon': 'notifications',
         'layout': 'mobilelist',
-        'linktitle': _('Notifications'),
         'mustsearch': False,
         'name': 'mobile_notifications',
         'num_columns': 2,
@@ -500,7 +489,7 @@ multisite_builtin_views.update({
             ('host', 'mobile_hostsvcnotifications', ''),
             ('service_description', 'mobile_svcnotifications', ''),
             ('log_time', None, ''),
-            ('log_contact_name', 'mobile_contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('log_type', None, ''),
             ('log_plugin_output', None, ''),
         ],
@@ -511,9 +500,9 @@ multisite_builtin_views.update({
             'log_plugin_output',
             'logtime',
         ],
-        'sorters': [('log_time', False), ('log_lineno', False)],
-        'title': _('Notifications'),
-        'topic': _('Events')
+        'sorters': [('log_time', True), ('log_lineno', True)],
+        'title': _('History'),
+        'topic': 'history'
     }),
 
     # All events of a Host
@@ -530,7 +519,6 @@ multisite_builtin_views.update({
         'hide_filters': ['site', 'host'],
         'icon': 'history',
         'layout': 'mobilelist',
-        'linktitle': _('Host+Svc history'),
         'name': 'events',
         'num_columns': 2,
         'painters': [
@@ -561,7 +549,6 @@ multisite_builtin_views.update({
         'hide_filters': ['site', 'host', 'service'],
         'icon': 'history',
         'layout': 'mobilelist',
-        'linktitle': _('History'),
         'name': 'events',
         'num_columns': 2,
         'painters': [
@@ -598,9 +585,8 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['log_contact_name'],
         'hidebutton': False,
-        'icon': 'notification',
+        'icon': 'notifications',
         'layout': 'mobilelist',
-        'linktitle': _('Contact notification'),
         'name': 'mobile_contactnotifications',
         'num_columns': 2,
         'painters': [
@@ -615,7 +601,7 @@ multisite_builtin_views.update({
         'show_filters': ['host', 'serviceregex', 'log_plugin_output', 'logtime'],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': _('Notifications of contact'),
-        'topic': _('Other')
+        'topic': 'history'
     }),
 
     # All Notfications of Host
@@ -639,14 +625,13 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['site', 'host'],
         'hidebutton': False,
-        'icon': 'notification',
+        'icon': 'notifications',
         'layout': 'mobilelist',
-        'linktitle': _('Host+Svc notifications'),
         'name': 'hostsvcnotifications',
         'num_columns': 2,
         'painters': [
             ('log_time', None, ''),
-            ('log_contact_name', 'mobile_contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('log_type', None, ''),
             ('host', 'mobile_hostsvcnotifications', ''),
             ('service_description', 'mobile_svcnotifications', ''),
@@ -656,7 +641,7 @@ multisite_builtin_views.update({
         'show_filters': ['serviceregex', 'log_plugin_output', 'logtime'],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': _('Notifications of host & services'),
-        'topic': _('Other')
+        'topic': 'history'
     }),
 
     # All Notfications of a service
@@ -679,14 +664,13 @@ multisite_builtin_views.update({
         'hidden': True,
         'hide_filters': ['site', 'service', 'host'],
         'hidebutton': False,
-        'icon': 'notification',
+        'icon': 'notifications',
         'layout': 'mobilelist',
-        'linktitle': _('Notifications'),
         'name': 'mobile_svcnotifications',
         'num_columns': 2,
         'painters': [
             ('log_time', None, ''),
-            ('log_contact_name', 'mobile_contactnotifications', ''),
+            ('log_contact_name', None, ''),
             ('host', None, ''),
             ('log_state', None, ''),
             ('log_plugin_output', None, ''),
@@ -696,7 +680,7 @@ multisite_builtin_views.update({
         'show_filters': ['log_plugin_output', 'logtime'],
         'sorters': [('log_time', False), ('log_lineno', False)],
         'title': _('Service Notifications'),
-        'topic': _('Other')
+        'topic': 'history'
     }),
 })
 
@@ -715,7 +699,7 @@ multisite_builtin_views.update({
 
 
 def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkboxes):
-    if not html.mobile:
+    if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
         return
 
@@ -742,11 +726,13 @@ def render_mobile_table(rows, view, group_cells, cells, num_columns, show_checkb
             if n > 0 and n % num_columns == 0:
                 html.close_tr()
                 html.open_tr(class_="%s0" % odd)
+
             if n == len(cells) - 1 and n % num_columns != (num_columns - 1):
-                tdattrs = 'colspan="%d"' % (num_columns - (n % num_columns))
+                colspan = num_columns - (n % num_columns)
             else:
-                tdattrs = ""
-            cell.paint(row, tdattrs=tdattrs)
+                colspan = None
+
+            cell.paint(row, colspan=colspan)
         html.close_row()
     html.close_table()
     html.javascript('$("table.mobile a").attr("data-ajax", "false");')
@@ -772,7 +758,7 @@ class LayoutMobileTable(Layout):
 
 
 def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkboxes):
-    if not html.mobile:
+    if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
         return
 
@@ -788,9 +774,7 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
         rendered_cells = [cell.render(row) for cell in cells]
         if rendered_cells:  # First cell (assumedly state) is left
             rendered_class, rendered_content = rendered_cells[0]
-            html.open_p(class_=["ui-li-aside", "ui-li-desc", rendered_class])
-            html.write(rendered_content)
-            html.close_p()
+            html.p(rendered_content, class_=["ui-li-aside", "ui-li-desc", rendered_class])
 
             if len(rendered_cells) > 1:
                 content = HTML(" &middot; ").join(
@@ -803,9 +787,7 @@ def render_mobile_list(rows, view, group_cells, cells, num_columns, show_checkbo
                     html.open_p(class_="ui-li-desc")
                     cell.paint_as_header()
                     html.write_text(': ')
-                    html.open_span(class_=rendered_class)
-                    html.write(rendered_content)
-                    html.close_span()
+                    html.span(rendered_content, class_=rendered_class)
                     html.close_p()
 
         html.close_li()
@@ -833,7 +815,7 @@ class LayoutMobileList(Layout):
 
 
 def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_checkboxes):
-    if not html.mobile:
+    if not is_mobile(request, response):
         html.show_error(_("This view can only be used in mobile mode."))
         return
 
@@ -848,9 +830,7 @@ def render_mobile_dataset(rows, view, group_cells, cells, num_columns, show_chec
                 continue  # Omit empty cells
 
             html.open_tr(class_="header")
-            html.open_th()
-            html.write(cell.title())
-            html.close_th()
+            html.th(cell.title())
             html.close_tr()
 
             html.open_tr(class_="data")

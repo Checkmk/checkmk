@@ -10,5 +10,5 @@ description:
  The upper default levels are set to (50%, 60%).
  These levels are configurable.
 
-inventory:
+discovery:
  One service is created.

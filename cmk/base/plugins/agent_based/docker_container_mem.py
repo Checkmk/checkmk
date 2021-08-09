@@ -3,39 +3,55 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Any, Dict
-from .agent_based_api.v1.type_defs import AgentStringTable
-
 from .agent_based_api.v1 import register
-from .utils import docker
+from .agent_based_api.v1.type_defs import StringTable
+from .utils import docker, memory
 
 
-def _parse_docker_container_mem_plugin(string_table: AgentStringTable) -> Dict[str, Any]:
-    parsed = docker.json_get_obj(string_table[1])
-    # flatten nested stats
-    parsed.update(parsed.pop('stats'))
-    # rename for compatibility with section produced by linux agent
-    for added_key, present_key in (
-        ("limit_in_bytes", "hierarchical_memory_limit"),
-        ("MemTotal", "limit"),
-        ("usage_in_bytes", "usage"),
-    ):
-        parsed[added_key] = parsed.get(present_key)
+def _parse_docker_container_mem_plugin(string_table: StringTable) -> docker.MemorySection:
+    """
+    parse output of mk_docker.py which corresponds to the docker api
+    """
+    parsed = docker.parse(string_table).data
 
-    return parsed
+    # we could get data from a host with cgroup v2, or cgroup v1.
+    stats = parsed.get('stats', {})
+
+    try:
+        memory_limit = parsed['limit']
+        container_memory_usage = parsed['usage']
+        if 'hierarchical_memory_limit' in stats and 'total_inactive_file' in stats:
+            # cgroup v1
+            container_memory_limit = stats['hierarchical_memory_limit']
+            container_memory_total_inactive_file = stats['total_inactive_file']
+            memory_limit = min(memory_limit, container_memory_limit)
+        else:
+            # we assume cgroup v2
+            container_memory_total_inactive_file = stats["inactive_file"]
+    except KeyError:
+        # `docker stats <CONTAINER>` will show 0/0 so we are compliant.
+        return docker.MemorySection(0, 0, 0)
+
+    return docker.MemorySection(
+        mem_total=memory_limit,
+        mem_usage=container_memory_usage,
+        mem_cache=container_memory_total_inactive_file,
+    )
 
 
-def parse_docker_container_mem(string_table: AgentStringTable) -> Dict[str, int]:
+def parse_docker_container_mem(string_table: StringTable) -> memory.SectionMemUsed:
     """
         >>> import pprint
         >>> pprint.pprint(parse_docker_container_mem([
         ...     ['@docker_version_info',
         ...      '{"PluginVersion": "0.1", "DockerPyVersion": "4.0.2", "ApiVersion": "1.40"}'],
         ...     [('{"usage": 4034560, "limit": 16690180096, "max_usage": 7208960,'
-        ...       ' "stats": {"cache": 42, "hierarchical_memory_limit": 9223372036854771712}}')]
+        ...       ' "stats": {"cache": 42, "total_inactive_file": 111, '
+        ...       '"hierarchical_memory_limit": 9223372036854771712}}')]
         ... ]))
-        {'MemFree': 16686145578, 'MemTotal': 16690180096}
+        {'MemFree': 16686145647, 'MemTotal': 16690180096}
         >>> pprint.pprint(parse_docker_container_mem([
+        ...     # this format is used for agent running inside docker container
         ...     ['cache', '41316352'], ['rss', '79687680'], ['rss_huge', '8388608'],
         ...     ['mapped_file', '5976064'], ['swap', '0'], ['pgpgin', '7294455'],
         ...     ['pgpgout', '7267468'], ['pgfault', '39514980'], ['pgmajfault', '111'],
@@ -53,41 +69,28 @@ def parse_docker_container_mem(string_table: AgentStringTable) -> Dict[str, int]
         ...     ['usage_in_bytes', '121810944'], ['limit_in_bytes', '9223372036854771712'],
         ...     ['MemTotal:', '65660592', 'kB']
         ... ]))
-        {'MemFree': 67155951616, 'MemTotal': 67236446208}
+        {'MemFree': 67142782976, 'MemTotal': 67236446208}
+
+    Some containers don't have any memory info:
+        >>> parse_docker_container_mem([
+        ...     ['@docker_version_info',
+        ...      '{"PluginVersion": "0.1", "DockerPyVersion": "4.0.2", "ApiVersion": "1.40"}'],
+        ...     ['{}'],
+        ... ])
+        {'MemTotal': 0, 'MemFree': 0}
 
     """
     version = docker.get_version(string_table)
 
     if version is None:
-        # parsed contains memory usages in bytes
-        parsed = {}
-        for line in string_table:
-            if line[0] == "MemTotal:" and line[2] == "kB":
-                parsed["MemTotal"] = int(line[1]) * 1024
-            else:
-                parsed[line[0]] = int(line[1])
+        parsed = docker.parse_container_memory(string_table)
     else:
         parsed = _parse_docker_container_mem_plugin(string_table)
-
-    # Calculate used memory like docker does (https://github.com/moby/moby/issues/10824)
-    usage = (parsed["usage_in_bytes"] - parsed["cache"])
-
-    # Populate a dictionary in the format check_memory() form mem.include expects.
-    # The values are scaled to kB
-    section = {}
-    # Extract the real memory limit for the container. There is either the
-    # maximum amount of memory available or a configured limit for the
-    # container (cgroup).
-    section["MemTotal"] = min(parsed["MemTotal"], parsed["limit_in_bytes"])
-    section["MemFree"] = section["MemTotal"] - usage
-    # temporarily disabled. See CMK-5224
-    # section["Cached"] = parsed["cache"]
-
-    return section
+    return parsed.to_mem_used()
 
 
 register.agent_section(
     name="docker_container_mem",
     parse_function=parse_docker_container_mem,
-    parsed_section_name="mem",
+    parsed_section_name="mem_used",
 )

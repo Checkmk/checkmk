@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    CascadingDropdown,
-    Dictionary,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import CascadingDropdown, Dictionary, DropdownChoice, TextInput, Tuple
 
 
 # Also used in ibm_mq_managers
@@ -23,14 +18,24 @@ def ibm_mq_version():
     return [
         (
             "version",
-            CascadingDropdown(
+            Tuple(
                 title=_("Check for correct version"),
                 help=_("You can make sure that the plugin is running"
                        " with a specific or a minimal version."),
-                choices=[
-                    ('at_least', _("At least"), TextAscii(title=_("At least"), allow_empty=False)),
-                    ('specific', _("Specific version"),
-                     TextAscii(title=_("Specific version"), allow_empty=False)),
+                elements=[
+                    CascadingDropdown(
+                        choices=[
+                            ('at_least', _("At least"),
+                             TextInput(title=_("At least"), allow_empty=False)),
+                            ('specific', _("Specific version"),
+                             TextInput(title=_("Specific version"), allow_empty=False)),
+                        ],
+                        default_value='at_least',
+                    ),
+                    DropdownChoice(
+                        choices=[(1, _("Warning")), (2, _("Critical"))],
+                        default_value=1,
+                    ),
                 ],
             ),
         ),

@@ -4,46 +4,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.config as config
-import cmk.gui.escaping as escaping
+from typing import Optional, Tuple
+
 import cmk.gui.metrics as metrics
-from cmk.gui.i18n import _
-
-from cmk.gui.globals import html
+import cmk.gui.utils.escaping as escaping
+from cmk.gui.globals import config, html
 from cmk.gui.htmllib import HTML
-
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
-
-from cmk.gui.plugins.views.perfometers import (
-    perfometers,
-    render_metricometer,
-)
-
 from cmk.gui.plugins.views import (
-    painter_registry,
-    Painter,
-    sorter_registry,
-    Sorter,
-    is_stale,
+    Cell,
+    CellSpec,
     display_options,
+    is_stale,
+    Painter,
+    painter_registry,
+    Perfdata,
+    PerfometerSpec,
+    Row,
+    Sorter,
+    sorter_registry,
+    TranslatedMetrics,
 )
-
 from cmk.gui.plugins.views.graphs import cmk_graph_url
+from cmk.gui.plugins.views.perfometers import perfometers, render_metricometer
 
 
 class Perfometer:
-    def __init__(self, row):
-        super(Perfometer, self).__init__()
-
+    def __init__(self, row: Row) -> None:
         self._row = row
 
-        self._perf_data = []
-        self._check_command = self._row["service_check_command"]
-        self._translated_metrics = None
+        self._perf_data: Perfdata = []
+        self._check_command: str = self._row["service_check_command"]
+        self._translated_metrics: TranslatedMetrics = {}
 
         self._parse_perf_data()
 
-    def _parse_perf_data(self):
+    def _parse_perf_data(self) -> None:
         perf_data_string = self._row["service_perf_data"].strip()
         if not perf_data_string:
             return
@@ -53,7 +50,7 @@ class Perfometer:
 
         self._translated_metrics = metrics.translate_metrics(self._perf_data, self._check_command)
 
-    def render(self):
+    def render(self) -> Tuple[Optional[str], Optional[HTML]]:
         """Renders the HTML code of a perfometer
 
         It returns a 2-tuple of either the title to show and the HTML of
@@ -76,7 +73,7 @@ class Perfometer:
                     self._row["service_description"], self._row["service_check_command"])
         return self._render_legacy_perfometer()
 
-    def _render_metrics_perfometer(self):
+    def _render_metrics_perfometer(self) -> Tuple[Optional[str], Optional[HTML]]:
         perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
         if not perfometer_definition:
             return None, None
@@ -85,15 +82,19 @@ class Perfometer:
                                                           self._translated_metrics)
         return renderer.get_label(), render_metricometer(renderer.get_stack())
 
-    def _render_legacy_perfometer(self):
+    def _render_legacy_perfometer(self) -> Tuple[Optional[str], Optional[HTML]]:
         perf_painter = perfometers[self._check_command]
-        title, h = perf_painter(self._row, self._check_command, self._perf_data)
+        result = perf_painter(self._row, self._check_command, self._perf_data)
+        if result is None:
+            return None, None
+
+        title, h = result
         if not h:
             return None, None
 
         return title, h
 
-    def sort_value(self):
+    def sort_value(self) -> Tuple[Optional[int], Optional[int]]:
         """Calculates a value that is used for sorting perfometers
 
         - First sort by the perfometer group / id
@@ -102,7 +103,7 @@ class Perfometer:
         """
         return self._get_sort_group(), self._get_sort_number()
 
-    def _get_sort_group(self):
+    def _get_sort_group(self) -> Optional[int]:
         """First sort by the optional performeter group or the perfometer id. The perfometer
           group is used to group different perfometers in a single sort domain
         """
@@ -120,7 +121,7 @@ class Perfometer:
         perf_painter_func = perfometers[self._check_command]
         return id(perf_painter_func)
 
-    def _get_metrics_sort_group(self):
+    def _get_metrics_sort_group(self) -> Optional[int]:
         perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
         if not perfometer_definition:
             return None
@@ -130,7 +131,7 @@ class Perfometer:
         # can use the id() of the perfometer_definition here.
         return perfometer_definition.get("sort_group", id(perfometer_definition))
 
-    def _get_sort_number(self):
+    def _get_sort_number(self) -> Optional[int]:
         """Calculate the sort value for this perfometer
         - The second sort criteria is a number that is calculated for each perfometer. The
           calculation of this number depends on the perfometer type:
@@ -152,7 +153,7 @@ class Perfometer:
         # TODO: Fallback to legacy perfometer number calculation
         return None
 
-    def _get_metrics_sort_number(self):
+    def _get_metrics_sort_number(self) -> Optional[int]:
         perfometer_definition = self._get_perfometer_definition(self._translated_metrics)
         if not perfometer_definition:
             return None
@@ -161,7 +162,8 @@ class Perfometer:
                                                           self._translated_metrics)
         return renderer.get_sort_number()
 
-    def _get_perfometer_definition(self, translated_metrics):
+    def _get_perfometer_definition(
+            self, translated_metrics: TranslatedMetrics) -> Optional[PerfometerSpec]:
         """Returns the matching perfometer definition
 
         Uses the metrics of the current row to gather perfometers that can be
@@ -170,13 +172,14 @@ class Perfometer:
 
         Returns None in case there is no matching definition found.
         """
-        perfometer_definitions = metrics.Perfometers().get_matching_perfometers(translated_metrics)
-        if not perfometer_definitions:
-            return
+        perfometer_definition = metrics.Perfometers().get_first_matching_perfometer(
+            translated_metrics)
+        if not perfometer_definition:
+            return None
 
-        return perfometer_definitions[0]
+        return perfometer_definition
 
-    def _has_legacy_perfometer(self):
+    def _has_legacy_perfometer(self) -> bool:
         return self._check_command in perfometers
 
 
@@ -220,7 +223,7 @@ class PainterPerfometer(Painter):
     def printable(self):
         return 'perfometer'
 
-    def render(self, row, cell):
+    def render(self, row: Row, cell: Cell) -> CellSpec:
         classes = ["perfometer"]
         if is_stale(row):
             classes.append("stale")
@@ -235,6 +238,7 @@ class PainterPerfometer(Painter):
                 raise
             return " ".join(classes), _("Exception: %s") % e
 
+        assert h is not None
         content = html.render_div(HTML(h), class_=["content"]) \
                 + html.render_div(title, class_=["title"]) \
                 + html.render_div("", class_=["glass"])

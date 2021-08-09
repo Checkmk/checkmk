@@ -6,16 +6,14 @@
 
 import cmk.gui.views as views
 import cmk.gui.visuals as visuals
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.plugins.views import PainterOptions
-from cmk.gui.valuespec import DropdownChoice
 from cmk.gui.exceptions import MKUserError
-
-from cmk.gui.plugins.dashboard import (
-    IFrameDashlet,
-    dashlet_registry,
-)
+from cmk.gui.globals import display_options, html, request
+from cmk.gui.i18n import _
+from cmk.gui.plugins.dashboard import dashlet_registry, IFrameDashlet
+from cmk.gui.plugins.views import PainterOptions
+from cmk.gui.type_defs import ViewSpec
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, requested_file_name, urlencode
+from cmk.gui.valuespec import DropdownChoice
 
 
 class ABCViewDashlet(IFrameDashlet):
@@ -31,29 +29,41 @@ class ABCViewDashlet(IFrameDashlet):
     def has_context(cls):
         return True
 
-    def _show_view_as_dashlet(self, view_spec):
-        is_reload = html.request.has_var("_reload")
+    def _show_view_as_dashlet(self, view_spec: ViewSpec):
+        html.add_body_css_class("view")
+        html.open_div(id_="dashlet_content_wrapper")
 
-        display_options = "SIXLW"
+        is_reload = request.has_var("_reload")
+
+        view_display_options = "SIXLW"
         if not is_reload:
-            display_options += "HR"
+            view_display_options += "HR"
 
-        html.request.set_var('display_options', display_options)
-        html.request.set_var('_display_options', display_options)
+        request.set_var('display_options', view_display_options)
+        request.set_var('_display_options', view_display_options)
         html.add_body_css_class('dashlet')
+
+        # Need to be loaded before processing the painter_options below.
+        # TODO: Make this dependency explicit
+        display_options.load_from_html(request, html)
 
         painter_options = PainterOptions.get_instance()
         painter_options.load(self._dashlet_spec["name"])
 
-        view = views.View(self._dashlet_spec["name"], view_spec, self.context)
+        # Here the linked view default context has the highest priority
+        # linkedview default>dashlet>url active filter, dashboard
+        context = visuals.get_merged_context(self.context, view_spec["context"])
+
+        view = views.View(self._dashlet_spec["name"], view_spec, context)
         view.row_limit = views.get_limit()
-        view.only_sites = visuals.get_only_sites_from_context(self.context)
+        view.only_sites = visuals.get_only_sites_from_context(context)
         view.user_sorters = views.get_user_sorters()
 
-        view_renderer = views.GUIViewRenderer(view, show_buttons=False)
-        views.process_view(view, view_renderer)
+        views.process_view(views.GUIViewRenderer(view, show_buttons=False))
 
-    def _get_infos_from_view_spec(self, view_spec):
+        html.close_div()
+
+    def _get_infos_from_view_spec(self, view_spec: ViewSpec):
         ds_name = view_spec["datasource"]
         return views.data_source_registry[ds_name]().infos
 
@@ -71,7 +81,7 @@ class ViewDashlet(ABCViewDashlet):
 
     @classmethod
     def description(cls):
-        return _("Copies a view to a dashlet")
+        return _("Copies a view to a dashboard element")
 
     @classmethod
     def vs_parameters(cls):
@@ -90,17 +100,18 @@ class ViewDashlet(ABCViewDashlet):
     @classmethod
     def add_url(cls):
         return 'create_view_dashlet.py?name=%s&mode=create&back=%s' % \
-            (html.urlencode(html.request.var('name')),
-             html.urlencode(html.makeuri([('edit', '1')])))
+            (urlencode(request.var('name')),
+             urlencode(makeuri(request, [('edit', '1')])))
 
     def update(self):
         self._show_view_as_dashlet(self._dashlet_spec)
+        html.javascript("cmk.utils.add_simplebar_scrollbar(\"dashlet_content_wrapper\");")
 
     def infos(self):
         # Hack for create mode of dashlet editor. The user first selects a datasource and then the
         # single contexts, the dashlet editor needs to use these information.
-        if html.myfile == "edit_dashlet" and html.request.has_var("datasource"):
-            ds_name = html.request.get_str_input_mandatory('datasource')
+        if requested_file_name(request) == "edit_dashlet" and request.has_var("datasource"):
+            ds_name = request.get_str_input_mandatory('datasource')
             return views.data_source_registry[ds_name]().infos
 
         return self._get_infos_from_view_spec(self._dashlet_spec)
@@ -143,27 +154,36 @@ class LinkedViewDashlet(ABCViewDashlet):
     @classmethod
     def add_url(cls):
         return 'create_link_view_dashlet.py?name=%s&mode=create&back=%s' % \
-            (html.urlencode(html.request.var('name')),
-             html.urlencode(html.makeuri([('edit', '1')])))
+            (urlencode(request.var('name')),
+             urlencode(makeuri(request, [('edit', '1')])))
 
-    def _get_view_spec(self):
+    def _get_view_spec(self) -> ViewSpec:
         view_name = self._dashlet_spec["name"]
         view_spec = views.get_permitted_views().get(view_name)
         if not view_spec:
             raise MKUserError("name", _("No view defined with the name '%s'.") % view_name)
 
+        # Override some view dashlet specific options
+        view_spec = view_spec.copy()
+        view_spec["user_sortable"] = False
+
         return view_spec
 
-    def display_title(self):
-        return visuals.visual_title("view", self._get_view_spec())
+    def default_display_title(self) -> str:
+        # TODO: Visual and ViewSpec are both Dict[str, Any]. How are these related?
+        return visuals.visual_title("view", self._get_view_spec(), self.context)
 
     def title_url(self):
         view_name = self._dashlet_spec["name"]
-        return html.makeuri_contextless([('view_name', view_name)] + self._dashlet_context_vars(),
-                                        filename='view.py')
+        return makeuri_contextless(
+            request,
+            [('view_name', view_name)] + self._dashlet_context_vars(),
+            filename='view.py',
+        )
 
     def update(self):
         self._show_view_as_dashlet(self._get_view_spec())
+        html.javascript("cmk.utils.add_simplebar_scrollbar(\"dashlet_content_wrapper\");")
 
     def infos(self):
         return self._get_infos_from_view_spec(self._get_view_spec())

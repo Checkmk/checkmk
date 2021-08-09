@@ -1,0 +1,14 @@
+Title: Fix reload of mega menu on changes in visuals
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1605698874
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+If changes in visuals were made, e.g. in views, the changes were not visible in
+the mega menu.
+
+From now on, the whole page is reloaded after applying such changes.

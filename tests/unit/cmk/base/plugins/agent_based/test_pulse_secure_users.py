@@ -4,10 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.base.plugins.agent_based import pulse_secure_users
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, state, Metric, type_defs
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
@@ -27,29 +29,28 @@ def test_parse_pulse_secure_users(string_table, expected_parsed_data):
 
 
 def test_check_pulse_secure_users():
-    assert list(
-        pulse_secure_users.check_pulse_secure_users(
-            type_defs.Parameters({}),
-            {'n_users': 172},
-        )) == [
-            Result(
-                state=state.OK,
-                summary='Pulse Secure users: 172',
-                details='Pulse Secure users: 172',
-            ),
-            Metric(
-                'current_users',
-                172.0,
-                levels=(None, None),
-                boundaries=(None, None),
-            ),
-        ]
+    assert list(pulse_secure_users.check_pulse_secure_users(
+        {},
+        {'n_users': 172},
+    )) == [
+        Result(
+            state=state.OK,
+            summary='Pulse Secure users: 172',
+            details='Pulse Secure users: 172',
+        ),
+        Metric(
+            'current_users',
+            172.0,
+            levels=(None, None),
+            boundaries=(None, None),
+        ),
+    ]
 
 
 def test_cluster_check_pulse_secure_users():
     assert list(
         pulse_secure_users.cluster_check_pulse_secure_users(
-            type_defs.Parameters({}),
+            {},
             {
                 'node1': {
                     'n_users': 20
@@ -61,11 +62,11 @@ def test_cluster_check_pulse_secure_users():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: Pulse Secure users: 20',
+                notice='[node1]: Pulse Secure users: 20',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: Pulse Secure users: 30',
+                notice='[node2]: Pulse Secure users: 30',
             ),
             Result(
                 state=state.OK,

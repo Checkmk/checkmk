@@ -5,26 +5,28 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Alternative,
-    Tuple,
-    Age,
-    FixedValue,
-    TextAscii,
-    Filesize,
-    Percentage,
-    CascadingDropdown,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithItem,
+    ManualCheckParameterRulespec,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupEnforcedServicesApplications,
+)
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    CascadingDropdown,
+    Dictionary,
+    Filesize,
+    FixedValue,
+    Percentage,
+    TextInput,
+    Tuple,
 )
 
 
 def _item_spec_sap_hana_backup():
-    return TextAscii(title=_("The instance name and backup type"))
+    return TextInput(title=_("The instance name and backup type"))
 
 
 def _parameter_valuespec_sap_hana_backup():
@@ -58,7 +60,7 @@ rulespec_registry.register(
 
 
 def _item_spec_sap_hana_license():
-    return TextAscii(title=_("The instance name"))
+    return TextInput(title=_("The instance name"))
 
 
 def _parameter_valuespec_sap_hana_license():
@@ -138,8 +140,17 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="sap_hana_memory",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("The instance name")),
+        item_spec=lambda: TextInput(title=_("The instance name")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_sap_hana_memory,
         title=lambda: _("SAP HANA Memory"),
+    ))
+
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="sap_hana_proc",
+        group=RulespecGroupEnforcedServicesApplications,
+        item_spec=lambda: TextInput(title=_("The instance name")),
+        match_type="dict",
+        title=lambda: _("SAP HANA Process"),
     ))

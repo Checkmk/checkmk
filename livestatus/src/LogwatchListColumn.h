@@ -19,11 +19,11 @@ class ColumnOffsets;
 class MonitoringCore;
 class Row;
 
-class LogwatchListColumn : public ListColumn {
+class LogwatchListColumn : public deprecated::ListColumn {
 public:
     LogwatchListColumn(const std::string &name, const std::string &description,
                        const ColumnOffsets &offsets, MonitoringCore *mc)
-        : ListColumn(name, description, offsets), _mc(mc) {}
+        : deprecated::ListColumn(name, description, offsets), _mc(mc) {}
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,

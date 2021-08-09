@@ -1,0 +1,17 @@
+Title: Corretly present filters for report elements of multiple subreports
+Class: fix
+Compatible: compat
+Component: reporting
+Date: 1615475142
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+"Host report for multiple hosts" and "Service report of multiple services"
+are elements that produce subreports where the context filters are directly
+specified on the element configuration. The Web interface was not
+presenting those filters to configuration neither was any filter action
+occurring. The only correct behavior was from reports configured in version 1.5.0
+
+This werk, restablishes the configuration possibilities available for this report elements.

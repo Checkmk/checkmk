@@ -1,4 +1,5 @@
-﻿####
+$CMK_VERSION = "2.1.0i1"
+####
 ## Monitor Windows Tasks
 ##
 
@@ -38,6 +39,6 @@ if ($lang -eq 1031){
 			Write-Host ""
 		}
 	}
-} elseif ($lang -eq 1033){
-	$tasks | ? {$_.HostName -match "^$($Env:Computername)$" -and $_.TaskName -notlike '\Microsoft*' -and $_.TaskName -notlike '*zachteHRM*'} | fl taskname,"last run time","next run time","last result","scheduled task state"
+} elseif ($lang -eq 1033 -or $lang -eq 2057){
+	$tasks | ? {$_.HostName -match "^$($Env:Computername)$" -and $_.TaskName -notlike '\Microsoft*' -and $_.TaskName -notlike '*zachteHRM*'} | fl taskname,"last run time","next run time","last result","scheduled task state" | out-string -width 4096
 }

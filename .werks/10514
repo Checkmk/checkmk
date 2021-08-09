@@ -6,7 +6,7 @@ Date: 1576157476
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The plugin tried to use the extended output for instance services even if
 the version was not capable to produce the output. This happend, because

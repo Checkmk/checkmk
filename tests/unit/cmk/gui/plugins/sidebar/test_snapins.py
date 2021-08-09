@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.version as cmk_version
 
@@ -28,7 +28,6 @@ def test_registered_snapins():
         'hosts',
         'master_control',
         'mkeventd_performance',
-        'nagios_legacy',
         'nagvis_maps',
         'performance',
         'problem_hosts',
@@ -42,7 +41,6 @@ def test_registered_snapins():
         'views',
         'wato_folders',
         'wato_foldertree',
-        'wiki',
     ]
 
     if not cmk_version.is_raw_edition():

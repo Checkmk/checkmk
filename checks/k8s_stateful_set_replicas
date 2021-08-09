@@ -7,11 +7,10 @@
 
 def inventory_k8s_stateful_set_replicas(parsed):
     if parsed:
-        yield HostLabel(u"cmk/kubernetes_object", u"statefulset")
         yield (None, {})
 
 
-def check_k8s_stateful_set_replicas(_no_item, params, parsed):
+def check_k8s_stateful_set_replicas(_no_item, _params, parsed):
     ready, total = parsed["ready_replicas"], parsed["replicas"]
     # If set, strategy may be one of RollingUpdate or OnDelete.
     strategy = parsed["strategy_type"]
@@ -31,10 +30,8 @@ def check_k8s_stateful_set_replicas(_no_item, params, parsed):
 
 
 check_info["k8s_stateful_set_replicas"] = {
-    "parse_function": parse_k8s,
+    # section is already migrated
     "inventory_function": inventory_k8s_stateful_set_replicas,
     "check_function": check_k8s_stateful_set_replicas,
     "service_description": "Replicas",
-    "has_perfdata": True,
-    "includes": ["k8s.include"],
 }

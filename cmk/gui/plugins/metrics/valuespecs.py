@@ -4,27 +4,58 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+from typing import List, Optional
+
+from cmk.gui.globals import html
 from cmk.gui.i18n import _
+from cmk.gui.pages import AjaxPage, page_registry
+from cmk.gui.plugins.metrics import artwork, metric_info, unit_info
 from cmk.gui.valuespec import (
     CascadingDropdown,
+    CascadingDropdownChoiceValue,
     Checkbox,
-    GraphColor,
     Dictionary,
     DropdownChoice,
     Float,
     Fontsize,
     ListChoice,
     Transform,
+    Tuple,
+    ValueSpecHelp,
+    ValueSpecValidateFunc,
 )
 
-from cmk.gui.plugins.metrics import artwork
 
-
-# This was moved from pnp_graph reportlet specific code
-def transform_graph_render_options_title_format(p):
+def transform_graph_render_options_title_format(p) -> List[str]:
+    # ->1.5.0i2 pnp_graph reportlet
     if p in ('add_host_name', 'add_host_alias'):
         p = ("add_title_infos", [p])
+    #   1.5.0i2->2.0.0i1 title format DropdownChoice to ListChoice
+    if p == "plain":
+        return ["plain"]
+    if isinstance(p, tuple):
+        if p[0] == "add_title_infos":
+            return ["plain"] + p[1]
+        if p[0] == "plain":
+            return ["plain"]
+
+    # Because the spec could come from a JSON request CMK-6339
+    if isinstance(p, list) and len(p) == 2 and p[0] == "add_title_infos":
+        return ["plain"] + p[1]
+
     return p
+
+
+def transform_graph_render_options(value):
+    # Graphs in painters and dashlets had the show_service option before 1.5.0i2.
+    # This has been consolidated with the option title_format from the reportlet.
+    if value.pop("show_service", False):
+        value["title_format"] = ["plain", "add_host_name", "add_service_description"]
+    #   1.5.0i2->2.0.0i1 title format DropdownChoice to ListChoice
+    if isinstance(value.get("title_format"), (str, tuple)):
+        value["title_format"] = transform_graph_render_options_title_format(value["title_format"])
+    return value
 
 
 def vs_graph_render_options(default_values=None, exclude=None):
@@ -34,21 +65,20 @@ def vs_graph_render_options(default_values=None, exclude=None):
             optional_keys=[],
             title=_("Graph rendering options"),
         ),
-        forth=_transform_graph_render_options,
+        forth=transform_graph_render_options,
     )
 
 
-def _transform_graph_render_options(value):
-    # Graphs in painters and dashlets had the show_service option before 1.5.0i2.
-    # This has been consolidated with the option title_format from the reportlet.
-    if "show_service" in value:
-        show_service = value.pop("show_service")
-        if show_service:
-            value["title_format"] = ("add_title_infos",
-                                     ["add_host_name", "add_service_description"])
-        else:
-            value["title_format"] = ("plain", [])
-    return value
+def vs_title_infos(with_metric: bool = False):
+    choices = [
+        ("plain", _("Graph title")),
+        ("add_host_name", _("Host name")),
+        ("add_host_alias", _("Host alias")),
+        ("add_service_description", _("Service description")),
+    ]
+    if with_metric:
+        choices.append(("add_metric_name", _("Add metric name")))
+    return ListChoice(title=_("Title format"), choices=choices, default_value=["plain"])
 
 
 def vs_graph_render_option_elements(default_values=None, exclude=None):
@@ -75,19 +105,7 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
          )),
         ("title_format",
          Transform(
-             CascadingDropdown(
-                 title=_("Title format"),
-                 orientation="vertical",
-                 choices=[
-                     ("plain", _("Just show graph title")),
-                     ("add_title_infos", _("Add additional information"),
-                      ListChoice(choices=[
-                          ("add_host_name", _("Add host name")),
-                          ("add_host_alias", _("Add host alias")),
-                          ("add_service_description", _("Add service description")),
-                      ])),
-                 ],
-             ),
+             vs_title_infos(),
              forth=transform_graph_render_options_title_format,
          )),
         ("show_graph_time",
@@ -148,20 +166,11 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
              label="Show previews",
              default_value=default_values["show_time_range_previews"],
          )),
-        ("foreground_color",
-         GraphColor(
-             title=_("Foreground color"),
-             default_value=default_values["foreground_color"],
-         )),
-        ("background_color",
-         GraphColor(
-             title=_("Background color"),
-             default_value=default_values["background_color"],
-         )),
-        ("canvas_color",
-         GraphColor(
-             title=_("Canvas color"),
-             default_value=default_values["canvas_color"],
+        ("fixed_timerange",
+         Checkbox(
+             title=_("Timerange synchronization"),
+             label="Do not follow timerange changes of other graphs on the current page",
+             default_value=default_values["fixed_timerange"],
          )),
     ]
 
@@ -169,3 +178,62 @@ def vs_graph_render_option_elements(default_values=None, exclude=None):
         elements = [x for x in elements if x[0] not in exclude]
 
     return elements
+
+
+class ValuesWithUnits(CascadingDropdown):
+    def __init__(  # pylint: disable=redefined-builtin
+            self,
+            vs_name: str,
+            metric_vs_name: str,
+            elements: List[str],
+            validate_value_elemets: Optional[ValueSpecValidateFunc] = None,
+            help: Optional[ValueSpecHelp] = None):
+        super().__init__(choices=self._unit_choices, help=help)
+        self._vs_name = vs_name
+        self._metric_vs_name = metric_vs_name
+        self._elements = elements
+        self._validate_value_elements = validate_value_elemets
+
+    def _unit_vs(self, info):
+        def set_vs(vs, title):
+            if vs.__name__ in ["Float", "Integer"]:
+                return vs(title=title, unit=info["symbol"])
+            return vs(title=title)
+
+        vs = info.get('valuespec') or Float
+
+        return Tuple(elements=[set_vs(vs, elem) for elem in self._elements],
+                     validate=self._validate_value_elements)
+
+    def _unit_choices(self):
+        return [(name, info.get("description", info["title"]), self._unit_vs(info))
+                for (name, info) in unit_info.items()]
+
+    @staticmethod
+    def resolve_units(request):
+        # This relies on python3.8 dictionaries being always ordered
+        # Otherwise it is not possible to mach the unit name to value
+        # CascadingDropdowns enumerate the options instead of using keys
+        known_units = list(unit_info.keys())
+        required_unit = metric_info.get(request["metric"], {}).get("unit", "")
+
+        try:
+            index = known_units.index(required_unit)
+        except ValueError:
+            index = known_units.index("")
+
+        return {"unit": required_unit, "option_place": index}
+
+    def render_input(self, varprefix: str, value: CascadingDropdownChoiceValue) -> None:
+        super().render_input(varprefix, value)
+        root_prefix = varprefix[:varprefix.find(self._vs_name)]
+        metric_ref_prefix = root_prefix + self._metric_vs_name
+        # This will load an event listener between the unit and the metric valuespec
+        html.javascript("cmk.valuespecs.update_unit_selector(%s, %s)" %
+                        (json.dumps(varprefix), json.dumps(metric_ref_prefix)))
+
+
+@page_registry.register_page("ajax_vs_unit_resolver")
+class PageVsAutocomplete(AjaxPage):
+    def page(self):
+        return ValuesWithUnits.resolve_units(self.webapi_request())

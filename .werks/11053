@@ -1,0 +1,18 @@
+Title: Don't escape the plugin output of email notifications if configured
+Level: 1
+Component: notifications
+Compatible: compat
+Edition: cre
+Version: 1.6.0p18
+Date: 1600094918
+Class: fix
+
+If you have rules configured for the rulesets "Escape HTML
+codes in plugin output" or "Escape HTML codes in service
+output", HTML email notifications will now honor these
+settings as well.
+
+This is e.g. usefull if you set "Enable per-process details
+in long-output" to "HTML output" in a "State and count of
+processes" rule. The HTML table of processes will now be
+rendered correctly in email notifications as well.

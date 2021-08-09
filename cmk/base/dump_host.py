@@ -4,20 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import socket
 import time
 from typing import Optional
 
-import cmk.utils.tty as tty
 import cmk.utils.render
-
-import cmk.base.config as config
-import cmk.base.core_config as core_config
-import cmk.base.obsolete_output as out
-import cmk.base.data_sources as data_sources
-import cmk.base.ip_lookup as ip_lookup
-import cmk.base.check_table as check_table
-import cmk.base.checking as checking
+import cmk.utils.tty as tty
 from cmk.utils.type_defs import HostName
+
+import cmk.base.agent_based.checking as checking
+import cmk.base.check_table as check_table
+import cmk.base.config as config
+import cmk.base.ip_lookup as ip_lookup
+import cmk.base.obsolete_output as out
+import cmk.base.sources as sources
 from cmk.base.check_utils import LegacyCheckParameters
 
 
@@ -37,17 +37,17 @@ def dump_host(hostname: HostName) -> None:
         add_txt = ""
     out.output("%s%s%s%-78s %s\n" % (color, tty.bold, tty.white, hostname + add_txt, tty.normal))
 
-    ipaddress = _ip_address_for_dump_host(host_config)
+    ipaddress = _ip_address_for_dump_host(host_config, family=host_config.default_address_family)
 
     addresses: Optional[str] = ""
     if not host_config.is_ipv4v6_host:
         addresses = ipaddress
     else:
         try:
-            if host_config.is_ipv6_primary:
-                secondary = _ip_address_for_dump_host(host_config, 4)
-            else:
-                secondary = _ip_address_for_dump_host(host_config, 6)
+            secondary = _ip_address_for_dump_host(
+                host_config,
+                family=socket.AF_INET if host_config.is_ipv6_primary else socket.AF_INET6,
+            )
         except Exception:
             secondary = "X.X.X.X"
 
@@ -82,13 +82,7 @@ def dump_host(hostname: HostName) -> None:
     out.output(tty.yellow + "Contact groups:         " + tty.normal +
                ", ".join(host_config.contactgroups) + "\n")
 
-    agenttypes = [
-        configurator.description for configurator in data_sources.make_configurators(
-            host_config,
-            ipaddress,
-            mode=data_sources.Mode.NONE,
-        )
-    ]
+    agenttypes = [source.description for source in sources.make_sources(host_config, ipaddress)]
 
     if host_config.is_ping_host:
         agenttypes.append('PING only')
@@ -123,22 +117,19 @@ def dump_host(hostname: HostName) -> None:
 
 def _evaluate_params(params: LegacyCheckParameters) -> str:
     if not isinstance(params, cmk.base.config.TimespecificParamList):
-        return "%r" % (params,)
+        return repr(params)
 
-    current_params = checking.legacy_determine_check_params(params)
+    current_params = checking.time_resolved_check_parameters(params)
     return "Timespecific parameters at %s: %r" % (cmk.utils.render.date_and_time(
         time.time()), current_params)
 
 
-def _ip_address_for_dump_host(host_config: config.HostConfig,
-                              family: Optional[int] = None) -> Optional[str]:
-    if host_config.is_cluster:
-        try:
-            return ip_lookup.lookup_ip_address(host_config, family)
-        except Exception:
-            return ""
-
+def _ip_address_for_dump_host(
+    host_config: config.HostConfig,
+    *,
+    family: socket.AddressFamily,
+) -> Optional[str]:
     try:
-        return ip_lookup.lookup_ip_address(host_config, family)
+        return config.lookup_ip_address(host_config, family=family)
     except Exception:
-        return core_config.fallback_ip_for(host_config, family)
+        return "" if host_config.is_cluster else ip_lookup.fallback_ip_for(family)

@@ -4,18 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.liebert_humidity_air import (
-    parse_liebert_humidity_air,
-    discover_liebert_humidity_air,
     check_liebert_humidity_air,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Result,
-    state,
-    Service,
-    Metric,
+    discover_liebert_humidity_air,
+    parse_liebert_humidity_air,
 )
 
 STRING_TABLE = [[[
@@ -75,8 +71,8 @@ def test_discover_liebert_humidity_air(section, extra_section, result):
             PARSED_SECTION,
             PARSED_EXTRA_SECTION,
             [
-                Result(state=state.OK, summary='36.50 % RH', details='36.50 % RH'),
-                Metric(name='humidity', value=36.5, levels=(50.0, 55.0), boundaries=(None, None)),
+                Result(state=state.OK, summary='36.50 % RH'),
+                Metric(name='humidity', value=36.5, levels=(50.0, 55.0), boundaries=(0.0, None)),
             ],
         ),
         (

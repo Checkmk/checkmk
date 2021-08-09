@@ -5,20 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersStorage,
+)
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
     Filesize,
     ListOfTimeRanges,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
-)
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersStorage,
 )
 
 
@@ -28,32 +27,32 @@ def _parameter_valuespec_fileinfo():
          Tuple(
              title=_("Minimal age"),
              elements=[
-                 Age(title=_("Warning if younger than")),
-                 Age(title=_("Critical if younger than")),
+                 Age(title=_("Warning below")),
+                 Age(title=_("Critical below")),
              ],
          )),
         ("maxage",
          Tuple(
              title=_("Maximal age"),
              elements=[
-                 Age(title=_("Warning if older than")),
-                 Age(title=_("Critical if older than")),
+                 Age(title=_("Warning at or above")),
+                 Age(title=_("Critical at or above")),
              ],
          )),
         ("minsize",
          Tuple(
              title=_("Minimal size"),
              elements=[
-                 Filesize(title=_("Warning if below")),
-                 Filesize(title=_("Critical if below")),
+                 Filesize(title=_("Warning below")),
+                 Filesize(title=_("Critical below")),
              ],
          )),
         ("maxsize",
          Tuple(
              title=_("Maximal size"),
              elements=[
-                 Filesize(title=_("Warning at")),
-                 Filesize(title=_("Critical at")),
+                 Filesize(title=_("Warning at or above")),
+                 Filesize(title=_("Critical at or above")),
              ],
          )),
         ("timeofday",
@@ -69,7 +68,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fileinfo",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("File name"), allow_empty=True),
+        item_spec=lambda: TextInput(title=_("File name"), allow_empty=True),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fileinfo,
         title=lambda: _("Size and age of single files"),

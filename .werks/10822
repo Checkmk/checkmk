@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously if inventory trees of hosts could not be loaded (eg. caused by
 corrupt data) various views which use the inventory data were broken and only

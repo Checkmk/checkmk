@@ -5,20 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Alternative,
-    Dictionary,
-    Filesize,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import Alternative, Dictionary, Filesize, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_memory_multiitem():
@@ -60,7 +52,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="memory_multiitem",
         group=RulespecGroupCheckParametersOperatingSystem,
-        item_spec=lambda: TextAscii(title=_("Module name"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Module name"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_memory_multiitem,
         title=lambda: _("Main memory usage of devices with modules"),

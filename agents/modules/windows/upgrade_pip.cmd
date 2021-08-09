@@ -1,5 +1,5 @@
-@rem Pip Upgrading script
-@rem May be called only from exec_cmd.bat
+:: Pip Upgrading script
+:: May be called only from exec_cmd.bat
 
 @echo off
 powershell Write-Host "Upgrading pip" -foreground cyan
@@ -8,3 +8,4 @@ if not exist %install_dir% powershell Write-Host "%install_dir% doesnt exist" -f
 cd %install_dir%
 .\python.exe -m pip install --upgrade pip
 powershell Write-Host "Pip upgraded" -foreground green
+exit /b 0

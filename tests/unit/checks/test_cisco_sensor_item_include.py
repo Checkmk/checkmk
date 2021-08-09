@@ -5,13 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import pytest  # type: ignore[import]
+
+import pytest
+
+from cmk.base.check_legacy_includes.cisco_sensor_item import *
 
 pytestmark = pytest.mark.checks
-
-exec(
-    open(os.path.join(os.path.dirname(__file__),
-                      '../../../checks/cisco_sensor_item.include')).read())
 
 FALLBACK = '999'
 

@@ -4,8 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-The things in this module specify the official Check_MK check API. Meaning all
-variables, functions etc. and default modules that are available to checks.
+The things in this module specify the old Check_MK (<- see? Old!) check API
+
++---------------------------------------------------------------------------+
+|             THIS API IS OLD, AND NO LONGER MAINTAINED.                    |
+|                                                                           |
+| All new plugins should be programmed against the new API, please refer to |
+| the online user manual for details!                                       |
+|                                                                           |
++---------------------------------------------------------------------------+
+
+Meaning all variables, functions etc. and default modules that are available to checks.
 
 Modules available by default (pre imported by Check_MK):
     collections
@@ -45,7 +54,7 @@ Global variables:
     nagios_illegal_chars Characters not allowed to be used in service
                          descriptions. Can be used in discovery functions to
                          remove unwanted characters from a string. The unwanted
-                         chars default are: `;~!$%^&*|\'"<>?,()=
+                         chars default are: `;~!$%^&*|\'"<>?,=
 
 
     OID_BIN              TODO
@@ -72,6 +81,7 @@ Global variables:
 # We import several modules here for the checks
 
 import calendar
+
 # TODO: Move imports directly to checks?
 import collections  # noqa: F401 # pylint: disable=unused-import
 import enum  # noqa: F401 # pylint: disable=unused-import
@@ -79,6 +89,7 @@ import fnmatch  # noqa: F401 # pylint: disable=unused-import
 import functools
 import math  # noqa: F401 # pylint: disable=unused-import
 import os
+
 # NOTE: We do not use pprint in this module, but it is part of the check API.
 import pprint  # noqa: F401 # pylint: disable=unused-import
 import re  # noqa: F401 # pylint: disable=unused-import
@@ -95,57 +106,73 @@ import cmk.utils.defines as _defines
 import cmk.utils.log.console as _console  # noqa: F401 # pylint: disable=unused-import
 import cmk.utils.paths as _paths
 import cmk.utils.render as render
+
 # These imports are not meant for use in the API. So we prefix the names
 # with an underscore. These names will be skipped when loading into the
 # check context.
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
-from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
-    get_rule_options, hosttags_match_taglist, in_extraconf_hostlist,
-)
-# The class 'as_float' has been moved; import it here under the old name
-from cmk.utils.type_defs import CheckPluginNameStr
-from cmk.utils.type_defs import EvalableFloat as as_float  # noqa: F401 # pylint: disable=unused-import
+from cmk.utils.type_defs import HostName, MetricName
+from cmk.utils.type_defs import Ruleset as _Ruleset
+from cmk.utils.type_defs import SectionName as _SectionName
 from cmk.utils.type_defs import (
-    HostName,
-    MetricName,
-    SectionName as _SectionName,
-    Ruleset as _Ruleset,
     ServiceCheckResult,
     ServiceDetails,
     ServiceName,
     ServiceState,
+    state_markers,
 )
 
-import cmk.snmplib.utils as _snmp_utils
-from cmk.snmplib.type_defs import (  # noqa: F401 # pylint: disable=unused-import
-    OID_BIN, OID_END, OID_END_BIN, OID_END_OCTET_STRING, OID_STRING, OIDBytes, OIDCached,
-)
+from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
 
 import cmk.base.api.agent_based.register as _agent_based_register
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
+from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
+from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
+from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels
+from cmk.base.discovered_labels import ServiceLabel  # noqa: F401 # pylint: disable=unused-import
 
-from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
-    HOST_ONLY  # Symbolic representations of states in plugin output; Management board checks; Check is only executed for real SNMP host (e.g. interfaces),
+from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    HOST_ONLY,  # Check is only executed for real SNMP host (e.g. interfaces),
 )
-from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
-    HOST_PRECEDENCE  # Check is only executed for mgmt board (e.g. Managegment Uptime),
+from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    HOST_PRECEDENCE,  # Check is only executed for mgmt board (e.g. Managegment Uptime),
 )
-from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
-    MGMT_ONLY  # Use host address/credentials when it's a SNMP HOST,
+
+from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import; Use host address/credentials when it's a SNMP HOST, # isort: skip
+    MGMT_ONLY,)
+
+# The class 'as_float' has been moved; import it here under the old name
+from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    EvalableFloat as as_float,)
+
+from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # isort: skip # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
+    get_rule_options, hosttags_match_taglist, in_extraconf_hostlist,
 )
-from cmk.base.check_api_utils import (  # noqa: F401 # pylint: disable=unused-import
-    check_type, host_name, Service, service_description, state_markers,
+
+from cmk.base.plugin_contexts import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    check_type, host_name as _internal_host_name, service_description,
 )
-from cmk.base.discovered_labels import DiscoveredHostLabels as HostLabels  # noqa: F401 # pylint: disable=unused-import
-from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels  # noqa: F401 # pylint: disable=unused-import
-from cmk.base.discovered_labels import HostLabel, ServiceLabel  # noqa: F401 # pylint: disable=unused-import
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]
 Levels = Tuple  # Has length 2 or 4
+
+
+def host_name() -> str:
+    """compatibility for making HostName a own class
+    if somebody make type comparision to str or some other weird stuff we want to be compatible"""
+    return str(_internal_host_name())
+
+
+def HostLabel(*_a, **_kw):
+    raise NotImplementedError("Creation of HostLabels in legacy plugins is no longer supported"
+                              " (see https://checkmk.de/check_mk-werks.php?werk_id=11117).")
+
+
+HostLabels = HostLabel
 
 
 def get_check_api_context() -> _config.CheckContext:
@@ -170,10 +197,14 @@ def get_check_api_context() -> _config.CheckContext:
 core_state_names = _defines.short_service_state_names()
 
 # backwards compatibility: allow to pass integer.
-BINARY = lambda x: OIDBytes(str(x))
-CACHED_OID = lambda x: OIDCached(str(x))
+BINARY = lambda x: _OIDBytes(str(x))
+CACHED_OID = lambda x: _OIDCached(str(x))
 
-network_interface_scan_registry = _snmp_utils.MutexScanRegistry()
+OID_BIN = _SpecialColumn.BIN
+OID_STRING = _SpecialColumn.STRING
+OID_END = _SpecialColumn.END
+OID_END_BIN = _SpecialColumn.END_BIN
+OID_END_OCTET_STRING = _SpecialColumn.END_OCTET_STRING
 
 
 def saveint(i: Any) -> int:
@@ -208,8 +239,8 @@ def service_extra_conf(hostname: HostName, service: ServiceName, ruleset: _confi
 
 
 # Compatibility wrapper for the pre 1.6 existant config.host_extra_conf()
-def host_extra_conf(hostname: HostName, ruleset: _config.Ruleset) -> List:
-    return _config.get_config_cache().host_extra_conf(hostname, ruleset)
+def host_extra_conf(hostname: str, ruleset: _config.Ruleset) -> List:
+    return _config.get_config_cache().host_extra_conf(HostName(hostname), ruleset)
 
 
 # Compatibility wrapper for the pre 1.6 existant config.in_binary_hostlist()
@@ -218,8 +249,8 @@ def in_binary_hostlist(hostname: HostName, ruleset: _config.Ruleset) -> bool:
 
 
 # Compatibility wrapper for the pre 1.6 existant conf.host_extra_conf_merged()
-def host_extra_conf_merged(hostname: HostName, conf: _config.Ruleset) -> Dict[str, Any]:
-    return _config.get_config_cache().host_extra_conf_merged(hostname, conf)
+def host_extra_conf_merged(hostname: str, conf: _config.Ruleset) -> Dict[str, Any]:
+    return _config.get_config_cache().host_extra_conf_merged(HostName(hostname), conf)
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to
@@ -297,12 +328,11 @@ def get_relative_date_human_readable(timestamp: float) -> str:
 
 set_item_state = _item_state.set_item_state
 get_item_state = _item_state.get_item_state
-get_all_item_states = _item_state.get_all_item_states
 clear_item_state = _item_state.clear_item_state
-clear_item_states_by_full_keys = _item_state.clear_item_states_by_full_keys
+
 get_rate = _item_state.get_rate
 get_average = _item_state.get_average
-# TODO: Cleanup checks and deprecate this
+
 last_counter_wrap = _item_state.last_counter_wrap
 
 SKIP = _item_state.SKIP
@@ -343,8 +373,9 @@ def _do_check_levels(value: Union[int, float], levels: Levels, human_readable_fu
 
 def _levelsinfo_ty(ty: str, warn: Warn, crit: Crit, human_readable_func: Callable,
                    unit_info: str) -> str:
-    return u" (warn/crit {0} {1}{3}/{2}{3})".format(ty, human_readable_func(warn),
-                                                    human_readable_func(crit), unit_info)
+    warn_str = "never" if warn is None else "%s%s" % (human_readable_func(warn), unit_info)
+    crit_str = "never" if crit is None else "%s%s" % (human_readable_func(crit), unit_info)
+    return " (warn/crit %s %s/%s)" % (ty, warn_str, crit_str)
 
 
 def _build_perfdata(dsname: Union[None, MetricName],
@@ -456,7 +487,7 @@ def check_levels(value: Union[int, float],
             raise TypeError("Metric name is empty/None")
 
         try:
-            ref_value, levels = _prediction.get_levels(host_name(),
+            ref_value, levels = _prediction.get_levels(_internal_host_name(),
                                                        service_description(),
                                                        dsname,
                                                        params,
@@ -494,11 +525,14 @@ def get_effective_service_level() -> ServiceState:
     """Get the service level that applies to the current service.
     This can only be used within check functions, not during discovery nor parsing."""
     config_cache = _config.get_config_cache()
-    service_level = config_cache.service_level_of_service(host_name(), service_description())
+    service_level = config_cache.service_level_of_service(
+        _internal_host_name(),
+        service_description(),
+    )
     if service_level is not None:
         return service_level
 
-    service_level = config_cache.get_host_config(host_name()).service_level
+    service_level = config_cache.get_host_config(_internal_host_name()).service_level
     if service_level is not None:
         return service_level
 
@@ -538,11 +572,13 @@ def get_agent_data_time() -> Optional[float]:
     of tcp or snmp hosts or None in case of piggyback data because
     we do not exactly know the latest agent data. Maybe one time
     we can handle this. For cluster hosts an exception is raised."""
-    return _agent_cache_file_age(host_name(), check_type())
+    return _agent_cache_file_age(_internal_host_name(), check_type())
 
 
-def _agent_cache_file_age(hostname: HostName,
-                          check_plugin_name: CheckPluginNameStr) -> Optional[float]:
+def _agent_cache_file_age(
+    hostname: HostName,
+    check_plugin_name: str,
+) -> Optional[float]:
     host_config = _config.get_config_cache().get_host_config(hostname)
     if host_config.is_cluster:
         raise MKGeneralException("get_agent_data_time() not valid for cluster")
@@ -577,12 +613,20 @@ def get_parsed_item_data(check_function: Callable) -> Callable:
         ...
 
     In case of parsed not being a dict the decorator returns 3
-    (UNKN state) with a wrong usage message.
+    (unknown state) with a wrong usage message.
     In case of item not existing as a key in parsed or parsed[item]
-    not existing the decorator gives an empty return leading to
-    cmk.base returning 3 (UNKN state) with an item not found message
-    (see cmk/base/checking.py).
+    evaluating to False the decorator gives an empty return leading to
+    cmk.base returning 3 (unknown state) with an item not found message
+    (see cmk/base/agent_based/checking.py).
+
+    WATCH OUT:
+    This will not work if valid item data evaluates to False (such as a
+    sensor reading that is 0.0, for example).
     """
+    # ^- However: It's been like this for a while and some plugins rely on this
+    # behaviour. Since this function has no counterpart in the new check API,
+    # we leave it as it is.
+
     @functools.wraps(check_function)
     def wrapped_check_function(item: str, params: Any, parsed: Any) -> Any:
         # TODO
@@ -721,8 +765,20 @@ def _get_discovery_iter(name: Any, get_name: Callable[[], str]) -> Iterable[str]
         return iter(())
 
 
+# Obsolete! Do not confuse with the Service object exposed by the new API.
+class Service:
+    """Can be used to by the discovery function to tell Checkmk about a new service"""
+    def __init__(
+        self,
+        item: Optional[str],
+        parameters: Any = None,
+        service_labels: Optional[ServiceLabels] = None,
+    ) -> None:
+        self.item = item
+        self.parameters = parameters
+        self.service_labels = service_labels or ServiceLabels()
+
+
 # NOTE: Currently this is not really needed, it is just here to keep any start
 # import in sync with our intended API.
-# TODO: Do we really need this? Is there code which uses a star import for this
-# module?
 __all__ = list(get_check_api_context())

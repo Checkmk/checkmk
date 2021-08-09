@@ -5,10 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import textwrap
-from typing import Union, Tuple, Callable, Optional, Dict, List
+from typing import Callable, Dict, List, Optional, Set, Tuple, Union
 
-from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
+from cmk.utils.log import console
+from cmk.utils.plugin_loader import load_plugins
 from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
@@ -25,8 +26,7 @@ Arguments = List[str]
 
 class Modes:
     def __init__(self) -> None:
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        super(Modes, self).__init__()  # pylint: disable=bad-super-call
+        super().__init__()
         self._mode_map: Dict[OptionName, Mode] = {}
         self._modes: List[Mode] = []
         self._general_options: List[Option] = []
@@ -207,12 +207,14 @@ class Option:
                  argument_conv: Optional[ConvertFunction] = None,
                  argument_optional: bool = False,
                  count: bool = False,
-                 handler_function: Optional[OptionFunction] = None) -> None:
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        super(Option, self).__init__()  # pylint: disable=bad-super-call
+                 handler_function: Optional[OptionFunction] = None,
+                 *,
+                 deprecated_long_options: Optional[Set[str]] = None) -> None:
+        super().__init__()
         self.long_option = long_option
         self.short_help = short_help
         self.short_option = short_option
+        self._deprecated_long_options = deprecated_long_options or set()
 
         # An option can either
         # a) have an argument
@@ -231,9 +233,13 @@ class Option:
     def options(self) -> List[str]:
         options = []
         if self.short_option:
-            options.append("-%s" % self.short_option)
-        options.append("--%s" % self.long_option)
+            options.append(f"-{self.short_option}")
+        options.append(f"--{self.long_option}")
+        options.extend(f"--{opt}" for opt in self._deprecated_long_options)
         return options
+
+    def is_deprecated_option(self, opt_str: str) -> bool:
+        return opt_str.lstrip('-') in self._deprecated_long_options
 
     def has_short_option(self) -> bool:
         return self.short_option is not None
@@ -276,10 +282,11 @@ class Option:
         return [spec]
 
     def long_getopt_specs(self) -> List[str]:
-        spec = self.long_option
+        specs = [self.long_option]
+        specs.extend(self._deprecated_long_options)
         if self.argument and not self.argument_optional:
-            spec += "="
-        return [spec]
+            return [f"{spec}=" for spec in specs]
+        return specs
 
 
 class Mode(Option):
@@ -296,29 +303,27 @@ class Mode(Option):
                  needs_config: bool = True,
                  needs_checks: bool = True,
                  sub_options: Optional[List[Option]] = None) -> None:
-        super(Mode, self).__init__(long_option,
-                                   short_help,
-                                   short_option,
-                                   argument,
-                                   argument_descr,
-                                   argument_conv,
-                                   argument_optional,
-                                   handler_function=handler_function)
+        super().__init__(long_option,
+                         short_help,
+                         short_option,
+                         argument,
+                         argument_descr,
+                         argument_conv,
+                         argument_optional,
+                         handler_function=handler_function)
         self.long_help = long_help
         self.needs_config = needs_config
         self.needs_checks = needs_checks
         self.sub_options = sub_options or []
 
     def short_getopt_specs(self) -> List[str]:
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        specs = super(Mode, self).short_getopt_specs()  # pylint: disable=bad-super-call
+        specs = super().short_getopt_specs()
         for option in self.sub_options:
             specs += option.short_getopt_specs()
         return specs
 
     def long_getopt_specs(self) -> List[str]:
-        # TODO: This disable is needed because of a pylint bug. Remove one day.
-        specs = super(Mode, self).long_getopt_specs()  # pylint: disable=bad-super-call
+        specs = super().long_getopt_specs()
         for option in self.sub_options:
             specs += option.long_getopt_specs()
         return specs
@@ -357,7 +362,7 @@ class Mode(Option):
         if self.sub_options:
             sub_texts = []
             for option in self.sub_options:
-                short_help_text = option.short_help_text(fmt="    %-21s")
+                short_help_text = option.short_help_text(fmt="    %-24s")
                 if short_help_text is not None:
                     sub_texts.append(short_help_text)
             text.append("    Additional options:\n\n%s" % "\n".join(sub_texts))
@@ -375,6 +380,9 @@ class Mode(Option):
             for option in self.sub_options:
                 if o not in option.options():
                     continue
+
+                if option.is_deprecated_option(o):
+                    console.warning("%r is deprecated in favour of option %r", o, option.name())
 
                 if a and not option.takes_argument():
                     raise MKGeneralException("No argument to %s expected." % o)

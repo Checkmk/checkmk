@@ -6,7 +6,7 @@ Date: 1598877496
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If you used host labels like "my_key:my_value" and "my_key:my_next_value" in
 ruleset conditions, the rule was saved with the last "key:value" pair. From now

@@ -12,5 +12,5 @@ description:
 item:
  The fixed statement {{Power Supply System}}
 
-inventory:
+discovery:
  One service is created for each device.

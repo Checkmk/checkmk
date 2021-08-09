@@ -9,36 +9,39 @@
 # but excellent article "Parsing Command Line Arguments" in the FPComplete blog
 # at https://www.fpcomplete.com/blog/2017/12/parsing-command-line-arguments.
 
-from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 import sys
-from typing import List, NamedTuple, Optional, Union
+from argparse import ArgumentParser, ArgumentTypeError, RawDescriptionHelpFormatter
 from pathlib import Path
+from typing import List, NamedTuple, Optional, Union
 
-# a filesystem path with a user-presentable description
-AnnotatedPath = NamedTuple('AnnotatedPath', [('description', str), ('value', Path)])
 
-# filesystem paths related to the event console
-Paths = NamedTuple('Paths', [
-    ('main_config_file', AnnotatedPath),
-    ('config_dir', AnnotatedPath),
-    ('rule_pack_dir', AnnotatedPath),
-    ('mkp_rule_pack_dir', AnnotatedPath),
-    ('unix_socket', AnnotatedPath),
-    ('event_socket', AnnotatedPath),
-    ('event_pipe', AnnotatedPath),
-    ('pid_file', AnnotatedPath),
-    ('log_file', AnnotatedPath),
-    ('history_dir', AnnotatedPath),
-    ('messages_dir', AnnotatedPath),
-    ('master_config_file', AnnotatedPath),
-    ('slave_status_file', AnnotatedPath),
-    ('spool_dir', AnnotatedPath),
-    ('status_file', AnnotatedPath),
-    ('status_server_profile', AnnotatedPath),
-    ('event_server_profile', AnnotatedPath),
-    ('compiled_mibs_dir', AnnotatedPath),
-    ('mongodb_config_file', AnnotatedPath),
-])
+class AnnotatedPath(NamedTuple):
+    """a filesystem path with a user-presentable description"""
+    description: str
+    value: Path
+
+
+class Paths(NamedTuple):
+    """filesystem paths related to the event console"""
+    main_config_file: AnnotatedPath
+    config_dir: AnnotatedPath
+    rule_pack_dir: AnnotatedPath
+    mkp_rule_pack_dir: AnnotatedPath
+    unix_socket: AnnotatedPath
+    event_socket: AnnotatedPath
+    event_pipe: AnnotatedPath
+    pid_file: AnnotatedPath
+    log_file: AnnotatedPath
+    history_dir: AnnotatedPath
+    messages_dir: AnnotatedPath
+    master_config_file: AnnotatedPath
+    slave_status_file: AnnotatedPath
+    spool_dir: AnnotatedPath
+    status_file: AnnotatedPath
+    status_server_profile: AnnotatedPath
+    event_server_profile: AnnotatedPath
+    compiled_mibs_dir: AnnotatedPath
+    mongodb_config_file: AnnotatedPath
 
 
 def _default_paths(omd_root: Path, default_config_dir: Path) -> Paths:
@@ -72,15 +75,16 @@ def _default_paths(omd_root: Path, default_config_dir: Path) -> Paths:
         mongodb_config_file=AnnotatedPath('MongoDB configuration', omd_root / 'etc/mongodb.conf'))
 
 
-# a network port number
-PortNumber = NamedTuple('PortNumber', [('value', int)])
+class PortNumber(NamedTuple):
+    """a network port number"""
+    value: int
 
-# network port numbers related to the event console
-PortNumbers = NamedTuple('PortNumbers', [
-    ('syslog_udp', PortNumber),
-    ('syslog_tcp', PortNumber),
-    ('snmptrap_udp', PortNumber),
-])
+
+class PortNumbers(NamedTuple):
+    """network port numbers related to the event console"""
+    syslog_udp: PortNumber
+    syslog_tcp: PortNumber
+    snmptrap_udp: PortNumber
 
 
 def _default_port_numbers() -> PortNumbers:
@@ -90,17 +94,18 @@ def _default_port_numbers() -> PortNumbers:
                        snmptrap_udp=PortNumber(162))
 
 
-# a Unix file descriptor number
-FileDescriptor = NamedTuple('FileDescriptor', [('value', int)])
+class FileDescriptor(NamedTuple):
+    """a Unix file descriptor number"""
+    value: int
 
 
 class ECArgumentParser(ArgumentParser):
     """An argument parser for the event console"""
     def __init__(self, prog: str, version: str, paths: Paths, port_numbers: PortNumbers) -> None:
-        super(ECArgumentParser, self).__init__(prog=prog,
-                                               formatter_class=RawDescriptionHelpFormatter,
-                                               description='Start the Check_MK event console.',
-                                               epilog=self._epilog(paths))
+        super().__init__(prog=prog,
+                         formatter_class=RawDescriptionHelpFormatter,
+                         description='Start the Check_MK event console.',
+                         epilog=self._epilog(paths))
         self._add_arguments(version, port_numbers)
 
     @staticmethod
@@ -176,23 +181,22 @@ def _endpoint(enabled: bool, file_descriptor: FileDescriptor,
     return file_descriptor
 
 
-# various post-processed commandline options
-Options = NamedTuple('Options', [
-    ('verbosity', int),
-    ('syslog_udp', Optional[EndPoint]),
-    ('syslog_tcp', Optional[EndPoint]),
-    ('snmptrap_udp', Optional[EndPoint]),
-    ('foreground', bool),
-    ('debug', bool),
-    ('profile_status', bool),
-    ('profile_event', bool),
-])
+class Options(NamedTuple):
+    """various post-processed commandline options"""
+    verbosity: int
+    syslog_udp: Optional[EndPoint]
+    syslog_tcp: Optional[EndPoint]
+    snmptrap_udp: Optional[EndPoint]
+    foreground: bool
+    debug: bool
+    profile_status: bool
+    profile_event: bool
 
-# all settings of the event console
-Settings = NamedTuple('Settings', [
-    ('paths', Paths),
-    ('options', Options),
-])
+
+class Settings(NamedTuple):
+    """all settings of the event console"""
+    paths: Paths
+    options: Options
 
 
 def settings(version: str, omd_root: Path, default_config_dir: Path, argv: List[str]) -> Settings:
@@ -215,8 +219,8 @@ def settings(version: str, omd_root: Path, default_config_dir: Path, argv: List[
 
 
 if __name__ == "__main__":
-    import cmk.utils.version as cmk_version
     import cmk.utils.paths
+    import cmk.utils.version as cmk_version
     print(
         settings(str(cmk_version.__version__), Path(cmk.utils.paths.omd_root),
                  Path(cmk.utils.paths.default_config_dir), sys.argv))

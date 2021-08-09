@@ -1,0 +1,12 @@
+Title: Fixed state colors and overlapping texts in availability and timeline tables
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 2.1.0i1
+Date: 1615539398
+Class: fix
+
+Availability tables showed state colors only on every other row. This has been fixed and the display of state colors has been unified with the common state color rendering that is known from views.
+Also overlapping text glitches were fixed for availability and timeline tables.
+

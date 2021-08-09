@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=protected-access,redefined-outer-name
-import pytest  # type: ignore[import]
+import pytest
 from utils import import_module
 
 

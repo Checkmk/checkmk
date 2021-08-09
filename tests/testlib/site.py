@@ -7,7 +7,6 @@
 import glob
 import logging
 import os
-from pathlib import Path
 import pipes
 import pwd
 import shutil
@@ -15,21 +14,22 @@ import subprocess
 import sys
 import time
 import urllib.parse
-
+from contextlib import suppress
+from pathlib import Path
 from typing import Union
 
+import pytest
 from six import ensure_str
 
-from testlib.utils import (
-    cmk_path,
-    cme_path,
+from tests.testlib.utils import (
     cmc_path,
-    virtualenv_path,
+    cme_path,
+    cmk_path,
     current_base_branch_name,
-    api_str_type,
+    virtualenv_path,
 )
-from testlib.web_session import CMKWebSession
-from testlib.version import CMKVersion
+from tests.testlib.version import CMKVersion
+from tests.testlib.web_session import CMKWebSession
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +85,7 @@ class Site:
     @property
     def live(self):
         import livestatus  # pylint: disable=import-outside-toplevel,import-outside-toplevel
+
         # Note: If the site comes from a SiteFactory instance, the TCP connection
         # is insecure, i.e. no TLS.
         live = (livestatus.LocalConnection() if self._is_running_as_site_user() else
@@ -119,7 +120,7 @@ class Site:
                 return False
             return new_t > after
 
-        reload_time, timeout = time.time(), 10
+        reload_time, timeout = time.time(), 40
         while not config_reloaded():
             if time.time() > reload_time + timeout:
                 raise Exception("Config did not update within %d seconds" % timeout)
@@ -256,15 +257,25 @@ class Site:
                 "sudo", "su", "-l", self.id, "-c",
                 pipes.quote(" ".join(pipes.quote(p) for p in cmd))
             ]))
-        sys.stdout.write("Executing: %s\n" % cmd_txt)
+        logger.info("Executing: %s", cmd_txt)
         kwargs["shell"] = True
         return subprocess.Popen(cmd_txt, *args, **kwargs)
 
     def omd(self, mode: str, *args: str) -> int:
         sudo, site_id = ([], []) if self._is_running_as_site_user() else (["sudo"], [self.id])
         cmd = sudo + ["/usr/bin/omd", mode] + site_id + list(args)
-        sys.stdout.write("Executing: %s\n" % subprocess.list2cmdline(cmd))
-        return subprocess.call(cmd)
+        logger.info("Executing: %s", subprocess.list2cmdline(cmd))
+        p = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.STDOUT,
+                             encoding="utf-8")
+        stdout, _stderr = p.communicate()
+        logger.debug("Exit code: %d", p.returncode)
+        if stdout:
+            logger.debug("Output:")
+        for line in stdout.strip().split("\n"):
+            logger.debug("> %s", line)
+        return p.returncode
 
     def path(self, rel_path):
         return os.path.join(self.root, rel_path)
@@ -392,14 +403,25 @@ class Site:
             assert os.path.exists("/omd/sites/%s" % self.id)
 
             self._set_number_of_helpers()
-            #self._enabled_liveproxyd_debug_logging()
+            self._enabled_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
+            self._enable_cmc_core_dumps()
+            self._enable_cmc_debug_logging()
+            self._enable_gui_debug_logging()
+            self._tune_nagios()
 
         if self.install_test_python_modules:
             self._install_test_python_modules()
 
         if self.update_from_git:
             self._update_with_f12_files()
+
+        # The tmpfs is already mounted during "omd create". We have just created some
+        # Checkmk configuration files and want to be sure they are used once the core
+        # starts.
+        self._update_cmk_core_config()
+
+        self.makedirs(self.result_dir())
 
     def _update_with_f12_files(self):
         paths = [
@@ -409,6 +431,8 @@ class Site:
             cmk_path() + "/bin",
             cmk_path() + "/agents/special",
             cmk_path() + "/agents/plugins",
+            cmk_path() + "/agents/windows/plugins",
+            cmk_path() + "/agents",
             cmk_path() + "/modules",
             cmk_path() + "/cmk/base",
             cmk_path() + "/cmk",
@@ -424,7 +448,6 @@ class Site:
             paths += [
                 cmc_path() + "/bin",
                 cmc_path() + "/agents/plugins",
-                cmc_path() + "/agents/bakery",
                 cmc_path() + "/modules",
                 cmc_path() + "/cmk/base",
                 cmc_path() + "/cmk",
@@ -454,14 +477,21 @@ class Site:
                 print("Executing .f12 in \"%s\" DONE" % path)
                 sys.stdout.flush()
 
+    def _update_cmk_core_config(self):
+        logger.info("Updating core configuration...")
+        p = self.execute(["cmk", "-U"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        assert p.wait() == 0, "Failed to execute 'cmk -U': %s" % p.communicate()[0]
+
     def _set_number_of_helpers(self):
         self.makedirs("etc/check_mk/conf.d")
         self.write_file("etc/check_mk/conf.d/cmc-helpers.mk", "cmc_cmk_helpers = 5\n")
 
     def _enabled_liveproxyd_debug_logging(self):
         self.makedirs("etc/check_mk/liveproxyd.d")
+        # 15 = verbose
+        # 10 = debug
         self.write_file("etc/check_mk/liveproxyd.d/logging.mk",
-                        "liveproxyd_log_levels = {'cmk.liveproxyd': 10}")
+                        "liveproxyd_log_levels = {'cmk.liveproxyd': 15}")
 
     def _enable_mkeventd_debug_logging(self):
         self.makedirs("etc/check_mk/mkeventd.d")
@@ -474,6 +504,47 @@ class Site:
                 'cmk.mkeventd.StatusServer': 10,
                 'cmk.mkeventd.lock': 20
             })
+
+    def _enable_cmc_core_dumps(self):
+        self.makedirs("etc/check_mk/conf.d")
+        self.write_file("etc/check_mk/conf.d/cmc-core-dumps.mk", "cmc_dump_core = True\n")
+
+    def _enable_cmc_debug_logging(self):
+        self.makedirs("etc/check_mk/conf.d")
+        self.write_file(
+            "etc/check_mk/conf.d/cmc-logging.mk", "cmc_log_levels = %r\n" % {
+                'cmk.alert': 7,
+                'cmk.carbon': 7,
+                'cmk.core': 7,
+                'cmk.downtime': 7,
+                'cmk.helper': 6,
+                'cmk.livestatus': 7,
+                'cmk.notification': 7,
+                'cmk.rrd': 7,
+                'cmk.smartping': 7,
+            })
+
+    def _enable_gui_debug_logging(self):
+        self.makedirs("etc/check_mk/multisite.d")
+        self.write_file(
+            "etc/check_mk/multisite.d/logging.mk", "log_levels = %r\n" % {
+                "cmk.web": 10,
+                "cmk.web.ldap": 10,
+                "cmk.web.auth": 10,
+                "cmk.web.bi.compilation": 10,
+                "cmk.web.automations": 10,
+                "cmk.web.background-job": 10,
+            })
+
+    def _tune_nagios(self):
+        # We want nagios to process queued external commands as fast as possible.  Even if we
+        # set command_check_interval to -1, nagios is doing some sleeping in between the
+        # command processing. We reduce the sleep time here to make it a little faster.
+        self.write_file(
+            "etc/nagios/nagios.d/zzz-test-tuning.cfg", "log_passive_checks=1\n"
+            "service_inter_check_delay_method=n\n"
+            "host_inter_check_delay_method=n\n"
+            "sleep_time=0.05\n")
 
     def _install_test_python_modules(self):
         venv = virtualenv_path()
@@ -515,21 +586,30 @@ class Site:
     def start(self):
         if not self.is_running():
             assert self.omd("start") == 0
+            #print("= BEGIN PROCESSES AFTER START ==============================")
+            #self.execute(["ps", "aux"]).wait()
+            #print("= END PROCESSES AFTER START ==============================")
             i = 0
             while not self.is_running():
                 i += 1
                 if i > 10:
                     self.execute(["/usr/bin/omd", "status"]).wait()
-                    raise Exception("Could not start site %s" % self.id)
+                    #print("= BEGIN PROCESSES FAIL ==============================")
+                    #self.execute(["ps", "aux"]).wait()
+                    #print("= END PROCESSES FAIL ==============================")
+                    logger.warning("Could not start site %s. Stop waiting.", self.id)
+                    break
                 logger.warning("The site %s is not running yet, sleeping... (round %d)", self.id, i)
                 sys.stdout.flush()
                 time.sleep(0.2)
+
+            self.ensure_running()
 
         assert os.path.ismount(self.path("tmp")), \
             "The site does not have a tmpfs mounted! We require this for good performing tests"
 
     def stop(self):
-        if not self.is_running():
+        if self.is_stopped():
             return  # Nothing to do
 
         #logger.debug("= BEGIN PROCESSES BEFORE =======================================")
@@ -545,7 +625,7 @@ class Site:
         #logger.debug("= END PROCESSES AFTER STOP =======================================")
 
         i = 0
-        while self.is_running():
+        while not self.is_stopped():
             i += 1
             if i > 10:
                 raise Exception("Could not stop site %s" % self.id)
@@ -556,9 +636,20 @@ class Site:
     def exists(self):
         return os.path.exists("/omd/sites/%s" % self.id)
 
+    def ensure_running(self):
+        if not self.is_running():
+            pytest.exit("Site was not running completely while it should. Enforcing stop.")
+
     def is_running(self):
         return self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull,
                                                                               "w")).wait() == 0
+
+    def is_stopped(self):
+        # 0 -> fully running
+        # 1 -> fully stopped
+        # 2 -> partially running
+        return self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull,
+                                                                              "w")).wait() == 1
 
     def set_config(self, key, val, with_restart=False):
         if self.get_config(key) == val:
@@ -619,15 +710,12 @@ class Site:
 
         web = CMKWebSession(self)
         web.login()
-        web.set_language("en")
 
         # Call WATO once for creating the default WATO configuration
         logger.debug("Requesting wato.py (which creates the WATO factory settings)...")
         response = web.get("wato.py?mode=sites").text
         #logger.debug("Debug: %r" % response)
-        assert "<title>Distributed Monitoring</title>" in response
-        assert "replication_status_%s" % web.site.id in response, \
-                "WATO does not seem to be initialized: %r" % response
+        assert "site=%s" % web.site.id in response
 
         logger.debug("Waiting for WATO files to be created...")
         wait_time = 20.0
@@ -640,10 +728,12 @@ class Site:
             "Failed to initialize WATO data structures " \
             "(Still missing: %s)" % missing_files
 
+        web.enforce_non_localized_gui()
+
         self._add_wato_test_config(web)
 
     # Add some test configuration that is not test specific. These settings are set only to have a
-    # bit more complex Check_MK config.
+    # bit more complex Checkmk config.
     def _add_wato_test_config(self, web):
         # This entry is interesting because it is a check specific setting. These
         # settings are only registered during check loading. In case one tries to
@@ -658,11 +748,9 @@ class Site:
                         {
                             'condition': {},
                             'options': {},
-                            # TODO: This should obviously be 'str' in Python 3, but the GUI is
-                            # currently in Python 2 and expects byte strings. Change this once
-                            # the GUI is based on Python 3.
-                            'value': [(api_str_type('TESTGROUP'),
-                                       (api_str_type('*gwia*'), api_str_type('')))]
+                            'value': {
+                                'group_patterns': [('TESTGROUP', ('*gwia*', ''))]
+                            }
                         },
                     ],
                 }
@@ -688,11 +776,11 @@ class Site:
         Not free of races, but should be sufficient."""
         start_again = False
 
-        if self.is_running():
+        if not self.is_stopped():
             start_again = True
             self.stop()
 
-        sys.stdout.write("Have livestatus port lock\n")
+        logger.info("Have livestatus port lock")
         self.set_config("LIVESTATUS_TCP", "on")
         self._gather_livestatus_port()
         self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
@@ -701,7 +789,7 @@ class Site:
         if start_again:
             self.start()
 
-        sys.stdout.write("After livestatus port lock\n")
+        logger.info("After livestatus port lock")
 
     def _gather_livestatus_port(self):
         if self.reuse and self.exists():
@@ -724,6 +812,40 @@ class Site:
 
         logger.debug("Livestatus ports already in use: %r, using port: %d", used_ports, port)
         return port
+
+    def save_results(self):
+        if not _is_dockerized():
+            logger.info("Not dockerized: not copying results")
+            return
+        logger.info("Saving to %s", self.result_dir())
+
+        os.makedirs(self.result_dir(), exist_ok=True)
+
+        with suppress(FileNotFoundError):
+            shutil.copy(self.path("junit.xml"), self.result_dir())
+
+        shutil.copytree(self.path("var/log"),
+                        "%s/logs" % self.result_dir(),
+                        ignore_dangling_symlinks=True,
+                        ignore=shutil.ignore_patterns('.*'))
+
+        for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
+            shutil.copy(nagios_log_path, "%s/logs" % self.result_dir())
+
+        with suppress(FileNotFoundError):
+            shutil.copy(self.path("var/check_mk/core/core"), "%s/cmc_core_dump" % self.result_dir())
+
+        with suppress(FileNotFoundError):
+            shutil.copytree(self.path("var/check_mk/crashes"),
+                            "%s/crashes" % self.result_dir(),
+                            ignore=shutil.ignore_patterns('.*'))
+
+    def result_dir(self):
+        return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)
+
+
+def _is_dockerized():
+    return Path("/.dockerenv").exists()
 
 
 class SiteFactory:
@@ -794,16 +916,24 @@ class SiteFactory:
         site = self._site_obj(name)
 
         site.create()
+        self._sites[site.id] = site
+
         site.open_livestatus_tcp(encrypted=False)
         site.start()
         site.prepare_for_tests()
         # There seem to be still some changes that want to be activated
         CMKWebSession(site).activate_changes()
         logger.debug("Created site %s", site.id)
-        self._sites[site.id] = site
         return site
 
+    def save_results(self):
+        logger.info("Saving results")
+        for _site_id, site in sorted(self._sites.items(), key=lambda x: x[0]):
+            logger.info("Saving results of site %s", site.id)
+            site.save_results()
+
     def cleanup(self):
+        logger.info("Removing sites")
         for site_id in list(self._sites.keys()):
             self.remove_site(site_id)
 

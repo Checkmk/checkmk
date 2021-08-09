@@ -6,6 +6,6 @@ distribution: check_mk
 description:
  Show the serial number and firmware version
 
-inventory:
+discovery:
  One service is created for each controller.
 

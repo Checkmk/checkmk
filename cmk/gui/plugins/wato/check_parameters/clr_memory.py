@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _item_spec_clr_memory():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the Application"),
         help=_("The name of the DotNet (.Net) application or _Global_"),
         allow_empty=False,

@@ -6,9 +6,7 @@
 #include "LogwatchListColumn.h"
 
 #include <algorithm>
-#include <filesystem>
 #include <iterator>
-#include <ostream>
 
 #include "Logger.h"
 #include "MonitoringCore.h"
@@ -17,7 +15,6 @@
 
 #ifdef CMC
 #include "Host.h"
-#include "cmc.h"
 #else
 #include "nagios.h"
 #endif

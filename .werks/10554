@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The "Secure Agent Updater" analyze configuration check could fail when a rule had no protocol
 defined, which is totally fine, because it is an optional parameter per rule.

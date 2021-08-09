@@ -4,19 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import (
-    all_of,
-    contains,
-    exists,
-    parse_to_string_table,
-    register,
-    SNMPTree,
-)
+from .agent_based_api.v1 import all_of, contains, exists, register, SNMPTree
 
 register.snmp_section(
     name="infoblox_osinfo",
-    parse_function=parse_to_string_table,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2021.100",
             oids=[
@@ -25,7 +17,7 @@ register.snmp_section(
         ),
     ],
     detect=all_of(
-        exists(".1.3.6.1.4.1.2021.4.1.*"),
         contains(".1.3.6.1.2.1.1.1.0", "infoblox"),
+        exists(".1.3.6.1.4.1.2021.4.1.*"),
     ),
 )

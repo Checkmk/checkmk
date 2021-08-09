@@ -6,6 +6,6 @@ Date: 1576582914
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The Azure agent now collects the total account of user accoutns. Before it was limited to 100 users by the Azure AD Connect API.

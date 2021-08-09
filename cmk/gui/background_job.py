@@ -5,29 +5,29 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import errno
+import io
 import logging
 import multiprocessing
 import os
-from pathlib import Path
 import pprint
 import shutil
 import signal
 import sys
 import time
 import traceback
+from pathlib import Path
 from types import FrameType
-import io
-from typing import Tuple, Callable, Type, List, Optional, Dict, Any, Sequence
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type
 
 import psutil  # type: ignore[import]
 from six import ensure_binary, ensure_str
 
+import cmk.utils.daemon as daemon
 import cmk.utils.log
 import cmk.utils.render as render
-from cmk.utils.log import VERBOSE
-import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
+from cmk.utils.log import VERBOSE
 
 import cmk.gui.log
 from cmk.gui.i18n import _
@@ -60,7 +60,7 @@ class BackgroundJobAlreadyRunning(MKGeneralException):
 
 class BackgroundProcessInterface:
     def __init__(self, job_parameters: JobParameters) -> None:
-        super(BackgroundProcessInterface, self).__init__()
+        super().__init__()
         self._job_parameters = job_parameters
 
     def get_work_dir(self) -> str:
@@ -121,7 +121,7 @@ class BackgroundProcessInterface:
 
 class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
     def __init__(self, job_parameters: JobParameters) -> None:
-        super(BackgroundProcess, self).__init__(job_parameters)
+        super().__init__(job_parameters)
         self._jobstatus = self._job_parameters["jobstatus"]
         # TODO: Hand over the logger via arguments
         self._logger = cmk.gui.log.logger.getChild("background_process")
@@ -272,7 +272,7 @@ class BackgroundJob:
     job_prefix = "unnamed-job"
 
     def __init__(self, job_id: str, logger: Optional[logging.Logger] = None, **kwargs: Any) -> None:
-        super(BackgroundJob, self).__init__()
+        super().__init__()
         self._job_id = job_id
         self._job_base_dir = BackgroundJobDefines.base_dir
         self._job_initializiation_lock = os.path.join(self._job_base_dir, "job_initialization.lock")
@@ -515,6 +515,11 @@ class BackgroundJob:
         This is here so we can mock this away cleanly."""
         os._exit(code)
 
+    def wait_for_completion(self):
+        """Wait for background job to be complete."""
+        while self.is_active():
+            time.sleep(0.5)
+
 
 class JobStatusStates:
     INITIALIZED = "initialized"
@@ -526,7 +531,7 @@ class JobStatusStates:
 
 class JobStatus:
     def __init__(self, work_dir: str) -> None:
-        super(JobStatus, self).__init__()
+        super().__init__()
         self._work_dir = work_dir
         self._jobstatus_path = Path(work_dir) / BackgroundJobDefines.jobstatus_filename
 
@@ -548,7 +553,7 @@ class JobStatus:
                 # Repair broken/invalid files
                 if "state" not in data:
                     data["state"] = JobStatusStates.INITIALIZED
-                    data["started"] = time.time()
+                    data["started"] = os.path.getctime(str(self._jobstatus_path))
             finally:
                 store.release_lock(str(self._jobstatus_path))
 
@@ -582,7 +587,9 @@ class JobStatus:
 
         if params:
             try:
-                status = store.load_object_from_file(str(self._jobstatus_path), {}, lock=True)
+                status = store.load_object_from_file(str(self._jobstatus_path),
+                                                     default={},
+                                                     lock=True)
                 status.update(params)
                 store.save_mk_file(str(self._jobstatus_path), self._format_value(status))
             finally:
@@ -595,7 +602,7 @@ class JobStatus:
 class BackgroundJobManager:
     def __init__(self, logger: logging.Logger) -> None:
         self._logger = logger.getChild("job_manager")
-        super(BackgroundJobManager, self).__init__()
+        super().__init__()
 
     def get_running_job_ids(self, job_class: Type[BackgroundJob]) -> List[JobId]:
         """Checks for running jobs in the jobs default basedir"""

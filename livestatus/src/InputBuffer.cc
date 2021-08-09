@@ -7,7 +7,6 @@
 
 #include <unistd.h>
 
-// IWYU pragma: no_include <type_traits>
 #include <cctype>
 #include <cerrno>
 #include <cstring>
@@ -217,8 +216,8 @@ InputBuffer::Result InputBuffer::readData() {
             }
             break;
         }
-        ssize_t r = read(_fd, &_readahead_buffer[_write_index],
-                         _readahead_buffer.capacity() - _write_index);
+        ssize_t r = ::read(_fd, &_readahead_buffer[_write_index],
+                           _readahead_buffer.capacity() - _write_index);
         if (r < 0) {
             return Result::eof;
         }

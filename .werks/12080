@@ -1,0 +1,13 @@
+Title: fjdarye-plugins: some discovery functions returned non-str items, leading to crashes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1613574813
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+This change turns two item formats from {{int}} to {{str}} making {{fjdarye100_disks}} and
+{{fjdarye100_sum}} usable again.

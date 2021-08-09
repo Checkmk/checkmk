@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Since version 1.6 the active check check_http automatically
 set the HTTP Host header and used HTTP/1.1 instead of HTTP/1.0

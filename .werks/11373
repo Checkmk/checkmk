@@ -1,0 +1,19 @@
+Title: Made titles of options in host/folder permissions less uncertain
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1602855809
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+There have always been additional option when assigning contact groups to
+WATO folders or hosts. The effect of this options meanwhile has not always
+been absolute transparent depending if the user is in folder or in host
+properties. Especially the outcome of option "Always add host contact groups
+also to its services" has not been clear.
+
+The titles do now explain better, what a particular option really does. This
+is just a clarification of the current, actual behaviour and no change of
+the behaviour itself. Therefore there is no need for manual interaction.

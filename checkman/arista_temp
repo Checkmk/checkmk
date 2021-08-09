@@ -18,5 +18,5 @@ description:
 item:
  One service is created for each recognized temperature sensor
 
-inventory:
+discovery:
  All temperature known sensors with complete Physical description are detected

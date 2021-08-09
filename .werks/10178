@@ -5,7 +5,7 @@ Class: fix
 Compatible: compat
 Edition: cre
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 Date: 1569338621
 
 The empty column which was shown before in the event row looked like a bug.

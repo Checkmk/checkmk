@@ -4,6 +4,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.storeonce import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # example output:
 #
 # <<<storeonce_clusterinfo:sep(9)>>>
@@ -62,7 +86,6 @@ check_info['storeonce_clusterinfo'] = {
     'inventory_function': inventory_storeonce_clusterinfo,
     'check_function': check_storeonce_clusterinfo,
     'service_description': '%s',
-    'includes': ['storeonce.include'],
 }
 
 #.
@@ -123,7 +146,6 @@ check_info['storeonce_clusterinfo.space'] = {
     'check_function': check_storeonce_space,
     'service_description': "%s",
     'has_perfdata': True,
-    'includes': ["size_trend.include", "df.include", "storeonce.include"],
     'group': "filesystem",
     'default_levels_variable': "filesystem_Default_levels",
 }
@@ -155,6 +177,5 @@ check_info['storeonce_clusterinfo.uptime'] = {
     'check_function': check_storeonce_clusterinfo_uptime,
     'service_description': "Uptime",
     'has_perfdata': True,
-    'includes': ["uptime.include"],
     'group': "uptime",
 }

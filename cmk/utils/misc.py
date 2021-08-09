@@ -8,16 +8,17 @@ usable in all components of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-from contextlib import contextmanager
 import inspect
 import itertools
 import os
-from pathlib import Path
 import sys
 import time
-from typing import Any, Iterator, Callable, Dict, List, Optional, Set, Tuple, Union
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Set, Tuple, Union
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostAddress
 
 
 def quote_shell_string(s: str) -> str:
@@ -96,12 +97,12 @@ def total_size(o: Any, handlers: Optional[Dict] = None) -> int:
     return sizeof(o)
 
 
-# Works with Check_MK version (without tailing .cee and/or .demo)
+# Works with Checkmk version (without tailing .cee and/or .demo)
 def is_daily_build_version(v: str) -> bool:
     return len(v) == 10 or '-' in v
 
 
-# Works with Check_MK version (without tailing .cee and/or .demo)
+# Works with Checkmk version (without tailing .cee and/or .demo)
 def branch_of_daily_build(v: str) -> str:
     if len(v) == 10:
         return "master"
@@ -149,3 +150,23 @@ def umask(mask: int) -> Iterator[None]:
         yield None
     finally:
         os.umask(old_mask)
+
+
+def normalize_ip_addresses(ip_addresses: Union[str, Sequence[str]]) -> List[HostAddress]:
+    """Expand 10.0.0.{1,2,3}."""
+    if isinstance(ip_addresses, str):
+        ip_addresses = ip_addresses.split()
+
+    expanded = [HostAddress(word) for word in ip_addresses if '{' not in word]
+    for word in ip_addresses:
+        if word in expanded:
+            continue
+
+        try:
+            prefix, tmp = word.split('{')
+            curly, suffix = tmp.split('}')
+        except ValueError:
+            raise MKGeneralException(f"could not expand {word!r}")
+        expanded.extend(HostAddress(f"{prefix}{i}{suffix}") for i in curly.split(','))
+
+    return expanded

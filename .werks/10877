@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When calling the cmk command with more than two "-v" arguments, this resulted
 in a NotImplementedError trace. The error handling has now been improved by

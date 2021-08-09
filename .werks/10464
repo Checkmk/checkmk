@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Since version 1.6.0 the check netscaler_vserver did not output
 any health information. This is fixed.

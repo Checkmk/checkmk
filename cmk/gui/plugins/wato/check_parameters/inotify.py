@@ -5,24 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    DropdownChoice,
-    ListOf,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, ListOf, TextInput, Tuple
 
 
 def _item_spec_inotify():
-    return TextAscii(title=_("The filesystem path, prefixed with <i>File </i> or <i>Folder </i>"),)
+    return TextInput(title=_("The filesystem path, prefixed with <i>File </i> or <i>Folder </i>"),)
 
 
 def _parameter_valuespec_inotify():

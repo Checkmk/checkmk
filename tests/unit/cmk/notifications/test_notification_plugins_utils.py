@@ -4,7 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+from unittest.mock import Mock
+
+import pytest
+import requests
 
 from cmk.notification_plugins import utils
 
@@ -201,32 +204,141 @@ def test_api_endpoint_url(monkeypatch, value, result):
         # If not explicitly allowed as unescaped...
         (
             {
+                'CONTACTALIAS': 'd&d&+$@example.com',
+                'CONTACTNAME': 'd&d&+$@example.com',
+                'CONTACTEMAIL': 'd&d&+$@example.com',
                 'PARAMETER_HOST_SUBJECT': '$HOSTALIAS$ > $HOSTSTATE$ < $HOST_SERVERTYP$',
                 'PARAMETER_SERVICE_SUBJECT': '<>&',
                 'PARAMETER_BULK_SUBJECT': '<>&',
                 'PARAMETER_INSERT_HTML_SECTION': '<h1>Important</h1>',
-                'PARAMETER_FROM': 'Harri Hirsch <harri.hirsch@test.de>',
+                'PARAMETER_FROM_ADDRESS': 'Harri Hirsch <harri.hirsch@test.de>',
                 'PARAMETER_REPLY_TO': 'Harri Hirsch <harri.hirsch@test.de>',
+                'PARAMETER_REPLY_TO_ADDRESS': 'd&d&+$@example.com',
             },
             {
+                'CONTACTALIAS': 'd&d&+$@example.com',
+                'CONTACTNAME': 'd&d&+$@example.com',
+                'CONTACTEMAIL': 'd&d&+$@example.com',
                 'PARAMETER_HOST_SUBJECT': '$HOSTALIAS$ > $HOSTSTATE$ < $HOST_SERVERTYP$',
                 'PARAMETER_SERVICE_SUBJECT': '<>&',
                 'PARAMETER_BULK_SUBJECT': '<>&',
                 'PARAMETER_INSERT_HTML_SECTION': '<h1>Important</h1>',
-                'PARAMETER_FROM': 'Harri Hirsch <harri.hirsch@test.de>',
+                'PARAMETER_FROM_ADDRESS': 'Harri Hirsch <harri.hirsch@test.de>',
                 'PARAMETER_REPLY_TO': 'Harri Hirsch <harri.hirsch@test.de>',
+                'PARAMETER_REPLY_TO_ADDRESS': 'd&d&+$@example.com',
             },
         ),
         # ... all variables will be escaped
         (
             {
-                'SERVICEOUTPUT': '<h1>Important</h1>'
+                'FOO': '<h1>Important</h1>'
             },
             {
-                'SERVICEOUTPUT': '&lt;h1&gt;Important&lt;/h1&gt;'
+                'FOO': '&lt;h1&gt;Important&lt;/h1&gt;'
+            },
+        ),
+        # Host and service output will be escaped:
+        (
+            {
+                'SERVICEOUTPUT': '<h1>A</h1>',
+                'LONGSERVICEOUTPUT': '<h1>B</h1>',
+                'HOSTOUTPUT': '<h1>C</h1>',
+                'LONGHOSTOUTPUT': '<h1>D</h1>',
+            },
+            {
+                'SERVICEOUTPUT': '&lt;h1&gt;A&lt;/h1&gt;',
+                'LONGSERVICEOUTPUT': '&lt;h1&gt;B&lt;/h1&gt;',
+                'HOSTOUTPUT': '&lt;h1&gt;C&lt;/h1&gt;',
+                'LONGHOSTOUTPUT': '&lt;h1&gt;D&lt;/h1&gt;',
+            },
+        ),
+        # if not disabled with the rule "HTML codes in service output" for services:
+        (
+            {
+                'SERVICEOUTPUT': '<h1>A</h1>',
+                'LONGSERVICEOUTPUT': '<h1>B</h1>',
+                'HOSTOUTPUT': '<h1>C</h1>',
+                'LONGHOSTOUTPUT': '<h1>D</h1>',
+                'SERVICE_ESCAPE_PLUGIN_OUTPUT': '0',  # variable set via the rule
+            },
+            {
+                'SERVICEOUTPUT': '<h1>A</h1>',
+                'LONGSERVICEOUTPUT': '<h1>B</h1>',
+                'HOSTOUTPUT': '&lt;h1&gt;C&lt;/h1&gt;',
+                'LONGHOSTOUTPUT': '&lt;h1&gt;D&lt;/h1&gt;',
+                'SERVICE_ESCAPE_PLUGIN_OUTPUT': '0',  # variable set via the rule
+            },
+        ),
+        # or with the rule "HTML codes in host output" for hosts:
+        (
+            {
+                'SERVICEOUTPUT': '<h1>A</h1>',
+                'LONGSERVICEOUTPUT': '<h1>B</h1>',
+                'HOSTOUTPUT': '<h1>C</h1>',
+                'LONGHOSTOUTPUT': '<h1>D</h1>',
+                'HOST_ESCAPE_PLUGIN_OUTPUT': '0',  # variable set via the rule
+            },
+            {
+                'SERVICEOUTPUT': '&lt;h1&gt;A&lt;/h1&gt;',
+                'LONGSERVICEOUTPUT': '&lt;h1&gt;B&lt;/h1&gt;',
+                'HOSTOUTPUT': '<h1>C</h1>',
+                'LONGHOSTOUTPUT': '<h1>D</h1>',
+                'HOST_ESCAPE_PLUGIN_OUTPUT': '0',  # variable set via the rule
             },
         ),
     ])
 def test_escape_context(input_context, expected_context):
-    utils.html_escape_context(input_context)
-    assert input_context == expected_context
+    escaped_context = utils.html_escape_context(input_context)
+    assert escaped_context == expected_context
+
+
+@pytest.mark.parametrize("response, result_map, expected_exit_msg, expected_exit_code", [
+    (
+        Mock(requests.models.Response, status_code=200, text="whatever"),
+        {},
+        "Details for Status Code are not defined\n200: OK\n",
+        3,
+    ),
+    (
+        Mock(requests.models.Response, status_code=200, text="whatever"),
+        {
+            (400, 500): utils.StateInfo(state=0, type="str", title="some title"),
+        },
+        "Details for Status Code are not defined\n200: OK\n",
+        3,
+    ),
+    (
+        Mock(requests.models.Response, status_code=200, text="whatever"),
+        {
+            (200, 300): utils.StateInfo(state=0, type="str", title="some title"),
+        },
+        "some title\n200: OK\n",
+        0,
+    ),
+    (
+        Mock(requests.models.Response, status_code=201, text="whatever"),
+        {
+            (200, 300): utils.StateInfo(state=0, type="str", title="some title"),
+        },
+        "some title\n200: OK\n",
+        0,
+    ),
+    (
+        Mock(requests.models.Response, status_code=300, text="whatever"),
+        {
+            (200, 300): utils.StateInfo(state=0, type="str", title="some title"),
+        },
+        "some title\n200: OK\n",
+        0,
+    ),
+])
+def test_process_by_result_map(
+    response,
+    result_map,
+    expected_exit_msg,
+    expected_exit_code,
+):
+    with pytest.raises(SystemExit) as sys_exit:
+        utils.process_by_result_map(response, result_map)
+        assert sys_exit.value == expected_exit_msg
+        assert sys_exit.value.code == expected_exit_code

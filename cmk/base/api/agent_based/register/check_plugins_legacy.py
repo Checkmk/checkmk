@@ -5,26 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper to register a new-style section based on config.check_info
 """
-from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 import copy
 import functools
 import itertools
+from contextlib import suppress
+from typing import Any, Callable, Dict, Generator, List, Optional, Tuple, Union
 
-from cmk.utils.check_utils import maincheckify, wrap_parameters, unwrap_parameters
+from cmk.utils.check_utils import maincheckify, unwrap_parameters, wrap_parameters
 
-from cmk.base import item_state
+from cmk.base import item_state  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import (
+    CheckPlugin,
     Metric,
-    state,
     Result,
     Service,
+    ServiceLabel,
+    State,
 )
 from cmk.base.api.agent_based.register.check_plugins import create_check_plugin
-from cmk.base.api.agent_based.register.utils import DUMMY_RULESET_NAME
-from cmk.base.api.agent_based.type_defs import CheckPlugin, Parameters
-from cmk.base.check_api_utils import Service as LegacyService
-from cmk.base.check_utils import get_default_parameters
-from cmk.base.discovered_labels import HostLabel, DiscoveredHostLabels
+from cmk.base.api.agent_based.type_defs import Parameters, ParametersTypeAlias
 
 # There are so many check_info keys, make sure we didn't miss one.
 CONSIDERED_KEYS = {
@@ -46,6 +45,28 @@ CONSIDERED_KEYS = {
 }
 
 
+def _get_default_parameters(
+    check_legacy_info: Dict[str, Any],
+    factory_settings: Dict[str, Dict[str, Any]],
+    check_context: Dict[str, Any],
+) -> Optional[ParametersTypeAlias]:
+    """compute default parameters"""
+    params_variable_name = check_legacy_info.get("default_levels_variable")
+    if not params_variable_name:
+        return None
+
+    # factory_settings
+    fs_parameters = factory_settings.get(params_variable_name, {})
+
+    # global scope of check context
+    gs_parameters = check_context.get(params_variable_name)
+
+    return {
+        **fs_parameters,
+        **gs_parameters,
+    } if isinstance(gs_parameters, dict) else fs_parameters
+
+
 def _create_discovery_function(
     check_name: str,
     check_info_dict: Dict[str, Any],
@@ -65,29 +86,32 @@ def _create_discovery_function(
             return
 
         for element in original_discovery_result:
-            if isinstance(element, (HostLabel, DiscoveredHostLabels)):
-                # these are dealt with in the host_label_function!
+            if isinstance(element, tuple) and len(element) in (2, 3):
+                item, raw_params = element[0], element[-1]
+                if item is not None and not isinstance(item, str):
+                    raise ValueError("item must be None or of type `str`")
+
+                parameters = _resolve_string_parameters(raw_params, check_name, get_check_context)
+                service = Service(
+                    item=None,  # will be replaced
+                    parameters=wrap_parameters(parameters or {}),
+                )
+                # nasty hack for nasty plugins: item = ''
+                # Bypass validation. Item should be None or non-empty string!
+                service = service._replace(item=item)
+                yield service
                 continue
 
-            if isinstance(element, LegacyService):
+            with suppress(AttributeError):
                 yield Service(
                     item=element.item,
                     parameters=wrap_parameters(element.parameters or {}),
-                    labels=list(element.service_labels),
+                    labels=[ServiceLabel(l.name, l.value) for l in element.service_labels],
                 )
-            elif isinstance(element, tuple) and len(element) in (2, 3):
-                parameters = _resolve_string_parameters(element[-1], check_name, get_check_context)
-                service = Service(
-                    item=element[0] or None,
-                    parameters=wrap_parameters(parameters or {}),
-                )
-                # nasty hack for nasty plugins:
-                # Bypass validation. Item should be None or non-empty string!
-                service._item = element[0]  # pylint: disable=protected-access
-                yield service
-            else:
-                # just let it through. Base must deal with bogus return types anyway.
-                yield element
+                continue
+
+            # just let it through. Base must deal with bogus return types anyway.
+            yield element
 
     return discovery_migration_wrapper
 
@@ -103,23 +127,27 @@ def _resolve_string_parameters(
     try:
         context = get_check_context(check_name)
         # string may look like '{"foo": bar}', in the worst case.
-        return eval(params_unresolved, context, context)
+        # This evaluation was needed in the past to resolve references to variables in context and
+        # to evaluate data structure declarations containing references to variables.
+        # Since Checkmk 2.0 we have a better API and need it only for compatibility. The parameters
+        # are resolved now *before* they are written to the autochecks file, and earlier autochecks
+        # files are resolved during cmk-update-config.
+        return eval(params_unresolved, context, context)  # pylint: disable=eval-used
     except Exception:
         raise ValueError("Invalid check parameter string '%s' found in discovered service %r" %
                          (params_unresolved, check_name))
 
 
-def _create_check_function(name: str, check_info_dict: Dict[str, Any],
-                           ruleset_name: Optional[str]) -> Callable:
+def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callable:
     """Create an API compliant check function"""
     service_descr = check_info_dict["service_description"]
     if not isinstance(service_descr, str):
         raise ValueError("[%s]: invalid service description: %r" % (name, service_descr))
 
     # 1) ensure we have the correct signature
+    requires_item = "%s" in service_descr
     sig_function = _create_signature_check_function(
-        requires_item="%s" in service_descr,
-        requires_params=ruleset_name is not None,
+        requires_item=requires_item,
         original_function=check_info_dict["check_function"],
     )
 
@@ -127,26 +155,25 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any],
     @functools.wraps(sig_function)
     def check_result_generator(*args, **kwargs):
         assert not args, "pass arguments as keywords to check function"
-        if "params" in kwargs:
-            parameters = kwargs["params"]
-            if isinstance(parameters, Parameters):
-                # In the new API check_functions will be passed an immutable mapping
-                # instead of a dict. However, we have way too many 'if isinsance(params, dict)'
-                # call sites to introduce this into legacy code, so use the plain dict.
-                parameters = copy.deepcopy(parameters._data)
-            kwargs["params"] = unwrap_parameters(parameters)
+        assert "params" in kwargs, "'params' is missing in kwargs: %r" % (kwargs,)
+        parameters = kwargs["params"]
+        if isinstance(parameters, Parameters):
+            # In the new API check_functions will be passed an immutable mapping
+            # instead of a dict. However, we have way too many 'if isinsance(params, dict)'
+            # call sites to introduce this into legacy code, so use the plain dict.
+            parameters = copy.deepcopy(parameters._data)
+        kwargs["params"] = unwrap_parameters(parameters)
 
         item_state.reset_wrapped_counters()  # not supported by the new API!
 
-        try:
-            subresults = sig_function(**kwargs)
-        except TypeError:
+        if not requires_item:
             # this handles a very weird case, in which check plugins do not have an '%s'
             # in their description (^= no item) but do in fact discover an empty string.
             # We cannot just append "%s" to the service description, because in that case
             # our tests complain about the ruleset not being for plugins with item :-(
-            # Just retry without item:
-            subresults = sig_function(**{k: v for k, v in kwargs.items() if k != "item"})
+            kwargs = {k: v for k, v in kwargs.items() if k != "item"}
+
+        subresults = sig_function(**kwargs)
 
         if subresults is None:
             return
@@ -166,60 +193,73 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any],
     return check_result_generator
 
 
+def _get_float(raw_value: Any) -> Optional[float]:
+    """Try to convert to float
+
+        >>> _get_float("12.3s")
+        12.3
+
+    """
+    with suppress(TypeError, ValueError):
+        return float(raw_value)
+
+    if not isinstance(raw_value, str):
+        return None
+    # try to cut of units:
+    for i in range(len(raw_value) - 1, 0, -1):
+        with suppress(TypeError, ValueError):
+            return float(raw_value[:i])
+
+    return None
+
+
 def _create_new_result(
         is_details: bool,
         legacy_state: int,
         legacy_text: str,
         legacy_metrics: Union[Tuple, List] = (),
 ) -> Generator[Union[Metric, Result], None, bool]:
-    result_state = state(legacy_state)
 
     if legacy_state or legacy_text:  # skip "Null"-Result
-        if is_details:
-            summary: Optional[str] = None
-            details: Optional[str] = legacy_text
-        else:
-            is_details = "\n" in legacy_text
-            summary, details = legacy_text.split("\n", 1) if is_details else (legacy_text, None)
-        yield Result(
-            state=result_state,
-            summary=summary or None,
-            details=details or None,
+        # Bypass the validation of the Result class:
+        # Legacy plugins may relie on the fact that once a newline
+        # as been in the output, *all* following ouput is sent to
+        # the details. That means we have to create Results with
+        # details only, which is prohibited by the original Result
+        # class.
+        yield Result(state=State(legacy_state), summary="Fake")._replace(
+            summary="" if is_details else legacy_text.split("\n", 1)[0],
+            details=legacy_text.strip(),
         )
 
     for metric in legacy_metrics:
+        if len(metric) < 2:
+            continue
+        name = str(metric[0])
+        value = _get_float(metric[1])
+        if value is None:  # skip bogus metrics
+            continue
         # fill up with None:
-        name, value, warn, crit, min_, max_ = (
-            v for v, _ in itertools.zip_longest(metric, range(6)))
+        warn, crit, min_, max_ = (
+            _get_float(v) for v, _ in itertools.zip_longest(metric[2:], range(4)))
         yield Metric(name, value, levels=(warn, crit), boundaries=(min_, max_))
 
-    return is_details
+    return ("\n" in legacy_text) or is_details
 
 
 def _create_signature_check_function(
     requires_item: bool,
-    requires_params: bool,
     original_function: Callable,
 ) -> Callable:
     """Create the function for a check function with the required signature"""
     if requires_item:
-        if requires_params:
 
-            def check_migration_wrapper(item, params, section):
-                return original_function(item, params, section)
-        else:
-            # suppress "All conditional function variants must have identical signatures"
-            def check_migration_wrapper(item, section):  # type: ignore[misc]
-                return original_function(item, {}, section)
+        def check_migration_wrapper(item, params, section):
+            return original_function(item, params, section)
     else:
-        if requires_params:
 
-            def check_migration_wrapper(params, section):  # type: ignore[misc]
-                return original_function(None, params, section)
-        else:
-
-            def check_migration_wrapper(section):  # type: ignore[misc]
-                return original_function(None, {}, section)
+        def check_migration_wrapper(params, section):  # type: ignore[misc]
+            return original_function(None, params, section)
 
     return check_migration_wrapper
 
@@ -229,15 +269,15 @@ def _create_wrapped_parameters(
     check_info_dict: Dict[str, Any],
     factory_settings: Dict[str, Dict],
     get_check_context: Callable,
-) -> Optional[Dict[str, Any]]:
+) -> ParametersTypeAlias:
     """compute default parameters and wrap them in a dictionary"""
-    default_parameters = get_default_parameters(
+    default_parameters = _get_default_parameters(
         check_info_dict,
         factory_settings,
         get_check_context(check_plugin_name),
     )
     if default_parameters is None:
-        return {} if check_info_dict.get("group") else None
+        return {}
 
     if isinstance(default_parameters, dict):
         return default_parameters
@@ -248,8 +288,21 @@ def _create_cluster_legacy_mode_from_hell(check_function: Callable) -> Callable:
     # copy signature of check function:
     @functools.wraps(check_function, ('__attributes__',))
     def cluster_legacy_mode_from_hell(*args, **kwargs):
-        raise NotImplementedError("This just a dummy to pass validation is.")
-        yield  # pylint: disable=unreachable
+        # This function will *almost* never be called:
+        #
+        # If legacy plugins are executed on clusters, the original check function is called,
+        # as it is impossible to recreate the "complex" behavior of the legacy API using the new API.
+        # We maintain an extra code path in cmk/base/agent_based/checking.py for those cases.
+        #
+        # Unfortunately, when discovering cluster hosts, this function will still be called, as
+        # part of the code designed for the new API is used.
+        # Since fixing this issue would dramatically worsen the code in
+        # cmk/base/agent_based/checking.py, we simply issue an Message here, similar to the preview
+        # for counter based checks:
+        yield Result(
+            state=State.OK,
+            summary="Service preview for legacy plugins on clusters not available.",
+        )
 
     return cluster_legacy_mode_from_hell
 
@@ -260,6 +313,8 @@ def create_check_plugin_from_legacy(
     extra_sections: List[str],
     factory_settings: Dict[str, Dict],
     get_check_context: Callable,
+    *,
+    validate_creation_kwargs: bool = True,
 ) -> CheckPlugin:
 
     if extra_sections:
@@ -293,13 +348,9 @@ def create_check_plugin_from_legacy(
         get_check_context,
     )
 
-    check_ruleset_name = check_info_dict.get("group")
-    if check_ruleset_name is None and check_default_parameters is not None:
-        check_ruleset_name = DUMMY_RULESET_NAME
     check_function = _create_check_function(
         check_plugin_name,
         check_info_dict,
-        check_ruleset_name,
     )
 
     return create_check_plugin(
@@ -311,11 +362,12 @@ def create_check_plugin_from_legacy(
         discovery_ruleset_name=None,
         check_function=check_function,
         check_default_parameters=check_default_parameters,
-        check_ruleset_name=check_ruleset_name,
+        check_ruleset_name=check_info_dict.get("group"),
         cluster_check_function=_create_cluster_legacy_mode_from_hell(check_function),
         # Legacy check plugins may return an item even if the service description
         # does not contain a '%s'. In this case the old check API assumes an implicit,
         # trailing '%s'. Therefore, we disable this validation for legacy check plugins.
         # Once all check plugins are migrated to the new API this flag can be removed.
         validate_item=False,
+        validate_kwargs=validate_creation_kwargs,
     )

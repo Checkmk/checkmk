@@ -6,7 +6,7 @@ Date: 1576592750
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The network interface check for TP-LINK switches now supports standard ifAlias OIDs. 
 This addresses the issue that for some TP-LINK switches the configured alias names weren't shown.

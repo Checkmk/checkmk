@@ -15,5 +15,5 @@ description:
 item:
  Name of the Redis instance.
 
-inventory:
+discovery:
  One service is created for each instance {"Redis MY_REDIS Persistence"}.

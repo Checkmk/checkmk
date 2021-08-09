@@ -6,32 +6,37 @@
 
 # yapf: disable
 # type: ignore
+from cmk.base.plugins.agent_based.df_section import parse_df
+
 checkname = 'df'
 
-info = [
+parsed = parse_df([
     ['C:\\', 'NTFS', '8192620', '7724268', '468352', '95%', 'C:\\'],
     ['New_Volume', 'NTFS', '10240796', '186256', '10054540', '2%', 'E:\\'],
     ['New_Volume', 'NTFS', '124929596', '50840432', '74089164', '41%', 'F:\\'],
-]
+])
 
 discovery = {
     '': [
         (
             'C:/',
             {
-                'include_volume_name': False
+                "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
         (
             'E:/',
             {
-                'include_volume_name': False
+                "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
         (
             'F:/',
             {
-                'include_volume_name': False
+                "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
     ]
@@ -52,7 +57,7 @@ checks = {
         }, [
             (
                 2,
-                '94.28% used (7.37 of 7.81 GB), (warn/crit at 80.0%/90.0%)',
+                '94.28% used (7.37 of 7.81 GB, warn/crit at 80.00%/90.00%)',
                 [
                     ('fs_used', 7543.23046875, 6400.484375, 7200.544921875, 0, 8000.60546875),
                     ('fs_size', 8000.60546875, None, None, None, None),
@@ -129,11 +134,10 @@ checks = {
             'inodes_levels': (10.0, 5.0),
             'show_inodes': 'onlow',
             'show_reserved': False,
-            'include_volume_name': False
         }, [
             (
                 2,
-                '94.28% used (7.37 of 7.81 GB), (warn/crit at 80.0%/90.0%)',
+                '94.28% used (7.37 of 7.81 GB, warn/crit at 80.00%/90.00%)',
                 [
                     ('fs_used', 7543.23046875, 6400.484375, 7200.544921875, 0, 8000.60546875),
                     ('fs_size', 8000.60546875, None, None, None, None),
@@ -151,7 +155,6 @@ checks = {
             'inodes_levels': (10.0, 5.0),
             'show_inodes': 'onlow',
             'show_reserved': False,
-            'include_volume_name': False
         }, [
             (
                 0,
@@ -173,7 +176,6 @@ checks = {
             'inodes_levels': (10.0, 5.0),
             'show_inodes': 'onlow',
             'show_reserved': False,
-            'include_volume_name': False
         }, [
             (
                 0,

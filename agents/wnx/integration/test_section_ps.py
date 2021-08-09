@@ -4,26 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from itertools import chain, repeat
-import yaml
 import os
-import pytest  # type: ignore[import]
 import re
-from local import actual_output, make_yaml_config, local_test, wait_agent, write_config
+from itertools import chain, repeat
+
+import pytest  # type: ignore[import]
+
+from .local import local_test
 
 
-class Globals(object):
+class Globals():
     section = 'ps'
     alone = True
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(params=['alone', 'with_systemtime'])
-def testconfig(request, make_yaml_config):
+@pytest.fixture(name="testconfig", params=['alone', 'with_systemtime'])
+def testconfig_engine(request, make_yaml_config):
     Globals.alone = request.param == 'alone'
     if Globals.alone:
         make_yaml_config['global']['sections'] = Globals.section
@@ -32,24 +33,29 @@ def testconfig(request, make_yaml_config):
     return make_yaml_config
 
 
-@pytest.fixture(params=['yes', 'no'], ids=['use_wmi=yes', 'use_wmi=no'])
-def testconfig_use_wmi(request, testconfig):
+@pytest.fixture(
+    name="testconfig_use_wmi",
+    params=['yes', 'no'],
+    ids=['use_wmi=yes', 'use_wmi=no'],
+)
+def testconfig_use_wmi_engine(request, testconfig):
     testconfig['global']['sections'] = Globals.section
-    testconfig[Globals.section] = {
-        'enabled': True,
-        'use_wmi': True if request.param == 'yes' else False
-    }
+    testconfig[Globals.section] = {'enabled': True, 'use_wmi': request.param == 'yes'}
     return testconfig
 
 
-@pytest.fixture(params=['yes', 'no'], ids=['full_path=yes', 'full_path=no'])
-def full_path_config(request, testconfig_use_wmi):
+@pytest.fixture(
+    name="full_path_config",
+    params=['yes', 'no'],
+    ids=['full_path=yes', 'full_path=no'],
+)
+def full_path_config_engine(request, testconfig_use_wmi):
     testconfig_use_wmi[Globals.section]['full_path'] = request.param
     return testconfig_use_wmi
 
 
-@pytest.fixture
-def expected_output():
+@pytest.fixture(name="expected_output")
+def expected_output_engine():
     # expected:
     # *.exe, *.dll, System, System( Idle Process), Registry,Memory Compression
     re_str = (

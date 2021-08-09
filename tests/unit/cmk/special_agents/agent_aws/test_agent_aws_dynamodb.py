@@ -6,17 +6,22 @@
 
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore[import]
+import pytest
 
-from agent_aws_fake_clients import (
-    FakeCloudwatchClient,
+from cmk.special_agents.agent_aws import (
+    AWSConfig,
+    DynamoDBLimits,
+    DynamoDBSummary,
+    DynamoDBTable,
+    ResultDistributor,
+)
+
+from .agent_aws_fake_clients import (
     DynamoDBDescribeLimitsIB,
     DynamoDBDescribeTableIB,
     DynamoDBListTagsOfResourceIB,
+    FakeCloudwatchClient,
 )
-
-from cmk.special_agents.agent_aws import (AWSConfig, ResultDistributor, DynamoDBLimits,
-                                          DynamoDBSummary, DynamoDBTable)
 
 
 class PaginatorTables:
@@ -167,6 +172,7 @@ def test_agent_aws_dynamodb_limits(get_dynamodb_sections, names, tags, found_ins
     dynamodb_limits_content = dynamodb_summary._get_colleague_contents().content
 
     assert dynamodb_limits.cache_interval == 300
+    assert dynamodb_limits.period == 600
     assert dynamodb_limits.name == "dynamodb_limits"
 
     provisioned_table_names = _get_provisioned_table_names(dynamodb_limits_content)
@@ -184,6 +190,7 @@ def _test_summary(dynamodb_summary, found_instances):
     dynamodb_summary_results = dynamodb_summary.run().results
 
     assert dynamodb_summary.cache_interval == 300
+    assert dynamodb_summary.period == 600
     assert dynamodb_summary.name == "dynamodb_summary"
 
     if found_instances:
@@ -214,6 +221,7 @@ def _test_table(dynamodb_table, found_instances):
     dynamodb_table_results = dynamodb_table.run().results
 
     assert dynamodb_table.cache_interval == 300
+    assert dynamodb_table.period == 600
     assert dynamodb_table.name == "dynamodb_table"
     assert len(dynamodb_table_results) == len(found_instances)
     for result in dynamodb_table_results:

@@ -4,6 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example output from agent:
 # <<<ibm_svc_host:sep(58)>>>
 # 0:h_esx01:2:4:degraded
@@ -102,7 +108,6 @@ check_info["ibm_svc_host"] = {
     "check_function": check_ibm_svc_host,
     "inventory_function": discover_single,
     "service_description": "Hosts",
-    "includes": ['ibm_svc.include'],
     "has_perfdata": True,
     "group": "ibm_svc_host",
 }

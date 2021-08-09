@@ -13,5 +13,5 @@ description:
 item:
  Name of the instance
 
-inventory:
+discovery:
  One service is created if all required metrics (NetworkIn, NetworkOut) are given.

@@ -10,7 +10,11 @@ Send notification messages to PagerDuty
 """
 from typing import Dict
 
-from cmk.notification_plugins.utils import host_url_from_context, service_url_from_context, retrieve_from_passwordstore
+from cmk.notification_plugins.utils import (
+    host_url_from_context,
+    retrieve_from_passwordstore,
+    service_url_from_context,
+)
 
 
 def pagerduty_event_type(event):
@@ -35,6 +39,14 @@ def pagerduty_severity(state):
     }[state]
 
 
+def _notification_source_from_context(context: Dict) -> str:
+    """
+    payload.source must not be empty, otherwise:
+    HTTP 400 (Bad Request), "'payload.source' is missing or blank"
+    """
+    return context.get('HOSTADDRESS') or context.get('HOSTNAME') or 'Undeclared Host identifier'
+
+
 def pagerduty_msg(context: Dict) -> Dict:
     """Build the PagerDuty incident payload"""
 
@@ -57,8 +69,7 @@ def pagerduty_msg(context: Dict) -> Dict:
         "dedup_key": incident_key,
         "payload": {
             "summary": incident,
-            "source": context.get('HOSTADDRESS',
-                                  context.get('HOSTNAME', 'Undeclared Host identifier')),
+            "source": _notification_source_from_context(context),
             "severity": pagerduty_severity(state),
             "custom_details": {
                 "info": output,

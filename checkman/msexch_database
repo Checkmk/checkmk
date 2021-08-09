@@ -15,5 +15,5 @@ description:
 item:
  Name of the database instance
 
-inventory:
+discovery:
  One service is created for each database instance.

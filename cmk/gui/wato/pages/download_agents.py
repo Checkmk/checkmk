@@ -5,38 +5,34 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Simple download page for the builtin agents and plugins"""
 
-import os
 import abc
-import glob
 import fnmatch
-from typing import List, Iterator
+import glob
+import os
+from typing import Iterator, List, Optional
 
 import cmk.utils.paths
 import cmk.utils.render
 
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
+import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.globals import html
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_simple_link,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_link,
+    PageMenuTopic,
 )
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
-    folder_preserving_link,
-)
+from cmk.gui.plugins.wato import folder_preserving_link, mode_registry, WatoMode
+from cmk.gui.type_defs import PermissionName
 
 
 class ABCModeDownloadAgents(WatoMode):
     @classmethod
-    def permissions(cls) -> List[str]:
+    def permissions(cls) -> Optional[List[PermissionName]]:
         return ["download_agents"]
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -57,6 +53,13 @@ class ABCModeDownloadAgents(WatoMode):
         )
 
     def _page_menu_entries_related(self) -> Iterator[PageMenuEntry]:
+        if watolib.has_agent_bakery():
+            yield PageMenuEntry(
+                title=_("Windows, Linux, Solaris, AIX"),
+                icon_name="agents",
+                item=make_simple_link(watolib.folder_preserving_link([("mode", "agents")])),
+            )
+
         if self.name() != "download_agents_windows":
             yield PageMenuEntry(
                 title=_("Windows files"),
@@ -67,23 +70,16 @@ class ABCModeDownloadAgents(WatoMode):
 
         if self.name() != "download_agents_linux":
             yield PageMenuEntry(
-                title=_("Linux files"),
+                title=_("Linux, Solaris, AIX files"),
                 icon_name="download_agents",
                 item=make_simple_link(folder_preserving_link([("mode", "download_agents_linux")])),
             )
 
         if self.name() != "download_agents":
             yield PageMenuEntry(
-                title=_("Other files"),
+                title=_("Other operating systems"),
                 icon_name="download_agents",
                 item=make_simple_link(folder_preserving_link([("mode", "download_agents")])),
-            )
-
-        if watolib.has_agent_bakery():
-            yield PageMenuEntry(
-                title=_("Baked agents"),
-                icon_name="agents",
-                item=make_simple_link(watolib.folder_preserving_link([("mode", "agents")])),
             )
 
     @abc.abstractmethod
@@ -113,15 +109,15 @@ class ABCModeDownloadAgents(WatoMode):
             self._download_table(_("Packaged Agents"), packed)
 
         titles = {
-            '': _('Linux/Unix Agents'),
-            '/plugins': _('Linux/Unix Agents - Plugins'),
-            '/cfg_examples': _('Linux/Unix Agents - Example Configurations'),
-            '/cfg_examples/systemd': _('Linux Agent - Example configuration using with systemd'),
+            '': _('Agents'),
+            '/plugins': _('Plugins'),
+            '/cfg_examples': _('Example Configurations'),
+            '/cfg_examples/systemd': _('Example configuration for systemd'),
             '/windows': _('Windows Agent'),
-            '/windows/plugins': _('Windows Agent - Plugins'),
-            '/windows/mrpe': _('Windows Agent - MRPE Scripts'),
-            '/windows/cfg_examples': _('Windows Agent - Example Configurations'),
-            '/windows/ohm': _('Windows Agent - OpenHardwareMonitor (headless)'),
+            '/windows/plugins': _('Plugins'),
+            '/windows/mrpe': _('Scripts to integrate Nagios plugis'),
+            '/windows/cfg_examples': _('Example Configurations'),
+            '/windows/ohm': _('OpenHardwareMonitor (headless)'),
             '/z_os': _('z/OS'),
             '/sap': _('SAP R/3'),
         }
@@ -175,7 +171,7 @@ class ABCModeDownloadAgents(WatoMode):
             # FIXME: Rename classes etc. to something generic
             html.open_div(class_="ruleset")
             html.open_div(style="width:300px;", class_="text")
-            html.a(filename, href="agents/%s" % relpath)
+            html.a(filename, href="agents/%s" % relpath, download=filename)
             html.span("." * 200, class_="dots")
             html.close_div()
             html.div(cmk.utils.render.fmt_bytes(file_size), style="width:60px;", class_="rulecount")
@@ -191,7 +187,7 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
         return "download_agents"
 
     def title(self) -> str:
-        return _("Download other agents and plugins")
+        return _("Other operating systems")
 
     def _packed_agents(self):
         return []
@@ -203,7 +199,9 @@ class ModeDownloadAgentsOther(ABCModeDownloadAgents):
         return [
             "*.rpm",
             "*.deb",
+            "*.aix",
             "*.linux",
+            "*.solaris",
         ]
 
     def _exclude_paths(self):
@@ -226,7 +224,7 @@ class ModeDownloadAgentsWindows(ABCModeDownloadAgents):
         return "download_agents_windows"
 
     def title(self) -> str:
-        return _("Download Windows agents and plugins")
+        return _("Windows files")
 
     def _packed_agents(self):
         return glob.glob(cmk.utils.paths.agents_dir + "/windows/c*.msi")
@@ -242,7 +240,7 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
         return "download_agents_linux"
 
     def title(self) -> str:
-        return _("Download Linux agents and plugins")
+        return _("Linux, Solaris, AIX files")
 
     def _packed_agents(self):
         return glob.glob(cmk.utils.paths.agents_dir +
@@ -253,8 +251,6 @@ class ModeDownloadAgentsLinux(ABCModeDownloadAgents):
 
     def _exclude_file_glob_patterns(self):
         return [
-            "*.solaris",
-            "*.aix",
             "*.hpux",
             "*.macosx",
             "*.freebsd",

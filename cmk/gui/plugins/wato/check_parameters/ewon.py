@@ -5,14 +5,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     HostRulespec,
@@ -20,6 +12,7 @@ from cmk.gui.plugins.wato import (
     RulespecGroupCheckParametersDiscovery,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Percentage, TextInput, Tuple
 
 
 def _valuespec_ewon_discovery_rules():
@@ -46,7 +39,7 @@ rulespec_registry.register(
 
 
 def _item_spec_ewon():
-    return TextAscii(title=_("Item name"),
+    return TextInput(title=_("Item name"),
                      help=_("The item name. The meaning of this depends on the proxied device: "
                             "- Wagner OxyReduct: Name of the room/protection zone"))
 

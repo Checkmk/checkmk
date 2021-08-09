@@ -5,16 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Integer, Tuple
 
 
 def _parameter_valuespec_sansymphony_alerts():
@@ -40,5 +36,5 @@ rulespec_registry.register(
         check_group_name="sansymphony_alerts",
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_sansymphony_alerts,
-        title=lambda: _("Sansymphony: Number of unacknowlegded alerts"),
+        title=lambda: _("Sansymphony unacknowlegded alerts"),
     ))

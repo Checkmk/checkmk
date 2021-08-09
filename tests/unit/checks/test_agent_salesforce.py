@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
+
+from tests.testlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
 
@@ -17,8 +19,8 @@ pytestmark = pytest.mark.checks
         "https://api.status.salesforce.com/v1/instances/5/status"
     ]),
 ])
-def test_agent_salesforce_argument_parsing(check_manager, params, expected_args):
+def test_agent_salesforce_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = check_manager.get_special_agent('agent_salesforce')
+    agent = SpecialAgent('agent_salesforce')
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

@@ -8,11 +8,15 @@ else cd ..; fi; done)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
+echo "Updating compiled microcore protobuf files..."
+make -C ../.. protobuf-files
+
 echo "Update site $SITE..."
 
 echo "Copy CRE files..."
 sudo rsync \
     --exclude="*.pyc" \
+    --exclude="flycheck*" \
     --exclude=cee \
     --exclude=cee.py \
     --exclude=cme.py \

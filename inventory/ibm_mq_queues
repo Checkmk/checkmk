@@ -19,6 +19,11 @@ def inv_ibm_mq_queues(parsed, inventory_tree, status_data_tree):
             "name": qname,
             "maxdepth": attrs["MAXDEPTH"],
             "maxmsgl": attrs.get("MAXMSGL", "n/a"),
+            "created":
+                (attrs.get("CRDATE", "n/a") + " " + (attrs.get("CRTIME", "").replace(".", ":"))),
+            "altered":
+                (attrs.get("ALTDATE", "n/a") + " " + (attrs.get("ALTTIME", "").replace(".", ":"))),
+            "monq": attrs.get("MONQ", "n/a"),
         })
 
 

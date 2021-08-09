@@ -5,22 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import time
 import multiprocessing
 import sys
+import time
 
-import pytest  # type: ignore[import]
+import pytest
 
-import testlib
+import tests.testlib as testlib
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
+
 import cmk.gui.background_job as background_job
 import cmk.gui.gui_background_job as gui_background_job
+import cmk.gui.log
+
 # Loads all GUI modules
 import cmk.gui.modules
-
-import cmk.gui.log
 
 
 @pytest.fixture(autouse=True)
@@ -40,10 +41,13 @@ def test_registered_background_jobs():
         'FetchAgentOutputBackgroundJob',
         'BulkDiscoveryBackgroundJob',
         'UserSyncBackgroundJob',
+        'UserProfileCleanupBackgroundJob',
         'ServiceDiscoveryBackgroundJob',
         'ActivationCleanupBackgroundJob',
         'CheckmkAutomationBackgroundJob',
         'DiagnosticsDumpBackgroundJob',
+        'SearchIndexBackgroundJob',
+        'DiscoveredHostLabelSyncJob',
     ]
 
     if not cmk_version.is_raw_edition():
@@ -107,7 +111,8 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         time.sleep(100)
 
 
-def test_start_job(register_builtin_html):
+@pytest.mark.non_resilient
+def test_start_job(request_context):
     job = DummyBackgroundJob()
     job.set_function(job.execute_hello)
 
@@ -137,7 +142,7 @@ def test_start_job(register_builtin_html):
     assert "Hallo :-)" in output
 
 
-def test_stop_job(register_builtin_html):
+def test_stop_job(request_context):
     job = DummyBackgroundJob()
     job.set_function(job.execute_endless)
     job.start()

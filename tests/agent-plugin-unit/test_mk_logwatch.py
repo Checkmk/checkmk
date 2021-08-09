@@ -6,11 +6,13 @@
 
 # pylint: disable=protected-access,redefined-outer-name
 from __future__ import print_function
+
+import locale
 import os
 import re
 import sys
-import locale
-import pytest  # type: ignore[import]
+
+import pytest
 from utils import import_module
 
 
@@ -44,7 +46,7 @@ def ensure_binary(s, encoding='utf-8', errors='strict'):
 
 @pytest.fixture(scope="module")
 def mk_logwatch():
-    return import_module("mk_logwatch")
+    return import_module("mk_logwatch.py")
 
 
 def test_options_defaults(mk_logwatch):
@@ -433,16 +435,16 @@ def test_log_lines_iter_encoding(mk_logwatch, monkeypatch, buff, encoding, posit
 
 def test_log_lines_iter(mk_logwatch):
     with mk_logwatch.LogLinesIter(mk_logwatch.__file__, None) as log_iter:
-        log_iter.set_position(121)
-        assert log_iter.get_position() == 121
+        log_iter.set_position(122)
+        assert log_iter.get_position() == 122
 
         line = log_iter.next_line()
         assert isinstance(line, text_type())
         assert line == u"# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and\n"
-        assert log_iter.get_position() == 206
+        assert log_iter.get_position() == 207
 
         log_iter.push_back_line(u'Täke this!')
-        assert log_iter.get_position() == 195
+        assert log_iter.get_position() == 196
         assert log_iter.next_line() == u'Täke this!'
 
         log_iter.skip_remaining()

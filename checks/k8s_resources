@@ -4,6 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.k8s import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings['k8s_resources_default_levels'] = {
     'cpu': (90.0, 95.0),
     'memory': (90.0, 95.0),
@@ -42,18 +48,20 @@ def get_k8s_resources_check_function(name, default, readable):
 
         if allocatable:
             usage = 100.0 * request / allocatable
-            yield check_levels(usage,
-                               'k8s_%s_usage' % name,
-                               params.get(name),
-                               infoname='Usage',
-                               human_readable_func=get_percent_human_readable)
+            yield check_levels(
+                usage,
+                'k8s_%s_usage' % name,
+                params.get(name),
+                infoname='Usage',
+                human_readable_func=get_percent_human_readable,
+                boundaries=(0, None),
+            )
 
     return check_resources
 
 
 check_info['k8s_resources'] = {
     'parse_function': parse_k8s,
-    'includes': ['k8s.include'],
 }
 
 check_info['k8s_resources.pods'] = {

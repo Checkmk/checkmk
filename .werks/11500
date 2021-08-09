@@ -1,0 +1,57 @@
+Title: Microcore: Improved memory efficiency of helper processes
+Class: feature
+Compatible: compat
+Component: core
+Date: 1603178206
+Edition: cee
+Knowledge: undoc
+Level: 3
+Version: 2.0.0i1
+
+In previous versions the Checkmk Microcore used so called Checkmk helper
+processes to execute the "Check_MK" services of the monitored hosts.
+
+In larger installations, these processes consumed a lot of memory, because a)
+they held the Checkmk configuration in memory and b) you needed to configure a
+lot of them to scale the performance of your monitoring with the growing number
+of hosts. This resulted in a resource bottleneck.
+
+Checkmk 2.0 comes with a completely reworked helper model. This introduces two
+kinds of helper processes.
+
+<ul>
+<li>Fetcher: It's only task is to fetch the needed information from the
+monitored hosts. So it handles the network communication with the Checkmk
+agent, SNMP agent or other special agents. It may take some time to gather
+these information and it also may be blocked by network timeouts. But it
+consumes only a small amount of memory. So you can configure a lot of these
+processes without problems.</li>
+<li>Checker: It's task is to parse, analyze and evaluate the information
+gathered by the fetcher. It produces the check results for your services. It is
+a memory hungry process, because it needs to know all of your Checkmk
+configuration. It only takes a very short time to process the information from
+the fetcher. There is no network IO done by this helper process, which makes it
+pretty fast. You only need a small number of these processes.</li>
+</ul>
+
+This new model separates the problems of the previous "Checkmk helpers" into
+two separate pools: a) The network IO bound fetching of information and b) the
+CPU bound checking of the fetched information. We can now scale these different
+helper types independently from each other.
+
+Bottom line: Checkmk 2.0 has consumes significantly less memory (~ factor of 4,
+depending on your configuration) while achieving the same amount of checks per
+second. As a result, Checkmk 2.0 can monitor even more hosts on the same
+platform than before.
+
+The new model is enabled with Checkmk 2.0 by default. It can be configured
+using the global settings "Use separate fetchers and checkers", "Maximum
+concurrent Checkmk fetchers", "Maximum concurrent Checkmk checkers".
+
+All sites start with 13 fetcher processes and 4 checker processes.
+
+After updating you should have a look at the "Fetcher helper usage" and
+"Checker helper usage". It can be viewed in the "Micro core statistics" snapin
+and the detailed output of the "OMD [SITE] performance" services on your
+Checkmk host. The usage of both pools should not exceed 80%. In case it does,
+you should consider increasing the number of helpers of that type.

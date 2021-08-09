@@ -7,6 +7,6 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If a cluster host has different datasources as its nodes, you would see the clustered services within the service discovery page but not on the cluster host after activating the changes. The core config generation will now {WARN} if cluster and node datasources differ.

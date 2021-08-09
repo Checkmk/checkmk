@@ -4,35 +4,45 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import time
-import sys
 import abc
-import tempfile
 import datetime
+import os
+import sys
+import tempfile
+import time
 from contextlib import contextmanager
 from pathlib import Path
+from types import ModuleType
+from typing import Any, Callable, Generator, MutableMapping
 
+import freezegun
+import pytest
 import urllib3  # type: ignore[import]
-import freezegun  # type: ignore[import]
+from _pytest.monkeypatch import MonkeyPatch
 
-from testlib.utils import (  # noqa: F401 # pylint: disable=unused-import
-    repo_path, cmk_path, cme_path, cmc_path, current_branch_name, virtualenv_path,
-    get_cmk_download_credentials, is_running_as_site_user, site_id, add_python_paths,
-    is_enterprise_repo, is_managed_repo, get_standard_linux_agent_output,
+from tests.testlib.compare_html import compare_html
+from tests.testlib.fixtures import ec, web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
+
+from tests.testlib.web_session import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    APIError, CMKWebSession,
 )
-from testlib.fixtures import web, ec  # noqa: F401 # pylint: disable=unused-import
-from testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unused-import
-from testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
-from testlib.web_session import CMKWebSession, APIError  # noqa: F401 # pylint: disable=unused-import
-from testlib.event_console import CMKEventConsole, CMKEventConsoleStatus  # noqa: F401 # pylint: disable=unused-import
+
+from tests.testlib.event_console import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    CMKEventConsole, CMKEventConsoleStatus,
+)
+from tests.testlib.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    add_python_paths, cmc_path, cme_path, cmk_path, current_branch_name,
+    get_cmk_download_credentials, get_standard_linux_agent_output, is_enterprise_repo,
+    is_managed_repo, is_running_as_site_user, repo_path, site_id, virtualenv_path,
+)
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def skip_unwanted_test_types(item):
-    import pytest  # type: ignore[import] # pylint: disable=import-outside-toplevel
     test_type = item.get_closest_marker("type")
     if test_type is None:
         raise Exception("Test is not TYPE marked: %s" % item)
@@ -57,8 +67,8 @@ def fake_version_and_paths():
     monkeypatch = _pytest.monkeypatch.MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
-    import cmk.utils.version as cmk_version  # pylint: disable=import-outside-toplevel
     import cmk.utils.paths  # pylint: disable=import-outside-toplevel
+    import cmk.utils.version as cmk_version  # pylint: disable=import-outside-toplevel
 
     if is_managed_repo():
         edition_short = "cme"
@@ -90,6 +100,8 @@ def fake_version_and_paths():
                         os.path.join(tmp_dir, "tmp/check_mk/data_source_cache"))
     monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))
     monkeypatch.setattr("cmk.utils.paths.log_dir", os.path.join(tmp_dir, "var/log"))
+    monkeypatch.setattr("cmk.utils.paths.core_helper_config_dir",
+                        Path(tmp_dir, "var/check_mk/core/helper_config"))
     monkeypatch.setattr("cmk.utils.paths.autochecks_dir",
                         os.path.join(tmp_dir, "var/check_mk/autochecks"))
     monkeypatch.setattr("cmk.utils.paths.precompiled_checks_dir",
@@ -133,6 +145,13 @@ def fake_version_and_paths():
                         Path(cmk.utils.paths.var_dir, "site_configs"))
     monkeypatch.setattr("cmk.utils.paths.disabled_packages_dir",
                         Path(cmk.utils.paths.var_dir, "disabled_packages"))
+    monkeypatch.setattr("cmk.utils.paths.nagios_objects_file",
+                        os.path.join(tmp_dir, "etc/nagios/conf.d/check_mk_objects.cfg"))
+    monkeypatch.setattr("cmk.utils.paths.precompiled_hostchecks_dir",
+                        os.path.join(tmp_dir, "var/check_mk/precompiled"))
+    monkeypatch.setattr("cmk.utils.paths.discovered_host_labels_dir",
+                        Path(tmp_dir, "var/check_mk/discovered_host_labels"))
+    monkeypatch.setattr("cmk.utils.paths.profile_dir", Path(cmk.utils.paths.var_dir, "web"))
 
 
 def import_module(pathname):
@@ -152,8 +171,9 @@ def import_module(pathname):
     modpath = os.path.join(cmk_path(), pathname)
 
     import importlib  # pylint: disable=import-outside-toplevel
+
     # TODO: load_module() is deprecated, we should avoid using it.
-    # Furhermore, due to some reflection Kung-Fu and typeshed oddities,
+    # Furthermore, due to some reflection Kung-Fu and typeshed oddities,
     # mypy is confused about its arguments.
     return importlib.machinery.SourceFileLoader(modname, modpath).load_module()  # type: ignore[call-arg] # pylint: disable=no-value-for-parameter,deprecated-method
 
@@ -166,6 +186,23 @@ def wait_until(condition, timeout=1, interval=0.1):
         time.sleep(interval)
 
     raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
+
+
+def wait_until_liveproxyd_ready(site, site_ids):
+    # First wait for the site sockets to appear
+    def _all_sockets_opened():
+        return all([site.file_exists("tmp/run/liveproxy/%s" % s) for s in site_ids])
+
+    wait_until(_all_sockets_opened, timeout=60, interval=0.5)
+
+    # Then wait for the sites to be ready
+    def _all_sites_ready():
+        content = site.read_file("var/log/liveproxyd.state")
+        num_ready = content.count("State:                   ready")
+        print("%d sites are ready. Waiting for %d sites to be ready." % (num_ready, len(site_ids)))
+        return len(site_ids) == num_ready
+
+    wait_until(_all_sites_ready, timeout=60, interval=0.5)
 
 
 class WatchLog:
@@ -236,7 +273,10 @@ def create_linux_test_host(request, web_fixture, site, hostname):
                 "tmp/check_mk/status_data/%s.gz" % hostname,
                 "var/check_mk/inventory/%s" % hostname,
                 "var/check_mk/inventory/%s.gz" % hostname,
-        ]:
+                "var/check_mk/autochecks/%s.mk" % hostname,
+                "tmp/check_mk/counters/%s" % hostname,
+                "tmp/check_mk/cache/%s" % hostname,
+        ] + [str(p) for p in Path("tmp/check_mk/data_source_cache/").glob(f"*/{hostname}")]:
             if os.path.exists(path):
                 site.delete_file(path)
 
@@ -262,38 +302,8 @@ def create_linux_test_host(request, web_fixture, site, hostname):
 #   |                   \____|_| |_|\___|\___|_|\_\___/                    |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Testing of Check_MK checks                                           |
+#   | Testing of Checkmk checks                                           |
 #   '----------------------------------------------------------------------'
-
-
-class CheckManager:
-    def load(self, file_names=None):
-        """Load either all check plugins or the given file_names"""
-        import cmk.base.config as config  # pylint: disable=import-outside-toplevel
-        import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
-        import cmk.utils.paths  # pylint: disable=import-outside-toplevel
-
-        if file_names is None:
-            config.load_all_checks(check_api.get_check_api_context)  # loads all checks
-        else:
-            config._initialize_data_structures()
-            config.load_checks(check_api.get_check_api_context,
-                               [os.path.join(cmk.utils.paths.checks_dir, f) for f in file_names])
-
-        return self
-
-    def get_check(self, name):
-        main_check = name.split(".", 1)[0]
-        self.load([main_check])
-        return Check(name)
-
-    def get_active_check(self, name):
-        self.load([name])
-        return ActiveCheck(name)
-
-    def get_special_agent(self, name):
-        self.load([name])
-        return SpecialAgent(name)
 
 
 class MissingCheckInfoError(KeyError):
@@ -303,24 +313,12 @@ class MissingCheckInfoError(KeyError):
 class BaseCheck(metaclass=abc.ABCMeta):
     """Abstract base class for Check and ActiveCheck"""
     def __init__(self, name):
-        import cmk.base.check_api_utils  # pylint: disable=import-outside-toplevel
-        self.set_hostname = cmk.base.check_api_utils.set_hostname
-        self.set_service = cmk.base.check_api_utils.set_service
         self.name = name
         self.info = {}
-
-    def set_check_api_utils_globals(self, item=None, set_service=False):
-        description = None
-        if set_service:
-            description = self.info["service_description"]
-            assert description, '%r is missing a service_description' % self.name
-            if item is not None:
-                assert "%s" in description, \
-                    "Missing '%%s' formatter in service description of %r" \
-                    % self.name
-                description = description % item
-        self.set_service(self.name, description)
-        self.set_hostname('non-existent-testhost')
+        # we cant use the current_host context, b/c some tests rely on a persistent
+        # item state across several calls to run_check
+        import cmk.base.plugin_contexts  # pylint: disable=import-outside-toplevel
+        cmk.base.plugin_contexts._hostname = 'non-existent-testhost'
 
 
 class Check(BaseCheck):
@@ -344,7 +342,6 @@ class Check(BaseCheck):
         parse_func = self.info.get("parse_function")
         if not parse_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
-        self.set_check_api_utils_globals()
         return parse_func(info)
 
     def run_discovery(self, info):
@@ -352,37 +349,13 @@ class Check(BaseCheck):
         if not disco_func:
             raise MissingCheckInfoError("Check '%s' " % self.name +
                                         "has no discovery function defined")
-        self.set_check_api_utils_globals()
-        # TODO: use standard sanitizing code
         return disco_func(info)
 
     def run_check(self, item, params, info):
         check_func = self.info.get("check_function")
         if not check_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
-        self.set_check_api_utils_globals(item, set_service=True)
-        # TODO: use standard sanitizing code
         return check_func(item, params, info)
-
-    #def run_parse_with_walk(self, walk_name):
-    #    if "parse_function" not in self.info:
-    #        raise Exception("This check has no parse function defined")
-
-    #    return self.info["parse_function"]()
-
-    #def run_discovery_with_walk(self, walk_name):
-    #     # TODO: use standard walk processing code
-    #    info = self._get_walk(walk_name)
-
-    #    # TODO: use standard sanitizing code
-    #    return self.info["inventory_function"](info)
-
-    #def run_check_with_walk(self, walk_name, item, params):
-    #     # TODO: use standard walk processing code
-    #    info = self._get_walk(walk_name)
-
-    #    # TODO: use standard sanitizing code
-    #    return self.info["check_function"](item, params, info)
 
 
 class ActiveCheck(BaseCheck):
@@ -394,7 +367,6 @@ class ActiveCheck(BaseCheck):
         self.info = config.active_check_info[self.name[len('check_'):]]
 
     def run_argument_function(self, params):
-        self.set_check_api_utils_globals()
         return self.info['argument_function'](params)
 
     def run_service_description(self, params):
@@ -412,98 +384,45 @@ class SpecialAgent:
 
 
 @contextmanager
+def set_timezone(timezone):
+    if "TZ" not in os.environ:
+        tz_set = False
+        old_tz = ""
+    else:
+        tz_set = True
+        old_tz = os.environ['TZ']
+
+    os.environ['TZ'] = timezone
+    time.tzset()
+
+    yield
+
+    if not tz_set:
+        del os.environ['TZ']
+    else:
+        os.environ['TZ'] = old_tz
+
+    time.tzset()
+
+
+@contextmanager
 def on_time(utctime, timezone):
     """Set the time and timezone for the test"""
     if isinstance(utctime, (int, float)):
         utctime = datetime.datetime.utcfromtimestamp(utctime)
 
-    os.environ['TZ'] = timezone
-    time.tzset()
-    with freezegun.freeze_time(utctime):
+    with set_timezone(timezone), freezegun.freeze_time(utctime):
         yield
-    os.environ.pop('TZ')
-    time.tzset()
 
 
-#.
-#   .--Inventory plugins---------------------------------------------------.
-#   |            ___                      _                                |
-#   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
-#   |            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |             |
-#   |            | || | | \ V /  __/ | | | || (_) | |  | |_| |             |
-#   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
-#   |                                                   |___/              |
-#   |                         _             _                              |
-#   |                   _ __ | |_   _  __ _(_)_ __  ___                    |
-#   |                  | '_ \| | | | |/ _` | | '_ \/ __|                   |
-#   |                  | |_) | | |_| | (_| | | | | \__ \                   |
-#   |                  | .__/|_|\__,_|\__, |_|_| |_|___/                   |
-#   |                  |_|            |___/                                |
-#   '----------------------------------------------------------------------'
+def get_value_store_fixture(
+        module: ModuleType
+) -> Callable[[MonkeyPatch], Generator[MutableMapping[str, Any], None, None]]:
+    """Creates a fixture for patching get_value_store (check API) in a given module"""
+    @pytest.fixture(name="value_store")
+    def value_store_fixture(monkeypatch):
+        value_store: MutableMapping[str, Any] = {}
+        monkeypatch.setattr(module, 'get_value_store', lambda: value_store)
+        yield value_store
 
-
-class MockStructuredDataTree:
-    def __init__(self):
-        self.data = {}
-
-    def get_dict(self, path):
-        return self.data.setdefault(path, dict())
-
-    def get_list(self, path):
-        return self.data.setdefault(path, list())
-
-
-class InventoryPluginManager:
-    def load(self):
-        import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
-        import cmk.base.check_api as check_api  # pylint: disable=import-outside-toplevel
-        g_inv_tree = MockStructuredDataTree()
-        g_status_tree = MockStructuredDataTree()
-
-        def get_inventory_context():
-            return {
-                "inv_tree_list": g_inv_tree.get_list,
-                "inv_tree": g_inv_tree.get_dict,
-            }
-
-        inv_plugins.load_plugins(check_api.get_check_api_context, get_inventory_context)
-        return g_inv_tree, g_status_tree
-
-    def get_inventory_plugin(self, name):
-        g_inv_tree, g_status_tree = self.load()
-        return InventoryPlugin(name, g_inv_tree, g_status_tree)
-
-
-class MissingInvInfoError(KeyError):
-    pass
-
-
-class InventoryPlugin:
-    def __init__(self, name, g_inv_tree, g_status_tree):
-        import cmk.base.inventory_plugins as inv_plugins  # pylint: disable=import-outside-toplevel
-        super(InventoryPlugin, self).__init__()
-        self.name = name
-        if self.name not in inv_plugins.inv_info:
-            raise MissingInvInfoError(self.name)
-        self.info = inv_plugins.inv_info[self.name]
-        self.g_inv_tree = g_inv_tree
-        self.g_status_tree = g_status_tree
-
-    def run_inventory(self, *args):
-        # args contain info/parsed and/or params
-        inv_function = self.info.get("inv_function")
-        if not inv_function:
-            raise MissingInvInfoError("Inventory plugin '%s' " % self.name +
-                                      "has no inv function defined.")
-
-        # As in inventory._do_inv_for_realhost
-        inventory_tree = MockStructuredDataTree()
-        status_data_tree = MockStructuredDataTree()
-        from cmk.utils.misc import make_kwargs_for  # pylint: disable=import-outside-toplevel
-        kwargs = make_kwargs_for(inv_function,
-                                 inventory_tree=inventory_tree,
-                                 status_data_tree=status_data_tree)
-        inv_function(*args, **kwargs)
-        if kwargs:
-            return inventory_tree.data, status_data_tree.data
-        return self.g_inv_tree.data, self.g_status_tree.data
+    return value_store_fixture

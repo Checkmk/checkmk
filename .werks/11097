@@ -6,7 +6,7 @@ Date: 1589788968
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The check emc_datadomain_mtree, which monitors the state of EMC
 Data Domain MTrees, is now configurable via the rule "State of EMC

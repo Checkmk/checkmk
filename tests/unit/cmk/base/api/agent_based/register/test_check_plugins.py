@@ -8,9 +8,9 @@
 
 from typing import Any, Dict
 
-import pytest  # type: ignore[import]
+import pytest
 
-from cmk.utils.type_defs import ParsedSectionName, CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, ParsedSectionName
 
 import cmk.base.api.agent_based.register.check_plugins as check_plugins
 
@@ -128,7 +128,7 @@ def test_validate_function_args(function, has_item, has_params, sections, raises
             type_label="check",
             function=function,
             has_item=has_item,
-            has_params=has_params,
+            default_params={} if has_params else None,
             sections=sections,
         )
         return
@@ -138,7 +138,7 @@ def test_validate_function_args(function, has_item, has_params, sections, raises
             type_label="check",
             function=function,
             has_item=has_item,
-            has_params=has_params,
+            default_params={} if has_params else None,
             sections=sections,
         )
 
@@ -175,8 +175,13 @@ def test_create_check_plugin():
     assert plugin.service_name == MINIMAL_CREATION_KWARGS["service_name"]
     assert plugin.discovery_function.__name__ == MINIMAL_CREATION_KWARGS[
         "discovery_function"].__name__
-    assert plugin.discovery_default_parameters == {}
+    assert plugin.discovery_default_parameters is None
     assert plugin.discovery_ruleset_name is None
     assert plugin.check_function.__name__ == MINIMAL_CREATION_KWARGS["check_function"].__name__
-    assert plugin.check_default_parameters == {}
+    assert plugin.check_default_parameters is None
     assert plugin.check_ruleset_name is None
+
+
+def test_module_attribute(fix_register):
+    local_check = fix_register.check_plugins[CheckPluginName("local")]
+    assert local_check.module == "local"

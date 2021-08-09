@@ -6,7 +6,7 @@ Date: 1591121466
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werk fixes some small bugs in the monitoring of AWS EC2 limits (check
 aws_ec2_limits). Before this werk, depending on the configuration, the

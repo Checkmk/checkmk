@@ -5,15 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import namedtuple
-from typing import Mapping
-from ..agent_based_api.v1 import (
-    equals,
-    Metric,
-    Result,
-    state,
-    type_defs,
-)
-from ..agent_based_api.v1.clusterize import aggregate_node_details
+from typing import Any, Dict, Mapping, Optional, Tuple
+
+from ..agent_based_api.v1 import equals, Metric, Result
+from ..agent_based_api.v1 import State as state
+from ..agent_based_api.v1 import type_defs
+from ..agent_based_api.v1.clusterize import make_node_notice_results
 
 Section = Mapping[str, int]
 ClusterSection = Mapping[str, Section]
@@ -36,19 +33,17 @@ _OPER_STATE_MAP = {
 }
 
 
-def parse_bluecat(string_table: type_defs.SNMPStringTable) -> Section:
+def parse_bluecat(string_table: type_defs.StringTable) -> Optional[Section]:
     """
-    >>> parse_bluecat([[['1', '2']]])
+    >>> parse_bluecat([['1', '2']])
     {'oper_state': 1, 'leases': 2}
-    >>> parse_bluecat([[['3']]])
+    >>> parse_bluecat([['3']])
     {'oper_state': 3}
     """
-    return {
-        key: int(str_val) for key, str_val in zip(
-            ['oper_state', 'leases'],
-            string_table[0][0],
-        )
-    }
+    return {key: int(str_val) for key, str_val in zip(
+        ['oper_state', 'leases'],
+        string_table[0],
+    )} if string_table else None
 
 
 def _get_service_name(section: Section) -> str:
@@ -56,9 +51,9 @@ def _get_service_name(section: Section) -> str:
 
 
 def check_bluecat_operational_state(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
     oper_state = section['oper_state']
     service_name = _get_service_name(section)
 
@@ -98,23 +93,21 @@ OKNodeResults = namedtuple(
 
 
 def cluster_check_bluecat_operational_state(
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: ClusterSection,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
 
-    results = {}
+    results: Dict[str, Tuple] = {}
     ok_node_results = None
     overall_state = state.OK
 
     for node_name, node_section in section.items():
-        node_results = tuple(check_bluecat_operational_state(
-            params,
-            node_section,
-        ))
-        results[node_name] = aggregate_node_details(
-            node_name,
-            node_results,
-        )
+        node_results = results.setdefault(
+            node_name, tuple(check_bluecat_operational_state(
+                params,
+                node_section,
+            )))
+
         monitoring_state_result = node_results[0]
         assert isinstance(monitoring_state_result, Result)
         if monitoring_state_result.state is state.OK:
@@ -127,14 +120,12 @@ def cluster_check_bluecat_operational_state(
             monitoring_state_result.state,
         )
 
-    for node_name, agg_node_result in results.items():
-        assert agg_node_result
-        if ok_node_results:
-            agg_node_result = Result(
-                state=state.OK,
-                details=agg_node_result.details,
-            )
-        yield agg_node_result
+    for node_name, original_results in results.items():
+        yield from make_node_notice_results(
+            node_name,
+            original_results,
+            force_ok=bool(ok_node_results),
+        )
 
     if ok_node_results:
         for result in ok_node_results.results:

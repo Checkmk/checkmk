@@ -25,10 +25,10 @@ checks = {
             'roles': (10, 20)
         },
         [
-            (1, 'Total: 61 (warn/crit at 50/80)', [('k8s_total_roles', 61, 50, 80, None, None)]),
-            (2, 'Cluster roles: 53 (warn/crit at 30/50)', [('k8s_cluster_roles', 53, 30, 50, None,
+            (1, 'Total: 61 (warn/crit at 50/80)', [('k8s_total_roles', 61, 50, 80, 0.0, None)]),
+            (2, 'Cluster roles: 53 (warn/crit at 30/50)', [('k8s_cluster_roles', 53, 30, 50, 0.0,
                                                             None)]),
-            (0, 'Roles: 8', [('k8s_roles', 8, 10, 20, None, None)]),
+            (0, 'Roles: 8', [('k8s_roles', 8, 10, 20, 0.0, None)]),
         ],
     )]
 }

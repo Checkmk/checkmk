@@ -6,16 +6,17 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import Dict, List, Union
 from pathlib import Path
+from typing import Dict, List, Union
 
-import pytest  # type: ignore[import]
-from mockldap import MockLdap, LDAPObject  # type: ignore[import]
+import pytest
+from mockldap import LDAPObject, MockLdap  # type: ignore[import]
+
+import cmk.gui.plugins.userdb.ldap_connector as ldap
+import cmk.gui.plugins.userdb.utils as userdb_utils
 
 # userdb is needed to make the module register the post-config-load-hooks
 import cmk.gui.userdb
-import cmk.gui.plugins.userdb.ldap_connector as ldap
-import cmk.gui.plugins.userdb.utils as userdb_utils
 
 
 def test_connector_info():
@@ -39,11 +40,12 @@ def test_sync_plugins(load_config):
         'icons_per_item',
         'disable_notifications',
         'force_authuser',
+        'nav_hide_icons_title',
         'pager',
         'start_url',
         'ui_theme',
         'ui_sidebar_position',
-        'ui_basic_advanced_mode',
+        'show_mode',
     ])
 
 
@@ -283,7 +285,7 @@ def mocked_ldap(monkeypatch):
                 "server": "127.0.0.1"
             }),
         }),
-        "bind": ("cn=sync-user,ou=users,dc=check-mk,dc=org", "sync-secret"),
+        "bind": ("cn=sync-user,ou=users,dc=check-mk,dc=org", ("password", "sync-secret")),
         "user_id_umlauts": "keep",
         "user_scope": "sub",
         "user_dn": "ou=users,dc=check-mk,dc=org",
@@ -329,18 +331,18 @@ def _check_restored_bind_user(mocked_ldap):
     assert mocked_ldap._ldap_obj.whoami_s() == "dn:cn=sync-user,ou=users,dc=check-mk,dc=org"
 
 
-def test_check_credentials_success(register_builtin_html, mocked_ldap):
-    result = mocked_ldap.check_credentials("admin", "ldap-test")
+def test_check_credentials_success(request_context, mocked_ldap):
+    result = mocked_ldap.check_credentials("admin", ("password", "ldap-test"))
     assert isinstance(result, str)
     assert result == "admin"
 
-    result = mocked_ldap.check_credentials(u"admin", "ldap-test")
+    result = mocked_ldap.check_credentials(u"admin", ("password", "ldap-test"))
     assert isinstance(result, str)
     assert result == "admin"
     _check_restored_bind_user(mocked_ldap)
 
 
-def test_check_credentials_invalid(register_builtin_html, mocked_ldap):
+def test_check_credentials_invalid(request_context, mocked_ldap):
     assert mocked_ldap.check_credentials("admin", "WRONG") is False
     _check_restored_bind_user(mocked_ldap)
 
@@ -350,8 +352,8 @@ def test_check_credentials_not_existing(mocked_ldap):
     _check_restored_bind_user(mocked_ldap)
 
 
-def test_check_credentials_enforce_conn_success(register_builtin_html, mocked_ldap):
-    result = mocked_ldap.check_credentials("admin@testldap", "ldap-test")
+def test_check_credentials_enforce_conn_success(request_context, mocked_ldap):
+    result = mocked_ldap.check_credentials("admin@testldap", ("password", "ldap-test"))
     assert isinstance(result, str)
     assert result == "admin"
     _check_restored_bind_user(mocked_ldap)

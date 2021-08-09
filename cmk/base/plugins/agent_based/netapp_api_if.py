@@ -4,21 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    TypedDict,
-    Union,
-)
-from .agent_based_api.v1 import (
-    register,
-    Result,
-    state,
-    type_defs,
-)
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, TypedDict, Union
+
+from .agent_based_api.v1 import register, Result
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1 import type_defs
 from .utils import interfaces, netapp_api
 
 MACList = List[Tuple[str, Optional[str]]]
@@ -39,7 +29,7 @@ Section = Tuple[interfaces.Section, ExtraInfo]
 # interface clu1-01_clus2 use-failover-group unused       address 222.254.110.12  dns-domain-name none    is-auto-revert true     lif-uuid 3d6817c9-4bd1-11e5-a02c-0050569628b6   vserver Cluster role cluster    netmask-length 24       data-protocols.data-protocol none       operational-status up   netmask 255.255.255.0   failover-policy local_only      home-node clu1-01       address-family ipv4     current-port e0b        current-node clu1-01    routing-group-name c222.254.110.0/24    listen-for-dns-query false      administrative-status up        failover-group Cluster  home-port e0b   is-home true    send_data 4389886  send_errors 0   recv_errors 0   instance_name clu1-01_clus2     recv_data 6113182
 
 
-def parse_netapp_api_if(string_table: type_defs.AgentStringTable) -> Section:
+def parse_netapp_api_if(string_table: type_defs.StringTable) -> Section:
     ifaces = netapp_api.parse_netapp_api_single_instance(string_table)
 
     # Dictionary with lists of common mac addresses
@@ -177,9 +167,9 @@ register.agent_section(
 
 
 def discover_netapp_api_if(
-    params: Sequence[type_defs.Parameters],
+    params: Sequence[Mapping[str, Any]],
     section: Section,
-) -> type_defs.DiscoveryGenerator:
+) -> type_defs.DiscoveryResult:
     yield from interfaces.discover_interfaces(
         params,
         section[0],
@@ -196,9 +186,9 @@ INFO_INCLUDED_MAP = {"dont_show_and_check": False}
 
 def check_netapp_api_if(
     item: str,
-    params: type_defs.Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckGenerator:
+) -> type_defs.CheckResult:
 
     nics, extra_info = section
     yield from interfaces.check_multiple_interfaces(
@@ -277,7 +267,7 @@ register.check_plugin(
     name="netapp_api_if",
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_netapp_api_if,
     check_ruleset_name="if",

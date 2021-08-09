@@ -8,14 +8,14 @@ import ast
 import os
 import re
 import subprocess
-from typing import Any, Dict, Optional, Tuple
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
-from testlib.utils import get_standard_linux_agent_output
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.paths
+from cmk.utils.type_defs import SetAutochecksTable
 
 import cmk.base.autochecks as autochecks
 import cmk.base.config as config
@@ -23,6 +23,8 @@ import cmk.base.config as config
 
 @pytest.fixture(name="test_cfg", scope="module")
 def test_cfg_fixture(web, site):  # noqa: F811  # pylint: disable=redefined-outer-name
+    site.ensure_running()
+
     print("Applying default config")
     web.add_host("modes-test-host", attributes={
         "ipaddress": "127.0.0.1",
@@ -56,22 +58,24 @@ def test_cfg_fixture(web, site):  # noqa: F811  # pylint: disable=redefined-oute
     web.discover_services("modes-test-host2")
     web.discover_services("modes-test-host3")
 
-    web.activate_changes()
-    yield None
+    try:
+        web.activate_changes()
+        yield None
+    finally:
+        #
+        # Cleanup code
+        #
+        print("Cleaning up test config")
 
-    #
-    # Cleanup code
-    #
-    print("Cleaning up test config")
+        site.delete_dir("var/check_mk/agent_output")
 
-    site.delete_dir("var/check_mk/agent_output")
+        site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
 
-    site.delete_file("etc/check_mk/conf.d/modes-test-host.mk")
-
-    web.delete_host("modes-test-host")
-    web.delete_host("modes-test-host2")
-    web.delete_host("modes-test-host3")
-    web.delete_host("modes-test-host4")
+        web.delete_host("modes-test-host")
+        web.delete_host("modes-test-host2")
+        web.delete_host("modes-test-host3")
+        web.delete_host("modes-test-host4")
+        web.activate_changes()
 
 
 #.
@@ -102,15 +106,17 @@ def _execute_automation(site,
 
     stdout, stderr = p.communicate(stdin)
 
-    assert p.wait() == expect_exit_code, "Output: %r, Error: %r" % (stdout, stderr)
+    error_msg = "Exit code: %d, Output: %r, Error: %r" % (p.wait(), stdout, stderr)
+
+    assert p.wait() == expect_exit_code, error_msg
 
     if expect_stderr_pattern:
-        assert re.match(expect_stderr_pattern, stderr) is not None
+        assert re.match(expect_stderr_pattern, stderr) is not None, error_msg
     else:
-        assert stderr == expect_stderr
+        assert stderr == expect_stderr, error_msg
 
     if expect_stdout is not None:
-        assert stdout == expect_stdout
+        assert stdout == expect_stdout, error_msg
 
     if parse_data:
         data = ast.literal_eval(stdout)
@@ -132,14 +138,11 @@ def test_automation_discovery_no_host(test_cfg, site):
 def test_automation_discovery_single_host(test_cfg, site):
     data = _execute_automation(site, "inventory", args=["@raiseerrors", "new", "modes-test-host"])
 
-    assert isinstance(data, tuple)
-    assert len(data) == 2
+    assert isinstance(data, dict)
+    assert len(data) == 1
 
-    assert len(data[0]) == 1
-    assert "modes-test-host" in data[0]
-    assert len(data[0]["modes-test-host"]) == 6
-
-    assert data[1] == {}
+    assert data["results"]["modes-test-host"]["diff_text"] == "Nothing was changed."
+    assert data["results"]["modes-test-host"]["error_text"] is None
 
 
 def test_automation_discovery_multiple_hosts(test_cfg, site):
@@ -147,39 +150,46 @@ def test_automation_discovery_multiple_hosts(test_cfg, site):
                                "inventory",
                                args=["@raiseerrors", "new", "modes-test-host", "modes-test-host2"])
 
-    assert isinstance(data, tuple)
-    assert len(data) == 2
+    assert isinstance(data, dict)
+    assert len(data) == 1
 
-    assert len(data[0]) == 2
-    assert "modes-test-host" in data[0]
-    assert "modes-test-host2" in data[0]
-    assert len(data[0]["modes-test-host"]) == 6
-    assert len(data[0]["modes-test-host2"]) == 6
-
-    assert data[1] == {}
+    assert data["results"]["modes-test-host"]["diff_text"] == "Nothing was changed."
+    assert data["results"]["modes-test-host"]["error_text"] is None
+    assert data["results"]["modes-test-host2"]["diff_text"] == "Nothing was changed."
+    assert data["results"]["modes-test-host2"]["error_text"] is None
 
 
 def test_automation_discovery_not_existing_host(test_cfg, site):
     data = _execute_automation(site, "inventory", args=["@raiseerrors", "new", "xxxhost"])
 
-    assert isinstance(data, tuple)
-    assert len(data) == 2
+    assert isinstance(data, dict)
+    assert len(data) == 1
 
-    assert data[0]["xxxhost"] == [0, 0, 0, 0, 0, 0]
-    assert data[1] == {"xxxhost": ''}
+    assert data["results"] == {
+        u'xxxhost': {
+            u'clustered_new': 0,
+            u'clustered_old': 0,
+            u'clustered_vanished': 0,
+            u'diff_text': None,
+            u'error_text': u'',
+            u'self_kept': 0,
+            u'self_new': 0,
+            u'self_new_host_labels': 0,
+            u'self_removed': 0,
+            u'self_total': 0,
+            u'self_total_host_labels': 0,
+        }
+    }
 
 
 def test_automation_discovery_with_cache_option(test_cfg, site):
     data = _execute_automation(site, "inventory", args=["new", "modes-test-host"])
 
-    assert isinstance(data, tuple)
-    assert len(data) == 2
+    assert isinstance(data, dict)
+    assert len(data) == 1
 
-    assert len(data[0]) == 1
-    assert "modes-test-host" in data[0]
-    assert len(data[0]["modes-test-host"]) == 6
-
-    assert data[1] == {}
+    assert data["results"]["modes-test-host"]["diff_text"] == "Nothing was changed."
+    assert data["results"]["modes-test-host"]["error_text"] is None
 
 
 def test_automation_analyse_service_autocheck(test_cfg, site):
@@ -205,7 +215,8 @@ def test_automation_try_discovery_not_existing_host(test_cfg, site):
         args=["xxx-not-existing-host"],
         expect_stderr_pattern=(r"Failed to lookup IPv4 address of xxx-not-existing-host "
                                r"via DNS: (\[Errno -2\] Name or service not known"
-                               r"|\[Errno -3\] Temporary failure in name resolution)\n"),
+                               r"|\[Errno -3\] Temporary failure in name resolution"
+                               r"|\[Errno -5\] No address associated with hostname)\n"),
         expect_stdout="",
         expect_exit_code=2,
         parse_data=False,
@@ -221,37 +232,43 @@ def test_automation_try_discovery_host(test_cfg, site):
 
 
 def test_automation_set_autochecks(test_cfg, site):
-    new_items: Dict[Tuple[str, Optional[str]], Any] = {
-        ("df", "xxx"): ({}, {
+    hostname = "blablahost"
+    new_items: SetAutochecksTable = {
+        ("df", "xxx"): ("Filesystem xxx", {}, {
             u"xyz": u"123"
-        }),
-        ("uptime", None): (None, {}),
+        }, [hostname]),
+        ("uptime", None): ("Uptime", None, {}, [hostname]),
     }
 
     try:
-        data = _execute_automation(site,
-                                   "set-autochecks",
-                                   args=["blablahost"],
-                                   stdin=repr(new_items))
+        data = _execute_automation(site, "set-autochecks", args=[hostname], stdin=repr(new_items))
         assert data is None
 
-        autochecks_file = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, "blablahost")
+        autochecks_file = "%s/%s.mk" % (cmk.utils.paths.autochecks_dir, hostname)
         assert os.path.exists(autochecks_file)
 
-        data = autochecks.parse_autochecks_file("blablahost", config.service_description)
+        data = autochecks.parse_autochecks_file(hostname, config.service_description)
         services = [((str(s.check_plugin_name), s.item), s.parameters, s.service_labels.to_dict())
                     for s in data]
         assert sorted(services) == [
-            (('df', u'xxx'), {}, {
-                u"xyz": u"123"
-            }),
-            (('uptime', None), None, {}),
+            (
+                ('df', u'xxx'),
+                {},
+                {
+                    u"xyz": u"123"
+                },
+            ),
+            (
+                ('uptime', None),
+                None,
+                {},
+            ),
         ]
 
-        assert site.file_exists("var/check_mk/autochecks/blablahost.mk")
+        assert site.file_exists("var/check_mk/autochecks/%s.mk" % hostname)
     finally:
-        if site.file_exists("var/check_mk/autochecks/blablahost.mk"):
-            site.delete_file("var/check_mk/autochecks/blablahost.mk")
+        if site.file_exists("var/check_mk/autochecks/%s.mk" % hostname):
+            site.delete_file("var/check_mk/autochecks/%s.mk" % hostname)
 
 
 def test_automation_update_dns_cache(test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
@@ -316,16 +333,6 @@ def test_automation_get_section_information(test_cfg, site):
         assert isinstance(info["name"], str)
         assert "type" in info
         assert info["type"] in ("snmp", "agent")
-
-
-def test_automation_get_real_time_checks(test_cfg, site):
-    data = _execute_automation(site, "get-real-time-checks")
-    assert isinstance(data, list)
-    assert len(data) > 5
-
-    for check_type, title in data:
-        assert isinstance(check_type, str)
-        assert isinstance(title, str)
 
 
 def test_automation_notification_replay(test_cfg, site):

@@ -1,7 +1,0 @@
-base   authmultisite
-author Bastian Kuhn
-email  bk@mathias-kettner.de
-date   2012-05-30
-name   Multisite authentication plugin
-desc   authenticate against multisite
-url    http://mathias-kettner.de

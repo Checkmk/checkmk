@@ -4,17 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.liebert_system import (
-    parse_liebert_system,
-    discover_liebert_system,
     check_liebert_system,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Result,
-    state,
-    Service,
+    discover_liebert_system,
+    parse_liebert_system,
 )
 
 

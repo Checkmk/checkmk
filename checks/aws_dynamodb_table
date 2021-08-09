@@ -4,6 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
+
 factory_settings['aws_dynamodb_capacity_defaults'] = {
     'levels_%s' % op: {
         'levels_average': {
@@ -18,7 +25,7 @@ def parse_aws_dynamodb_table(info):
     parsed = parse_aws(info)
 
     # the last entry contains the provisioned limits
-    metrics = _extract_aws_metrics_by_labels([
+    metrics = extract_aws_metrics_by_labels([
         "Minimum_ConsumedReadCapacityUnits",
         "Maximum_ConsumedReadCapacityUnits",
         "Sum_ConsumedReadCapacityUnits",
@@ -43,7 +50,6 @@ def parse_aws_dynamodb_table(info):
 
 check_info['aws_dynamodb_table'] = {
     'parse_function': parse_aws_dynamodb_table,
-    'includes': ['aws.include'],
 }
 
 
@@ -150,7 +156,7 @@ def check_aws_dynamodb_latency(item, params, parsed):
                 metric_val *= 1e-3
                 levels = params.get("levels_seconds_%s_%s" % (operation.lower(), statistic.lower()))
                 if levels is not None:
-                    levels = tuple([level * 1e-3 for level in levels])
+                    levels = tuple(level * 1e-3 for level in levels)
 
                 yield check_levels(metric_val,
                                    metric_name,

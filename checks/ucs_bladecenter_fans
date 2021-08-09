@@ -6,6 +6,12 @@
 
 import cmk.base.plugins.agent_based.utils.ucs_bladecenter as ucs_bladecenter
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<ucs_bladecenter_fans:sep(9)>>>
 # equipmentNetworkElementFanStats Dn sys/switch-A/fan-module-1-1/fan-1/stats      SpeedAvg 8542
 # equipmentFanModuleStats Dn sys/chassis-2/fan-module-1-1/stats   AmbientTemp 29.000000
@@ -121,6 +127,5 @@ check_info["ucs_bladecenter_fans.temp"] = {
     'service_description': 'Temperature %s',
     'group': 'temperature',
     'has_perfdata': True,
-    'includes': ['temperature.include'],
     'default_levels_variable': 'ucs_bladecenter_fans_temp_default_levels'
 }

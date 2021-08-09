@@ -6,16 +6,16 @@
 
 import errno
 import glob
-from hashlib import sha256
 import io
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import tarfile
 import time
 import traceback
-from typing import Any, List, Dict, Optional, Union
+from hashlib import sha256
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 from six import ensure_binary
 
@@ -23,11 +23,11 @@ import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
 
-import cmk.gui.config as config
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import config, user
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.watolib.changes import log_audit
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.i18n import _
 
 DomainSpec = Dict
 
@@ -47,19 +47,19 @@ def create_snapshot(comment):
                                                            time.localtime(time.time()))
 
     data: Dict[str, Any] = {}
-    data["comment"] = _("Activated changes by %s.") % config.user.id
+    data["comment"] = _("Activated changes by %s.") % user.id
 
     if comment:
         data["comment"] += _("Comment: %s") % comment
 
-    data["created_by"] = config.user.id
+    data["created_by"] = user.id
     data["type"] = "automatic"
     data["snapshot_name"] = snapshot_name
 
     _do_create_snapshot(data)
     _do_snapshot_maintenance()
 
-    log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
+    log_audit("snapshot-created", _("Created snapshot %s") % snapshot_name)
     logger.debug("Backup snapshot creation took %.4f", time.time() - start)
 
 
@@ -179,7 +179,7 @@ def _do_snapshot_maintenance():
 
     snapshots.sort(reverse=True)
     while len(snapshots) > config.wato_max_snapshots:
-        #log_audit(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
+        #log_audit("snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
         os.remove(snapshot_dir + snapshots.pop())
 
 

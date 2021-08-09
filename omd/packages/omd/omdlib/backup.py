@@ -24,16 +24,16 @@
 # Boston, MA 02110-1301 USA.
 """Cares about backing up the files of a site"""
 
-import os
-import sys
 import errno
-import socket
-import tarfile
 import fnmatch
-from typing import cast, List, Tuple, BinaryIO
+import os
+import socket
+import sys
+import tarfile
+from typing import BinaryIO, cast, List, Tuple
 
-from omdlib.type_defs import CommandOptions
 from omdlib.contexts import SiteContext
+from omdlib.type_defs import CommandOptions
 
 
 def backup_site_to_tarfile(site: SiteContext, fh: BinaryIO, mode: str, options: CommandOptions,
@@ -123,7 +123,7 @@ class BackupTarFile(tarfile.TarFile):
         self._sock = None
         self._sites_path = os.path.realpath("/omd/sites")
 
-        super(BackupTarFile, self).__init__(name, mode, fileobj, **kwargs)
+        super().__init__(name, mode, fileobj, **kwargs)
 
     # We override this function to workaround an issue in the builtin add() method in
     # case it is called in recursive mode and a file vanishes between the os.listdir()
@@ -131,7 +131,7 @@ class BackupTarFile(tarfile.TarFile):
     # like this we want to skip those files silently during backup.
     def add(self, name, arcname=None, recursive=True, *, filter=None):  # pylint: disable=redefined-builtin
         try:
-            super(BackupTarFile, self).add(name, arcname, recursive, filter=filter)
+            super().add(name, arcname, recursive, filter=filter)
         except OSError as e:
             if e.errno != errno.ENOENT or arcname == self._site.name:
                 raise
@@ -143,7 +143,7 @@ class BackupTarFile(tarfile.TarFile):
         # In case of a stopped site or stopped rrdcached there is no
         # need to suspend rrd updates
         if self._site_stopped or not os.path.exists(self._rrdcached_socket_path):
-            super(BackupTarFile, self).addfile(tarinfo, fileobj)
+            super().addfile(tarinfo, fileobj)
             return
 
         site_rel_path = tarinfo.name[len(self._site.name) + 1:]
@@ -158,7 +158,7 @@ class BackupTarFile(tarfile.TarFile):
             self._suspend_rrd_update(rrd_file_path)
 
         try:
-            super(BackupTarFile, self).addfile(tarinfo, fileobj)
+            super().addfile(tarinfo, fileobj)
         finally:
             if is_rrd:
                 self._resume_rrd_update(rrd_file_path)
@@ -179,20 +179,19 @@ class BackupTarFile(tarfile.TarFile):
         self._send_rrdcached_command("RESUMEALL")
 
     def _send_rrdcached_command(self, cmd: str) -> None:
-        if not self._sock:
-            self._sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        if self._sock is None:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             try:
-                self._sock.connect(self._rrdcached_socket_path)
-            except socket.error as e:
-                # ECONNRESET: Broken pipe
-                # EPIPE:      Connection reset by peer
-                #             Happens, for example, when the rrdcached is reloaded/restarted during backup
-                if e.errno in (errno.ECONNRESET, errno.EPIPE):
-                    self._sock = None
-                    if self._verbose:
-                        sys.stdout.write("skipping rrdcached command (%s)\n" % e)
-                    return
+                sock.connect(self._rrdcached_socket_path)
+            except IOError as e:
+                if self._verbose:
+                    sys.stdout.write("skipping rrdcached command (%s)\n" % e)
+            except Exception:  # pylint: disable=try-except-raise
                 raise
+            self._sock = sock
+
+        if self._sock is None:
+            return
 
         try:
             if self._verbose:
@@ -202,12 +201,13 @@ class BackupTarFile(tarfile.TarFile):
             answer = ""
             while not answer.endswith("\n"):
                 answer += self._sock.recv(1024).decode("utf-8")
-        except socket.error as e:
-            if e.errno == errno.EPIPE:
-                self._sock = None
-                if self._verbose:
-                    sys.stdout.write("skipping rrdcached command (broken pipe)\n")
-                return
+        except IOError as e:
+            self._sock = None
+            if self._verbose:
+                sys.stdout.write("skipping rrdcached command (broken pipe)\n")
+            return
+        except Exception:  # pylint: disable=try-except-raise
+            self._sock = None
             raise
 
         code, msg = answer.strip().split(" ", 1)
@@ -228,9 +228,9 @@ class BackupTarFile(tarfile.TarFile):
             sys.stdout.write("rrdcached response: %r\n" % (answer))
 
     def close(self) -> None:
-        super(BackupTarFile, self).close()
+        super().close()
 
-        if self._sock:
+        if self._sock is not None:
             self._resume_all_rrds()
             self._sock.close()
 

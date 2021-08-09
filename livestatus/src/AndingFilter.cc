@@ -7,12 +7,10 @@
 
 #include <algorithm>
 #include <iterator>
-#include <memory>
 #include <ostream>
 #include <type_traits>
 #include <vector>
 
-#include "Filter.h"
 #include "OringFilter.h"
 #include "Row.h"
 
@@ -43,7 +41,7 @@ bool AndingFilter::accepts(Row row, const contact *auth_user,
 }
 
 std::unique_ptr<Filter> AndingFilter::partialFilter(
-    std::function<bool(const Column &)> predicate) const {
+    columnNamePredicate predicate) const {
     Filters filters;
     std::transform(
         _subfilters.cbegin(), _subfilters.cend(), std::back_inserter(filters),

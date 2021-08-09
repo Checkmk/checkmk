@@ -5,16 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    TextAscii,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersEnvironment,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_room_temperature():
@@ -34,7 +30,7 @@ rulespec_registry.register(
         check_group_name="room_temperature",
         group=RulespecGroupCheckParametersEnvironment,
         is_deprecated=True,
-        item_spec=lambda: TextAscii(title=_("Sensor ID"),
+        item_spec=lambda: TextInput(title=_("Sensor ID"),
                                     help=_("The identifier of the thermal sensor.")),
         parameter_valuespec=_parameter_valuespec_room_temperature,
         title=lambda: _("Room temperature (external thermal sensors)"),

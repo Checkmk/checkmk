@@ -7,32 +7,27 @@
 # yapf: disable
 # type: ignore
 
-import pytest  # type: ignore[import]
+import pytest
+
+from tests.testlib import Check
+
 from cmk.base.check_api import MKCounterWrapped
+from cmk.base.plugins.agent_based.oracle_instance import parse_oracle_instance
 
 pytestmark = pytest.mark.checks
 
-_broken_info = [
-    [
-        '+ASM', 'FAILURE',
-        'ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days'
-    ]
-]
-
-@pytest.mark.parametrize('info', [
-    _broken_info,
-])
-def test_oracle_intance_uptime_discovery(check_manager, info):
-    main_check = check_manager.get_check('oracle_instance')
-    check = check_manager.get_check('oracle_instance.uptime')
-    assert list(check.run_discovery(main_check.run_parse(info))) == []
+PARSED = parse_oracle_instance([[
+    '+ASM', 'FAILURE',
+    'ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days'
+]])
 
 
-@pytest.mark.parametrize('info', [
-    _broken_info,
-])
-def test_oracle_instance_uptime_check_error(check_manager, info):
-    main_check = check_manager.get_check('oracle_instance')
-    check = check_manager.get_check('oracle_instance.uptime')
+def test_oracle_intance_uptime_discovery():
+    check = Check('oracle_instance.uptime')
+    assert list(check.run_discovery(PARSED)) == []
+
+
+def test_oracle_instance_uptime_check_error():
+    check = Check('oracle_instance.uptime')
     with pytest.raises(MKCounterWrapped):
-        check.run_check("+ASM", {}, main_check.run_parse(info))
+        check.run_check("+ASM", {}, PARSED)

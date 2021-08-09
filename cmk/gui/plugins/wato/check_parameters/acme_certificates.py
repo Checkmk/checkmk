@@ -5,21 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    TextAscii,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 
 
 def _item_spec_acme_certificates():
-    return TextAscii(
+    return TextInput(
         title=_("Name of certificate"),
         allow_empty=False,
     )

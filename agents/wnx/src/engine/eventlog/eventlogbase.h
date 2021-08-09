@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 #ifndef EventLogBase_h
 #define EventLogBase_h
@@ -10,6 +11,7 @@
 
 #include <functional>
 #include <memory>
+#include <ranges>
 #include <string>
 
 #include "common/cfg_info.h"
@@ -18,6 +20,7 @@
 namespace cma::evl {
 class EventLogRecordBase {
 public:
+    using ptr = std::unique_ptr<EventLogRecordBase>;
     enum class Level {
         error,
         warning,
@@ -40,20 +43,22 @@ public:
     virtual Level eventLevel() const = 0;
     virtual std::wstring makeMessage() const = 0;
 
-    std::string stringize(cma::cfg::EventLevels Required,
-                          bool HideTrash) const {
+    std::string stringize(cma::cfg::EventLevels required,
+                          bool hide_trash) const {
         // convert UNIX timestamp to local time
-        auto ch = getEventSymbol(Required);
-        if (HideTrash && ch == '.') return {};
+        auto ch = getEventSymbol(required);
+        if (hide_trash && ch == '.') {
+            return {};
+        }
 
         time_t time_generated = static_cast<time_t>(timeGenerated());
-        struct tm *t = localtime(&time_generated);
+        auto *t = ::localtime(&time_generated);
         char timestamp[64];
-        strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
+        ::strftime(timestamp, sizeof(timestamp), "%b %d %H:%M:%S", t);
 
         // source is the application that produced the event
-        std::string source_name = wtools::ConvertToUTF8(source());
-        std::replace(source_name.begin(), source_name.end(), ' ', '_');
+        std::string source_name = wtools::ToUtf8(source());
+        std::ranges::replace(source_name, ' ', '_');
 
         return fmt::format("{} {} {}.{} {} {}\n",
                            ch,                 // char symbol
@@ -61,11 +66,11 @@ public:
                            eventQualifiers(),  //
                            eventId(),          //
                            source_name,        //
-                           wtools::ConvertToUTF8(makeMessage()));
+                           wtools::ToUtf8(makeMessage()));
     }
 
     // for output in port
-    char getEventSymbol(cma::cfg::EventLevels Required) const {
+    char getEventSymbol(cma::cfg::EventLevels required) const {
         switch (eventLevel()) {
             case Level::error:
                 return 'C';
@@ -74,7 +79,7 @@ public:
             case Level::information:
             case Level::audit_success:
             case Level::success:
-                if (Required == cma::cfg::EventLevels::kAll)
+                if (required == cma::cfg::EventLevels::kAll)
                     return 'O';
                 else
                     return '.';  // potential drop of context
@@ -86,7 +91,7 @@ public:
     }
 
     // decode windows level to universal
-    cma::cfg::EventLevels calcEventLevel(cma::cfg::EventLevels Required) const {
+    cma::cfg::EventLevels calcEventLevel(cma::cfg::EventLevels required) const {
         switch (eventLevel()) {
             case Level::error:
                 return cma::cfg::EventLevels::kCrit;
@@ -147,21 +152,20 @@ public:
     virtual bool isLogValid() const = 0;
 };
 
-// Official API
-// first call
-std::unique_ptr<cma::evl::EventLogBase> OpenEvl(const std::wstring &Name,
-                                                bool VistaApi);
+// Official CheckMK Event Log API
+/// \brief - open event log using one of available mode
+std::unique_ptr<EventLogBase> OpenEvl(const std::wstring &name, bool vista_api);
 
-// second call
+/// \brief - scan existing event log
 std::pair<uint64_t, cma::cfg::EventLevels> ScanEventLog(
-    EventLogBase &log, uint64_t previouslyReadId, cma::cfg::EventLevels level);
+    EventLogBase &log, uint64_t pos, cma::cfg::EventLevels level);
 
 using EvlProcessor = std::function<bool(const std::string &)>;
 
 // third call
 uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
                        cma::cfg::EventLevels level, bool hide_context,
-                       EvlProcessor processor);
+                       const EvlProcessor &processor);
 // internal
 inline uint64_t choosePos(uint64_t last_read_pos) {
     return cma::cfg::kFromBegin == last_read_pos ? 0 : last_read_pos + 1;

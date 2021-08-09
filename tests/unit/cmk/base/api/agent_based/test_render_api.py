@@ -5,7 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import inspect
 import time
-import pytest  # type: ignore[import]
+
+import pytest
+
 import cmk.base.api.agent_based.render as render
 
 
@@ -33,6 +35,7 @@ def test_datetime(monkeypatch, epoch, output):
 @pytest.mark.parametrize("seconds, output", [
     (0, "0 seconds"),
     (0.00000001, "10 nanoseconds"),
+    (5.3991e-05, "54 microseconds"),
     (0.1, "100 milliseconds"),
     (22, "22 seconds"),
     (158, "2 minutes 38 seconds"),
@@ -114,6 +117,7 @@ def test_bytes(bytes_, output):
     (2345, "2,345 B"),
     (1024**2, "1,048,576 B"),
     (1000**2, "1,000,000 B"),
+    (600000, "600,000 B"),
     (1234000678, "1,234,000,678 B"),
     (-1234000678, "-1,234,000,678 B"),
 ])
@@ -164,22 +168,37 @@ def test_iobandwidth(bytes_, output):
     assert output == render.iobandwidth(bytes_)
 
 
-@pytest.mark.parametrize("percentage, output", [
-    (0., "0%"),
-    (0.001, "0.00%"),
-    (0.01, "0.01%"),
-    (1.0, "1.00%"),
-    (10, "10.0%"),
-    (99.8, "99.8%"),
-    (99.9, "99.90%"),
-    (99.92, "99.92%"),
-    (99.9991, "99.9991%"),
-    (99.9997, "99.9997%"),
-    (100, "100%"),
-    (100.01, "100%"),
-    (100, "100%"),
-    (123, "123%"),
-    (-23, "-23.0%"),
-])
+@pytest.mark.parametrize(
+    "percentage, output",
+    [
+        # 1. Die 0 selbst:
+        (0.0, "0%"),
+        # 2. Bereich ]0, 0.01[:
+        (0.000102, "<0.01%"),
+        # 3. Bereich [1 ... 99]:
+        # -> Ausgabe mit 2 Nachkommastellen
+        (1.0, "1.00%"),
+        (1.234, "1.23%"),
+        (10.80, "10.80%"),
+        (99.92, "99.92%"),
+        # 5. Bereich [100,
+        (100.01, "100.01%"),
+        (123.456, "123.46%"),
+    ])
 def test_percent(percentage, output):
     assert output == render.percent(percentage)
+    # 6. Bereich kleiner 0:
+    #     negieren und "-" davorhängen
+    if abs(percentage) >= 0.01:
+        assert f"-{output}" == render.percent(-percentage)
+
+
+@pytest.mark.parametrize("hz, output", [
+    (111, "111 Hz"),
+    (1112, "1.11 kHz"),
+    (111222, "111 kHz"),
+    (111222333, "111 MHz"),
+    (111222333444, "111 GHz"),
+])
+def test_frequency(hz, output):
+    assert output == render.frequency(hz)

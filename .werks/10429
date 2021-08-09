@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This is a regression since Werk <a href=https://checkmk.com/check_mk-werks.php?werk_id=6711>#6711</a>.
 

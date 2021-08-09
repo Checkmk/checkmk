@@ -7,64 +7,82 @@
 
 import abc
 import re
-from typing import Union, Dict, List, Type, Optional, Any, Callable, Tuple as _Tuple
+from typing import Any, Callable, Dict, List, Optional
+from typing import Tuple as _Tuple
+from typing import Type, Union
 
 import cmk.utils.plugin_registry
 
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import html, request
+from cmk.gui.i18n import _
 from cmk.gui.type_defs import HTTPVariables
-from cmk.gui.globals import html
 from cmk.gui.utils.html import HTML
-from cmk.gui.valuespec import ValueSpec
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, makeuri_contextless_rulespec_group
 from cmk.gui.valuespec import (
     Dictionary,
-    Transform,
-    ListOf,
+    DropdownChoice,
     ElementSelection,
     FixedValue,
-    Tuple,
-    DropdownChoice,
+    ListOf,
     OptionalDropdownChoice,
+    Transform,
+    Tuple,
+    ValueSpec,
+    ValueSpecText,
+)
+from cmk.gui.watolib.automations import check_mk_local_automation
+from cmk.gui.watolib.main_menu import ABCMainModule, ModuleRegistry
+from cmk.gui.watolib.search import (
+    ABCMatchItemGenerator,
+    match_item_generator_registry,
+    MatchItem,
+    MatchItems,
 )
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
-from cmk.gui.watolib.automations import check_mk_local_automation
-from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKGeneralException
 
 
 class RulespecBaseGroup(metaclass=abc.ABCMeta):
     """Base class for all rulespec group types"""
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def name(self) -> str:
         """Unique internal key of this group"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Human readable title of this group"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def help(self) -> Optional[str]:
         """Helpful description of this group"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def choice_title(self) -> str:
         raise NotImplementedError()
 
 
 class RulespecGroup(RulespecBaseGroup):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def name(self) -> str:
         """Unique internal key of this group"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Human readable title of this group"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def help(self) -> str:
         """Helpful description of this group"""
         raise NotImplementedError()
@@ -75,12 +93,14 @@ class RulespecGroup(RulespecBaseGroup):
 
 
 class RulespecSubGroup(RulespecBaseGroup, metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def main_group(self) -> Type[RulespecGroup]:
         """A reference to the main group class"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def sub_group_name(self) -> str:
         """The internal name of the sub group"""
         raise NotImplementedError()
@@ -100,7 +120,7 @@ class RulespecSubGroup(RulespecBaseGroup, metaclass=abc.ABCMeta):
 
 class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBaseGroup]]):
     def __init__(self):
-        super(RulespecGroupRegistry, self).__init__()
+        super().__init__()
         self._main_groups: List[Type[RulespecGroup]] = []
         self._sub_groups_by_main_group: Dict[Type[RulespecGroup], List[Type[RulespecSubGroup]]] = {}
 
@@ -115,17 +135,12 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBase
         else:
             raise TypeError("Got invalid type \"%s\"" % instance.__name__)
 
-    def get_group_choices(self, mode: str) -> List[_Tuple[str, str]]:
+    def get_group_choices(self) -> List[_Tuple[str, str]]:
         """Returns all available ruleset groups to be used in dropdown choices"""
         choices: List[_Tuple[str, str]] = []
 
         main_groups = [g_class() for g_class in self.get_main_groups()]
         for main_group in sorted(main_groups, key=lambda g: g.title):
-            if mode == "static_checks" and main_group.name != "static":
-                continue
-            if mode != "static_checks" and main_group.name == "static":
-                continue
-
             choices.append((main_group.name, main_group.choice_title))
 
             sub_groups = [g_class() for g_class in self._get_sub_groups_of(main_group.__class__)]
@@ -152,7 +167,7 @@ class RulespecGroupRegistry(cmk.utils.plugin_registry.Registry[Type[RulespecBase
     def get_host_rulespec_group_names(self) -> List[str]:
         """Collect all rulesets that apply to hosts, except those specifying new active or static checks"""
         names: List[str] = []
-        hidden_groups = ("static", "checkparams", "activechecks")
+        hidden_groups = ("static", "activechecks")
         hidden_main_groups = ("host_monconf", "monconf", "agents", "agent")
         for g_class in self.values():
             group = g_class()
@@ -171,25 +186,29 @@ rulespec_group_registry = RulespecGroupRegistry()
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecks(RulespecGroup):
+class RulespecGroupEnforcedServices(RulespecGroup):
     @property
     def name(self):
         return "static"
 
     @property
     def title(self):
-        return _("Manual services")
+        return _("Enforced services")
 
     @property
     def help(self):
-        return _("Statically configured Checkmk services that do not rely on the service discovery")
+        return _(
+            "Rules to set up [wato_services#manual_checks|manual services]. Services set "
+            "up in this way do not depend on the service discovery. This is useful if you want "
+            "to enforce compliance with a specific guideline. You can for example ensure that "
+            "a certain Windows service is always present on a host.")
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksNetworking(RulespecSubGroup):
+class RulespecGroupEnforcedServicesNetworking(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -201,10 +220,10 @@ class RulespecGroupManualChecksNetworking(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksApplications(RulespecSubGroup):
+class RulespecGroupEnforcedServicesApplications(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -216,10 +235,10 @@ class RulespecGroupManualChecksApplications(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksEnvironment(RulespecSubGroup):
+class RulespecGroupEnforcedServicesEnvironment(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -231,10 +250,10 @@ class RulespecGroupManualChecksEnvironment(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksOperatingSystem(RulespecSubGroup):
+class RulespecGroupEnforcedServicesOperatingSystem(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -246,10 +265,10 @@ class RulespecGroupManualChecksOperatingSystem(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksHardware(RulespecSubGroup):
+class RulespecGroupEnforcedServicesHardware(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -261,10 +280,10 @@ class RulespecGroupManualChecksHardware(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksStorage(RulespecSubGroup):
+class RulespecGroupEnforcedServicesStorage(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -276,10 +295,10 @@ class RulespecGroupManualChecksStorage(RulespecSubGroup):
 
 
 @rulespec_group_registry.register
-class RulespecGroupManualChecksVirtualization(RulespecSubGroup):
+class RulespecGroupEnforcedServicesVirtualization(RulespecSubGroup):
     @property
     def main_group(self):
-        return RulespecGroupManualChecks
+        return RulespecGroupEnforcedServices
 
     @property
     def sub_group_name(self):
@@ -352,6 +371,8 @@ class Rulespec(metaclass=abc.ABCMeta):
         valuespec: Callable[[], ValueSpec],
         match_type: str,
         item_type: Optional[str],
+        # WATCH OUT: passing a Callable[[], Transform] will not work (see the
+        # isinstance check in the item_spec property)!
         item_spec: Optional[Callable[[], ValueSpec]],
         item_name: Optional[Callable[[], str]],
         item_help: Optional[Callable[[], str]],
@@ -362,7 +383,7 @@ class Rulespec(metaclass=abc.ABCMeta):
         factory_default: Any,
         help_func: Optional[Callable[[], str]],
     ) -> None:
-        super(Rulespec, self).__init__()
+        super().__init__()
 
         arg_infos: List[_Tuple[Any, bool, bool]] = [
             # (arg, is_callable, none_allowed)
@@ -525,7 +546,7 @@ class HostRulespec(Rulespec):
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Optional[Callable[[], str]] = None,
     ) -> None:
-        super(HostRulespec, self).__init__(
+        super().__init__(
             name=name,
             group=group,
             title=title,
@@ -567,7 +588,7 @@ class ServiceRulespec(Rulespec):
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Optional[Callable[[], str]] = None,
     ) -> None:
-        super(ServiceRulespec, self).__init__(
+        super().__init__(
             name=name,
             group=group,
             title=title,
@@ -600,7 +621,7 @@ class BinaryHostRulespec(HostRulespec):
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Optional[Callable[[], str]] = None,
     ) -> None:
-        super(BinaryHostRulespec, self).__init__(
+        super().__init__(
             name=name,
             group=group,
             title=title,
@@ -642,7 +663,7 @@ class BinaryServiceRulespec(ServiceRulespec):
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Optional[Callable[[], str]] = None,
     ) -> None:
-        super(BinaryServiceRulespec, self).__init__(
+        super().__init__(
             name=name,
             group=group,
             title=title,
@@ -740,7 +761,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         ]
         _validate_function_args(arg_infos, name)
 
-        super(CheckParameterRulespecWithItem, self).__init__(
+        super().__init__(
             name=name,
             group=group,
             title=title,
@@ -807,7 +828,7 @@ class CheckParameterRulespecWithoutItem(HostRulespec):
         ]
         _validate_function_args(arg_infos, name)
 
-        super(CheckParameterRulespecWithoutItem, self).__init__(
+        super().__init__(
             group=group,
             title=title,
             is_optional=is_optional,
@@ -883,7 +904,7 @@ class ManualCheckParameterRulespec(HostRulespec):
             (item_spec, True, True),
         ]
         _validate_function_args(arg_infos, name)
-        super(ManualCheckParameterRulespec, self).__init__(
+        super().__init__(
             group=group,
             name=name,
             title=title,
@@ -1015,7 +1036,7 @@ def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -
 
 class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
     def __init__(self, group_registry):
-        super(RulespecRegistry, self).__init__()
+        super().__init__()
         self._group_registry = group_registry
 
     def plugin_name(self, instance: Rulespec) -> str:
@@ -1053,9 +1074,9 @@ class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
                 if subgroup_key not in rulespec_group_registry:
                     rulespec_group_registry.register(manual_instance.group)
 
-                super(RulespecRegistry, self).register(manual_instance)
+                super().register(manual_instance)
 
-        return super(RulespecRegistry, self).register(instance)
+        return super().register(instance)
 
     def register_without_manual_check_rulespec(self, instance: Rulespec) -> None:
         """Use this register method to prevent adding a manual check rulespec"""
@@ -1064,12 +1085,12 @@ class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
                 _("!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec %r")
                 % instance)
             return
-        super(RulespecRegistry, self).register(instance)
+        super().register(instance)
 
 
 class CheckTypeGroupSelection(ElementSelection):
     def __init__(self, checkgroup, **kwargs):
-        super(CheckTypeGroupSelection, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._checkgroup = checkgroup
 
     def get_elements(self):
@@ -1081,8 +1102,8 @@ class CheckTypeGroupSelection(ElementSelection):
         }
         return elements
 
-    def value_to_text(self, value):
-        return "<tt>%s</tt>" % value
+    def value_to_text(self, value) -> HTML:
+        return html.render_tt(value)
 
 
 class TimeperiodValuespec(ValueSpec):
@@ -1097,7 +1118,7 @@ class TimeperiodValuespec(ValueSpec):
     tp_values_key = "tp_values"  # Used in valuespec
 
     def __init__(self, valuespec):
-        super(TimeperiodValuespec, self).__init__(
+        super().__init__(
             title=valuespec.title(),
             help=valuespec.help(),
         )
@@ -1109,11 +1130,11 @@ class TimeperiodValuespec(ValueSpec):
 
     def render_input(self, varprefix, value):
         # The display mode differs when the valuespec is activated
-        vars_copy = dict(html.request.itervars())
+        vars_copy = dict(request.itervars())
 
         # The timeperiod mode can be set by either the GUI switch or by the value itself
         # GUI switch overrules the information stored in the value
-        if html.request.has_var(self.tp_toggle_var):
+        if request.has_var(self.tp_toggle_var):
             is_active = self._is_switched_on()
         else:
             is_active = self.is_active(value)
@@ -1125,7 +1146,7 @@ class TimeperiodValuespec(ValueSpec):
 
         url_vars: HTTPVariables = []
         url_vars += vars_copy.items()
-        toggle_url = html.makeuri(url_vars)
+        toggle_url = makeuri(request, url_vars)
 
         if is_active:
             value = self._get_timeperiod_value(value)
@@ -1141,17 +1162,11 @@ class TimeperiodValuespec(ValueSpec):
                             class_=["toggle_timespecific_parameter"])
             return r
 
-    def value_to_text(self, value):
-        text = ""
-        if self.is_active(value):
-            # TODO/Phantasm: highlight currently active timewindow
-            text += self._get_timeperiod_valuespec().value_to_text(value)
-        else:
-            text += self._enclosed_valuespec.value_to_text(value)
-        return text
+    def value_to_text(self, value) -> ValueSpecText:
+        return self._get_used_valuespec(value).value_to_text(value)
 
     def from_html_vars(self, varprefix):
-        if html.request.var(self.tp_current_mode) == "1":
+        if request.var(self.tp_current_mode) == "1":
             # Fetch the timespecific settings
             parameters = self._get_timeperiod_valuespec().from_html_vars(varprefix)
             if parameters[self.tp_values_key]:
@@ -1167,11 +1182,12 @@ class TimeperiodValuespec(ValueSpec):
         return self._enclosed_valuespec.canonical_value()
 
     def _validate_value(self, value, varprefix):
-        super(TimeperiodValuespec, self)._validate_value(value, varprefix)
-        if self.is_active(value):
-            self._get_timeperiod_valuespec().validate_value(value, varprefix)
-        else:
-            self._enclosed_valuespec.validate_value(value, varprefix)
+        super()._validate_value(value, varprefix)
+        self._get_used_valuespec(value).validate_value(value, varprefix)
+
+    def validate_datatype(self, value: Any, varprefix: str) -> None:
+        super().validate_datatype(value, varprefix)
+        self._get_used_valuespec(value).validate_datatype(value, varprefix)
 
     def _get_timeperiod_valuespec(self):
         return Dictionary(
@@ -1197,7 +1213,7 @@ class TimeperiodValuespec(ValueSpec):
 
     # Checks whether the tp-mode is switched on through the gui
     def _is_switched_on(self):
-        return html.request.var(self.tp_toggle_var) == "1"
+        return request.var(self.tp_toggle_var) == "1"
 
     # Checks whether the value itself already uses the tp-mode
     def is_active(self, value):
@@ -1215,5 +1231,70 @@ class TimeperiodValuespec(ValueSpec):
             return value.get(self.tp_default_value_key)
         return value
 
+    # Returns the currently used ValueSpec based on the current value
+    def _get_used_valuespec(self, value: Any) -> ValueSpec:
+        return self._get_timeperiod_valuespec() if self.is_active(
+            value) else self._enclosed_valuespec
+
+    def transform_value(self, value: Any) -> Any:
+        return self._get_used_valuespec(value).transform_value(value)
+
+
+def main_module_from_rulespec_group_name(
+    group_name: str,
+    main_module_reg: ModuleRegistry,
+) -> ABCMainModule:
+    return main_module_reg[makeuri_contextless_rulespec_group(
+        request,
+        group_name,
+    )]()
+
+
+class MatchItemGeneratorRules(ABCMatchItemGenerator):
+    def __init__(
+        self,
+        name: str,
+        rulesepc_group_reg: RulespecGroupRegistry,
+        rulespec_reg: RulespecRegistry,
+    ) -> None:
+        super().__init__(name)
+        self._rulespec_group_registry = rulesepc_group_reg
+        self._rulespec_registry = rulespec_reg
+
+    def _topic(self, rulespec: Rulespec) -> str:
+        if rulespec.is_deprecated:
+            return _("Deprecated rulesets")
+        return f"{self._rulespec_group_registry[rulespec.main_group_name]().title}"
+
+    def generate_match_items(self) -> MatchItems:
+        yield from (MatchItem(
+            title=rulespec.title,
+            topic=self._topic(rulespec),
+            url=makeuri_contextless(
+                request,
+                [("mode", "edit_ruleset"), ("varname", rulespec.name)],
+                filename="wato.py",
+            ),
+            match_texts=[rulespec.title, rulespec.name],
+        )
+                    for group in self._rulespec_registry.get_all_groups()
+                    for rulespec in self._rulespec_registry.get_by_group(group)
+                    if rulespec.title)
+
+    @staticmethod
+    def is_affected_by_change(_change_action_name: str) -> bool:
+        return False
+
+    @property
+    def is_localization_dependent(self) -> bool:
+        return True
+
 
 rulespec_registry = RulespecRegistry(rulespec_group_registry)
+
+match_item_generator_registry.register(
+    MatchItemGeneratorRules(
+        'rules',
+        rulespec_group_registry,
+        rulespec_registry,
+    ))

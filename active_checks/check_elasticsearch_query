@@ -7,11 +7,13 @@
 import argparse
 import sys
 import urllib.parse
+
 import requests
 import urllib3  # type: ignore[import]
-from cmk.utils.defines import service_state_name
-from cmk.utils.exceptions import MKGeneralException
+
 import cmk.utils.password_store
+from cmk.utils.exceptions import MKGeneralException
+
 cmk.utils.password_store.replace_passwords()
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -26,7 +28,7 @@ def main():
         sys.stdout.write("UNKNOWN - %s\n" % exc)
         return 3
 
-    sys.stdout.write("%s - %s | %s\n" % (service_state_name(state), msg, perfdata))
+    sys.stdout.write("%s | %s\n" % (msg, perfdata))
     sys.exit(state)
 
 

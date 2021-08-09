@@ -6,7 +6,7 @@ Date: 1579699279
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Scheduled reports, configured as background job, were not executet in
 background. This has been fixed.

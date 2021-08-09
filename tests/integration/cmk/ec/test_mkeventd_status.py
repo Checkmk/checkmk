@@ -6,9 +6,9 @@
 
 import time
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib.fixtures import ec  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.fixtures import ec  # noqa: F401 # pylint: disable=unused-import
 
 
 def ensure_core_and_get_connection(site, ec, core):  # noqa: F811 # pylint: disable=redefined-outer-name

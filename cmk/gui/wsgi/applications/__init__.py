@@ -5,13 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.wsgi.applications.checkmk import CheckmkApp
-from cmk.gui.wsgi.applications.rest_api import (
-    CheckmkApiApp,
-    openapi_spec_dir,
-)
+from cmk.gui.wsgi.applications.rest_api import CheckmkRESTAPI
 
 __all__ = [
     'CheckmkApp',
-    'CheckmkApiApp',
-    'openapi_spec_dir',
+    'CheckmkRESTAPI',
 ]

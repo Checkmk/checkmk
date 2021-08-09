@@ -14,6 +14,6 @@ description:
  with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
  can be configured by WATO.
 
-inventory:
+discovery:
  One service is created for each device.
 

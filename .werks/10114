@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This WERK fixes most potential crashes in this particular check as well.
 Instead of crashing, the check will return no data which will lead to

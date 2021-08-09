@@ -5,14 +5,10 @@
 
 #include "TimeperiodsCache.h"
 
-// IWYU pragma: no_include <type_traits>
-#include <ostream>
-#include <string>
 #include <utility>
 
 #include "Logger.h"
-
-extern timeperiod *timeperiod_list;
+#include "NagiosGlobals.h"
 
 using namespace std::chrono_literals;
 

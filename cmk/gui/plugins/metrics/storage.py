@@ -5,13 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-    KB,
-    MB,
-)
+from cmk.gui.plugins.metrics import graph_info, KB, MB, metric_info
 
 #.
 #   .--Metrics-------------------------------------------------------------.
@@ -32,12 +26,6 @@ metric_info["age"] = {
     "title": _("Age"),
     "unit": "s",
     "color": "#80f000",
-}
-
-metric_info["age_oldest"] = {
-    "title": _("Oldest age"),
-    "unit": "s",
-    "color": "35/a",
 }
 
 metric_info["last_updated"] = {
@@ -1300,6 +1288,12 @@ metric_info["disk_drain_rate"] = {
     "color": "31/b",
 }
 
+metric_info["memory_used"] = {
+    "color": "46/a",
+    "title": _("Memory used"),
+    "unit": "bytes",
+}
+
 # In order to use the "bytes" unit we would have to change the output of the check, (i.e. divide by
 # 1024) which means an invalidation of historic values.
 metric_info['kb_out_of_sync'] = {
@@ -1362,11 +1356,13 @@ graph_info["backup_time"] = {
 }
 
 graph_info["total_cache_usage"] = {
+    "title": _("Total cache usage"),
     "metrics": [("total_cache_usage", "area")],
     "range": (0, 100),
 }
 
 graph_info["write_cache_usage"] = {
+    "title": _("Write cache usage"),
     "metrics": [("write_cache_usage", "area")],
     "range": (0, 100),
 }
@@ -1402,6 +1398,7 @@ graph_info["wasted_space_of_tables_and_indexes"] = {
 # diskstat checks
 
 graph_info["disk_utilization"] = {
+    "title": _("Disk utilization"),
     "metrics": [("disk_utilization", "area"),],
     "range": (0, 100),
     "scalars": [
@@ -1526,6 +1523,7 @@ graph_info["ram_swap_used"] = {
 }
 
 graph_info["mem_used_percent"] = {
+    "title": _("Used RAM"),
     "metrics": [("mem_used_percent", "area"),],
     "scalars": [
         "mem_used_percent:warn",
@@ -1535,12 +1533,14 @@ graph_info["mem_used_percent"] = {
 }
 
 graph_info["cpu_mem_used_percent"] = {
+    "title": _("Used CPU Memory"),
     "metrics": [("cpu_mem_used_percent", "area"),],
     "scalars": ["cpu_mem_used_percent:warn", "cpu_mem_used_percent:crit"],
     "range": (0, 100),
 }
 
 graph_info["mem_trend"] = {
+    "title": _("Trend of memory usage growth"),
     "metrics": [("mem_trend", "line"),],
 }
 
@@ -1755,6 +1755,7 @@ graph_info["harddrive_health_statistic"] = {
 }
 
 graph_info["mem_perm_used"] = {
+    "title": _("Permanent Generation Memory"),
     "metrics": [("mem_perm_used", "area")],
     "scalars": [
         "mem_perm_used:warn",

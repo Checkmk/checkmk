@@ -6,6 +6,11 @@
 
 from cmk.utils.plugin_loader import load_plugins
 
+from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    Filter, filter_registry, FilterTime, FilterTristate, get_only_sites_from_context,
+    visual_info_registry, visual_type_registry, VisualInfo, VisualType,
+)
+
 #.
 #   .--Plugin API----------------------------------------------------------.
 #   |           ____  _             _            _    ____ ___             |
@@ -15,11 +20,6 @@ from cmk.utils.plugin_loader import load_plugins
 #   |          |_|   |_|\__,_|\__, |_|_| |_| /_/   \_\_|  |___|            |
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
-
-from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
-    Filter, FilterTime, FilterTristate, filter_registry, VisualType, visual_type_registry,
-    VisualInfo, visual_info_registry,
-)
 
 #.
 #   .--Plugins-------------------------------------------------------------.

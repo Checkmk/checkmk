@@ -4,6 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.arris_cmts import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 arris_cmts_cpu_default_levels = (90, 95)
 
 
@@ -15,7 +21,7 @@ def inventory_arris_cmts_cpu(info):
             yield cpu_id, 'arris_cmts_cpu_default_levels'
         else:
             # Fallback to the oid end
-            item = int(oid_id) - 1
+            item = str(int(oid_id) - 1)
             yield item, 'arris_cmts_cpu_default_levels'
 
 
@@ -28,7 +34,7 @@ def check_arris_cmts_cpu(item, params, info):
         if cpu_id:
             citem = cpu_id
         else:
-            citem = int(oid_id) - 1
+            citem = str(int(oid_id) - 1)
 
         if citem == item:
             # We get the IDLE percentage, but need the usage
@@ -45,7 +51,6 @@ def check_arris_cmts_cpu(item, params, info):
             else:
                 yield 0, infotext, perfdata
             return
-    yield 3, "CPU information not found"
 
 
 check_info["arris_cmts_cpu"] = {
@@ -62,5 +67,4 @@ check_info["arris_cmts_cpu"] = {
             8,  # cadIdleCpuRecentPercent
         ]),
     "group": "cpu_utilization_multiitem",
-    "includes": ["arris_cmts.include"]
 }

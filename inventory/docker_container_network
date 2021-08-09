@@ -6,13 +6,6 @@
 import cmk.base.plugins.agent_based.utils.docker as docker
 
 
-def parse_docker_container_network(info):
-    version = docker.get_version(info)
-    index = 0 if version is None else 1
-    parsed = docker.json_get_obj(info[index]) or {}
-    return parsed
-
-
 def inv_docker_container_network_networks(parsed, inventory_tree):
     network_data = parsed.get("Networks") or {}
 
@@ -51,7 +44,7 @@ def inv_docker_container_network_ports(parsed, inventory_tree):
 
 
 def inv_docker_container_network(info, inventory_tree):
-    parsed = parse_docker_container_network(info)
+    parsed = docker.parse(info).data
     inv_docker_container_network_networks(parsed, inventory_tree)
     inv_docker_container_network_ports(parsed, inventory_tree)
 

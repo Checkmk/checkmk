@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In Pacemaker 2.0 the cluster controller process was renamed
 from crmd to pacemaker-controld. Therefore, heartbeat_crm

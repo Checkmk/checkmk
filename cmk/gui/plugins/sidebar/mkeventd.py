@@ -4,21 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, List, Tuple
+from typing import List, Optional, Tuple
 
-from cmk.gui.type_defs import PermissionName
 import cmk.gui.mkeventd as mkeventd
-import cmk.gui.config as config
-from cmk.gui.htmllib import HTMLContent
-from cmk.gui.sites import SiteId
-from cmk.gui.i18n import _
 from cmk.gui.globals import html
-
-from cmk.gui.plugins.sidebar import (
-    snapin_site_choice,
-    SidebarSnapin,
-    snapin_registry,
-)
+from cmk.gui.htmllib import HTMLContent
+from cmk.gui.i18n import _
+from cmk.gui.plugins.sidebar import SidebarSnapin, snapin_registry, snapin_site_choice
+from cmk.gui.sites import get_event_console_site_choices, SiteId
+from cmk.gui.type_defs import PermissionName
 
 
 @snapin_registry.register
@@ -29,7 +23,7 @@ class SidebarSnapinCustomers(SidebarSnapin):
 
     @classmethod
     def title(cls) -> str:
-        return _("Event Console Performance")
+        return _("Event console performance")
 
     @classmethod
     def description(cls) -> str:
@@ -44,8 +38,7 @@ class SidebarSnapinCustomers(SidebarSnapin):
         return True
 
     def show(self) -> None:
-        only_sites = snapin_site_choice("mkeventd_performance",
-                                        config.get_event_console_site_choices())
+        only_sites = snapin_site_choice("mkeventd_performance", get_event_console_site_choices())
 
         try:
             entries = self._mkeventd_performance_entries(only_sites)

@@ -32,22 +32,20 @@
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnCumulateSessions.0 = Counter32: 0 Sessions
 # CISCO-REMOTE-ACCESS-MONITOR-MIB::crasWebvpnPeakConcurrentSessions.0 = Gauge32: 0 Sessions
 
-from typing import Dict
-from .agent_based_api.v1 import (
-    any_of,
-    contains,
-    register,
-    SNMPTree,
-    type_defs,
-)
+from typing import Dict, Optional
+
+from .agent_based_api.v1 import any_of, contains, register, SNMPTree, type_defs
 
 SESSION_TYPES = ['IPsec RA', 'IPsec L2L', 'AnyConnect SVC', 'WebVPN']
 METRICS_PER_SESSION_TYPE = ['active_sessions', 'cumulative_sessions', 'peak_sessions']
 
 
-def parse_cisco_vpn_sessions(string_table: type_defs.SNMPStringTable) -> Dict[str, Dict[str, int]]:
+def parse_cisco_vpn_sessions(
+        string_table: type_defs.StringTable) -> Optional[Dict[str, Dict[str, int]]]:
+    if not string_table:
+        return None
 
-    raw_data = string_table[0][0]
+    raw_data = string_table[0]
     parsed = {}
     summary = {'active_sessions': 0, 'cumulative_sessions': 0}
 
@@ -87,24 +85,22 @@ register.snmp_section(
         contains('.1.3.6.1.2.1.1.1.0', 'cisco adaptive security'),
         contains('.1.3.6.1.2.1.1.1.0', 'cisco firepower threat defense'),
     ),
-    trees=[
-        SNMPTree(
-            base='.1.3.6.1.4.1.9.9.392.1',
-            oids=[
-                '3.26',  # crasIPSecNumSessions
-                '3.27',  # crasIPSecCumulateSessions
-                '3.28',  # crasIPSecPeakConcurrentSessions
-                '3.29',  # crasL2LNumSessions
-                '3.30',  # crasL2LCumulateSessions
-                '3.31',  # crasL2LPeakConcurrentSessions
-                '3.35',  # crasSVCNumSessions
-                '3.36',  # crasSVCCumulateSessions
-                '3.37',  # crasSVCPeakConcurrentSessions
-                '3.38',  # crasWebvpnNumSessions
-                '3.39',  # crasWebvpnCumulateSessions
-                '3.40',  # crasWebvpnPeakConcurrentSessions
-                '1.1',  # crasMaxSessionsSupportable
-            ],
-        ),
-    ],
+    fetch=SNMPTree(
+        base='.1.3.6.1.4.1.9.9.392.1',
+        oids=[
+            '3.26',  # crasIPSecNumSessions
+            '3.27',  # crasIPSecCumulateSessions
+            '3.28',  # crasIPSecPeakConcurrentSessions
+            '3.29',  # crasL2LNumSessions
+            '3.30',  # crasL2LCumulateSessions
+            '3.31',  # crasL2LPeakConcurrentSessions
+            '3.35',  # crasSVCNumSessions
+            '3.36',  # crasSVCCumulateSessions
+            '3.37',  # crasSVCPeakConcurrentSessions
+            '3.38',  # crasWebvpnNumSessions
+            '3.39',  # crasWebvpnCumulateSessions
+            '3.40',  # crasWebvpnPeakConcurrentSessions
+            '1.1',  # crasMaxSessionsSupportable
+        ],
+    ),
 )

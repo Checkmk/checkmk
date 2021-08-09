@@ -4,21 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Union, Tuple, Optional, TypedDict, Generator
 import time
-from cmk.base.api.agent_based.utils import (
-    check_levels,
-    get_rate,
-    get_average,
-)
-from cmk.base.api.agent_based.render import (
-    timespan,)
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Result,
-    state,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
-    CheckGenerator,)
+from typing import Any, Generator, MutableMapping, Optional, Tuple, TypedDict, Union
+
+from ..agent_based_api.v1 import check_levels, get_average, get_rate, Result
+from ..agent_based_api.v1 import State as state
+from ..agent_based_api.v1.render import timespan
+from ..agent_based_api.v1.type_defs import CheckResult
 
 StatusType = int
 TempUnitType = str
@@ -72,7 +64,7 @@ def celsius_to_fahrenheit(tempc, relative=False):
 
 def to_celsius(reading, unit, relative=False):
     if isinstance(reading, tuple):
-        return tuple([to_celsius(x, unit, relative) for x in reading])
+        return tuple(to_celsius(x, unit, relative) for x in reading)
     if unit == "f":
         return fahrenheit_to_celsius(reading, relative)
     if unit == "k":
@@ -175,7 +167,7 @@ def _validate_levels(
 
 
 def _check_trend(
-    value_store,
+    value_store: MutableMapping[str, Any],
     temp: float,
     params: TrendComputeDict,
     output_unit: str,
@@ -255,14 +247,14 @@ def check_temperature(
     reading: float,
     params: TempParamType,
     *,
-    unique_name: Optional[str] = None,
-    value_store: Optional[str] = None,
+    unique_name: str,
+    value_store: MutableMapping[str, Any],
     dev_unit: Optional[str] = "c",
     dev_levels: Optional[Tuple[float, float]] = None,
     dev_levels_lower: Optional[Tuple[float, float]] = None,
     dev_status: Optional[StatusType] = None,
     dev_status_name: Optional[str] = None,
-) -> CheckGenerator:
+) -> CheckResult:
     """This function checks the temperature value against specified levels and issues a warn/cirt
     message. Levels can be supplied by the user or the device. The user has the possibility to configure
     the preferred levels. Additionally, it is possible to check temperature trends. All internal
@@ -271,7 +263,8 @@ def check_temperature(
     Args:
         reading (Number): The numeric temperature value itself.
         params (dict): A dictionary giving the user's configuration. See below.
-        unique_name (str): The name under which to track performance data.
+        unique_name (str): The name under which to track performance data for trend computation.
+        value_store: The Value Store to used for trend computation
         dev_unit (str): The unit. May be one of 'c', 'f' or 'k'. Default is 'c'.
         dev_levels (Optional[LevelsType]): The upper levels (warn, crit)
         dev_levels_lower (Optional[LevelsType]): The lower levels (warn, crit)
@@ -340,7 +333,7 @@ def check_temperature(
 
     usr_results = [usr_result]
     dev_results = [dev_result]
-    if unique_name is not None and params.get('trend_compute') is not None:
+    if params.get('trend_compute') is not None:
         usr_results.extend(result for result in _check_trend(
             value_store=value_store,
             temp=temp,
@@ -358,7 +351,7 @@ def check_temperature(
             output_unit=output_unit,
             crit_temp=dev_levels_upper[1] if dev_levels_upper is not None else None,
             crit_temp_lower=dev_levels_lower[1] if dev_levels_lower is not None else None,
-            unique_name=unique_name,
+            unique_name=unique_name + '.dev',
         ))
 
     if dev_status is not None:
@@ -371,13 +364,13 @@ def check_temperature(
     if device_levels_handling == 'usr':
         yield usr_metric
         yield from usr_results
-        yield Result(state=state.OK, details='Configuration: only use user levels')
+        yield Result(state=state.OK, notice='Configuration: only use user levels')
         return
 
     if device_levels_handling == 'dev':
         yield dev_metric
         yield from dev_results
-        yield Result(state=state.OK, details='Configuration: only use device levels')
+        yield Result(state=state.OK, notice='Configuration: only use device levels')
         return
 
     if device_levels_handling == 'usrdefault':
@@ -398,7 +391,7 @@ def check_temperature(
 
         yield Result(
             state=state.OK,
-            details='Configuration: prefer user levels over device levels %s' % suffix,
+            notice='Configuration: prefer user levels over device levels %s' % suffix,
         )
 
         return
@@ -421,7 +414,7 @@ def check_temperature(
 
         yield Result(
             state=state.OK,
-            details='Configuration: prefer device levels over user levels %s' % suffix,
+            notice='Configuration: prefer device levels over user levels %s' % suffix,
         )
 
         return
@@ -438,7 +431,7 @@ def check_temperature(
             yield dev_metric
             yield from dev_results
 
-        yield Result(state=state.OK, details='Configuration: show most critical state')
+        yield Result(state=state.OK, notice='Configuration: show most critical state')
 
         return
 
@@ -454,6 +447,6 @@ def check_temperature(
             yield dev_metric
             yield from dev_results
 
-        yield Result(state=state.OK, details='Configuration: show least critical state')
+        yield Result(state=state.OK, notice='Configuration: show least critical state')
 
         return

@@ -4,14 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import namedtuple
 import argparse
-import logging
 import json
+import logging
 import sys
+from collections import namedtuple
+
 import requests
-from requests.exceptions import ConnectionError as RequestsConnectionError
 import urllib3  # type: ignore[import]
+from requests.exceptions import ConnectionError as RequestsConnectionError
+
 import cmk.utils.password_store
 
 urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)

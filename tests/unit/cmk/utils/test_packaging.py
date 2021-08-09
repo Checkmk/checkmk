@@ -4,19 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import shutil
-import tarfile
 import ast
 import json
+import shutil
+import tarfile
 from io import BytesIO
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from six import ensure_str
 
-from cmk.utils.i18n import _
-import cmk.utils.paths
 import cmk.utils.packaging as packaging
+import cmk.utils.paths
+from cmk.utils.i18n import _
 
 
 def _read_package_info(pacname: packaging.PackageName) -> packaging.PackageInfo:
@@ -70,6 +71,15 @@ def fixture_mkp_file(tmp_path, mkp_bytes):
     return mkp_path
 
 
+@pytest.fixture(scope="function", autouse=True)
+def fixture_build_setup_search_index_background(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        packaging,
+        "_build_setup_search_index_background",
+        lambda: None,
+    )
+
+
 def test_package_parts():
     assert sorted(packaging.get_package_parts()) == sorted([
         packaging.PackagePart("agent_based", _("Agent based plugins (Checks, Inventory)"),
@@ -84,7 +94,7 @@ def test_package_parts():
                               str(cmk.utils.paths.local_check_manpages_dir)),
         packaging.PackagePart('agents', _('Agents'), str(cmk.utils.paths.local_agents_dir)),
         packaging.PackagePart('web', _('GUI extensions'), str(cmk.utils.paths.local_web_dir)),
-        packaging.PackagePart('pnp-templates', _('PNP4Nagios templates'),
+        packaging.PackagePart('pnp-templates', _('PNP4Nagios templates (deprecated)'),
                               str(cmk.utils.paths.local_pnp_templates_dir)),
         packaging.PackagePart('doc', _('Documentation files'), str(cmk.utils.paths.local_doc_dir)),
         packaging.PackagePart('locales', _('Localizations'), str(cmk.utils.paths.local_locale_dir)),
@@ -287,7 +297,7 @@ def test_remove():
 
 
 def test_unpackaged_files_none():
-    assert packaging.unpackaged_files() == {
+    assert {part.ident: files for part, files in packaging.unpackaged_files().items()} == {
         'agent_based': [],
         'agents': [],
         'alert_handlers': [],
@@ -317,7 +327,7 @@ def test_unpackaged_files():
     with p.open("w", encoding="utf-8") as f:
         f.write(u"huhu\n")
 
-    assert packaging.unpackaged_files() == {
+    assert {part.ident: files for part, files in packaging.unpackaged_files().items()} == {
         'agent_based': ['dada'],
         'agents': [],
         'alert_handlers': [],

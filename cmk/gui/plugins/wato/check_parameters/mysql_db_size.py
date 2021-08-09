@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Filesize,
-    Optional,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Filesize, Optional, TextInput, Tuple
 
 
 def _item_spec_mysql_db_size():
-    return TextAscii(
+    return TextInput(
         title=_("Name of the database"),
         help=_("Don't forget the instance: instance:dbname"),
     )
@@ -44,5 +38,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         item_spec=_item_spec_mysql_db_size,
         parameter_valuespec=_parameter_valuespec_mysql_db_size,
-        title=lambda: _("Size of MySQL databases"),
+        title=lambda: _("MySQL database sizes"),
     ))

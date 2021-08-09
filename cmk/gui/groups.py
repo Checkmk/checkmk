@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Any
+from typing import Any, Dict
+
 import cmk.utils.paths
 import cmk.utils.store as store
 
@@ -33,7 +34,7 @@ def load_group_information() -> Dict[str, GroupSpecs]:
     cmk_base_groups = _load_cmk_base_groups()
     gui_groups = _load_gui_groups()
 
-    # Merge information from Check_MK and Multisite worlds together
+    # Merge information from Checkmk and Multisite worlds together
     groups: Dict[str, Dict[str, GroupSpec]] = {}
     for what in ["host", "service", "contact"]:
         groups[what] = {}
@@ -48,7 +49,7 @@ def load_group_information() -> Dict[str, GroupSpecs]:
 
 
 def _load_cmk_base_groups():
-    """Load group information from Check_MK world"""
+    """Load group information from Checkmk world"""
     group_specs: Dict[str, GroupSpecs] = {
         "define_hostgroups": {},
         "define_servicegroups": {},

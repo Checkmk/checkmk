@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    Float,
-    Integer,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersOperatingSystem,
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+    RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import Age, Dictionary, Float, Integer, Tuple
 
 
 def _parameter_valuespec_timesyncd_time():
@@ -59,12 +53,12 @@ def _parameter_valuespec_timesyncd_time():
                            Age(
                                title=_("Warning at"),
                                display=["hours", "minutes"],
-                               default_value=3600,
+                               default_value=7200,
                            ),
                            Age(
                                title=_("Critical at"),
                                display=["hours", "minutes"],
-                               default_value=7200,
+                               default_value=10800,
                            ),
                        ],
                    ))])
@@ -76,5 +70,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_timesyncd_time,
-        title=lambda: _("State of Systemd Timesyncd time synchronisation"),
+        title=lambda: _("Systemd Timesyncd time synchronisation"),
     ))

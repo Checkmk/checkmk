@@ -12,6 +12,6 @@ description:
  and states. This check converts them to numeric
  values and passes it on to the if64 check.
 
-inventory:
+discovery:
  One service is created for each interface.
 

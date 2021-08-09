@@ -4,24 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
 from contextlib import suppress
+from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
 
-from .agent_based_api.v1.type_defs import (
-    AgentStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
-    Parameters,
-)
-from .agent_based_api.v1 import (
-    check_levels,
-    IgnoreResultsError,
-    register,
-    render,
-    Result,
-    Service,
-    state,
-)
+from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.mssql_counters import accumulate_node_results
 
 
 class MSSQLInstanceData(TypedDict):
@@ -34,12 +23,12 @@ class MSSQLInstanceData(TypedDict):
 SectionDatafiles = Dict[Tuple[Optional[str], str, str], MSSQLInstanceData]
 
 
-def parse_mssql_datafiles(string_table: AgentStringTable) -> SectionDatafiles:
+def parse_mssql_datafiles(string_table: StringTable) -> SectionDatafiles:
     """
         >>> from pprint import pprint
         >>> pprint(parse_mssql_datafiles([
         ...     ['MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log',
-        ...      'Z:\\mypath\\CorreLog_Report_T_log.ldf', '2097152', '256', '16', '0'],
+        ...      'Z:\\\\mypath\\\\CorreLog_Report_T_log.ldf', '2097152', '256', '16', '0'],
         ... ]))
         {('MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log'): {'allocated_size': 268435456.0,
                                                                      'max_size': 2199023255552.0,
@@ -106,7 +95,7 @@ def _mssql_datafiles_process_sizes(
     allocated_size: float,
     max_size: Optional[float],
     unlimited: bool,
-) -> CheckGenerator:
+) -> CheckResult:
     def calculate_levels(
         levels: Tuple[float, float],
         reference_value: Optional[float],
@@ -160,43 +149,35 @@ def _mssql_datafiles_process_sizes(
 
 def discover_mssql_common(
     mode: Literal["datafiles", "transactionlogs"],
-    params: List[Parameters],
+    params: List[Mapping[str, Any]],
     section: SectionDatafiles,
-    section_mssql_databases: Dict[str, Dict[str, str]],
-) -> DiscoveryGenerator:
+) -> DiscoveryResult:
 
     summarize = params[0].get("summarize_%s" % mode, False)
     for inst, database, file_name in section:
-        if mode == 'transactionlogs':
-            dbinst = "%s %s" % (inst, database)
-            if section_mssql_databases.get(dbinst, {}).get('Recovery', u'') == u'SIMPLE':
-                # ignore DBs with SIMPLE Recovery, these do not use transaction logs
-                continue
-        yield Service(item=_format_item_mssql_datafiles(inst, database,
-                                                        None if summarize else file_name),)
+        yield Service(item=_format_item_mssql_datafiles(
+            inst,
+            database,
+            None if summarize else file_name,
+        ),)
 
 
 def discover_mssql_datafiles(
-    params: List[Parameters],
-    section_mssql_datafiles: Optional[SectionDatafiles],
-    section_mssql_databases: Optional[Dict[str, Dict[str, str]]],
-) -> DiscoveryGenerator:
-    if section_mssql_datafiles:
-        yield from discover_mssql_common("datafiles", params, section_mssql_datafiles,
-                                         section_mssql_databases or {})
+    params: List[Mapping[str, Any]],
+    section: SectionDatafiles,
+) -> DiscoveryResult:
+    yield from discover_mssql_common("datafiles", params, section)
 
 
 def discover_mssql_transactionlogs(
-    params: List[Parameters],
-    section_mssql_transactionlogs: Optional[SectionDatafiles],
-    section_mssql_databases: Optional[Dict[str, Dict[str, str]]],
-) -> DiscoveryGenerator:
-    if section_mssql_transactionlogs:
-        yield from discover_mssql_common("transactionlogs", params, section_mssql_transactionlogs,
-                                         section_mssql_databases or {})
+    params: List[Mapping[str, Any]],
+    section: SectionDatafiles,
+) -> DiscoveryResult:
+    yield from discover_mssql_common("transactionlogs", params, section)
 
 
-def check_mssql_common(item: str, params: Parameters, section: SectionDatafiles):
+def check_mssql_common(item: str, params: Mapping[str, Any],
+                       section: SectionDatafiles) -> CheckResult:
     max_size_sum = 0.
     allocated_size_sum = 0.
     used_size_sum = 0.
@@ -227,48 +208,40 @@ def check_mssql_common(item: str, params: Parameters, section: SectionDatafiles)
                                               max_size_sum, unlimited_sum)
 
 
-def check_mssql_transactionlogs(
+def cluster_check_mssql_common(
     item: str,
-    params: Parameters,
-    section_mssql_transactionlogs: Optional[SectionDatafiles],
-    section_mssql_databases: Optional[Dict[str, Dict[str, str]]],
-) -> CheckGenerator:
-    if section_mssql_transactionlogs:
-        yield from check_mssql_common(item, params, section_mssql_transactionlogs)
-
-
-def check_mssql_datafiles(
-    item: str,
-    params: Parameters,
-    section_mssql_datafiles: Optional[SectionDatafiles],
-    section_mssql_databases: Optional[Dict[str, Dict[str, str]]],
-) -> CheckGenerator:
-    if section_mssql_datafiles:
-        yield from check_mssql_common(item, params, section_mssql_datafiles)
+    params: Mapping[str, Any],
+    section: Mapping[str, SectionDatafiles],
+) -> CheckResult:
+    yield from accumulate_node_results(
+        node_check_function=lambda node_name, node_section: check_mssql_common(
+            item, params, node_section),
+        section=section,
+    )
 
 
 register.check_plugin(
     name="mssql_datafiles",
     service_name="MSSQL Datafile %s",
-    sections=["mssql_datafiles", "mssql_databases"],
     discovery_function=discover_mssql_datafiles,
     discovery_ruleset_name="mssql_transactionlogs_discovery",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={},
-    check_function=check_mssql_datafiles,
+    check_function=check_mssql_common,
     check_default_parameters={'used_levels': (80.0, 90.0)},
     check_ruleset_name="mssql_datafiles",
+    cluster_check_function=cluster_check_mssql_common,
 )
 
 register.check_plugin(
     name="mssql_transactionlogs",
     service_name="MSSQL Transactionlog %s",
-    sections=["mssql_transactionlogs", "mssql_databases"],
     discovery_function=discover_mssql_transactionlogs,
     discovery_ruleset_name="mssql_transactionlogs_discovery",
-    discovery_ruleset_type="all",
+    discovery_ruleset_type=register.RuleSetType.ALL,
     discovery_default_parameters={},
-    check_function=check_mssql_transactionlogs,
+    check_function=check_mssql_common,
     check_default_parameters={'used_levels': (80.0, 90.0)},
     check_ruleset_name="mssql_transactionlogs",
+    cluster_check_function=cluster_check_mssql_common,
 )

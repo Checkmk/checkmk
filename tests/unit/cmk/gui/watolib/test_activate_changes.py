@@ -4,20 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import tarfile
 import io
 import logging
+import tarfile
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
+
+import tests.testlib as testlib
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+
 import cmk.gui.watolib.activate_changes as activate_changes
+import cmk.gui.watolib.utils
 from cmk.gui.watolib.activate_changes import ConfigSyncFileInfo
 from cmk.gui.watolib.config_sync import ReplicationPath
-
-import testlib
 
 pytestmark = pytest.mark.usefixtures("load_plugins")
 logger = logging.getLogger(__name__)
@@ -117,8 +119,6 @@ def test_get_replication_components(edition_short, monkeypatch, replicate_ec, re
     if not replicate_mkps:
         expected = [e for e in expected if e.ident not in ["local", "mkps"]]
 
-    work_dir = cmk.utils.paths.omd_root
-
     if is_pre_17_remote_site:
         for repl_path in expected:
             if repl_path.ident in {
@@ -150,7 +150,7 @@ def test_get_replication_components(edition_short, monkeypatch, replicate_ec, re
         ]
 
     assert sorted(
-        activate_changes._get_replication_components(work_dir, partial_site_config,
+        activate_changes._get_replication_components(partial_site_config,
                                                      is_pre_17_remote_site)) == sorted(expected)
 
 
@@ -206,7 +206,7 @@ def test_add_replication_paths():
     }),
 ])
 def test_is_pre_17_remote_site(site_status, expected):
-    assert activate_changes._is_pre_17_remote_site(site_status) == expected
+    assert cmk.gui.watolib.utils.is_pre_17_remote_site(site_status) == expected
 
 
 def test_automation_get_config_sync_state():
@@ -335,8 +335,8 @@ def _create_get_config_sync_file_infos_test_config(base_dir):
 
 def test_get_file_names_to_sync():
     remote, central = _get_test_file_infos()
-    to_sync_new, to_sync_changed, to_delete = activate_changes._get_file_names_to_sync(
-        logger, central, remote)
+    to_sync_new, to_sync_changed, to_delete = activate_changes.get_file_names_to_sync(
+        logger, central, remote, None)
 
     assert sorted(to_sync_new + to_sync_changed) == sorted([
         "both-differ-mode",
@@ -581,21 +581,3 @@ def test_get_current_config_generation():
     activate_changes.update_config_generation()
     activate_changes.update_config_generation()
     assert activate_changes._get_current_config_generation() == 3
-
-
-def test_remove_site_config_directory():
-    site1_dir = cmk.utils.paths.site_config_dir / "site1"
-    site2_dir = cmk.utils.paths.site_config_dir / "site2"
-
-    site1_dir.mkdir(parents=True, exist_ok=True)
-    with site1_dir.joinpath("xyz").open("w", encoding="utf-8") as f:
-        f.write(u"ä")
-
-    site2_dir.mkdir(parents=True, exist_ok=True)
-    with site2_dir.joinpath("xyz").open("w", encoding="utf-8") as f:
-        f.write(u"b")
-
-    activate_changes.remove_site_config_directory("site1")
-
-    assert not site1_dir.exists()
-    assert site2_dir.exists()

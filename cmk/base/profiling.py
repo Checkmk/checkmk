@@ -7,8 +7,9 @@
 import sys
 from pathlib import Path
 
-import cmk.base.obsolete_output as out
 from cmk.utils.log import console
+
+import cmk.base.obsolete_output as out
 
 _profile = None
 _profile_path = Path("profile.out")
@@ -33,7 +34,6 @@ def output_profile() -> None:
     _profile.dump_stats(str(_profile_path))
     show_profile = _profile_path.with_name("show_profile.py")
 
-    # TODO Change shebang as soon as we migrate to Python 3
     with show_profile.open("w") as f:
         f.write("""#!/usr/bin/env python3
 import sys

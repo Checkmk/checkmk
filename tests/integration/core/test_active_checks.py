@@ -4,12 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 import collections
-import pytest  # type: ignore[import]
+import logging
 
-from testlib.utils import api_str_type
-from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+import pytest
+
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
 DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
 
@@ -40,19 +40,18 @@ def test_cfg_fixture(request, web, site):  # noqa: F811 # pylint: disable=redefi
 
 def test_active_check_execution(test_cfg, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
     try:
-        # TODO: Remove bytestr marker once the GUI uses Python 3
         web.set_ruleset(
-            api_str_type("custom_checks"),
+            "custom_checks",
             {
-                api_str_type("ruleset"): {
+                "ruleset": {
                     # Main folder
-                    api_str_type(""): [{
-                        api_str_type("value"): {
-                            api_str_type('service_description'): u'\xc4ctive-Check',
-                            api_str_type('command_line'): api_str_type('echo "123"')
+                    "": [{
+                        "value": {
+                            'service_description': '\xc4ctive-Check',
+                            'command_line': 'echo "123"'
                         },
-                        api_str_type("condition"): {},
-                        api_str_type("options"): {},
+                        "condition": {},
+                        "options": {},
                     },],
                 }
             })
@@ -70,12 +69,11 @@ def test_active_check_execution(test_cfg, site, web):  # noqa: F811 # pylint: di
         assert result[2] == 0
         assert result[3] == "123"
     finally:
-        # TODO: Remove bytestr marker once the GUI uses Python 3
         web.set_ruleset(
-            api_str_type("custom_checks"),
+            "custom_checks",
             {
-                api_str_type("ruleset"): {
-                    api_str_type(""): [],  # -> folder
+                "ruleset": {
+                    "": [],  # -> folder
                 }
             })
         web.activate_changes()
@@ -108,8 +106,7 @@ def test_active_check_macros(test_cfg, site, web):  # noqa: F811 # pylint: disab
         ruleset.append({
             "value": {
                 'service_description': descr(var),
-                # TODO: Remove this once the GUI uses Python 3
-                'command_line': api_str_type('echo "Output: %s"' % var),
+                'command_line': 'echo "Output: %s"' % var,
             },
             "condition": {},
         })

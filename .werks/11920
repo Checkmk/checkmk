@@ -1,0 +1,14 @@
+Title: Fix preview selection of folders while moving
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1611219551
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+If you want to move a folder, a preview selection of available folders is
+shown. This preview was empty in some cases.
+
+The preview will now show the available folders correctly.

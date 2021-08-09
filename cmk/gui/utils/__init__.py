@@ -8,21 +8,21 @@ usable in all components of the Web GUI of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-import re
-import uuid
-import marshal
 import itertools
-from pathlib import Path
-from typing import Optional, Union, Any, List, Dict, Tuple
+import marshal
+import re
 import urllib.parse
+import uuid
+from pathlib import Path
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 from six import ensure_str
 
 import cmk.utils.paths
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKUserError
 
 
 def num_split(s: str) -> Tuple[Union[int, str], ...]:
@@ -65,7 +65,7 @@ def is_allowed_url(url: str) -> bool:
         return False
 
     # Don't allow bad characters in path
-    if not re.match(r"[/a-z0-9_\.-]*$", parsed.path):
+    if not re.match(r"[/a-zA-Z0-9_\.-]*$", parsed.path):
         return False
 
     return True
@@ -184,7 +184,7 @@ def validate_regex(value: str, varname: Optional[str]) -> None:
     except re.error:
         raise MKUserError(
             varname,
-            _('You search statement is not valid. You need to provide a regular '
+            _('Your search statement is not valid. You need to provide a regular '
               'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
               'if you like to search for a single backslash.'))
 
@@ -193,5 +193,23 @@ def validate_regex(value: str, varname: Optional[str]) -> None:
     lookahead_pattern = r'\((\?!|\?=|\?<)'
 
     if re.search(lookahead_pattern, value):
-        raise MKUserError(varname,
-                          _('You search statement is not valid. You can not use a lookahead here.'))
+        raise MKUserError(
+            varname, _('Your search statement is not valid. You can not use a lookahead here.'))
+
+
+def unique_default_name_suggestion(template: str, used_names: Iterable[str]) -> str:
+    used_names_set = set(used_names)
+    nr = 1
+    while True:
+        suggestion = "%s_%d" % (template.replace(" ", "_"), nr)
+        if suggestion not in used_names_set:
+            return suggestion
+        nr += 1
+
+
+def show_mode_choices() -> List[Tuple[Optional[str], str]]:
+    return [
+        ("default_show_less", _("Default to show less")),
+        ("default_show_more", _("Default to show more")),
+        ("enforce_show_more", _("Enforce show more")),
+    ]

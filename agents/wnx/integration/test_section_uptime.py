@@ -5,9 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import pytest  # type: ignore[import]
 import re
-from local import actual_output, make_yaml_config, local_test, wait_agent, write_config
+
+import pytest  # type: ignore[import]
+
+from .local import local_test
 
 
 class Globals(object):
@@ -15,8 +17,8 @@ class Globals(object):
     alone = True
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
@@ -30,8 +32,8 @@ def testconfig(request, make_yaml_config):
     return make_yaml_config
 
 
-@pytest.fixture
-def expected_output():
+@pytest.fixture(name="expected_output")
+def expected_output_engine():
     expected = [r'<<<%s>>>' % Globals.section, r'\d+']
     if not Globals.alone:
         expected += [re.escape(r'<<<systemtime>>>'), r'\d+']

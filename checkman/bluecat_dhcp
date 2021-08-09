@@ -8,7 +8,7 @@ description:
  The Check will return {OK} if the Service is running, {CRITICAL} if the state is fault, {WARNING} in each other case.
  The number of successful DHCP leases issued per second is return as information.
 
-inventory:
+discovery:
  One service is created if DHCP is not stopped
 
 cluster:

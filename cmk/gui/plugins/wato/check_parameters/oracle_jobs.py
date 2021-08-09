@@ -5,28 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
-
 from cmk.gui.plugins.wato.check_parameters.db_jobs import (
+    ignore_db_status,
+    missinglog,
     run_duration,
-    consider_db_status,
     status_disabled_jobs,
     status_missing_jobs,
-    missinglog,
 )
+from cmk.gui.valuespec import Dictionary, TextInput
 
 
 def _item_spec_oracle_jobs():
-    return TextAscii(
+    return TextInput(
         title=_("Scheduler Job Name"),
         help=_("Here you can set explicit Scheduler-Jobs by defining them via SID, Job-Owner "
                "and Job-Name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"),
@@ -40,7 +35,7 @@ def _parameter_valuespec_oracle_jobs():
                "compared to a cron job on Unix. "),
         elements=[
             ("run_duration", run_duration),
-            ("disabled", consider_db_status),
+            ("disabled", ignore_db_status),
             ("status_disabled_jobs", status_disabled_jobs),
             ("status_missing_jobs", status_missing_jobs),
             ("missinglog", missinglog),

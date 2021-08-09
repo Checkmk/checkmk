@@ -14,5 +14,5 @@ description:
  can be changed using the rule "Pulse Secure IVE memory
  utilization"
 
-inventory:
+discovery:
  One service is created.

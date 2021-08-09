@@ -13,6 +13,6 @@ description:
  The server state "NotConnected" is interpreted as warn, as are the grace states
  "InOutOfBoxGracePeriod" and "InSupplementalGracePeriod".
 
-inventory:
+discovery:
  One service is created for each controller.
 

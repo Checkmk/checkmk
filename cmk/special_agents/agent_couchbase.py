@@ -7,13 +7,15 @@
 Special agent for monitoring Couchbase servers with Checkmk
 """
 
-import sys
 import argparse
-import logging
 import json
+import logging
+import sys
+
 import requests
 
 import cmk.utils.password_store
+
 from cmk.special_agents.utils import vcrtrace
 
 LOGGER = logging.getLogger(__name__)

@@ -6,7 +6,7 @@ Date: 1591081835
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Any Windows service can be marked  as <tt>Automatic (Delayed Start)</tt>. 
 This mode means short wait for other Windows services marked as <tt>Automatic</tt>.

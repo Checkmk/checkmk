@@ -9,7 +9,7 @@ description:
  number of pending active vBuckets per Couchbase bucket.
  Levels can be configured in the WATO rule "Couchbase vBuckets".
 
-inventory:
+discovery:
  One service is created for each bucket.
 
 item:

@@ -10,11 +10,11 @@ description:
  to be installed on the FreeBSD host to be monitored. On linux it works with the
  standard agent.
 
- The check is {OK} if the frontend has the status {OPEN}. It is {CRIT}
- otherwise.
+ Mapping between server status and monitoring states can be parametrized. By default,
+ the check is {OK} if the frontend has the status {OPEN} and {CRIT} otherwise.
 
 item:
  The name of the frontend.
 
-inventory:
+discovery:
  One service is created for each frontend.

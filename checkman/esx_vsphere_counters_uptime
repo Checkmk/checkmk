@@ -7,5 +7,5 @@ description:
  This check is always OK and simply outputs the uptime of an ESX host
  system.
 
-inventory:
+discovery:
  One service is created for each system.

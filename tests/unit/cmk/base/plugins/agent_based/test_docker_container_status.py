@@ -4,18 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import on_time  # type: ignore[import]
+import pytest
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    state,
-    Result,
-    IgnoreResults,
-    Metric,
-)
+from tests.testlib import on_time
+
 import cmk.base.plugins.agent_based.docker_container_status as docker
-from cmk.base.plugins.agent_based.utils.legacy_docker import DeprecatedDict
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults, Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.utils import uptime
+from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
+
 NOW_SIMULATED = 1559728800, "UTC"
 STRING_TABLE_WITH_VERSION = [
     [
@@ -84,7 +82,6 @@ PARSED_NOT_RUNNING = {"Status": "stopped"}
 
 @pytest.mark.parametrize("string_table, parse_type", [
     (STRING_TABLE_WITH_VERSION, dict),
-    (STRING_TABLE_WITHOUT_VERSION, DeprecatedDict),
 ])
 def test_parse_docker_container_status(string_table, parse_type):
     actual_parsed = docker.parse_docker_container_status(string_table)
@@ -92,26 +89,35 @@ def test_parse_docker_container_status(string_table, parse_type):
     assert isinstance(actual_parsed, parse_type)
 
 
-def test_discovery_docker_container_status():
-    expected_discovery = [
-        Service(item=None, parameters={}, labels=[]),
-    ]
+@pytest.mark.parametrize("string_table, exception_type", [
+    (STRING_TABLE_WITHOUT_VERSION, AgentOutputMalformatted),
+])
+def test_parse_docker_container_status_legacy_raises(string_table, exception_type):
+    with pytest.raises(exception_type):
+        docker.parse_docker_container_status(string_table)
 
-    assert list(docker.discover_docker_container_status(PARSED)) == expected_discovery
+
+def _test_discovery(discovery_function, section, expected_discovery):
+    for status in ['running', 'exited']:
+        assert list(discovery_function({**section, 'Status': status})) == expected_discovery
+
+
+def test_discovery_docker_container_status():
+    _test_discovery(
+        docker.discover_docker_container_status,
+        PARSED,
+        [Service(item=None, parameters={}, labels=[])],
+    )
 
 
 def test_check_docker_container_status():
-    expected_results = [
-        Result(state=state.OK, summary='Container running', details='Container running')
-    ]
+    expected_results = [Result(state=state.OK, summary='Container running')]
     assert list(docker.check_docker_container_status(PARSED)) == expected_results
 
 
 @pytest.mark.parametrize("section_uptime, expected_services", [
     (
-        {
-            "an uptime section": 123456789
-        },
+        uptime.Section(123456789, None),
         [],
     ),
     (
@@ -122,49 +128,50 @@ def test_check_docker_container_status():
     ),
 ])
 def test_discovery_docker_container_status_uptime(section_uptime, expected_services):
-    assert list(docker.discover_docker_container_status_uptime(PARSED,
-                                                               section_uptime)) == expected_services
+    _test_discovery(
+        lambda parsed: docker.discover_docker_container_status_uptime(parsed, section_uptime),
+        PARSED,
+        expected_services,
+    )
 
 
 @pytest.mark.parametrize("params, expected_results", [
     ({}, [
-        Result(state=state.OK,
-               summary='Up since Jun 05 2019 08:58:07, Uptime:: 1 hour 1 minute',
-               details='Up since Jun 05 2019 08:58:07, Uptime:: 1 hour 1 minute'),
-        Metric('uptime', 3713.0, levels=(None, None), boundaries=(None, None)),
+        Result(state=state.OK, summary='Up since Jun 05 2019 08:58:07'),
+        Result(state=state.OK, summary='Uptime: 1 hour 1 minute'),
+        Metric('uptime', 3713.0),
     ]),
     ({
         "min": (1000, 2000)
     }, [
-        Result(state=state.OK,
-               summary='Up since Jun 05 2019 08:58:07, Uptime:: 1 hour 1 minute',
-               details='Up since Jun 05 2019 08:58:07, Uptime:: 1 hour 1 minute'),
-        Metric('uptime', 3713.0, levels=(None, None), boundaries=(None, None)),
+        Result(state=state.OK, summary='Up since Jun 05 2019 08:58:07'),
+        Result(state=state.OK, summary='Uptime: 1 hour 1 minute'),
+        Metric('uptime', 3713.0),
     ]),
     ({
         "max": (1000, 2000)
     }, [
+        Result(state=state.OK, summary='Up since Jun 05 2019 08:58:07'),
         Result(
             state=state.CRIT,
             summary=
-            'Up since Jun 05 2019 08:58:07, Uptime:: 1 hour 1 minute (warn/crit at 16 minutes 40 seconds/33 minutes 20 seconds)',
-            details=
-            'Up since Jun 05 2019 08:58:07, Uptime:: 1 hour 1 minute (warn/crit at 16 minutes 40 seconds/33 minutes 20 seconds)'
+            'Uptime: 1 hour 1 minute (warn/crit at 16 minutes 40 seconds/33 minutes 20 seconds)',
         ),
-        Metric('uptime', 3713.0, levels=(1000.0, 2000.0), boundaries=(None, None)),
+        Metric('uptime', 3713.0, levels=(1000.0, 2000.0)),
     ]),
 ])
 def test_check_docker_container_status_uptime(params, expected_results):
     with on_time(*NOW_SIMULATED):
-        yielded_results = list(docker.check_docker_container_status_uptime(params, PARSED, {}))
+        yielded_results = list(docker.check_docker_container_status_uptime(params, PARSED, None))
         assert expected_results == yielded_results
 
 
 def test_discover_docker_container_status_health():
-
-    yielded_services = list(docker.discover_docker_container_status_health(PARSED))
-    expected_services = [Service()]
-    assert yielded_services == expected_services
+    _test_discovery(
+        docker.discover_docker_container_status_health,
+        PARSED,
+        [Service()],
+    )
 
 
 @pytest.mark.parametrize("section, expected", [
@@ -175,7 +182,7 @@ def test_discover_docker_container_status_health():
         Result(state=state.OK,
                summary='Last health report: mysqld is alive',
                details='Last health report: mysqld is alive'),
-        Result(state=state.CRIT, summary='Failing streak: 0', details='Failing streak: 0'),
+        Result(state=state.CRIT, summary='Failing streak: 0'),
         Result(state=state.OK,
                summary='Health test: CMD-SHELL /healthcheck.sh',
                details='Health test: CMD-SHELL /healthcheck.sh')

@@ -21,6 +21,6 @@ description:
 item:
  The numeric number of the array, reported by areca cli tool
 
-inventory:
+discovery:
  One service is created for each array
 

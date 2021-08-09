@@ -7,14 +7,14 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
-    RulespecGroupCheckParametersEnvironment,
     rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Dictionary, Percentage, TextAscii, Tuple
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _item_spec_cooling_cap():
-    return TextAscii(title=_("Cooling device"),
+    return TextInput(title=_("Cooling device"),
                      help=_("This name corresponds to the cooling device to be monitored."),
                      allow_empty=True)
 

@@ -76,7 +76,7 @@ test_monitored_qm() {
     actual=$(. "$IBM_PLUGIN_PATH" | sed 's/NOW([^)]*)/NOW(timestamp)/')
     expected="\
 <<<ibm_mq_plugin:sep(58)>>>
-version: 1.6.0
+version: 2.1.0i1
 dspmq: OK
 runmqsc: OK
 <<<ibm_mq_channels:sep(10)>>>
@@ -97,7 +97,7 @@ test_excluded_qm() {
     actual=$(. "$IBM_PLUGIN_PATH" 2>&1)
     expected="\
 <<<ibm_mq_plugin:sep(58)>>>
-version: 1.6.0
+version: 2.1.0i1
 dspmq: OK
 runmqsc: OK
 TEE: Ignored because ONLY_QM: FOO BAR

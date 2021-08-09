@@ -4,14 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.globals import html
+from cmk.gui.globals import html, request
+from cmk.gui.htmllib import foldable_container
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
-    footnotelinks,
-)
+from cmk.gui.plugins.sidebar import footnotelinks, SidebarSnapin, snapin_registry
 
 
 @snapin_registry.register
@@ -22,7 +18,7 @@ class NagVisMaps(SidebarSnapin):
 
     @classmethod
     def title(cls):
-        return _("NagVis Maps")
+        return _("NagVis maps")
 
     @classmethod
     def description(cls):
@@ -46,23 +42,23 @@ class NagVisMaps(SidebarSnapin):
         }
 
     def _ajax_show_nagvis_maps_snapin(self):
-        request = html.get_request()
-        if request["type"] == "table":
-            self._show_table(request)
-        elif request["type"] == "tree":
-            self._show_tree(request)
-        elif request["type"] == "error":
-            html.show_error(request["message"])
+        api_request = request.get_request()
+        if api_request["type"] == "table":
+            self._show_table(api_request)
+        elif api_request["type"] == "tree":
+            self._show_tree(api_request)
+        elif api_request["type"] == "error":
+            html.show_error(api_request["message"])
         else:
             raise NotImplementedError()
 
         self._show_footnote_links()
 
-    def _show_table(self, request):
+    def _show_table(self, api_request):
         html.open_table(class_="allhosts")
         html.open_tbody()
 
-        for map_cfg in request["maps"]:
+        for map_cfg in api_request["maps"]:
             html.open_tr()
             html.open_td()
             html.div("",
@@ -119,24 +115,24 @@ class NagVisMaps(SidebarSnapin):
         edit_url = "../nagvis/"
         footnotelinks([(_("Edit"), edit_url)])
 
-    def _show_tree(self, request):
+    def _show_tree(self, api_request):
         html.open_ul()
-        self._show_tree_nodes(request["maps"]["maps"], request["maps"]["childs"])
+        self._show_tree_nodes(api_request["maps"]["maps"], api_request["maps"]["childs"])
         html.close_ul()
 
     def _show_tree_nodes(self, maps, children):
         for map_name, map_cfg in maps.items():
             html.open_li()
             if map_name in children:
-                html.begin_foldable_container(treename="nagvis",
-                                              id_=map_name,
-                                              isopen=False,
-                                              title=map_cfg["alias"],
-                                              title_url=map_cfg["url"],
-                                              title_target="main",
-                                              indent=False)
-                self._show_tree_nodes(children[map_name], children)
-                html.end_foldable_container()
+                with foldable_container(treename="nagvis",
+                                        id_=map_name,
+                                        isopen=False,
+                                        title=map_cfg["alias"],
+                                        title_url=map_cfg["url"],
+                                        title_target="main",
+                                        indent=False,
+                                        icon="foldable_sidebar"):
+                    self._show_tree_nodes(children[map_name], children)
             else:
                 html.a(map_cfg["alias"], href=map_cfg["url"], target="main", class_="link")
             html.close_li()

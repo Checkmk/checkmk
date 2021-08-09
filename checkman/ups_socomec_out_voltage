@@ -11,7 +11,7 @@ description:
 item:
  ID of the phase
 
-inventory:
+discovery:
  One service is created for each phase.
 
 

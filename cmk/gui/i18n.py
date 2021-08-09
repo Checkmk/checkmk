@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import gettext as gettext_module
-from typing import Dict, NamedTuple, Optional, List, Tuple
 from pathlib import Path
+from typing import Dict, List, NamedTuple, Optional, Tuple
 
 from flask_babel.speaklater import LazyString  # type: ignore[import]
 
@@ -34,19 +34,26 @@ Translation = NamedTuple("Translation", [
 _translation: Optional[Translation] = None
 
 
-def _(message: str) -> str:
+def _(message: str, /) -> str:
+    """
+    Positional-only argument to simplify additional linting of localized strings.
+    """
     if _translation:
         return _translation.translation.gettext(message)
     return str(message)
 
 
-def _l(string: str) -> str:
+def _l(string: str, /) -> str:
     """Like _() but the string returned is lazy which means it will be translated when it is used as
-    an actual string."""
+    an actual string. Positional-only arguments to simplify additional linting of localized
+    strings."""
     return LazyString(_, string)
 
 
-def ungettext(singular: str, plural: str, n: int) -> str:
+def ungettext(singular: str, plural: str, n: int, /) -> str:
+    """
+    Positional-only argument to simplify additional linting of localized strings
+    """
     if _translation:
         return _translation.translation.ngettext(singular, plural, n)
     if n == 1:
@@ -143,8 +150,7 @@ def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:
         try:
             translation = gettext_module.translation("multisite",
                                                      str(locale_base_dir),
-                                                     languages=[lang],
-                                                     codeset='UTF-8')
+                                                     languages=[lang])
 
         except IOError:
             continue

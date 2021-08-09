@@ -6,7 +6,7 @@ Date: 1599049148
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If you configured a site filter in a multisite view, the filter had no effect
 when calling the view. The cause was that the url variables for the site where

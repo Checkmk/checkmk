@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 With werk 6952, ucd_cpu_util default configuration changed. However, your
 checkmk configuration might still rely on our old default values. Service

@@ -5,6 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import cmk.base.plugins.agent_based.utils.ps as ps
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.ucd_hr import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 discovery_hr_processes_rules = []
 
 hr_ps_status_map = {
@@ -96,12 +102,10 @@ def _match_hr_process(process, match_name_or_path, match_status, match_groups=No
         return True
 
     match_type, match_pattern = match_name_or_path
-    if match_type == "match_name":
-        pattern_to_match = process.name
-    elif match_type == "match_name":
-        pattern_to_match = process.path
-    else:
-        pattern_to_match = None
+    pattern_to_match = {
+        'match_name': process.name,
+        'match_path': process.path,
+    }.get(match_type)
 
     if match_pattern is not None and match_pattern.startswith("~"):
         # Regex for complete process name or path
@@ -130,7 +134,6 @@ check_info['hr_ps'] = {
             '4',  # hrSWRunPath
             '7',  # hrSWRunStatus
         ]),
-    'includes': ['ucd_hr.include'],
     'group': 'hr_ps',
     'default_levels_variable': 'hr_ps_default_levels',
 }

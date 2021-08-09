@@ -6,20 +6,30 @@
 
 from typing import List, Tuple
 
-import cmk.gui.config as config
-import cmk.gui.views as views
+import cmk.utils.version as cmk_version
+
 import cmk.gui.dashboard as dashboard
 import cmk.gui.pagetypes as pagetypes
+import cmk.gui.views as views
+from cmk.gui.globals import config
+
+if not cmk_version.is_raw_edition():
+    import cmk.gui.cee.reporting as reporting  # pylint: disable=no-name-in-module
+else:
+    reporting = None  # type: ignore[assignment]
+from cmk.gui.globals import user
+from cmk.gui.i18n import _, _l
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
+from cmk.gui.node_visualization import ParentChildTopologyPage
 from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
     footnotelinks,
     make_topic_menu,
+    search,
     show_topic_menu,
+    SidebarSnapin,
+    snapin_registry,
 )
-from cmk.gui.i18n import _, _l
+from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
 
 
 @snapin_registry.register
@@ -40,7 +50,7 @@ class Views(SidebarSnapin):
         show_topic_menu(treename="views", menu=get_view_menu_items())
 
         links = []
-        if config.user.may("general.edit_views"):
+        if user.may("general.edit_views"):
             if config.debug:
                 links.append((_("Export"), "export_views.py"))
             links.append((_("Edit"), "edit_views.py"))
@@ -70,9 +80,17 @@ def get_view_menu_items() -> List[TopicMenuTopic]:
                      if (not config.visible_views or name in config.visible_views) and
                      (not config.hidden_views or name not in config.hidden_views)]
 
+    network_topology_visual_spec = ParentChildTopologyPage.visual_spec()
+    pages_to_show = [(network_topology_visual_spec["name"], network_topology_visual_spec)]
+
     visuals_to_show = [("views", e) for e in views_to_show]
     visuals_to_show += [("dashboards", e) for e in dashboard.get_permitted_dashboards().items()]
+    visuals_to_show += [("pages", e) for e in pages_to_show]
     visuals_to_show += page_type_items
+
+    if reporting:
+        reporting.load_reports()
+        visuals_to_show += [("reports", e) for e in reporting.permitted_reports().items()]
 
     return make_topic_menu(visuals_to_show)
 
@@ -81,7 +99,8 @@ mega_menu_registry.register(
     MegaMenu(
         name="monitoring",
         title=_l("Monitor"),
-        icon_name="main_monitoring",
+        icon="main_monitoring",
         sort_index=5,
         topics=get_view_menu_items,
+        search=search.MonitoringSearch("monitoring_search"),
     ))

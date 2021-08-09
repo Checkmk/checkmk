@@ -26,14 +26,14 @@
 # http://fritz.box:49000/igddslSCPD.xml
 #get_upnp_info('WANDSLLinkC1', 'urn:schemas-upnp-org:service:WANDSLLinkConfig:1', 'GetDSLLinkInfo')
 
-import re
-import sys
 import getopt
 import pprint
+import re
 import socket
+import sys
+import traceback
 import urllib.error
 import urllib.request
-import traceback
 
 from cmk.utils.exceptions import MKException
 
@@ -103,7 +103,7 @@ def get_upnp_info(control, namespace, action, base_urls, opt_debug):
             raise RequestError('Error during UPNP call')
 
     infos = handle.info()
-    contents = handle.read()
+    contents = handle.read().decode('utf-8')
 
     parts = infos['SERVER'].split("UPnP/1.0 ")[1].split(' ')
     g_device = ' '.join(parts[:-1])

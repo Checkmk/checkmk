@@ -4,22 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.config as config
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    ListOf,
-    Dictionary,
-    TextUnicode,
-    Age,
-)
-
-from cmk.gui.plugins.wato import (
-    config_variable_registry,
-    ConfigVariable,
-    ConfigDomainGUI,
-)
-
+from cmk.gui.plugins.wato import config_variable_registry, ConfigDomainGUI, ConfigVariable
 from cmk.gui.plugins.wato.check_mk_configuration import ConfigVariableGroupUserInterface
+from cmk.gui.valuespec import Age, Dictionary, ListOf, TextInput
 
 
 @config_variable_registry.register
@@ -37,7 +26,7 @@ class ConfigVariableGraphTimeranges(ConfigVariable):
         return ListOf(
             Dictionary(optional_keys=[],
                        elements=[
-                           ('title', TextUnicode(
+                           ('title', TextInput(
                                title=_('Title'),
                                allow_empty=False,
                            )),

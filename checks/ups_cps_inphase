@@ -4,13 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_ups_cps_inphase(info):
     parsed = {}
-    parsed["1"] = {}
-    parsed["1"]["voltage"] = float(info[0][0]) / 10
-    parsed["1"]["frequency"] = float(info[0][1]) / 10
-    return parsed
+    for index, stat_name in enumerate(("voltage", "frequency")):
+        try:
+            parsed[stat_name] = float(info[0][index]) / 10
+        except ValueError:
+            continue
+
+    return parsed and {"1": parsed}
 
 
 def inventory_ups_cps_inphase(parsed):
@@ -31,6 +40,5 @@ check_info["ups_cps_inphase"] = {
             "1",  #upsAdvanceInputLineVoltage "in 1/10 VAC"
             "4",  #upsAdvanceInputFrequency "in 1/10 Hz"
         ]),
-    "includes": ["elphase.include"],
     "group": "el_inphase",
 }

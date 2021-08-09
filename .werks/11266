@@ -6,7 +6,7 @@ Date: 1598877171
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously output lines were discovered in the check plugins {{ups_out_load}},
 {{ups_power}} if and only if they had a value greater than zero.

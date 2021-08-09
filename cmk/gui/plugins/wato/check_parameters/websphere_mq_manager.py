@@ -5,20 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    ListOf,
-    MonitoringState,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOf, MonitoringState, TextInput, Tuple
 
 
 def _parameter_valuespec_websphere_mq_manager():
@@ -69,7 +61,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="websphere_mq_manager",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of manager")),
+        item_spec=lambda: TextInput(title=_("Name of manager")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_websphere_mq_manager,
         title=lambda: _("Websphere MQ Manager"),

@@ -6,29 +6,28 @@
 """Background tools required to register a check plugin
 """
 import functools
-from typing import Any, Callable, Dict, Generator, get_args, List, Optional
+from typing import Any, Callable, Generator, List, Optional
 
-from cmk.utils.type_defs import CheckPluginName, RuleSetName
+from cmk.utils.type_defs import CheckPluginName, ParsedSectionName, RuleSetName
 
-from cmk.base.api.agent_based.type_defs import (
+from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
     CheckPlugin,
     DiscoveryFunction,
-    DiscoveryRuleSetType,
-)
-from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
     Metric,
     Result,
     Service,
-    state,
 )
 from cmk.base.api.agent_based.register.utils import (
     create_subscribed_sections,
     ITEM_VARIABLE,
-    validate_function_arguments,
+    RuleSetType,
     validate_default_parameters,
+    validate_function_arguments,
+    validate_ruleset_type,
 )
+from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
 MANAGEMENT_DESCR_PREFIX = "Management Interface: "
 
@@ -52,7 +51,11 @@ def _validate_service_name(plugin_name: CheckPluginName, service_name: str) -> N
 
 def _requires_item(service_name: str) -> bool:
     """See if this check requires an item"""
-    return ITEM_VARIABLE in service_name
+    try:
+        return ITEM_VARIABLE in service_name
+    except TypeError:
+        # _validate_service_name will fail with a better message
+        return False
 
 
 def _filter_discovery(
@@ -91,48 +94,61 @@ def _filter_check(generator: Callable[..., Generator[Any, None, None]],) -> Chec
     return filtered_generator
 
 
-def _validate_discovery_ruleset(ruleset_name: Optional[str],
-                                default_parameters: Optional[dict]) -> None:
-    if ruleset_name is None:
+def _validate_kwargs(
+    *,
+    plugin_name: CheckPluginName,
+    subscribed_sections: List[ParsedSectionName],
+    service_name: str,
+    requires_item: bool,
+    discovery_function: Callable,
+    discovery_default_parameters: Optional[ParametersTypeAlias],
+    discovery_ruleset_name: Optional[str],
+    discovery_ruleset_type: RuleSetType,
+    check_function: Callable,
+    check_default_parameters: Optional[ParametersTypeAlias],
+    check_ruleset_name: Optional[str],
+    cluster_check_function: Optional[Callable],
+) -> None:
+    _validate_service_name(plugin_name, service_name)
+
+    # validate discovery arguments
+    validate_default_parameters(
+        "discovery",
+        discovery_ruleset_name,
+        discovery_default_parameters,
+    )
+    validate_ruleset_type(discovery_ruleset_type)
+    validate_function_arguments(
+        type_label="discovery",
+        function=discovery_function,
+        has_item=False,
+        default_params=discovery_default_parameters,
+        sections=subscribed_sections,
+    )
+    # validate check arguments
+    validate_default_parameters(
+        "check",
+        check_ruleset_name,
+        check_default_parameters,
+    )
+    validate_function_arguments(
+        type_label="check",
+        function=check_function,
+        has_item=requires_item,
+        default_params=check_default_parameters,
+        sections=subscribed_sections,
+    )
+
+    if cluster_check_function is None:
         return
 
-    # TODO (mo): Implelment this! CMK-4180
-    # * see that the ruleset exists
-    # * the item spec matches
-    # * the default parameters can be loaded
-    return
-
-
-def _validate_discovery_ruleset_type(ruleset_type: DiscoveryRuleSetType) -> None:
-    if ruleset_type not in get_args(DiscoveryRuleSetType):
-        raise ValueError("invalid discovery ruleset type %r. Allowed are %s" %
-                         (ruleset_type, ",".join(repr(c) for c in get_args(DiscoveryRuleSetType))))
-
-
-def _validate_check_ruleset(ruleset_name: Optional[str],
-                            default_parameters: Optional[dict]) -> None:
-    if ruleset_name is None:
-        return
-
-    # TODO (mo): Implelment this! CMK-4180
-    # * see that the ruleset exists
-    # * the item spec matches
-    # * the default parameters can be loaded
-    return
-
-
-def unfit_for_clustering_wrapper(check_function):
-    """Return a cluster_check_function that displays a generic warning"""
-    # copy signature of check_function
-    @functools.wraps(check_function, ("__attributes__",))
-    def unfit_for_clustering(*args, **kwargs):
-        yield Result(
-            state=state.UNKNOWN,
-            summary=("This service is not ready to handle clustered data. "
-                     "Please change your configuration."),
-        )
-
-    return unfit_for_clustering
+    validate_function_arguments(
+        type_label="cluster_check",
+        function=cluster_check_function,
+        has_item=requires_item,
+        default_params=check_default_parameters,
+        sections=subscribed_sections,
+    )
 
 
 def create_check_plugin(
@@ -141,15 +157,16 @@ def create_check_plugin(
     sections: Optional[List[str]] = None,
     service_name: str,
     discovery_function: Callable,
-    discovery_default_parameters: Optional[Dict] = None,
+    discovery_default_parameters: Optional[ParametersTypeAlias] = None,
     discovery_ruleset_name: Optional[str] = None,
-    discovery_ruleset_type: DiscoveryRuleSetType = "merged",
+    discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: Callable,
-    check_default_parameters: Optional[Dict] = None,
+    check_default_parameters: Optional[ParametersTypeAlias] = None,
     check_ruleset_name: Optional[str] = None,
     cluster_check_function: Optional[Callable] = None,
     module: Optional[str] = None,
     validate_item: bool = True,
+    validate_kwargs: bool = True,
 ) -> CheckPlugin:
     """Return an CheckPlugin object after validating and converting the arguments one by one
 
@@ -160,71 +177,41 @@ def create_check_plugin(
 
     subscribed_sections = create_subscribed_sections(sections, plugin_name)
 
-    _validate_service_name(plugin_name, service_name)
     requires_item = _requires_item(service_name)
 
-    # validate discovery arguments
-    validate_default_parameters(
-        "discovery",
-        discovery_ruleset_name,
-        discovery_default_parameters,
-    )
-    _validate_discovery_ruleset(
-        discovery_ruleset_name,
-        discovery_default_parameters,
-    )
-    _validate_discovery_ruleset_type(discovery_ruleset_type,)
-    validate_function_arguments(
-        type_label="discovery",
-        function=discovery_function,
-        has_item=False,
-        has_params=discovery_ruleset_name is not None,
-        sections=subscribed_sections,
-    )
+    if validate_kwargs:
+        _validate_kwargs(
+            plugin_name=plugin_name,
+            subscribed_sections=subscribed_sections,
+            service_name=service_name,
+            requires_item=requires_item,
+            discovery_function=discovery_function,
+            discovery_default_parameters=discovery_default_parameters,
+            discovery_ruleset_name=discovery_ruleset_name,
+            discovery_ruleset_type=discovery_ruleset_type,
+            check_function=check_function,
+            check_default_parameters=check_default_parameters,
+            check_ruleset_name=check_ruleset_name,
+            cluster_check_function=cluster_check_function,
+        )
+
     disco_func = _filter_discovery(discovery_function, requires_item, validate_item)
-    disco_params = discovery_default_parameters or {}
     disco_ruleset_name = RuleSetName(discovery_ruleset_name) if discovery_ruleset_name else None
 
-    # validate check arguments
-    validate_default_parameters(
-        "check",
-        check_ruleset_name,
-        check_default_parameters,
-    )
-    _validate_check_ruleset(
-        check_ruleset_name,
-        check_default_parameters,
-    )
-    validate_function_arguments(
-        type_label="check",
-        function=check_function,
-        has_item=requires_item,
-        has_params=check_default_parameters is not None,
-        sections=subscribed_sections,
-    )
-
-    if cluster_check_function is None:
-        cluster_check_function = unfit_for_clustering_wrapper(check_function)
-    else:
-        validate_function_arguments(
-            type_label="cluster_check",
-            function=cluster_check_function,
-            has_item=requires_item,
-            has_params=check_ruleset_name is not None,
-            sections=subscribed_sections,
-        )
-        cluster_check_function = _filter_check(cluster_check_function)
+    cluster_check_function = None if cluster_check_function is None else _filter_check(
+        cluster_check_function)
 
     return CheckPlugin(
         name=plugin_name,
         sections=subscribed_sections,
         service_name=service_name,
         discovery_function=disco_func,
-        discovery_default_parameters=disco_params,
+        discovery_default_parameters=discovery_default_parameters,
         discovery_ruleset_name=disco_ruleset_name,
-        discovery_ruleset_type=discovery_ruleset_type,
+        discovery_ruleset_type=("merged"
+                                if discovery_ruleset_type is RuleSetType.MERGED else "all"),
         check_function=_filter_check(check_function),
-        check_default_parameters=check_default_parameters or {},
+        check_default_parameters=check_default_parameters,
         check_ruleset_name=RuleSetName(check_ruleset_name) if check_ruleset_name else None,
         cluster_check_function=cluster_check_function,
         module=module,

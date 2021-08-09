@@ -4,28 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    Dict,
-    Optional,
-    TypedDict,
-    Mapping,
-)
+from typing import Any, Dict, Mapping, Optional, TypedDict
+
+from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import oracle
-from .agent_based_api.v1 import (
-    IgnoreResultsError,
-    check_levels,
-    register,
-    render,
-    Result,
-    Service,
-    state,
-)
-from .agent_based_api.v1.type_defs import (
-    Parameters,
-    AgentStringTable,
-    DiscoveryGenerator,
-    CheckGenerator,
-)
 
 # actual format
 # <<<oracle_rman>>>
@@ -41,7 +25,7 @@ from .agent_based_api.v1.type_defs import (
 # Create DB_INCR_<Level> checks when parameter is True
 # Set this to False for old behavior. This is required for the service
 # discovery and can't be set as a inventory parameter.
-# This will be removed in a later version of Check_MK. Don't use it for new installations!
+# This will be removed in a later version of Checkmk. Don't use it for new installations!
 inventory_oracle_rman_incremental_details = True
 
 SectionSidOracleRman = TypedDict(
@@ -58,7 +42,7 @@ SectionSidOracleRman = TypedDict(
 SectionOracleRman = Dict[str, SectionSidOracleRman]
 
 
-def parse_oracle_rman(string_table: AgentStringTable) -> SectionOracleRman:
+def parse_oracle_rman(string_table: StringTable) -> SectionOracleRman:
     section: SectionOracleRman = {}
     error_sids = {}
 
@@ -131,15 +115,16 @@ def parse_oracle_rman(string_table: AgentStringTable) -> SectionOracleRman:
 
             # check backupage
             sid_level0 = "%s0" % (elem[0:-1])
-            sid_level0_backupage = section[sid_level0]['backupage']
-            section_backupage = section[elem]['backupage']
+            if sid_level0 in section:
+                sid_level0_backupage = section[sid_level0]['backupage']
+                section_backupage = section[elem]['backupage']
 
-            if isinstance(sid_level0_backupage, int) and isinstance(section_backupage, int):
-                if sid_level0 in section and sid_level0_backupage < section_backupage:
-                    section[elem].update({
-                        "backupage": sid_level0_backupage,
-                        "used_incr_0": True,
-                    })
+                if isinstance(sid_level0_backupage, int) and isinstance(section_backupage, int):
+                    if sid_level0_backupage < section_backupage:
+                        section[elem].update({
+                            "backupage": sid_level0_backupage,
+                            "used_incr_0": True,
+                        })
 
     return section
 
@@ -150,7 +135,7 @@ register.agent_section(
 )
 
 
-def discovery_oracle_rman(section: SectionOracleRman) -> DiscoveryGenerator:
+def discovery_oracle_rman(section: SectionOracleRman) -> DiscoveryResult:
     for elem in section.values():
 
         sid = elem['sid']
@@ -165,7 +150,8 @@ def discovery_oracle_rman(section: SectionOracleRman) -> DiscoveryGenerator:
             yield Service(item="%s.%s" % (sid, backuptype))
 
 
-def check_oracle_rman(item: str, params: Parameters, section: SectionOracleRman) -> CheckGenerator:
+def check_oracle_rman(item: str, params: Mapping[str, Any],
+                      section: SectionOracleRman) -> CheckResult:
 
     rman_backup = section.get(item)
 
@@ -221,8 +207,8 @@ def check_oracle_rman(item: str, params: Parameters, section: SectionOracleRman)
                      summary="no COMPLETED backup found in last 14 days (very old plugin in use?)")
 
 
-def cluster_check_oracle_rman(item: str, params: Parameters,
-                              section: Mapping[str, SectionOracleRman]) -> CheckGenerator:
+def cluster_check_oracle_rman(item: str, params: Mapping[str, Any],
+                              section: Mapping[str, SectionOracleRman]) -> CheckResult:
 
     youngest_backup_age: Optional[int] = None
     # take the most current backupage in clustered environments

@@ -5,10 +5,9 @@
 import * as ajax from "ajax";
 import $ from "jquery";
 
-export function fetch_site_status()
-{
+export function fetch_site_status() {
     ajax.call_ajax("wato_ajax_fetch_site_status.py", {
-        response_handler : function (handler_data, response_json) {
+        response_handler: function (handler_data, response_json) {
             let response = JSON.parse(response_json);
             let success = response.result_code === 0;
             let site_states = response.result;
@@ -22,22 +21,23 @@ export function fetch_site_status()
                 var livestatus_container = document.getElementById("livestatus_status_" + site_id);
                 livestatus_container.innerHTML = site_status.livestatus;
 
-                var replication_container = document.getElementById("replication_status_" + site_id);
+                var replication_container = document.getElementById(
+                    "replication_status_" + site_id
+                );
                 replication_container.innerHTML = site_status.replication;
             }
         },
-        error_handler    : function (handler_data, status_code, error_msg) {
+        error_handler: function (handler_data, status_code, error_msg) {
             if (status_code != 0) {
                 show_error("Site status update failed [" + status_code + "]: " + error_msg);
             }
         },
-        method           : "POST",
-        add_ajax_id      : false
+        method: "POST",
+        add_ajax_id: false,
     });
 }
 
-function show_error(msg)
-{
+function show_error(msg) {
     var o = document.getElementById("message_container");
     o.innerHTML = "<div class=error>" + msg + "</div>";
 

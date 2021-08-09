@@ -3,29 +3,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import (
-    Any,
-    Dict,
-    Union,
-    List,
-    Mapping,
-)
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    IgnoreResults,
-    state,
-    get_value_store,
-    render,
-)
+from typing import Any, Dict, List, Mapping, Union
 
-from .agent_based_api.v1.type_defs import (
-    DiscoveryGenerator,
-    AgentStringTable,
-    CheckGenerator,
-    Parameters,
-)
+from .agent_based_api.v1 import get_value_store, IgnoreResults, register, render, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.df import df_check_filesystem_single
 
 # future todos in checkcode
@@ -62,7 +44,7 @@ ASM_DISKGROUP_DEFAULT_LEVELS = {
 }
 
 
-def parse_oracle_asm_diskgroup(string_table: AgentStringTable):
+def parse_oracle_asm_diskgroup(string_table: StringTable):
     section: Dict[str, Dict[str, Union[str, List, None]]] = {}
 
     for line in string_table:
@@ -180,14 +162,14 @@ register.agent_section(
 )
 
 
-def discovery_oracle_asm_diskgroup(section: Dict[str, Any]) -> DiscoveryGenerator:
+def discovery_oracle_asm_diskgroup(section: Dict[str, Any]) -> DiscoveryResult:
     for asm_diskgroup_name, attrs in section.items():
         if attrs["dgstate"] in ["MOUNTED", "DISMOUNTED"]:
             yield Service(item=asm_diskgroup_name)
 
 
-def check_oracle_asm_diskgroup(item: str, params: Parameters, section: Dict[str,
-                                                                            Any]) -> CheckGenerator:
+def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
+                               section: Dict[str, Any]) -> CheckResult:
     if item not in section:
         # In case of missing information we assume that the ASM-Instance is
         # checked at a later time.
@@ -226,7 +208,7 @@ def check_oracle_asm_diskgroup(item: str, params: Parameters, section: Dict[str,
 
             if fg_count == 1:
 
-                # we miss the 2nd requirred fg.
+                # we miss the 2nd required fg.
                 # => factor is down from 2 to 1
                 dg_sizefactor = 1
 
@@ -237,7 +219,7 @@ def check_oracle_asm_diskgroup(item: str, params: Parameters, section: Dict[str,
 
             if fg_count <= 3:
 
-                # we are under the minimum requirred fgs for the dg.
+                # we are under the minimum required fgs for the dg.
                 dg_sizefactor = fg_count
 
             else:
@@ -312,23 +294,21 @@ def check_oracle_asm_diskgroup(item: str, params: Parameters, section: Dict[str,
     free_space_mb = int(free_mb) // dg_sizefactor
 
     if params.get('req_mir_free'):
-        req_mir_free_mb = int(req_mir_free_mb)
-        if req_mir_free_mb < 0:
-            # requirred mirror free space could be negative!
-            req_mir_free_mb = 0
-
+        req_mir_free_mb = max(int(req_mir_free_mb),
+                              0)  # required mirror free space could be negative!
         add_text = ', required mirror free space used'
 
     result_list = list(
-        df_check_filesystem_single(value_store=get_value_store(),
-                                   check="oracle_asm_diskgroup",
-                                   mountpoint=item,
-                                   size_mb=float(total_mb),
-                                   avail_mb=free_space_mb,
-                                   reserved_mb=0,
-                                   inodes_total=None,
-                                   inodes_avail=None,
-                                   params=params))
+        df_check_filesystem_single(
+            value_store=get_value_store(),
+            mountpoint=item,
+            size_mb=float(total_mb),
+            avail_mb=free_space_mb,
+            reserved_mb=0,
+            inodes_total=None,
+            inodes_avail=None,
+            params=params,
+        ),)
     yield from result_list
     aggregated_state = state.worst(
         *[elem.state for elem in result_list if isinstance(elem, Result)])
@@ -385,8 +365,8 @@ def check_oracle_asm_diskgroup(item: str, params: Parameters, section: Dict[str,
     yield Result(state=aggregated_state, summary=infotext)
 
 
-def cluster_check_oracle_asm_diskgroup(item: str, params: Parameters,
-                                       section: Mapping[str, Dict[str, Any]]) -> CheckGenerator:
+def cluster_check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
+                                       section: Mapping[str, Dict[str, Any]]) -> CheckResult:
 
     # only use data from 1. node in agent output
     # => later calculation of DG size is much easier

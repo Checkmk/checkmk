@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 import os
-import pytest  # type: ignore[import]
+import time
 
-from testlib import WatchLog
-from testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
+import pytest
+
+from tests.testlib import WatchLog
+from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
 
 @pytest.fixture(name="fake_sendmail")

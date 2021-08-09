@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Float,
-    TextAscii,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersStorage,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 
 def _parameter_valuespec_brocade_sfp():
@@ -47,7 +42,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="brocade_sfp",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Port index")),
+        item_spec=lambda: TextInput(title=_("Port index")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_brocade_sfp,
         title=lambda: _("Brocade SFPs"),

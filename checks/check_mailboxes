@@ -11,36 +11,36 @@ def check_mailboxes_arguments(params):
     fetch_params = params["imap_parameters"]
 
     if "server" in fetch_params:
-        args.append("--server=%s" % fetch_params["server"])
+        args.append("--fetch-server=%s" % fetch_params["server"])
     else:
-        args.append("--server=$HOSTADDRESS$")
+        args.append("--fetch-server=$HOSTADDRESS$")
 
     fetch_use_ssl, fetch_port = fetch_params["ssl"]
     if fetch_use_ssl:
-        args.append("--ssl")
+        args.append("--fetch-tls")
 
     if fetch_port is not None:
-        args.append("--port=%d" % fetch_port)
+        args.append("--fetch-port=%d" % fetch_port)
 
     username, password = fetch_params["auth"]
-    args.append("--username=%s" % username)
-    args.append(passwordstore_get_cmdline("--password=%s", password))
+    args.append("--fetch-username=%s" % username)
+    args.append(passwordstore_get_cmdline("--fetch-password=%s", password))
 
     if "connect_timeout" in params:
-        args.append("--timeout=%d" % params["connect_timeout"])
+        args.append("--connect-timeout=%d" % params["connect_timeout"])
 
     if "retrieve_max" in params:
         args.append("--retrieve-max=%d" % params["retrieve_max"])
 
     if "age" in params:
         warn, crit = params["age"]
-        args.append("--warn-age=%d" % warn)
-        args.append("--crit-age=%d" % crit)
+        args.append("--warn-age-oldest=%d" % warn)
+        args.append("--crit-age-oldest=%d" % crit)
 
-    if "new" in params:
-        warn, crit = params["new"]
-        args.append("--warn-new=%d" % warn)
-        args.append("--crit-new=%d" % crit)
+    if "age_newest" in params:
+        warn, crit = params["age_newest"]
+        args.append("--warn-age-newest=%d" % warn)
+        args.append("--crit-age-newest=%d" % crit)
 
     if "count" in params:
         warn, crit = params["count"]

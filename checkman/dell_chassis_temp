@@ -12,6 +12,6 @@ item:
  drsChassisFrontPanelAmbientTemperature,
  drsCMCAmbientTemperature, drsCMCProcessorTemperature
 
-inventory:
+discovery:
  Three services are created one for each sensor.
 

@@ -46,12 +46,12 @@
 #  5  66.249.94.88 (66.249.94.88)  24.481 ms  24.498 ms  24.271 ms
 #  6  209.85.240.99 (209.85.240.99)  27.628 ms  21.605 ms  21.943 ms
 
+import ast
 import getopt
+import ipaddress
 import os
 import subprocess
 import sys
-import ipaddress
-import ast
 
 
 class MissingValueError(Exception):
@@ -73,13 +73,11 @@ def parse_exception(exc):
     return str(exc)
 
 
-def output_check_result(rc, s, perfdata):
-    stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
-    output = '%s - %s' % (stxt, s)
+def output_check_result(s, perfdata):
     if perfdata:
         perfdata_output_entries = ['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata]
-        output += ' | %s' % " ".join(perfdata_output_entries)
-    sys.stdout.write('%s\n' % output)
+        s += ' | %s' % " ".join(perfdata_output_entries)
+    sys.stdout.write('%s\n' % s)
 
 
 def option_to_state(c):
@@ -128,12 +126,7 @@ def check_traceroute(lines, routes):
             state = max(state, s)
             missing_routers.append("%s(%s)" % (route, "!" * s))
 
-    info_text = "%s - %d hops, missing routers: %s, bad routers: %s" % (
-        {
-            0: "OK",
-            1: "WARN",
-            2: "CRIT"
-        }[state],
+    info_text = "%d hops, missing routers: %s, bad routers: %s" % (
         hops,
         missing_routers and ", ".join(missing_routers) or "none",
         bad_routers and ", ".join(bad_routers) or "none",
@@ -144,7 +137,13 @@ def check_traceroute(lines, routes):
 
 def validate_ip_version(address_arg, ip_version_arg):
     # ipv6 address can have an appended interface index/name: 'fe80::%{interface}'
-    ip_address_version = ipaddress.ip_interface(address_arg.split('%')[0]).ip.version
+    try:
+        ip_address_version = ipaddress.ip_interface(address_arg.split('%')[0]).ip.version
+    except ValueError:
+        # May be a host or DNS name, don't execute the validation in this case.
+        # check_traceroute will perform the name resolution for us.
+        return
+
     if not ip_address_version == ip_version_arg:
         raise ProtocolVersionError(
             'IP protocol version "%s" not the same as the IP address version "%s".' %
@@ -250,5 +249,5 @@ def main(args=None):
 
 if __name__ == "__main__":
     exitcode, info, perf = main()
-    output_check_result(exitcode, info, perf)
+    output_check_result(info, perf)
     sys.exit(exitcode)

@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _item_spec_openhardwaremonitor_smart():
-    return TextAscii(
+    return TextInput(
         title=_("Device Name"),
         help=_("Name of the Hard Disk as reported by OHM: hdd0, hdd1, ..."),
     )

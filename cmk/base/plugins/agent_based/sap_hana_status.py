@@ -4,24 +4,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict
+
+from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    state,
-)
-
-from .agent_based_api.v1.type_defs import (
-    DiscoveryGenerator,
-    AgentStringTable,
-    CheckGenerator,
-)
 
 
-def parse_sap_hana_status(string_table: AgentStringTable) -> sap_hana.ParsedSection:
+def parse_sap_hana_status(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
+        section.setdefault(f"Status {sid_instance}", {})
+        section.setdefault(f"Version {sid_instance}", {})
+
         for line in lines:
             if line[0].lower() == "all started":
                 item_name = 'Status'
@@ -36,7 +32,7 @@ def parse_sap_hana_status(string_table: AgentStringTable) -> sap_hana.ParsedSect
                     "instance": sid_instance,
                     'version': line[2],
                 }
-            section.setdefault("%s %s" % (item_name, sid_instance), item_data)
+            section["%s %s" % (item_name, sid_instance)] = item_data
 
     return section
 
@@ -58,28 +54,28 @@ def _check_sap_hana_status_data(data):
     return cur_state, "Status: %s" % state_name
 
 
-def discovery_sap_hana_status(section: sap_hana.ParsedSection) -> DiscoveryGenerator:
+def discovery_sap_hana_status(section: sap_hana.ParsedSection) -> DiscoveryResult:
     for item in section:
         yield Service(item=item)
 
 
-def check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckGenerator:
+def check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckResult:
 
     data = section.get(item)
-    if data is None:
-        return
+    if not data:
+        raise IgnoreResultsError("Login into database failed.")
+
     if 'Status' in item:
         cur_state, infotext = _check_sap_hana_status_data(data)
         yield Result(state=cur_state, summary=infotext)
     else:
         yield Result(state=state.OK, summary="Version: %s" % data['version'])
 
-    # It ONE physical device and at least two nodes.
-    # Thus we only need to check the first one.
-    return
 
-
-def cluster_check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckGenerator:
+def cluster_check_sap_hana_status(
+    item: str,
+    section: Dict[str, sap_hana.ParsedSection],
+) -> CheckResult:
 
     yield Result(state=state.OK, summary='Nodes: %s' % ', '.join(section.keys()))
     for node_section in section.values():

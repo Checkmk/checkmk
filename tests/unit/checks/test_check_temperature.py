@@ -9,10 +9,12 @@
 import collections
 import datetime as dt
 
-import freezegun  # type: ignore[import]
-import pytest  # type: ignore[import]
+import freezegun
+import pytest
 
-from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
+from tests.testlib import Check
+
+from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
 
 
 @pytest.mark.parametrize(
@@ -162,8 +164,8 @@ from checktestlib import MockItemState, assertCheckResultsEqual, CheckResult
          (2, u'5 \xb0C (device warn/crit below 6/6 \xb0C)', [('temp', 5, None, None)])),
     ],
 )
-def test_check_temperature(check_manager, params, kwargs, expected):
-    check = check_manager.get_check('acme_temp')
+def test_check_temperature(params, kwargs, expected):
+    check = Check('acme_temp')
     check_temperature = check.context['check_temperature']
     result = check_temperature(*params, **kwargs)
     assertCheckResultsEqual(CheckResult(result), CheckResult(expected))
@@ -174,7 +176,7 @@ def unix_ts(datetime_obj, epoch=dt.datetime(1970, 1, 1)):
 
 
 Entry = collections.namedtuple(
-    'TestEntry',
+    'Entry',
     [
         'reading',
         'growth',
@@ -240,8 +242,8 @@ _WATO_DICT = {
         # Are the effects of last two test cases related somehow?
     ]
 )
-def test_check_temperature_trend(check_manager, test_case):
-    check = check_manager.get_check('acme_temp')
+def test_check_temperature_trend(test_case):
+    check = Check('acme_temp')
     check_trend = check.context['check_temperature_trend']
 
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
@@ -251,7 +253,7 @@ def test_check_temperature_trend(check_manager, test_case):
         'temp.foo.trend': (0, 0)
     }
 
-    with MockItemState(state):
+    with mock_item_state(state):
         with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
             result = check_trend(test_case.reading + test_case.growth,
                                  test_case.wato_dict, 'c',
@@ -273,8 +275,8 @@ def test_check_temperature_trend(check_manager, test_case):
         ),
     ]
 )
-def test_check_temperature_called(check_manager, test_case):
-    check = check_manager.get_check('acme_temp')
+def test_check_temperature_called(test_case):
+    check = Check('acme_temp')
     check_temperature = check.context['check_temperature']
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 
@@ -283,7 +285,7 @@ def test_check_temperature_called(check_manager, test_case):
         'temp.foo.trend': (0, 0)
     }
 
-    with MockItemState(state):
+    with mock_item_state(state):
         with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
             # Assuming atmospheric pressure...
             result = check_temperature(

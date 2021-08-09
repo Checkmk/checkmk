@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_hivemanager_ng_devices():
@@ -37,7 +31,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hivemanager_ng_devices",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Hostname of the Device")),
+        item_spec=lambda: TextInput(title=_("Hostname of the Device")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hivemanager_ng_devices,
         title=lambda: _("HiveManager NG Devices"),

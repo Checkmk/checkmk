@@ -5,24 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Alternative,
-    Dictionary,
-    FixedValue,
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Integer, TextInput, Tuple
 
 
 def _item_spec_ibm_svc_enclosure():
-    return TextAscii(
+    return TextInput(
         title=_("Name of enclosure"),
         help=_("Name of the enclosure, e.g. Enclosure 1"),
     )

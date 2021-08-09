@@ -4,7 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
+
 import cmk.utils.render
 
 
@@ -26,6 +27,34 @@ def test_fmt_bytes(entry, result):
 @pytest.mark.parametrize("args, result", [((0.433 / 1, 10), (4.33, -1)), ((5, 10), (5, 0))])
 def test_frexpb(args, result):
     assert cmk.utils.render._frexpb(*args) == result
+
+
+@pytest.mark.parametrize("perc, result", [
+    (0.0, "0%"),
+    (9.0e-05, "0.00009%"),
+    (0.00009, "0.00009%"),
+    (0.00103, "0.001%"),
+    (0.0019, "0.002%"),
+    (0.129, "0.13%"),
+    (8.25752, "8.26%"),
+    (8, "8.0%"),
+    (80, "80.0%"),
+    (100.123, "100%"),
+    (200.123, "200%"),
+    (1234567, "1234567%"),
+])
+def test_percent_std(perc, result):
+    assert cmk.utils.render.percent(perc, False) == result
+
+
+@pytest.mark.parametrize("perc, result", [
+    (0.00009, "9.0e-5%"),
+    (0.00019, "0.0002%"),
+    (12345, "12345%"),
+    (1234567, "1.2e+6%"),
+])
+def test_percent_scientific(perc, result):
+    assert cmk.utils.render.percent(perc, True) == result
 
 
 @pytest.mark.parametrize("value, kwargs, result", [

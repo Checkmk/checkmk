@@ -9,7 +9,7 @@ description:
  board, and power supply status are OK. Otherwise the status
  {CRIT} will be returned.
 
-inventory:
+discovery:
  One service is created for each module on each host.
 
 item:

@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _item_spec_skype_edge():
-    return TextAscii(
+    return TextInput(
         title=_("Interface"),
         help=_("The name of the interface (Public/Private IPv4/IPv6 Network Interface)"),
     )

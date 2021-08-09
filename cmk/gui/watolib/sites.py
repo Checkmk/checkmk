@@ -7,55 +7,54 @@
 import os
 import re
 import time
-from typing import NamedTuple, Type
 from pathlib import Path
+from typing import Any, NamedTuple, Type
 
 from six import ensure_binary
 
-import cmk.utils.version as cmk_version
-import cmk.utils.store as store
+from livestatus import SiteConfigurations, SiteId
 
-import cmk.gui.sites
-from cmk.gui.sites import SiteConfigurations
-import cmk.gui.config as config
-import cmk.gui.plugins.userdb.utils as userdb_utils
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
+from cmk.utils.site import omd_site
+
 import cmk.gui.hooks as hooks
-from cmk.gui.globals import html
+import cmk.gui.plugins.userdb.utils as userdb_utils
+import cmk.gui.sites
+import cmk.gui.watolib.activate_changes
+import cmk.gui.watolib.changes
+import cmk.gui.watolib.sidebar_reload
+from cmk.gui.config import default_single_site_configuration, load_config, prepare_raw_site_config
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import config, request, transactions
 from cmk.gui.i18n import _
-from cmk.gui.exceptions import MKUserError, MKGeneralException
+from cmk.gui.plugins.watolib.utils import ABCConfigDomain
+from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site, site_is_local
+from cmk.gui.utils.urls import makeactionuri
 from cmk.gui.valuespec import (
+    Alternative,
     CascadingDropdown,
     Checkbox,
-    TextAscii,
-    Float,
-    Integer,
-    Tuple,
     Dictionary,
     FixedValue,
-    Alternative,
-    Transform,
-    ListOfStrings,
-    IPNetwork,
+    Float,
     HostAddress,
+    Integer,
+    IPNetwork,
     ListChoice,
+    ListOfStrings,
+    TextInput,
+    Transform,
+    Tuple,
 )
-
-import cmk.gui.watolib.changes
-import cmk.gui.watolib.activate_changes
-import cmk.gui.watolib.sidebar_reload
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.config_domains import (
-    ConfigDomainLiveproxy,
-    ConfigDomainGUI,
     ConfigDomainCACertificates,
+    ConfigDomainGUI,
+    ConfigDomainLiveproxy,
 )
-from cmk.gui.watolib.automation_commands import (
-    AutomationCommand,
-    automation_command_registry,
-)
-from cmk.gui.watolib.utils import (
-    default_site,
-    multisite_dir,
-)
+from cmk.gui.watolib.global_settings import load_configuration_settings
+from cmk.gui.watolib.utils import multisite_dir
 
 
 class SiteManagement:
@@ -93,7 +92,7 @@ class SiteManagement:
             ("unix", _("Connect via UNIX socket"),
              Dictionary(
                  elements=[
-                     ("path", TextAscii(
+                     ("path", TextInput(
                          label=_("Path:"),
                          size=40,
                          allow_empty=False,
@@ -185,7 +184,7 @@ class SiteManagement:
                      allow_empty=False,
                  )),
             ],
-            default_value="all" if config.site_is_local(site_id) else None,
+            default_value="all" if site_is_local(site_id) else None,
             help=_(
                 'By default the users are synchronized automatically in the interval configured '
                 'in the connection. For example the LDAP connector synchronizes the users every '
@@ -214,12 +213,12 @@ class SiteManagement:
             raise MKUserError("url_prefix", _("The URL prefix must end with a slash."))
 
         # Connection
-        if site_configuration["socket"][0] == "local" and site_id != config.omd_site():
+        if site_configuration["socket"][0] == "local" and site_id != omd_site():
             raise MKUserError(
                 "method_sel",
                 _("You can only configure a local site connection for "
                   "the local site. The site IDs ('%s' and '%s') are "
-                  "not equal.") % (site_id, config.omd_site()))
+                  "not equal.") % (site_id, omd_site()))
 
         # Timeout
         if "timeout" in site_configuration:
@@ -268,13 +267,13 @@ class SiteManagement:
     @classmethod
     def load_sites(cls) -> SiteConfigurations:
         if not os.path.exists(cls._sites_mk()):
-            return config.default_single_site_configuration()
+            return default_single_site_configuration()
 
         raw_sites = store.load_from_mk_file(cls._sites_mk(), "sites", {})
         if not raw_sites:
-            return config.default_single_site_configuration()
+            return default_single_site_configuration()
 
-        sites = config.migrate_old_site_config(raw_sites)
+        sites = prepare_raw_site_config(raw_sites)
         for site in sites.values():
             if site["proxy"] is not None:
                 site["proxy"] = cls.transform_old_connection_params(site["proxy"])
@@ -291,7 +290,7 @@ class SiteManagement:
         # Do not activate when just the site's global settings have
         # been edited
         if activate:
-            config.load_config()  # make new site configuration active
+            load_config()  # make new site configuration active
             _update_distributed_wato_file(sites)
             Folder.invalidate_caches()
             cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
@@ -315,7 +314,7 @@ class SiteManagement:
 
         # Make sure that site is not being used by hosts and folders
         if site_id in Folder.root_folder().all_site_ids():
-            search_url = html.makeactionuri([
+            search_url = makeactionuri(request, transactions, [
                 ("host_search_change_site", "on"),
                 ("host_search_site", site_id),
                 ("host_search", "1"),
@@ -334,11 +333,10 @@ class SiteManagement:
         del all_sites[site_id]
         cls.save_sites(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
-        cmk.gui.watolib.activate_changes.remove_site_config_directory(site_id)
         cmk.gui.watolib.changes.add_change("edit-sites",
                                            _("Deleted site %s") % site_id,
                                            domains=domains,
-                                           sites=[default_site()])
+                                           sites=[omd_site()])
 
     @classmethod
     def _affected_config_domains(cls):
@@ -513,7 +511,7 @@ class CEESiteManagement(SiteManagement):
         }
 
         defaults = ConfigDomainLiveproxy.connection_params_defaults()
-        for key, val in value.items():
+        for key, val in list(value.items()):
             if val == defaults[key]:
                 del value[key]
 
@@ -524,7 +522,7 @@ class CEESiteManagement(SiteManagement):
 
     @classmethod
     def save_sites(cls, sites, activate=True):
-        super(CEESiteManagement, cls).save_sites(sites, activate)
+        super().save_sites(sites, activate)
 
         if activate and config.liveproxyd_enabled:
             cls._save_liveproxyd_config(sites)
@@ -557,7 +555,7 @@ class CEESiteManagement(SiteManagement):
 
     @classmethod
     def _affected_config_domains(cls):
-        domains = super(CEESiteManagement, cls)._affected_config_domains()
+        domains = super()._affected_config_domains()
         if config.liveproxyd_enabled:
             domains.append(ConfigDomainLiveproxy)
         return domains
@@ -599,7 +597,7 @@ class LivestatusViaTCP(Dictionary):
              )),
         ]
         kwargs["optional_keys"] = ["only_from", "tls"]
-        super(LivestatusViaTCP, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 def _create_nagvis_backends(sites_config):
@@ -607,7 +605,7 @@ def _create_nagvis_backends(sites_config):
         '; MANAGED BY CHECK_MK WATO - Last Update: %s' % time.strftime('%Y-%m-%d %H:%M:%S'),
     ]
     for site_id, site in sites_config.items():
-        if site == config.omd_site():
+        if site == omd_site():
             continue  # skip local site, backend already added by omd
 
         socket = _encode_socket_for_nagvis(site_id, site)
@@ -628,8 +626,8 @@ def _create_nagvis_backends(sites_config):
             cfg.append('verify_tls_peer=%d' % tls_settings["verify"])
             cfg.append('verify_tls_ca_path=%s' % ConfigDomainCACertificates.trusted_cas_file)
 
-    store.save_file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.utils.paths.omd_root,
-                    '\n'.join(cfg))
+    store.save_text_to_file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.utils.paths.omd_root,
+                            '\n'.join(cfg))
 
 
 def _encode_socket_for_nagvis(site_id, site):
@@ -649,7 +647,7 @@ def _update_distributed_wato_file(sites):
     for siteid, site in sites.items():
         if site.get("replication"):
             distributed = True
-        if config.site_is_local(siteid):
+        if site_is_local(siteid):
             cmk.gui.watolib.activate_changes.create_distributed_wato_files(
                 base_dir=Path(cmk.utils.paths.omd_root),
                 site_id=siteid,
@@ -663,9 +661,22 @@ def _update_distributed_wato_file(sites):
         _delete_distributed_wato_file()
 
 
-def is_livestatus_encrypted(site):
+def is_livestatus_encrypted(site) -> bool:
     family_spec, address_spec = site["socket"]
     return family_spec in ["tcp", "tcp6"] and address_spec["tls"][0] != "plain_text"
+
+
+def site_globals_editable(site_id, site) -> bool:
+    # Site is a remote site of another site. Allow to edit probably pushed site
+    # specific globals when remote WATO is enabled
+    if is_wato_slave_site():
+        return True
+
+    # Local site: Don't enable site specific locals when no remote sites configured
+    if not has_wato_slave_sites():
+        return False
+
+    return site["replication"] or site_is_local(site_id)
 
 
 def _delete_distributed_wato_file():
@@ -674,7 +685,7 @@ def _delete_distributed_wato_file():
     # we do not need write permissions to the conf.d
     # directory!
     if os.path.exists(p):
-        store.save_file(p, "")
+        store.save_text_to_file(p, "")
 
 
 PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [
@@ -694,17 +705,36 @@ class AutomationPushSnapshot(AutomationCommand):
         return "push-snapshot"
 
     def get_request(self) -> PushSnapshotRequest:
-        site_id = html.request.get_ascii_input_mandatory("siteid")
+        site_id = request.get_ascii_input_mandatory("siteid")
         cmk.gui.watolib.activate_changes.verify_remote_site_config(site_id)
 
-        snapshot = html.request.uploaded_file("snapshot")
+        snapshot = request.uploaded_file("snapshot")
         if not snapshot:
             raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
 
         return PushSnapshotRequest(site_id=site_id, tar_content=ensure_binary(snapshot[2]))
 
-    def execute(self, request: PushSnapshotRequest) -> bool:
+    def execute(self, api_request: PushSnapshotRequest) -> bool:
         with store.lock_checkmk_configuration():
             return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
-                request.site_id, request.tar_content, Path(cmk.utils.paths.omd_root),
+                api_request.site_id, api_request.tar_content, Path(cmk.utils.paths.omd_root),
                 cmk.gui.watolib.activate_changes.get_replication_paths())
+
+
+def get_effective_global_setting(site_id: SiteId, is_remote_site: bool, varname: str) -> Any:
+    global_settings = load_configuration_settings()
+    default_values = ABCConfigDomain.get_all_default_globals()
+
+    if is_remote_site:
+        current_settings = load_configuration_settings(site_specific=True)
+    else:
+        sites = SiteManagementFactory.factory().load_sites()
+        current_settings = sites.get(site_id, {}).get("globals", {})
+
+    if varname in current_settings:
+        return current_settings[varname]
+
+    if varname in global_settings:
+        return global_settings[varname]
+
+    return default_values[varname]

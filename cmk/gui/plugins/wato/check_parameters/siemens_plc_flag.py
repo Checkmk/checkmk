@@ -5,20 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    DropdownChoice,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import DropdownChoice, TextInput
 
 
 def _item_spec_siemens_plc_flag():
-    return TextAscii(
+    return TextInput(
         title=_("Device Name and Value Ident"),
         help=_("You need to concatenate the device name which is configured in the special agent "
                "for the PLC device separated by a space with the ident of the value which is also "
@@ -44,5 +40,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         item_spec=_item_spec_siemens_plc_flag,
         parameter_valuespec=_parameter_valuespec_siemens_plc_flag,
-        title=lambda: _("State of Siemens PLC Flags"),
+        title=lambda: _("Siemens PLC Flag state"),
     ))

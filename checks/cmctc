@@ -4,6 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.cmctc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Table columns:
 # 0: index
 # 1: sensor type (10 = temperature)
@@ -44,7 +56,6 @@ check_info['cmctc.temp'] = {
     "has_perfdata": True,
     "service_description": "Temperature %s",
     "group": "temperature",
-    "includes": ["temperature.include", "cmctc.include"],
     "snmp_scan_function": cmctc_snmp_scan_function,
     "snmp_info": (
         # Base to all IO units

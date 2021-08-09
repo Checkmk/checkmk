@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
@@ -16,21 +16,33 @@ plugin ("pip install docker").
 
 This plugin it will be called by the agent without any arguments.
 """
-# N O T E:
-# docker is available for python versions from 2.6 / 3.3
 
 from __future__ import with_statement
 
+__version__ = "2.1.0i1"
+
+# this file has to work with both Python 2 and 3
+# pylint: disable=super-with-arguments
+
+# N O T E:
+# docker is available for python versions from 2.6 / 3.3
+
+import argparse
 import configparser
+import functools
+import json
+import logging
+import multiprocessing
 import os
+import pathlib
+import struct
 import sys
 import time
-import json
-import struct
-import argparse
-import functools
-import multiprocessing
-import logging
+
+try:
+    from typing import Dict, Tuple, Union
+except ImportError:
+    pass
 
 
 def which(prg):
@@ -53,14 +65,16 @@ except ImportError:
     sys.stdout.write('<<<docker_node_info:sep(124)>>>\n'
                      '@docker_version_info|{}\n'
                      '{"Critical": "Error: mk_docker requires the docker library.'
-                     ' Please install it on the monitored system (pip install docker)."}\n')
+                     ' Please install it on the monitored system (%s install docker)."}\n' %
+                     ('pip3' if sys.version_info.major == 3 else 'pip'))
     sys.exit(1)
 
-if int(docker.__version__.split('.')[0]) < 2:
+if int(docker.__version__.split('.', 1)[0]) < 2:
     sys.stdout.write('<<<docker_node_info:sep(124)>>>\n'
                      '@docker_version_info|{}\n'
                      '{"Critical": "Error: mk_docker requires the docker library >= 2.0.0.'
-                     ' Please install it on the monitored system (pip install docker)."}\n')
+                     ' Please install it on the monitored system (%s install docker)."}\n' %
+                     ('pip3' if sys.version_info.major == 3 else 'pip'))
     sys.exit(1)
 
 DEBUG = "--debug" in sys.argv[1:]
@@ -119,10 +133,11 @@ def get_config(cfg_file):
     files_read = config.read(cfg_file)
     LOGGER.info("read configration file(s): %r", files_read)
     section_name = "DOCKER" if config.sections() else "DEFAULT"
-    conf_dict = dict(config.items(section_name))
-
-    skip_list = conf_dict.get("skip_sections", "").split(',')
-    conf_dict["skip_sections"] = tuple(n.strip() for n in skip_list)
+    conf_dict = dict(config.items(section_name))  # type: Dict[str, Union[str, Tuple]]
+    skip_sections = conf_dict.get("skip_sections", "")
+    if isinstance(skip_sections, str):
+        skip_list = skip_sections.split(',')
+        conf_dict["skip_sections"] = tuple(n.strip() for n in skip_list)
 
     return conf_dict
 
@@ -138,15 +153,15 @@ class Section(list):
 
     # Should we need to parallelize one day, change this to be
     # more like the Section class in agent_azure, for instance
-    def __init__(self, name=None, separator=0, piggytarget=None):
+    def __init__(self, name=None, piggytarget=None):
         super(Section, self).__init__()
-        self.sep = chr(separator)
         if piggytarget is not None:
             self.append('<<<<%s>>>>' % piggytarget)
         if name is not None:
-            self.append('<<<docker_%s:sep(%d)>>>' % (name, separator))
+            self.append('<<<docker_%s:sep(124)>>>' % name)
             version_json = json.dumps(Section.version_info)
-            self.append(self.sep.join(('@docker_version_info', version_json)))
+            self.append('@docker_version_info|%s' % version_json)
+            self.append('<<<docker_%s:sep(0)>>>' % name)
 
     def write(self):
         if self[0].startswith('<<<<'):
@@ -165,6 +180,79 @@ def report_exception_to_server(exc, location):
     sec.write()
 
 
+class ParallelDfCall:
+    """handle parallel calls of super().df()
+
+    The Docker API will only allow one super().df() call at a time.
+    This leads to problems when the plugin is executed multiple times
+    in parallel.
+    """
+    def __init__(self, call):
+        self._call = call
+        self._vardir = pathlib.Path(os.getenv('MK_VARDIR', ''))
+        self._spool_file = self._vardir / "mk_docker_df.spool"
+        self._tmp_file_templ = "mk_docker_df.tmp.%s"
+        self._my_tmp_file = self._vardir / (self._tmp_file_templ % os.getpid())
+
+    def __call__(self):
+        try:
+            self._my_tmp_file.touch()
+            data = self._new_df_result()
+        except docker.errors.APIError as exc:
+            LOGGER.debug("df API call failed: %s", exc)
+            data = self._spool_df_result()
+        else:
+            # the API call succeeded, no need for any tmp files
+            for file_ in self._iter_tmp_files():
+                self._unlink(file_)
+        finally:
+            # what ever happens: remove my tmp file
+            self._unlink(self._my_tmp_file)
+
+        return data
+
+    def _new_df_result(self):
+        data = self._call()
+        self._write_df_result(data)
+        return data
+
+    def _iter_tmp_files(self):
+        return self._vardir.glob(self._tmp_file_templ % '*')
+
+    @staticmethod
+    def _unlink(file_):
+        try:
+            file_.unlink()
+        except FileNotFoundError:
+            pass
+
+    def _spool_df_result(self):
+        # check every 0.1 seconds
+        tick = 0.1
+        # if the df command takes more than 60 seconds, you probably want to
+        # execute the plugin asynchronously. This should cover a majority of cases.
+        timeout = 60
+        for _ in range(int(timeout / tick)):
+            time.sleep(tick)
+            if not any(self._iter_tmp_files()):
+                break
+
+        return self._read_df_result()
+
+    def _write_df_result(self, data):
+        with self._my_tmp_file.open('w') as file_:
+            file_.write(json.dumps(data))
+        self._my_tmp_file.rename(self._spool_file)
+
+    def _read_df_result(self):
+        """read from the spool file
+
+        Don't handle FileNotFound - the plugin can deal with it, and it's easier to debug.
+        """
+        with self._spool_file.open() as file_:
+            return json.loads(file_.read())
+
+
 class MKDockerClient(docker.DockerClient):
     '''a docker.DockerClient that caches containers and node info'''
     API_VERSION = "auto"
@@ -174,15 +262,20 @@ class MKDockerClient(docker.DockerClient):
         super(MKDockerClient, self).__init__(config['base_url'], version=MKDockerClient.API_VERSION)
         all_containers = self.containers.list(all=True)
         if config['container_id'] == "name":
-            self.all_containers = dict([(c.attrs["Name"].lstrip('/'), c) for c in all_containers])
+            self.all_containers = {c.attrs["Name"].lstrip('/'): c for c in all_containers}
         elif config['container_id'] == "long":
-            self.all_containers = dict([(c.attrs["Id"], c) for c in all_containers])
+            self.all_containers = {c.attrs["Id"]: c for c in all_containers}
         else:
-            self.all_containers = dict([(c.attrs["Id"][:12], c) for c in all_containers])
+            self.all_containers = {c.attrs["Id"][:12]: c for c in all_containers}
         self._env = {"REMOTE": os.getenv("REMOTE", "")}
         self._container_stats = {}
         self._device_map = None
         self.node_info = self.info()
+
+        self._df_caller = ParallelDfCall(call=super(MKDockerClient, self).df)
+
+    def df(self):
+        return self._df_caller()
 
     def device_map(self):
         with self._DEVICE_MAP_LOCK:
@@ -200,16 +293,16 @@ class MKDockerClient(docker.DockerClient):
     def iter_socket(sock, descriptor):
         '''iterator to recv data from container socket
         '''
-        header = sock.recv(8)
+        header = docker.utils.socket.read(sock, 8)
         while header:
             actual_descriptor, length = struct.unpack('>BxxxL', header)
             while length:
-                data = sock.recv(length)
+                data = docker.utils.socket.read(sock, length)
                 length -= len(data)
                 LOGGER.debug("Received data: %r", data)
                 if actual_descriptor == descriptor:
-                    yield data
-            header = sock.recv(8)
+                    yield data.decode('UTF-8')
+            header = docker.utils.socket.read(sock, 8)
 
     def get_stdout(self, exec_return_val):
         '''read stdout from container process
@@ -420,10 +513,13 @@ def section_container_agent(client, container_id):
         return True
     result = client.run_agent(container)
     success = '<<<check_mk>>>' in result
-    LOGGER.debug("running containers check_mk_agent: %s", 'ok' if success else 'failed')
-    section = Section(piggytarget=container_id)
-    section.append(result)
-    section.write()
+    if success:
+        LOGGER.debug("running check_mk_agent in container %s: ok", container_id)
+        section = Section(piggytarget=container_id)
+        section.append(result)
+        section.write()
+    else:
+        LOGGER.warning("running check_mk_agent in container %s failed: %s", container_id, result)
     return success
 
 

@@ -7,10 +7,14 @@
 import os
 from pathlib import Path
 
-from testlib import repo_path, import_module
+from tests.testlib import import_module, repo_path
+
+system_paths = [
+    "mkbackup_lock_dir",
+]
 
 pathlib_paths = [
-    "core_discovered_host_labels_dir",
+    "core_helper_config_dir",
     "base_discovered_host_labels_dir",
     "discovered_host_labels_dir",
     "piggyback_dir",
@@ -40,15 +44,25 @@ pathlib_paths = [
     "local_agent_based_plugins_dir",
     "diagnostics_dir",
     "site_config_dir",
+    "license_usage_dir",
+    "profile_dir",
 ]
 
 
 def _check_paths(root, module):
     for var, value in module.__dict__.items():
-        if not var.startswith("_") and var not in ('Path', 'os', 'sys', 'Union'):
+        if not var.startswith("_") and not var.startswith("make_") and var not in (
+                'Path',
+                'os',
+                'sys',
+                'Union',
+        ):
             if var in pathlib_paths:
                 assert isinstance(value, Path)
                 assert str(value).startswith(root)
+            elif var in system_paths:
+                assert isinstance(value, Path)
+                assert str(value).startswith("/")
             else:
                 assert isinstance(value, str)
                 # TODO: Differentiate in a more clever way between /omd and /opt paths

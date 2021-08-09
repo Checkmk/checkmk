@@ -10,5 +10,5 @@ description:
  No default levels are set. Upper levels can be set for "backend connections busy/too many",
  "backend connections failures" and "backend connections unhealthy/not attempted".
 
-inventory:
+discovery:
  One service is created.

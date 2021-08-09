@@ -40,12 +40,13 @@ from pathlib import Path
 
 from six import ensure_str
 
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
 
-import cmk.gui.config as config
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
+from cmk.gui.globals import config
+from cmk.gui.utils.roles import get_role_permissions
 from cmk.gui.watolib.groups import load_contact_group_information
 
 
@@ -83,9 +84,9 @@ def _create_php_file(callee, users, role_permissions, groups):
     # Do not change WATO internal objects
     nagvis_users = copy.deepcopy(users)
 
-    # Set a language for all users
     for user in nagvis_users.values():
-        user.setdefault('language', config.default_language)
+        user.setdefault('language', config.default_language)  # Set a language for all users
+        user.pop('session_info', None)  # remove the SessionInfo object
 
     content = u'''<?php
 // Created by Multisite UserDB Hook (%s)
@@ -207,7 +208,7 @@ def _create_auth_file(callee, users=None):
         if 'nagvis_maps' in group and group['nagvis_maps']:
             groups[gid] = group['nagvis_maps']
 
-    _create_php_file(callee, users, config.get_role_permissions(), groups)
+    _create_php_file(callee, users, get_role_permissions(), groups)
 
 
 def _on_userdb_job():

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When doing a "omd restore" as root user while the version of the site to be restored is not
 the OMD default version (mostly the last installed version), the restore could fail. This

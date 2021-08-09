@@ -5,18 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import collections
-import dataclasses
-import inspect
+import copy
+import enum
 import logging
-import string
 from typing import (
     Any,
     AnyStr,
     Callable,
+    cast,
     Dict,
     Iterable,
     List,
+    Literal,
+    Mapping,
     NamedTuple,
     Optional,
     Sequence,
@@ -31,35 +32,27 @@ from cmk.utils.type_defs import AgentRawData as _AgentRawData
 from cmk.utils.type_defs import CheckPluginNameStr as _CheckPluginName
 from cmk.utils.type_defs import HostAddress as _HostAddress
 from cmk.utils.type_defs import HostName as _HostName
-from cmk.utils.type_defs import RuleSetName as _RuleSetName
 from cmk.utils.type_defs import SectionName as _SectionName
+from cmk.utils.type_defs import SNMPDetectBaseType as _SNMPDetectBaseType
 
 SNMPContextName = str
 SNMPDecodedString = str
-SNMPDecodedBinary = List[int]
+SNMPDecodedBinary = Sequence[int]
 SNMPDecodedValues = Union[SNMPDecodedString, SNMPDecodedBinary]
-SNMPValueEncoding = str
-SNMPTable = List[List[SNMPDecodedValues]]
+SNMPValueEncoding = Literal["string", "binary"]
+SNMPTable = Sequence[Sequence[SNMPDecodedValues]]
 SNMPContext = Optional[str]
-SNMPSectionContent = Union[SNMPTable, List[SNMPTable]]
-SNMPSections = Dict[_SectionName, SNMPSectionContent]
-SNMPPersistedSection = Tuple[int, int, SNMPSectionContent]
-SNMPPersistedSections = Dict[_SectionName, SNMPPersistedSection]
-SNMPRawData = SNMPSections
-SNMPColumn = Union[str, int, Tuple[SNMPValueEncoding, str]]
-SNMPColumns = List[SNMPColumn]
+SNMPRawDataSection = Union[SNMPTable, Sequence[SNMPTable]]
+# The SNMPRawData type is not useful.  See comments to `AgentRawDataSection`.
+#
+#     **WE DO NOT WANT `NewType` HERE** because this prevents us to
+#     type some classes correctly.  The type should be *REMOVED* instead!
+#
+SNMPRawData = Mapping[_SectionName, SNMPRawDataSection]
 OID = str
-OIDWithColumns = Tuple[OID, SNMPColumns]
-OIDWithSubOIDsAndColumns = Tuple[OID, List[OID], SNMPColumns]
 OIDFunction = Callable[[OID, Optional[SNMPDecodedString], Optional[_CheckPluginName]],
                        Optional[SNMPDecodedString]]
 SNMPScanFunction = Callable[[OIDFunction], bool]
-# TODO (CMK-4490): Typing here is just wrong as there is no practical
-# difference between an OIDWithColumns and OIDWithSubOIDsAndColumns with
-# an empty List[OID].
-OIDSingleInfo = Union[OIDWithColumns, OIDWithSubOIDsAndColumns]
-OIDMultiInfo = List[OIDSingleInfo]
-OIDInfo = Union[OIDSingleInfo, OIDMultiInfo]
 SNMPRawValue = bytes
 SNMPRowInfo = List[Tuple[OID, SNMPRawValue]]
 
@@ -91,60 +84,34 @@ AbstractRawData = Union[_AgentRawData, SNMPRawData]
 TRawData = TypeVar("TRawData", bound=AbstractRawData)
 
 
-# make this a class in order to hide the List implementation from the sphinx doc!
-class SNMPDetectSpec(List[List[SNMPDetectAtom]]):
-    """A specification for SNMP device detection
+class SNMPBackendEnum(enum.Enum):
+    INLINE = "Inline"
+    PYSNMP = "PySNMP"
+    CLASSIC = "Classic"
 
-    Note that the structure of this object is not part of the API,
-    and may change at any time.
-    """
+    def serialize(self) -> str:
+        return self.name
+
+    @classmethod
+    def deserialize(cls, name: str) -> "SNMPBackendEnum":
+        return cls[name]
 
 
-@dataclasses.dataclass
-class SNMPRuleDependentDetectSpec:
-    """Structure for specifying SNMP detection specifications which depend on discovery rulesets
+class SNMPDetectSpec(_SNMPDetectBaseType):
+    """A specification for SNMP device detection"""
+    @classmethod
+    def from_json(cls, serialized: Mapping[str, Any]) -> "SNMPDetectSpec":
+        try:
+            # The cast is necessary as mypy does not infer types in a list comprehension.
+            # See https://github.com/python/mypy/issues/5068
+            return cls([[cast(SNMPDetectAtom, tuple(inner))
+                         for inner in outer]
+                        for outer in serialized["snmp_detect_spec"]])
+        except (LookupError, TypeError, ValueError) as exc:
+            raise ValueError(serialized) from exc
 
-    Args:
-        rulesets: Names of the discovery rulesets needed to compute the dectection specifications.
-        evaluator: Function which returns the current detection specifications based on the
-        user-defined rules for the current host. Input arguments must have the sames names and the
-        same order as the ruleset names. The return value must be of the type SNMPDetectSpec.
-
-    At runtime, evaluator will be provided with the lists of user-configured discovery rules that
-    were specified in rulesets.
-
-    Example:
-        rulesets = [RuleSetName('discovery_ruleset_1'), RuleSetName('discovery_ruleset_2')]
-
-        def evaluator(
-            discovery_ruleset_1: List[bool],
-            discovery_ruleset_2: List[Mapping],
-        ):
-            if len(discovery_ruleset_1) > 0 and discovery_ruleset_1[0]:
-                return SNMPDetectSpec([[('.1.2.3.4.5', 'Foo.*', True)]])
-            else:
-                discovery_ruleset_2_merged = {}
-                for discover_rule_2 in discovery_ruleset_2[::-1]:
-                    discovery_ruleset_2_merged.update(discover_rule_2)
-                if discovery_ruleset_2_merged.get('key2', 0) > 1:
-                    return SNMPDetectSpec([[('.5.3.2', 'Bar.*', True)]])
-            return SNMPDetectSpec([[('.7.8.9', 'Hohoho.*', True)]])
-
-        rule_dependent_detect_spec = SNMPRuleDependentDetectSpec(rulesets, evaluator)
-
-    Note:
-        The structure of this object is not part of the API and may change at any time.
-    """
-    rulesets: Sequence[_RuleSetName]
-    evaluator: Callable[..., SNMPDetectSpec]
-
-    def __post_init__(self):
-        expected_args = [str(ruleset) for ruleset in self.rulesets]
-        if expected_args != list(inspect.signature(self.evaluator).parameters):
-            if len(expected_args) == 0:
-                raise TypeError("evaluator must not accept any arguments")
-            raise TypeError("evaluator must accept exactly the following arguments: %s" %
-                            ', '.join(expected_args))
+    def to_json(self) -> Mapping[str, Any]:
+        return {"snmp_detect_spec": self}
 
 
 # Wraps the configuration of a host into a single object for the SNMP code
@@ -163,14 +130,16 @@ class SNMPHostConfig(
             ("snmpv3_contexts", list),
             ("character_encoding", Optional[str]),
             ("is_usewalk_host", bool),
-            ("is_inline_snmp_host", bool),
-            ("record_stats", bool),
+            ("snmp_backend", SNMPBackendEnum),
         ])):
     @property
     def is_snmpv3_host(self) -> bool:
         return isinstance(self.credentials, tuple)
 
-    def snmpv3_contexts_of(self, section_name: Optional[_SectionName]) -> List[SNMPContext]:
+    def snmpv3_contexts_of(
+        self,
+        section_name: Optional[_SectionName],
+    ) -> Sequence[SNMPContext]:
         if not section_name or not self.is_snmpv3_host:
             return [None]
         section_name_str = str(section_name)
@@ -179,7 +148,8 @@ class SNMPHostConfig(
                 return rules
         return [None]
 
-    def update(self, **kwargs: Dict[str, Any]) -> "SNMPHostConfig":
+    # TODO: Why not directly use SNMPHostConfig._replace(...)?
+    def update(self, **kwargs: Mapping[str, Any]) -> "SNMPHostConfig":
         """Return a new SNMPHostConfig with updated attributes."""
         cfg = self._asdict()
         cfg.update(**kwargs)
@@ -193,10 +163,21 @@ class SNMPHostConfig(
         except UnicodeDecodeError:
             return ensure_str(value, "latin1")
 
+    def serialize(self):
+        serialized = self._asdict()
+        serialized["snmp_backend"] = serialized["snmp_backend"].serialize()
+        return serialized
 
-class ABCSNMPBackend(metaclass=abc.ABCMeta):
+    @classmethod
+    def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPHostConfig":
+        serialized_ = copy.deepcopy(dict(serialized))
+        serialized_["snmp_backend"] = SNMPBackendEnum.deserialize(serialized_["snmp_backend"])
+        return cls(**serialized_)
+
+
+class SNMPBackend(metaclass=abc.ABCMeta):
     def __init__(self, snmp_config: SNMPHostConfig, logger: logging.Logger) -> None:
-        super(ABCSNMPBackend, self).__init__()
+        super().__init__()
         self._logger = logger
         self.config = snmp_config
 
@@ -227,206 +208,66 @@ class ABCSNMPBackend(metaclass=abc.ABCMeta):
         return []
 
 
-OID_END = 0  # Suffix-part of OID that was not specified
-OID_STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
-OID_BIN = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
-OID_END_BIN = -3  # Same, but just the end part
-OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
+class SpecialColumn(enum.IntEnum):
+    # Until we remove all but the first, its worth having an enum
+    END = 0  # Suffix-part of OID that was not specified
+    STRING = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
+    BIN = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
+    END_BIN = -3  # Same, but just the end part
+    END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
 
 
-class OIDSpec:
-    """Basic class for OID spec of the form ".1.2.3.4.5" or "2.3"
-    """
-    VALID_CHARACTERS = '.' + string.digits
+class BackendOIDSpec(NamedTuple):
+    column: Union[str, SpecialColumn]
+    encoding: SNMPValueEncoding
+    save_to_cache: bool
+
+    def _serialize(self) -> Union[Tuple[str, str, bool], Tuple[int, str, bool]]:
+        if isinstance(self.column, SpecialColumn):
+            return (int(self.column), self.encoding, self.save_to_cache)
+        return (self.column, self.encoding, self.save_to_cache)
 
     @classmethod
-    def validate(cls, value: str) -> None:
-        if not isinstance(value, str):
-            raise TypeError("expected a non-empty string: %r" % (value,))
-        if not value:
-            raise ValueError("expected a non-empty string: %r" % (value,))
-        invalid = ''.join(c for c in value if c not in cls.VALID_CHARACTERS)
-        if invalid:
-            raise ValueError("invalid characters in OID descriptor: %r" % invalid)
-        if value.endswith('.'):
-            raise ValueError("%r should not end with '.'" % (value,))
-
-    def __init__(self, value: Union["OIDSpec", str]) -> None:
-        if isinstance(value, OIDSpec):
-            value = str(value)
-
-        self.validate(value)
-        self._value = value
-
-    def __add__(self, right: Any) -> "OIDSpec":
-        """Concatenate two OID specs
-        We only allow adding (left to right) a "base" (starting with a '.')
-        to an "column" (not starting with '.').
-        We preserve the type of the column, which may signal caching or byte encoding.
-        """
-        if not isinstance(right, OIDSpec):
-            raise TypeError("cannot add %r" % (right,))
-        if not self._value.startswith('.') or right._value.startswith('.'):
-            raise ValueError("can only add full OIDs to partial OIDs")
-        return right.__class__("%s.%s" % (self, right))
-
-    def __eq__(self, other: Any) -> bool:
-        if other.__class__ != self.__class__:
-            return False
-        return self._value == other._value
-
-    def __str__(self) -> str:
-        return self._value
-
-    def __repr__(self) -> str:
-        return "%s(%r)" % (self.__class__.__name__, self._value)
+    def deserialize(
+        cls,
+        column: Union[str, int],
+        encoding: SNMPValueEncoding,
+        save_to_cache: bool,
+    ) -> 'BackendOIDSpec':
+        return cls(
+            SpecialColumn(column) if isinstance(column, int) else column, encoding, save_to_cache)
 
 
-class OIDCached(OIDSpec):
-    pass
+class BackendSNMPTree(NamedTuple):
+    """The 'working class' pendant to the check APIs 'SNMPTree'
 
-
-class OIDBytes(OIDSpec):
-    pass
-
-
-# The old API defines OID_END = 0.  Once we can drop the old API,
-# replace every occurence of this with OIDEnd.
-OIDEndCompat = int
-
-
-# We inherit from OIDEndCompat = int because we must be compatible with the
-# old APIs OID_END, OID_STRING and so on (in particular OID_END = 0).
-class OIDEnd(OIDEndCompat):
-    """OID specification to get the end of the OID string
-    When specifying an OID in an SNMPTree object, the parse function
-    will be handed the corresponding value of that OID. If you use OIDEnd()
-    instead, the parse function will be given the tailing portion of the
-    OID (the part that you not already know).
+    It mainly features (de)serialization. Validation is done during
+    section registration, so we can assume sane values here.
     """
+    base: str
+    oids: Sequence[BackendOIDSpec]
 
-    # NOTE: The default constructor already does the right thing for our "glorified 0".
-    def __repr__(self):
-        return "OIDEnd()"
-
-
-SNMPTreeInputOIDs = Iterable[Union[str, OIDSpec, OIDEnd]]
-
-
-class SNMPTree:
-    """Specify an OID table to fetch
-
-    For every SNMPTree that is specified, the parse function will
-    be handed a list of lists with the values of the corresponding
-    OIDs.
-    """
-    def __init__(
-        self,
+    @classmethod
+    def from_frontend(
+        cls,
         *,
-        base: Union[OIDSpec, str],
-        oids: SNMPTreeInputOIDs,
-    ) -> None:
-        super(SNMPTree, self).__init__()
-        self._base = self._sanitize_base(base)
-        self._oids = self._sanitize_oids(oids)
+        base: str,
+        oids: Iterable[Tuple[Union[str, int], SNMPValueEncoding, bool]],
+    ) -> 'BackendSNMPTree':
+        return cls(
+            base=base,
+            oids=[BackendOIDSpec.deserialize(*oid) for oid in oids],
+        )
 
-    def to_json(self) -> Dict[str, Any]:
+    def to_json(self) -> Mapping[str, Any]:
         return {
-            "base": SNMPTree._serialize_oid(self.base),
-            "oids": [SNMPTree._serialize_oid(oid) for oid in self.oids],
+            "base": self.base,
+            "oids": [oid._serialize() for oid in self.oids],
         }
 
     @classmethod
-    def from_json(cls, serialized: Dict[str, Any]) -> "SNMPTree":
+    def from_json(cls, serialized: Mapping[str, Any]) -> "BackendSNMPTree":
         return cls(
-            base=SNMPTree._deserialize_base(*serialized["base"]),
-            oids=[SNMPTree._deserialize_oids(*oid) for oid in serialized["oids"]],
+            base=serialized["base"],
+            oids=[BackendOIDSpec.deserialize(*oid) for oid in serialized["oids"]],
         )
-
-    @staticmethod
-    def _sanitize_base(base: Union[OIDSpec, str]) -> OIDSpec:
-        oid_base = OIDSpec(base)
-        if not str(oid_base).startswith('.'):
-            raise ValueError("%r must start with '.'" % (oid_base,))
-        return oid_base
-
-    @staticmethod
-    def _sanitize_oids(oids: SNMPTreeInputOIDs) -> List[Union[OIDSpec, OIDEndCompat]]:
-
-        # This check is stricter than the typization of oids. We do not want oids to be a str,
-        # however, unfortunately, str == Iterable[str], so it is currently not possible to exclude
-        # str by typization. Therefore, for now, we simply keep the check if oids is a list.
-        if not isinstance(oids, list):
-            raise TypeError("oids must be a list")
-
-        # Remove the "int" once OIDEndCompat is not needed anymore.
-        # We must handle int, for legacy code. Typing should prevent us from
-        # adding new cases.
-        typed_oids = [
-            oid if isinstance(oid, (OIDSpec, OIDEnd, int)) else OIDSpec(oid) for oid in oids
-        ]
-
-        # remaining validations only regard true OIDSpec objects
-        oid_specs = [o for o in typed_oids if isinstance(o, OIDSpec)]
-        if len(oid_specs) < 2:
-            return typed_oids  # type: ignore[return-value] # allow for legacy code
-
-        for oid in oid_specs:
-            if str(oid).startswith('.'):
-                raise ValueError("column %r must not start with '.'" % (oid,))
-
-        # make sure the base is as long as possible
-        heads_counter = collections.Counter(str(oid).split('.', 1)[0] for oid in oid_specs)
-        head, count = max(heads_counter.items(), key=lambda x: x[1])
-        if count == len(oid_specs) and all(str(o) != head for o in oid_specs):
-            raise ValueError("base can be extended by '.%s'" % head)
-
-        return typed_oids  # type: ignore[return-value] # allow for legacy code
-
-    @property
-    def base(self) -> OIDSpec:
-        return self._base
-
-    @property
-    def oids(self) -> List[Union[OIDSpec, OIDEndCompat]]:
-        return self._oids
-
-    @staticmethod
-    def _serialize_oid(oid: Union[OIDSpec, OIDEndCompat]) -> Tuple[str, Union[str, int]]:
-        if isinstance(oid, OIDSpec):
-            return type(oid).__name__, str(oid)
-        if isinstance(oid, OIDEndCompat):
-            return "OIDEnd", 0
-        raise TypeError(oid)
-
-    @staticmethod
-    def _deserialize_base(type_: str, value: str) -> OIDSpec:
-        # Note: base *cannot* be OIDEnd.
-        try:
-            return {
-                "OIDSpec": OIDSpec,
-                "OIDBytes": OIDBytes,
-                "OIDCached": OIDCached,
-            }[type_](value)
-        except LookupError as exc:
-            raise TypeError(type_) from exc
-
-    @staticmethod
-    def _deserialize_oids(type_: str, value: Union[str, int]) -> Union[str, OIDSpec, OIDEnd]:
-        try:
-            return {
-                "OIDSpec": OIDSpec,
-                "OIDBytes": OIDBytes,
-                "OIDCached": OIDCached,
-                "OIDEnd": OIDEndCompat,
-            }[type_](value)
-        except LookupError as exc:
-            raise TypeError(type_) from exc
-
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, self.__class__):
-            return False
-        return self.__dict__ == other.__dict__
-
-    def __repr__(self) -> str:
-        return "%s(base=%r, oids=%r)" % (self.__class__.__name__, self.base, self.oids)

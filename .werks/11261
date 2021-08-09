@@ -6,7 +6,7 @@ Date: 1597256073
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The version 1.6.0p14 introduced an issue affecting the Event Console and it's
 Livestatus communication with the local monitoring core.

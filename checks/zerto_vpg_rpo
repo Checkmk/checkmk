@@ -23,7 +23,7 @@ def parse_zerto_vpg(info):
     for line in info:
         if len(line) < 3:
             continue
-        vpgname = info[0]
+        vpgname = line[0]
         vpg = parsed.setdefault(vpgname, {})
         vpg["state"] = line[1]
         vpg["actual_rpo"] = line[2]
@@ -37,6 +37,7 @@ def check_zerto_vpg_rpo(_item, _params, data):
 
 
 check_info['zerto_vpg_rpo'] = {
+    'parse_function': parse_zerto_vpg,
     'inventory_function': discover(),
     'check_function': check_zerto_vpg_rpo,
     'service_description': 'Zerto VPG RPO %s',

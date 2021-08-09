@@ -1,0 +1,15 @@
+Title: heartbeat_crm: Fix ExceptionTypeError if cluster is not availabe
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1601303884
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+In case the cluster was not available, the check crashed with the error
+"ExceptionTypeError (expected string or buffer)".
+
+From now on, the check can handle such situations.

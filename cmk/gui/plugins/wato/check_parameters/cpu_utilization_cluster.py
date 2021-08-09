@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    ListOf,
-    Percentage,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksNetworking,
-    rulespec_registry,
     ManualCheckParameterRulespec,
+    rulespec_registry,
+    RulespecGroupEnforcedServicesNetworking,
 )
+from cmk.gui.valuespec import Integer, ListOf, Percentage, Tuple
 
 
 # TODO: Why is this only a manual check rulespec?
@@ -44,7 +39,7 @@ def _parameter_valuespec_cpu_utilization_cluster():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="cpu_utilization_cluster",
-        group=RulespecGroupManualChecksNetworking,
+        group=RulespecGroupEnforcedServicesNetworking,
         parameter_valuespec=_parameter_valuespec_cpu_utilization_cluster,
         title=lambda: _("CPU Utilization of Clusters"),
     ))

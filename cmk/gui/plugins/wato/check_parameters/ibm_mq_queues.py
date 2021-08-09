@@ -5,20 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+)
 from cmk.gui.valuespec import (
     Age,
     Dictionary,
     Integer,
     OptionalDropdownChoice,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
-)
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
 )
 
 
@@ -26,7 +25,7 @@ def _parameter_valuespec_ibm_mq_queues():
     return Dictionary(
         help=_(
             "See 'Queue status attributes' in IBM manual"
-            " (https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_9.1.0/com.ibm.mq.explorer.doc/e_status_queue.htm)"
+            "(https://www.ibm.com/support/knowledgecenter/en/SSFKSJ_9.2.0/com.ibm.mq.explorer.doc/e_status_queue.html)"
             " for detailed explanations of these parameters."),
         elements=[
             ("curdepth",
@@ -144,7 +143,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="ibm_mq_queues",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of Queue")),
+        item_spec=lambda: TextInput(title=_("Name of Queue")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_mq_queues,
         title=lambda: _("IBM MQ Queues"),

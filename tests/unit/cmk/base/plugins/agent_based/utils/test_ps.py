@@ -4,82 +4,78 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
-from cmk.base.discovered_labels import DiscoveredHostLabels
-
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import Parameters
-from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
+from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel, Result, State
 from cmk.base.plugins.agent_based.utils import ps
 
 pytestmark = pytest.mark.checks
 
 
 def test_host_labels_ps_no_match_attr():
-    section = (
-        1,
-        [
-            (
-                ps.ps_info(
-                    "(root,4056,1512,0.0/52-04:56:05,5689)".split()),  # type: ignore[call-arg]
-                ["/usr/lib/ssh/sshd"],
-            ),
-        ])
+    section = (1, [
+        (
+            ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
+            ["/usr/lib/ssh/sshd"],
+        ),
+    ])
     params = [
-        Parameters({
+        {
             "default_params": {},
             "descr": "SSH",
             "match": "~.*ssh?",
             "user": "flynn",
-            "label": DiscoveredHostLabels(HostLabel(u'marco', u'polo')),
-        }),
-        Parameters({}),
+            "label": {
+                'marco': 'polo'
+            },
+        },
+        {},
     ]
-    assert list(ps.host_labels_ps(params, section)) == []
+    assert list(ps.host_labels_ps(params, section)) == []  # type: ignore[arg-type]
 
 
 def test_host_labels_ps_no_match_pattern():
-    section = (
-        1,
-        [
-            (
-                ps.ps_info(
-                    "(root,4056,1512,0.0/52-04:56:05,5689)".split()),  # type: ignore[call-arg]
-                ["/usr/lib/ssh/sshd"],
-            ),
-        ])
+    section = (1, [
+        (
+            ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
+            ["/usr/lib/ssh/sshd"],
+        ),
+    ])
     params = [
-        Parameters({
+        {
             "default_params": {},
             "descr": "SSH",
             "match": "~wat?",
-            "label": DiscoveredHostLabels(HostLabel(u'marco', u'polo')),
-        }),
-        Parameters({}),
+            "label": {
+                'marco': 'polo'
+            },
+        },
+        {},
     ]
-    assert list(ps.host_labels_ps(params, section)) == []
+    assert list(ps.host_labels_ps(params, section)) == []  # type: ignore[arg-type]
 
 
 def test_host_labels_ps_match():
-    section = (
-        1,
-        [
-            (
-                ps.ps_info(
-                    "(root,4056,1512,0.0/52-04:56:05,5689)".split()),  # type: ignore[call-arg]
-                ["/usr/lib/ssh/sshd"],
-            ),
-        ])
+    section = (1, [
+        (
+            ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
+            ["/usr/lib/ssh/sshd"],
+        ),
+    ])
     params = [
-        Parameters({
+        {
             "default_params": {},
             "descr": "SSH",
             "match": "~.*ssh?",
-            "label": DiscoveredHostLabels(HostLabel(u'marco', u'polo')),
-        }),
-        Parameters({}),
+            "label": {
+                'marco': 'polo'
+            },
+        },
+        {},
     ]
-    assert list(ps.host_labels_ps(params, section)) == [HostLabel(u'marco', u'polo')]
+    assert list(ps.host_labels_ps(params, section)) == [  # type: ignore[arg-type]
+        HostLabel('marco', 'polo')
+    ]
 
 
 @pytest.mark.parametrize("ps_line, ps_pattern, user_pattern, result", [
@@ -92,7 +88,7 @@ def test_host_labels_ps_match():
     (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
 ])
 def test_process_matches(ps_line, ps_pattern, user_pattern, result):
-    psi = ps.ps_info(ps_line[0])  # type: ignore[call-arg]
+    psi = ps.PsInfo(ps_line[0])
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
     matches_proc = ps.process_matches(ps_line[1:], ps_pattern)
 
@@ -107,7 +103,7 @@ def test_process_matches(ps_line, ps_pattern, user_pattern, result):
     (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ['123'], True),
 ])
 def test_process_matches_match_groups(ps_line, ps_pattern, user_pattern, match_groups, result):
-    psi = ps.ps_info(ps_line[0])  # type: ignore[call-arg]
+    psi = ps.PsInfo(ps_line[0])  # type: ignore[call-arg]
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
     matches_proc = ps.process_matches(ps_line[1:], ps_pattern, match_groups)
 
@@ -191,3 +187,70 @@ def test_unused_value_remover():
             "new": (2.7, 2.7),
         },
     }
+
+
+def test_memory_perc_check_noop_no_resident_size():
+
+    procs = ps.ProcessAggregator(1, {})
+    assert not list(
+        ps.memory_perc_check(
+            procs,
+            {"resident_levels_perc": None},  # we just need the key here
+            {},
+        ))
+
+
+def test_memory_perc_check_noop_no_rule():
+
+    procs = ps.ProcessAggregator(1, {})
+    # add a fake process
+    procs.resident_size = 42
+
+    assert not list(ps.memory_perc_check(procs, {}, {}))
+
+
+def test_memory_perc_check_missing_mem_total():
+
+    missing_mem_result = [
+        Result(
+            state=State.UNKNOWN,
+            summary="Percentual RAM levels configured, but total RAM is unknown",
+        ),
+    ]
+
+    procs = ps.ProcessAggregator(1, {})
+    procs.resident_size = 42
+
+    assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None},
+                                     {})) == missing_mem_result
+
+    procs.running_on_nodes = {"A", "B"}
+    mem_map = {"A": 102400.0}
+    assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None},
+                                     mem_map)) == missing_mem_result
+
+
+def test_memory_perc_check_realnode():
+
+    procs = ps.ProcessAggregator(1, {})
+    procs.resident_size = 42
+
+    assert list(ps.memory_perc_check(procs, {"resident_levels_perc":
+        (10.0, 20.0)}, {"": 102400.0})) == [
+            Result(
+                state=State.CRIT,
+                summary='Percentage of total RAM: 42.00% (warn/crit at 10.00%/20.00%)',
+            ),
+        ]
+
+
+def test_memory_perc_check_cluster():
+
+    procs = ps.ProcessAggregator(1, {})
+    procs.resident_size = 42
+    procs.running_on_nodes = {"A", "B"}
+
+    mem_map = {"A": 102400.0, "B": 102400.0, "C": 102400.0}
+    assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None}, mem_map)) == [
+        Result(state=State.OK, summary='Percentage of total RAM: 21.00%')
+    ]

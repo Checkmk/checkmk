@@ -1,0 +1,12 @@
+Title: check_mail: Fix cleanup of messages ('Namespace' object has no attribute 'cleanup_messages')
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1610447039
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+

@@ -1,0 +1,24 @@
+Title: New inventory plugins for Fortinet systems
+Class: feature
+Compatible: compat
+Component: inv
+Date: 1612456866
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+This werk introduces four new inventory plugins plugins. They all
+gather their data via SNMP.
+<ul>
+<li><tt>fortisandbox_system</tt>: Inventorizes the operating system
+version of Fortinet FortiSandbox systems.</li>
+<li><tt>fortisandbox_software</tt>: Inventorizes the versions of the
+software of Fortinet FortiSandbox systems. Examples include the version
+of the tracer engine and the sniffer.</li>
+<li><tt>fortiauthenticator_system</tt>: Inventorizes the model and the
+serial number of Fortinet FortiAuthenticator systems.</li>
+<li><tt>fortigate_ha</tt>: Inventorizes the HighAvailability mode,
+priority, schedule, group id and group name of Fortinet FortiGate
+Systems.</li>
+</ul>

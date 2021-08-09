@@ -7,17 +7,18 @@
 Write cisco_prime_ sections containing JSON formatted results from Cisco Prime API
 """
 
-import sys
 import argparse
-import logging
 import json
+import logging
+import sys
 from typing import Optional, Sequence
 
 import requests
 from requests.packages import urllib3
 
-from cmk.special_agents.utils import vcrtrace
 from cmk.utils import password_store
+
+from cmk.special_agents.utils import vcrtrace
 
 API_PATH = "webacs/api/v1/data/"
 REQUESTS = {

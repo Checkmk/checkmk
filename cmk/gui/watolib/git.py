@@ -7,17 +7,16 @@
 import errno
 import glob
 import os
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 from six import ensure_str
 
 import cmk.utils
 
-import cmk.gui.config as config
-from cmk.gui.globals import g
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import g, user
+from cmk.gui.i18n import _
 from cmk.gui.log import logger
 
 
@@ -31,7 +30,7 @@ def _git_messages():
 
 
 def do_git_commit():
-    author = "%s <%s>" % (config.user.id, config.user.email)
+    author = "%s <%s>" % (user.id, user.email)
     git_dir = cmk.utils.paths.default_config_dir + "/.git"
     if not os.path.exists(git_dir):
         logger.debug("GIT: Initializing")
@@ -121,7 +120,7 @@ def _write_gitignore_files():
     config_dir = Path(cmk.utils.paths.default_config_dir)
 
     with config_dir.joinpath(".gitignore").open("w", encoding="utf-8") as f:
-        f.write("# This file is under control of Check_MK. Please don't modify it.\n"
+        f.write("# This file is under control of Checkmk. Please don't modify it.\n"
                 "# Your changes will be overwritten.\n"
                 "\n"
                 "*\n"

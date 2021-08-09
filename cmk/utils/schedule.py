@@ -14,7 +14,7 @@ import datetime
 import time
 
 from dateutil.relativedelta import relativedelta
-from dateutil.rrule import rrule, DAILY, WEEKLY, MONTHLY
+from dateutil.rrule import DAILY, MONTHLY, rrule, WEEKLY
 
 
 class Schedule(metaclass=abc.ABCMeta):
@@ -24,11 +24,13 @@ class Schedule(metaclass=abc.ABCMeta):
     Subclasses have to define the class attribute _delta and the
     instance attribute _rule.
     """
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def rule(self):
         pass
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def delta(self):
         pass
 

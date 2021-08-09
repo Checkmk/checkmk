@@ -6,7 +6,7 @@ Date: 1570615420
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If a host is a no-agent host with an IPMI management board configuration then
 the discovery page found some IPMI services. During the check phase these

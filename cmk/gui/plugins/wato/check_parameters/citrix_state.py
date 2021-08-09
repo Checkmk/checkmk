@@ -5,16 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState
 
 
 def _parameter_valuespec_citrix_state():
@@ -39,5 +35,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_citrix_state,
-        title=lambda: _("State of Citrix VMs"),
+        title=lambda: _("Citrix VM state"),
     ))

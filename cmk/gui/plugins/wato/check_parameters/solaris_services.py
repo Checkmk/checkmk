@@ -5,6 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
+)
 from cmk.gui.valuespec import (
     Alternative,
     Dictionary,
@@ -13,16 +20,8 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
-)
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
-    RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
 )
 
 
@@ -123,7 +122,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="solaris_services",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Name of the service"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Name of the service"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_solaris_services,
         title=lambda: _("Solaris Services"),

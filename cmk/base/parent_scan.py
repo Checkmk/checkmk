@@ -5,24 +5,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-import sys
+import pprint
 import socket
 import subprocess
+import sys
 import time
-import pprint
-from typing import Union, Tuple, Optional, Set, Dict, List
+from typing import Dict, List, Optional, Set, Tuple, Union
 
-import cmk.utils.tty as tty
-import cmk.utils.paths
 import cmk.utils.debug
+import cmk.utils.paths
+import cmk.utils.tty as tty
+from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.type_defs import HostAddress, HostName
 
-from cmk.base.caching import config_cache as _config_cache
-import cmk.base.obsolete_output as out
 import cmk.base.config as config
-import cmk.base.ip_lookup as ip_lookup
-from cmk.utils.type_defs import HostName, HostAddress
+import cmk.base.obsolete_output as out
 
 Gateways = List[Tuple[Optional[Tuple[Optional[HostName], HostAddress, Optional[HostName]]], str,
                       int, str]]
@@ -39,8 +38,8 @@ def do_scan_parents(hosts: List[HostName]) -> None:
     parent_rules = []
     gateway_hosts: Set[HostName] = set()
 
-    if config.max_num_processes < 1:
-        config.max_num_processes = 1
+    # TODO: Sneakily changing a global variable looks like a bad idea!
+    config.max_num_processes = max(config.max_num_processes, 1)
 
     outfilename = cmk.utils.paths.check_mk_config_dir + "/parents.mk"
 
@@ -80,7 +79,7 @@ def do_scan_parents(hosts: List[HostName]) -> None:
                     if dns_name:
                         gateway = dns_name
                     else:
-                        gateway = "gw-%s" % (gateway_ip.replace(".", "-"))
+                        gateway = HostName("gw-%s" % (gateway_ip.replace(".", "-")))
                     if gateway not in gateway_hosts:
                         gateway_hosts.add(gateway)
                         parent_hosts.append("%s|parent|ping" % gateway)
@@ -127,7 +126,7 @@ def scan_parents_of(config_cache: config.ConfigCache,
 
     if config.monitoring_host:
         host_config = config_cache.get_host_config(config.monitoring_host)
-        nagios_ip = ip_lookup.lookup_ipv4_address(host_config)
+        nagios_ip = config.lookup_ip_address(host_config, family=socket.AF_INET)
     else:
         nagios_ip = None
 
@@ -140,7 +139,7 @@ def scan_parents_of(config_cache: config.ConfigCache,
         console.verbose("%s " % host)
         host_config = config_cache.get_host_config(host)
         try:
-            ip = ip_lookup.lookup_ipv4_address(host_config)
+            ip = config.lookup_ip_address(host_config, family=socket.AF_INET)
             if ip is None:
                 raise RuntimeError()
             command = [
@@ -305,28 +304,28 @@ def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
 
 
 # find hostname belonging to an ip address. We must not use
-# reverse DNS but the Check_MK mechanisms, since we do not
+# reverse DNS but the Checkmk mechanisms, since we do not
 # want to find the DNS name but the name of a matching host
 # from all_hosts
 def _ip_to_hostname(config_cache: config.ConfigCache,
                     ip: Optional[HostAddress]) -> Optional[HostName]:
-    if not _config_cache.exists("ip_to_hostname"):
-        cache = _config_cache.get_dict("ip_to_hostname")
+    if "ip_to_hostname" not in _config_cache:
+        cache = _config_cache.get("ip_to_hostname")
 
         for host in config_cache.all_active_realhosts():
             host_config = config_cache.get_host_config(host)
             try:
-                cache[ip_lookup.lookup_ipv4_address(host_config)] = host
+                cache[config.lookup_ip_address(host_config, family=socket.AF_INET)] = host
             except Exception:
                 pass
     else:
-        cache = _config_cache.get_dict("ip_to_hostname")
+        cache = _config_cache.get("ip_to_hostname")
 
     return cache.get(ip)
 
 
 def _ip_to_dnsname(ip: HostAddress) -> Optional[HostName]:
     try:
-        return socket.gethostbyaddr(ip)[0]
+        return HostName(socket.gethostbyaddr(ip)[0])
     except Exception:
         return None

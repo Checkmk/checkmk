@@ -1,0 +1,15 @@
+Title: Monitoring of Fortinet FortiGate AntiVirus and IPS
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1612885431
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+This werk introduces the two new check plugins <tt>fortigate_antivirus</tt>
+and <tt>fortigate_ips</tt>. They monitor the detection and blocking rate of
+FortiGate AntiVirus and IPS systems. One service is created per virtual
+domain. These services go {WARN} or {CRIT} if the detection rate exceeds
+user-configurable levels.

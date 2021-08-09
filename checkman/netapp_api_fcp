@@ -11,6 +11,6 @@ description:
 item:
  The interface description
 
-inventory:
+discovery:
  One service is created for each fibrechannel interface.
 

@@ -5,17 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    MonitoringState,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _parameter_valuespec_hp_hh3c_ext_states():
@@ -47,8 +42,8 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="hp_hh3c_ext_states",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("Port"), help=_("The Port Description")),
+        item_spec=lambda: TextInput(title=_("Port"), help=_("The Port Description")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hp_hh3c_ext_states,
-        title=lambda: _("States of HP Switch modules"),
+        title=lambda: _("HP Switch module state"),
     ))

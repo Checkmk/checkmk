@@ -4,17 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .agent_based_api.v1 import (
-    parse_to_string_table,
-    register,
-    SNMPTree,
-)
+from .agent_based_api.v1 import register, SNMPTree
 from .utils import checkpoint
+
+
+def parse_checkpoint_inv_tunnels(string_table):
+    return string_table if string_table[0] else None
+
 
 register.snmp_section(
     name="checkpoint_inv_tunnels",
-    parse_function=parse_to_string_table,
-    trees=[
+    parse_function=parse_checkpoint_inv_tunnels,
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2620.500.9002.1",
             oids=[

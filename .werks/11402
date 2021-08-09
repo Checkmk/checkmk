@@ -1,0 +1,24 @@
+Title: Agent Bakery: New "Bake and sign" action
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1603177338
+Edition: cee
+Knowledge: undoc
+Level: 2
+Version: 2.0.0i1
+
+It is now possible to bake and sign all agents in one step. You can simply do this by pressing
+the corresponding button at the agent bakery. It will be available as soon as at least one
+signature key has been created or imported.
+
+When invoking "Bake and sign agents", you will be prompted for selecting a signature key and
+entering its passphrase. After that, every agent package will get baked and signed immediately
+after baking.
+
+When using "Bake and sign", it is assured that there are no unsigned packages visible for
+download at any time, avoiding that it could be seen accidentally by a calling agent updater, 
+leading to a "The deployment server provides an agent but that is not signed." error.
+
+The "Bake and sign" action is also available via REST API, please refer to the documentation
+for details.

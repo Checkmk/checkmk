@@ -1,0 +1,15 @@
+Title: Add option for number of items to show in topics
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1614160944
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+You have now the option to set the number of items that should be shown in
+topics until the "Show all" option is painted. All remaining items will only be
+visible, if the "Show all" option is used.
+
+This option can be found on creating or editing topics.

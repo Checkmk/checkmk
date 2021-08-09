@@ -8,29 +8,26 @@ import ast
 import re
 import socket
 import time
-from typing import Dict, List, Optional, Tuple
 from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 from six import ensure_binary, ensure_str
 
 import livestatus
 from livestatus import SiteId
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
+
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
-import cmk.gui.config as config
 import cmk.gui.sites as sites
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.permissions import (
-    permission_section_registry,
-    PermissionSection,
-)
-from cmk.gui.valuespec import DropdownChoices, DropdownChoiceEntry
+from cmk.gui.globals import config, g
+from cmk.gui.i18n import _
+from cmk.gui.permissions import permission_section_registry, PermissionSection
+from cmk.gui.valuespec import DropdownChoiceEntry, DropdownChoices
 
 
 def _socket_path() -> Path:
@@ -134,29 +131,25 @@ def service_levels():
     return config.mkeventd_service_levels
 
 
-def action_choices(omit_hidden=False):
+def action_choices(omit_hidden=False) -> List[Tuple[str, str]]:
     # The possible actions are configured in mkeventd.mk,
     # not in multisite.mk (like the service levels). That
     # way we have not direct access to them but need
     # to load them from the configuration.
-    return [ ( "@NOTIFY", _("Send monitoring notification")) ] + \
-           [ (a["id"], a["title"])
-             for a in eventd_configuration().get("actions", [])
-             if not omit_hidden or not a.get("hidden") ]
+    return ([("@NOTIFY", _("Send monitoring notification"))] +
+            [(a["id"], a["title"])
+             for a in _eventd_configuration().get("actions", [])
+             if not omit_hidden or not a.get("hidden")])
 
 
-cached_config = None
-
-
-def eventd_configuration():
-    global cached_config
-    if cached_config and cached_config[0] is html:
-        return cached_config[1]
+def _eventd_configuration() -> ec.ConfigFromWATO:
+    if "eventd_configuration" in g:
+        return g.eventd_configuration
 
     settings = ec.settings('', Path(cmk.utils.paths.omd_root),
                            Path(cmk.utils.paths.default_config_dir), [''])
     cfg = ec.load_config(settings)
-    cached_config = (html, cfg)
+    g.eventd_configuration = cfg
     return cfg
 
 
@@ -164,22 +157,22 @@ def daemon_running() -> bool:
     return _socket_path().exists()
 
 
-# Note: in order to be able to simulate an original IP address
-# we put hostname|ipaddress into the host name field. The EC
-# recognizes this and unpacks the data correctly.
-def send_event(event):
-    # "<%PRI%>@%TIMESTAMP%;%SL% %HOSTNAME% %syslogtag% %msg%\n"
-    prio = (event["facility"] << 3) + event["priority"]
+def send_event(event) -> str:
+    syslog_message_str = repr(
+        ec.SyslogMessage(
+            facility=event["facility"],
+            severity=event["priority"],
+            timestamp=time.time(),
+            host_name=event["host"],
+            application=event["application"],
+            text=event["text"],
+            ip_address=event["ipaddress"],
+            service_level=event["sl"],
+        ))
 
-    rfc = [
-        "<%d>@%d" % (prio, int(time.time())),
-        "%d %s|%s %s: %s\n" %
-        (event["sl"], event["host"], event["ipaddress"], event["application"], event["text"]),
-    ]
+    execute_command("CREATE", [syslog_message_str], site=event["site"])
 
-    execute_command("CREATE", [ensure_str(r) for r in rfc], site=event["site"])
-
-    return ";".join(rfc)
+    return syslog_message_str
 
 
 def get_local_ec_status():
@@ -295,8 +288,11 @@ def get_total_stats(only_sites):
 def get_stats_per_site(only_sites, stats_keys):
     try:
         sites.live().set_only_sites(only_sites)
-        for list_row in sites.live().query("GET eventconsolestatus\nColumns: %s" %
-                                           " ".join(stats_keys)):
+        # Do not mark the site as dead in case the Event Console is not available.
+        query = livestatus.Query("GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys),
+                                 suppress_exceptions=(livestatus.MKLivestatusTableNotFoundError,
+                                                      livestatus.MKLivestatusBadGatewayError))
+        for list_row in sites.live().query(query):
             yield dict(zip(stats_keys, list_row))
     finally:
         sites.live().set_only_sites(None)

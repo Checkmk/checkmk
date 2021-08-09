@@ -1,0 +1,39 @@
+Title: Improve login session security
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1601623889
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+In previous Checkmk versions the login sessions were not tracked on the Checkmk
+server side.  This means that a logout in the GUI was a pure client action
+destroying the authentication cookie. When the cookie was stored and reused
+later, the user was able to access the GUI again with that old login session
+which was logged out.
+
+This change extends the authentication cookie with a session ID which has to be
+known on the Checkmk server to result in a successful login. Once a login
+session is logging out from the GUI, the session is invalidated on the Checkmk
+server.  If a client tries to access the GUI with an invalidated authentication
+cookie, the login will be rejected from now.
+
+Please note that we have added some limitations with this change:
+
+<ul>
+<li>Per user we can now have up to 20 parallel login sessions. Once a user
+    account reaches the 21st sessions, the session with the longest inactivity will
+    be invalidated.</li>
+<li>Existing sessions with an inactivity of more than 7 days will be invalidated.</li>
+</ul>
+
+The change of the authentication cookie requires all users to login again to the
+GUI after updating to Checkmk 2.0, because the cookie format is now incompatible
+with the authentication cookies issued by previous Checkmk versions.
+
+We use the incompatibility to switch the authentication cookie hashing
+algorithm from to sha256. The previous md5 at this point was not a security
+problem, but it can be considered bad practice.

@@ -3,19 +3,13 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from typing import List
 
-from .agent_based_api.v1 import (
-    all_of,
-    contains,
-    OIDBytes,
-    register,
-    SNMPTree,
-    type_defs,
-)
+from .agent_based_api.v1 import all_of, contains, OIDBytes, register, SNMPTree, type_defs
 from .utils import if64, interfaces
 
 
-def parse_if64_tplink(string_table: type_defs.SNMPStringByteTable) -> interfaces.Section:
+def parse_if64_tplink(string_table: List[type_defs.StringByteTable]) -> interfaces.Section:
     """
     >>> from pprint import pprint
     >>> pprint(parse_if64_tplink([[
@@ -25,8 +19,8 @@ def parse_if64_tplink(string_table: type_defs.SNMPStringByteTable) -> interfaces
     ...  '622053', '471593', '0', '0', '28059984507', '146316671', '2292666', '221224', '0', '0',
     ...  '0', '', [172, 132, 198, 175, 52, 255], 'ifAlias']
     ... ]]))
-    [Interface(index='1', descr='Vlan-interface1', alias='', type='6', speed=0, oper_status='1', in_octets=377138653, in_ucast=0, in_mcast=322566, in_bcast=0, in_discards=0, in_errors=0, out_octets=833158925, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address=[172, 132, 198, 175, 52, 255], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None),
-     Interface(index='49153', descr='gigabitEthernet 1/0/1 : copper', alias='ifAlias', type='6', speed=1000000000, oper_status='1', in_octets=304751823764, in_ucast=273677445, in_mcast=622053, in_bcast=471593, in_discards=0, in_errors=0, out_octets=28059984507, out_ucast=146316671, out_mcast=2292666, out_bcast=221224, out_discards=0, out_errors=0, out_qlen=0, phys_address=[172, 132, 198, 175, 52, 255], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None)]
+    [Interface(index='1', descr='Vlan-interface1', alias='', type='6', speed=0, oper_status='1', in_octets=377138653, in_ucast=0, in_mcast=322566, in_bcast=0, in_discards=0, in_errors=0, out_octets=833158925, out_ucast=0, out_mcast=0, out_bcast=0, out_discards=0, out_errors=0, out_qlen=0, phys_address=[172, 132, 198, 175, 52, 255], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=1210297578),
+     Interface(index='49153', descr='gigabitEthernet 1/0/1 : copper', alias='ifAlias', type='6', speed=1000000000, oper_status='1', in_octets=304751823764, in_ucast=273677445, in_mcast=622053, in_bcast=471593, in_discards=0, in_errors=0, out_octets=28059984507, out_ucast=146316671, out_mcast=2292666, out_bcast=221224, out_discards=0, out_errors=0, out_qlen=0, phys_address=[172, 132, 198, 175, 52, 255], oper_status_name='up', speed_as_text='', group=None, node=None, admin_status=None, total_octets=332811808271)]
     """
     preprocessed_lines = []
     for line in string_table[0]:
@@ -42,7 +36,8 @@ def parse_if64_tplink(string_table: type_defs.SNMPStringByteTable) -> interfaces
 register.snmp_section(
     name="if64_tplink",
     parse_function=parse_if64_tplink,
-    trees=[
+    parsed_section_name="interfaces",
+    fetch=[
         SNMPTree(
             base=".1.3.6.1",
             oids=[
@@ -74,18 +69,5 @@ register.snmp_section(
         ),
     ],
     detect=all_of(contains(".1.3.6.1.2.1.1.2.0", ".4.1.11863."), if64.HAS_ifHCInOctets),
-    supersedes=['if', 'if64', 'if64adm'],
-)
-
-register.check_plugin(
-    name="if64_tplink",
-    service_name="Interface %s",
-    discovery_ruleset_name="inventory_if_rules",
-    discovery_ruleset_type="all",
-    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
-    discovery_function=interfaces.discover_interfaces,
-    check_ruleset_name="if",
-    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
-    check_function=if64.check_if64,
-    cluster_check_function=interfaces.cluster_check,
+    supersedes=['if', 'if64'],
 )

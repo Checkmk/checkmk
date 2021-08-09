@@ -8,76 +8,106 @@
 # TODO: More feature related splitting up would be better
 
 import abc
-import time
-import re
+import functools
 import hashlib
-from pathlib import Path
+import os
+import re
+import time
 import traceback
-from typing import Callable, NamedTuple, Hashable, TYPE_CHECKING, Any, Set, Tuple, List, Optional, Union, Dict, Type, cast
+from contextlib import suppress
+from pathlib import Path
+from typing import (
+    Any,
+    Callable,
+    cast,
+    Dict,
+    Hashable,
+    List,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    TYPE_CHECKING,
+    Union,
+)
 
 from six import ensure_str
 
 import livestatus
-from livestatus import SiteId, LivestatusColumn, LivestatusRow, OnlySites
+from livestatus import LivestatusColumn, LivestatusRow, OnlySites, SiteId
 
 import cmk.utils.plugin_registry
-import cmk.utils.render
 import cmk.utils.regex
+import cmk.utils.render
+from cmk.utils.check_utils import worst_service_state
+from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import (
-    Timestamp,
-    TimeRange,
     HostName,
-    TagGroups,
     LabelSources,
     ServiceName,
+    TaggroupIDToTagID,
+    TimeRange,
+    Timestamp,
 )
 
-import cmk.gui.config as config
-import cmk.gui.escaping as escaping
-import cmk.gui.sites as sites
-import cmk.gui.visuals as visuals
 import cmk.gui.forms as forms
+import cmk.gui.sites as sites
 import cmk.gui.utils
-import cmk.gui.view_utils
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.valuespec as valuespec
-from cmk.gui.permissions import Permission
-from cmk.gui.valuespec import ValueSpec, DropdownChoice
-from cmk.gui.log import logger
-from cmk.gui.htmllib import HTML
-from cmk.gui.i18n import _, _u
-from cmk.gui.globals import g, html
+import cmk.gui.view_utils
+import cmk.gui.visuals as visuals
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.display_options import display_options
-from cmk.gui.permissions import permission_registry
-from cmk.gui.view_utils import CellSpec, CSSClass, CellContent
-from cmk.gui.breadcrumb import make_topic_breadcrumb, Breadcrumb, BreadcrumbItem
+from cmk.gui.globals import config, display_options, g, html, request, response, theme, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _, _u, ungettext
+from cmk.gui.log import logger
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.pagetypes import PagetypeTopics
-
+from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import (
+    AllViewSpecs,
     ColumnName,
-    ViewName,
-    LivestatusQuery,
-    SorterName,
+    FilterName,
     HTTPVariables,
-    ViewSpec,
-    PainterSpec,
+    LivestatusQuery,
     PainterName,
+    PainterParameters,
+    PainterSpec,
+    PermittedViewSpecs,
     Row,
     Rows,
+    SingleInfos,
     SorterFunction,
-    AllViewSpecs,
-    PermittedViewSpecs,
+    SorterName,
+    ViewSpec,
+    Visual,
     VisualContext,
-    PainterParameters,
+    VisualLinkSpec,
+    VisualName,
 )
+from cmk.gui.utils.mobile import is_mobile
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
+from cmk.gui.valuespec import DropdownChoice, ValueSpec
+from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
 
 if TYPE_CHECKING:
-    from cmk.gui.views import View
     from cmk.gui.plugins.visuals.utils import Filter
+    from cmk.gui.views import View
 
+ExportCellContent = Union[str, Dict[str, Any]]
 PDFCellContent = Union[str, HTML, Tuple[str, str]]
 PDFCellSpec = Union[CellSpec, Tuple[CSSClass, PDFCellContent]]
+CommandSpecWithoutSite = str
+CommandSpecWithSite = Tuple[Optional[str], CommandSpecWithoutSite]
+CommandSpec = Union[CommandSpecWithoutSite, CommandSpecWithSite]
+CommandActionResult = Optional[Tuple[Union[CommandSpecWithoutSite, Sequence[CommandSpec]], str]]
+CommandExecutor = Callable[[CommandSpec, Optional[SiteId]], None]
+InventoryHintSpec = Dict[str, Any]
 
 
 # TODO: Better name it PainterOptions or DisplayOptions? There are options which only affect
@@ -99,7 +129,7 @@ class PainterOptions:
         return g.painter_options
 
     def __init__(self) -> None:
-        super(PainterOptions, self).__init__()
+        super().__init__()
         # The names of the painter options used by the current view
         self._used_option_names: List[str] = []
         # The effective options for this view
@@ -125,10 +155,10 @@ class PainterOptions:
         # Mandatory options for all views (if permitted)
         if display_options.enabled(display_options.O):
             if display_options.enabled(
-                    display_options.R) and config.user.may("general.view_option_refresh"):
+                    display_options.R) and user.may("general.view_option_refresh"):
                 options.add("refresh")
 
-            if config.user.may("general.view_option_columns"):
+            if user.may("general.view_option_columns"):
                 options.add("num_columns")
 
         # TODO: Improve sorting. Add a sort index?
@@ -142,16 +172,16 @@ class PainterOptions:
             return
 
         # Options are stored per view. Get all options for all views
-        vo = config.user.load_file("viewoptions", {})
+        vo = user.load_file("viewoptions", {})
         self._options = vo.get(view_name, {})
 
     def _is_anonymous_view(self, view_name: Optional[str]) -> bool:
         return view_name is None
 
     def save_to_config(self, view_name: str) -> None:
-        vo = config.user.load_file("viewoptions", {}, lock=True)
+        vo = user.load_file("viewoptions", {}, lock=True)
         vo[view_name] = self._options
-        config.user.save_file("viewoptions", vo)
+        user.save_file("viewoptions", vo)
 
     def update_from_url(self, view: 'View') -> None:
         self._load_used_options(view)
@@ -159,11 +189,11 @@ class PainterOptions:
         if not self.painter_option_form_enabled():
             return
 
-        if html.request.has_var("_reset_painter_options"):
+        if request.has_var("_reset_painter_options"):
             self._clear_painter_options(view.name)
             return
 
-        if html.request.has_var("_update_painter_options"):
+        if request.has_var("_update_painter_options"):
             self._set_from_submitted_form(view.name)
 
     def _set_from_submitted_form(self, view_name: str) -> None:
@@ -200,8 +230,8 @@ class PainterOptions:
         # Also remove the options from current html vars. Otherwise the
         # painter option form will display the just removed options as
         # defaults of the painter option form.
-        for varname, _value in list(html.request.itervars(prefix="po_")):
-            html.request.del_var(varname)
+        for varname, _value in list(request.itervars(prefix="po_")):
+            request.del_var(varname)
 
     def get_valuespec_of(self, name: str) -> ValueSpec:
         return painter_option_registry[name]().valuespec
@@ -237,7 +267,7 @@ class PainterOptions:
         return self._options
 
     def painter_options_permitted(self) -> bool:
-        return config.user.may("general.painter_options")
+        return user.may("general.painter_options")
 
     def painter_option_form_enabled(self) -> bool:
         return bool(self._used_option_names) and self.painter_options_permitted()
@@ -249,15 +279,14 @@ class PainterOptions:
             return
 
         html.begin_form("painteroptions")
-        forms.header(_("Display options"))
+        forms.header("", show_table_head=False)
         for name in self._used_option_names:
             vs = self.get_valuespec_of(name)
             forms.section(vs.title())
-            # TODO: Possible improvement for vars which default is specified
-            # by the view: Don't just default to the valuespecs default. Better
-            # use the view default value here to get the user the current view
-            # settings reflected.
-            vs.render_input("po_%s" % name, self.get(name))
+            if name == "refresh":
+                vs.render_input("po_%s" % name, view.spec.get("browser_reload", self.get(name)))
+                continue
+            vs.render_input("po_%s" % name, view.spec.get(name, self.get(name)))
         forms.end()
 
         html.button("_update_painter_options", _("Submit"), "submit")
@@ -267,7 +296,7 @@ class PainterOptions:
         html.end_form()
 
 
-def row_id(view_spec: Dict[str, Any], row: Row) -> str:
+def row_id(view_spec: ViewSpec, row: Row) -> str:
     """Calculates a uniq id for each data row which identifies the current
     row accross different page loadings."""
     key = u''
@@ -283,7 +312,7 @@ def group_value(row: Row, group_cells: 'List[Cell]') -> Hashable:
     for cell in group_cells:
         painter = cell.painter()
 
-        group_by_val = painter.group_by(row)
+        group_by_val = painter.group_by(row, cell)
         if group_by_val is not None:
             group.append(group_by_val)
 
@@ -299,17 +328,19 @@ def _create_dict_key(value: Any) -> Hashable:
     if isinstance(value, (list, tuple)):
         return tuple(map(_create_dict_key, value))
     if isinstance(value, dict):
-        return tuple([(k, _create_dict_key(v)) for (k, v) in sorted(value.items())])
+        return tuple((k, _create_dict_key(v)) for (k, v) in sorted(value.items()))
     return value
 
 
 class PainterOption(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a painter option. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def valuespec(self) -> ValueSpec:
         raise NotImplementedError()
 
@@ -352,12 +383,14 @@ class PainterOptionNumColumns(PainterOption):
 
 
 class Layout(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a layout. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Short human readable title of the layout"""
         raise NotImplementedError()
@@ -368,7 +401,8 @@ class Layout(metaclass=abc.ABCMeta):
         """Render the given data in this layout"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def can_display_checkboxes(self) -> bool:
         """Whether this layout can display checkboxes for selecting rows"""
         raise NotImplementedError()
@@ -418,16 +452,19 @@ exporter_registry = ViewExporterRegistry()
 
 
 class CommandGroup(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a command group. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def sort_index(self) -> int:
         raise NotImplementedError()
 
@@ -455,30 +492,59 @@ def register_command_group(ident: str, title: str, sort_index: int) -> None:
 
 
 class Command(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a command. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
-    def permission(self) -> Type[Permission]:
+    @property
+    @abc.abstractmethod
+    def permission(self) -> Permission:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def tables(self) -> List[str]:
         """List of livestatus table identities the action may be used with"""
         raise NotImplementedError()
 
+    def user_dialog_suffix(self, title: str, len_action_rows: int, cmdtag: str) -> str:
+        return title + " the following %(count)d %(what)s?" % {
+            "count": len_action_rows,
+            "what": ungettext(
+                "host",
+                "hosts",
+                len_action_rows,
+            ) if cmdtag == "HOST" else ungettext(
+                "service",
+                "services",
+                len_action_rows,
+            )
+        }
+
+    def user_confirm_options(self, len_rows: int, cmdtag: str) -> List[Tuple[str, str]]:
+        return [(_("Confirm"), "_do_confirm")]
+
     def render(self, what: str) -> None:
         raise NotImplementedError()
 
+    def action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+               num_rows: int) -> CommandActionResult:
+        result = self._action(cmdtag, spec, row, row_index, num_rows)
+        if result:
+            commands, title = result
+            return commands, self.user_dialog_suffix(title, num_rows, cmdtag)
+        return None
+
     @abc.abstractmethod
-    def action(self, cmdtag: str, spec: str, row: dict, row_index: int,
-               num_rows: int) -> Optional[Tuple[Union[str, List[str]], str]]:
+    def _action(self, cmdtag: str, spec: str, row: Row, row_index: int,
+                num_rows: int) -> CommandActionResult:
         raise NotImplementedError()
 
     @property
@@ -496,12 +562,23 @@ class Command(metaclass=abc.ABCMeta):
         return "commands"
 
     @property
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return False
 
-    def executor(self, command: str, site: str) -> None:
+    @property
+    def is_shortcut(self) -> bool:
+        return False
+
+    @property
+    def is_suggested(self) -> bool:
+        return False
+
+    def executor(self, command: CommandSpec, site: Optional[SiteId]) -> None:
         """Function that is called to execute this action"""
-        sites.live().command("[%d] %s" % (int(time.time()), command), SiteId(site))
+        # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
+        # object type for the command
+        assert isinstance(command, str)
+        sites.live().command("[%d] %s" % (int(time.time()), command), site)
 
 
 class CommandRegistry(cmk.utils.plugin_registry.Registry[Type[Command]]):
@@ -526,6 +603,8 @@ def register_legacy_command(spec: Dict[str, Any]) -> None:
             "render": lambda s: s._spec["render"](),
             "action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["action"]
                       (cmdtag, spec, row),
+            "_action": lambda s, cmdtag, spec, row, row_index, num_rows: s._spec["_action"]
+                       (cmdtag, spec, row),
             "group": lambda s: command_group_registry[s._spec.get("group", "various")],
             "only_view": lambda s: s._spec.get("only_view"),
         })
@@ -534,23 +613,27 @@ def register_legacy_command(spec: Dict[str, Any]) -> None:
 
 class ABCDataSource(metaclass=abc.ABCMeta):
     """Provider of rows for the views (basically tables of data) in the GUI"""
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a data source. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Used as display-string for the datasource in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def table(self) -> 'RowTable':
         """Returns a table object that can provide a list of rows for the provided
         query using the query() method."""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def infos(self) -> List[str]:
         """Infos that are available with this data sources
 
@@ -581,7 +664,8 @@ class ABCDataSource(metaclass=abc.ABCMeta):
         """additional livestatus headers to add to each call"""
         return ""
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def keys(self) -> List[ColumnName]:
         """columns which must be fetched in order to execute commands on
         the items (= in order to identify the items and gather all information
@@ -589,14 +673,15 @@ class ABCDataSource(metaclass=abc.ABCMeta):
         those columns are always fetched from the datasource for each item"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def id_keys(self) -> List[ColumnName]:
         """These are used to generate a key which is unique for each data row
         is used to identify an item between http requests"""
         raise NotImplementedError()
 
     @property
-    def join(self) -> Optional[Tuple]:
+    def join(self) -> Optional[Tuple[str, str]]:
         """A view can display e.g. host-rows and include information from e.g.
         the service table to create a column which shows e.g. the state of one
         service.
@@ -671,13 +756,14 @@ data_source_registry = DataSourceRegistry()
 class RowTable(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def query(self, view: 'View', columns: List[ColumnName], headers: str, only_sites: OnlySites,
-              limit: Optional[int], all_active_filters: 'List[Filter]') -> Rows:
+              limit: Optional[int],
+              all_active_filters: 'List[Filter]') -> Union[Rows, Tuple[Rows, int]]:
         raise NotImplementedError()
 
 
 class RowTableLivestatus(RowTable):
     def __init__(self, table_name: str) -> None:
-        super(RowTableLivestatus, self).__init__()
+        super().__init__()
         self._table_name = table_name
 
     @property
@@ -717,8 +803,9 @@ class RowTableLivestatus(RowTable):
                 if c not in columns:
                     columns.append(c)
 
-        # Remove columns which are implicitely added by the datasource
-        return [c for c in columns if c not in datasource.add_columns], dynamic_columns
+        # Remove columns which are implicitly added by the datasource. We sort the remaining
+        # columns to allow for repeatable tests.
+        return [c for c in sorted(columns) if c not in datasource.add_columns], dynamic_columns
 
     def prepare_lql(self, columns: List[ColumnName], headers: str) -> LivestatusQuery:
         query = "GET %s\n" % self.table_name
@@ -727,7 +814,7 @@ class RowTableLivestatus(RowTable):
         return query
 
     def query(self, view: 'View', columns: List[ColumnName], headers: str, only_sites: OnlySites,
-              limit: Optional[int], all_active_filters: 'List[Filter]') -> Rows:
+              limit: Optional[int], all_active_filters: 'List[Filter]') -> Tuple[Rows, int]:
         """Retrieve data via livestatus, convert into list of dicts,
 
         view: view object
@@ -756,7 +843,7 @@ class RowTableLivestatus(RowTable):
             painter = cell.painter()
             painter.derive(rows, cell, dynamic_columns.get(index))
 
-        return rows
+        return rows, len(data)
 
 
 def query_livestatus(query: LivestatusQuery, only_sites: OnlySites, limit: Optional[int],
@@ -796,17 +883,23 @@ class Painter(metaclass=abc.ABCMeta):
     make use of more than one data columns. One example is the current
     service state. It uses the columns "service_state" and "has_been_checked".
     """
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a painter. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
     @abc.abstractmethod
     def title(self, cell: 'Cell') -> str:
-        """Used as display string for the painter in the GUI (e.g. view editor)"""
+        """Used as display string for the painter in the GUI (e.g. views using this painter)"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    def title_classes(self) -> List[str]:
+        """Additional css classes used to render the title"""
+        return []
+
+    @property
+    @abc.abstractmethod
     def columns(self) -> List[ColumnName]:
         """Livestatus columns needed for this painter"""
         raise NotImplementedError()
@@ -860,7 +953,16 @@ class Painter(metaclass=abc.ABCMeta):
         Falls back to the full title if no short title is given"""
         return self.title(cell)
 
-    def group_by(self, row: Row) -> Union[None, str, Tuple]:
+    def list_title(self, cell: 'Cell') -> str:
+        """Override this to define a custom title for the painter in the view editor
+        Falls back to the full title if no short title is given"""
+        return self.title(cell)
+
+    def group_by(
+        self,
+        row: Row,
+        cell: 'Cell',
+    ) -> Union[None, str, Tuple[str, ...], Tuple[Tuple[str, str], ...]]:
         """When a value is returned, this is used instead of the value produced by self.paint()"""
         return None
 
@@ -881,6 +983,11 @@ class Painter(metaclass=abc.ABCMeta):
         False      : Is not printable at all
         "<string>" : ID of a painter_printer (Reporting module)
         """
+        return True
+
+    @property
+    def use_painter_link(self) -> bool:
+        """Allow the view spec to define a view / dashboard to link to"""
         return True
 
     @property
@@ -915,7 +1022,7 @@ def register_painter(ident: str, spec: Dict[str, Any]) -> None:
             "short_title": lambda s, cell: s._spec.get("short", s.title),
             "columns": property(lambda s: s._spec["columns"]),
             "render": lambda self, row, cell: spec["paint"](row),
-            "group_by": lambda self, row: self._spec.get("groupby"),
+            "group_by": lambda self, row, cell: self._spec.get("groupby"),
             "parameters": property(lambda s: s._spec.get("params")),
             "painter_options": property(lambda s: s._spec.get("options", [])),
             "printable": property(lambda s: s._spec.get("printable", True)),
@@ -928,17 +1035,20 @@ def register_painter(ident: str, spec: Dict[str, Any]) -> None:
 class Sorter(metaclass=abc.ABCMeta):
     """A sorter is used for allowing the user to sort the queried data
     according to a certain logic."""
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         """The identity of a sorter. One word, may contain alpha numeric characters"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def title(self) -> str:
         """Used as display string for the sorter in the GUI (e.g. view editor)"""
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def columns(self) -> List[str]:
         """Livestatus columns needed for this sorter"""
         raise NotImplementedError()
@@ -971,9 +1081,46 @@ class Sorter(metaclass=abc.ABCMeta):
 
 
 class DerivedColumnsSorter(Sorter):
+    """
+    Can be used to transfer an additional parameter to the Sorter instance.
+
+    To transport the additional parameter through the url and other places the
+    parameter is added to the sorter name seperated by a colon.
+
+    This mechanism is used by the Columns "Service: Metric History", "Service:
+    Metric Forecast": Those columns can be sorted by "Sorting"-section in
+    the "Edit View" only after you added the column to the columns list and
+    saved the view, or by clicking on the column header in the view.
+
+    It's also used by host custom attributes: Those can be sorted by the
+    "Sorting"-section in the "Edit View" options independent of the column
+    section.
+    """
+    # TODO: should somehow be harmonized. this is probably not possible as the
+    # metric sorting options can not be serialized into a short/simple string,
+    # this is why the uuid option was introduced. Now there are basically three
+    # different ways to subselect sorting options:
+    # * don't use subselect at all (see Inventory): simply put all the posible
+    #   values with a prefix into the sorting list (drawback: long list)
+    # * don't use explicit options for sorting (see Metrics): link between
+    #   columns and sorting via uuid (drawback: have to display column to
+    #   activate sorting)
+    # * use explicit options for sorting (see Custom Attributes): Encode the
+    #   choosen value in the name (possible because it's only a simple string
+    #   instead of complex options as with the metrics) and append it to the
+    #   name of the column (drawback: it's the third hack)
+
     @abc.abstractmethod
-    def derived_columns(self, view: 'View', uuid: Optional[str]) -> List[str]:
+    def derived_columns(self, view: 'View', uuid: Optional[str]) -> None:
+        # TODO: rename uuid, as this is no longer restricted to uuids
         raise NotImplementedError()
+
+    def get_parameters(self) -> Optional[ValueSpec]:
+        """
+        If not None, this ValueSpec will be visible after selecting this Sorter
+        in the section "Sorting" in the "Edit View" form
+        """
+        return None
 
 
 class SorterRegistry(cmk.utils.plugin_registry.Registry[Type[Sorter]]):
@@ -1003,14 +1150,14 @@ def register_sorter(ident: str, spec: Dict[str, Any]) -> None:
 # TODO: Refactor to plugin_registries
 multisite_builtin_views: Dict = {}
 view_hooks: Dict = {}
-inventory_displayhints: Dict = {}
+inventory_displayhints: Dict[str, InventoryHintSpec] = {}
 # For each view a function can be registered that has to return either True
 # or False to show a view as context link
 view_is_enabled: Dict = {}
 
 
-def view_title(view_spec: ViewSpec) -> str:
-    return visuals.visual_title('view', view_spec)
+def view_title(view_spec: ViewSpec, context: VisualContext) -> str:
+    return visuals.visual_title('view', view_spec, context)
 
 
 def transform_action_url(url_spec: Union[Tuple[str, str], str]) -> Tuple[str, Optional[str]]:
@@ -1020,7 +1167,8 @@ def transform_action_url(url_spec: Union[Tuple[str, str], str]) -> Tuple[str, Op
 
 
 def is_stale(row: Row) -> bool:
-    return row.get('service_staleness', row.get('host_staleness', 0)) >= config.staleness_threshold
+    staleness = row.get('service_staleness', row.get('host_staleness', 0)) or 0
+    return staleness >= config.staleness_threshold
 
 
 def paint_stalified(row: Row, text: CellContent) -> CellSpec:
@@ -1034,77 +1182,184 @@ def paint_host_list(site: SiteId, hosts: List[HostName]) -> CellSpec:
         cmk.gui.view_utils.get_host_list_links(site, [ensure_str(h) for h in hosts]))
 
 
-def format_plugin_output(output: CellContent, row: Row) -> str:
+def format_plugin_output(output: str, row: Row) -> HTML:
     return cmk.gui.view_utils.format_plugin_output(output,
                                                    row,
                                                    shall_escape=config.escape_plugin_output)
 
 
-def link_to_view(content: CellContent, row: Row, view_name: ViewName) -> CellContent:
+def render_link_to_view(content: CellContent, row: Row, link_spec: VisualLinkSpec) -> CellContent:
     assert not isinstance(content, dict)
     if display_options.disabled(display_options.I):
         return content
 
-    url = url_to_view(row, view_name)
+    url = url_to_visual(row, link_spec)
     if url:
         return html.render_a(content, href=url)
     return content
 
 
-# TODO: There is duplicated logic with visuals.collect_context_links_of()
-def url_to_view(row: Row, view_name: ViewName) -> Optional[str]:
+def url_to_visual(row: Row, link_spec: VisualLinkSpec) -> Optional[str]:
     if display_options.disabled(display_options.I):
         return None
 
-    view = get_permitted_views().get(view_name)
-    if not view:
+    visual = _get_visual_by_link_spec(link_spec)
+    if not visual:
         return None
 
-    # Get the context type of the view to link to, then get the parameters of this
-    # context type and try to construct the context from the data of the row
-    url_vars: HTTPVariables = []
-    datasource = data_source_registry[view['datasource']]()
-    for info_key in datasource.infos:
-        if info_key in view['single_infos']:
-            # Determine which filters (their names) need to be set
-            # for specifying in order to select correct context for the
-            # target view.
-            for filter_name in visuals.info_params(info_key):
-                filter_object = visuals.get_filter(filter_name)
-                # Get the list of URI vars to be set for that filter
-                new_vars = filter_object.variable_settings(row)
-                url_vars += new_vars
+    visual_type = visual_type_registry[link_spec.type_name]()
+
+    if visual_type.ident == "views":
+        datasource = data_source_registry[visual['datasource']]()
+        infos = datasource.infos
+        link_filters = datasource.link_filters
+    elif visual_type.ident == "dashboards":
+        # TODO: Is this "infos" correct?
+        infos = []
+        link_filters = {}
+    else:
+        raise NotImplementedError(f"Unsupported visual type: {visual_type}")
+
+    singlecontext_request_vars = _get_singlecontext_html_vars_from_row(
+        visual["name"], row, infos, visual["single_infos"], link_filters)
+
+    return make_linked_visual_url(visual_type, visual, singlecontext_request_vars,
+                                  is_mobile(request, response))
+
+
+def _get_visual_by_link_spec(link_spec: Optional[VisualLinkSpec]) -> Optional[Visual]:
+    if link_spec is None:
+        return None
+
+    visual_type = visual_type_registry[link_spec.type_name]()
+    visual_type.load_handler()
+    available_visuals = visual_type.permitted_visuals
+
+    with suppress(KeyError):
+        return available_visuals[link_spec.name]
+
+    return None
+
+
+def _get_singlecontext_html_vars_from_row(
+    visual_name: VisualName,
+    row: Row,
+    infos: List[str],
+    single_infos: SingleInfos,
+    link_filters: Dict[str, str],
+) -> Dict[str, str]:
+    # Get the context type of the view to link to, then get the parameters of this context type
+    # and try to construct the context from the data of the row
+    url_vars: Dict[str, str] = {}
+    for info_key in single_infos:
+        # Determine which filters (their names) need to be set for specifying in order to select
+        # correct context for the target view.
+        for filter_name in visuals.info_params(info_key):
+            filter_object = visuals.get_filter(filter_name)
+            # Get the list of URI vars to be set for that filter
+            try:
+                url_vars.update(filter_object.request_vars_from_row(row))
+            except KeyError:
+                # The information needed for a mandatory filter (single context) is not available.
+                # Continue without failing: The target site will show up a warning and ask for the
+                # missing information.
+                pass
 
     # See get_link_filter_names() comment for details
-    for src_key, dst_key in visuals.get_link_filter_names(view, datasource.infos,
-                                                          datasource.link_filters):
+    for src_key, dst_key in visuals.get_link_filter_names(single_infos, infos, link_filters):
         try:
-            url_vars += visuals.get_filter(src_key).variable_settings(row)
+            url_vars.update(visuals.get_filter(src_key).request_vars_from_row(row))
         except KeyError:
             pass
 
         try:
-            url_vars += visuals.get_filter(dst_key).variable_settings(row)
+            url_vars.update(visuals.get_filter(dst_key).request_vars_from_row(row))
         except KeyError:
             pass
 
-    add_site_hint = visuals.may_add_site_hint(view_name,
-                                              info_keys=datasource.infos,
-                                              single_info_keys=view["single_infos"],
-                                              filter_names=[v for v, _ in url_vars])
-    if add_site_hint and row.get('site'):
-        url_vars.append(('site', row['site']))
+    add_site_hint = visuals.may_add_site_hint(visual_name,
+                                              info_keys=list(visual_info_registry.keys()),
+                                              single_info_keys=single_infos,
+                                              filter_names=list(url_vars.keys()))
+    if add_site_hint and row.get("site"):
+        url_vars["site"] = row["site"]
 
-    do = html.request.var("display_options")
-    if do:
-        url_vars.append(("display_options", do))
-
-    filename = "mobile_view.py" if html.mobile else "view.py"
-    url_vars.insert(0, ("view_name", view_name))
-    return filename + "?" + html.urlencode_vars(url_vars)
+    return url_vars
 
 
-def get_tag_groups(row: Row, what: str) -> TagGroups:
+def make_linked_visual_url(visual_type: VisualType, visual: Visual,
+                           singlecontext_request_vars: Dict[str, str], mobile: bool) -> str:
+    """Compute URLs to link from a view to other dashboards and views"""
+    name = visual["name"]
+
+    filename = visual_type.show_url
+    if mobile and visual_type.show_url == 'view.py':
+        filename = 'mobile_' + visual_type.show_url
+
+    required_vars = [(visual_type.ident_attr, name)]
+
+    # add context link to this visual. For reports we put in
+    # the *complete* context, even the non-single one.
+    if visual_type.multicontext_links:
+        # Keeping the _active flag is a long distance hack to be able to rebuild the
+        # filters on the linked view using the visuals.VisualFilterListWithAddPopup.from_html_vars
+        return makeuri(request, required_vars, filename=filename, keep_vars=["_active"])
+
+    vars_values = get_linked_visual_request_vars(visual, singlecontext_request_vars)
+    # For views and dashboards currently the current filter settings
+    return makeuri_contextless(
+        request,
+        vars_values + required_vars,
+        filename=filename,
+    )
+
+
+def translate_filters(visual):
+    if datasource_name := visual.get('datasource'):
+        datasource = data_source_registry[datasource_name]()
+        link_filters = datasource.link_filters
+        return lambda x: link_filters.get(x, x)
+    return lambda x: x
+
+
+def get_linked_visual_request_vars(visual: Visual,
+                                   singlecontext_request_vars: Dict[str, str]) -> HTTPVariables:
+    vars_values: HTTPVariables = []
+
+    filters = visuals.get_single_info_keys(visual["single_infos"])
+    active_filters: List[FilterName] = []
+
+    for src_filter, dst_filter in zip(filters, map(translate_filters(visual), filters)):
+        try:
+            src_var = visuals.get_filter(src_filter).htmlvars[0]
+            dst_var = visuals.get_filter(dst_filter).htmlvars[0]
+            vars_values.append((dst_var, singlecontext_request_vars[src_var]))
+            active_filters.append(dst_filter)
+        except KeyError:
+            # The information needed for a mandatory filter (single context) is not available.
+            # Continue without failing: The target site will show up a warning and ask for the
+            # missing information.
+            pass
+
+    if "site" in singlecontext_request_vars:
+        vars_values.append(("site", singlecontext_request_vars["site"]))
+    else:
+        # site may already be added earlier from the livestatus row
+        add_site_hint = visuals.may_add_site_hint(visual["name"],
+                                                  info_keys=list(visual_info_registry.keys()),
+                                                  single_info_keys=visual["single_infos"],
+                                                  filter_names=list(dict(vars_values).keys()))
+
+        if add_site_hint and request.var('site'):
+            vars_values.append(('site', request.get_ascii_input_mandatory('site')))
+            active_filters.append("site")
+
+    vars_values.append(("_active", ";".join(active_filters)))
+
+    return vars_values
+
+
+def get_tag_groups(row: Row, what: str) -> TaggroupIDToTagID:
     # Sites with old versions that don't have the tag groups column return
     # None for this field. Convert this to the default value
     groups = row.get("%s_tags" % what, {}) or {}
@@ -1139,7 +1394,7 @@ def paint_age(timestamp: Timestamp,
 
     painter_options = PainterOptions.get_instance()
     if mode is None:
-        mode = painter_options.get("ts_format")
+        mode = request.var("po_ts_format", painter_options.get("ts_format"))
 
     if mode == "epoch":
         return "", str(int(timestamp))
@@ -1149,9 +1404,10 @@ def paint_age(timestamp: Timestamp,
         css, h2 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "rel", what=what)
         return css, "%s - %s" % (h1, h2)
 
-    dateformat = painter_options.get("ts_date")
     age = time.time() - timestamp
     if mode == "abs" or (mode == "mixed" and abs(age) >= 48 * 3600):
+        dateformat = request.var("po_ts_date", painter_options.get("ts_date"))
+        assert dateformat is not None
         return "age", time.strftime(dateformat + " %H:%M:%S", time.localtime(timestamp))
 
     warn_txt = u''
@@ -1180,7 +1436,7 @@ def paint_age(timestamp: Timestamp,
 def paint_nagiosflag(row: Row, field: ColumnName, bold_if_nonzero: bool) -> CellSpec:
     nonzero = row[field] != 0
     return ("badflag" if nonzero == bold_if_nonzero else "goodflag",
-            _("yes") if nonzero else _("no"))
+            html.render_span(_("yes") if nonzero else _("no")))
 
 
 def declare_simple_sorter(name: str, title: str, column: ColumnName, func: SorterFunction) -> None:
@@ -1260,13 +1516,18 @@ def cmp_custom_variable(r1: Row, r2: Row, key: str, cmp_func: SorterFunction) ->
 
 
 def cmp_ip_address(column: ColumnName, r1: Row, r2: Row) -> int:
-    def split_ip(ip):
+    return compare_ips(r1.get(column, ''), r2.get(column, ''))
+
+
+def compare_ips(ip1: str, ip2: str) -> int:
+    def split_ip(ip: str) -> Tuple:
         try:
             return tuple(int(part) for part in ip.split('.'))
-        except Exception:
-            return ip
+        except ValueError:
+            # Make hostnames comparable with IPv4 address representations
+            return (255, 255, 255, 255, ip)
 
-    v1, v2 = split_ip(r1.get(column, '')), split_ip(r2.get(column, ''))
+    v1, v2 = split_ip(ip1), split_ip(ip2)
     return (v1 > v2) - (v1 < v2)
 
 
@@ -1306,11 +1567,6 @@ def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[Li
     mergefuncs: List[Callable[[LivestatusColumn, LivestatusColumn],
                               LivestatusColumn]] = [site_column_merge_func]
 
-    def worst_service_state(a, b):
-        if a == 2 or b == 2:
-            return 2
-        return max(a, b)
-
     def worst_host_state(a, b):
         if a == 1 or b == 1:
             return 1
@@ -1321,11 +1577,12 @@ def _merge_data(data: List[LivestatusRow], columns: List[ColumnName]) -> List[Li
         if col.startswith("num_") or col.startswith("members"):
             mergefunc = lambda a, b: a + b
         elif col.startswith("worst_service"):
-            mergefunc = worst_service_state
+            mergefunc = functools.partial(worst_service_state, default=3)
         elif col.startswith("worst_host"):
             mergefunc = worst_host_state
         else:
             mergefunc = lambda a, b: a
+
         mergefuncs.append(mergefunc)
 
     for row in data:
@@ -1349,7 +1606,7 @@ def join_row(row: Row, cell: 'Cell') -> Row:
 
 def get_view_infos(view: ViewSpec) -> List[str]:
     """Return list of available datasources (used to render filters)"""
-    ds_name = view.get('datasource', html.request.var('datasource'))
+    ds_name = view.get('datasource', request.var('datasource'))
     return data_source_registry[ds_name]().infos
 
 
@@ -1357,18 +1614,21 @@ def replace_action_url_macros(url: str, what: str, row: Row) -> str:
     macros = {
         "HOSTNAME": row['host_name'],
         "HOSTADDRESS": row['host_address'],
-        "USER_ID": config.user.id,
+        "USER_ID": user.id,
     }
     if what == 'service':
         macros.update({
             "SERVICEDESC": row['service_description'],
         })
-
-    for key, val in macros.items():
-        url = url.replace("$%s$" % key, val)
-        url = url.replace("$%s_URL_ENCODED$" % key, html.urlencode(val))
-
-    return url
+    return replace_macros_in_str(
+        url,
+        {
+            k_mod: v_mod for k_orig, v_orig in macros.items() for k_mod, v_mod in (
+                (f"${k_orig}$", v_orig),
+                (f"${k_orig}_URL_ENCODED$", urlencode(v_orig)),
+            )
+        },
+    )
 
 
 def render_cache_info(what: str, row: Row) -> str:
@@ -1494,7 +1754,7 @@ def _transform_old_views(all_views: AllViewSpecs) -> AllViewSpecs:
             single_keys = visuals.get_single_info_keys(view["single_infos"])
 
             # First get vars for the classic filters
-            context: VisualContext = {}
+            context: Dict[str, Dict[str, str]] = {}  # VisualContext, yet mutates on creation
             filtervars = dict(view['hard_filtervars'])
             all_vars = {}
             for filter_name in view['show_filters']:
@@ -1623,7 +1883,7 @@ class Cell:
         self._view = view
         self._painter_name: Optional[PainterName] = None
         self._painter_params: Optional[PainterParameters] = None
-        self._link_view_name: Optional[ViewName] = None
+        self._link_spec: Optional[VisualLinkSpec] = None
         self._tooltip_painter_name: Optional[PainterName] = None
         self._custom_title: Optional[str] = None
 
@@ -1636,7 +1896,7 @@ class Cell:
             self._painter_params = painter_spec[0][1]
             self._custom_title = self._painter_params.get('column_title', None)
 
-        self._link_view_name = painter_spec.link_view
+        self._link_spec = painter_spec.link_spec
 
         tooltip_painter_name = painter_spec.tooltip
         if tooltip_painter_name is not None and tooltip_painter_name in painter_registry:
@@ -1647,16 +1907,14 @@ class Cell:
 
         columns = set(self.painter().columns)
 
-        if self._link_view_name:
-            if self._has_link():
-                link_view = self._link_view()
-                if link_view:
-                    # TODO: Clean this up here
-                    for filt in [
-                            visuals.get_filter(fn)
-                            for fn in visuals.get_single_info_keys(link_view["single_infos"])
-                    ]:
-                        columns.update(filt.link_columns)
+        link_view = self._link_view()
+        if link_view:
+            # TODO: Clean this up here
+            for filt in [
+                    visuals.get_filter(fn)
+                    for fn in visuals.get_single_info_keys(link_view["single_infos"])
+            ]:
+                columns.update(filt.link_columns)
 
         if self.has_tooltip():
             columns.update(self.tooltip_painter().columns)
@@ -1669,15 +1927,12 @@ class Cell:
     def join_service(self) -> Optional[ServiceName]:
         return None
 
-    def _has_link(self) -> bool:
-        return self._link_view_name is not None
-
     def _link_view(self) -> Optional[ViewSpec]:
-        if self._link_view_name is None:
+        if self._link_spec is None:
             return None
 
         try:
-            return get_permitted_views()[self._link_view_name]
+            return get_permitted_views()[self._link_spec.name]
         except KeyError:
             return None
 
@@ -1689,7 +1944,9 @@ class Cell:
         return self._painter_name
 
     def export_title(self) -> str:
-        return ensure_str(self.painter_name())
+        if self._custom_title:
+            return re.sub(r"[^\w]", "_", self._custom_title.lower())
+        return self.painter_name()
 
     def painter_options(self) -> List[str]:
         return self.painter().painter_options
@@ -1740,7 +1997,7 @@ class Cell:
         assert self._tooltip_painter_name is not None
         return painter_registry[self._tooltip_painter_name]()
 
-    def paint_as_header(self, is_last_column_header: bool = False) -> None:
+    def paint_as_header(self) -> None:
         # Optional: Sort link in title cell
         # Use explicit defined sorter or implicit the sorter with the painter name
         # Important for links:
@@ -1748,25 +2005,25 @@ class Cell:
         # - Link to _self (Always link to the current frame)
         classes: List[str] = []
         onclick = ''
-        title = u''
+        title = ''
         if display_options.enabled(display_options.L) \
            and self._view.spec.get('user_sortable', False) \
            and _get_sorter_name_of_painter(self.painter_name()) is not None:
             params: HTTPVariables = [
                 ('sort', self._sort_url()),
+                ('_show_filter_form', 0),
             ]
             if display_options.title_options:
                 params.append(('display_options', display_options.title_options))
 
             classes += ["sort"]
-            onclick = "location.href=\'%s\'" % html.makeuri(params, 'sort')
+            onclick = "location.href=\'%s\'" % makeuri(
+                request, addvars=params, remove_prefix='sort')
             title = _('Sort by %s') % self.title()
-
-        if is_last_column_header:
-            classes.append("last_col")
+        classes += self.painter().title_classes()
 
         html.open_th(class_=classes, onclick=onclick, title=title)
-        html.write(self.title())
+        html.write_text(self.title())
         html.close_th()
 
     def _sort_url(self) -> str:
@@ -1798,6 +2055,8 @@ class Cell:
             uuid = ':%s' % self.painter_parameters()['uuid']
             assert sorter_name is not None
             sorter_name += uuid
+        elif painter_name in {'host_custom_variable'}:
+            sorter_name = f'{sorter_name}:{self.painter_parameters()["ident"]}'
 
         this_asc_sorter = SorterSpec(sorter_name, False, self.join_service())
         this_desc_sorter = SorterSpec(sorter_name, True, self.join_service())
@@ -1840,31 +2099,37 @@ class Cell:
             return "", ""
 
         # Add the optional link to another view
-        if content and self._has_link() and self._link_view_name is not None:
-            content = link_to_view(content, row, self._link_view_name)
+        if content and self._link_spec is not None and self._use_painter_link():
+            content = render_link_to_view(content, row, self._link_spec)
 
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():
+            assert not isinstance(content, dict)
             tooltip_cell = Cell(self._view, PainterSpec(self.tooltip_painter_name()))
             _tooltip_tdclass, tooltip_content = tooltip_cell.render_content(row)
             assert not isinstance(tooltip_content, dict)
             tooltip_text = escaping.strip_tags(tooltip_content)
             if tooltip_text:
-                content = '<span title="%s">%s</span>' % (tooltip_text, content)
+                content = html.render_span(content, title=tooltip_text)
 
         return tdclass, content
+
+    def _use_painter_link(self) -> bool:
+        return self.painter().use_painter_link
 
     # Same as self.render() for HTML output: Gets a painter and a data
     # row and creates the text for being painted.
     def render_for_pdf(self, row: Row, time_range: TimeRange) -> PDFCellSpec:
         # TODO: Move this somewhere else!
         def find_htdocs_image_path(filename):
+            themes = theme.icon_themes()
             for file_path in [
                     cmk.utils.paths.local_web_dir / "htdocs" / filename,
                     Path(cmk.utils.paths.web_dir, "htdocs", filename),
             ]:
-                if file_path.exists():
-                    return str(file_path)
+                for path_in_theme in (str(file_path).replace(t, "facelift") for t in themes):
+                    if os.path.exists(path_in_theme):
+                        return path_in_theme
 
         try:
             row = join_row(row, self)
@@ -1879,7 +2144,8 @@ class Cell:
             # images, but all that we need for showing simple icons.
             # Current limitation: *one* image
             assert not isinstance(txt, tuple)
-            if txt.lower().startswith("<img"):
+            if ((isinstance(txt, str) and txt.lower().startswith("<img")) or
+                (isinstance(txt, HTML) and txt.lower().startswith(HTML("<img")))):
                 img_filename = re.sub('.*src=["\']([^\'"]*)["\'].*', "\\1", str(txt))
                 img_path = find_htdocs_image_path(img_filename)
                 if img_path:
@@ -1888,7 +2154,7 @@ class Cell:
                     txt = img_filename
 
             if isinstance(txt, HTML):
-                txt = escaping.strip_tags("%s" % txt)
+                txt = escaping.strip_tags(str(txt))
 
             elif not isinstance(txt, tuple):
                 txt = escaping.unescape_attributes(txt)
@@ -1901,7 +2167,7 @@ class Cell:
 
     # TODO: We really should have some intermediate "data" layer that would make it possible to
     # extract the data for the export in a cleaner way.
-    def render_for_export(self, row):
+    def render_for_export(self, row: Row) -> ExportCellContent:
         rendered_txt = self.render_content(row)[1]
         if rendered_txt is None:
             return ""
@@ -1913,12 +2179,11 @@ class Cell:
         if isinstance(rendered_txt, dict):
             return rendered_txt
 
-        txt: str = rendered_txt.strip()
+        txt: str = str(rendered_txt).strip()
 
         # Similar to the PDF rendering hack above, but this time we extract the title from our icons
         # and add them to the CSV export instead of stripping the whole HTML tag.
         # Current limitation: *one* image
-        assert not isinstance(txt, tuple)
         if txt.lower().startswith("<img"):
             txt = re.sub('.*title=["\']([^\'"]*)["\'].*', "\\1", str(txt))
         return txt
@@ -1933,34 +2198,27 @@ class Cell:
             raise Exception(_("Painter %r returned invalid result: %r") % (painter.ident, result))
         return result
 
-    def paint(self, row: Row, tdattrs: str = "", is_last_cell: bool = False) -> bool:
+    def paint(self, row: Row, colspan: Optional[int] = None) -> bool:
         tdclass, content = self.render(row)
-        has_content = content != ""
         assert not isinstance(content, dict)
-
-        if is_last_cell:
-            if tdclass is None:
-                tdclass = "last_col"
-            else:
-                tdclass += " last_col"
-
-        if tdclass:
-            html.write("<td %s class=\"%s\">" % (tdattrs, tdclass))
-            html.write(content)
-            html.close_td()
-        else:
-            html.write("<td %s>" % (tdattrs))
-            html.write(content)
-            html.close_td()
-
-        return has_content
+        html.td(content, class_=tdclass, colspan=colspan)
+        return content != ""
 
 
-SorterSpec = NamedTuple("SorterSpec", [
-    ("sorter", SorterName),
-    ("negate", bool),
-    ("join_key", Optional[str]),
-])
+SorterSpec = NamedTuple(
+    "SorterSpec",
+    [
+        # some Sorter need an additional parameter e.g. svc_metrics_hist, svc_metrics_forecast
+        # The parameter is then encoded in the sorter name. "[sorter]:[param]"
+        # other Sorter (custom host metric) do the same when the information is
+        # coming from the url, but use a CascadingDropdown to let the user
+        # input the information. This results in a Tuple as a result variable.
+        # TODO: perhaps it could be possible to use the ValueSpec to
+        #       transparently transform the tuple into a single string?!
+        ("sorter", Union[SorterName, Tuple[SorterName, Dict[str, str]]]),
+        ("negate", bool),
+        ("join_key", Optional[str]),
+    ])
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterSpec.__new__.__defaults__ = (None,) * len(SorterSpec._fields)  # type: ignore[attr-defined]
 
@@ -1972,11 +2230,22 @@ SorterEntry = NamedTuple("SorterEntry", [
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)  # type: ignore[attr-defined]
 
+SorterListEntry = Union[Tuple[Union[str, Tuple[str, Dict[str, str]]], bool],
+                        Tuple[Union[str, Tuple[str, Dict[str, str]]], bool, Optional[str]]]
+
 
 def _encode_sorter_url(sorters: List[SorterSpec]) -> str:
-    p = []
+    p: List[str] = []
     for s in sorters:
-        url = (u'-' if s.negate else u'') + s.sorter
+        sorter_name = s.sorter
+        if not isinstance(sorter_name, str):
+            # sorter_name is a tuple
+            if sorter_name[0] in {'host_custom_variable'}:
+                sorter_name, params = sorter_name
+                sorter_name = "{}:{}".format(sorter_name, params['ident'])
+            else:
+                raise MKGeneralException(f"Can not handle sorter {sorter_name}")
+        url = ('-' if s.negate else '') + sorter_name
         if s.join_key:
             url += '~' + s.join_key
         p.append(url)
@@ -2006,10 +2275,10 @@ def _parse_url_sorters(sort: Optional[str]) -> List[SorterSpec]:
 class JoinCell(Cell):
     def __init__(self, view: 'View', painter_spec: PainterSpec) -> None:
         self._join_service_descr: Optional[ServiceName] = None
-        super(JoinCell, self).__init__(view, painter_spec)
+        super().__init__(view, painter_spec)
 
     def _from_view(self, painter_spec: PainterSpec) -> None:
-        super(JoinCell, self)._from_view(painter_spec)
+        super()._from_view(painter_spec)
 
         self._join_service_descr = painter_spec.join_index
 
@@ -2031,22 +2300,22 @@ class JoinCell(Cell):
         return self._custom_title or self.join_service()
 
     def export_title(self) -> str:
-        return "%s.%s" % (self._painter_name, self.join_service())
+        serv_painter = re.sub(r"[^\w]", "_", self.title().lower())
+        return "%s.%s" % (self._painter_name, serv_painter)
 
 
 class EmptyCell(Cell):
-    def render(self, row):
+    def render(self, row: Row) -> CellSpec:
         return "", ""
 
-    def paint(self, row, tdattrs="", is_last_cell=False):
+    def paint(self, row: Row, colspan: Optional[int] = None) -> bool:
         return False
 
 
 def output_csv_headers(view: ViewSpec) -> None:
     filename = '%s-%s.csv' % (view['name'],
                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    html.response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(
-        filename)
+    response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(filename)
 
 
 def _get_sorter_name_of_painter(
@@ -2106,10 +2375,12 @@ def make_service_breadcrumb(host_name: HostName, service_name: ServiceName) -> B
     # Add service home page
     breadcrumb.append(
         BreadcrumbItem(
-            title=view_title(service_view_spec),
-            url=html.makeuri_contextless([("view_name", "service"), ("host", host_name),
-                                          ("service", service_name)],
-                                         filename="view.py"),
+            title=view_title(service_view_spec, context={}),
+            url=makeuri_contextless(
+                request,
+                [("view_name", "service"), ("host", host_name), ("service", service_name)],
+                filename="view.py",
+            ),
         ))
 
     return breadcrumb
@@ -2127,16 +2398,34 @@ def make_host_breadcrumb(host_name: HostName) -> Breadcrumb:
     breadcrumb.append(
         BreadcrumbItem(
             title=_u(allhosts_view_spec["title"]),
-            url=html.makeuri_contextless([("view_name", "allhosts")], filename="view.py"),
+            url=makeuri_contextless(
+                request,
+                [("view_name", "allhosts")],
+                filename="view.py",
+            ),
         ))
 
-    # 2. level: host home page
+    # 2. Level: hostname (url to status of host)
+    breadcrumb.append(
+        BreadcrumbItem(
+            title=host_name,
+            url=makeuri_contextless(
+                request,
+                [("view_name", "hoststatus"), ("host", host_name)],
+                filename="view.py",
+            ),
+        ))
+
+    # 3. level: host home page
     host_view_spec = permitted_views["host"]
     breadcrumb.append(
         BreadcrumbItem(
-            title=view_title(host_view_spec),
-            url=html.makeuri_contextless([("view_name", "host"), ("host", host_name)],
-                                         filename="view.py"),
+            title=view_title(host_view_spec, context={}),
+            url=makeuri_contextless(
+                request,
+                [("view_name", "host"), ("host", host_name)],
+                filename="view.py",
+            ),
         ))
 
     return breadcrumb

@@ -8,7 +8,7 @@ description:
 
  This check supports Hepta 8029 and Hepta 8030 devices.
 
-inventory:
+discovery:
  One service is created.
 
 item:

@@ -8,22 +8,23 @@
 # TODO: More feature related splitting up would be better
 
 import abc
-from hashlib import md5
 import json
+from hashlib import md5
 from typing import Type
 
 from six import ensure_binary
 
 import cmk.utils.plugin_registry
 
-import cmk.gui.config as config
+import cmk.gui.utils.escaping as escaping
 import cmk.gui.watolib as watolib
-import cmk.gui.escaping as escaping
-from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.exceptions import MKUserError
+from cmk.gui.sites import allsites
 from cmk.gui.valuespec import Hostname
+from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 
 class APICallCollection(metaclass=abc.ABCMeta):
@@ -120,7 +121,7 @@ def _validate_general_host_attributes(host_attributes, new):
                 attr.validate_input(value, "")
 
         # The site attribute gets an extra check
-        if name == "site" and value not in config.allsites().keys():
+        if name == "site" and value not in allsites().keys():
             raise MKUserError(None, _("Unknown site %s") % escaping.escape_attribute(value))
 
 

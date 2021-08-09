@@ -7,11 +7,11 @@
 configuration and cache files (cmk --backup and cmk --restore). This
 is implemented here. """
 
+import io
 import os
 import shutil
 import tarfile
 import time
-import io
 from typing import List, Tuple
 
 import cmk.utils.paths

@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    Integer,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice, NetworkPort, TextInput
 
 
 def _item_spec_k8s_port():
-    return TextAscii(
+    return TextInput(
         title=_("Port"),
         help=_("Name or number of the port"),
     )
@@ -28,21 +22,9 @@ def _item_spec_k8s_port():
 
 def _parameter_valuespec_k8s_port():
     return Dictionary(elements=[
-        ('port', Integer(
-            title=_('Port'),
-            minvalue=0,
-            maxvalue=65535,
-        )),
-        ('target_port', Integer(
-            title=_('Target port'),
-            minvalue=0,
-            maxvalue=65535,
-        )),
-        ('node_port', Integer(
-            title=_('Node port'),
-            minvalue=0,
-            maxvalue=65535,
-        )),
+        ('port', NetworkPort(title=_('Port'),)),
+        ('target_port', NetworkPort(title=_('Target port'),)),
+        ('node_port', NetworkPort(title=_('Node port'),)),
         ('protocol',
          DropdownChoice(
              title=_('Protocol'),

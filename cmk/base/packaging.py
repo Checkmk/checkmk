@@ -4,32 +4,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import logging
+import os
 import sys
 import tarfile
-from typing import BinaryIO, cast, List
 from pathlib import Path
+from typing import AbstractSet, BinaryIO, cast, List
 
 from six import ensure_str
 
-from cmk.utils.log import VERBOSE
+import cmk.utils.debug
+import cmk.utils.packaging as packaging
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.werks
-import cmk.utils.debug
-import cmk.utils.packaging as packaging
+from cmk.utils.log import VERBOSE
 from cmk.utils.packaging import (
-    PackageException,
-    package_dir,
-    read_package_info,
-    write_package_info,
-    parse_package_info,
-    get_package_parts,
-    unpackaged_files_in_dir,
     get_config_parts,
     get_initial_package_info,
+    get_package_parts,
+    package_dir,
     PACKAGE_EXTENSION,
+    PackageException,
+    parse_package_info,
+    read_package_info,
+    unpackaged_files,
+    unpackaged_files_in_dir,
+    write_package_info,
 )
 
 logger = logging.getLogger("cmk.base.packaging")
@@ -54,6 +55,7 @@ Available commands are:
    remove NAME      ...  Uninstall package NAME
    disable NAME     ...  Disable package NAME
    enable NAME      ...  Enable previously disabled package NAME
+   disable-outdated ...  Disable outdated packages
 
    -v  enables verbose output
 
@@ -79,6 +81,7 @@ def do_packaging(args: List[str]) -> None:
         "install": package_install,
         "disable": package_disable,
         "enable": package_enable,
+        "disable-outdated": package_disable_outdated,
     }
     f = commands.get(command)
     if f:
@@ -206,22 +209,26 @@ def package_create(args: List[str]) -> None:
 
 
 def package_find(_no_args: List[str]) -> None:
-    first = True
-    for part in get_package_parts() + get_config_parts():
-        files = unpackaged_files_in_dir(part.ident, part.path)
-        if len(files) > 0:
-            if first:
+    visited: AbstractSet[Path] = set()
+    for part, files in unpackaged_files().items():
+        if files:
+            if not visited:
                 logger.log(VERBOSE, "Unpackaged files:")
-                first = False
 
-            logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
-            for f in files:
+            found = frozenset(
+                Path(part.path) / f
+                for f in files
+                if (Path(part.path) / f).resolve() not in visited)
+            if found:
+                logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
+            for p in found:
                 if logger.isEnabledFor(VERBOSE):
-                    logger.log(VERBOSE, "    %s", f)
+                    logger.log(VERBOSE, "    %s", p.relative_to(part.path))
                 else:
-                    logger.info("%s/%s", part.path, f)
+                    logger.info("%s", p)
+            visited |= {p.resolve() for p in found}
 
-    if first:
+    if not visited:
         logger.log(VERBOSE, "No unpackaged files found.")
 
 
@@ -236,7 +243,7 @@ def package_pack(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P pack NAME")
 
-    # Make sure, user is not in data directories of Check_MK
+    # Make sure, user is not in data directories of Checkmk
     abs_curdir = os.path.abspath(os.curdir)
     for directory in [cmk.utils.paths.var_dir
                      ] + [p.path for p in get_package_parts() + get_config_parts()]:
@@ -296,3 +303,16 @@ def package_enable(args: List[str]) -> None:
     if len(args) != 1:
         raise PackageException("Usage: check_mk -P enable PACK.mkp")
     packaging.enable(args[0])
+
+
+def package_disable_outdated(args: List[str]) -> None:
+    """Disable MKP packages that are declared to be outdated with the new version
+
+    Since 1.6 there is the option version.usable_until available in MKP packages.
+    Iterate over all installed packages, check that field and once it is set, compare
+    the version with the new Checkmk version. In case it is outdated, move the
+    package to the disabled packages.
+    """
+    if args:
+        raise PackageException("Usage: check_mk -P disable-outdated")
+    packaging.disable_outdated()

@@ -5,25 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    ListOf,
-    MonitoringState,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
 from cmk.gui.plugins.wato.check_parameters.db2_tablespaces import db_levels_common
+from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOf, MonitoringState, TextInput, Tuple
 
 
 def _item_spec_oracle_tablespaces():
-    return TextAscii(
+    return TextInput(
         title=_("Explicit tablespaces"),
         help=
         _("Here you can set explicit tablespaces by defining them via SID and the tablespace name, separated by a dot, for example <b>pengt.TEMP</b>"

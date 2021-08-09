@@ -6,7 +6,7 @@
 """This module wraps some regex handling functions used by Check_MK"""
 
 import re
-from typing import Any, AnyStr, Dict, Pattern, Tuple
+from typing import Any, Dict, Pattern, Tuple
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
@@ -17,7 +17,7 @@ REGEX_HOST_NAME_CHARS = r'-0-9a-zA-Z_.'
 REGEX_HOST_NAME = r'^[%s]+$' % REGEX_HOST_NAME_CHARS
 
 
-def regex(pattern: AnyStr, flags: int = 0) -> Pattern[AnyStr]:
+def regex(pattern: str, flags: int = 0) -> Pattern[str]:
     """Compile regex or look it up in already compiled regexes.
     (compiling is a CPU consuming process. We cache compiled regexes)."""
     try:
@@ -50,3 +50,19 @@ def escape_regex_chars(match: str) -> str:
             r += "\\"
         r += c
     return r
+
+
+def unescape(pattern: str) -> str:
+    r"""Reverse of re.escape()
+
+    >>> from cmk.utils.regex import unescape
+    >>> unescape(re.escape(r"a b c"))
+    'a b c'
+    >>> unescape(re.escape(r"http://abc.de/"))
+    'http://abc.de/'
+    >>> unescape(re.escape(r"\\u\n\c"))
+    '\\\\u\\n\\c'
+    >>> unescape(re.escape(r"ä b .*(C)"))
+    'ä b .*(C)'
+    """
+    return re.sub(r'\\(.)', r'\1', pattern)

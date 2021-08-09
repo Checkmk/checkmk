@@ -7,26 +7,18 @@
 body.dashboard {
   overflow: hidden;
 
-  &.main div#main_page_content { padding-bottom: 0; }
+  &.main div#main_page_content {
+    padding-bottom: 0;
+  }
 
   #menu_entry_toggle_edit img.icon {
     background-size: 16px;
   }
 
-  #menu_shortcut_toggle_edit, #menu_suggestion_toggle_edit {
+  #menu_shortcut_toggle_edit,
+  #menu_suggestion_toggle_edit {
     img.icon {
       background-size: 20px;
-    }
-  }
-
-  #menu_shortcut_toggle_edit, #menu_entry_toggle_edit, #menu_suggestion_toggle_edit {
-    img.icon {
-      background-image: url("images/icon_dashboard_edit.png");
-      background-repeat: no-repeat;
-    }
-
-    &.edit img.icon {
-      background-image: url("images/icon_dashboard_edit_set.png");
     }
   }
 }
@@ -35,13 +27,6 @@ div#dashboard {
   position: relative;
   padding: 0;
   margin: 0;
-}
-
-body.dashlet {
-  #data_container {
-    padding: 0;
-    border: none;
-  }
 }
 
 div.dashlet {
@@ -63,12 +48,8 @@ div.dashlet {
       background-color: $dashlet-inner-bg-color;
     }
 
-    > div {
-      color: $primary-font-color;
-
-      &[id*="dashlet_graph"] img[id*="dashlet_img"] {
-	filter: $pnp4nagios-img-filter;
-      }
+    > div[id*="dashlet_graph"] img[id*="dashlet_img"] {
+      filter: $pnp4nagios-img-filter;
     }
   }
 
@@ -97,30 +78,25 @@ div.dashlet {
     padding-left: 9px;
     margin: 0;
     overflow: hidden;
-    font-size: $font-size-default;
-    text-align: center;
     font-weight: 500;
     letter-spacing: 2px;
     color: $font-color;
+    text-align: center;
     white-space: nowrap;
-    background: $headline-color;
-    border: 1px solid $color-table-border;
-    border-bottom: none;
-    border-radius: $dashlet-title-border-radius;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#4c000000', endColorstr='#4c000000');
+    background: $dashlet-body-bg-color;
+
+    &.highlighted {
+      background: $headline-color;
+    }
 
     span {
       padding-left: 8px;
     }
   }
 
-  &.edit div.title span {
-    padding-left: 27px;
-  }
-
+  g.title a text,
   div.title a {
-    color: rgb(255, 255, 255);
+    color: $font-color;
     text-decoration: none;
 
     &:hover {
@@ -150,25 +126,26 @@ div.dashlet {
 
   table.hoststats {
     position: absolute;
+    top: -1px;
     right: 10px;
     width: 135px;
     height: 142px;
     margin-top: 0;
     border-collapse: collapse;
     border-spacing: 0;
-    top: -1px;
 
     &.narrow {
       /* TODO: Remove this style after decoupling from classic theme */
       margin-top: 0;
 
-      th, td {
-        font-size: 11px;
+      th,
+      td {
         font-weight: normal;
       }
     }
 
-    th, td {
+    th,
+    td {
       padding: 0 4px;
       vertical-align: middle;
       border-color: rgb(73, 138, 166);
@@ -192,7 +169,7 @@ div.dashlet {
     }
 
     a {
-      color: rgb(0, 0, 0);
+      color: $black;
       text-decoration: none;
 
       &:hover {
@@ -200,26 +177,30 @@ div.dashlet {
       }
     }
   }
-}
 
-.dashlet .dashlet_inner.background {
-  background-color: $dashlet-bg-color;
-
-  &:first-child {
-    border-radius: $dashlet-title-border-radius;
+  div.graph > div.v_axis_label {
+    position: absolute;
+    top: 50%;
+    left: 10px;
+    transform: rotate(-90deg) translateX(50%);
   }
 }
 
 div.dashlet > div.title span {
-  padding-left: 0; /* left align with titles of contained views */
   position: relative;
   top: 4px;
+  padding-left: 0; /* left align with titles of contained views */
+}
+
+/* Inside a dashlet, we need a different color here in order to see a difference w.r.t. the title*/
+div.dashlet div.success {
+  background-color: $base-color;
 }
 
 /* Overview dashlet is not selectable TODO: Check if this style can be dropped */
 table.dashlet_overview h2 {
   margin: 8px 0;
-  font-size: 13px;
+  font-size: $font-size-large;
 }
 
 div.dashlet_inner div.stats table.hoststats a,
@@ -236,7 +217,8 @@ div.dashlet_inner div.stats {
   margin: 0;
   background-color: $bg-color-secondary;
 
-  table th, table td {
+  table th,
+  table td {
     background: $dashboard-stats-bg-color;
     border-top: 1px solid $dashlet-stats-border-top-color;
     border-bottom: none;
@@ -245,66 +227,53 @@ div.dashlet_inner div.stats {
 
 body.main.dashlet {
   padding: 8px;
-  background: $body-dashlet-bg-color;
-  border-top: none;
+  background-color: $dashlet-body-bg-color;
   box-sizing: border-box;
+
+  div#row_info {
+    display: none;
+  }
 
   table.data.table {
     padding: 0 8px;
 
     tr.data {
-      border-bottom: $dashboard-tr-border-bottom;
-      transition: .15s ease-in-out;
+      transition: 0.15s ease-in-out;
     }
   }
 
-  table.data {
-    border-spacing: 0;
-
-    th:nth-child(1) {
-      padding-bottom: 2px;
-      padding-left: 1px;
-    }
+  /* warning messages in view dashlets */
+  div.warning {
+    margin: 0;
+    margin-bottom: 10px;
+    border-radius: 0;
+    box-shadow: 0;
   }
 
-  /* Adapted styling of views in dashlets */
-  tr.data {
-    > td {
-      padding-top: 2px;
-      padding-bottom: 2px;
-      border-bottom: none;
+  &.view {
+    padding: $h3-margin-bottom 0 0; // add padding-top for consistency with other tables
+    overflow: hidden;
+    background-color: $dashlet-inner-bg-color;
 
-      &.state {
-        border-top: none;
-	border-top-color: $state-border-top-color;
-      }
-    }
-
-    &:last-of-type > td:not(.state):not(.gap) {
-      border-bottom: 1px solid $color-table-border;
-    }
-
-    &:nth-child(2) > td.state {
-      border-top-color: $color-table-border !important;
+    div#dashlet_content_wrapper[data-simplebar="init"] {
+      height: 100%;
+      overflow: auto;
     }
   }
 }
 
-div[id^=dashlet] div.dashlet_inner > div {
-  border: 1px solid $color-table-border;
-  border-radius: $dashlet-title-border-radius;
+div[id^="dashlet"] div.dashlet_inner > div {
   box-sizing: border-box;
-  transition: .15s ease-in-out;
+  transition: 0.15s ease-in-out;
 }
 
-div[id^=dashlet] div.title + div.dashlet_inner > div {
-  border-top: none;
+div[id^="dashlet"] div.title + div.dashlet_inner > div {
   border-radius: 0;
 }
 
-iframe[id^=dashlet_iframe] {
+iframe[id^="dashlet_iframe"] {
   background: $bg-color-secondary;
-  transition: .15s ease-in-out;
+  transition: 0.15s ease-in-out;
 }
 
 /*
@@ -319,111 +288,214 @@ div.dashlet.edit {
     width: 100%;
     height: 100%;
     cursor: auto;
-    background-color: rgba(50, 80, 90, 0.6);
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#fffffff', endColorstr='#7fffffff');
+    background-color: rgba($dashlet-inner-bg-color, 0.8);
+    border: 1px dashed #4e5d69;
 
     &:hover {
       cursor: move;
     }
   }
 
-  /* dashlet edit button */
-  .edit {
+  div.centered_controls {
     position: absolute;
-    top: 4px;
-    left: 19px;
-    width: 14px;
-    height: 14px;
-    cursor: pointer;
-    /* background-color: rgba(0, 0, 0, 0.7); */
-    background-image: url(images/dashlet_edit_lo.png);
-    border-radius: 5px;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 3 * ($dashlet-editor-icon-size + 8px);
+    height: 3 * $dashlet-editor-icon-size;
+    margin: auto;
+    text-align: center;
 
-    &:hover {
-      background-image: url(images/dashlet_edit_hi.png);
+    .editor a {
+      display: inline-block;
+      width: $dashlet-editor-icon-size;
+      height: $dashlet-editor-icon-size;
+      margin: 0 4px;
+      cursor: pointer;
+      background-repeat: no-repeat;
+      background-size: $dashlet-editor-icon-size;
+      border-radius: 5px;
+
+      &:hover {
+        opacity: 0.7;
+      }
+
+      &.edit {
+        background-image: url("images/dashlet_edit.svg");
+      }
+
+      &.clone {
+        background-image: url("images/dashlet_clone.svg");
+      }
+
+      &.del {
+        background-image: url("images/dashlet_delete.svg");
+      }
     }
   }
 
-  /* dashlet clone button */
-  .clone {
-    position: absolute;
-    top: 4px;
-    right: 34px;
-    width: 14px;
-    height: 14px;
-    cursor: pointer;
-    /* background-color: rgba(0, 0, 0, 0.7); */
-    background-image: url(images/dashlet_clone_lo.png);
-    border-radius: 5px;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
-
-    &:hover {
-      background-image: url(images/dashlet_clone_hi.png);
-    }
-  }
-
-  /* dashlet delete button */
-  .del {
-    position: absolute;
-    top: 4px;
-    right: 19px;
-    width: 14px;
-    height: 14px;
-    cursor: pointer;
-    /* background-color: rgba(0, 0, 0, 0.7); */
-    background-image: url(images/dashlet_del_lo.png);
-    border-radius: 5px;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
-
-    &:hover {
-      background-image: url(images/dashlet_del_hi.png);
-    }
+  &:not(.resizable) div.centered_controls {
+    height: $dashlet-editor-icon-size;
   }
 
   /* position anchors */
   .anchor {
     position: absolute;
-    width: 14px;
-    height: 14px;
-    cursor: auto;
-    /* background-color: rgba(255, 255, 255, 0.7); */
-    background-image: url(images/dashlet_anchor_lo.png);
-    border-radius: 5px;
-    /* IE < 9 */
-    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+    cursor: pointer;
 
-    &.off {
-      cursor: pointer;
-      background-image: url(images/dashlet_anchor_off.png);
+    // Edit with this tricks
+    // https://css-tricks.com/the-shapes-of-css/#triangle-top-left-shape
 
-      &:hover {
-        background-image: url(images/dashlet_anchor_hi.png);
+    &.on div {
+      position: absolute;
+      padding: 2px 6px;
+      color: #172127;
+      text-align: center;
+      background-color: $success;
+      border-radius: 12px;
+
+      &.anchor_image {
+        width: 15px;
+        height: 15px;
+        padding: 0;
+        background-image: url("images/dashlet_anchor.svg");
+        background-repeat: no-repeat;
       }
     }
 
     &.anchor0 {
-      top: 4px;
-      left: 4px;
+      top: 0;
+      left: 0;
+      border-top: $dashlet-anchor-size solid $dashlet-editor-free;
+      border-right: $dashlet-anchor-size solid transparent;
+
+      &.on {
+        border-top: $dashlet-anchor-on-size solid $success;
+        border-right: $dashlet-anchor-on-size solid transparent;
+
+        div {
+          &.anchor_label {
+            top: -$dashlet-anchor-size;
+            left: $dashlet-anchor-size;
+          }
+
+          &.anchor_image {
+            top: -$dashlet-anchor-size - $spacing;
+            left: 3px;
+          }
+        }
+      }
     }
 
     &.anchor1 {
-      top: 4px;
-      right: 4px;
+      top: 0;
+      right: 0;
+      border-top: $dashlet-anchor-size solid $dashlet-editor-free;
+      border-left: $dashlet-anchor-size solid transparent;
+
+      &.on {
+        border-top: $dashlet-anchor-on-size solid $success;
+        border-left: $dashlet-anchor-on-size solid transparent;
+
+        div {
+          &.anchor_label {
+            top: -$dashlet-anchor-size;
+            right: $dashlet-anchor-size;
+          }
+
+          &.anchor_image {
+            top: -$dashlet-anchor-size - $spacing;
+            right: 3px;
+          }
+        }
+      }
     }
 
     &.anchor2 {
-      right: 4px;
-      bottom: 4px;
+      right: 0;
+      bottom: 0;
+      border-bottom: $dashlet-anchor-size solid $dashlet-editor-free;
+      border-left: $dashlet-anchor-size solid transparent;
+
+      &.on {
+        border-bottom: $dashlet-anchor-on-size solid $success;
+        border-left: $dashlet-anchor-on-size solid transparent;
+
+        div {
+          &.anchor_label {
+            right: $dashlet-anchor-size;
+          }
+
+          &.anchor_image {
+            right: 3px;
+            bottom: -$dashlet-anchor-size - $spacing;
+          }
+        }
+      }
     }
 
     &.anchor3 {
-      bottom: 4px;
-      left: 4px;
+      bottom: 0;
+      left: 0;
+      border-right: $dashlet-anchor-size solid transparent;
+      border-bottom: $dashlet-anchor-size solid $dashlet-editor-free;
+
+      &.on {
+        border-right: $dashlet-anchor-on-size solid transparent;
+        border-bottom: $dashlet-anchor-on-size solid $success;
+
+        div {
+          &.anchor_label {
+            left: $dashlet-anchor-size;
+          }
+
+          &.anchor_image {
+            bottom: -$dashlet-anchor-size - $spacing;
+            left: 3px;
+          }
+        }
+      }
+    }
+  }
+
+  div.slim_controls {
+    div.resize_image {
+      visibility: hidden;
+    }
+
+    div.anchor_image {
+      visibility: hidden;
+    }
+
+    div.anchor_label {
+      visibility: hidden;
+    }
+
+    .anchor {
+      &.anchor0,
+      &.anchor0.on {
+        border-top-width: $dashlet-anchor-size-slim;
+        border-right-width: $dashlet-anchor-size-slim;
+      }
+
+      &.anchor1,
+      &.anchor1.on {
+        border-top-width: $dashlet-anchor-size-slim;
+        border-left-width: $dashlet-anchor-size-slim;
+      }
+
+      &.anchor2,
+      &.anchor2.on {
+        border-bottom-width: $dashlet-anchor-size-slim;
+        border-left-width: $dashlet-anchor-size-slim;
+      }
+
+      &.anchor3,
+      &.anchor3.on {
+        border-right-width: $dashlet-anchor-size-slim;
+        border-bottom-width: $dashlet-anchor-size-slim;
+      }
     }
   }
 }
@@ -433,226 +505,148 @@ div#dashboard.grid {
 }
 
 .sizer {
-  position: absolute;
+  position: relative;
+  right: 0;
+  left: 0;
+  width: 100%;
+  padding: 2px 6px;
+  margin: 4px auto;
+  text-align: center;
   cursor: pointer;
-  border: 1px solid rgb(102, 102, 102);
-  border-radius: 2px;
-  box-shadow: .5px .5px 2px rgb(51, 51, 51);
-}
+  border-radius: 12px;
+  box-sizing: border-box;
 
-.sizer0 {
-  width: 50%;
-  height: 10px;
-}
+  &.max {
+    color: #f00;
+    background-color: $dashlet-editor-free;
+  }
 
-.sizer1 {
-  width: 10px;
-  height: 50%;
-}
+  &.grow {
+    color: $white;
+    background-color: $dashlet-editor-free;
+  }
 
-.sizer.max {
-  background-color: rgb(255, 0, 0);
-}
-
-.sizer.grow {
-  background-color: rgb(255, 255, 0);
-}
-
-.sizer.abs {
-  background-color: rgb(238, 238, 238);
-}
-
-/* left side */
-.sizer1.anchor0,
-.sizer1.anchor3 {
-  top: 25%;
-  left: 5px;
-}
-
-/* right side */
-.sizer1.anchor1,
-.sizer1.anchor2 {
-  top: 25%;
-  right: 10px;
-}
-
-/* top side */
-.sizer0.anchor0,
-.sizer0.anchor1 {
-  top: 5px;
-  left: 25%;
-}
-
-/* bottom side */
-.sizer0.anchor2,
-.sizer0.anchor3 {
-  bottom: 10px;
-  left: 25%;
-}
-
-/* general arrow */
-.sizer0:before,
-.sizer1:before {
-  position: absolute;
-  content: " ";
-}
-
-/* arrow on left */
-.sizer0.anchor1:before, .sizer0.anchor2:before {
-  top: -7px;
-  left: -11px;
-  width: 13px;
-  height: 21px;
-  background-repeat: no-repeat;
-}
-
-.sizer0.anchor1.max:before, .sizer0.anchor2.max:before {
-  background-image: url("images/dashlet_arrow_l_max.png");
-}
-
-.sizer0.anchor1.grow:before, .sizer0.anchor2.grow:before {
-  background-image: url("images/dashlet_arrow_l_grow.png");
-}
-
-/* arrow on right */
-.sizer0.anchor0:before, .sizer0.anchor3:before {
-  top: -7px;
-  left: 100%;
-  width: 12px;
-  height: 21px;
-  background-repeat: no-repeat;
-}
-
-.sizer0.anchor0.max:before, .sizer0.anchor3.max:before {
-  background-image: url("images/dashlet_arrow_r_max.png");
-}
-
-.sizer0.anchor0.grow:before, .sizer0.anchor3.grow:before {
-  background-image: url("images/dashlet_arrow_r_grow.png");
-}
-
-/* arrow at top */
-.sizer1.anchor2:before, .sizer1.anchor3:before {
-  top: -10px;
-  left: -7px;
-  width: 23px;
-  height: 14px;
-  background-repeat: no-repeat;
-}
-
-.sizer1.anchor2.max:before, .sizer1.anchor3.max:before {
-  background-image: url("images/dashlet_arrow_t_max.png");
-}
-
-.sizer1.anchor2.grow:before, .sizer1.anchor3.grow:before {
-  background-image: url("images/dashlet_arrow_t_grow.png");
-}
-
-/* arrow at bottom */
-.sizer1.anchor0:before, .sizer1.anchor1:before {
-  bottom: -10px;
-  left: -7px;
-  width: 23px;
-  height: 14px;
-  background-repeat: no-repeat;
-}
-
-.sizer1.anchor0.max:before, .sizer1.anchor1.max:before {
-  background-image: url("images/dashlet_arrow_b_max.png");
-}
-
-.sizer1.anchor0.grow:before, .sizer1.anchor1.grow:before {
-  background-image: url("images/dashlet_arrow_b_grow.png");
-}
-
-.sizer_lbl {
-  position: absolute;
-  /* display: none; */
-  padding: 2px;
-  font-size: 6px;
-  color: rgb(0, 0, 0);
-  cursor: auto;
-}
-
-.sizer_lbl0 {
-  width: auto;
-  height: 15px;
-}
-
-.sizer_lbl1 {
-  width: 15px;
-  height: auto;
-  /* Should be unset in IE9+ I think. */
-  filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
-  -webkit-transform: rotate(-90deg);
-  -moz-transform: rotate(-90deg);
-  -ms-transform: rotate(-90deg);
-  -o-transform: rotate(-90deg);
-  transform: rotate(-90deg);
-}
-
-/* left side */
-.sizer_lbl1.anchor0,
-.sizer_lbl1.anchor3 {
-  top: 47%;
-  left: 1.5px;
-}
-
-/* right side */
-.sizer_lbl1.anchor1,
-.sizer_lbl1.anchor2 {
-  top: 47%;
-  right: 6.5px;
-}
-
-/* top side */
-.sizer_lbl0.anchor0,
-.sizer_lbl0.anchor1 {
-  top: 5px;
-  left: 47%;
-}
-
-/* bottom side */
-.sizer_lbl0.anchor2,
-.sizer_lbl0.anchor3 {
-  bottom: 2.5px;
-  left: 47%;
+  &.abs {
+    color: #172127;
+    background-color: #13d389;
+  }
 }
 
 /* transparent resize areas for absolute sized */
 .resize {
   position: absolute;
   z-index: 70;
+
+  &.circle_handle .resize_image {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 10px;
+    height: 10px;
+    margin: auto;
+    background-image: url("images/dashlet_resize.svg");
+    background-repeat: no-repeat;
+  }
 }
 
 .resize0 {
-  width: 5px;
+  top: 0;
+  bottom: 0;
   height: 100%;
+  margin: auto;
+  background-color: #13d389;
+  border: 1px solid #13d389;
+  border-top: none;
+  border-bottom: none;
+
+  &.resize0_0 {
+    left: -1px;
+    cursor: w-resize;
+
+    &.circle_handle {
+      width: $dashlet-resize-handle-height;
+      height: $dashlet-resize-handle-width;
+      border-radius: 0 $dashlet-resize-handle-width $dashlet-resize-handle-width 0;
+
+      .resize_image {
+        transform: rotate(90deg);
+      }
+
+      div.slim_controls & {
+        width: $dashlet-resize-handle-height-slim;
+        height: $dashlet-resize-handle-width-slim;
+      }
+    }
+  }
+
+  &.resize0_1 {
+    right: -1px;
+    cursor: e-resize;
+
+    &.circle_handle {
+      width: $dashlet-resize-handle-height;
+      height: $dashlet-resize-handle-width;
+      border-radius: $dashlet-resize-handle-width 0 0 $dashlet-resize-handle-width;
+
+      .resize_image {
+        transform: rotate(-90deg);
+      }
+
+      div.slim_controls & {
+        width: $dashlet-resize-handle-height-slim;
+        height: $dashlet-resize-handle-width-slim;
+      }
+    }
+  }
 }
 
 .resize1 {
-  width: 100%;
-  height: 5px;
-}
-
-.resize0_0 {
-  left: 0;
-  cursor: w-resize;
-}
-
-.resize0_1 {
   right: 0;
-  cursor: e-resize;
-}
+  left: 0;
+  width: 100%;
+  margin: auto;
+  background-color: #13d389;
+  border: 1px solid #13d389;
+  border-right: none;
+  border-left: none;
 
-.resize1_0 {
-  top: 0;
-  cursor: n-resize;
-}
+  &.resize1_0 {
+    top: -1px;
+    cursor: n-resize;
 
-.resize1_1 {
-  bottom: 0;
-  cursor: s-resize;
+    &.circle_handle {
+      width: $dashlet-resize-handle-width;
+      height: $dashlet-resize-handle-height;
+      border-radius: 0 0 $dashlet-resize-handle-width $dashlet-resize-handle-width;
+
+      .resize_image {
+        transform: rotate(180deg);
+      }
+
+      div.slim_controls & {
+        width: $dashlet-resize-handle-width-slim;
+        height: $dashlet-resize-handle-height-slim;
+      }
+    }
+  }
+
+  &.resize1_1 {
+    bottom: -1px;
+    cursor: s-resize;
+
+    &.circle_handle {
+      width: $dashlet-resize-handle-width;
+      height: $dashlet-resize-handle-height;
+      border-radius: $dashlet-resize-handle-width $dashlet-resize-handle-width 0 0;
+
+      div.slim_controls & {
+        width: $dashlet-resize-handle-width-slim;
+        height: $dashlet-resize-handle-height-slim;
+      }
+    }
+  }
 }
 
 .resize_corner {
@@ -686,9 +680,9 @@ div#dashboard.grid {
 }
 
 .dashlet.pnpgraph .dashlet_inner {
+  color: $font-color;
+  text-align: left;
   background-color: $dashlet-inner-bg-color;
-  color: $primary-font-color;
-  text-align: center;
 }
 
 .dashlet.pnpgraph .graph {
@@ -701,127 +695,307 @@ div#dashboard.grid {
 }
 
 .dashlet.pnpgraph div.title a {
-  color: $primary-font-color;
+  color: $font-color;
 }
 
-div.dashlet.single_metric {
-  /* When no dashlet title (div.title) is rendered, div.dashlet_inner is the
-     first child of div.dashlet */
-  div.dashlet_inner:first-child {
-    &:not(.background) div.metric {
-      border: none;
+svg {
+  .title,
+  .single_value,
+  .state_component {
+    fill: $font-color;
+    text {
+      // because there is conflict with a general: svg text
+      stroke: none;
     }
+  }
+  .status_background {
+    opacity: 0.6;
+    fill: $dashlet-inner-bg-color;
+  }
 
-    div.metric {
-      padding: 4px;
+  .line {
+    fill: none !important;
+  }
+
+  .area {
+    opacity: 0.3;
+  }
+
+  .svcstate,
+  .hoststate {
+    // Default UX timeseries blue #008EFF, No variable yet, thus equal on themes
+    fill: rgb(0, 142, 255);
+    stroke: rgb(0, 142, 255);
+  }
+
+  .state0,
+  .hstate0 {
+    /* OK/UP */
+    fill: $success;
+    stroke: $success;
+  }
+
+  .state1 {
+    /* WARN */
+    fill: $color-state-1-background;
+    stroke: $color-state-1-background;
+  }
+
+  .state2,
+  .hstate1 {
+    /* CRIT/DOWN */
+    fill: $color-state-2-background;
+    stroke: $color-state-2-background;
+  }
+
+  .state3,
+  .hstate2 {
+    /* UNKNOWN/UNREACH */
+    fill: $color-state-3-background;
+    stroke: $color-state-3-background;
+  }
+  // gauge
+  .gauge_span {
+    // TODO: Suitable for both themes. Darkgrey is rather in the middle grey.
+    // Gives enough contrast on both themes against the color of the gauge level
+    // which is $font-color
+    fill: $darkgrey;
+  }
+}
+
+svg.renderer {
+  g.grid path {
+    stroke-width: 0;
+  }
+
+  g.grid line {
+    stroke: #8097b1;
+    stroke-opacity: 0.61;
+    stroke-width: 0.5px;
+  }
+}
+
+div.dashlet.nodata {
+  > div.dashlet_inner div.msg {
+    padding: 10px;
+  }
+}
+
+@mixin default-hexagon {
+  fill: $hexagon-default-color;
+  fill-opacity: $hexagon-default-fill-opacity;
+  stroke: $hexagon-default-stroke-color;
+  stroke-opacity: $hexagon-default-stroke-opacity;
+}
+
+div.site_overview,
+div.alert_statistics,
+div.stats {
+  g.element_box:hover {
+    path + path {
+      fill-opacity: 0.96;
     }
   }
 
-  div.single_metric g {
-    a.single_value {
-      width: 100%;
+  div.tooltip {
+    h3 {
+      margin-top: 2px;
+      margin-bottom: 2px;
+    }
 
-      text {
-	&.state0, &.state0 > a, &.state0 > a:link {
-	  fill: $black;
-	}
+    td.color {
+      width: 10px;
 
-	&.state-fill-font, &.no-state-color {
-	  &, > a {
-	    fill: $font-color !important;
-	  }
-	}
-
-	&.state-fill-font {
-	  &.state0, &.state0 > a, &.state0 > a:link {
-	    fill: $color-state-success-background !important;
-	  }
-
-	  &.state1, &.state1 > a, &.state1 > a:link {
-	    fill: $color-state-1-background !important;
-	  }
-
-	  &.state2, &.state2 > a, &.state2 > a:link {
-	    fill: $color-state-2-background !important;
-	  }
-
-	  &.state3, &.state3 > a, &.state3 > a:link {
-	    fill: $color-state-3-background !important;
-	  }
-	}
+      &.critical {
+        background-color: #f00;
       }
+
+      &.unknown {
+        background-color: #f80;
+      }
+
+      &.warning {
+        background-color: #ff0;
+      }
+
+      &.downtime {
+        background-color: #0af;
+      }
+
+      &.ok {
+        background-color: #262f38;
+      }
+    }
+
+    td.count {
+      padding-left: 4px;
+      text-align: right;
+      vertical-align: top;
     }
   }
 
-  div.dashlet_inner div.metric {
-    height: inherit;
-    padding: 0 4px 4px;
+  path.hexagon.hexagon_0 {
+    stroke: #404a55;
+  }
 
-    table.metric_content {
-      width: 100%;
-      height: 100%;
-      margin: 0 auto;
-      table-layout: fixed;
+  path.hexagon {
+    &.critical,
+    &.down {
+      fill: $hexagon-critical-color;
+      fill-opacity: 0.8;
+      stroke: $hexagon-critical-color;
+    }
 
-      td {
-	padding: 0;
-	text-align: center;
-	border-radius: 16px;
+    &.unknown,
+    &.unreachable {
+      fill: $hexagon-unknown-color;
+      fill-opacity: 0.8;
+      stroke: $hexagon-unknown-color;
+    }
 
-	&.metric_value {
-	  position: relative;
-	  height: 100%;
-	  margin: 0 auto;
-	  text-align: center;
-	  border-radius: 16px;
+    &.warning {
+      fill: $hexagon-warning-color;
+      fill-opacity: 0.6;
+      stroke: $hexagon-warning-color;
+    }
 
-	  a {
-	    text-decoration: none;
-	    white-space: nowrap;
-	  }
+    &.downtime {
+      fill: $hexagon-downtime-color;
+      fill-opacity: 0.6;
+      stroke: $hexagon-downtime-color;
+    }
 
-	  &.state0, &.state0 > a, &.state0 > a:link {
-	    color: $black;
-	  }
+    &.host_down {
+      fill: $hexagon-host-down-color;
+      fill-opacity: 0.5;
+      stroke: $hexagon-host-down-color;
+    }
 
-	  &.state-color-font, &.no-state-color {
-	    &, > a {
-	      color: $font-color !important;
-	      background-color: transparent !important;
-	    }
-	  }
+    &.ok {
+      @include default-hexagon;
+    }
+  }
 
-	  &.state-color-font {
-	    &.state0, &.state0 > a, &.state0 > a:link {
-	      color: $color-state-success-background !important;
-	    }
+  g.element_box.host_element path.hexagon,
+  path.hexagon.host_element {
+    fill-opacity: 0.8;
+    stroke-opacity: 0.8;
 
-	    &.state1, &.state1 > a, &.state1 > a:link {
-	      color: $color-state-1-background !important;
-	    }
+    &.ok {
+      fill: $host-hexagon-ok-stroke-color;
+      stroke: none;
 
-	    &.state2, &.state2 > a, &.state2 > a:link {
-	      color: $color-state-2-background !important;
-	    }
-
-	    &.state3, &.state3 > a, &.state3 > a:link {
-	      color: $color-state-3-background !important;
-	    }
-	  }
-	}
-      }
-
-      div.no_metric_match {
-	margin: 8px 0;
-      }
-
-      a {
-	text-decoration: none;
-
-	&:hover {
-	  text-decoration: underline;
-	}
+      + path.up:hover,
+      &:hover + path.up {
+        fill-opacity: 0.6;
       }
     }
+
+    &.up {
+      fill: $headline-color;
+      fill-opacity: 0.85;
+      stroke: none;
+    }
+  }
+
+  path.icon_element {
+    fill: #262f38;
+    stroke-dasharray: 3, 3;
+    stroke: #404a55;
+  }
+}
+
+div.stats {
+  height: 100%;
+
+  path.hexagon {
+    &.ok {
+      fill: $success;
+      fill-opacity: 0.06;
+      stroke: $success;
+      stroke-opacity: 0.9;
+    }
+
+    &.empty {
+      @include default-hexagon;
+    }
+  }
+
+  div.stats_table {
+    position: absolute;
+    right: 0;
+
+    table {
+      pointer-events: all;
+      border-collapse: collapse;
+    }
+
+    td {
+      padding: 3px;
+    }
+
+    td:last-child {
+      width: 115px; // aligns the host and service stats tables
+    }
+
+    a {
+      text-decoration: none;
+      cursor: pointer;
+
+      &.box {
+        display: inline-block;
+        width: $spacing-half;
+        height: 14px;
+        padding: 0;
+        background-color: $font-color;
+        border-radius: $theme-border-radius;
+
+        &.critical {
+          background-color: $hexagon-critical-color;
+        }
+
+        &.unknown {
+          background-color: $hexagon-unknown-color;
+        }
+
+        &.warning {
+          background-color: $hexagon-warning-color;
+        }
+
+        &.downtime {
+          background-color: $hexagon-downtime-color;
+        }
+
+        &.host_down {
+          background-color: $hexagon-host-down-color;
+        }
+
+        &.ok {
+          background-color: $success;
+        }
+      }
+
+      &.count {
+        float: right;
+      }
+
+      &.count:hover,
+      &.text:hover {
+        color: $success;
+      }
+    }
+
+    .warning {
+      background-color: transparent;
+    }
+  }
+
+  &.hoststats div.stats_table,
+  &.eventstats div.stats_table {
+    top: 44px;
+  }
+
+  &.servicestats div.stats_table {
+    top: 28px;
   }
 }

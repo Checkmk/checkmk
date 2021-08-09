@@ -6,7 +6,7 @@ Date: 1588916924
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Analogous to ups_modulys_battery ups_capacity will check whether
 time_on_battery is set and valid. If not we assume we're on main

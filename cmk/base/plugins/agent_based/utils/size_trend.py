@@ -4,36 +4,51 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Tuple
 import time
+from typing import Any, Mapping, MutableMapping, Optional, Tuple
 
-from ..agent_based_api.v1.type_defs import (
-    ValueStore,
-    CheckGenerator,
-    Parameters,
-)
-from ..agent_based_api.v1 import (
-    get_rate,
-    get_average,
-    Metric,
-    render,
-    check_levels,
-)
+from ..agent_based_api.v1 import check_levels, get_average, get_rate, Metric, render
+from ..agent_based_api.v1.type_defs import CheckResult
 
-Levels = Tuple[Optional[float], Optional[float]]
+Levels = Tuple[float, float]
+
+MB = 1024 * 1024
+SEC_PER_H = 60 * 60
+SEC_PER_D = SEC_PER_H * 24
+
+
+def _level_bytes_to_mb(levels: Optional[Levels]) -> Optional[Levels]:
+    """convert levels given as bytes to levels as MB
+    >>> _level_bytes_to_mb(None)
+    >>> _level_bytes_to_mb((1048576, 2097152))
+    (1.0, 2.0)
+    """
+    if levels is None:
+        return None
+    return levels[0] / MB, levels[1] / MB
+
+
+def _reverse_level_signs(levels: Optional[Levels]) -> Optional[Levels]:
+    """reverse the sign of all values
+    >>> _reverse_level_signs(None)
+    >>> _reverse_level_signs((-1, 2))
+    (1, -2)
+    """
+    if levels is None:
+        return None
+    return -levels[0], -levels[1]
 
 
 def size_trend(
     *,
-    value_store: ValueStore,
-    check: str,
-    item: str,
+    value_store: MutableMapping[str, Any],
+    value_store_key: str,
     resource: str,
-    levels: Parameters,
+    levels: Mapping[str, Any],
     used_mb: float,
     size_mb: float,
     timestamp: Optional[float],
-) -> CheckGenerator:
+) -> CheckResult:
     """Trend computation for size related checks of disks, ram, etc.
     Trends are computed in two steps. In the first step the delta to
     the last check is computed, using a normal check_mk counter.
@@ -45,39 +60,39 @@ def size_trend(
       Use at your own risk!
 
     Args:
-      check (str): The name of the check, e.g. "df".
-      item (str): The name of the item, e.g. the mountpoint "/" for df.
+      value_store: Retrived value_store by calling check function
+      value_store_key (str): The key (prefix) to use in the value_store
       resource (str): The resource in question, e.g. "disk", "ram", "swap".
       levels (dict): Level parameters for the trend computation. Items:
-          "trend_range"       : 24,        # interval for the trend in hours
-          "trend_perfdata     : True       # generate perfomance data for trends
-          "trend_mb"          : (10, 20),  # MB of change during trend_range
-          "trend_perc"        : (1, 2),    # percent change during trend_range
-          "trend_timeleft"    : (72, 48)   # time left in hours until full
-          "trend_showtimeleft": True       # display time left in infotext
+          "trend_range"          : 24,       # interval for the trend in hours
+          "trend_perfdata"       : True      # generate perfomance data for trends
+          "trend_bytes"          : (10, 20), # change during trend_range
+          "trend_shrinking_bytes": (16, 32), # Bytes of shrinking during trend_range
+          "trend_perc"           : (1, 2),   # percent change during trend_range
+          "trend_shrinking_perc" : (1, 2),   # percent decreasing change during trend_range
+          "trend_timeleft"       : (72, 48)  # time left in hours until full
+          "trend_showtimeleft    : True      # display time left in infotext
         The item "trend_range" is required. All other items are optional.
       timestamp (float, optional): Time in secs used to calculate the rate
         and average. Defaults to "None".
       used_mb (float): Used space in MB.
       size_mb (float): Max. available space in MB.
-      value_store: Retrived value_store by calling check function
 
     Yields:
       Result- and Metric- instances for the trend computation.
-    >>> from ..agent_based_api.v1 import GetRateError, Result, state
+    >>> from ..agent_based_api.v1 import GetRateError, Result
     >>> vs = {}
     >>> t0 = time.time()
     >>> for i in range(2):
     ...     try:
     ...         for result in size_trend(
     ...                 value_store=vs,
-    ...                 check="check_name",
-    ...                 item="item_name",
+    ...                 value_store_key="vskey",
     ...                 resource="resource_name",
     ...                 levels={
     ...                     "trend_range": 24,
     ...                     "trend_perfdata": True,
-    ...                     "trend_mb":   (1000, 2000),
+    ...                     "trend_bytes":   (10 * 1024**2, 20 * 1024**2),
     ...                     "trend_perc": (50, 70),
     ...                     "trend_timeleft"   : (72, 48),
     ...                     "trend_showtimeleft": True,
@@ -88,25 +103,22 @@ def size_trend(
     ...             print(result)
     ...     except GetRateError:
     ...         pass
-    Metric('growth', 1200.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.CRIT: 2>, summary='trend per 1 day 0 hours: +1.17 GiB (warn/crit at +1000 B/+1.95 KiB)', details='trend per 1 day 0 hours: +1.17 GiB (warn/crit at +1000 B/+1.95 KiB)')
-    Result(state=<state.WARN: 1>, summary='trend per 1 day 0 hours: +60.0% (warn/crit at +50.0%/+70.0%)', details='trend per 1 day 0 hours: +60.0% (warn/crit at +50.0%/+70.0%)')
-    Metric('trend', 1200.0, levels=(1000.0, 1400.0), boundaries=(0.0, 83.33333333333333))
-    Result(state=<state.CRIT: 2>, summary='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)', details='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)')
-    Metric('trend_hoursleft', 37.0, levels=(None, None), boundaries=(None, None))
+    Metric('growth', 1200.0)
+    Result(state=<State.CRIT: 2>, summary='trend per 1 day 0 hours: +1.17 GiB (warn/crit at +10.0 MiB/+20.0 MiB)')
+    Result(state=<State.WARN: 1>, summary='trend per 1 day 0 hours: +60.00% (warn/crit at +50.00%/+70.00%)')
+    Metric('trend', 1200.0, levels=(10.0, 20.0), boundaries=(0.0, 83.33333333333333))
+    Result(state=<State.CRIT: 2>, summary='Time left until resource_name full: 1 day 13 hours (warn/crit below 3 days 0 hours/2 days 0 hours)')
+    Metric('trend_hoursleft', 37.0)
     """
-    MB = 1024 * 1024
-    SEC_PER_H = 60 * 60
-    SEC_PER_D = SEC_PER_H * 24
 
     range_sec = levels["trend_range"] * SEC_PER_H
     timestamp = timestamp or time.time()
 
-    mb_per_sec = get_rate(value_store, "%s.%s.delta" % (check, item), timestamp, used_mb)
+    mb_per_sec = get_rate(value_store, "%s.delta" % value_store_key, timestamp, used_mb)
 
     avg_mb_per_sec = get_average(
         value_store=value_store,
-        key="%s.%s.trend" % (check, item),
+        key="%s.trend" % value_store_key,
         time=timestamp,
         value=mb_per_sec,
         backlog_minutes=range_sec // 60,
@@ -120,7 +132,8 @@ def size_trend(
     # apply levels for absolute growth in MB / interval
     yield from check_levels(
         mb_in_range * MB,
-        levels_upper=levels.get("trend_mb"),
+        levels_upper=levels.get("trend_bytes"),
+        levels_lower=_reverse_level_signs(levels.get("trend_shrinking_bytes")),
         render_func=lambda x: ("+" if x >= 0 else "") + render.bytes(x),
         label="trend per %s" % render.timespan(range_sec),
     )
@@ -129,6 +142,7 @@ def size_trend(
     yield from check_levels(
         mb_in_range * 100 / size_mb,
         levels_upper=levels.get("trend_perc"),
+        levels_lower=_reverse_level_signs(levels.get("trend_shrinking_perc")),
         render_func=lambda x: ("+" if x >= 0 else "") + render.percent(x),
         label="trend per %s" % render.timespan(range_sec),
     )
@@ -136,19 +150,21 @@ def size_trend(
     def to_abs(levels: Optional[Levels]) -> Optional[Levels]:
         if levels is None:
             return None
-        return (None if levels[0] is None else levels[0] / 100 * size_mb,
-                None if levels[1] is None else levels[1] / 100 * size_mb)
+        return levels[0] / 100 * size_mb, levels[1] / 100 * size_mb
 
-    def mins(levels1: Optional[Levels], levels2: Optional[Levels]) -> Levels:
+    def mins(levels1: Optional[Levels], levels2: Optional[Levels]) -> Optional[Levels]:
         return ((min(levels1[0], levels2[0]),
                  min(levels1[1], levels2[1])) if levels1 and levels2 else  #
-                levels1 or levels2 or (None, None))
+                levels1 or levels2 or None)
 
     if levels.get("trend_perfdata"):
         yield Metric(
             "trend",
             avg_mb_per_sec * SEC_PER_D,
-            levels=mins(levels.get("trend_mb"), to_abs(levels.get("trend_perc"))),
+            levels=mins(
+                _level_bytes_to_mb(levels.get("trend_bytes")),
+                to_abs(levels.get("trend_perc")),
+            ),
             boundaries=(0, size_mb / range_sec * SEC_PER_H),
         )
 

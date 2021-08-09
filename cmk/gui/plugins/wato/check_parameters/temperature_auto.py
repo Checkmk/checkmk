@@ -5,16 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import TextAscii
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksEnvironment,
     ManualCheckParameterRulespec,
     rulespec_registry,
+    RulespecGroupEnforcedServicesEnvironment,
 )
+from cmk.gui.valuespec import TextInput
 
 
 def _item_spec_temperature_auto():
-    return TextAscii(
+    return TextInput(
         title=_("Sensor ID"),
         help=_("The identificator of the thermal sensor."),
     )
@@ -23,7 +23,7 @@ def _item_spec_temperature_auto():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="temperature_auto",
-        group=RulespecGroupManualChecksEnvironment,
+        group=RulespecGroupEnforcedServicesEnvironment,
         is_deprecated=True,
         item_spec=_item_spec_temperature_auto,
         title=lambda: _("Temperature sensors with builtin levels"),

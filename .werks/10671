@@ -6,7 +6,7 @@ Date: 1578486626
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The new feauture Custom SQL could be used with Remote Monitoring as well.
 Be aware that the configuration of Custom SQL and Remote Monitoring is not

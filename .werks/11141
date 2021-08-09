@@ -6,7 +6,7 @@ Date: 1594113780
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 In case virtual interfaces on ONTAP are checked, the interface speed can be returned as "auto". This leaded to a crash of the check plugin "netapp_api_if" and was fixed with this werk.
 In such cases, the interface speed will be displayed as "auto".

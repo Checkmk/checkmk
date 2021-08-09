@@ -55,7 +55,7 @@ std::vector<std::wstring> MessageResolver::getMessageFiles(
     return result;
 }
 
-std::wstring MessageResolver::resolveInt(DWORD eventID, LPCWSTR dllpath,
+std::wstring MessageResolver::resolveInt(DWORD event_id, LPCWSTR dllpath,
                                          LPCWSTR *parameters) const {
     HMODULE dll = nullptr;
 
@@ -69,31 +69,23 @@ std::wstring MessageResolver::resolveInt(DWORD eventID, LPCWSTR dllpath,
         }
 
         if (!dll) {
-            XLOG::l("Failed to load dll '{}'", wtools::ConvertToUTF8(dllpath));
+            XLOG::l("Failed to load dll '{}'", wtools::ToUtf8(dllpath));
             return {};
         }
-    } else {
-        dll = nullptr;
     }
 
     std::wstring result;
-    // maximum supported size
     result.resize(8192);
 
     DWORD dwFlags = FORMAT_MESSAGE_ARGUMENT_ARRAY | FORMAT_MESSAGE_FROM_SYSTEM;
-    if (dll) dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
+    if (dll) {
+        dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
+    }
 
-#if 0
-    // disabled as useless
-    XLOG::t("Event ID: {}.{}",
-            eventID / 65536,   // "Qualifiers": no idea what *that* is
-            eventID % 65536);  // the actual event id
-#endif
-
-    DWORD len =
-        ::FormatMessageW(dwFlags, dll, eventID,
-                         0,  // accept any language
-                         &result[0], (DWORD)result.size(), (char **)parameters);
+    DWORD len = ::FormatMessageW(dwFlags, dll, event_id,
+                                 0,  // accept any language
+                                 &result[0], static_cast<DWORD>(result.size()),
+                                 (char **)parameters);
 
     // this trims the result string or empties it if formatting failed
     result.resize(len);
@@ -121,9 +113,8 @@ std::wstring MessageResolver::resolve(DWORD eventID, LPCWSTR source,
             result += parameters[i];
         }
     }
-    std::replace_if(
-        result.begin(), result.end(),
-        [](wchar_t ch) { return ch == L'\n' || ch == L'\r'; }, ' ');
+    std::ranges::replace_if(
+        result, [](wchar_t ch) { return ch == L'\n' || ch == L'\r'; }, ' ');
     return result;
 }
 
@@ -202,7 +193,7 @@ EventLog::EventLog(const std::wstring &Name)
 
     if (handle_ == nullptr) {
         XLOG::l("failed to open eventlog: '{}' error = [{}]",
-                wtools::ConvertToUTF8(name_), GetLastError());
+                wtools::ToUtf8(name_), GetLastError());
     }
 
     buffer_.resize(INIT_BUFFER_SIZE);
@@ -328,8 +319,7 @@ bool EventLog::fillBuffer() {
         // otherwise treat this like any other error
     }
 
-    XLOG::l("Can't read eventlog '{}' error {}", wtools::ConvertToUTF8(name_),
-            error);
+    XLOG::l("Can't read eventlog '{}' error {}", wtools::ToUtf8(name_), error);
     return false;
 }
 }  // namespace cma::evl

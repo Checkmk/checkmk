@@ -19,12 +19,14 @@ struct CounterInfo {
     double rate;
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::vector<CounterInfo> counters(num_counters);
 
 CounterInfo &counter(Counter which) {
     return counters[static_cast<int>(which)];
 }
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 time_t last_statistics_update = 0;
 constexpr time_t statistics_interval = 5;
 constexpr double rating_weight = 0.25;

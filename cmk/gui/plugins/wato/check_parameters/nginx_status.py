@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _item_spec_nginx_status():
-    return TextAscii(title=_("Nginx Server"),
+    return TextInput(title=_("Nginx Server"),
                      help=_("A string-combination of servername and port, e.g. 127.0.0.1:80."))
 
 

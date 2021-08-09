@@ -6,7 +6,7 @@ Date: 1591114343
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This werk fixes some issues with the monitoring of AWS RDS DBs:
 <ul>

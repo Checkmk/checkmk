@@ -4,24 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Metric,
-    Result,
-    state,
-    type_defs,
-)
 from cmk.base.plugins.agent_based import bluecat_dhcp
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 
 
 def check_bluecat_dhcp_ok():
     assert list(
         bluecat_dhcp.check_bluecat_dhcp(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [],
                     "critical": [],
                 },
-            },),
+            },
             {
                 'oper_state': 1,
                 'leases': 11,
@@ -45,12 +42,12 @@ def check_bluecat_dhcp_ok():
 def check_bluecat_dhcp_crit():
     assert list(
         bluecat_dhcp.check_bluecat_dhcp(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [],
                     "critical": [5],
                 },
-            },),
+            },
             {
                 'oper_state': 5,
                 'leases': 10,
@@ -74,12 +71,12 @@ def check_bluecat_dhcp_crit():
 def check_bluecat_dhcp_one_lease():
     assert list(
         bluecat_dhcp.check_bluecat_dhcp(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [],
                     "critical": [],
                 },
-            },),
+            },
             {
                 'oper_state': 1,
                 'leases': 1,
@@ -103,12 +100,12 @@ def check_bluecat_dhcp_one_lease():
 def test_cluster_check_bluecat_all_ok():
     assert list(
         bluecat_dhcp.cluster_check_bluecat_dhcp(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [],
                     "critical": [],
                 },
-            },),
+            },
             {
                 'node1': {
                     'oper_state': 1,
@@ -122,11 +119,19 @@ def test_cluster_check_bluecat_all_ok():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: DHCP is running normally\n[node1]: 11 leases per second',
+                notice='[node1]: DHCP is running normally',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: DHCP is running normally\n[node2]: 11 leases per second',
+                notice='[node1]: 11 leases per second',
+            ),
+            Result(
+                state=state.OK,
+                notice='[node2]: DHCP is running normally',
+            ),
+            Result(
+                state=state.OK,
+                notice='[node2]: 11 leases per second',
             ),
             Result(
                 state=state.OK,
@@ -146,12 +151,12 @@ def test_cluster_check_bluecat_all_ok():
 def test_cluster_check_bluecat_one_ok():
     assert list(
         bluecat_dhcp.cluster_check_bluecat_dhcp(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [4],
                     "critical": [],
                 },
-            },),
+            },
             {
                 'node1': {
                     'oper_state': 1,
@@ -165,11 +170,19 @@ def test_cluster_check_bluecat_one_ok():
         )) == [
             Result(
                 state=state.OK,
-                details='[node1]: DHCP is running normally\n[node1]: 13 leases per second',
+                notice='[node1]: DHCP is running normally',
             ),
             Result(
                 state=state.OK,
-                details='[node2]: DHCP is currently stopping(!)\n[node2]: 11 leases per second',
+                notice='[node1]: 13 leases per second',
+            ),
+            Result(
+                state=state.OK,
+                notice='[node2]: DHCP is currently stopping(!)',
+            ),
+            Result(
+                state=state.OK,
+                notice='[node2]: 11 leases per second',
             ),
             Result(
                 state=state.OK,
@@ -189,12 +202,12 @@ def test_cluster_check_bluecat_one_ok():
 def test_cluster_check_bluecat_none_ok():
     assert list(
         bluecat_dhcp.cluster_check_bluecat_dhcp(
-            type_defs.Parameters({
+            {
                 "oper_states": {
                     "warning": [1],
                     "critical": [2, 3],
                 },
-            },),
+            },
             {
                 'node1': {
                     'oper_state': 1,
@@ -208,11 +221,19 @@ def test_cluster_check_bluecat_none_ok():
         )) == [
             Result(
                 state=state.WARN,
-                details='[node1]: DHCP is running normally(!)\n[node1]: 0 leases per second',
+                notice='[node1]: DHCP is running normally',
+            ),
+            Result(
+                state=state.OK,
+                notice='[node1]: 0 leases per second',
             ),
             Result(
                 state=state.CRIT,
-                details='[node2]: DHCP is currently starting(!!)\n[node2]: 1 lease per second',
+                notice='[node2]: DHCP is currently starting',
+            ),
+            Result(
+                state=state.OK,
+                notice='[node2]: 1 lease per second',
             ),
             Result(
                 state=state.CRIT,

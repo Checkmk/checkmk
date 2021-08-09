@@ -9,10 +9,11 @@
 import tarfile
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
+
 import omdlib
-import omdlib.main
 import omdlib.backup
+import omdlib.main
 
 
 @pytest.fixture()

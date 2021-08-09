@@ -9,13 +9,14 @@
 # as well as the ibm_db2 Python DBI driver for DB2:
 #  https://pypi.python.org/pypi/ibm_db
 """Check_MK SQL Test"""
-from typing import List, Optional, Tuple, NoReturn
 import argparse
 import logging
 import os
 import sys
+from typing import List, NoReturn, Optional, Tuple
 
 import cmk.utils.password_store
+
 cmk.utils.password_store.replace_passwords()
 
 LOG = logging.getLogger(__name__)
@@ -194,8 +195,7 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
 
 
 def bail_out(exit_code: int, output: str) -> NoReturn:
-    state_txt = ["OK", "WARN", "CRIT", "UNKNOWN"][exit_code]
-    sys.stdout.write("%s - %s\n" % (state_txt, output))
+    sys.stdout.write("%s\n" % output)
     sys.exit(exit_code)
 
 
@@ -235,9 +235,9 @@ def mysql_execute(cursor, cmd, inpt, procedure):
     return _default_execute(cursor, cmd, inpt, procedure)
 
 
-# def mssql_connect(host, port, db_name, user, pwd):
-#    import pymssql  # type: ignore[import] # pylint: disable=import-outside-toplevel
-#    return pymssql.connect(host=host, port=port, database=db_name, user=user, password=pwd)
+def mssql_connect(host, port, db_name, user, pwd):
+    import pymssql  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    return pymssql.connect(host=host, port=port, database=db_name, user=user, password=pwd)
 
 
 def mssql_execute(cursor, cmd, _inpt, procedure):
@@ -334,7 +334,7 @@ def connect(dbms, host, port, db_name, user, pwd):
     return {
         'postgres': postgres_connect,
         'mysql': mysql_connect,
-        # 'mssql': mssql_connect,
+        'mssql': mssql_connect,
         'oracle': oracle_connect,
         'db2': db2_connect,
     }[dbms](host, port, db_name, user, pwd)

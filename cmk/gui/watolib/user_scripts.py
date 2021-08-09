@@ -24,6 +24,7 @@ from pathlib import Path
 from six import ensure_str
 
 import cmk.utils.paths
+
 from cmk.gui.i18n import _u
 
 

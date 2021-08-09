@@ -1,9 +1,9 @@
 # Package definition
 PYTHON3 := Python3
-PYTHON3_VERS := 3.8.3
+PYTHON3_VERS := 3.8.7
 PYTHON3_DIR := Python-$(PYTHON3_VERS)
 # Increase this to enforce a recreation of the build cache
-PYTHON3_BUILD_ID := 3
+PYTHON3_BUILD_ID := 4
 
 PYTHON3_UNPACK := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-unpack
 PYTHON3_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON3_DIR)-build
@@ -33,6 +33,8 @@ PYTHON3_SITECUSTOMIZE_COMPILED := $(PYTHON3_WORK_DIR)/__pycache__/sitecustomize.
 
 .NOTPARALLEL: $(PYTHON3_INSTALL)
 
+python3-install: $(PYTHON3_INSTALL)
+
 $(PYTHON3_BUILD): $(PYTHON3_SITECUSTOMIZE_COMPILED)
 	$(TOUCH) $@
 
@@ -45,24 +47,23 @@ $(PYTHON3_CACHE_PKG_PROCESS): $(PYTHON3_CACHE_PKG_PATH)
 	$(call unpack_pkg_archive,$(PYTHON3_CACHE_PKG_PATH),$(PYTHON3_DIR))
 	$(call upload_pkg_archive,$(PYTHON3_CACHE_PKG_PATH),$(PYTHON3_DIR),$(PYTHON3_BUILD_ID))
 # Ensure that the rpath of the python binary and dynamic libs always points to the current version path
-	chmod +w $(PACKAGE_PYTHON3_LD_LIBRARY_PATH)/libpython3.8.so.1.0 $(PACKAGE_PYTHON3_LD_LIBRARY_PATH)/libpython3.so
 	for i in $(PACKAGE_PYTHON3_EXECUTABLE) \
 	         $(PACKAGE_PYTHON3_LD_LIBRARY_PATH)/libpython3.8.so.1.0 \
 	         $(PACKAGE_PYTHON3_LD_LIBRARY_PATH)/libpython3.so \
 	         $(PACKAGE_PYTHON3_PYTHONPATH)/lib-dynload/*.so ; do \
 	    chrpath -r "$(OMD_ROOT)/lib" $$i; \
 	done
-	chmod -w $(PACKAGE_PYTHON3_LD_LIBRARY_PATH)/libpython3.8.so.1.0 $(PACKAGE_PYTHON3_LD_LIBRARY_PATH)/libpython3.so
 # Native modules built based on this version need to use the correct rpath
 	sed -i 's|--rpath,/omd/versions/[^/]*/lib|--rpath,$(OMD_ROOT)/lib|g' \
 	    $(PACKAGE_PYTHON3_PYTHONPATH)/_sysconfigdata__linux_x86_64-linux-gnu.py
 	LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" \
 	    $(PACKAGE_PYTHON3_EXECUTABLE) -m py_compile \
 	    $(PACKAGE_PYTHON3_PYTHONPATH)/_sysconfigdata__linux_x86_64-linux-gnu.py
+	rm -r $(PACKAGE_PYTHON3_PYTHONPATH)/test
 	$(TOUCH) $@
 
 $(PYTHON3_UNPACK): $(PACKAGE_DIR)/$(PYTHON3)/$(PYTHON3_DIR).tar.xz
-	$(RM) -r $(PACKAGE_BUILD_DIR)/$*
+	$(RM) -r $(PYTHON3_BUILD_DIR)
 	$(MKDIR) $(PACKAGE_BUILD_DIR)
 	$(TAR_XZ) $< -C $(PACKAGE_BUILD_DIR)
 	$(MKDIR) $(BUILD_HELPER_DIR)

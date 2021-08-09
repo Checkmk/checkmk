@@ -6,7 +6,6 @@
 #include "Table.h"
 
 #include <cstdlib>
-#include <ostream>
 #include <stdexcept>
 
 #include "Column.h"
@@ -14,14 +13,16 @@
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "StringUtils.h"
+#ifndef CMC
 #include "nagios.h"
+#endif
 
 Table::Table(MonitoringCore *mc) : _mc(mc) {}
 
 Table::~Table() = default;
 
 void Table::addColumn(std::unique_ptr<Column> col) {
-    if (_columns.contains(col->name())) {
+    if (_columns.find(col->name()) != _columns.end()) {
         // NOTE: We can't uses Table::logger() here, because there might be no
         // monitoring core yet. We get called *very* early...
         Emergency(col->logger()) << "overwriting column '" << col->name()
@@ -87,8 +88,8 @@ bool Table::isAuthorized(Row /*unused*/, const contact * /*unused*/) const {
     return true;
 }
 
-Row Table::findObject(const std::string & /*unused*/) const {
-    return Row(nullptr);
-}
+Row Table::get(const std::string & /*unused*/) const { return Row{nullptr}; }
+
+Row Table::getDefault() const { return Row{nullptr}; }
 
 Logger *Table::logger() const { return _mc->loggerLivestatus(); }

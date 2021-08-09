@@ -9,9 +9,13 @@ SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then cat .site; break; e
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 ROOT=/omd/sites/$SITE
 
-sudo rsync -varx --delete --exclude=.f12* --exclude windows --exclude=.gitignore --exclude=baked* ./ $ROOT/share/check_mk/agents/
-if [ -e /etc/check_mk ]; then
-    sudo install -m 644 cfg_examples/logwatch.cfg /etc/check_mk/
+sudo rsync -varx --delete --exclude=.f12* --exclude windows --exclude=.gitignore --exclude=baked* --exclude=bakery --exclude=plugins ./ $ROOT/share/check_mk/agents/
+
+if [ -z "$ONLY_COPY" ]; then
+    if [ -e /etc/check_mk ]; then
+        sudo install -m 644 cfg_examples/logwatch.cfg /etc/check_mk/
+    fi
+
+    sudo install -m 755 check_mk_agent.linux /usr/bin/check_mk_agent
+    sudo install -m 755 mk-job /usr/bin/
 fi
-sudo install -m 755 check_mk_agent.linux /usr/bin/check_mk_agent
-sudo install -m 755 mk-job /usr/bin/

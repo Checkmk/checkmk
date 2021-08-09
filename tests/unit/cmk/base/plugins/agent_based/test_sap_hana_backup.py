@@ -4,11 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from freezegun import freeze_time  # type: ignore[import]
+import pytest
+from freezegun import freeze_time
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (Service, state, Result, Metric)
 import cmk.base.plugins.agent_based.sap_hana_backup as sap_hana_backup
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
 NOW_SIMULATED = "2019-05-17 00:00:00.000000"
 ITEM = "inst"
@@ -67,15 +68,15 @@ def test_check_sap_hana_backup_OK():
     params = {"backup_age": (24 * 60 * 60, 2 * 24 * 60 * 60)}
     yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
     assert yielded_results == [
-        Result(state=state.OK, summary='Status: successful', details='Status: successful'),
+        Result(state=state.OK, summary='Status: successful'),
         Result(state=state.OK,
                summary='Last: 2019-01-01 00:00:00',
                details='Last: 2019-01-01 00:00:00'),
         Result(state=state.OK,
                summary='Age: 22 hours 54 minutes',
                details='Age: 22 hours 54 minutes'),
-        Metric('backup_age', 82457.0, levels=(86400.0, 172800.0), boundaries=(None, None)),
-        Result(state=state.OK, summary='Message: <ok>', details='Message: <ok>'),
+        Metric('backup_age', 82457.0, levels=(86400.0, 172800.0)),
+        Result(state=state.OK, summary='Message: <ok>'),
     ]
 
 
@@ -86,7 +87,7 @@ def test_check_sap_hana_backup_CRIT():
     yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
 
     assert yielded_results == [
-        Result(state=state.OK, summary='Status: successful', details='Status: successful'),
+        Result(state=state.OK, summary='Status: successful'),
         Result(state=state.OK,
                summary='Last: 2019-01-01 00:00:00',
                details='Last: 2019-01-01 00:00:00'),
@@ -94,8 +95,8 @@ def test_check_sap_hana_backup_CRIT():
             state=state.CRIT,
             summary='Age: 22 hours 54 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)',
             details='Age: 22 hours 54 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)'),
-        Metric('backup_age', 82457.0, levels=(3600.0, 7200.0), boundaries=(None, None)),
-        Result(state=state.OK, summary='Message: <ok>', details='Message: <ok>'),
+        Metric('backup_age', 82457.0, levels=(3600.0, 7200.0)),
+        Result(state=state.OK, summary='Message: <ok>'),
     ]
 
 
@@ -108,8 +109,8 @@ def test_cluster_check_sap_hana_backup_CRIT():
     yielded_results = list(sap_hana_backup.cluster_check_sap_hana_backup(ITEM, params, section))
 
     assert yielded_results == [
-        Result(state=state.OK, summary='Nodes: node0, node1', details='Nodes: node0, node1'),
-        Result(state=state.OK, summary='Status: successful', details='Status: successful'),
+        Result(state=state.OK, summary='Nodes: node0, node1'),
+        Result(state=state.OK, summary='Status: successful'),
         Result(state=state.OK,
                summary='Last: 2019-01-01 00:00:00',
                details='Last: 2019-01-01 00:00:00'),
@@ -117,6 +118,6 @@ def test_cluster_check_sap_hana_backup_CRIT():
             state=state.CRIT,
             summary='Age: 22 hours 54 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)',
             details='Age: 22 hours 54 minutes (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)'),
-        Metric('backup_age', 82457.0, levels=(3600.0, 7200.0), boundaries=(None, None)),
-        Result(state=state.OK, summary='Message: <ok>', details='Message: <ok>'),
+        Metric('backup_age', 82457.0, levels=(3600.0, 7200.0)),
+        Result(state=state.OK, summary='Message: <ok>'),
     ]

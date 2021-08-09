@@ -1,0 +1,13 @@
+Title: REST API: links in responses are now absolute
+Class: fix
+Compatible: compat
+Component: core
+Date: 1613657177
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Previously these links were relative to the API base path,
+but now they are absolute including protocol, host and port.

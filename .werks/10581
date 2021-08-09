@@ -6,7 +6,7 @@ Date: 1578902040
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Using the WATO rule "Main memory usage (UNIX / Other Devices)", users could specify levels
 as absolute values or percent and on used or free memory.

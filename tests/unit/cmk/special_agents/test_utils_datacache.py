@@ -4,18 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from datetime import datetime
+from pathlib import Path
 from typing import Any
 
-from datetime import datetime
+import pytest
 
-from pathlib import Path
-
-import pytest  # type: ignore[import]
-
-from cmk.special_agents.utils import (
-    DataCache,
-    get_seconds_since_midnight,
-)
+from cmk.special_agents.utils import DataCache, get_seconds_since_midnight
 
 
 class KeksDose(DataCache):

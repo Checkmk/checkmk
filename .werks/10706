@@ -6,7 +6,7 @@ Date: 1577648912
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The editor for e.g. dashboard or report elements was showing too many types of
 filter contexts (e.g. comments, ...) where either none or only a specific set

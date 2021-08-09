@@ -15,5 +15,5 @@ description:
  The check will also report {WARNING} if the presence state is not "empty", "equipped",
  "missing", "equippedNotPrimary", "equippedSlave" or "equippedDiscInProgress".
 
-inventory:
+discovery:
  One service is created for each CPU.

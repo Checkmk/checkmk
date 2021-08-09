@@ -3,22 +3,10 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""
-Version 1
----------
 
-.. warning::
-    This Version of the **Check API** is still under development
-    and may change untils checkmk version 1.7 is released.
-
-    Do not use it (yet) for production code.
-    It may change at any time without notice.
-
-"""
 # For an explanation of what is what see comments in __all__definition at the end
 
-from cmk.utils.regex import regex
-from cmk.snmplib.type_defs import OIDBytes, OIDCached, OIDEnd
+from cmk.utils.regex import regex  # pylint: disable=cmk-module-layer-violation
 
 from cmk.base.api.agent_based.checking_classes import (
     IgnoreResults,
@@ -27,13 +15,13 @@ from cmk.base.api.agent_based.checking_classes import (
     Result,
     Service,
     ServiceLabel,
-    state,
+    State,
 )
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
-from cmk.base.api.agent_based.type_defs import SNMPTree
+from cmk.base.api.agent_based.section_classes import OIDBytes, OIDCached, OIDEnd, SNMPTree
+from cmk.base.api.agent_based.type_defs import HostLabel
 from cmk.base.api.agent_based.utils import (
     all_of,
-    always_detect,
     any_of,
     check_levels,
     check_levels_predictive,
@@ -43,29 +31,24 @@ from cmk.base.api.agent_based.utils import (
     exists,
     get_average,
     get_rate,
+    GetRateError,
     matches,
-    never_detect,
     not_contains,
     not_endswith,
     not_equals,
     not_exists,
     not_matches,
     not_startswith,
-    parse_to_string_table,
     startswith,
-    GetRateError,
 )
 from cmk.base.api.agent_based.value_store import get_value_store
-from cmk.base.discovered_labels import HostLabel
 
-from . import register, render, clusterize, type_defs
+from . import clusterize, register, render, type_defs
 
 __all__ = [
     # the order is relevant for the shinx doc!
     # begin with section stuff
-    "parse_to_string_table",
     "all_of",
-    "always_detect",
     "any_of",
     "exists",
     "equals",
@@ -73,7 +56,6 @@ __all__ = [
     "endswith",
     "contains",
     "matches",
-    "never_detect",
     "not_exists",
     "not_equals",
     "not_contains",
@@ -101,7 +83,7 @@ __all__ = [
     "Service",
     "ServiceLabel",
     "SNMPTree",
-    "state",
+    "State",
     "TableRow",
     "type_defs",
     "GetRateError",

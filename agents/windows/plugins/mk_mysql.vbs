@@ -6,6 +6,7 @@
 ' is running one or multiple MySQL server instances locally.
 
 Option Explicit
+Const CMK_VERSION = "2.1.0i1"
 
 Dim SHO, FSO, WMI, PROC
 Dim cfg_dir, cfg_file, service_list, service, instances, instance, cmd
@@ -23,7 +24,7 @@ cfg_dir = SHO.ExpandEnvironmentStrings("%MK_CONFDIR%")
 '
 
 Set WMI = GetObject("winmgmts:{impersonationLevel=impersonate}!\\.\root\cimv2")
-Set service_list = WMI.ExecQuery("SELECT * FROM Win32_Service WHERE Name LIKE '%MySQL%' and State = 'Running'")
+Set service_list = WMI.ExecQuery("SELECT * FROM Win32_Service WHERE (Name LIKE '%MySQL%' or Name LIKE '%MariaDB') and State = 'Running'")
 For Each service in service_list
     ' add the internal service name as key and the launch command line as value
     instances.add service.Name, service.PathName
@@ -94,7 +95,7 @@ For Each instance In instances.Keys
     cmd = Replace(cmd, "mysqld""", "mysql""")
     cmd = Replace(cmd, "mysqld-nt""", "mysql""")
     cmd = Replace(cmd, "mysql""", "mysql.exe""")
-    cmd = Replace(cmd, "mysqld.exe""", "mysql.exe""")    
+    cmd = Replace(cmd, "mysqld.exe""", "mysql.exe""")
     If InStr(cmd, "mysql.exe""") = 0 Then
         ' replace failed, probably we have no double quotes in the string
         cmd = Replace(cmd, "mysqld.exe", "mysql.exe")

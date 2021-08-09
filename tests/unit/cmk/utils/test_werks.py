@@ -11,14 +11,14 @@ import subprocess
 from collections import defaultdict
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 from six import ensure_binary, ensure_str
 
-import testlib
+import tests.testlib as testlib
 
+import cmk.utils.memoize
 import cmk.utils.version as cmk_version
 import cmk.utils.werks
-import cmk.utils.memoize
 
 
 @pytest.mark.parametrize("version_str,expected", [
@@ -89,7 +89,7 @@ def test_werk_versions_after_tagged(precompiled_werks):
 
         # Some werks were added after the version was released. Mostly they were forgotten by
         # the developer. Consider it a hall of shame ;)
-        if werk_id in {10062, 10063, 10064, 10125}:
+        if werk_id in {10062, 10063, 10064, 10125, 12836}:
             continue
 
         tag_name = "v%s" % werk["version"]
@@ -128,7 +128,7 @@ def _tags_containing_werk(werk_id):
     return _werk_to_git_tag[werk_id]
 
 
-_werk_to_git_tag = defaultdict(list)  # type: ignore[var-annotated]
+_werk_to_git_tag = defaultdict(list)
 
 
 @cmk.utils.memoize.MemoizeCache

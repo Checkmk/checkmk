@@ -3,11 +3,11 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import collections
 
 
 def inventory_k8s_pod_container(parsed):
     if parsed:
-        yield HostLabel(u"cmk/kubernetes_object", u"pod")
         yield (None, {})
 
 
@@ -30,10 +30,8 @@ def check_k8s_pod_container(_no_item, params, parsed):
 
 
 check_info['k8s_pod_container'] = {
-    'parse_function': parse_k8s,
+    # section is already migrated
     'inventory_function': inventory_k8s_pod_container,
     'check_function': check_k8s_pod_container,
     'service_description': 'Container',
-    'has_perfdata': True,
-    'includes': ['k8s.include'],
 }

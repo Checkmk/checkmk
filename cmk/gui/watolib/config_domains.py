@@ -8,44 +8,42 @@ import errno
 import logging
 import os
 import re
-from pathlib import Path
 import signal
 import subprocess
 import traceback
-from typing import Any, Dict, List, Tuple, Set
+from pathlib import Path
+from typing import Any, Dict, List, Set, Tuple
 
 from six import ensure_binary, ensure_str
 
-import cmk.utils.version as cmk_version
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
+from cmk.utils.site import omd_site
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.hooks as hooks
-import cmk.gui.config as config
 import cmk.gui.mkeventd as mkeventd
-from cmk.gui.log import logger
-from cmk.gui.i18n import _
+from cmk.gui.config import get_default_config
 from cmk.gui.exceptions import MKGeneralException
-
+from cmk.gui.globals import config
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.plugins.watolib import ABCConfigDomain, config_domain_registry
+from cmk.gui.type_defs import ConfigDomainName
 from cmk.gui.watolib.changes import log_audit
-from cmk.gui.watolib.utils import (
-    wato_root_dir,
-    liveproxyd_config_dir,
-    multisite_dir,
-)
-from cmk.gui.plugins.watolib import (
-    config_domain_registry,
-    ABCConfigDomain,
-)
+from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
 
 
 @config_domain_registry.register
 class ConfigDomainCore(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "check_mk"
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "check_mk"
 
     def config_dir(self):
         return wato_root_dir()
@@ -66,7 +64,10 @@ class ConfigDomainCore(ABCConfigDomain):
 class ConfigDomainGUI(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
-    ident = "multisite"
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "multisite"
 
     def config_dir(self):
         return multisite_dir()
@@ -75,7 +76,7 @@ class ConfigDomainGUI(ABCConfigDomain):
         pass
 
     def default_globals(self):
-        return config.default_config
+        return get_default_config()
 
 
 # TODO: This has been moved directly into watolib because it was not easily possible
@@ -86,8 +87,11 @@ class ConfigDomainGUI(ABCConfigDomain):
 class ConfigDomainLiveproxy(ABCConfigDomain):
     needs_sync = False
     needs_activation = False
-    ident = "liveproxyd"
     in_global_settings = True
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "liveproxyd"
 
     @classmethod
     def enabled(cls):
@@ -97,14 +101,11 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         return liveproxyd_config_dir()
 
     def save(self, settings, site_specific=False, custom_site_path=None):
-        super(ConfigDomainLiveproxy, self).save(settings,
-                                                site_specific=site_specific,
-                                                custom_site_path=custom_site_path)
+        super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
         self.activate()
 
     def activate(self):
-        log_audit(None, "liveproxyd-activate",
-                  _("Activating changes of Livestatus Proxy configuration"))
+        log_audit("liveproxyd-activate", _("Activating changes of Livestatus Proxy configuration"))
 
         try:
             pidfile = Path(cmk.utils.paths.livestatus_unix_socket).with_name("liveproxyd.pid")
@@ -112,7 +113,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
                 with pidfile.open(encoding="utf-8") as f:
                     pid = int(f.read().strip())
 
-                os.kill(pid, signal.SIGUSR1)
+                os.kill(pid, signal.SIGHUP)
             except OSError as e:
                 # ENOENT: No liveproxyd running: No reload needed.
                 # ESRCH: PID in pidfiles does not exist: No reload needed.
@@ -158,8 +159,11 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 class ConfigDomainEventConsole(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "ec"
     in_global_settings = False
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "ec"
 
     @classmethod
     def enabled(cls):
@@ -170,9 +174,8 @@ class ConfigDomainEventConsole(ABCConfigDomain):
 
     def activate(self):
         if getattr(config, "mkeventd_enabled", False):
-            mkeventd.execute_command("RELOAD", site=config.omd_site())
-            log_audit(None, "mkeventd-activate",
-                      _("Activated changes of event console configuration"))
+            mkeventd.execute_command("RELOAD", site=omd_site())
+            log_audit("mkeventd-activate", _("Activated changes of event console configuration"))
             if hooks.registered('mkeventd-activate-changes'):
                 hooks.call("mkeventd-activate-changes")
 
@@ -185,9 +188,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
     always_activate = True  # Execute this on all sites on all activations
-    ident = "ca-certificates"
 
-    trusted_cas_file = "%s/var/ssl/ca-certificates.crt" % cmk.utils.paths.omd_root
+    trusted_cas_file = cmk.utils.paths.trusted_ca_file
 
     # This is a list of directories that may contain .pem files of trusted CAs.
     # The contents of all .pem files will be contantenated together and written
@@ -201,6 +203,10 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     _PEM_RE = re.compile(b"-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?"
                          b"", re.DOTALL)
 
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "ca-certificates"
+
     def config_dir(self):
         return multisite_dir()
 
@@ -210,9 +216,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         return os.path.join(self.config_dir(), "ca-certificates.mk")
 
     def save(self, settings, site_specific=False, custom_site_path=None):
-        super(ConfigDomainCACertificates, self).save(settings,
-                                                     site_specific=site_specific,
-                                                     custom_site_path=custom_site_path)
+        super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
 
         current_config = settings.get("trusted_certificate_authorities", {
             "use_system_wide_cas": True,
@@ -270,9 +274,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                         continue
 
                     trusted_cas.update(self._get_certificates_from_file(cert_file_path))
-                except IOError:
-                    logger.exception("Error reading certificates from %s", cert_file_path)
-
+                except (IOError, PermissionError):
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful
                     # trigger for further checking web.log when a really needed certificate can
@@ -283,6 +285,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                     # not needed.
                     if cert_file_path == Path("/etc/ssl/certs/localhost.crt"):
                         continue
+
+                    logger.exception("Error reading certificates from %s", cert_file_path)
 
                     errors.append("Failed to add certificate '%s' to trusted CA certificates. "
                                   "See web.log for details." % cert_file_path)
@@ -318,12 +322,15 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 class ConfigDomainOMD(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "omd"
     omd_config_dir = "%s/etc/omd" % (cmk.utils.paths.omd_root,)
 
     def __init__(self):
-        super(ConfigDomainOMD, self).__init__()
+        super().__init__()
         self._logger = logger.getChild("config.omd")
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "omd"
 
     def config_dir(self):
         return self.omd_config_dir
@@ -345,7 +352,7 @@ class ConfigDomainOMD(ABCConfigDomain):
             if key not in current_settings:
                 continue  # Skip settings unknown to current OMD
 
-            if current_settings[key] == settings[key]:
+            if current_settings[key] == val:
                 continue  # Skip unchanged settings
 
             config_change_commands.append("%s=%s" % (key, val))

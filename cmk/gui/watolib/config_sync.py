@@ -12,21 +12,22 @@ import io
 import itertools
 import multiprocessing
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import tarfile
 import time
 import traceback
+from pathlib import Path
+from tarfile import TarFile, TarInfo
 from types import TracebackType
-from typing import Any, Optional, Type, Tuple, Dict, List, NamedTuple
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Type
 
-import cmk.utils.store as store
 import cmk.utils.paths
+import cmk.utils.store as store
 
-from cmk.gui.log import logger
-from cmk.gui.i18n import _
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
 
 Command = List[str]
 
@@ -50,7 +51,7 @@ class ReplicationPath(
         else:
             final_excludes = excludes
 
-        return super(ReplicationPath, cls).__new__(
+        return super().__new__(
             cls,
             ty=ty,
             ident=ident,
@@ -61,7 +62,7 @@ class ReplicationPath(
 
 class SnapshotCreationBase:
     def __init__(self, activation_work_dir: str) -> None:
-        super(SnapshotCreationBase, self).__init__()
+        super().__init__()
         self._logger = logger.getChild("SnapshotCreationBase")
         self._multitar_workdir = os.path.join(activation_work_dir, "multitar_workdir")
         self._rsync_target_dir = os.path.join(self._multitar_workdir, "synced_files")
@@ -251,7 +252,7 @@ class SnapshotCreationBase:
 class SnapshotCreator(SnapshotCreationBase):
     def __init__(self, activation_work_dir: str,
                  all_generic_components: List[ReplicationPath]) -> None:
-        super(SnapshotCreator, self).__init__(activation_work_dir)
+        super().__init__(activation_work_dir)
         self._setup_directories()
         self._generic_components = all_generic_components
         self._worker_subprocesses: List[multiprocessing.Process] = []
@@ -410,23 +411,49 @@ def _wipe_directory(path: str) -> None:
                     raise
 
 
-def _get_local_users(tar_file):
+def _get_local_users(tar_file) -> Dict[str, Optional[str]]:
     """The tar_file should contain var/check_mk/web/
 
-From there on inspect every user's cached_profile.mk to recognize if they are a users
-belonging to a certain customer in the CME."""
+    From there on inspect every user's cached_profile.mk to recognize if they are a users
+    belonging to a certain customer in the CME."""
     return {
         os.path.normpath(os.path.dirname(entry)):
-        ast.literal_eval(tar_file.extractfile(entry).read()).get('customer', None)
+        ast.literal_eval(tar_file.extractfile(entry).read().decode("utf-8")).get('customer', None)
         for entry in tar_file.getnames()
         if os.path.basename(entry) == "cached_profile.mk"
     }
 
 
-def _update_usersettings(path, tar_file):
-    """Recursively traverse the usersettings dir and update files
+def _update_usersettings(path, subtar):
+    local_users = _get_local_users(subtar)
+    all_user_tars: Dict[str, List[TarInfo]] = {}
+    for tarinfo in subtar.getmembers():
+        tokens = tarinfo.name.split("/")
+        # tokens example
+        # ['.']
+        # ['.', 'automation']
+        # ['.', 'automation', 'automation.secret']
+        # ['.', 'automation', 'enforce_pw_change.mk']
+        if len(tokens) < 2:
+            continue
+        all_user_tars.setdefault(tokens[1], []).append(tarinfo)
 
-    User can be split in two tiers.
+    for user in os.listdir(path):
+        p = path + "/" + user
+        if os.path.isdir(p):
+            _update_settings_of_user(p, subtar, all_user_tars.get(user, []), user, local_users)
+
+
+def _update_settings_of_user(
+    path: str,
+    tar_file: TarFile,
+    user_tars: List[TarInfo],
+    user: str,
+    local_users: Dict[str, Optional[str]],
+) -> None:
+    """Update files within user directory
+
+    A user can be split in two tiers.
 
     Customer-Users belong to a customer when working on the CME. They only
     work on the GUI of their corresponding remote site. They are allowed to
@@ -434,7 +461,7 @@ def _update_usersettings(path, tar_file):
     local configurations are retained when receiving files from master as
     changes are activated.
 
-        This meas all "user_*" files are retained during sync.
+        This means all "user_*" files are retained during sync.
 
     Non-customer-users (e.g. GLOBAL users) normally work on the central
     site and thus they should be able to use their customizations when they
@@ -443,54 +470,46 @@ def _update_usersettings(path, tar_file):
 
     No backup of the remote site dir happens during sync, data is removed,
     added, skipped in place to avoid collisions."""
-    def is_user_file(filepath):
-        entry = os.path.basename(filepath)
-        return entry.startswith('user_') or entry in [
-            'tableoptions.mk', 'treestates.mk', 'sidebar.mk'
-        ]
 
-    user_p = _get_local_users(tar_file)
-    user = os.path.basename(path)
+    is_customer_user = local_users.get(user) is not None
+    _cleanup_user_dir(path, is_customer_user)
+    if is_customer_user:
+        user_tars = [m for m in user_tars if not is_user_file(m.name)]
 
+    tar_file.extractall(os.path.dirname(path), members=user_tars)
+
+
+def _cleanup_user_dir(path, is_customer_user) -> None:
     for entry in os.listdir(path):
         p = path + "/" + entry
         if os.path.isdir(p):
-            _update_usersettings(p, tar_file)
-        elif (user_p.get(user, False) and is_user_file(entry)):
+            _cleanup_user_dir(p, is_customer_user)
+        elif is_customer_user and is_user_file(entry):
             continue
         else:
             os.remove(p)
 
-    # This verifies the function is at a user level path to extract tar_file
-    if user in user_p:
-        members = (m for m in tar_file.getmembers() if m.name.startswith('./' + user + '/'))
-        if user_p[user] is not None:
-            members = (m for m in members if not is_user_file(m.name))
 
-        tar_file.extractall(os.path.dirname(path), members=members)
+def is_user_file(filepath) -> bool:
+    entry = os.path.basename(filepath)
+    return entry.startswith('user_') or entry in ['tableoptions.mk', 'treestates.mk', 'sidebar.mk']
 
 
-def _update_check_mk(path, tar_file):
-    "extract check_mk/conf.d/wato folder but skip overwriting user notification_rules"
+def _update_check_mk(target_dir, tar_file):
+    """extract check_mk/conf.d/wato folder, but keep information in contacts.mk
+    (need to retain user notification rules)"""
+    site_vars: Dict[str, Any] = {"contacts": {}}
+    with Path(target_dir).joinpath("contacts.mk").open(encoding="utf-8") as f:
+        exec(f.read(), {}, site_vars)
 
-    members = [m for m in tar_file.getmembers() if m.name != "./contacts.mk"]
-    for entry in members:
-        filepath = os.path.join(path, entry.name)
-        if os.path.isfile(filepath):
-            os.remove(filepath)
-
-    tar_file.extractall(path, members=members)
+    _wipe_directory(target_dir)
+    tar_file.extractall(target_dir)
 
     master_vars: Dict[str, Any] = {"contacts": {}}
-    eval(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)
-
-    site_vars: Dict[str, Any] = {"contacts": {}}
-    with Path(path).joinpath("contacts.mk").open(encoding="utf-8") as f:
-        eval(f.read(), {}, site_vars)
+    exec(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)
 
     site_contacts = _update_contacts_dict(master_vars["contacts"], site_vars["contacts"])
-
-    store.save_to_mk_file(os.path.join(path, "contacts.mk"), "contacts", site_contacts)
+    store.save_to_mk_file(os.path.join(target_dir, "contacts.mk"), "contacts", site_contacts)
 
 
 def _update_contacts_dict(master: Dict, site: Dict) -> Dict:

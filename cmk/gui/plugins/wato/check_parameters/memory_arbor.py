@@ -5,19 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    CascadingDropdown,
-    Dictionary,
-    Filesize,
-    Percentage,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import CascadingDropdown, Dictionary, Filesize, Percentage, Tuple
 
 # Beware: This is not yet implemented in the check.
 # def PredictiveMemoryChoice(what):

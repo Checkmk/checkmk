@@ -1,0 +1,7 @@
+===========================
+agent_based_api.v1.register
+===========================
+
+.. automodule:: cmk.base.plugins.agent_based.agent_based_api.v1.register
+   :members:
+   :show-inheritance:

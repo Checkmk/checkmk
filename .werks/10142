@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 mk_logwatch tries its best to determine the correct encoding of a file,
 and to recover from errors if it is wrong.

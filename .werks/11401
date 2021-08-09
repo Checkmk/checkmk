@@ -1,0 +1,36 @@
+Title: New Bakery API
+Class: feature
+Compatible: incomp
+Component: agents
+Date: 1603112641
+Edition: cee
+Knowledge: undoc
+Level: 3
+Version: 2.0.0i1
+
+It is now possible to extend Checkmk by writing your own bakery plugins.
+That is, you can now deploy your own agent plugins and have them baked into
+your agent packages by the agent bakery.
+
+While this was also possible before by placing the right files at the right
+locations, you can now deploy your plugins with the help of a well-documented,
+versioned and comprehensive API. A bakery plugin is a Python 3 module that specifies
+files that should be deployed to the baked agents, scriptlets that should be
+executed on the target system (RPM scriplets, DEB maintainer scripts, Solaris PKG
+installation scripts) on package transition, and Windows agent config entries (YAML config)
+that should be available for the baked windows agents.
+
+You can add your own bakery plugins by placing them at
+<code>~/local/lib/check_mk/base/cee/plugins/bakery/</code>. For instructions and details
+on how to use the new API, please refer to the official Checkmk documentation. With Checkmk 2.0,
+also the majority of the builtin bakery plugins have been migrated to the new Bakery API, so
+having a look at them at <code>~/lib/check_mk/base/cee/plugins/bakery/</code>
+can also help to write your own plugins.
+
+If you have deployed your bakery plugins to Checkmk before, using the previous method
+of placing a plugin file to <code>~/local/share/check_mk/agents/bakery/</code>, your plugins
+will continue to work with Checkmk 2.0, if you convert them to Python 3 syntax. However,
+the Agent Bakery will display a deprecation warning on baking agents (visible at the
+bake-agents background job details at the GUI, or on the console if baking via command line),
+and the support for legacy bakery plugins will be removed in an upcoming version of Checkmk,
+so it's worth it to migrate your plugins to the new API early.

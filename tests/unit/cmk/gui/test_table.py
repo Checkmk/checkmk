@@ -6,13 +6,16 @@
 
 import re
 
+import pytest
 from bs4 import BeautifulSoup as bs  # type: ignore[import]
-import pytest  # type: ignore[import]
 
+from tests.testlib import compare_html
+
+from cmk.gui.globals import html, output_funnel, response
 from cmk.gui.i18n import _
 from cmk.gui.table import table_element
-from cmk.gui.globals import html
-from tools import compare_html  # type: ignore[import]
+from cmk.gui.utils.html import HTML
+from cmk.gui.utils.logged_in import LoggedInNobody
 
 
 def read_out_simple_table(text):
@@ -41,11 +44,11 @@ def read_out_csv(text, separator):
     return data
 
 
-def test_basic(register_builtin_html):
+def test_basic(request_context):
     table_id = 0
     title = " TEST "
 
-    with html.plugged():
+    with output_funnel.plugged():
         with table_element("%d" % table_id, title, searchable=False, sortable=False) as table:
             table.row()
             table.cell("A", "1")
@@ -54,55 +57,85 @@ def test_basic(register_builtin_html):
             table.cell("A", "1")
             table.cell("C", "4")
 
-        written_text = "".join(html.drain())
+        written_text = "".join(output_funnel.drain())
     assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1', u'2'], [u'1', u'4']]
 
 
-def test_plug(register_builtin_html):
+def test_cell_content_escaping(request_context):
+    with output_funnel.plugged():
+        with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
+            table.row()
+            table.cell("A", "<script>alert('A')</script>")
+            table.cell("B", HTML("<script>alert('B')</script>"))
+            table.cell("C", "<b>C</b>")
+
+        written_text = output_funnel.drain()
+
+    assert "&lt;script&gt;alert(&#x27;A&#x27;)&lt;/script&gt;" in written_text
+    assert "<script>alert('B')</script>" in written_text
+    assert "<b>C</b>" in written_text
+
+
+def test_cell_title_escaping(request_context):
+    with output_funnel.plugged():
+        with table_element("ding", "TITLE", searchable=False, sortable=False) as table:
+            table.row()
+            table.cell("<script>alert('A')</script>")
+            table.cell(HTML("<script>alert('B')</script>"))
+            table.cell("<b>C</b>")
+
+        written_text = output_funnel.drain()
+
+    assert "&lt;script&gt;alert(&#x27;A&#x27;)&lt;/script&gt;" in written_text
+    assert "<script>alert('B')</script>" in written_text
+    assert "<b>C</b>" in written_text
+
+
+def test_plug(request_context):
     table_id = 0
     title = " TEST "
 
-    with html.plugged():
+    with output_funnel.plugged():
         with table_element("%d" % table_id, title, searchable=False, sortable=False) as table:
             table.row()
             table.cell("A", "1")
-            html.write("a")
+            html.write_text("a")
             table.cell("B", "2")
-            html.write("b")
+            html.write_text("b")
             table.row()
             table.cell("A", "1")
-            html.write("a")
+            html.write_text("a")
             table.cell("C", "4")
-            html.write("c")
+            html.write_text("c")
 
-        written_text = "".join(html.drain())
+        written_text = "".join(output_funnel.drain())
     assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1a', u'2b'], [u'1a', u'4c']]
 
 
-def test_context(register_builtin_html):
+def test_context(request_context):
     table_id = 0
     rows = [(i, i**3) for i in range(10)]
     header = ["Number", "Cubical"]
 
-    with html.plugged():
+    with output_funnel.plugged():
         with table_element(table_id="%d" % table_id, searchable=False, sortable=False) as table:
             for row in rows:
                 table.row()
                 for h, r in zip(header, row):
                     table.cell(_(h), r)
 
-        written_text = "".join(html.drain())
+        written_text = "".join(output_funnel.drain())
     data = read_out_simple_table(written_text)
     assert data.pop(0) == header
     data = [tuple(map(int, row)) for row in data if row and row[0]]
     assert data == rows
 
 
-def test_nesting(register_builtin_html):
+def test_nesting(request_context):
     table_id = 0
     title = " TEST "
 
-    with html.plugged():
+    with output_funnel.plugged():
         with table_element("%d" % table_id, title, searchable=False, sortable=False) as table1:
             table1.row()
             table1.cell("A", "1")
@@ -113,28 +146,28 @@ def test_nesting(register_builtin_html):
                 table2.cell("_", "+")
                 table2.cell("|", "-")
 
-        written_text = "".join(html.drain())
+        written_text = "".join(output_funnel.drain())
     assert compare_html(
-        written_text, '''<h3>  TEST </h3>
-                            <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
+        written_text, '''<h3 class="table">  TEST </h3>
+                            <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
-                            <tr class="data odd0">  <td>   1  </td>  <td>
-                                <h3> TEST 2</h3>
-                                <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
+                            <tr class="data even0">  <td>   1  </td>  <td>
+                                <h3 class="table"> TEST 2</h3>
+                                <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                                 <table class="data oddeven">
                                 <tr><th>_</th><th>|</th></tr>
-                                <tr class="data odd0"><td>+</td><td>-</td></tr>
+                                <tr class="data even0"><td>+</td><td>-</td></tr>
                                 </table>  </td>
                             </tr>
                             </table>'''), written_text
 
 
-def test_nesting_context(register_builtin_html):
+def test_nesting_context(request_context):
     table_id = 0
     title = " TEST "
 
-    with html.plugged():
+    with output_funnel.plugged():
         with table_element(table_id="%d" % table_id, title=title, searchable=False,
                            sortable=False) as table1:
             table1.row()
@@ -146,18 +179,18 @@ def test_nesting_context(register_builtin_html):
                 table2.cell("_", "+")
                 table2.cell("|", "-")
 
-        written_text = "".join(html.drain())
+        written_text = "".join(output_funnel.drain())
     assert compare_html(
-        written_text, '''<h3>  TEST </h3>
-                            <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
+        written_text, '''<h3 class="table">  TEST </h3>
+                            <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
-                            <tr class="data odd0">  <td>   1  </td>  <td>
-                                <h3> TEST 2</h3>
-                                <script type="text/javascript">\ncmk.utils.update_header_info(\'1 row\');\n</script>
+                            <tr class="data even0">  <td>   1  </td>  <td>
+                                <h3 class="table"> TEST 2</h3>
+                                <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                                 <table class="data oddeven">
                                 <tr><th>_</th><th>|</th></tr>
-                                <tr class="data odd0"><td>+</td><td>-</td></tr>
+                                <tr class="data even0"><td>+</td><td>-</td></tr>
                                 </table>  </td>
                             </tr>
                             </table>'''), written_text
@@ -167,14 +200,8 @@ def test_nesting_context(register_builtin_html):
 @pytest.mark.parametrize("searchable", [True, False])
 @pytest.mark.parametrize("limit", [None, 2])
 @pytest.mark.parametrize("output_format", ["html", "csv"])
-def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable, limit,
-                       output_format):
-    # TODO: Better mock the access to save_user in table.*
-    def save_user_mock(name, data, user, unlock=False):
-        pass
-
-    import cmk.gui.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
-    monkeypatch.setattr(config, "save_user_file", save_user_mock)
+def test_table_cubical(request_context, monkeypatch, sortable, searchable, limit, output_format):
+    monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)
 
     # Test data
     rows = [(i, i**3) for i in range(10)]
@@ -187,8 +214,7 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
     html.request.set_var('_%s_sort' % table_id, "1,0")
     html.request.set_var('_%s_actions' % table_id, '1')
 
-    # Table construction
-    with html.plugged():
+    def _render_table():
         with table_element(table_id="%d" % table_id,
                            title=title,
                            sortable=sortable,
@@ -200,16 +226,18 @@ def test_table_cubical(register_builtin_html, monkeypatch, sortable, searchable,
                 for h, r in zip(header, row):
                     table.cell(_(h), r)
 
-        # Get generated html
-        written_text = "".join(html.drain())
-
     # Data assertions
     assert output_format in ['html', 'csv'], 'Fetch is not yet implemented'
     if output_format == 'html':
+        with output_funnel.plugged():
+            _render_table()
+            written_text = "".join(output_funnel.drain())
+
         data = read_out_simple_table(written_text)
         assert data.pop(0) == header, 'Wrong header'
     elif output_format == 'csv':
-        data = read_out_csv(written_text, separator)
+        _render_table()
+        data = read_out_csv(response.get_data(as_text=True), separator)
         limit = len(data)
         assert data.pop(0) == header, 'Wrong header'
     else:

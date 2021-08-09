@@ -19,5 +19,5 @@ description:
 item:
  Name of the Postfix queue
 
-inventory:
+discovery:
  One service is created on each system which provides the {postconf}.

@@ -4,9 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 
 def parse_ceph_status(info):
-    import json
 
     joined_lines = [" ".join(line) for line in info]
     parsed = json.loads(''.join(joined_lines))
@@ -70,9 +71,14 @@ def check_ceph_status(_no_item, params, parsed):
         "HEALTH_ERR": (2, "error"),
     }
 
-    overall_status = parsed["health"]["status"]
-    state, state_readable = map_health_states.get(overall_status,
-                                                  (3, "unknown[%s]" % overall_status))
+    overall_status = parsed.get("health", {}).get("status")
+    if not overall_status:
+        return None
+
+    state, state_readable = map_health_states.get(
+        overall_status,
+        (3, "unknown[%s]" % overall_status),
+    )
     if state:
         error_messages = _extract_error_messages(parsed)
         if error_messages:
@@ -114,7 +120,8 @@ def inventory_ceph_status_osds(parsed):
 
 
 def check_ceph_status_osds(_no_item, params, parsed):
-    data = parsed["osdmap"]["osdmap"]
+    # some instances of ceph give out osdmap data in a flat structure
+    data = parsed["osdmap"].get("osdmap") or parsed["osdmap"]
     num_osds = int(data["num_osds"])
     yield ceph_check_epoch("ceph_osds", data["epoch"], params)
 
@@ -249,8 +256,10 @@ def inventory_ceph_status_mgrs(parsed):
 
 
 def check_ceph_status_mgrs(_no_item, params, parsed):
-    data = parsed["mgrmap"]
-    yield ceph_check_epoch("ceph_mgrs", data["epoch"], params)
+    epoch = parsed.get("mgrmap", {}).get("epoch")
+    if epoch is None:
+        return None
+    yield ceph_check_epoch("ceph_mgrs", epoch, params)
 
 
 check_info['ceph_status.mgrs'] = {

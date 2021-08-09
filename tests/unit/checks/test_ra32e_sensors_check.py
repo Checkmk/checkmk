@@ -4,8 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from checktestlib import BasicCheckResult
+import pytest
+
+from tests.testlib import Check
+
+from .checktestlib import BasicCheckResult
 
 pytestmark = pytest.mark.checks
 
@@ -76,7 +79,7 @@ pytestmark = pytest.mark.checks
                   ('ra32e_sensors.voltage', "Sensor 8", {
                       'voltage': (210, 180)
                   },
-                   BasicCheckResult(1, 'Voltage: 200 V (warn/crit below 210/180 V)',
+                   BasicCheckResult(1, 'Voltage: 200.0 V (warn/crit below 210.0 V/180.0 V)',
                                     [('voltage', 200)])),
                   ('ra32e_sensors', "Sensor 1", {
                       'levels_lower': (30.0, 25.0)
@@ -89,12 +92,12 @@ pytestmark = pytest.mark.checks
                                     [('humidity', 75.0, None, None, 0, 100)])),
               ]),
     ])
-def test_ra32e_sensors_inputs(check_manager, info, discoveries_expected, checks_expected):
+def test_ra32e_sensors_inputs(info, discoveries_expected, checks_expected):
     ra32e_sensors_checks = [
         'ra32e_sensors', 'ra32e_sensors.humidity', 'ra32e_sensors.voltage', 'ra32e_sensors.power'
     ]
 
-    checks = {name: check_manager.get_check(name) for name in ra32e_sensors_checks}
+    checks = {name: Check(name) for name in ra32e_sensors_checks}
     parsed = checks['ra32e_sensors'].run_parse(info)
 
     for check, expected in discoveries_expected:

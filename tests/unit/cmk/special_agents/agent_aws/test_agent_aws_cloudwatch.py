@@ -6,16 +6,18 @@
 
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore[import]
-from agent_aws_fake_clients import (
-    FakeCloudwatchClient,)
+from typing import List, Optional, Tuple
+
+import pytest
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
-    ResultDistributor,
-    CloudwatchAlarmsLimits,
     CloudwatchAlarms,
+    CloudwatchAlarmsLimits,
+    ResultDistributor,
 )
+
+from .agent_aws_fake_clients import FakeCloudwatchClient  # type: ignore[import] # pylint: disable=import-error # isort: skip
 
 
 @pytest.fixture()
@@ -39,7 +41,7 @@ def get_cloudwatch_alarms_sections():
     return _create_cloudwatch_alarms_sections
 
 
-cloudwatch_params = [  # type: ignore[var-annotated]
+cloudwatch_params: List[Tuple[Optional[List[str]], int]] = [
     (None, 2),
     ([], 2),
     (['AlarmName-0'], 1),
@@ -57,6 +59,7 @@ def test_agent_aws_cloudwatch_alarms_limits(get_cloudwatch_alarms_sections, alar
     cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results
 
     assert cloudwatch_alarms_limits.cache_interval == 300
+    assert cloudwatch_alarms_limits.period == 600
     assert cloudwatch_alarms_limits.name == "cloudwatch_alarms_limits"
 
     assert len(cloudwatch_alarms_limits_results) == 1
@@ -74,10 +77,11 @@ def test_agent_aws_cloudwatch_alarms_limits(get_cloudwatch_alarms_sections, alar
 @pytest.mark.parametrize("alarm_names,amount_alarms", cloudwatch_params)
 def test_agent_aws_cloudwatch_alarms(get_cloudwatch_alarms_sections, alarm_names, amount_alarms):
     cloudwatch_alarms_limits, cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)
-    _cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results
+    _cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results  # noqa: F841
     cloudwatch_alarms_results = cloudwatch_alarms.run().results
 
     assert cloudwatch_alarms.cache_interval == 300
+    assert cloudwatch_alarms.period == 600
     assert cloudwatch_alarms.name == "cloudwatch_alarms"
 
     assert len(cloudwatch_alarms_results) == 1
@@ -93,6 +97,7 @@ def test_agent_aws_cloudwatch_alarms_without_limits(get_cloudwatch_alarms_sectio
     cloudwatch_alarms_results = cloudwatch_alarms.run().results
 
     assert cloudwatch_alarms.cache_interval == 300
+    assert cloudwatch_alarms.period == 600
     assert cloudwatch_alarms.name == "cloudwatch_alarms"
 
     assert len(cloudwatch_alarms_results) == 1

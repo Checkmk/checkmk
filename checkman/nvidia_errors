@@ -8,6 +8,6 @@ description:
  check for GPU errors on an NVIDIA graphics card. The check
  (more precisely the agent) needs access to the display {:0}.
 
-inventory:
+discovery:
  One service is created if the agent sends any output about {GPUErrors}.
 

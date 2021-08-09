@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The check could got to UNKN state, if zero licenses where active. This
 has been fixed. Such licenses now show the infotext "No active

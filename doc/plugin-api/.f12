@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+SITE=${SITE:-$(until [ "$PWD" == / ]; do if [ -e .site ]; then
     cat .site
     break
 else cd ..; fi; done)}
@@ -12,7 +12,7 @@ echo "Cleanup old stuff..."
 git clean -xfd .
 
 echo "Updating documentation..."
-make apidoc html
+make html
 
 echo "Updating site $SITE..."
 sudo rsync -a build/html "$ROOT/share/doc/check_mk/plugin-api/"

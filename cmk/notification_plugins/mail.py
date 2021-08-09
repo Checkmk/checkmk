@@ -12,21 +12,22 @@
 # attached graphs and such neat stuff. Sweet!
 
 import base64
-from email.mime.application import MIMEApplication
-from email.mime.image import MIMEImage
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 import json
 import os
 import socket
 import sys
+from email.mime.application import MIMEApplication
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import List
 from urllib.parse import quote
 from urllib.request import urlopen
 
-from cmk.notification_plugins import utils
 import cmk.utils.site as site
 from cmk.utils.exceptions import MKException
+
+from cmk.notification_plugins import utils
 
 
 def tmpl_head_html(html_section):
@@ -318,7 +319,7 @@ BODY_ELEMENTS = [
         "host",
         True,
         "normal",
-        "Plugin Output",
+        "Summary",
         "$HOSTOUTPUT$",
         "$HOSTOUTPUT_HTML$",
     ),
@@ -365,7 +366,7 @@ BODY_ELEMENTS = [
         "service",
         True,
         "normal",
-        "Plugin Output",
+        "Summary",
         "$SERVICEOUTPUT$",
         "$SERVICEOUTPUT_HTML$",
     ),
@@ -374,7 +375,7 @@ BODY_ELEMENTS = [
         "service",
         False,
         "normal",
-        "Additional Output",
+        "Details",
         "$LONGSERVICEOUTPUT$",
         "$LONGSERVICEOUTPUT_HTML$",
     ),
@@ -604,15 +605,20 @@ def send_mail(message, target, from_address, context):
     return utils.send_mail_sendmail(message, target, from_address)
 
 
-def render_cmk_graphs(context):
+def render_cmk_graphs(context, is_bulk):
     if context["WHAT"] == "HOST":
         svc_desc = "_HOST_"
     else:
         svc_desc = context["SERVICEDESC"]
 
-    url = ("http://localhost:%d/%s/check_mk/ajax_graph_images.py?host=%s&service=%s" %
-           (site.get_apache_port(), os.environ["OMD_SITE"], quote(
-               context["HOSTNAME"]), quote(svc_desc)))
+    url = ("http://localhost:%d/%s/check_mk/ajax_graph_images.py?host=%s&service=%s&num_graphs=%s" %
+           (
+               site.get_apache_port(),
+               os.environ["OMD_SITE"],
+               quote(context["HOSTNAME"]),
+               quote(svc_desc),
+               quote(context["PARAMETER_GRAPHS_PER_NOTIFICATION"]),
+           ))
 
     try:
         json_data = urlopen(url).read()
@@ -634,8 +640,8 @@ def render_cmk_graphs(context):
     return [base64.b64decode(s) for s in base64_strings]
 
 
-def render_performance_graphs(context):
-    graphs = render_cmk_graphs(context)
+def render_performance_graphs(context, is_bulk):
+    graphs = render_cmk_graphs(context, is_bulk)
 
     attachments, graph_code = [], ''
     for source, graph_png in enumerate(graphs):
@@ -663,7 +669,7 @@ def render_performance_graphs(context):
     return attachments, graph_code
 
 
-def construct_content(context):
+def construct_content(context, is_bulk=False, notification_number=1):
     # A list of optional information is configurable via the parameter "elements"
     # (new configuration style)
     # Note: The value PARAMETER_ELEMENTSS is NO TYPO.
@@ -672,6 +678,11 @@ def construct_content(context):
         elements = context["PARAMETER_ELEMENTSS"].split()
     else:
         elements = ["perfdata", "graph", "abstime", "address", "longoutput"]
+
+    if is_bulk and "graph" in elements:
+        notifications_with_graphs = context["PARAMETER_NOTIFICATIONS_WITH_GRAPHS"]
+        if notification_number > int(notifications_with_graphs):
+            elements.remove("graph")
 
     # Prepare the mail contents
     template_txt, template_html = body_templates(
@@ -687,7 +698,7 @@ def construct_content(context):
     if "graph" in elements and "ALERTHANDLEROUTPUT" not in context:
         # Add Checkmk graphs
         try:
-            attachments, graph_code = render_performance_graphs(context)
+            attachments, graph_code = render_performance_graphs(context, is_bulk)
             content_html += graph_code
         except Exception as e:
             sys.stderr.write("Failed to add graphs to mail. Continue without them. (%s)\n" % e)
@@ -697,8 +708,8 @@ def construct_content(context):
         extra_html_section = context['PARAMETER_INSERT_HTML_SECTION']
 
     content_html = utils.substitute_context(tmpl_head_html(extra_html_section), context) + \
-                   content_html + \
-                   utils.substitute_context(TMPL_FOOT_HTML, context)
+        content_html + \
+        utils.substitute_context(TMPL_FOOT_HTML, context)
 
     return content_txt, content_html, attachments
 
@@ -809,22 +820,23 @@ class BulkEmailContent(EmailContent):
         content_txt = ""
         content_html = ""
         parameters, contexts = context_function()
+        context = contexts[-1]
         hosts = set([])
-        for context in contexts:
-            context.update(parameters)
-            utils.html_escape_context(context)
-            extend_context(context)
 
-            txt, html, att = construct_content(context)
+        for i, c in enumerate(contexts, 1):
+            c.update(parameters)
+            escaped_context = utils.html_escape_context(c)
+            extend_context(escaped_context)
+
+            txt, html, att = construct_content(escaped_context, is_bulk=True, notification_number=i)
             content_txt += txt
             content_html += html
             attachments += att
-            hosts.add(context["HOSTNAME"])
+            hosts.add(c["HOSTNAME"])
 
-        context = contexts[-1]
         # TODO: cleanup duplicate code with SingleEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
-        super(BulkEmailContent, self).__init__(
+        super().__init__(
             context=context,
             # Assume the same in each context
             mailto=context['CONTACTEMAIL'],
@@ -834,7 +846,7 @@ class BulkEmailContent(EmailContent):
             from_address=utils.format_address(
                 context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
                 # TODO: Correct context parameter???
-                context.get("PARAMETER_FROM", utils.default_from_address())),
+                context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address())),
             reply_to=utils.format_address(context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
                                           context.get("PARAMETER_REPLY_TO", u"")),
             content_txt=content_txt,
@@ -847,21 +859,22 @@ class SingleEmailContent(EmailContent):
     def __init__(self, context_function):
         # gather all options from env
         context = context_function()
-        utils.html_escape_context(context)
-        extend_context(context)
-        content_txt, content_html, attachments = construct_content(context)
+        escaped_context = utils.html_escape_context(context)
+        extend_context(escaped_context)
+        content_txt, content_html, attachments = construct_content(escaped_context)
 
         # TODO: cleanup duplicate code with BulkEmailContent
         # TODO: the context is only needed because of SMPT settings used in send_mail
-        super(SingleEmailContent, self).__init__(
-            context=context,
-            mailto=context['CONTACTEMAIL'],
-            subject=context['SUBJECT'],
+        super().__init__(
+            context=escaped_context,
+            mailto=escaped_context['CONTACTEMAIL'],
+            subject=escaped_context['SUBJECT'],
             from_address=utils.format_address(
-                context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
-                context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address())),
-            reply_to=utils.format_address(context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
-                                          context.get("PARAMETER_REPLY_TO_ADDRESS", u"")),
+                escaped_context.get("PARAMETER_FROM_DISPLAY_NAME", u""),
+                escaped_context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address())),
+            reply_to=utils.format_address(
+                escaped_context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", u""),
+                escaped_context.get("PARAMETER_REPLY_TO_ADDRESS", u"")),
             content_txt=content_txt,
             content_html=content_html,
             attachments=attachments,

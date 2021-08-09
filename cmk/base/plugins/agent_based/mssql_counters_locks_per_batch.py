@@ -4,29 +4,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
 import time
+from typing import Any, Mapping, MutableMapping
 
 from .agent_based_api.v1 import (
-    Service,
+    check_levels,
+    get_value_store,
     IgnoreResults,
     IgnoreResultsError,
     register,
-    check_levels,
-    get_value_store,
+    Service,
 )
-
-from .agent_based_api.v1.type_defs import (
-    Parameters,
-    CheckGenerator,
-    DiscoveryGenerator,
-    ValueStore,
-)
-
-from .utils.mssql_counters import Section, get_rate_or_none, get_int
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.mssql_counters import get_int, get_rate_or_none, Section
 
 
-def discovery_mssql_counters_locks_per_batch(section: Section) -> DiscoveryGenerator:
+def discovery_mssql_counters_locks_per_batch(section: Section) -> DiscoveryResult:
     """
     >>> for result in discovery_mssql_counters_locks_per_batch({
     ...     ('MSSQL_VEEAMSQL2012:Batch_Resp_Statistics', 'CPU_Time:Total(ms)'): { 'batches_>=000000ms_&_<000001ms': 0, 'batches_>=000001ms_&_<000002ms': 668805},
@@ -34,7 +27,7 @@ def discovery_mssql_counters_locks_per_batch(section: Section) -> DiscoveryGener
     ...     ('MSSQL_VEEAMSQL2012:Locks', '_Total'): { 'lock_requests/sec': 3900449701, 'lock_timeouts/sec': 86978, 'number_of_deadlocks/sec': 19, 'lock_waits/sec': 938, 'lock_wait_time_(ms)': 354413, 'average_wait_time_(ms)': 354413, 'average_wait_time_base': 938, 'lock_timeouts_(timeout_>_0)/sec': 0},
     ... }):
     ...   print(result)
-    Service(item='MSSQL_VEEAMSQL2012', parameters={}, labels=[])
+    Service(item='MSSQL_VEEAMSQL2012')
     """
     db_names = (
         db_name  #
@@ -49,12 +42,12 @@ def discovery_mssql_counters_locks_per_batch(section: Section) -> DiscoveryGener
 
 
 def _check_common(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     node_name: str,
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     data_locks = section.get(("%s:Locks" % item, "_Total"), {})
     data_stats = section.get(("%s:SQL_Statistics" % item, "None"), {})
 
@@ -86,15 +79,16 @@ def _check_common(
         levels_upper=params.get('locks_per_batch'),
         metric_name="locks_per_batch",
         render_func=lambda v: "%s%.1f" % (node_name and "[%s] " % node_name, v),
+        boundaries=(0, None),
     )
 
 
 def _check_base(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> from contextlib import suppress
     >>> vs = {}
@@ -106,26 +100,26 @@ def _check_base(
     ...     }):
     ...       print(result)
     Cannot calculate rates yet
-    Result(state=<state.OK: 0>, summary='1.0', details='1.0')
-    Metric('locks_per_batch', 1.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<State.OK: 0>, summary='1.0')
+    Metric('locks_per_batch', 1.0, boundaries=(0.0, None))
     """
     yield from _check_common(value_store, "", item, params, section)
 
 
 def check_mssql_counters_locks_per_batch(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Section,
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _check_base(get_value_store(), item, params, section)
 
 
 def _cluster_check_base(
-    value_store: ValueStore,
+    value_store: MutableMapping[str, Any],
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     """
     >>> from contextlib import suppress
     >>> vs = {}
@@ -137,8 +131,8 @@ def _cluster_check_base(
     ...     }}):
     ...       print(result)
     Cannot calculate rates yet
-    Result(state=<state.OK: 0>, summary='[node1] 1.0', details='[node1] 1.0')
-    Metric('locks_per_batch', 1.0, levels=(None, None), boundaries=(None, None))
+    Result(state=<State.OK: 0>, summary='[node1] 1.0')
+    Metric('locks_per_batch', 1.0, boundaries=(0.0, None))
     """
     for node_name, node_section in section.items():
         yield from _check_common(value_store, node_name, item, params, node_section)
@@ -146,9 +140,9 @@ def _cluster_check_base(
 
 def cluster_check_mssql_counters_locks_per_batch(
     item: str,
-    params: Parameters,
+    params: Mapping[str, Any],
     section: Mapping[str, Section],
-) -> CheckGenerator:
+) -> CheckResult:
     yield from _cluster_check_base(get_value_store(), item, params, section)
 
 

@@ -40,22 +40,25 @@
 import json
 import re
 
-import cmk.gui.bi as bi
-import cmk.gui.config as config
 import cmk.utils
 import cmk.utils.render
-from cmk.gui.globals import g, html
+
+import cmk.gui.bi as bi
+from cmk.gui.globals import config, g, html, request, response, user
 from cmk.gui.i18n import _
 from cmk.gui.plugins.views import (
     display_options,
     is_stale,
     paint_age,
     render_cache_info,
-    url_to_view,
+    url_to_visual,
 )
-from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
 from cmk.gui.plugins.views.graphs import cmk_graph_url
+from cmk.gui.plugins.views.icons import Icon, icon_and_action_registry
+from cmk.gui.type_defs import VisualLinkSpec
+from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.popups import MethodAjax
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 
 #   .--Action Menu---------------------------------------------------------.
 #   |          _        _   _               __  __                         |
@@ -75,6 +78,10 @@ class ActionMenuIcon(Icon):
     def ident(cls):
         return "action_menu"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Action menu")
+
     def default_toplevel(self):
         return True
 
@@ -92,11 +99,11 @@ class ActionMenuIcon(Icon):
         if what == 'service':
             url_vars.append(('service', row['service_description']))
 
-        if html.request.has_var('display_options'):
-            url_vars.append(('display_options', html.request.var('display_options')))
-        if html.request.has_var('_display_options'):
-            url_vars.append(('_display_options', html.request.var('_display_options')))
-        url_vars.append(('_back_url', html.makeuri([])))
+        if request.has_var('display_options'):
+            url_vars.append(('display_options', request.var('display_options')))
+        if request.has_var('_display_options'):
+            url_vars.append(('_display_options', request.var('_display_options')))
+        url_vars.append(('_back_url', makeuri(request, [])))
 
         return html.render_popup_trigger(
             html.render_icon('menu', _('Open the action menu'), cssclass="iconbutton"),
@@ -123,6 +130,10 @@ class IconImageIcon(Icon):
     @classmethod
     def ident(cls):
         return "icon_image"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Icon image")
 
     def columns(self):
         return ["icon_image"]
@@ -161,6 +172,10 @@ class RescheduleIcon(Icon):
     def ident(cls):
         return "reschedule"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Reschedule")
+
     def columns(self):
         return ['check_type', 'active_checks_enabled', 'check_command']
 
@@ -178,9 +193,9 @@ class RescheduleIcon(Icon):
         if row[what + "_check_type"] == 2:
             return  # shadow hosts/services cannot be rescheduled
 
-        if (row[what + "_active_checks_enabled"] == 1
-            or row[what + '_check_command'].startswith('check_mk-')) \
-            and config.user.may('action.reschedule'):
+        if (row[what + "_active_checks_enabled"] == 1 or
+                row[what + '_check_command'].startswith('check_mk-')) \
+                and user.may('action.reschedule'):
 
             servicedesc = ''
             wait_svc = ''
@@ -222,6 +237,10 @@ class RuleEditorIcon(Icon):
     def ident(cls):
         return "rule_editor"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Rule editor")
+
     def columns(self):
         return ['check_type']
 
@@ -235,8 +254,7 @@ class RuleEditorIcon(Icon):
         if row[what + "_check_type"] == 2:
             return  # shadow services have no parameters
 
-        if config.wato_enabled and config.user.may(
-                "wato.rulesets") and config.multisite_draw_ruleicon:
+        if config.wato_enabled and user.may("wato.rulesets") and config.multisite_draw_ruleicon:
             urlvars = [
                 ("mode", "object_parameters"),
                 ("host", row["host_name"]),
@@ -248,7 +266,7 @@ class RuleEditorIcon(Icon):
             else:
                 title = _("Parameters for this host")
 
-            return 'rulesets', title, html.makeuri_contextless(urlvars, "wato.py")
+            return 'rulesets', title, makeuri_contextless(request, urlvars, "wato.py")
 
 
 #.
@@ -270,13 +288,19 @@ class ManpageIcon(Icon):
     def ident(cls):
         return "check_manpage"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Check manual page")
+
     def service_columns(self):
         return ['check_command']
 
     def render(self, what, row, tags, custom_vars):
-        if what == "service" and config.wato_enabled and config.user.may("wato.use"):
+        if what == "service" and config.wato_enabled and user.may("wato.use"):
             command = row["service_check_command"]
-            if command.startswith("check_mk-"):
+            if command.startswith("check_mk-mgmt_"):
+                check_type = command[14:]
+            elif command.startswith("check_mk-"):
                 check_type = command[9:]
             elif command.startswith("check_mk_active-"):
                 check_name = command[16:].split("!")[0]
@@ -291,8 +315,11 @@ class ManpageIcon(Icon):
             else:
                 return
             urlvars = [("mode", "check_manpage"), ("check_type", check_type)]
-            return 'check_plugins', _("Manual page for this check type"), html.makeuri_contextless(
-                urlvars, "wato.py")
+            return (
+                'check_plugins',
+                _("Manual page for this check type"),
+                makeuri_contextless(request, urlvars, "wato.py"),
+            )
 
 
 #.
@@ -313,6 +340,10 @@ class AcknowledgeIcon(Icon):
     @classmethod
     def ident(cls):
         return "status_acknowledged"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Status acknowledged")
 
     def columns(self):
         return ['acknowledged']
@@ -344,6 +375,10 @@ class PerfgraphIcon(Icon):
     def ident(cls):
         return "perfgraph"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Performance graph")
+
     def columns(self):
         return ['pnpgraph_present']
 
@@ -361,20 +396,20 @@ class PerfgraphIcon(Icon):
     def _pnp_icon(self, row, what):
         url = self._graph_icon_link(row, what)
 
-        # Don't show the icon with Check_MK graphing. The hover makes no sense and there is no
+        # Don't show the icon with Checkmk graphing. The hover makes no sense and there is no
         # mobile view for graphs, so the graphs on the bottom of the host/service view are enough
         # for the moment.
-        if html.is_mobile():
+        if is_mobile(request, response):
             return
 
         return html.render_a(
-            content=html.render_icon('pnp', ''),
+            content=html.render_icon('graph', ''),
             href=url,
             onmouseout="cmk.hover.hide()",
             onmouseover="cmk.graph_integration.show_hover_graphs(event, %s, %s, %s);" % (
                 json.dumps(row['site']),
                 json.dumps(row["host_name"]),
-                json.dumps(row.get('service_description', '_HOST_')),
+                json.dumps(row['service_description'] if what == "service" else '_HOST_'),
             ))
 
     def _graph_icon_link(self, row, what):
@@ -402,6 +437,10 @@ class PredictionIcon(Icon):
     def ident(cls):
         return "prediction"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Prediction")
+
     def columns(self):
         return ['perf_data']
 
@@ -418,15 +457,17 @@ class PredictionIcon(Icon):
                 if p.startswith("predict_"):
                     varname, _value = p.split("=")
                     dsname = varname[8:]
-                    sitename = row["site"]
-                    url_prefix = config.site(sitename)["url_prefix"]
-                    url = url_prefix + "check_mk/prediction_graph.py?" + html.urlencode_vars([
+                    urlvars = [
+                        ("site", row["site"]),
                         ("host", row["host_name"]),
                         ("service", row["service_description"]),
                         ("dsname", dsname),
-                    ])
-                    title = _("Analyse predictive monitoring for this service")
-                    return 'prediction', title, url
+                    ]
+                    return (
+                        'prediction',
+                        _("Analyse predictive monitoring for this service"),
+                        makeuri_contextless(request, urlvars, "prediction_graph.py"),
+                    )
 
 
 #.
@@ -447,6 +488,10 @@ class CustomActionIcon(Icon):
     @classmethod
     def ident(cls):
         return "custom_action"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Custom action")
 
     def columns(self):
         return ['action_url_expanded', 'pnpgraph_present']
@@ -480,19 +525,26 @@ class LogwatchIcon(Icon):
     def ident(cls):
         return "logwatch"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Logwatch")
+
     def service_columns(self):
         return ['host_name', 'service_description', 'check_command']
 
     def render(self, what, row, tags, custom_vars):
         if what != "service" or row[what + "_check_command"] not in [
                 'check_mk-logwatch',
-                'check_mk-logwatch.groups',
+                'check_mk-logwatch_groups',
         ]:
             return
 
         sitename, hostname, item = row['site'], row['host_name'], row['service_description'][4:]
-        url = html.makeuri_contextless([("site", sitename), ("host", hostname), ("file", item)],
-                                       filename="logwatch.py")
+        url = makeuri_contextless(
+            request,
+            [("site", sitename), ("host", hostname), ("file", item)],
+            filename="logwatch.py",
+        )
         return 'logwatch', _('Open Log'), url
 
 
@@ -515,6 +567,10 @@ class NotesIcon(Icon):
     def ident(cls):
         return "notes"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Notes")
+
     def columns(self):
         return ['notes_url_expanded', 'check_command']
 
@@ -525,7 +581,7 @@ class NotesIcon(Icon):
         if display_options.enabled(display_options.X):
             notes_url = row[what + "_notes_url_expanded"]
             if notes_url:
-                return 'notes', _('Custom Notes'), notes_url
+                return 'notes', _('Custom Notes'), (notes_url, "_blank")
 
 
 #.
@@ -546,6 +602,10 @@ class DowntimesIcon(Icon):
     @classmethod
     def ident(cls):
         return "status_downtimes"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Status downtimes")
 
     def default_toplevel(self):
         return True
@@ -587,13 +647,14 @@ class DowntimesIcon(Icon):
             title = _("Currently in downtime")
             title += detail_txt(row[what + "_downtimes_with_extra_info"])
 
-            return icon, title, url_to_view(row, 'downtimes_of_' + what)
+            return icon, title, url_to_visual(row, VisualLinkSpec('views', 'downtimes_of_' + what))
 
         if what == "service" and row["host_scheduled_downtime_depth"] > 0:
             title = _("The host is currently in downtime")
             title += detail_txt(row["host_downtimes_with_extra_info"])
 
-            return 'derived_downtime', title, url_to_view(row, 'downtimes_of_host')
+            return 'derived_downtime', title, url_to_visual(
+                row, VisualLinkSpec('views', 'downtimes_of_host'))
 
 
 #.
@@ -615,6 +676,10 @@ class CommentsIcon(Icon):
     def ident(cls):
         return "status_comments"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status comments")
+
     def columns(self):
         return ['comments_with_extra_info']
 
@@ -630,7 +695,8 @@ class CommentsIcon(Icon):
                 comment = comment.replace("\n", "<br>")
                 text += "%s %s: \"%s\" \n" % (paint_age(timestamp, True, 0,
                                                         'abs')[1], author, comment)
-            return 'comment', text, url_to_view(row, 'comments_of_' + what)
+            return 'comment', text, url_to_visual(row, VisualLinkSpec('views',
+                                                                      'comments_of_' + what))
 
 
 #.
@@ -651,6 +717,10 @@ class NotificationsIcon(Icon):
     @classmethod
     def ident(cls):
         return "status_notifications_enabled"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Status notifications enabled")
 
     def columns(self):
         return ['modified_attributes_list', 'notifications_enabled']
@@ -687,6 +757,10 @@ class FlappingIcon(Icon):
     def ident(cls):
         return "status_flapping"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status flapping")
+
     def columns(self):
         return ['is_flapping']
 
@@ -718,6 +792,10 @@ class StalenessIcon(Icon):
     @classmethod
     def ident(cls):
         return "status_stale"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Status stale")
 
     def columns(self):
         return ['staleness']
@@ -755,6 +833,10 @@ class ActiveChecksIcon(Icon):
     def ident(cls):
         return "status_active_checks"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status active checks")
+
     def columns(self):
         return ['modified_attributes_list', 'active_checks_enabled']
 
@@ -789,6 +871,10 @@ class PassiveChecksIcon(Icon):
     def ident(cls):
         return "status_passive_checks"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status passive checks")
+
     def columns(self):
         return ['modified_attributes_list', 'accept_passive_checks']
 
@@ -820,6 +906,10 @@ class NotificationPeriodIcon(Icon):
     def ident(cls):
         return "status_notification_period"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Status notification period")
+
     def columns(self):
         return ['in_notification_period']
 
@@ -847,6 +937,10 @@ class ServicePeriodIcon(Icon):
     @classmethod
     def ident(cls):
         return "status_service_period"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Status service period")
 
     def columns(self):
         return ['in_service_period']
@@ -878,16 +972,18 @@ class AggregationsIcon(Icon):
     def ident(cls):
         return "aggregations"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Aggregations")
+
     def render(self, what, row, tags, custom_vars):
         # Link to aggregations of the host/service
         # When precompile on demand is enabled, this icon is displayed for all hosts/services
         # otherwise only for the hosts/services which are part of aggregations.
-        if config.bi_precompile_on_demand \
-           or bi.is_part_of_aggregation(what, row["site"], row["host_name"],
-                                        row.get("service_description")):
+        if bi.is_part_of_aggregation(row["host_name"], row.get("service_description")):
             view_name = "aggr_%s" % what
 
-            if not config.user.may("view.%s" % view_name):
+            if not user.may("view.%s" % view_name):
                 return
 
             urivars = [
@@ -897,7 +993,7 @@ class AggregationsIcon(Icon):
             ]
             if what == "service":
                 urivars += [("aggr_service_service", row["service_description"])]
-            url = html.makeuri_contextless(urivars, filename="view.py")
+            url = makeuri_contextless(request, urivars, filename="view.py")
             return 'aggr', _("BI Aggregations containing this %s") % \
                             (what == "host" and _("Host") or _("Service")), url
 
@@ -919,9 +1015,13 @@ class StarsIcon(Icon):
     def ident(cls):
         return "stars"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Stars")
+
     def render(self, what, row, tags, custom_vars):
         if 'stars' not in g:
-            g.stars = config.user.stars.copy()
+            g.stars = user.stars.copy()
         stars = g.stars
 
         if what == "host":
@@ -954,6 +1054,10 @@ class AggregationIcon(Icon):
     def ident(cls):
         return "aggregation_checks"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Aggregation checks")
+
     def host_columns(self):
         return ['check_command', 'name', 'address']
 
@@ -974,7 +1078,7 @@ class AggregationIcon(Icon):
             aggr_name = args[start:end]
 
             url = "%s/check_mk/view.py?view_name=aggr_single&aggr_name=%s" % \
-                  (base_url, html.urlencode(aggr_name))
+                  (base_url, urlencode(aggr_name))
 
             return 'aggr', _('Open this Aggregation'), url
 
@@ -998,6 +1102,10 @@ class CrashdumpsIcon(Icon):
     def ident(cls):
         return "crashed_check"
 
+    @classmethod
+    def title(cls) -> str:
+        return _("Crashed check")
+
     def default_toplevel(self):
         return True
 
@@ -1006,10 +1114,10 @@ class CrashdumpsIcon(Icon):
 
     def render(self, what, row, tags, custom_vars):
         if what == "service" \
-            and row["service_state"] == 3 \
-            and "check failed - please submit a crash report!" in row["service_plugin_output"]:
+                and row["service_state"] == 3 \
+                and "check failed - please submit a crash report!" in row["service_plugin_output"]:
 
-            if not config.user.may("general.see_crash_reports"):
+            if not user.may("general.see_crash_reports"):
                 return 'crash', _(
                     "This check crashed. Please inform a Check_MK user that is allowed "
                     "to view and submit crash reports to the development team.")
@@ -1022,7 +1130,8 @@ class CrashdumpsIcon(Icon):
                     "to the development team.")
 
             crash_id = match.group(1)
-            crashurl = html.makeuri_contextless(
+            crashurl = makeuri_contextless(
+                request,
                 [
                     ("site", row["site"]),
                     ("crash_id", crash_id),
@@ -1052,6 +1161,10 @@ class CheckPeriodIcon(Icon):
     @classmethod
     def ident(cls):
         return "check_period"
+
+    @classmethod
+    def title(cls) -> str:
+        return _("Check period")
 
     def columns(self):
         return ['in_check_period']

@@ -5,20 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    TextAscii,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersEnvironment,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _item_spec_disk_temperature():
-    return TextAscii(title=_("Hard disk device"),
+    return TextInput(title=_("Hard disk device"),
                      help=_("The identificator of the hard disk device, e.g. <tt>/dev/sda</tt>."))
 
 

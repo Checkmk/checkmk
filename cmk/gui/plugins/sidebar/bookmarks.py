@@ -4,41 +4,43 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Dict, List
 import urllib.parse
+from typing import Any, Dict, List
 
 import cmk.utils.store as store
 
-import cmk.gui.config as config
 import cmk.gui.pagetypes as pagetypes
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.exceptions import MKUserError
-
-from cmk.gui.valuespec import (
-    TextUnicode,
-    ListOf,
-    Transform,
-    Tuple,
-    IconSelector,
-    Alternative,
-    FixedValue,
-    OptionalDropdownChoice,
-)
-
+from cmk.gui.globals import request, user
+from cmk.gui.htmllib.foldable_container import foldable_container
+from cmk.gui.i18n import _
 from cmk.gui.plugins.sidebar import (
-    SidebarSnapin,
-    snapin_registry,
-    iconlink,
-    link,
     begin_footnote_links,
     end_footnote_links,
+    iconlink,
+    link,
+    SidebarSnapin,
+    snapin_registry,
+)
+from cmk.gui.valuespec import (
+    Alternative,
+    FixedValue,
+    IconSelector,
+    ListOf,
+    OptionalDropdownChoice,
+    TextInput,
+    Transform,
+    Tuple,
 )
 
 
 class BookmarkList(pagetypes.Overridable):
     @classmethod
     def type_name(cls):
+        return "bookmark_list"
+
+    @classmethod
+    def type_icon(cls):
         return "bookmark_list"
 
     @classmethod
@@ -75,7 +77,7 @@ class BookmarkList(pagetypes.Overridable):
             [
                 # sort-index, key, valuespec
                 (2.5, "default_topic",
-                 TextUnicode(
+                 TextInput(
                      title=_("Default Topic") + "<sup>*</sup>",
                      size=50,
                      allow_empty=False,
@@ -91,18 +93,18 @@ class BookmarkList(pagetypes.Overridable):
                         Transform(
                             Tuple(
                                 elements=[
-                                    (TextUnicode(
+                                    (TextInput(
                                         title=_("Title") + "<sup>*</sup>",
                                         size=30,
                                         allow_empty=False,
                                     )),
-                                    (TextUnicode(
+                                    (TextInput(
                                         title=_("URL"),
                                         size=50,
                                         allow_empty=False,
                                         validate=cls.validate_url,
                                     )),
-                                    (IconSelector(title=_("Icon"),)),
+                                    (IconSelector(title=_("Icon"), with_emblem=False)),
                                     (cls._vs_topic()),
                                 ],
                                 orientation="horizontal",
@@ -130,7 +132,7 @@ class BookmarkList(pagetypes.Overridable):
                     title=_("Individual topic"),
                     choices=choices,
                     default_value=choices[0][0] if choices else "",
-                    explicit=TextUnicode(
+                    explicit=TextInput(
                         size=30,
                         allow_empty=False,
                     ),
@@ -170,37 +172,37 @@ class BookmarkList(pagetypes.Overridable):
         attrs = {
             "title": u"My Bookmarks",
             "public": False,
-            "owner": config.user.id,
+            "owner": user.id,
             "name": "my_bookmarks",
             "description": u"Your personal bookmarks",
             "default_topic": u"My Bookmarks",
             "bookmarks": [],
         }
 
-        cls.add_instance((config.user.id, "my_bookmarks"), cls(attrs))
+        cls.add_instance((user.id, "my_bookmarks"), cls(attrs))
 
     @classmethod
     def load_legacy_bookmarks(cls):
         # Don't load the legacy bookmarks when there is already a my_bookmarks list
-        if cls.has_instance((config.user.id, "my_bookmarks")):
+        if cls.has_instance((user.id, "my_bookmarks")):
             return
 
         # Also don't load them when the user has at least one bookmark list
         for user_id, _name in cls.instances_dict():
-            if user_id == config.user.id:
+            if user_id == user.id:
                 return
 
         cls.add_default_bookmark_list()
-        bookmark_list = cls.instance((config.user.id, "my_bookmarks"))
+        bookmark_list = cls.instance((user.id, "my_bookmarks"))
 
         for title, url in cls._do_load_legacy_bookmarks():
             bookmark_list.add_bookmark(title, url)
 
     @classmethod
     def _do_load_legacy_bookmarks(cls):
-        if config.user.confdir is None:
+        if user.confdir is None:
             raise Exception("user confdir is None")
-        path = config.user.confdir + "/bookmarks.mk"
+        path = user.confdir + "/bookmarks.mk"
         return store.load_object_from_file(path, default=[])
 
     @classmethod
@@ -217,8 +219,9 @@ class BookmarkList(pagetypes.Overridable):
 
     def bookmarks_by_topic(self):
         topics: Dict[str, List[Dict[str, Any]]] = {}
+        default_topic = self.default_bookmark_topic()
         for bookmark in self._["bookmarks"]:
-            topic = topics.setdefault(bookmark["topic"], [])
+            topic = topics.setdefault(bookmark["topic"] or default_topic, [])
             topic.append(bookmark)
         return sorted(topics.items())
 
@@ -246,16 +249,21 @@ class Bookmarks(SidebarSnapin):
 
     def show(self):
         for topic, bookmarks in self._get_bookmarks_by_topic():
-            html.begin_foldable_container("bookmarks", topic, False, topic)
+            with foldable_container(
+                    treename="bookmarks",
+                    id_=topic,
+                    isopen=False,
+                    title=topic,
+                    indent=False,
+                    icon="foldable_sidebar",
+            ):
 
-            for bookmark in bookmarks:
-                icon = bookmark["icon"]
-                if not icon:
-                    icon = "kdict"
+                for bookmark in bookmarks:
+                    icon = bookmark["icon"]
+                    if not icon:
+                        icon = "bookmark_list"
 
-                iconlink(bookmark["title"], bookmark["url"], icon)
-
-            html.end_foldable_container()
+                    iconlink(bookmark["title"], bookmark["url"], icon)
 
         begin_footnote_links()
         link(_("Add Bookmark"), "javascript:void(0)", onclick="cmk.sidebar.add_bookmark()")
@@ -280,8 +288,8 @@ class Bookmarks(SidebarSnapin):
         return ["admin", "user", "guest"]
 
     def _ajax_add_bookmark(self):
-        title = html.request.var("title")
-        url = html.request.var("url")
+        title = request.var("title")
+        url = request.var("url")
         if title and url:
             BookmarkList.validate_url(url, "url")
             self._add_bookmark(title, url)
@@ -290,15 +298,15 @@ class Bookmarks(SidebarSnapin):
     def _add_bookmark(self, title, url):
         BookmarkList.load()
 
-        if not BookmarkList.has_instance((config.user.id, "my_bookmarks")):
+        if not BookmarkList.has_instance((user.id, "my_bookmarks")):
             BookmarkList.add_default_bookmark_list()
 
-        bookmarks = BookmarkList.instance((config.user.id, "my_bookmarks"))
+        bookmarks = BookmarkList.instance((user.id, "my_bookmarks"))
         bookmarks.add_bookmark(title, self._try_shorten_url(url))
         bookmarks.save_user_instances()
 
     def _try_shorten_url(self, url):
-        referer = html.request.referer
+        referer = request.referer
         if referer:
             ref_p = urllib.parse.urlsplit(referer)
             url_p = urllib.parse.urlsplit(url)

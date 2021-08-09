@@ -21,12 +21,15 @@ def check_arc_raid_status(item, params, info):
 
             raid_state = line[-1]
             label = ""
-            if raid_state in ["Degarde", "Incompleted"]:
+            if raid_state in ["Degrade", "Incompleted"]:
                 state = 2
                 label = "(!!)"
             elif raid_state == "Rebuilding":
                 state = 1
                 label = "(!)"
+            elif raid_state == "Checking":
+                state = 0
+                label = ""
             elif raid_state != "Normal":
                 state = 2
                 label = "(!!)"

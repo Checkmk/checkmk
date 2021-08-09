@@ -5,16 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithoutItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_splunk_alerts():

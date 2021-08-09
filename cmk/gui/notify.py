@@ -11,22 +11,31 @@ from typing import Any, Dict, List, Tuple
 
 from six import ensure_str
 
+import cmk.utils.paths
 import cmk.utils.store as store
 
-import cmk.gui.pages
-import cmk.gui.utils as utils
-import cmk.gui.config as config
-import cmk.gui.userdb as userdb
 import cmk.gui.i18n
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.htmllib import HTML
+import cmk.gui.pages
+import cmk.gui.userdb as userdb
+import cmk.gui.utils as utils
+from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.default_permissions import PermissionSectionGeneral
-from cmk.gui.permissions import (
-    Permission,
-    permission_registry,
+from cmk.gui.exceptions import MKAuthException, MKInternalError, MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _, _l
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (
+    make_simple_form_page_menu,
+    make_simple_link,
+    PageMenu,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuTopic,
 )
-from cmk.gui.exceptions import MKInternalError, MKAuthException, MKUserError
+from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.utils.escaping import escape_html_permissive
+from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import (
     AbsoluteDate,
     CascadingDropdown,
@@ -37,22 +46,12 @@ from cmk.gui.valuespec import (
     Optional,
     TextAreaUnicode,
 )
-from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    make_simple_link,
-    make_simple_form_page_menu,
-)
-from cmk.gui.main_menu import mega_menu_registry
 
 
 def get_gui_messages(user_id=None):
     if user_id is None:
-        user_id = config.user.id
-    path = config.config_dir + "/" + ensure_str(user_id) + '/messages.mk'
+        user_id = user.id
+    path = cmk.utils.paths.profile_dir / user_id / "messages.mk"
     messages = store.load_object_from_file(path, default=[])
 
     # Delete too old messages
@@ -80,20 +79,20 @@ def delete_gui_message(msg_id):
 
 def save_gui_messages(messages, user_id=None):
     if user_id is None:
-        user_id = config.user.id
-    path = config.config_dir + "/" + ensure_str(user_id) + '/messages.mk'
-    store.mkdir(os.path.dirname(path))
+        user_id = user.id
+    path = cmk.utils.paths.profile_dir / user_id / "messages.mk"
+    store.mkdir(path.parent)
     store.save_object_to_file(path, messages)
 
 
 def _notify_methods() -> Dict[str, Dict[str, Any]]:
     return {
         'gui_popup': {
-            'title': _('Popup Message in the GUI (shows up alert window)'),
+            'title': _('Open window in the user interface'),
             'handler': notify_gui_msg,
         },
         'gui_hint': {
-            'title': _('Send hint to message inbox (bottom of sidebar)'),
+            'title': _('Show hint in the \'User\' menu'),
             'handler': notify_gui_msg,
         },
         'mail': {
@@ -101,39 +100,26 @@ def _notify_methods() -> Dict[str, Dict[str, Any]]:
             'handler': notify_mail,
         },
         'dashlet': {
-            'title': _('Send hint to dashlet'),
+            'title': _('Show notification in dashboard element \'User notifications\''),
             'handler': notify_gui_msg,
         },
     }
 
 
-@permission_registry.register
-class NotifyUsersPermission(Permission):
-    @property
-    def section(self):
-        return PermissionSectionGeneral
-
-    @property
-    def permission_name(self):
-        return "notify"
-
-    @property
-    def title(self):
-        return _("Notify Users")
-
-    @property
-    def description(self):
-        return _("This permissions allows users to send notifications to the users of "
-                 "the monitoring system using the web interface.")
-
-    @property
-    def defaults(self):
-        return ["admin"]
+permission_registry.register(
+    Permission(
+        section=PermissionSectionGeneral,
+        name="notify",
+        title=_l("Notify Users"),
+        description=_l("This permissions allows users to send notifications to the users of "
+                       "the monitoring system using the web interface."),
+        defaults=["admin"],
+    ))
 
 
 @cmk.gui.pages.register("notify")
 def page_notify():
-    if not config.user.may("general.notify"):
+    if not user.may("general.notify"):
         raise MKAuthException(_("You are not allowed to use the notification module."))
 
     title = _('Notify users')
@@ -143,7 +129,7 @@ def page_notify():
 
     vs_notify = _vs_notify()
 
-    if html.check_transaction():
+    if transactions.check_transaction():
         try:
             msg = vs_notify.from_html_vars("_notify")
             vs_notify.validate_value(msg, "_notify")
@@ -160,13 +146,11 @@ def page_notify():
 
 
 def _page_menu(breadcrumb: Breadcrumb) -> PageMenu:
-    menu = make_simple_form_page_menu(
-        breadcrumb,
-        form_name="notify",
-        button_name="save",
-        save_title=_("Send notification"),
-        add_abort_link=False,
-    )
+    menu = make_simple_form_page_menu(_("Users"),
+                                      breadcrumb,
+                                      form_name="notify",
+                                      button_name="save",
+                                      save_title=_("Send notification"))
 
     menu.dropdowns.insert(
         1,
@@ -201,16 +185,16 @@ def _vs_notify():
              allow_empty=False,
          )),
         #('contactgroup', _('All members of a contact group')),
+        ('online', _('All online users')),
     ]
-
-    if config.save_user_access_times:
-        dest_choices.append(('online', _('All online users')))
 
     return Dictionary(
         elements=[
             ('text',
              TextAreaUnicode(title=_('Text'),
                              help=_('Insert the text to be sent to all reciepents.'),
+                             allow_empty=False,
+                             empty_text=_('You need to provide a text.'),
                              cols=50,
                              rows=10)),
             ('dest',
@@ -223,6 +207,7 @@ def _vs_notify():
             ('methods',
              ListChoice(
                  title=_('How to notify'),
+                 allow_empty=False,
                  choices=[(k, v['title']) for k, v in _notify_methods().items()],
                  default_value=['popup'],
              )),
@@ -243,9 +228,6 @@ def _vs_notify():
 
 
 def _validate_msg(msg, varprefix):
-    if not msg.get('text'):
-        raise MKUserError('text', _('You need to provide a text.'))
-
     if not msg.get('methods'):
         raise MKUserError('methods', _('Please select at least one notification method.'))
 
@@ -297,25 +279,30 @@ def _process_notify_message(msg):
             except MKInternalError as e:
                 errors.setdefault(method, []).append((user_id, e))
 
-    message = _('The notification has been sent via<br>')
-    message += "<table>"
-    for method in msg['methods']:
-        message += "<tr><td>%s</td><td>to %d of %d recipients</td></tr>" %\
-                        (_notify_methods()[method]["title"], num_success[method], num_recipients)
-    message += "</table>"
+    message = escape_html_permissive(_('The notification has been sent via'))
+    message += html.render_br()
 
-    message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)
-    message += '<a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
-    html.show_message(HTML(message))
+    parts = []
+    for method in msg['methods']:
+        parts.append(
+            html.render_tr(
+                html.render_td(_notify_methods()[method]["title"]) +
+                html.render_td(_("to %d of %d recipients") %
+                               (num_success[method], num_recipients))))
+    message += html.render_table(HTML().join(parts))
+
+    message += html.render_p(_('Sent notification to: %s') % ', '.join(recipients))
+    message += html.render_a(_('Back to previous page'), href=makeuri(request, []))
+    html.show_message(message)
 
     if errors:
         error_message = HTML()
         for method, method_errors in errors.items():
             error_message += _("Failed to send %s notifications to the following users:") % method
             table_rows = HTML()
-            for user, exception in method_errors:
+            for user_id, exception in method_errors:
                 table_rows += html.render_tr(
-                    html.render_td(html.render_tt(user)) + html.render_td(exception))
+                    html.render_td(html.render_tt(user_id)) + html.render_td(exception))
             error_message += html.render_table(table_rows) + html.render_br()
         html.show_error(error_message)
 
@@ -340,21 +327,21 @@ def notify_gui_msg(user_id, msg):
 
 def notify_mail(user_id, msg):
     users = userdb.load_users(lock=False)
-    user = users.get(user_id)
+    user_spec = users.get(user_id)
 
-    if not user:
+    if not user_spec:
         raise MKInternalError(_('This user does not exist.'))
 
-    if not user.get('email'):
+    if not user_spec.get('email'):
         raise MKInternalError(_('This user has no mail address configured.'))
 
-    recipient_name = user.get('alias')
+    recipient_name = user_spec.get('alias')
     if not recipient_name:
         recipient_name = user_id
 
-    if config.user.id is None:
+    if user.id is None:
         raise Exception("no user ID")
-    sender_name = users[config.user.id].get('alias')
+    sender_name = users[user.id].get('alias')
     if not sender_name:
         sender_name = user_id
 
@@ -378,7 +365,7 @@ def notify_mail(user_id, msg):
     # FIXME: Maybe use the configured mail command for Check_MK-Notify one day
     # TODO: mail does not accept umlauts: "contains invalid character '\303'" in mail
     #       addresses. handle this correctly.
-    command = ["mail", "-s", ensure_str(subject), ensure_str(user['email'])]
+    command = ["mail", "-s", ensure_str(subject), ensure_str(user_spec['email'])]
 
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is

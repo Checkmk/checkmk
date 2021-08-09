@@ -12,39 +12,30 @@ Example:
     For a parse function that creates a dictionary for every item, for instance,
     you could use
 
-        def parse_my_plugin(string_table: AgentStringTable)= -> Dict[str, Dict[str, str]]:
-            pass
-
-    A check function handling such data should be annotated
-
-        def check_my_plugin(
-            item: str,
-            params: Parameters,
-            section: Dict[str, str],
-        ) -> CheckGenerator:
-            pass
+    >>> from typing import Any, Mapping
+    >>>
+    >>> def parse_my_plugin(string_table: StringTable) -> Mapping[str, Mapping[str, str]]:
+    ...     pass
+    >>>
+    >>> # A check function handling such data should be annotated
+    >>> def check_my_plugin(
+    ...     item: str,
+    ...     params: Mapping[str, Any],
+    ...     section: Mapping[str, Mapping[str, str]],
+    ... ) -> CheckResult:
+    ...     pass
 
 """
-from cmk.base.api.agent_based.type_defs import (
-    AgentStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
-    HostLabelGenerator,
-    InventoryGenerator,
-    Parameters,
-    SNMPStringByteTable,
-    SNMPStringTable,
-    ValueStore,
-)
+
+from cmk.base.api.agent_based.checking_classes import CheckResult, DiscoveryResult
+from cmk.base.api.agent_based.inventory_classes import InventoryResult
+from cmk.base.api.agent_based.type_defs import HostLabelGenerator, StringByteTable, StringTable
 
 __all__ = [
-    "AgentStringTable",
-    "CheckGenerator",
-    "DiscoveryGenerator",
+    "CheckResult",
+    "DiscoveryResult",
     "HostLabelGenerator",
-    "InventoryGenerator",
-    "Parameters",
-    "SNMPStringByteTable",
-    "SNMPStringTable",
-    "ValueStore",
+    "InventoryResult",
+    "StringByteTable",
+    "StringTable",
 ]

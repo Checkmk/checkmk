@@ -4,24 +4,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import os
+import subprocess
 import sys
 import tarfile
-import logging
-import subprocess
 import time
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
-from typing import List, Dict, Optional
-import requests
+from typing import Dict, List, Optional
 
 import dockerpty  # type: ignore[import]
-import docker  # type: ignore[import]
+import requests
 from docker.models.images import Image  # type: ignore[import]
 
-import testlib
-from testlib.version import CMKVersion
+import tests.testlib as testlib
+from tests.testlib.version import CMKVersion
+
+import docker  # type: ignore[import]
 
 _DOCKER_REGISTRY = "artifacts.lan.tribe29.com:4000"
 _DOCKER_REGISTRY_URL = "https://%s/v2/" % _DOCKER_REGISTRY
@@ -70,6 +71,7 @@ def execute_tests_in_container(distro_name: str, docker_tag: str, version: CMKVe
     ) as container:
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
+        _cleanup_previous_virtual_environment(container, version)
         _reuse_persisted_virtual_environment(container, version)
 
         if interactive:
@@ -239,8 +241,8 @@ def _create_cmk_image(client: docker.DockerClient, base_image_name: str, docker_
 
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
-        _prepare_virtual_environments(container, version)
-        _persist_virtual_environments(container, version)
+        _prepare_virtual_environment(container, version)
+        _persist_virtual_environment(container, version)
 
         logger.info("Install Checkmk version")
         assert _exec_run(
@@ -535,18 +537,18 @@ def _prepare_git_overlay(container, lower_path, target_path):
     ) == 0
 
 
-def _prepare_virtual_environments(container, version):
-    """Ensure the virtual environments are ready for use
+def _prepare_virtual_environment(container, version):
+    """Ensure the virtual environment is ready for use
 
-    Because the virtual environments are in the /git path (which is not persisted),
-    the initialized virtual environment will be copied to /virtual-envs, which is
+    Because the virtual environment are in the /git path (which is not persisted),
+    the initialized virtual environment will be copied to /.venv, which is
     persisted with the image. The test containers may use them.
     """
-    _cleanup_previous_virtual_environments(container, version)
-    _setup_virtual_environments(container, version)
+    _cleanup_previous_virtual_environment(container, version)
+    _setup_virtual_environment(container, version)
 
 
-def _setup_virtual_environments(container, version):
+def _setup_virtual_environment(container, version):
     logger.info("Prepare virtual environment")
     assert _exec_run(
         container,
@@ -559,10 +561,15 @@ def _setup_virtual_environments(container, version):
     assert _exec_run(container, ["test", "-d", "/git/.venv"]) == 0
 
 
-def _cleanup_previous_virtual_environments(container, version):
-    # When the git is mounted to the test container for a node which already
-    # created it's virtual environments these may be incompatible with the
-    # containers OS. Clean up, just to be sure.
+def _cleanup_previous_virtual_environment(container, version):
+    """Delete existing .venv
+
+    When the git is mounted to the test container for a node which already created it's virtual
+    environments in the git directory, the venv may be incompatible with the containers OS. Clean
+    up, just to be sure.
+
+    The copied .venv will be used by _reuse_persisted_virtual_environment().
+    """
     logger.info("Cleanup previous virtual environments")
     assert _exec_run(
         container,
@@ -575,7 +582,12 @@ def _cleanup_previous_virtual_environments(container, version):
     assert _exec_run(container, ["test", "-n", "/.venv"]) == 0
 
 
-def _persist_virtual_environments(container, version):
+def _persist_virtual_environment(container, version):
+    """Persist the used venv in container image
+
+    Copy the virtual environment that was used during image creation from /git/.venv (not persisted)
+    to /.venv (persisted in image). This will be reused later during test executions.
+    """
     logger.info("Persisting virtual environments for later use")
     assert _exec_run(
         container,
@@ -589,15 +601,14 @@ def _persist_virtual_environments(container, version):
 
 
 def _reuse_persisted_virtual_environment(container, version):
-    _cleanup_previous_virtual_environments(container, version)
-
-    if _exec_run(container, ["test", "-d", "/virtual-envs"],
+    """Copy /.venv to /git/.venv to reuse previous venv during testing"""
+    if _exec_run(container, ["test", "-d", "/.venv"],
                  workdir="/git",
                  environment=_container_env(version)) == 0:
-        logger.info("Restore previously created virtual environments")
+        logger.info("Restore previously created virtual environment")
         assert _exec_run(
             container,
-            ["rsync", "-a", "/virtual-envs", "/git"],
+            ["rsync", "-a", "/.venv", "/git"],
             workdir="/git",
             environment=_container_env(version),
             stream=True,
@@ -606,7 +617,7 @@ def _reuse_persisted_virtual_environment(container, version):
     if _mirror_reachable():
         #  Only try to update when the mirror is available, otherwise continue with the current
         #  state, which is good for the most of the time.
-        _setup_virtual_environments(container, version)
+        _setup_virtual_environment(container, version)
 
 
 def _mirror_reachable():

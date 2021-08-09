@@ -4,6 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #
 # during inventory we are looking for all temperatures available,
 # in this example there are two (index 1 & 2):
@@ -18,21 +24,20 @@ factory_settings["emerson_temp_default"] = {"levels": (40, 50)}
 
 
 def inventory_emerson_temp(info):
-    for nr, line in enumerate(info):
-        # Device appears to mark missing sensors by temperature value -999999
-        if int(line[0]) >= -273000:
-            yield nr, {}
+    # Device appears to mark missing sensors by temperature value -999999
+    yield from ((str(nr), {}) for nr, line in enumerate(info) if int(line[0]) >= -273000)
 
 
 def check_emerson_temp(item, params, info):
-    if len(info) > item:
-        if int(info[item][0]) < -273000:
-            return 3, "Sensor offline"
+    item_index = int(item)
+    if item_index >= len(info):
+        return None
 
-        temp = float(info[item][0]) / 1000.0
-        return check_temperature(temp, params, "emerson_temp_%s" % item)
+    if int(info[item_index][0]) < -273000:
+        return 3, "Sensor offline"
 
-    return 3, "Sensor not found in SNMP data"
+    temp = float(info[item_index][0]) / 1000.0
+    return check_temperature(temp, params, "emerson_temp_%s" % item)
 
 
 check_info['emerson_temp'] = {
@@ -44,6 +49,5 @@ check_info['emerson_temp'] = {
     "snmp_info": (".1.3.6.1.4.1.6302.2.1.2", ["7"]),
     "snmp_scan_function": lambda oid: oid('.1.3.6.1.4.1.6302.2.1.1.1.0', "").startswith(
         'Emerson Network Power'),
-    "includes": ["temperature.include"],
     "default_levels_variable": "emerson_temp_default"
 }

@@ -9,6 +9,6 @@ description:
  The resulting check state can be configured in WATO.
 
 
-inventory:
+discovery:
  One service is created.
 

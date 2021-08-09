@@ -8,6 +8,6 @@ description:
  Available Informations: Active, Active primary, Unassigned, Initializing,
  Relocating, Delayed unassigned shards and Ongoing shard info requests
 
-inventory:
+discovery:
  One service is created.
 

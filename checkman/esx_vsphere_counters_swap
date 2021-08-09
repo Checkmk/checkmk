@@ -9,5 +9,5 @@ description:
  mem.swapout: Sum of swapout metrics from all powered-on virtual machines on the host.
  mem.swapused: Amount of memory that is used by swap.
 
-inventory:
+discovery:
  One service is created for the VMKernel swap metrics on the ESX host system.

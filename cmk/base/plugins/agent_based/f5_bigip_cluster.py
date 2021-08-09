@@ -6,22 +6,11 @@
 """F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
 """
 from collections import namedtuple
+from typing import Any, List, Mapping, Optional
 
-from .agent_based_api.v1 import (
-    SNMPTree,
-    register,
-    Service,
-    Result,
-    state,
-    all_of,
-)
-from .agent_based_api.v1.type_defs import (
-    Parameters,
-    SNMPStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
-)
-
+from .agent_based_api.v1 import all_of, register, Result, Service, SNMPTree
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.f5_bigip import F5_BIGIP, VERSION_PRE_V11, VERSION_V11_PLUS
 
 State = namedtuple("State", ["state", "description"])
@@ -53,19 +42,19 @@ CONFIG_SYNC_STATE_NAMES = {
 }
 
 
-def discover_f5_bigip_config_sync(section: State) -> DiscoveryGenerator:
+def discover_f5_bigip_config_sync(section: State) -> DiscoveryResult:
     # run inventory unless we found a device in unconfigured state
     # don't need to loop over the input as there's only one status
     if not section.state == "-1":
         yield Service()
 
 
-def parse_f5_bigip_config_sync_pre_v11(string_table: SNMPStringTable) -> State:
+def parse_f5_bigip_config_sync_pre_v11(string_table: List[StringTable]) -> Optional[State]:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_config_sync_pre_v11([[["0 - Synchronized"]]])
     State(state='0', description='Synchronized')
     """
-    return State(*string_table[0][0][0].split(" - ", 1))
+    return State(*string_table[0][0][0].split(" - ", 1)) if string_table[0] else None
 
 
 # see: 1.3.6.1.4.1.3375.2.1.1.1.1.6.0
@@ -75,7 +64,7 @@ def parse_f5_bigip_config_sync_pre_v11(string_table: SNMPStringTable) -> State:
 # F5 nodes need to be ntp synced otherwise status reports might be wrong.
 
 
-def check_f5_bigip_config_sync_pre_v11(section: State) -> CheckGenerator:
+def check_f5_bigip_config_sync_pre_v11(section: State) -> CheckResult:
     # possible state values:
     #  -1   unconfigured,           ok only if original status
     #                               otherwise this would mean something is heavily broken?
@@ -97,7 +86,7 @@ register.snmp_section(
     name="f5_bigip_cluster",
     detect=all_of(F5_BIGIP, VERSION_PRE_V11),
     parse_function=parse_f5_bigip_config_sync_pre_v11,
-    trees=[
+    fetch=[
         SNMPTree(base=".1.3.6.1.4.1.3375.2.1.1.1.1", oids=["6"]),  # sysAttrConfigsyncState
     ],
 )
@@ -118,21 +107,21 @@ register.check_plugin(
 # F5 nodes need to be ntp synced otherwise status reports might be wrong.
 
 
-def parse_f5_bigip_config_sync_v11_plus(string_table: SNMPStringTable) -> State:
+def parse_f5_bigip_config_sync_v11_plus(string_table: List[StringTable]) -> Optional[State]:
     """Read a node status encoded as stringified int
     >>> parse_f5_bigip_config_sync_v11_plus([[['3', 'In Sync']]])
     State(state='3', description='In Sync')
     """
-    return State(*string_table[0][0])
+    return State(*string_table[0][0]) if string_table[0] else None
 
 
-def check_f5_bigip_config_sync_v11_plus(params: Parameters, section: State) -> CheckGenerator:
+def check_f5_bigip_config_sync_v11_plus(params: Mapping[str, Any], section: State) -> CheckResult:
     """
     >> for r in check_f5_bigip_config_sync_v11_plus(
-    ...         params=Parameters(CONFIG_SYNC_DEFAULT_PARAMETERS),
+    ...         params=CONFIG_SYNC_DEFAULT_PARAMETERS,
     ...         section={"node1": 0, "node2": 3}):
     ...     print(r)
-    Result(state=<state.OK: 0>, summary='Node [node1] is standby', details='Node [node1] is standby')
+    Result(state=<state.OK: 0>, summary='Node [node1] is standby')
     """
     status = params[section.state]
     status_name = CONFIG_SYNC_STATE_NAMES[section.state]
@@ -146,7 +135,7 @@ register.snmp_section(
     name="f5_bigip_cluster_v11",
     detect=all_of(F5_BIGIP, VERSION_V11_PLUS),
     parse_function=parse_f5_bigip_config_sync_v11_plus,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3375.2.1.14.1",
             oids=[

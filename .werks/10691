@@ -6,7 +6,7 @@ Date: 1584971100
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Since this release mk_logwatch is able to process files encoded with UTF-16LE.
 Those files must have correct byte order mark(BOM). 

@@ -6,7 +6,7 @@ Date: 1584534152
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 For memory checks based on the output of a UCD SNMP deamon (check ucd_mem),
 cached and buffered memory are now counted as free memory. This is consistent

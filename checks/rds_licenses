@@ -4,6 +4,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.license import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<rds_licenses:sep(44)>>>
 # KeyPackId,Description,KeyPackType,ProductType,ProductVersion,ProductVersionID,TotalLicenses,IssuedLi...
 # 13,A02-6.00-S,4,0,Windows Server 2008 oder Windows Server 2008 R2,2,-1,100,-1,20380119031407.000000-000
@@ -14,10 +20,13 @@
 # 17,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,50,18,32,20380101110453.000000-000
 # 18,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,65,22,43,20380101083530.000000-000
 # 19,A02-6.00-S,2,0,Windows Server 2008 oder Windows Server 2008 R2,2,600,0,600,20380101083248.000000-000
+# 4,C50-6.02-S,2,1,Windows Server 2012,4,300,0,300,20380101000000.000000-000
+# 3,C50-10.01-S,5,1,Windows Server 2019,6,2000,1,1999,20380101093636.000000-000
 
 # Insert any new keys here
 # https://msdn.microsoft.com/en-us/library/aa383803%28v=vs.85%29.aspx#properties
 rds_licenses_product_versionid_map = {
+    "6": "Windows Server 2019",
     "5": "Windows Server 2016",
     "4": "Windows Server 2012",
     "3": "Windows Server 2008 R2",
@@ -71,5 +80,4 @@ check_info['rds_licenses'] = {
     'service_description': "RDS Licenses %s",
     'group': "rds_licenses",
     'has_perfdata': True,
-    'includes': ['license.include'],
 }

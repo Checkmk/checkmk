@@ -6,7 +6,7 @@ Date: 1593155378
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously the input field for matching a syslog application tag had a
 standard size which lead to scrolling if the content has been very long. Now

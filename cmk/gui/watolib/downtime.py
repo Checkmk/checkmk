@@ -3,20 +3,10 @@
 # Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import time
 
-import cmk.gui.config as config
-import cmk.gui.sites as sites
-from livestatus import SiteId
 import livestatus
 
-
-def execute_livestatus_command(command, site):
-    sites.live().command("[%d] %s" % (int(time.time()), command), SiteId(site))
-
-
-def remove_downtime_command(cmdtag, downtime_id):
-    return "DEL_%s_DOWNTIME;%s" % (cmdtag, downtime_id)
+from cmk.gui.globals import user
 
 
 def determine_downtime_mode(recurring_number, delayed_duration):
@@ -45,11 +35,11 @@ class DowntimeSchedule:
         self.delayed_duration = delayed_duration
         self.comment = comment
 
-    def livestatus_command(self, specification, cmdtag):
+    def livestatus_command(self, specification: str, cmdtag: str) -> str:
         return ("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % specification) + ("%d;%d;%d;0;%d;%s;" % (
             self.start_time,
             self.end_time,
             self.mode,
             self.delayed_duration,
-            config.user.id,
+            user.id,
         )) + livestatus.lqencode(self.comment)

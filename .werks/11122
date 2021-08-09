@@ -6,7 +6,7 @@ Date: 1588593212
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This check is OK when a given Proxmox VM's {status} matches a configured value, WARN otherwise.
 It shows {vmid} (e.g. "101"), {status} (e.g. "running"), {type} ("lxc" or "qemu") and {host} values

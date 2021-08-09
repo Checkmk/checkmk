@@ -4,7 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any as _Any, Dict as _Dict, List as _List, Union as _Union
+from typing import Any as _Any
+from typing import Dict as _Dict
+from typing import List as _List
+from typing import Union as _Union
 
 import cmk.utils.version as cmk_version
 

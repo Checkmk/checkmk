@@ -5,20 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Checkbox,
-    Dictionary,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
+    HostRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
     RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
 )
 from cmk.gui.plugins.wato.check_parameters.mssql_datafiles import levels_absolute_or_dynamic
+from cmk.gui.plugins.wato.check_parameters.utils import mssql_item_spec_instance_database_file
+from cmk.gui.valuespec import Checkbox, Dictionary
 
 
 def _valuespec_mssql_transactionlogs_discovery():
@@ -65,7 +61,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mssql_transactionlogs",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Database Name"), allow_empty=False),
+        item_spec=mssql_item_spec_instance_database_file,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_transactionlogs,
         title=lambda: _("MSSQL Transactionlog Sizes"),

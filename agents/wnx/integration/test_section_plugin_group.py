@@ -4,16 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from itertools import chain, repeat
 import os
 import platform
-import pytest  # type: ignore[import]
 import re
+import shutil
 import sys
 import time
-import shutil
-from local import (actual_output, assert_subprocess, make_yaml_config, src_exec_dir, local_test,
-                   wait_agent, write_config, user_dir)
+from itertools import chain, repeat
+from typing import Iterator
+
+import pytest  # type: ignore[import]
+
+from .local import local_test, user_dir
 
 
 class Globals():
@@ -25,21 +27,21 @@ class Globals():
     alone = False
 
 
-@pytest.fixture
-def testfile():
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(params=['bat ps1'], ids=['bat_ps1'])
-def testconfig_suffixes(request, make_yaml_config):
+@pytest.fixture(name="testconfig_suffixes", params=['bat ps1'], ids=['bat_ps1'])
+def testconfig_suffixes_engine(request, make_yaml_config):
     Globals.suffixes = request.param
     if request.param != 'default':
         make_yaml_config['global']['execute'] = request.param
     return make_yaml_config
 
 
-@pytest.fixture(params=['alone', 'with_systemtime'])
-def testconfig_sections(request, testconfig_suffixes):
+@pytest.fixture(name="testconfig_sections", params=['alone', 'with_systemtime'])
+def testconfig_sections_engine(request, testconfig_suffixes):
     Globals.alone = request.param == 'alone'
     if Globals.alone:
         testconfig_suffixes['global']['sections'] = [Globals.plugintype]
@@ -48,8 +50,8 @@ def testconfig_sections(request, testconfig_suffixes):
     return testconfig_suffixes
 
 
-@pytest.fixture(params=['sync', 'async', 'async+cached'])
-def testconfig(request, testconfig_sections):
+@pytest.fixture(name="testconfig", params=['sync', 'async', 'async+cached'])
+def testconfig_engine(request, testconfig_sections):
     Globals.executionmode = request.param
     name = Globals.plugintype
     if request.param == 'sync':
@@ -76,8 +78,8 @@ def testconfig(request, testconfig_sections):
     return testconfig_sections
 
 
-@pytest.fixture()
-def expected_output():
+@pytest.fixture(name="expected_output")
+def expected_output_engine():
     main_label = [
         re.escape(r'<<<%s>>>' % ('local:sep(0)' if Globals.plugintype == 'local' else ''))
     ]
@@ -89,6 +91,7 @@ def expected_output():
     else:
         plugin_fixed = []
 
+    plugin_variadic: Iterator[str]
     if Globals.pluginname == 'netstat_an.bat':
         plugin_fixed += [
             re.escape(r'<<<') + r'win_netstat%s' %
@@ -107,7 +110,7 @@ def expected_output():
             r'\[[0-9a-f]{,4}(:[0-9a-f]{,4})+(%\d+)?\]):\d+'
             r'\s+(ABH.REN|HERGESTELLT|WARTEND|SCHLIESSEN_WARTEN|SYN_GESENDET'
             r'|LISTENING|ESTABLISHED|TIME_WAIT|CLOSE_WAIT|FIN_WAIT_\d|SYN_SENT|LAST_ACK'
-            r'|SCHLIESSEND|ZULETZT_ACK)'
+            r'|SCHLIESSEND|FIN_WARTEN_\d|ZULETZT_ACK)'
             r'|\s+UDP\s+\d+\.\d+\.\d+\.\d+:\d+\s+\*:\*'
             r'|\-?\d+( \d+)+ [\w\(\)]+')
         if Globals.plugintype == 'plugins':
@@ -144,15 +147,17 @@ def expected_output():
     return chain(main_label, plugin_fixed, plugin_variadic)
 
 
-@pytest.fixture(params=['plugins', 'local'])
-def plugin_dir(request):
+@pytest.fixture(name="plugin_dir", params=['plugins', 'local'])
+def plugin_dir_engine(request):
     Globals.plugintype = request.param
     target_dir = os.path.join(user_dir, request.param)
     return target_dir
 
 
-@pytest.fixture(params=['netstat_an.bat', 'wmic_if.bat', 'windows_if.ps1'], autouse=True)
-def manage_plugins(request, plugin_dir):
+@pytest.fixture(name="manage_plugins",
+                params=['netstat_an.bat', 'wmic_if.bat', 'windows_if.ps1'],
+                autouse=True)
+def manage_plugins_engine(request, plugin_dir):
     Globals.pluginname = request.param
     source_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                               "test_files\\integration")
@@ -165,11 +170,11 @@ def manage_plugins(request, plugin_dir):
     yield
     if platform.system() == 'Windows':
         for plugin in [request.param, Globals.binaryplugin]:
-            for i in range(0, 5):
+            for _ in range(0, 5):
                 try:
                     os.unlink(os.path.join(plugin_dir, plugin))
                     break
-                except WindowsError as e:
+                except OSError as e:
                     # For some reason, the exe plugin remains locked for a short
                     # while every now and then. Just sleep 1 s and retry.
                     sys.stderr.write('%s\n' % str(e))

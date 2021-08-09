@@ -5,22 +5,30 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Transform, Tuple
 
 
-def _parameter_valuespec_cpu_utilization_multiitem():
+def _parameter_valuespec():
+    return Transform(
+        _real_parameter_valuespec(),
+        forth=_transform,
+    )
+
+
+def _transform(params):
+    if params is None:
+        return {}
+    if isinstance(params, tuple):
+        return {"levels": params}
+    return params
+
+
+def _real_parameter_valuespec():
     return Dictionary(
         help=_("The CPU utilization sums up the percentages of CPU time that is used "
                "for user processes and kernel routines over all available cores within "
@@ -55,8 +63,8 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="cpu_utilization_multiitem",
         group=RulespecGroupCheckParametersOperatingSystem,
-        item_spec=lambda: TextAscii(title=_("Module name"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Module name"), allow_empty=False),
         match_type="dict",
-        parameter_valuespec=_parameter_valuespec_cpu_utilization_multiitem,
+        parameter_valuespec=_parameter_valuespec,
         title=lambda: _("CPU utilization of Devices with Modules"),
     ))

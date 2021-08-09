@@ -2,7 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-include Makefile.omd
+include omd.make
 include $(BUILD_BASE_DIR)/build-helper-files.make
 
 # You can build singele packages by calling macke <PACKAGENAME>
@@ -20,24 +20,27 @@ include $(BUILD_BASE_DIR)/build-helper-files.make
 
 PACKAGES := \
     openssl \
+    redis \
     libgsf \
     postgresql \
     perl-modules \
     Python3 \
     freetds \
     re2 \
+    protobuf \
     python3-modules \
     rrdtool \
     msitools \
     net-snmp \
     apache-omd \
+    lasso \
+    mod_auth_mellon \
     mod_fcgid \
     python3-mod_wsgi \
     check_mk \
     check_mysql_health \
     check_oracle_health \
     Webinject \
-    dokuwiki \
     jmx4perl \
     mk-livestatus \
     stunnel \
@@ -57,6 +60,9 @@ PACKAGES := \
     heirloom-pkgtools
 
 ifeq ($(EDITION),enterprise)
+PACKAGES += enterprise
+endif
+ifeq ($(EDITION),free)
 PACKAGES += enterprise
 endif
 ifeq ($(EDITION),managed)
@@ -82,7 +88,7 @@ $(BUILD_BASE_DIR)/build-helper-files.make:
 	$(RM) $@
 	for P in $(PACKAGES); do \
 	  inc_path=$(PACKAGE_DIR)/$$P/$$P.make; \
-	  if [[ $$P == 'enterprise' || $$P == 'managed' ]] ; then \
+	  if [[ $$P == 'enterprise' || $$P == 'free' || $$P == 'managed' ]] ; then \
 	    inc_path=$(REPO_PATH)/$$P/$$P.make; \
 	  fi ; \
 	  P_VAR=$$(echo $${P^^} | tr '-' '_' ); \
@@ -273,10 +279,11 @@ deb: debian/changelog debian/control
 	if [ "$(DISTRO_CODE)" = "jessie" ] || [ "$(DISTRO_CODE)" = "trusty" ] || [ "$(DISTRO_CODE)" = "xenial" ]; then \
 	    TARGET="-us -uc -B" ; \
 	else \
-	    TARGET="--no-sign -- clean binary-arch" ; \
+	    TARGET="--no-sign -- clean build-arch binary-arch" ; \
 	fi && \
 	    debuild \
 	    --preserve-envvar="NEXUS_*" \
+	    --preserve-envvar="MAKE" \
 	    --preserve-envvar="PYTHON_ENABLE_OPTIMIZATIONS" \
 	    --prepend-path=/usr/local/bin \
 	    --set-envvar EDITION=$(EDITION) \
@@ -290,7 +297,7 @@ setversion:
 # NEW_VERSION should be set on the command line.  Replace all '/' since sed
 # tries to interpret them '/' might occur in custom branches filenames and sed
 # arguments should not contain '/'
-	NEW_OMD_VERSION=$(subst /,-,$(NEW_VERSION)).$(EDITION_SHORT)$(DEMO_SUFFIX) ; \
+	NEW_OMD_VERSION=$(subst /,-,$(NEW_VERSION)).$(EDITION_SHORT) ; \
 
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
@@ -298,15 +305,11 @@ $(APPLIANCE_INSTALL_CMA): $(PRE_INSTALL)
 # Please note: APPLIANCE_*_CMA are defined in omd/packages/appliance/appliance.make
 $(CMA_PACKAGE): $(APPLIANCE_INSTALL_CMA) install
 	# Create info file to mark minimal cma firmware version requirement
-	@if [ "$(DISTRO_CODE)" = "stretch" ]; then \
-	    MIN_VERSION=1.4.0 ; \
-	else \
-	    MIN_VERSION=1.1.2 ; \
-	fi ; \
-	echo -e "MIN_VERSION=$${MIN_VERSION}\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
+	echo -e "MIN_VERSION=1.4.0\n" > $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info
 
 	# Mark demo builds in cma.info file
-	@if [ -n "$(DEMO_SUFFIX)" ]; then \
+
+	@if [ "$(EDITION)" = "free" ]; then \
 	    echo -e "DEMO=1\n" >> $(DESTDIR)/opt/omd/versions/$(OMD_VERSION)/cma.info ; \
 	fi
 

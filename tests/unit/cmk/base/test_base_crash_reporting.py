@@ -6,13 +6,14 @@
 
 from pathlib import Path
 
+from tests.testlib.base import Scenario
+
 import cmk.utils.crash_reporting
-import cmk.base.crash_reporting as crash_reporting
+import cmk.utils.version as cmk_version
+
 import cmk.base.check_api as check_api
 import cmk.base.config as config
-
-# No stub file
-from testlib.base import Scenario  # type: ignore[import]
+import cmk.base.crash_reporting as crash_reporting
 
 
 def test_base_crash_report_registry():
@@ -87,7 +88,6 @@ def test_check_crash_report_from_exception(monkeypatch):
         )
 
     _check_generic_crash_info(crash)
-
     assert crash.type() == "check"
     assert crash.crash_info["exc_type"] == "Exception"
     assert crash.crash_info["exc_value"] == "DING"

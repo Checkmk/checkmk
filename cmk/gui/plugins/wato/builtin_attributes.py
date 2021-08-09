@@ -3,58 +3,58 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 import time
 
 import cmk.utils.tags
-import cmk.gui.config as config
-import cmk.gui.watolib as watolib
+
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
-from cmk.gui.i18n import _
-from cmk.gui.globals import g, html
-
+import cmk.gui.watolib as watolib
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html, user
 from cmk.gui.htmllib import HTML
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    ABCHostAttributeNagiosText,
+    ABCHostAttributeValueSpec,
+    ConfigHostname,
+    host_attribute_registry,
+    HostAttributeTopicAddress,
+    HostAttributeTopicBasicSettings,
+    HostAttributeTopicCustomAttributes,
+    HostAttributeTopicDataSources,
+    HostAttributeTopicManagementBoard,
+    HostAttributeTopicMetaData,
+    HostAttributeTopicNetworkScan,
+    HostnameTranslation,
+    IPMIParameters,
+    SNMPCredentials,
+)
+from cmk.gui.sites import has_wato_slave_sites, is_wato_slave_site
+from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.valuespec import (
+    AbsoluteDate,
+    Age,
+    Alternative,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    FixedValue,
     HostAddress,
+    ID,
+    Integer,
+    IPv4Address,
+    Labels,
     ListOf,
     ListOfStrings,
-    Dictionary,
-    Age,
-    TimeofdayRange,
-    Checkbox,
-    DropdownChoice,
-    Integer,
-    CascadingDropdown,
-    Tuple,
-    IPv4Address,
     RegExp,
-    Alternative,
-    FixedValue,
-    AbsoluteDate,
-    TextUnicode,
-    SiteChoice,
-    ID,
+    SetupSiteChoice,
+    TextInput,
+    TimeofdayRange,
     Transform,
-    Labels,
-)
-from cmk.gui.exceptions import MKUserError
-
-from cmk.gui.plugins.wato import (
-    HostAttributeTopicBasicSettings,
-    HostAttributeTopicNetworkScan,
-    HostAttributeTopicAddress,
-    HostAttributeTopicManagementBoard,
-    HostAttributeTopicCustomAttributes,
-    HostAttributeTopicMetaData,
-    HostAttributeTopicDataSources,
-    ABCHostAttributeValueSpec,
-    ABCHostAttributeNagiosText,
-    host_attribute_registry,
-    SNMPCredentials,
-    IPMIParameters,
-    HostnameTranslation,
-    ConfigHostname,
+    Tuple,
+    ValueSpecText,
 )
 
 
@@ -63,7 +63,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def topic(self):
         return HostAttributeTopicBasicSettings
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     @classmethod
@@ -76,7 +76,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
     def nagios_name(self):
         return "alias"
 
-    def is_explicit(self):
+    def is_explicit(self) -> bool:
         return True
 
     def title(self):
@@ -109,7 +109,7 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return HostAddress(
-            title=_("IPv4 Address"),
+            title=_("IPv4 address"),
             help=_("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
                    "or DNS by your monitoring server, you can specify an explicit IP "
                    "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
@@ -174,7 +174,7 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 50
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def name(self):
@@ -210,6 +210,9 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 60
 
+    def is_show_more(self) -> bool:
+        return True
+
     def name(self):
         return "additional_ipv6addresses"
 
@@ -231,6 +234,42 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
             title=_("Additional IPv6 addresses"),
             help=_("Here you can specify additional IPv6 addresses. "
                    "These can be used in some active checks like ICMP."),
+        )
+
+
+@host_attribute_registry.register
+class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
+    def topic(self):
+        return HostAttributeTopicDataSources
+
+    @classmethod
+    def sort_index(cls):
+        return 64  # after agent, before snmp
+
+    def name(self):
+        return "cmk_agent_connection"
+
+    def show_in_table(self):
+        return False
+
+    def show_in_folder(self):
+        return True
+
+    def depends_on_tags(self):
+        return ["checkmk-agent"]
+
+    def valuespec(self):
+        return DropdownChoice(
+            title=_('Checkmk agent connection mode'),
+            choices=[
+                ('pull-agent', _('Pull: Checkmk server contacts the agent')),
+                ('push-agent', _('Push: Checkmk agent contacts the server')),
+            ],
+            help=_(  #
+                "By default the server will try to contact the monitored host and pull the"
+                " data by initializing a TCP connection. You can configure a push"
+                " configuration, where the monitored host is expected to send the data to"
+                " the monitoring server without being actively triggered."),
         )
 
 
@@ -279,7 +318,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def sort_index(cls):
         return 80
 
-    def is_advanced(self) -> bool:
+    def is_show_more(self) -> bool:
         return True
 
     def show_in_table(self):
@@ -312,10 +351,13 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
     def nagios_name(self):
         return "parents"
 
+    def is_explicit(self) -> bool:
+        return True
+
     def paint(self, value, hostname):
         parts = [
-            html.render_a(hn, "wato.py?" + html.urlencode_vars([("mode", "edit_host"),
-                                                                ("host", hn)])) for hn in value
+            html.render_a(hn, "wato.py?" + urlencode_vars([("mode", "edit_host"), ("host", hn)]))
+            for hn in value
         ]
         return "", HTML(", ").join(parts)
 
@@ -344,13 +386,25 @@ def validate_host_parents(host):
 hooks.register_builtin('validate-host', validate_host_parents)
 
 
+@hooks.request_memoize()
+def _get_criticality_choices():
+    """Returns the current configuration of the tag_group criticality"""
+    tags = cmk.utils.tags.TagConfig()
+    tags.parse_config(watolib.TagConfigFile().load_for_reading())
+    criticality_group = tags.get_tag_group("criticality")
+    if not criticality_group:
+        return []
+
+    return criticality_group.get_tag_choices()
+
+
 @host_attribute_registry.register
 class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
     def name(self):
         return "network_scan"
 
     def may_edit(self):
-        return config.user.may("wato.manage_hosts")
+        return user.may("wato.manage_hosts")
 
     def topic(self):
         return HostAttributeTopicNetworkScan
@@ -452,7 +506,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                         "choosen user. This user needs the permission to add new hosts "
                         "to this folder."),
                  choices=self._get_all_user_ids,
-                 default_value=lambda: config.user.id,
+                 default_value=lambda: user.id,
              )),
             ("translate_names", HostnameTranslation(title=_("Translate Hostnames"),)),
         ]
@@ -463,24 +517,9 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         return [(user_id, "%s (%s)" % (user_id, user.get("alias", user_id)))
                 for user_id, user in userdb.load_users(lock=False).items()]
 
-    def _get_criticality_choices(self):
-        """Returns the current configuration of the tag_group criticality"""
-        if 'criticality_choices' in g:
-            return g.criticality_choices
-
-        tags = cmk.utils.tags.TagConfig()
-        tags.parse_config(watolib.TagConfigFile().load_for_reading())
-        criticality_group = tags.get_tag_group("criticality")
-        if not criticality_group:
-            g.criticality_choices = []
-            return []
-
-        g.criticality_choices = criticality_group.get_tag_choices()
-        return g.criticality_choices
-
     def _optional_tag_criticality_element(self):
         """This element is optional. The user may have deleted the tag group criticality"""
-        choices = self._get_criticality_choices()
+        choices = _get_criticality_choices()
         if not choices:
             return []
 
@@ -620,7 +659,7 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
                         ],
                     ),
                 ),
-                ("output", TextUnicode(title=_("Output"),)),
+                ("output", TextInput(title=_("Output"),)),
             ],
             title=_("Last Scan Result"),
             optional_keys=[],
@@ -638,7 +677,7 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
 
     @classmethod
     def sort_index(cls):
-        return 110
+        return 120
 
     def show_in_table(self):
         return False
@@ -666,7 +705,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
 
     @classmethod
     def sort_index(cls):
-        return 120
+        return 110
 
     def show_in_table(self):
         return False
@@ -689,9 +728,6 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
 
 @host_attribute_registry.register
 class HostAttributeManagementSNMPCommunity(ABCHostAttributeValueSpec):
-    def is_advanced(self) -> bool:
-        return True
-
     def name(self):
         return "management_snmp_community"
 
@@ -725,7 +761,7 @@ class IPMICredentials(Alternative):
             ),
             IPMIParameters(),
         ]
-        super(IPMICredentials, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 @host_attribute_registry.register
@@ -739,9 +775,6 @@ class HostAttributeManagementIPMICredentials(ABCHostAttributeValueSpec):
     @classmethod
     def sort_index(cls):
         return 140
-
-    def is_advanced(self) -> bool:
-        return True
 
     def show_in_table(self):
         return False
@@ -761,8 +794,8 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
     def name(self):
         return "site"
 
-    def is_advanced(self) -> bool:
-        return True
+    def is_show_more(self) -> bool:
+        return not (has_wato_slave_sites() or is_wato_slave_site())
 
     def topic(self):
         return HostAttributeTopicBasicSettings
@@ -778,7 +811,7 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return True
 
     def valuespec(self):
-        return SiteChoice(
+        return SetupSiteChoice(
             title=_("Monitored on site"),
             help=_("Specify the site that should monitor this host."),
             invalid_choice_error=_("The configured site is not known to this site. In case you "
@@ -790,6 +823,8 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         )
 
     def get_tag_groups(self, value):
+        # Compatibility code for pre 2.0 sites. The SetupSiteChoice valuespec was previously setting
+        # a "False" value instead of "" on remote sites. May be removed with 2.1.
         if value is False:
             return {"site": ""}
 
@@ -841,12 +876,12 @@ class HostAttributeLockedBy(ABCHostAttributeValueSpec):
 
 
 class LockedByValuespec(Tuple):
-    def __init__(self):
-        super(LockedByValuespec, self).__init__(
+    def __init__(self) -> None:
+        super().__init__(
             orientation="horizontal",
             title_br=False,
             elements=[
-                SiteChoice(),
+                SetupSiteChoice(),
                 ID(title=_("Program"),),
                 ID(title=_("Connection ID"),),
             ],
@@ -855,10 +890,10 @@ class LockedByValuespec(Tuple):
                    "Dynamic Configuration."),
         )
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> ValueSpecText:
         if not value or not value[1] or not value[2]:
             return _("Not locked")
-        return super(LockedByValuespec, self).value_to_text(value)
+        return super().value_to_text(value)
 
 
 @host_attribute_registry.register
@@ -964,12 +999,12 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
                                 None,
                                 totext=_("Someone before 1.6"),
                             ),
-                            TextUnicode(
+                            TextInput(
                                 title=_("Created by"),
                                 default_value="unknown",
                             ),
                         ],
-                        default_value=config.user.id,
+                        default_value=lambda: user.id,
                     ),
                 ),
             ],
@@ -992,9 +1027,6 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
     @classmethod
     def sort_index(cls):
         return 190
-
-    def is_advanced(self) -> bool:
-        return True
 
     def help(self):
         return _("With the help of labels you can flexibly group your hosts in "

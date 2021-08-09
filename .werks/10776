@@ -6,7 +6,7 @@ Date: 1584972200
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Dynamic columns in views, like the "Metric History" or "Metric Forecast"
 Painter could only be sorted after the view was displayed. Now directly in

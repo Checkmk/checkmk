@@ -1,0 +1,17 @@
+Title: User access times are now recorded and displayed by default
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1601382302
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+The feature "Save last access times of users" of the GUI, which was
+disabled by default, is now always enabled. The time of the last access
+is stored for each user.
+
+The time of the last activity is shown on the users page for all admin
+users by default. In case you want to hide this information, you can
+remove the permission "Show last user activity" from your users.

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 384 384" style="enable-background:new 0 0 384 384;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#43A047;}
+	.st1{fill:#2D7E31;}
+	.st2{fill:#275129;}
+</style>
+<g id="Menu-Icons-EXPORT">
+	<g id="EXPORT" transform="translate(-514.000000, -541.000000)">
+		<g id="other-operating-system" transform="translate(514.000000, 541.000000)">
+			<path id="Path" class="st0" d="M0,42.7C0,19.2,19.2,0,42.7,0h298.7C364.8,0,384,19.2,384,42.7v298.7c0,23.5-19.2,42.7-42.7,42.7
+				H42.7C19.2,384,0,364.8,0,341.3V42.7z"/>
+			<polygon id="Path_1_" class="st1" points="149.3,250.7 149.3,106.7 170.7,106.7 170.7,218.7 283.7,171.7 292.3,190.9 			"/>
+			<path id="Shape" class="st2" d="M192,106.7c0,18.1-13.9,32-32,32s-32-13.9-32-32s13.9-32,32-32S192,88.5,192,106.7z M320,181.3
+				c0,18.1-13.9,32-32,32s-32-13.9-32-32s13.9-32,32-32S320,163.2,320,181.3z M213.3,234.7c0,29.9-23.5,53.3-53.3,53.3
+				s-53.3-23.5-53.3-53.3s23.5-53.3,53.3-53.3S213.3,204.8,213.3,234.7z"/>
+		</g>
+	</g>
+</g>
+</svg>

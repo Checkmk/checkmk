@@ -1,0 +1,14 @@
+Title: docker_container_cpu check accepts cgroup v2 values
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1613572324
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+Before this werk, the check crashed with `KeyError (percpu_usage)` on
+hosts with cgroups v2 enabled
+

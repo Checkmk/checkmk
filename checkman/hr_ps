@@ -16,7 +16,7 @@ description:
 item:
  A user defined name which must be unique.
 
-inventory:
+discovery:
  One service is created for each user defined name.
  Within the discovery rule {Process discovery (only SNMP)} you can specify
  which processes are taken into account.

@@ -8,7 +8,7 @@ description:
  This service monitors the number of operations per second on a single node.
  Levels can be configured in the WATO rule "Couchbase Operations".
 
-inventory:
+discovery:
  One service is created for each node.
 
 item:

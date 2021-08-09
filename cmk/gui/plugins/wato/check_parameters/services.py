@@ -5,23 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+    RulespecGroupCheckParametersDiscovery,
+    UserIconOrAction,
+)
 from cmk.gui.valuespec import (
     Dictionary,
     DropdownChoice,
     ListOf,
     ListOfStrings,
     MonitoringState,
-    TextAscii,
+    TextInput,
     Tuple,
-)
-
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
-    RulespecGroupCheckParametersDiscovery,
-    HostRulespec,
-    UserIconOrAction,
 )
 
 
@@ -77,7 +76,7 @@ rulespec_registry.register(
 
 
 def _item_spec_services():
-    return TextAscii(title=_("Name of the service"),
+    return TextInput(title=_("Name of the service"),
                      help=_("Please Please note, that the agent replaces spaces in "
                             "the service names with underscores. If you are unsure about the "
                             "correct spelling of the name then please look at the output of "

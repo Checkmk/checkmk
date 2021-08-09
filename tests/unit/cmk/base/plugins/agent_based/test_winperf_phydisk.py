@@ -4,16 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import MutableMapping
+import pytest
 
-import pytest  # type: ignore[import]
+from tests.testlib import get_value_store_fixture
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    IgnoreResultsError,
-    Metric,
-    type_defs,
-)
 from cmk.base.plugins.agent_based import winperf_phydisk
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, type_defs
+
+value_store_fixture = get_value_store_fixture(winperf_phydisk)
 
 STRING_TABLE = [
     ['1435670669.29', '234', '2', '3'],
@@ -66,13 +64,6 @@ DISK_WO_FREQUENCY = {
 }
 DISK = DISK_WO_FREQUENCY.copy()
 DISK['frequency'] = 2
-
-
-@pytest.fixture(name="value_store")
-def value_store_fixture(monkeypatch):
-    value_store: MutableMapping = {}
-    monkeypatch.setattr(winperf_phydisk, 'get_value_store', lambda: value_store)
-    yield value_store
 
 
 def _increment_time_and_frequency(disk):
@@ -143,14 +134,14 @@ def _test_check_winperf_phydisk(item, section_1, section_2, check_func):
     with pytest.raises(IgnoreResultsError):
         list(check_func(
             item,
-            type_defs.Parameters({}),
+            {},
             section_1,
         ))
 
     # second call: get values
     check_results = list(check_func(
         item,
-        type_defs.Parameters({}),
+        {},
         section_2,
     ))
 

@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    TextAscii,
-    Transform,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput, Transform
 
 
 def _item_spec_plugs():
-    return TextAscii(
+    return TextInput(
         title=_("Plug item number or name"),
         help=
         _("Whether you need the number or the name depends on the check. Just take a look to the service description."
@@ -64,5 +58,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         item_spec=_item_spec_plugs,
         parameter_valuespec=_parameter_valuespec_plugs,
-        title=lambda: _("State of PDU Plugs"),
+        title=lambda: _("PDU Plug state"),
     ))

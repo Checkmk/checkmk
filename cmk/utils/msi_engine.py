@@ -12,12 +12,12 @@
 # TODO: The refactoring is mandatory.
 
 import os
-from pathlib import Path
 import re
 import shutil
 import sys
 import tempfile
 import uuid
+from pathlib import Path
 
 from cmk.utils import msi_patch
 
@@ -36,12 +36,12 @@ def bail_out(text):
 
 def msi_file_table():
     # we have to sort the table, the table is created by MSI installer
-    return ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.8.zip"]
+    return ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.8.cab"]
 
 
 def msi_component_table():
     # we have to sort the table, the table is created by MSI installer too
-    return ["check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.8.zip"]
+    return ["check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.8.cab"]
 
 
 def remove_cab(path_to_msibuild, msi):
@@ -144,7 +144,7 @@ def patch_msi_properties(dir_name, product_code, version_build):
         for line in lines_property_idt[3:]:
             tokens = line.split("\t")
             if tokens[0] == "ProductName":
-                tokens[1] = "Check MK Agent 1.7\r\n"
+                tokens[1] = "Check MK Agent 2.0\r\n"
             # The upgrade code defines the product family. Do not change it!
             #    elif tokens[0] == "UpgradeCode":
             #        tokens[1] = upgrade_code
@@ -181,6 +181,7 @@ def generate_product_version(version, revision_text):
     major, minor, build = '1', '0', '0'
     try:
         major, minor, build = [x.lstrip("0") for x in version.split("-")[0].split(".")[:3]]
+        minor = '0' if minor == '' else minor
         build = '0' if build == '' else build
         if len(major) > 3:
             # Looks like a daily build.. 2015.03.05
@@ -299,7 +300,7 @@ def msi_update_core(msi_file_name, src_dir, revision_text, version, package_code
         if src_dir != file_dir:
             shutil.copy(src_dir + "/checkmk.dat", file_dir + "/checkmk.dat")
         shutil.copy(src_dir + "/plugins.cap", file_dir + "/plugins_cap")
-        shutil.copy(src_dir + "/python-3.8.zip", file_dir + "/python_3.8.zip")
+        shutil.copy(src_dir + "/python-3.8.cab", file_dir + "/python_3.8.cab")
 
         patch_msi_files(work_dir, new_version_build)
         patch_msi_components(work_dir)

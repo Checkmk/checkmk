@@ -4,17 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import time
-import json
 import ast
-import re
+import json
 import logging
+import os
+import re
+import time
 import urllib.parse
 
-from bs4 import BeautifulSoup  # type: ignore[import]
-
 import requests
+from bs4 import BeautifulSoup  # type: ignore[import]
 
 
 class APIError(Exception):
@@ -201,34 +200,14 @@ class CMKWebSession:
         assert "sidebar" in r.text
         assert "dashboard.py" in r.text
 
-    def set_language(self, lang):
-        lang = "" if lang == "en" else lang
+    def enforce_non_localized_gui(self):
+        all_users = self.get_all_users()
+        all_users["cmkadmin"]["language"] = "en"
+        self.edit_htpasswd_users(all_users)
 
-        profile_page = self.get("user_profile.py").text
-        assert "name=\"language\"" in profile_page
-
-        if lang:
-            assert "value=\"" + lang + "\"" in profile_page
-
-        r = self.post(
-            "user_profile.py",
-            data={
-                "filled_in": "profile",
-                "ua_start_url_use": "0",
-                "ua_ui_theme_use": "0",
-                # Encoded None using DropdownChoice.option_id
-                "ua_ui_sidebar_position": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
-                "ua_icons_per_item": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
-                "ua_ui_basic_advanced_mode": "dc937b59892604f5a86ac96936cd7ff09e25f18ae6b758e8014a24c7fa039e91",
-                "language": lang,
-                "_save": "Save",
-            },
-            add_transid=True)
-
-        if lang == "":
-            assert "Successfully updated" in r.text, "Body: %s" % r.text
-        else:
-            assert "Benutzerprofil erfolgreich aktualisiert" in r.text, "Body: %s" % r.text
+        # Verify the language is as expected now
+        r = self.get("user_profile.py")
+        assert "Edit profile" in r.text, "Body: %s" % r.text
 
     def logout(self):
         r = self.get("logout.py", allow_redirect_to_login=True)
@@ -749,6 +728,8 @@ class CMKWebSession:
         return result
 
     def activate_changes(self, mode=None, allow_foreign_changes=None, relevant_sites=None):
+        self.site.ensure_running()
+
         request = {}
         if not relevant_sites:
             relevant_sites = [self.site]
@@ -763,6 +744,15 @@ class CMKWebSession:
         logger.debug("Getting old program start")
         for site in relevant_sites:
             old_t[site.id] = site.live.query_value("GET status\nColumns: program_start\n")
+
+        logger.debug("Read replication changes of sites")
+        import glob
+        base_dir = self.site.path("var/check_mk/wato")
+        for site_changes_path in glob.glob(base_dir + "/replication_*"):
+            logger.debug("Replication changes of site: %r", site_changes_path)
+            if os.path.exists(site_changes_path):
+                logger.debug(
+                    self.site.read_file(base_dir + "/" + os.path.basename(site_changes_path)))
 
         logger.debug("Start activate changes: %r", request)
         time_started = time.time()
@@ -784,6 +774,8 @@ class CMKWebSession:
         for site in relevant_sites:
             if site.id in involved_sites:
                 site.wait_for_core_reloaded(old_t[site.id])
+
+        self.site.ensure_running()
 
     def get_regular_graph(self, hostname, service_description, graph_index, expect_error=False):
         result = self._api_request(
@@ -863,15 +855,28 @@ class CMKOpenAPISession:
         secret = _get_automation_secret(self.site).strip()
         return f"Bearer automation {secret}"
 
-    def request(self, method, endpoint, header_params=None, query_params=None, request_params=None):
+    def request(self,
+                method,
+                endpoint,
+                header_params=None,
+                query_params=None,
+                request_params=None,
+                assertion=True):
         url = f"{self.base_url}/{endpoint}"
-        return self.session.request(method,
-                                    url,
-                                    headers=header_params,
-                                    data=query_params,
-                                    json=request_params)
+        try:
+            resp = self.session.request(method,
+                                        url,
+                                        headers=header_params,
+                                        data=query_params,
+                                        json=request_params)
+            resp.raise_for_status()
+            return resp
+        except Exception:
+            if assertion:
+                assert False, f"REST API call failed: {resp.json()}"
+            raise
 
-    def add_host(self, host_name, folder="root", nodes=None, attributes=None):
+    def add_host(self, host_name, folder="/", nodes=None, attributes=None, assertion=True):
         request_params = {
             "folder": folder,
             "host_name": host_name,
@@ -881,49 +886,67 @@ class CMKOpenAPISession:
         if attributes:
             request_params["attributes"] = attributes
 
-        resp = self.request("post",
-                            "domain-types/host_config/collections/all",
-                            request_params=request_params)
-        try:
-            resp.raise_for_status()
-        except Exception:
-            print(resp.json())
-            raise
+        resp = self.request(
+            "post",
+            "domain-types/host_config/collections/all",
+            request_params=request_params,
+            assertion=assertion,
+        )
 
         return resp.json()
 
-    def activate_changes_async(self):
-        resp = self.request("post", "domain-types/activation_run/actions/activate-changes/invoke")
-        resp.raise_for_status()
+    def activate_changes_async(self, assertion=True):
+        resp = self.request(
+            "post",
+            "domain-types/activation_run/actions/activate-changes/invoke",
+            assertion=assertion,
+        )
         return resp.json()
 
-    def activate_changes_sync(self):
-        resp = self.request("post", "domain-types/activation_run/actions/activate-changes/invoke")
-        resp.raise_for_status()
+    def activate_changes_sync(self, assertion=True):
+        resp = self.request(
+            "post",
+            "domain-types/activation_run/actions/activate-changes/invoke",
+            assertion=assertion,
+        )
         activation_id = resp.json()["id"]
-        self.request("get",
-                     f"objects/activation_run/{activation_id}/actions/wait-for-completion/invoke")
+        self.request(
+            "get",
+            f"objects/activation_run/{activation_id}/actions/wait-for-completion/invoke",
+            assertion=assertion,
+        )
 
-    def get_baking_status(self):
-        return self.request("get", "domain-types/agent/actions/baking_status").json()
+    def get_baking_status(self, assertion=True):
+        return self.request(
+            "get",
+            "domain-types/agent/actions/baking_status",
+            assertion=assertion,
+        ).json()
 
-    def bake_agents(self):
-        resp = self.request("post", "domain-types/agent/actions/bake")
-        resp.raise_for_status()
+    def bake_agents(self, assertion=True):
+        resp = self.request(
+            "post",
+            "domain-types/agent/actions/bake",
+            assertion=assertion,
+        )
         return resp
 
-    def bake_and_sign_agents(self, key_id, passphrase):
+    def bake_and_sign_agents(self, key_id, passphrase, assertion=True):
         request_params = {"key_id": key_id, "passphrase": passphrase}
-        resp = self.request("post",
-                            "domain-types/agent/actions/bake_and_sign",
-                            request_params=request_params)
-        resp.raise_for_status()
+        resp = self.request(
+            "post",
+            "domain-types/agent/actions/bake_and_sign",
+            request_params=request_params,
+            assertion=assertion,
+        )
         return resp
 
-    def sign_agents(self, key_id, passphrase):
+    def sign_agents(self, key_id, passphrase, assertion=True):
         request_params = {"key_id": key_id, "passphrase": passphrase}
-        resp = self.request("post",
-                            "domain-types/agent/actions/sign",
-                            request_params=request_params)
-        resp.raise_for_status()
+        resp = self.request(
+            "post",
+            "domain-types/agent/actions/sign",
+            request_params=request_params,
+            assertion=assertion,
+        )
         return resp

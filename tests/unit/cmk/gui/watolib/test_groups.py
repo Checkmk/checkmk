@@ -4,16 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from werkzeug.test import create_environ
+import pytest
 
 import cmk.utils.paths
+
 import cmk.gui.groups as gui_groups
 import cmk.gui.watolib.groups as groups
-import cmk.gui.htmllib as htmllib
-from cmk.gui.http import Request
-from cmk.gui.globals import AppContext, RequestContext
-from testlib.utils import DummyApplication
+from cmk.gui.utils.script_helpers import application_and_request_context
 
 
 @pytest.fixture(autouse=True)
@@ -28,9 +25,7 @@ def patch_config_paths(monkeypatch, tmp_path):
 
 
 def test_load_group_information_empty(tmp_path):
-    environ = dict(create_environ(), REQUEST_URI='')
-    with AppContext(DummyApplication(environ, None)), \
-         RequestContext(htmllib.html(Request(environ))):
+    with application_and_request_context():
         assert groups.load_contact_group_information() == {}
         assert gui_groups.load_host_group_information() == {}
         assert gui_groups.load_service_group_information() == {}
@@ -75,9 +70,7 @@ multisite_contactgroups = {
 }
 """)
 
-    environ = dict(create_environ(), REQUEST_URI='')
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(htmllib.html(Request(environ))):
+    with application_and_request_context():
         assert groups.load_group_information() == {
             'contact': {
                 'all': {

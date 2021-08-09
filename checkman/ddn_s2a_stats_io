@@ -9,6 +9,6 @@ description:
 item:
  The port number or "Total"
 
-inventory:
+discovery:
  One service is created for each FC port and
  one service is created for the total IO.

@@ -5,20 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
-    Dictionary,
-    Float,
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Age, Dictionary, Float, Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_jira_custom_svc():
@@ -120,7 +112,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="jira_custom_svc",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextAscii(title=_("Custom service name"),),
+        item_spec=lambda: TextInput(title=_("Custom service name"),),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_jira_custom_svc,
         title=lambda: _("Jira custom service"),

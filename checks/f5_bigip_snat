@@ -4,19 +4,33 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 
 def parse_f5_bigip_snat(info):
     snats = {}
     for line in info:
         name = line[0]
-        snats.setdefault(name, {})
-        snats[name].setdefault("if_in_pkts", []).append(int(line[1]))
-        snats[name].setdefault("if_out_pkts", []).append(int(line[2]))
-        snats[name].setdefault("if_in_octets", []).append(int(line[3]))
-        snats[name].setdefault("if_out_octets", []).append(int(line[4]))
-        snats[name].setdefault("connections_rate", []).append(int(line[5]))
-        snats[name].setdefault("connections", []).append(int(line[6]))
-    return snats
+        snat_info = snats.setdefault(name, {})
+        for index, stat in enumerate((
+                "if_in_pkts",
+                "if_out_pkts",
+                "if_in_octets",
+                "if_out_octets",
+                "connections_rate",
+                "connections",
+        ),
+                                     start=1):
+            try:
+                stat_value = int(line[index])
+            except ValueError:
+                continue
+            snat_info.setdefault(stat, []).append(stat_value)
+    return {name: stats for name, stats in snats.items() if stats}
 
 
 def inventory_f5_bigip_snat(parsed):
@@ -39,6 +53,8 @@ def check_f5_bigip_snat(item, params, parsed):
                 "connections_rate",
         ]:
             summed_values.setdefault(what, 0)
+            if what not in snat:
+                continue
             for idx, entry in enumerate(snat[what]):
                 rate = get_rate("%s.%s" % (what, idx), now, entry)
                 summed_values[what] += rate
@@ -103,5 +119,4 @@ check_info["f5_bigip_snat"] = {
             "8",  #ltmSnatStatClientCurConns
         ]),
     "snmp_scan_function": scan_f5_bigip,
-    "includes": ["f5_bigip.include"],
 }

@@ -16,7 +16,8 @@ from typing import Any, AnyStr, Dict, Iterable, List, Optional, Tuple, Union
 from cmk.utils.log import VERBOSE
 from cmk.utils.render import date_and_time
 
-from .actions import quote_shell_string
+from .config import Config
+from .event import Event
 from .query import QueryGET
 from .settings import Settings
 
@@ -24,7 +25,7 @@ from .settings import Settings
 
 
 class History:
-    def __init__(self, settings: Settings, config: Dict[str, Any], logger: Logger,
+    def __init__(self, settings: Settings, config: Config, logger: Logger,
                  event_columns: List[Tuple[str, Any]], history_columns: List[Tuple[str,
                                                                                    Any]]) -> None:
         super().__init__()
@@ -38,7 +39,7 @@ class History:
         self._active_history_period = ActiveHistoryPeriod()
         self.reload_configuration(config)
 
-    def reload_configuration(self, config: Dict[str, Any]) -> None:
+    def reload_configuration(self, config: Config) -> None:
         self._config = config
         if self._config['archive_mode'] == 'mongodb':
             _reload_configuration_mongodb(self)
@@ -51,7 +52,7 @@ class History:
         else:
             _flush_files(self)
 
-    def add(self, event: Dict[str, Any], what: str, who: str = "", addinfo: str = "") -> None:
+    def add(self, event: Event, what: str, who: str = "", addinfo: str = "") -> None:
         if self._config['archive_mode'] == 'mongodb':
             _add_mongodb(self, event, what, who, addinfo)
         else:
@@ -83,10 +84,11 @@ class History:
 #   '----------------------------------------------------------------------'
 
 try:
-    from pymongo.connection import Connection  # type: ignore[import]
-    from pymongo import DESCENDING  # type: ignore[import]
-    from pymongo.errors import OperationFailure  # type: ignore[import]
     import datetime
+
+    from pymongo import DESCENDING  # type: ignore[import]
+    from pymongo.connection import Connection  # type: ignore[import]
+    from pymongo.errors import OperationFailure  # type: ignore[import]
 except ImportError:
     Connection = None
 
@@ -146,8 +148,7 @@ def _update_mongodb_indexes(settings: Settings, mongodb: MongoDB) -> None:
         mongodb.db.ec_archive.ensure_index([('time', DESCENDING)])
 
 
-def _update_mongodb_history_lifetime(settings: Settings, config: Dict[str, Any],
-                                     mongodb: MongoDB) -> None:
+def _update_mongodb_history_lifetime(settings: Settings, config: Config, mongodb: MongoDB) -> None:
     if not mongodb.connection:
         _connect_mongodb(settings, mongodb)
 
@@ -179,8 +180,7 @@ def _mongodb_next_id(mongodb: MongoDB, name: str, first_id: int = 0) -> int:
     return ret['seq']
 
 
-def _add_mongodb(history: History, event: Dict[str, Any], what: str, who: str,
-                 addinfo: str) -> None:
+def _add_mongodb(history: History, event: Event, what: str, who: str, addinfo: str) -> None:
     _log_event(history._config, history._logger, event, what, who, addinfo)
     if not history._mongodb.connection:
         _connect_mongodb(history._settings, history._mongodb)
@@ -200,7 +200,7 @@ def _add_mongodb(history: History, event: Dict[str, Any], what: str, who: str,
     })
 
 
-def _log_event(config: Dict[str, Any], logger: Logger, event: Dict[str, Any], what: str, who: str,
+def _log_event(config: Config, logger: Logger, event: Event, what: str, who: str,
                addinfo: str) -> None:
     if config['debug_rules']:
         logger.info("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
@@ -309,7 +309,7 @@ def _housekeeping_files(history: History) -> None:
 # 2: user who initiated the action (for GUI actions)
 # 3: additional information about the action
 # 4-oo: StatusTableEvents.columns
-def _add_files(history: History, event: Dict[str, Any], what: str, who: str, addinfo: str) -> None:
+def _add_files(history: History, event: Event, what: str, who: str, addinfo: str) -> None:
     _log_event(history._config, history._logger, event, what, who, addinfo)
     with history._lock:
         columns = [
@@ -352,8 +352,7 @@ class ActiveHistoryPeriod:
 
 # Get file object to current log file, handle also
 # history and lifetime limit.
-def get_logfile(config: Dict[str, Any], log_dir: Path,
-                active_history_period: ActiveHistoryPeriod) -> Path:
+def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHistoryPeriod) -> Path:
     log_dir.mkdir(parents=True, exist_ok=True)
     # Log into file starting at current history period,
     # but: if a newer logfile exists, use that one. This
@@ -377,7 +376,7 @@ def get_logfile(config: Dict[str, Any], log_dir: Path,
 
 # Return timestamp of the beginning of the current history
 # period.
-def _current_history_period(config: Dict[str, Any]) -> int:
+def _current_history_period(config: Config) -> int:
     lt = time.localtime()
     ts = time.mktime(
         time.struct_time((
@@ -397,7 +396,7 @@ def _current_history_period(config: Dict[str, Any]) -> int:
 
 
 # Delete old log files
-def _expire_logfiles(settings: Settings, config: Dict[str, Any], logger: Logger,
+def _expire_logfiles(settings: Settings, config: Config, logger: Logger,
                      lock_history: threading.Lock, flush: bool) -> None:
     with lock_history:
         try:
@@ -583,10 +582,8 @@ def _convert_history_line(history: History, values: List[Any]) -> None:
 def _unsplit(s: Any) -> Any:
     if not isinstance(s, str):
         return s
-
     if s.startswith('\2'):
         return None  # \2 is the designator for None
-
     if s.startswith('\1'):
         if len(s) == 1:
             return ()
@@ -611,7 +608,7 @@ def _get_logfile_timespan(path: Path) -> Tuple[float, float]:
 # encoded history files, see e.g. quote_tab. In theory this shouldn't be
 # necessary, because there are a bunch of bytes which are not contained in any
 # valid UTF-8 string, but following Murphy's Law, those are not used in
-# Check_MK. To keep backwards compatibility with old history files, we have no
+# Checkmk. To keep backwards compatibility with old history files, we have no
 # choice and continue to do it wrong... :-/
 def scrub_string(s: AnyStr) -> AnyStr:
     if isinstance(s, bytes):
@@ -624,3 +621,7 @@ def scrub_string(s: AnyStr) -> AnyStr:
 _scrub_string_str_table = b''.join(
     b' ' if x == ord(b'\t') else struct.Struct(">B").pack(x) for x in range(256))
 _scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}
+
+
+def quote_shell_string(s: str) -> str:
+    return "'" + s.replace("'", "'\"'\"'") + "'"

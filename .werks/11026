@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 If set, timespecific parameters of manual checks had no impact. From now on
 such parameters are taken into account.

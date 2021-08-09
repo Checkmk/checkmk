@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_memory_utilization_multiitem():
@@ -43,7 +37,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="memory_utilization_multiitem",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("Component"), allow_empty=False),
+        item_spec=lambda: TextInput(title=_("Component"), allow_empty=False),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_memory_utilization_multiitem,
         title=lambda: _("Device Component Memory Utilization"),

@@ -10,7 +10,7 @@ description:
  will be compared to this average value. Thresholds can be set on how much higher
  the last recent growth can be compared to the average growth.
 
-inventory:
+discovery:
  One service is created for each indice.
 
 item:

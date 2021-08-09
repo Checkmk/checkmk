@@ -10,29 +10,20 @@ import time
 import cmk.utils.store as store
 
 import cmk.gui.userdb as userdb
-import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import (
-    PageMenu,
-    make_simple_form_page_menu,
-)
-
+from cmk.gui.globals import config, html, user
+from cmk.gui.i18n import _
+from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
+from cmk.gui.plugins.wato import ActionResult, flash, mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.valuespec import (
-    Tuple,
-    FixedValue,
+    AbsoluteDate,
     Alternative,
+    Dictionary,
+    FixedValue,
     ListOf,
     TextAreaUnicode,
-    Dictionary,
-    AbsoluteDate,
-)
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
+    Tuple,
 )
 
 
@@ -47,27 +38,26 @@ class ModeManageReadOnly(WatoMode):
         return ["set_read_only"]
 
     def __init__(self):
-        super(ModeManageReadOnly, self).__init__()
+        super().__init__()
         self._settings = config.wato_read_only
 
     def title(self):
         return _("Manage configuration read only mode")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="read_only",
-            button_name="_save",
-            add_abort_link=False,
-        )
+        return make_simple_form_page_menu(_("Mode"),
+                                          breadcrumb,
+                                          form_name="read_only",
+                                          button_name="_save")
 
-    def action(self):
+    def action(self) -> ActionResult:
         settings = self._vs().from_html_vars("_read_only")
         self._vs().validate_value(settings, "_read_only")
         self._settings = settings
 
         self._save()
-        return "read_only", _("Saved read only settings")
+        flash(_("Saved read only settings"))
+        return redirect(mode_url("read_only"))
 
     def _save(self):
         store.save_to_mk_file(watolib.multisite_dir() + "read_only.mk",
@@ -123,7 +113,7 @@ class ModeManageReadOnly(WatoMode):
                                    help=_("Users listed here are still allowed to modify things."),
                                    movable=False,
                                    add_label=_("Add user"),
-                                   default_value=[config.user.id],
+                                   default_value=[user.id],
                                )),
                               ("message", TextAreaUnicode(
                                   title=_("Message"),

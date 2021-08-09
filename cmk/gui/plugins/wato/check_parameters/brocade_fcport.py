@@ -5,6 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    HostRulespec,
+    rulespec_registry,
+    RulespecGroupCheckParametersDiscovery,
+    RulespecGroupCheckParametersStorage,
+)
 from cmk.gui.valuespec import (
     Alternative,
     Checkbox,
@@ -14,15 +21,8 @@ from cmk.gui.valuespec import (
     ListChoice,
     Optional,
     Percentage,
-    TextAscii,
+    TextInput,
     Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersDiscovery,
-    RulespecGroupCheckParametersStorage,
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    HostRulespec,
 )
 
 _brocade_fcport_adm_choices = [
@@ -122,7 +122,7 @@ rulespec_registry.register(
 
 
 def _item_spec_brocade_fcport():
-    return TextAscii(
+    return TextInput(
         title=_("port name"),
         help=_("The name of the switch port"),
     )

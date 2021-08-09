@@ -6,7 +6,7 @@ Date: 1594104291
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When calculating age of snapshots timezone was not taken into account. With
 this fix a time_reference will be stored together with the snapshot timestamps

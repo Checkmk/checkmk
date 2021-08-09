@@ -5,43 +5,43 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Iterable, NamedTuple, Set
+from typing import Collection, Iterable, Set, Tuple
 
 import cmk.utils.tty as tty
-from cmk.utils.exceptions import MKGeneralException, MKSNMPError
+from cmk.utils.exceptions import MKGeneralException, MKSNMPError, OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import SectionName, SNMPDetectBaseType
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
-from cmk.snmplib.type_defs import ABCSNMPBackend, SNMPDetectSpec
+from cmk.snmplib.type_defs import SNMPBackend
 from cmk.snmplib.utils import evaluate_snmp_detection
 
-SNMPScanSection = NamedTuple("SNMPScanSection", [
-    ("name", SectionName),
-    ("specs", SNMPDetectSpec),
-])
+SNMPScanSection = Tuple[SectionName, SNMPDetectBaseType]
 
 
 # gather auto_discovered check_plugin_names for this host
 def gather_available_raw_section_names(
-    sections: Iterable[SNMPScanSection],
-    on_error: str,
+    sections: Collection[SNMPScanSection],
     *,
-    binary_host: bool,
-    backend: ABCSNMPBackend,
+    on_error: OnError = OnError.RAISE,
+    missing_sys_description: bool,
+    backend: SNMPBackend,
 ) -> Set[SectionName]:
+    if not sections:
+        return set()
+
     try:
         return _snmp_scan(
             sections,
             on_error=on_error,
-            binary_host=binary_host,
+            missing_sys_description=missing_sys_description,
             backend=backend,
         )
     except Exception as e:
-        if on_error == "raise":
+        if on_error is OnError.RAISE:
             raise
-        if on_error == "warn":
+        if on_error is OnError.WARN:
             console.error("SNMP scan failed: %s\n" % e)
 
     return set()
@@ -53,19 +53,20 @@ OID_SYS_OBJ = ".1.3.6.1.2.1.1.2.0"
 
 def _snmp_scan(
     sections: Iterable[SNMPScanSection],
-    on_error: str = "ignore",
     *,
-    binary_host: bool,
-    backend: ABCSNMPBackend,
+    on_error: OnError,
+    missing_sys_description: bool,
+    backend: SNMPBackend,
 ) -> Set[SectionName]:
     snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
-    _snmp_scan_cache_description(
-        binary_host=binary_host,
-        backend=backend,
-    )
 
-    found_sections = _snmp_scan_find_sections(
+    if missing_sys_description:
+        _fake_description_object()
+    else:
+        _prefetch_description_object(backend=backend)
+
+    found_sections = _find_sections(
         sections,
         on_error=on_error,
         backend=backend,
@@ -75,42 +76,42 @@ def _snmp_scan(
     return found_sections
 
 
-def _snmp_scan_cache_description(
-    binary_host: bool,
+def _prefetch_description_object(
     *,
-    backend: ABCSNMPBackend,
+    backend: SNMPBackend,
 ) -> None:
-    if not binary_host:
-        for oid, name in [
-            (OID_SYS_DESCR, "system description"),
-            (OID_SYS_OBJ, "system object"),
-        ]:
-            value = snmp_modes.get_single_oid(
-                oid,
-                backend=backend,
-            )
-            if value is None:
-                raise MKSNMPError(
-                    "Cannot fetch %s OID %s. Please check your SNMP "
-                    "configuration. Possible reason might be: Wrong credentials, "
-                    "wrong SNMP version, Firewall rules, etc." % (name, oid),)
-    else:
-        # Fake OID values to prevent issues with a lot of scan functions
-        console.vverbose(
-            "       Skipping system description OID "
-            '(Set %s and %s to "")\n',
-            OID_SYS_DESCR,
-            OID_SYS_OBJ,
+    for oid, name in [
+        (OID_SYS_DESCR, "system description"),
+        (OID_SYS_OBJ, "system object"),
+    ]:
+        value = snmp_modes.get_single_oid(
+            oid,
+            backend=backend,
         )
-        snmp_cache.set_single_oid_cache(OID_SYS_DESCR, "")
-        snmp_cache.set_single_oid_cache(OID_SYS_OBJ, "")
+        if value is None:
+            raise MKSNMPError(
+                "Cannot fetch %s OID %s. Please check your SNMP "
+                "configuration. Possible reason might be: Wrong credentials, "
+                "wrong SNMP version, Firewall rules, etc." % (name, oid),)
 
 
-def _snmp_scan_find_sections(
+def _fake_description_object() -> None:
+    """Fake OID values to prevent issues with a lot of scan functions"""
+    console.vverbose(
+        "       Skipping system description OID "
+        '(Set %s and %s to "")\n',
+        OID_SYS_DESCR,
+        OID_SYS_OBJ,
+    )
+    snmp_cache.single_oid_cache()[OID_SYS_DESCR] = ""
+    snmp_cache.single_oid_cache()[OID_SYS_OBJ] = ""
+
+
+def _find_sections(
     sections: Iterable[SNMPScanSection],
     *,
-    on_error: str,
-    backend: ABCSNMPBackend,
+    on_error: OnError,
+    backend: SNMPBackend,
 ) -> Set[SectionName]:
     found_sections: Set[SectionName] = set()
     for name, specs in sections:
@@ -130,10 +131,10 @@ def _snmp_scan_find_sections(
             # should be raised through this
             raise
         except Exception:
-            if on_error == "warn":
-                console.warning("   Exception in SNMP scan function of %s" % name)
-            elif on_error == "raise":
+            if on_error is OnError.RAISE:
                 raise
+            if on_error is OnError.WARN:
+                console.warning("   Exception in SNMP scan function of %s" % name)
     return found_sections
 
 

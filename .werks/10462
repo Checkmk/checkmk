@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The backup target directory was not validated correctly which made it possible
 for an attacker that has access to WATO backups to compromise the site.

@@ -6,6 +6,6 @@ Date: 1576599019
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 New checks that show cpu utilization, memory utilization, PoE status of interfaces and PoE power consumption for TP-LINK switches.

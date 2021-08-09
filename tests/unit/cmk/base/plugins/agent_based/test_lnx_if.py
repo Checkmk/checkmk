@@ -6,23 +6,18 @@
 
 import copy
 from typing import Dict
-import pytest  # type: ignore[import]
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    IgnoreResultsError,
-    Result,
-    Service,
-    state,
-    type_defs,
-)
+
+import pytest
+
+from tests.testlib import get_value_store_fixture
+
 from cmk.base.plugins.agent_based import lnx_if
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, Service
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 from cmk.base.plugins.agent_based.utils import interfaces
 
-
-@pytest.fixture(name="value_store")
-def value_store_fixture(monkeypatch):
-    value_store: type_defs.ValueStore = {}
-    monkeypatch.setattr(interfaces, 'get_value_store', lambda: value_store)
-    yield value_store
+value_store_fixture = get_value_store_fixture(interfaces)
 
 
 @pytest.mark.parametrize('string_table, result', [
@@ -55,10 +50,27 @@ def value_store_fixture(monkeypatch):
             [u'wlp3s0', u'130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0'],
         ],
         [
+            '1', 'wlp3s0', 'wlp3s0', '6', 0, '2', 130923553, 217262, 16078, 0, 0, 0, 23586281,
+            142684, 0, 0, 0, 0, 0, '\xbb\xbb\xbb\xbb\xbb\xbb'
+        ],
+    ),
+    (
+        [
+            [u'[start_iplink]'],
+            [
+                u'1:', u'wlp3s0:', u'<BROADCAST,MULTICAST,UP,LOWER_UP>', u'mtu', u'1500', u'qdisc',
+                u'fq_codel', u'state', u'UP', u'mode', u'DORMANT', u'group', u'default', u'qlen',
+                u'1000'
+            ],
+            [u'link/ether', u'BB:BB:BB:BB:BB:BB', u'brd', u'BB:BB:BB:BB:BB:BB'],
+            [u'[end_iplink]'],
+            [u'wlp3s0', u'130923553 201184 0 0 0 0 0 16078 23586281 142684 0 0 0 0 0 0'],
+        ],
+        [
             '1', 'wlp3s0', 'wlp3s0', '6', 0, '1', 130923553, 217262, 16078, 0, 0, 0, 23586281,
             142684, 0, 0, 0, 0, 0, '\xbb\xbb\xbb\xbb\xbb\xbb'
         ],
-    )
+    ),
 ])
 def test_parse_lnx_if(string_table, result):
     assert lnx_if.parse_lnx_if(string_table)[0][0] == interfaces.Interface(*result)
@@ -67,12 +79,14 @@ def test_parse_lnx_if(string_table, result):
 INTERFACE = interfaces.Interface('1', 'wlp3s0', 'wlp3s0', '6', 0, '1', 130923553, 217262, 16078, 0,
                                  0, 0, 23586281, 142684, 0, 0, 0, 0, 0, '\xaa\xaa\xaa\xaa\xaa\xaa')
 
-PARAMS = type_defs.Parameters({
-    'errors': (0.01, 0.1),
+PARAMS = {
+    'errors': {
+        'both': ('abs', (10, 20))
+    },
     'speed': 10000000,
     'traffic': [('both', ('upper', ('perc', (5.0, 20.0))))],
     'state': ['1'],
-})
+}
 
 
 def test_check_lnx_if(monkeypatch, value_store):
@@ -193,29 +207,33 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '1',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
                 [
                     Result(state=state.OK, summary='[docker0]'),
-                    Result(state=state.OK, summary='Operational state: up'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
                     Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
-                    Result(state=state.OK, summary='speed unknown'),
+                    Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
             (
                 '4',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
                 [
                     Result(state=state.OK, summary='[wlp3s0]'),
-                    Result(state=state.OK, summary='Operational state: up'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
                     Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:BB'),
-                    Result(state=state.OK, summary='speed unknown')
+                    Result(state=state.OK, summary='Speed: unknown')
                 ],
             ),
         ],
@@ -294,29 +312,33 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '2',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
                 [
                     Result(state=state.OK, summary='[docker0]'),
-                    Result(state=state.OK, summary='Operational state: up'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
                     Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
-                    Result(state=state.OK, summary='speed unknown'),
+                    Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
             (
                 '4',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
                 [
                     Result(state=state.OK, summary='[wlp3s0]'),
-                    Result(state=state.OK, summary='Operational state: up'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
                     Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
-                    Result(state=state.OK, summary='speed unknown'),
+                    Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
         ],
@@ -395,29 +417,33 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '2',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
                 [
                     Result(state=state.OK, summary='[docker0]'),
-                    Result(state=state.OK, summary='Operational state: up'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
                     Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
-                    Result(state=state.OK, summary='speed unknown'),
+                    Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
             (
                 '4',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
                 [
                     Result(state=state.OK, summary='[wlp3s0]'),
-                    Result(state=state.OK, summary='Operational state: up'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
                     Result(state=state.OK, summary='MAC: AA:AA:AA:AA:AA:AA'),
-                    Result(state=state.OK, summary='speed unknown'),
+                    Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
         ],
@@ -459,41 +485,47 @@ def test_cluster_check_lnx_if(monkeypatch, value_store):
             (
                 '1',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 1000000000,
                     'state': ['1']
                 },
                 [
                     Result(state=state.OK, summary='[em0]'),
-                    Result(state=state.OK, summary='Operational state: up'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
                     Result(state=state.OK, summary='MAC: 00:AA:11:BB:22:CC'),
-                    Result(state=state.OK, summary='1 GBit/s'),
+                    Result(state=state.OK, summary='Speed: 1 GBit/s'),
                 ],
             ),
             (
                 '2',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
                 [
                     Result(state=state.OK, summary='[tun0]'),
-                    Result(state=state.OK, summary='Operational state: up'),
-                    Result(state=state.OK, summary='speed unknown'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
+                    Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
             (
                 '3',
                 {
-                    'errors': (0.01, 0.1),
+                    'errors': {
+                        'both': ('abs', (10, 20))
+                    },
                     'speed': 0,
                     'state': ['1']
                 },
                 [
                     Result(state=state.OK, summary='[tun1]'),
-                    Result(state=state.OK, summary='Operational state: up'),
-                    Result(state=state.OK, summary='speed unknown'),
+                    Result(state=state.OK, summary='(up)', details='Operational state: up'),
+                    Result(state=state.OK, summary='Speed: unknown'),
                 ],
             ),
         ],
@@ -507,30 +539,30 @@ def test_lnx_if_regression(
 ):
     section = lnx_if.parse_lnx_if(string_table)
 
-    assert list(
-        lnx_if.discover_lnx_if(
-            [type_defs.Parameters(interfaces.DISCOVERY_DEFAULT_PARAMETERS)],
-            section,
-        )) == discovery_results
+    assert list(lnx_if.discover_lnx_if(
+        [interfaces.DISCOVERY_DEFAULT_PARAMETERS],
+        section,
+    )) == discovery_results
 
     monkeypatch.setattr(interfaces, 'get_value_store', lambda: {})
     for item, par, res in items_params_results:
         assert list(lnx_if.check_lnx_if(
             item,
-            type_defs.Parameters(par),
+            par,
             section,
         )) == res
 
     node_name = 'node'
     for item, par, res in items_params_results:
-        assert list(
-            lnx_if.cluster_check_lnx_if(
-                item,
-                type_defs.Parameters(par),
-                {node_name: section},
-            )) == [
-                Result(
-                    state=res[0].state,
-                    summary=res[0].summary + ' on %s' % node_name,
-                ),
-            ] + res[1:]
+        assert list(lnx_if.cluster_check_lnx_if(
+            item,
+            par,
+            {node_name: section},
+        )) == [
+            Result(  # type: ignore[call-overload]
+                state=res[0].state,
+                summary=res[0].summary + ' on %s' % node_name if res[0].summary else None,
+                notice=res[0].summary + ' on %s' % node_name if not res[0].summary else None,
+                details=res[0].details + ' on %s' % node_name if res[0].details else None,
+            ),
+        ] + res[1:]

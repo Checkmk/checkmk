@@ -5,18 +5,14 @@
 
 #include "DowntimeOrComment.h"
 
-#include "MonitoringCore.h"
-
 // TODO(sp): Remove ugly cast.
-DowntimeOrComment::DowntimeOrComment(MonitoringCore *mc,
+DowntimeOrComment::DowntimeOrComment(host *hst, service *svc,
                                      nebstruct_downtime_struct *dt,
                                      unsigned long id)
     : _type(dt->downtime_type)
     , _is_service(dt->service_description != nullptr)
-    , _host(reinterpret_cast<host *>(mc->find_host(dt->host_name)))
-    , _service(_is_service ? reinterpret_cast<service *>(mc->find_service(
-                                 dt->host_name, dt->service_description))
-                           : nullptr)
+    , _host(hst)
+    , _service(svc)
     , _entry_time(dt->entry_time)
     , _author_name(dt->author_name)
     , _comment(dt->comment_data)
@@ -24,16 +20,17 @@ DowntimeOrComment::DowntimeOrComment(MonitoringCore *mc,
 
 DowntimeOrComment::~DowntimeOrComment() = default;
 
-Downtime::Downtime(MonitoringCore *mc, nebstruct_downtime_struct *dt)
-    : DowntimeOrComment(mc, dt, dt->downtime_id)
+Downtime::Downtime(host *hst, service *svc, nebstruct_downtime_struct *dt)
+    : DowntimeOrComment(hst, svc, dt, dt->downtime_id)
     , _start_time(dt->start_time)
     , _end_time(dt->end_time)
     , _fixed(dt->fixed)
-    , _duration(static_cast<int>(dt->duration))
-    , _triggered_by(static_cast<int>(dt->triggered_by)) {}
+    , _duration{dt->duration}
+    , _triggered_by{dt->triggered_by} {}
 
-Comment::Comment(MonitoringCore *mc, nebstruct_comment_struct *co)
-    : DowntimeOrComment(mc, reinterpret_cast<nebstruct_downtime_struct *>(co),
+Comment::Comment(host *hst, service *svc, nebstruct_comment_struct *co)
+    : DowntimeOrComment(hst, svc,
+                        reinterpret_cast<nebstruct_downtime_struct *>(co),
                         co->comment_id)
     , _expire_time(co->expire_time)
     , _persistent(co->persistent)

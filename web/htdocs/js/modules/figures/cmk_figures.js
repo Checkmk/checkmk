@@ -1,8 +1,9 @@
 import * as d3 from "d3";
 import * as crossfilter from "crossfilter2";
+import * as utils from "utils";
 
 // The FigureRegistry holds all figure class templates
-class FigureRegistry{
+class FigureRegistry {
     constructor() {
         this._figures = {};
     }
@@ -17,7 +18,6 @@ class FigureRegistry{
 }
 
 export let figure_registry = new FigureRegistry();
-
 
 // Data update scheduler
 // Receives one function pointer which is regularly called
@@ -34,7 +34,7 @@ class Scheduler {
         this._enabled = false;
         this._last_update = 0;
         this._suspend_updates_until = 0;
-        setInterval(()=>this._schedule(), 1000);
+        setInterval(() => this._schedule(), 1000);
     }
 
     get_update_interval() {
@@ -54,46 +54,44 @@ class Scheduler {
     }
 
     suspend_for(seconds) {
-        this._suspend_updates_until  = Math.floor(new Date().getTime()/1000) + seconds;
+        this._suspend_updates_until = Math.floor(new Date().getTime() / 1000) + seconds;
     }
 
     update_if_older_than(seconds) {
-        let now = Math.floor(new Date().getTime()/1000);
+        let now = Math.floor(new Date().getTime() / 1000);
         if (now > this._last_update + seconds) {
             this._scheduled_function();
-            let now = Math.floor(new Date().getTime()/1000);
+            let now = Math.floor(new Date().getTime() / 1000);
             this._last_update = now;
         }
     }
 
     force_update() {
         this._scheduled_function();
-        let now = Math.floor(new Date().getTime()/1000);
+        let now = Math.floor(new Date().getTime() / 1000);
         this._last_update = now;
     }
 
     _schedule() {
-        if (!this._enabled)
-            return;
-        let now = Math.floor(new Date().getTime()/1000);
-        if (now < this._suspend_updates_until)
-            return;
+        if (!this._enabled) return;
+        if (!utils.is_window_active()) return;
+        let now = Math.floor(new Date().getTime() / 1000);
+        if (now < this._suspend_updates_until) return;
         // This function is called every second. Add 0.5 seconds grace time
         // for function which expect an update every second
-        if (now + 0.5 > (this._last_update + this._update_interval)) {
+        if (now + 0.5 > this._last_update + this._update_interval) {
             this._last_update = now;
             this._scheduled_function();
         }
     }
 }
 
-
 // Allows scheduling of multiple url calls
 // Registered hooks will be call on receiving data
 export class MultiDataFetcher {
     constructor() {
         this.reset();
-        this.scheduler = new Scheduler(()=>this._schedule_operations(), 1);
+        this.scheduler = new Scheduler(() => this._schedule_operations(), 1);
     }
 
     reset() {
@@ -123,22 +121,22 @@ export class MultiDataFetcher {
     }
 
     add_fetch_operation(post_url, post_body, interval) {
-        if (this._fetch_operations[post_url] == undefined)
-            this._fetch_operations[post_url] = {};
+        if (this._fetch_operations[post_url] == undefined) this._fetch_operations[post_url] = {};
 
         this._fetch_operations[post_url][post_body] = this._default_operation_options(interval);
     }
 
     _default_operation_options(interval) {
         return {
-            active: true,      // May be used to temporarily disable the operation
-            last_update: 0,    // Last time the fetch operation was sent (not received)
+            active: true, // May be used to temporarily disable the operation
+            last_update: 0, // Last time the fetch operation was sent (not received)
             fetch_in_progress: false,
-            interval: interval
+            interval: interval,
         };
     }
 
     _schedule_operations() {
+        if (!utils.is_window_active()) return;
         for (let url_id in this._fetch_operations) {
             for (let body_id in this._fetch_operations[url_id]) {
                 this._process_operation(url_id, body_id);
@@ -147,53 +145,49 @@ export class MultiDataFetcher {
     }
 
     _process_operation(post_url, post_body) {
-        let now = Math.floor(new Date().getTime()/1000);
+        let now = Math.floor(new Date().getTime() / 1000);
         let operation = this._fetch_operations[post_url][post_body];
-        if (!operation.active || operation.fetch_in_progress)
-            return;
+        if (!operation.active || operation.fetch_in_progress) return;
 
-        if (operation.last_update + operation.interval > now)
-            return;
+        if (operation.last_update + operation.interval > now) return;
 
         operation.last_update = now;
         operation.fetch_in_progress = true;
         this._fetch(post_url, post_body);
     }
 
-
     _fetch(post_url, post_body) {
         // TODO: improve error handling, d3js supports promises
-        d3.json(encodeURI(post_url),
-            {
-                credentials: "include",
-                method: "POST",
-                body: post_body,
-                headers: {
-                    "Content-type": "application/x-www-form-urlencoded"
-                }
-            }
-        ).then(response=>this._fetch_callback(post_url, post_body, response));
+        d3.json(encodeURI(post_url), {
+            credentials: "include",
+            method: "POST",
+            body: post_body,
+            headers: {
+                "Content-type": "application/x-www-form-urlencoded",
+            },
+        }).then(response => this._fetch_callback(post_url, post_body, response));
     }
 
     _fetch_callback(post_url, post_body, api_response) {
         let response = api_response.result;
         let data = response.figure_response;
 
-        let now = Math.floor(new Date().getTime()/1000);
+        let now = Math.floor(new Date().getTime() / 1000);
 
-        if (this._fetch_operations[post_url] == undefined ||
-            this._fetch_operations[post_url][post_body] == undefined)
+        if (
+            this._fetch_operations[post_url] == undefined ||
+            this._fetch_operations[post_url][post_body] == undefined
+        )
             return;
-        this._fetch_operations[post_url][post_body].last_update  = now;
+        this._fetch_operations[post_url][post_body].last_update = now;
         this._fetch_operations[post_url][post_body].fetch_in_progress = false;
 
         // Inform subscribers
-        this._fetch_hooks[post_url][post_body].forEach(subscriber_func=>{
+        this._fetch_hooks[post_url][post_body].forEach(subscriber_func => {
             subscriber_func(data);
         });
     }
 }
-
 
 // Base class for all cmk_figure based figures
 // Introduces
@@ -207,18 +201,16 @@ export class FigureBase {
         return "figure_base_class";
     }
 
-    constructor(div_selector, fixed_size=null) {
-        this._div_selector = div_selector;                          // The main container
-        this._div_selection = d3.select(this._div_selector);  // The d3-seletion of the main container
+    constructor(div_selector, fixed_size = null) {
+        this._div_selector = div_selector; // The main container
+        this._div_selection = d3.select(this._div_selector); // The d3-seletion of the main container
 
-        this.svg = null;  // The svg representing the figure
+        this.svg = null; // The svg representing the figure
         this.plot = null; // The plot representing the drawing area, is shifted by margin
 
-        if (fixed_size !== null)
-            this._fixed_size = fixed_size;
-        else
-            this._fixed_size = null;
-        this.margin = { top: 10, right: 10, bottom: 10, left: 10 };
+        if (fixed_size !== null) this._fixed_size = fixed_size;
+        else this._fixed_size = null;
+        this.margin = {top: 10, right: 10, bottom: 10, left: 10};
 
         this._div_selection
             .classed(this.constructor.ident(), true)
@@ -239,9 +231,7 @@ export class FigureBase {
         // The preprocessor can convert arbitary api data, into a figure convenient format
         this._data_pre_processor_hooks = [];
         this._pre_render_hooks = [];
-        this._post_render_hooks= [];
-
-        this.scheduler = new Scheduler(()=>this._fetch_data(), this.get_update_interval());
+        this._post_render_hooks = [];
 
         // Post url and body for fetching the graph data
         this._post_url = "";
@@ -251,14 +241,14 @@ export class FigureBase {
         this._data = {data: [], plot_definitions: []};
 
         this._crossfilter = new crossfilter.default();
+
+        this.scheduler = new Scheduler(() => this._fetch_data(), this.get_update_interval());
     }
 
     initialize(with_debugging) {
-        if (with_debugging)
-            this._add_scheduler_debugging();
+        if (with_debugging) this._add_scheduler_debugging();
         this.show_loading_image();
     }
-
 
     add_plot_definition(plot_definition) {
         this._data.plot_definitions.push(plot_definition);
@@ -279,23 +269,26 @@ export class FigureBase {
         }
     }
 
-    resize () {
+    resize() {
         let new_size = this._fixed_size;
         if (new_size === null) {
             new_size = {
                 width: this._div_selection.node().parentNode.offsetWidth,
-                height: this._div_selection.node().parentNode.offsetHeight
+                height: this._div_selection.node().parentNode.offsetHeight,
             };
         }
         this.figure_size = new_size;
         this.plot_size = {
             width: this.figure_size.width - this.margin.left - this.margin.right,
-            height: this.figure_size.height - this.margin.top - this.margin.bottom
+            height: this.figure_size.height - this.margin.top - this.margin.bottom,
         };
     }
 
     show_loading_image() {
-        this._div_selection.selectAll("div.loading_img").data([null]).enter()
+        this._div_selection
+            .selectAll("div.loading_img")
+            .data([null])
+            .enter()
             .insert("div", ":first-child")
             .classed("loading_img", true);
     }
@@ -335,7 +328,7 @@ export class FigureBase {
         return 10;
     }
 
-    set_post_url_and_body(url, body="") {
+    set_post_url_and_body(url, body = "") {
         this._post_url = url;
         this._post_body = body;
     }
@@ -343,29 +336,27 @@ export class FigureBase {
     get_post_settings() {
         return {
             url: this._post_url,
-            body: this._post_body
+            body: this._post_body,
         };
     }
 
     _fetch_data() {
         let post_settings = this.get_post_settings();
 
-        if (!post_settings.url)
-            return;
+        if (!post_settings.url) return;
 
-        this._fetch_start = Math.floor(new Date().getTime()/1000);
-        d3.json(encodeURI(post_settings.url),
-            {
-                credentials: "include",
-                method: "POST",
-                body: post_settings.body,
-                headers: {
-                    "Content-type": "application/x-www-form-urlencoded"
-                }
-            }
-        ).then(json_data=>this._process_api_response(json_data)).catch(
-            ()=> {
-                this._show_error_info("Error fetching data");
+        this._fetch_start = Math.floor(new Date().getTime() / 1000);
+        d3.json(encodeURI(post_settings.url), {
+            credentials: "include",
+            method: "POST",
+            body: post_settings.body,
+            headers: {
+                "Content-type": "application/x-www-form-urlencoded",
+            },
+        })
+            .then(json_data => this._process_api_response(json_data))
+            .catch(e => {
+                this._show_error_info("Error fetching data", "error");
                 this.remove_loading_image();
             });
     }
@@ -379,7 +370,7 @@ export class FigureBase {
         //      },
         // }}
         if (api_response.result_code != 0) {
-            this._show_error_info(api_response.result);
+            this._show_error_info(api_response.result, api_response.severity);
             return;
         }
         this._clear_error_info();
@@ -388,34 +379,40 @@ export class FigureBase {
     }
 
     process_data(data) {
-        this._data_pre_processor_hooks.forEach(pre_processor_func=>{
+        this._data_pre_processor_hooks.forEach(pre_processor_func => {
             data = pre_processor_func(data);
         });
         this._call_pre_render_hooks(data);
         this.update_data(data);
         this.remove_loading_image();
-        this.update_gui(data);
+        this.update_gui();
         this._call_post_render_hooks(data);
     }
 
-    _show_error_info(error_info) {
-        let error = this._div_selection.selectAll("label#figure_error").data([null]);
-        error = error.enter().append("label")
+    _show_error_info(error_info, div_class) {
+        this._div_selection
+            .selectAll("div#figure_error")
+            .data([null])
+            .join("div")
             .attr("id", "figure_error")
-            .merge(error);
-        error.text(error_info);
+            .attr("class", div_class)
+            .text(error_info);
+        if (!this.svg) return;
+        this.svg.style("display", "none");
     }
 
     _clear_error_info() {
         this._div_selection.select("#figure_error").remove();
+        if (!this.svg) return;
+        this.svg.style("display", null);
     }
 
     _call_pre_render_hooks(data) {
-        this._pre_render_hooks.forEach(hook=>hook(data));
+        this._pre_render_hooks.forEach(hook => hook(data));
     }
 
     _call_post_render_hooks(data) {
-        this._post_render_hooks.forEach(hook=>hook(data));
+        this._post_render_hooks.forEach(hook => hook(data));
     }
 
     // Triggers data update mechanics in a figure, e.g. store some data from response
@@ -434,41 +431,117 @@ export class FigureBase {
     _add_scheduler_debugging() {
         let debugging = this._div_selection.append("div");
         // Stop button
-        debugging.append("input")
+        debugging
+            .append("input")
             .attr("type", "button")
             .attr("value", "Stop")
-            .on("click", ()=>this.scheduler.disable());
+            .on("click", () => this.scheduler.disable());
         // Start button
-        debugging.append("input")
+        debugging
+            .append("input")
             .attr("type", "button")
             .attr("value", "Start")
-            .on("click", ()=>this.scheduler.enable());
+            .on("click", () => this.scheduler.enable());
         // Suspend 5 seconds
-        debugging.append("input")
+        debugging
+            .append("input")
             .attr("type", "button")
             .attr("value", "Suspend 5 seconds")
-            .on("click", ()=>this.scheduler.suspend_for(5));
+            .on("click", () => this.scheduler.suspend_for(5));
         // Force update
-        debugging.append("input")
+        debugging
+            .append("input")
             .attr("type", "button")
             .attr("value", "Force")
-            .on("click", ()=>this.scheduler.force_update());
+            .on("click", () => this.scheduler.force_update());
     }
 
-    render_title(title) {
-        if (!this.svg)
-            return;
+    render_title(title, title_url) {
+        if (!this.svg) return;
+        title = title ? [{title: title, url: title_url}] : [];
 
-        this.svg.selectAll(".title").data([title])
-            .join("text")
-            .text(d=>d)
-            .attr("y", 18)
-            .attr("x", this.figure_size.width/2)
-            .attr("text-anchor", "middle")
+        let title_component = this.svg
+            .selectAll(".title")
+            .data(title)
+            .join("g")
             .classed("title", true);
+
+        let config = new URLSearchParams(this._post_body);
+        let settings = config.get("settings");
+        let highlight_container = false;
+        if (settings != undefined) highlight_container = JSON.parse(settings).show_title == true;
+
+        title_component
+            .selectAll("rect")
+            .data(d => [d])
+            .join("rect")
+            .attr("x", 0)
+            .attr("y", 0.5)
+            .attr("width", this.figure_size.width)
+            .attr("height", 22)
+            .classed(highlight_container ? "highlighted" : "", true);
+
+        if (title_url) {
+            title_component = title_component
+                .selectAll("a")
+                .data(d => [d])
+                .join("a")
+                .attr("xlink:href", d => d.url || "#");
+        }
+
+        title_component
+            .selectAll("text")
+            .data(d => [d])
+            .join("text")
+            .text(d => d.title)
+            .classed("title", true)
+            .attr("y", 16)
+            .attr("x", this.figure_size.width / 2)
+            .attr("text-anchor", "middle");
+    }
+
+    get_scale_render_function() {
+        if (this._data.plot_definitions.length > 0)
+            return plot_render_function(this._data.plot_definitions[0]);
+        return plot_render_function({});
     }
 }
 
+export function calculate_domain(data) {
+    const [lower, upper] = d3.extent(data, d => d.value);
+    return [lower + upper * (1 - 1 / 0.95), upper / 0.95];
+}
+
+export function adjust_domain(domain, metrics) {
+    let [dmin, dmax] = domain;
+
+    if (metrics.max != null && metrics.max <= dmax) dmax = metrics.max;
+    if (metrics.min != null && dmin <= metrics.min) dmin = metrics.min;
+    return [dmin, dmax];
+}
+
+export function clamp(value, domain) {
+    return Math.min(Math.max(value, domain[0]), domain[1]);
+}
+
+export function make_levels(domain, bounds) {
+    let [dmin, dmax] = domain;
+    if (bounds.warn == null || bounds.crit == null) return [];
+
+    if (bounds.warn >= dmax) bounds.warn = dmax;
+    if (bounds.crit >= dmax) bounds.crit = dmax;
+    if (bounds.warn <= dmin) dmin = bounds.warn;
+
+    return [
+        {from: bounds.crit, to: dmax, style: "metricstate state2"},
+        {
+            from: bounds.warn,
+            to: bounds.crit,
+            style: "metricstate state1",
+        },
+        {from: dmin, to: bounds.warn, style: "metricstate state0"},
+    ];
+}
 // Base class for dc.js based figures (using crossfilter)
 export class DCFigureBase extends FigureBase {
     constructor(div_selector, crossfilter, graph_group) {
@@ -488,11 +561,9 @@ export class DCFigureBase extends FigureBase {
 export class FigureTooltip {
     constructor(tooltip_selection) {
         this._tooltip = tooltip_selection;
-        this._tooltip.style("opacity", 0)
-            .style("position", "absolute")
-            .classed("tooltip", true);
-        this.figure_size = { width: null, height: null };
-        this.plot_size = { width: null, height: null };
+        this._tooltip.style("opacity", 0).style("position", "absolute").classed("tooltip", true);
+        this.figure_size = {width: null, height: null};
+        this.plot_size = {width: null, height: null};
     }
 
     update_sizes(figure_size, plot_size) {
@@ -500,32 +571,29 @@ export class FigureTooltip {
         this.plot_size = plot_size;
     }
 
-    update_position() {
-        let ev = (("sourceEvent" in d3.event) ? d3.event.sourceEvent : d3.event);
-        let tooltip_size = { width: this._tooltip.node().offsetWidth, height: this._tooltip.node().offsetHeight };
-        let render_to_the_left = this.figure_size.width - ev.layerX < tooltip_size.width + 20;
-        let render_upwards = this.figure_size.height - ev.layerY < tooltip_size.height - 16;
+    update_position(event) {
+        if (!this.active()) return;
+
+        let tooltip_size = {
+            width: this._tooltip.node().offsetWidth,
+            height: this._tooltip.node().offsetHeight,
+        };
+        const [x, y] = d3.pointer(event, event.target.closest("svg"));
+        let render_to_the_left = this.figure_size.width - x < tooltip_size.width + 20;
+        let render_upwards = this.figure_size.height - y < tooltip_size.height - 16;
 
         this._tooltip
-            .style("left", ()=>{
-                if (!render_to_the_left)
-                    return ev.layerX + 20 + "px";
-                return "auto";
+            .style("left", () => {
+                return !render_to_the_left ? x + 20 + "px" : "auto";
             })
-            .style("right", ()=>{
-                if (render_to_the_left)
-                    return this.plot_size.width - ev.layerX + 75 + "px";
-                return "auto";
+            .style("right", () => {
+                return render_to_the_left ? this.plot_size.width - x + 75 + "px" : "auto";
             })
-            .style("bottom", ()=>{
-                if (render_upwards)
-                    return "6px";
-                return "auto";
+            .style("bottom", () => {
+                return render_upwards ? "6px" : "auto";
             })
-            .style("top", ()=>{
-                if (!render_upwards)
-                    return ev.layerY - 20 + "px";
-                return "auto";
+            .style("top", () => {
+                return !render_upwards ? y - 20 + "px" : "auto";
             })
             .style("pointer-events", "none")
             .style("opacity", 1);
@@ -533,68 +601,218 @@ export class FigureTooltip {
 
     add_support(node) {
         let element = d3.select(node);
-        element.on("mouseover", ()=>this._mouseover())
-            .on("mouseleave", ()=>this._mouseleave())
-            .on("mousemove", ()=>this._mousemove());
+        element
+            .on("mouseover", event => this._mouseover(event))
+            .on("mouseleave", event => this._mouseleave(event))
+            .on("mousemove", event => this._mousemove(event));
     }
 
-    _mouseover(){
-        let node_data = d3.select(d3.event.target).datum();
-        if (node_data == undefined || node_data.tooltip == undefined)
-            return;
-
-        this._tooltip.style("opacity", 1);
+    activate() {
+        this._tooltip.style("display", null);
     }
 
-    _mousemove(){
-        let node_data = d3.select(d3.event.target).datum();
-        if (node_data == undefined || node_data.tooltip == undefined)
-            return;
+    deactivate() {
+        this._tooltip.style("display", "none");
+    }
+
+    active() {
+        return this._tooltip.style("display") != "none";
+    }
+
+    _mouseover(event) {
+        let node_data = d3.select(event.target).datum();
+        if (node_data == undefined || node_data.tooltip == undefined) return;
+        this.activate();
+    }
+
+    _mousemove(event) {
+        let node_data = d3.select(event.target).datum();
+        if (node_data == undefined || node_data.tooltip == undefined) return;
         this._tooltip.html(node_data.tooltip);
-        this.update_position();
+        this.update_position(event);
     }
 
-    _mouseleave(){
-        this._tooltip.style("opacity", 0);
+    _mouseleave(event) {
+        this.deactivate();
     }
 }
 
-export class FigureLegend {
-    constructor(legend_selection) {
-        this._legend = legend_selection;
-        this._legend.classed("legend", true);
+/**
+ * Component to draw a label at the bottom of the dashlet
+ * @param {FigureBase} figurebase - Draw label on this dashlet
+ * @param {Object} options - Configuration of the label
+ * @param {string} options.label - Text to draw in the label
+ * @param {string} options.css_class - Css classes to append to the label
+ * @param {boolean} options.visible - Whether to draw the label at all
+ */
+// Figure which inherited from FigureBase. Needs access to svg and size
+export function state_component(figurebase, options) {
+    // TODO: use figurebase.svg as first parameter and move size to options
+    if (!options.visible) {
+        figurebase.svg.selectAll(".state_component").remove();
+        return;
     }
+    //hard fix for the moment
+    let font_size = 14;
+    let state_component = figurebase.svg
+        .selectAll(".state_component")
+        .data([options])
+        .join("g")
+        .classed("state_component", true)
+        .attr(
+            "transform",
+            "translate(" +
+                (figurebase.figure_size.width - font_size * 8) / 2 +
+                ", " +
+                (figurebase.figure_size.height - font_size * 2) +
+                ")"
+        );
+    let label_box = state_component
+        .selectAll("rect.status_label")
+        .data(d => [d])
+        .join("rect")
+        .attr("class", d => `status_label ${d.css_class}`)
+        // status_label css class is also defined for WATO and not encapsulated
+        // it predifines other sizes, we use thus style instead of attr for size
+        // to override that
+        .style("width", font_size * 8)
+        .style("height", font_size * 1.5)
+        .attr("rx", 2);
 
-    _dragstart() {
-        this._dragged_object = d3.select(d3.event.sourceEvent.currentTarget);
-    }
+    let the_text = state_component
+        .selectAll("text")
+        .data(d => [d])
+        .join("text")
+        .attr("text-anchor", "middle")
+        .attr("dx", font_size * 4)
+        .attr("dy", font_size * 1.2)
+        .style("font-size", font_size + "px")
+        .style("fill", "black")
+        .style("font-weight", "bold")
+        .text(d => d.label);
+}
 
-    _drag() {
-        this._dragged_object.style("position", "absolute")
-            .style("top", d3.event.y + "px")
-            .style("right", -d3.event.x + "px");
-    }
+export function renderable_value(value, domain, plot) {
+    const formatter = plot_render_function(plot);
+    return {
+        ...split_unit(formatter(value.value)),
+        url: value.url || "",
+    };
+}
 
-    _dragend() {
-        this._dragged_object.remove();
+// Adhoc hack to extract the unit from a formatted string, which has units
+// Once we migrate metric system to the frontend drop this
+export function split_unit(formatted_value) {
+    if (!formatted_value) return {};
+    // Separated by space, most rendered quantities
+    let splitted_text = formatted_value.split(" ");
+    if (splitted_text.length == 2) return {value: splitted_text[0], unit: splitted_text[1]};
 
-        let point_in_rect = (r,p)=>((p.x > r.x1 && p.x < r.x2) && (p.y > r.y1 && p.y < r.y2));
-        let renderer_instances = d3.selectAll("svg.renderer");
-        let target_renderer = null;
-        renderer_instances.each((d, idx, nodes)=>{
-            let rect = nodes[idx].getBoundingClientRect();
-            let x1 = rect.left;
-            let x2 = x1 + rect.width;
-            let y1 = rect.top;
-            let y2 = y1 + rect.height;
-            if (point_in_rect({x1: x1, y1: y1, x2: x2, y2: y2}, {x: d3.event.sourceEvent.clientX, y: d3.event.sourceEvent.clientY}))
-                target_renderer = d;
-        });
+    // Percentages have no space
+    if (formatted_value.endsWith("%")) return {value: formatted_value.slice(0, -1), unit: "%"};
 
-        if (target_renderer != null && target_renderer != d3.event.subject.renderer)
-            d3.event.subject.migrate_to(target_renderer);
-    }
+    // It's a counter, unitless
+    return {value: formatted_value, unit: ""};
+}
 
+export function getIn(object, ...args) {
+    return args.reduce((obj, level) => obj && obj[level], object);
+}
+export function get_function(render_string) {
+    return new Function(`"use strict"; return ${render_string}`)();
+}
+export function plot_render_function(plot) {
+    let js_render = getIn(plot, "metric", "unit", "js_render");
+    if (js_render) return get_function(js_render);
+    return get_function(
+        "function(v) { return cmk.number_format.fmt_number_with_precision(v, 1000, 2, true); }"
+    );
+}
+export function svc_status_css(paint, params) {
+    let status_cls = getIn(params, "paint") === paint ? getIn(params, "css") || "" : "";
+    if (status_cls.endsWith("0") && getIn(params, "status") === "not_ok") return "";
+    return status_cls;
+}
 
+/**
+ * Draw an individual shape
+ *
+ * @callback pathCallback
+ * @param {d3.path} path - d3 path object to draw a shape with, it is filled with color to reflect the status.
+ */
 
+/**
+ * Component to draw a background color on a dashlet
+ * @param {d3.selection} selection - d3 object to draw on
+ * @param {Object} options - Configuration of the background
+ * @param {Object} options.size - When path_callback is not given draw a rect
+ * @param {number} options.size.height - Height of the background rect
+ * @param {number} options.size.width - Width of the background rect
+ * @param {pathCallback} options.path_callback - Draw individual shape instead of rect
+ * @param {string} options.css_class - Css classes to append to the background
+ * @param {boolean} options.visible - Whether to draw the background at all
+ */
+export function background_status_component(selection, options) {
+    const data = options.visible ? [null] : [];
+
+    let path_callback =
+        options.path_callback ||
+        function (path) {
+            path.rect(0, 0, options.size.width, options.size.height);
+        };
+
+    let background_path = d3.path();
+    path_callback(background_path);
+
+    selection
+        .selectAll("path.status_background")
+        .data(data)
+        .join(enter => enter.insert("path", ":first-child"))
+        .attr("class", `status_background ${options.css_class}`)
+        .attr("d", background_path.toString());
+}
+
+/**
+ * Component to draw a big centered value on a dashlet
+ * @param {d3.selection} selection - d3 object to draw on
+ * @param {Object} options - Configuration of the value
+ * @param {Object} options.value - Configuration of the text to draw
+ * @param {string} options.value.url - When given, add a link to the text
+ * @param {string} options.value.unit - Append a unit to the value. e.g. '%'
+ * @param {string} options.value.value - Text to display
+ * @param {Object} options.position - Where to draw the Text
+ * @param {number} options.position.x - X position relative to the center of the text
+ * @param {number} options.position.y - Y position relative to the baseline of the text
+ * @param {number} options.font_size - Size of the font, clamped to [12, 50]
+ * @param {boolean} options.visible - Whether to draw the value at all
+ */
+export function metric_value_component(selection, options) {
+    const font_size = clamp(options.font_size, [12, 50]);
+    const data = options.visible ? [options.value] : [];
+
+    let link = selection
+        .selectAll("a.single_value")
+        .data(data)
+        .join("a")
+        .classed("single_value", true)
+        .attr("xlink:href", d => d.url || null);
+    let text = link
+        .selectAll("text")
+        .data(d => [d])
+        .join("text")
+        .text(d => d.value)
+        .attr("x", options.position.x)
+        .attr("y", options.position.y)
+        .attr("text-anchor", "middle")
+        .style("font-weight", "bold")
+        .style("font-size", font_size + "px");
+
+    let unit = text
+        .selectAll("tspan")
+        .data(d => [d])
+        .join("tspan")
+        .style("font-size", font_size / 2 + "px")
+        .style("font-weight", "lighter")
+        .text(d => d.unit);
+    if (options.value.unit !== "%") unit.attr("x", options.position.x).attr("dy", "1em");
 }

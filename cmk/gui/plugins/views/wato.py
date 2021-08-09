@@ -5,17 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, Union
+
 import cmk.gui.watolib as watolib
+from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.exceptions import MKGeneralException
-from cmk.gui.plugins.views import (
-    sorter_registry,
-    Sorter,
-    painter_registry,
-    Painter,
-)
+from cmk.gui.plugins.views import Painter, painter_registry, Sorter, sorter_registry
 from cmk.gui.type_defs import Row
 
 
@@ -63,7 +59,7 @@ def get_wato_folder(row: Dict, how: str, with_links: bool = True) -> Union[str, 
         return HTML(" / ").join(title_path)
     # We assume that only hosts are show, that are below the current WATO path.
     # If not then better output absolute path then wrong path.
-    current_path = html.request.var("wato_folder")
+    current_path = request.var("wato_folder")
     if not current_path or not wato_path.startswith(current_path):
         return HTML(" / ").join(title_path)
 

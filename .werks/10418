@@ -6,7 +6,7 @@ Date: 1576594687
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Amazon EC2 transitioned from On-Demand instance limits from instance
 count-based limits to new vCPU-based limits. Checkmk now imitates that

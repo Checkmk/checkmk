@@ -4,14 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.omd_status import (
-    parse_omd_status,
     check_omd_status,
     cluster_check_omd_status,
+    parse_omd_status,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, state
 
 
 @pytest.mark.parametrize("string_table,expected_parsed_data", [
@@ -89,6 +90,30 @@ def test_check_omd_status(item, section_omd_status, section_omd_info, result):
         }
     }, {
         "monitoring": {}
+    }, [Result(state=state.OK, summary='running')]),
+    ("site2", {
+        'hostname1': {},
+        'hostname2': {
+            'site1': {
+                'stopped': [],
+                'existing': [
+                    'mkeventd', 'liveproxyd', 'mknotifyd', 'rrdcached', 'cmc', 'apache', 'dcd',
+                    'crontab'
+                ],
+                'overall': 'running'
+            },
+            'site2': {
+                'stopped': [],
+                'existing': [
+                    'mkeventd', 'liveproxyd', 'mknotifyd', 'rrdcached', 'cmc', 'apache', 'dcd',
+                    'crontab'
+                ],
+                'overall': 'running'
+            }
+        }
+    }, {
+        'hostname1': None,
+        'hostname2': None
     }, [Result(state=state.OK, summary='running')]),
 ])
 def test_cluster_check_omd_status(item, section_omd_status, section_omd_info, result):

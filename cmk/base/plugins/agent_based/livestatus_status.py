@@ -4,28 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
-from typing import (
-    Dict,
-    Any,
-)
-from cmk.base.api.agent_based.utils import check_levels
+from typing import Any, Dict, Mapping, MutableMapping, Optional
+
 from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    Metric,
-    state,
+    check_levels,
     get_rate,
     get_value_store,
+    GetRateError,
+    IgnoreResults,
+    Metric,
+    register,
     render,
-    check_levels,
+    Result,
+    Service,
 )
-from .agent_based_api.v1.type_defs import (
-    AgentStringTable,
-    CheckGenerator,
-    DiscoveryGenerator,
-    Parameters,
-)
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.livestatus_status import LivestatusSection
 
 # Example output from agent:
 # <<<livestatus_status:sep(59)>>>
@@ -50,17 +45,18 @@ livestatus_status_default_levels = {
     "site_cert_days": (30, 7),
     "average_latency_generic": (30, 60),
     "average_latency_cmk": (30, 60),
-    "helper_usage_generic": (60.0, 90.0),
-    "helper_usage_cmk": (60.0, 90.0),
-    "livestatus_usage": (80.0, 90.0),
+    "average_latency_fetcher": (30, 60),
+    "helper_usage_generic": (80.0, 90.0),
+    "helper_usage_cmk": (80.0, 90.0),
+    "helper_usage_fetcher": (80.0, 90.0),
+    "helper_usage_checker": (80.0, 90.0),
+    "livestatus_usage": (60.0, 80.0),
     "livestatus_overflows_rate": (0.01, 0.02),
 }
 
-ParsedSection = Dict[str, Any]
 
-
-def parse_livestatus_status(string_table: AgentStringTable):
-    parsed: ParsedSection = {}
+def parse_livestatus_status(string_table: StringTable) -> LivestatusSection:
+    parsed: LivestatusSection = {}
     site, headers = None, None
     for line in string_table:
         if line and line[0][0] == "[" and line[0][-1] == "]":
@@ -83,7 +79,7 @@ register.agent_section(
 )
 
 
-def parse_livestatus_ssl_certs(string_table: AgentStringTable):
+def parse_livestatus_ssl_certs(string_table: StringTable) -> LivestatusSection:
     parsed: Dict[str, Dict[str, str]] = {}
     site = None
     for line in string_table:
@@ -104,17 +100,45 @@ register.agent_section(
 )
 
 
-def discovery_livestatus_status(section_livestatus_status: ParsedSection,
-                                section_livestatus_ssl_certs: ParsedSection) -> DiscoveryGenerator:
-
+def discovery_livestatus_status(
+    section_livestatus_status: Optional[LivestatusSection],
+    section_livestatus_ssl_certs: Optional[LivestatusSection],
+) -> DiscoveryResult:
+    if section_livestatus_status is None:
+        return
     for site, status in section_livestatus_status.items():
         if status is not None:
             yield Service(item=site)
 
 
-def check_livestatus_status(item: str, params: Parameters, section_livestatus_status: ParsedSection,
-                            section_livestatus_ssl_certs: ParsedSection) -> CheckGenerator:
-    if item not in section_livestatus_status:
+def check_livestatus_status(
+    item: str,
+    params: Mapping[str, Any],
+    section_livestatus_status: Optional[LivestatusSection],
+    section_livestatus_ssl_certs: Optional[LivestatusSection],
+) -> CheckResult:
+    # Check Performance counters
+    this_time = time.time()
+    value_store = get_value_store()
+    yield from _generate_livestatus_results(
+        item,
+        params,
+        section_livestatus_status,
+        section_livestatus_ssl_certs,
+        value_store,
+        this_time,
+    )
+
+
+def _generate_livestatus_results(
+    item: str,
+    params: Mapping[str, Any],
+    section_livestatus_status: Optional[LivestatusSection],
+    section_livestatus_ssl_certs: Optional[LivestatusSection],
+    value_store: MutableMapping[str, Any],
+    this_time: float,
+) -> CheckResult:
+    if section_livestatus_status is None or item not in section_livestatus_status:
         return
     status = section_livestatus_status[item]
 
@@ -124,65 +148,91 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
         yield Result(state=state(params["site_stopped"]), summary="Site is currently not running")
         return
 
-    # Check Performance counters
-    this_time = time.time()
+    yield Result(state=state.OK, summary="Livestatus version: %s" % status["livestatus_version"])
+
     for key, title in [
-        ("host_checks", "HostChecks"),
-        ("service_checks", "ServiceChecks"),
-        ("forks", "ProcessCreations"),
-        ("connections", "LivestatusConnects"),
-        ("requests", "LivestatusRequests"),
-        ("log_messages", "LogMessages"),
+        ("host_checks", "Host checks"),
+        ("service_checks", "Service checks"),
+        ("forks", "Process creations"),
+        ("connections", "Livestatus connects"),
+        ("requests", "Livestatus requests"),
+        ("log_messages", "Log messages"),
     ]:
-        value = get_rate(
-            value_store=get_value_store(),
-            key="livestatus_status.%s.%s" % (item, key),
-            time=this_time,
-            value=float(status[key]),
-        )
-        yield Result(state=state.OK, summary="%s: %.1f/s" % (title, value))
-        yield Metric(name=key, value=value)
+        try:
+            value = get_rate(
+                value_store=value_store,
+                key=key,
+                time=this_time,
+                value=float(status[key]),
+            )
+        except GetRateError as error:
+            yield IgnoreResults(str(error))
+            continue
+
+        if key in ("host_checks", "service_checks"):
+            yield Result(state=state.OK, summary="%s: %.1f/s" % (title, value))
+        else:
+            yield Result(state=state.OK, notice="%s: %.1f/s" % (title, value))
+
+        yield Metric(name=key, value=value, boundaries=(0, None))
 
     if status["program_version"].startswith("Check_MK"):
         # We have a CMC here.
 
-        for factor, human_func, key, title in [
+        for factor, render_func, key, label in [
             (1, lambda x: "%.3fs" % x, "average_latency_generic", "Average check latency"),
             (1, lambda x: "%.3fs" % x, "average_latency_cmk", "Average Checkmk latency"),
+            (1, lambda x: "%.3fs" % x, "average_latency_fetcher", "Average fetcher latency"),
             (100, render.percent, "helper_usage_generic", "Check helper usage"),
             (100, render.percent, "helper_usage_cmk", "Checkmk helper usage"),
+            (100, render.percent, "helper_usage_fetcher", "Fetcher helper usage"),
+            (100, render.percent, "helper_usage_checker", "Checker helper usage"),
             (100, render.percent, "livestatus_usage", "Livestatus usage"),
             (1, lambda x: "%.1f/s" % x, "livestatus_overflows_rate", "Livestatus overflow rate"),
         ]:
-            if key == "helper_usage_cmk" and status[key] == "":
-                # Quick workaround for enabled checker/fetcher mode. Will soon be replaced once
-                # the livestatus status table has been updated.
-                continue
 
-            value = factor * float(status[key])
-            yield from check_levels(value=value,
-                                    metric_name=key,
-                                    levels_upper=params.get(key),
-                                    render_func=human_func,
-                                    label=title)
+            try:
+                value = factor * float(status[key])
+            except KeyError:
+                # may happen if we are trying to query old host
+                if key in [
+                        "helper_usage_fetcher", "helper_usage_checker", "average_latency_fetcher"
+                ]:
+                    value = 0.0
+                else:
+                    raise
+
+            yield from check_levels(
+                value=value,
+                metric_name=key,
+                levels_upper=params[key],
+                render_func=render_func,
+                label=label,
+                notice_only=True,
+                boundaries=(0, None),
+            )
 
     yield from check_levels(
         value=int(status["num_hosts"]),
         metric_name="monitored_hosts",
         levels_upper=params.get("levels_hosts"),
-        label="Monitored Hosts",
+        label="Hosts",
+        notice_only=True,
+        boundaries=(0, None),
     )
     yield from check_levels(
         value=int(status["num_services"]),
         metric_name="monitored_services",
         levels_upper=params.get("levels_services"),
         label="Services",
+        notice_only=True,
+        boundaries=(0, None),
     )
     # Output some general information
-    yield Result(state=state.OK,
-                 summary="Core version: %s" %
-                 status["program_version"].replace("Check_MK", "Checkmk"))
-    yield Result(state=state.OK, summary="Livestatus version: %s" % status["livestatus_version"])
+    yield Result(
+        state=state.OK,
+        notice="Core version: %s" % status["program_version"].replace("Check_MK", "Checkmk"),
+    )
 
     # cert_valid_until should only be empty in one case that we know of so far:
     # the value is collected via the linux special agent with the command 'date'
@@ -190,18 +240,25 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
     # the 'date'-command will return an error and thus no result
     # this happens e.g. for hacky raspberry pi setups that are not officially supported
     pem_path = "/omd/sites/%s/etc/ssl/sites/%s.pem" % (item, item)
-    cert_valid_until = section_livestatus_ssl_certs.get(item, {}).get(pem_path)
-    if cert_valid_until is not None and cert_valid_until != '':
-        days_left = (int(cert_valid_until) - time.time()) / 86400.0
-        valid_until_formatted = time.strftime("%Y-%m-%d %H:%M:%S",
-                                              time.localtime(int(cert_valid_until)))
-
-        yield from check_levels(
-            value=days_left,
-            metric_name="site_cert_days",
-            label="Site certificate validity (until %s)" % valid_until_formatted,
-            levels_lower=(params["site_cert_days"][0], params["site_cert_days"][1]),
+    valid_until_str = (None if section_livestatus_ssl_certs is None else
+                       section_livestatus_ssl_certs.get(item, {}).get(pem_path))
+    if valid_until_str:
+        valid_until = int(valid_until_str)
+        yield Result(
+            state=state.OK,
+            notice="Site certificate valid until %s" % render.date(valid_until),
         )
+        secs_left = valid_until - this_time
+        warn_d, crit_d = params["site_cert_days"]
+        yield from check_levels(
+            value=secs_left,
+            label="Expiring in",
+            levels_lower=None if None in (warn_d, crit_d) else (warn_d * 86400.0, crit_d * 86400.0),
+            render_func=render.timespan,
+            notice_only=True,
+            boundaries=(0, None),
+        )
+        yield Metric("site_cert_days", secs_left / 86400.0)
 
     settings = [
         ("execute_host_checks", "Active host checks are disabled"),
@@ -218,8 +275,8 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
     ]
     # Check settings of enablings. Here we are quiet unless a non-OK state is found
     for settingname, title in settings:
-        if status[settingname] != '1' and params[settingname] != 0:
-            yield Result(state=state(params[settingname]), summary=title)
+        if status[settingname] != '1':
+            yield Result(state=state(params[settingname]), notice=title)
 
     # special considerations for enable_event_handlers
     if status["program_version"].startswith("Check_MK 1.2.6"):
@@ -231,9 +288,30 @@ def check_livestatus_status(item: str, params: Parameters, section_livestatus_st
         # handlers defined, so this is nothing to warn about. Start warn when the
         # user defines his first alert handlers.
         return
-    if status["enable_event_handlers"] != '1' and params["enable_event_handlers"] != 0:
-        yield Result(state=state(params["enable_event_handlers"]),
-                     summary="Alert handlers are disabled")
+    if status["enable_event_handlers"] != '1':
+        yield Result(
+            state=state(params["enable_event_handlers"]),
+            notice="Alert handlers are disabled",
+        )
+
+
+def cluster_check_livestatus_status(
+    item: str,
+    params: Mapping[str, Any],
+    section_livestatus_status: Mapping[str, LivestatusSection],
+    section_livestatus_ssl_certs: Mapping[str, LivestatusSection],
+) -> CheckResult:
+    this_time = time.time()
+    value_store = get_value_store()
+    for node_name, node_section_status in section_livestatus_status.items():
+        yield from _generate_livestatus_results(
+            item,
+            params,
+            node_section_status,
+            section_livestatus_ssl_certs.get(node_name),
+            value_store,
+            this_time,
+        )
 
 
 register.check_plugin(
@@ -244,4 +322,5 @@ register.check_plugin(
     discovery_function=discovery_livestatus_status,
     check_function=check_livestatus_status,
     check_default_parameters=livestatus_status_default_levels,
+    cluster_check_function=cluster_check_livestatus_status,
 )

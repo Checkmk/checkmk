@@ -10,11 +10,12 @@ description:
  plugin to be installed on the FreeBSD host to be monitored. On linux it
  works with the standard agent.
 
- The check is {OK} if the server indicates the status {UP} and either {active}
- or {backup}. It is {CRIT} otherwise.
+ The check is {OK} if server is either {active} or {backup}. It is {CRIT} otherwise.
+ Mapping between server status and monitoring states can be parametrized. By default,
+ the check is {OK} if the server indicates the status {UP} and {CRIT} otherwise.
 
 item:
  The name of backend and server, separated by a "/".
 
-inventory:
+discovery:
  One service is created for each server.

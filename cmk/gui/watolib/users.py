@@ -4,40 +4,39 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.userdb as userdb
-import cmk.gui.config as config
 import cmk.gui.mkeventd
-from cmk.gui.i18n import _
+import cmk.gui.userdb as userdb
+import cmk.gui.watolib.global_settings as global_settings
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, user
+from cmk.gui.i18n import _
+from cmk.gui.plugins.userdb.utils import add_internal_attributes
+from cmk.gui.type_defs import UserId
 from cmk.gui.valuespec import (
-    CascadingDropdown,
-    Foldable,
-    Dictionary,
-    ListOf,
-    DropdownChoice,
-    ListOfStrings,
-    TextAscii,
-    UserID,
-    RegExp,
-    ListChoice,
-    Tuple,
-    Integer,
-    Checkbox,
     Age,
-    FixedValue,
     Alternative,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
     EmailAddress,
+    FixedValue,
+    Foldable,
+    Integer,
+    ListChoice,
+    ListOf,
+    ListOfStrings,
+    RegExp,
+    TextInput,
+    Tuple,
+    UserID,
 )
-from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.user_scripts import (
-    user_script_title,
-    user_script_choices,
-)
-from cmk.gui.watolib.global_settings import rulebased_notifications_enabled
+from cmk.gui.watolib.changes import add_change, log_audit, make_diff_text, ObjectRef, ObjectRefType
+from cmk.gui.watolib.user_scripts import user_script_choices, user_script_title
 
 
 def delete_users(users_to_delete):
-    if config.user.id in users_to_delete:
+    if user.id in users_to_delete:
         raise MKUserError(None, _("You cannot delete your own account!"))
 
     all_users = userdb.load_users(lock=True)
@@ -51,6 +50,10 @@ def delete_users(users_to_delete):
             raise MKUserError(None, _("Unknown user: %s") % entry)
 
     if deleted_users:
+        for user_id in deleted_users:
+            log_audit("edit-user",
+                      _("Deleted user: %s") % user_id,
+                      object_ref=make_user_object_ref(user_id))
         add_change("edit-users", _("Deleted user: %s") % ", ".join(deleted_users))
         userdb.save_users(all_users)
 
@@ -68,14 +71,49 @@ def edit_users(changed_users):
         else:
             modified_users_info.append(user_id)
 
+        if is_new_user:
+            add_internal_attributes(user_attrs)
+
+        old_object = make_user_audit_log_object(all_users.get(user_id, {}))
+        log_audit(action="edit-user",
+                  message=(_("Created new user: %s") %
+                           user_id if is_new_user else _("Modified user: %s") % user_id),
+                  diff_text=make_diff_text(old_object, make_user_audit_log_object(user_attrs)),
+                  object_ref=make_user_object_ref(user_id))
+
         all_users[user_id] = user_attrs
 
     if new_users_info:
-        add_change("edit-users", _("Created new user: %s") % ", ".join(new_users_info))
+        add_change("edit-users", _("Created new users: %s") % ", ".join(new_users_info))
     if modified_users_info:
-        add_change("edit-users", _("Modified user: %s") % ", ".join(modified_users_info))
+        add_change("edit-users", _("Modified users: %s") % ", ".join(modified_users_info))
 
     userdb.save_users(all_users)
+
+
+def make_user_audit_log_object(attributes):
+    """The resulting object is used for building object diffs"""
+    obj = attributes.copy()
+
+    # Password hashes should not be logged
+    obj.pop("password", None)
+
+    # Skip internal attributes
+    obj.pop("user_scheme_serial", None)
+
+    # Skip default values (that will not be persisted)
+    if obj.get("start_url") is None:
+        obj.pop("start_url", None)
+    if obj.get("ui_sidebar_position") is None:
+        obj.pop("ui_sidebar_position", None)
+    if obj.get("ui_theme") is None:
+        obj.pop("ui_theme", None)
+
+    return obj
+
+
+def make_user_object_ref(user_id: UserId) -> ObjectRef:
+    return ObjectRef(ObjectRefType.User, str(user_id))
 
 
 def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
@@ -97,7 +135,7 @@ def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
 
     # Locking
     locked = user_attrs.get("locked")
-    if user_id == config.user.id and locked:
+    if user_id == user.id and locked:
         raise MKUserError("locked", _("You cannot lock your own account!"))
 
     # Authentication: Password or Secret
@@ -122,7 +160,7 @@ def _validate_user_attributes(all_users, user_id, user_attrs, is_new_user=True):
     vs_user_idle_timeout.validate_value(idle_timeout, "idle_timeout")
 
     # Notification settings are only active if we do *not* have rule based notifications!
-    if not rulebased_notifications_enabled():
+    if not global_settings.rulebased_notifications_enabled():
         # Notifications
         notifications_enabled = user_attrs.get("notification_enabled")
 
@@ -326,8 +364,8 @@ def get_vs_flexible_notifications():
                                           "<tt>!</tt> for negation and <tt>~</tt> for regex matches."
                                          ),
                                         orientation="horizontal",
-                                        # TODO: Clean this up to use an alternative between TextAscii() and RegExp(). Also handle the negation in a different way
-                                        valuespec=TextAscii(size=20,),
+                                        # TODO: Clean this up to use an alternative between TextInput() and RegExp(). Also handle the negation in a different way
+                                        valuespec=TextInput(size=20,),
                                     ),
                                 ),
                                 (
@@ -339,8 +377,8 @@ def get_vs_flexible_notifications():
                                           "entry with <tt>!</tt> in order to <i>exclude</i> that service."
                                          ),
                                         orientation="horizontal",
-                                        # TODO: Clean this up to use an alternative between TextAscii() and RegExp(). Also handle the negation in a different way
-                                        valuespec=TextAscii(size=20,),
+                                        # TODO: Clean this up to use an alternative between TextInput() and RegExp(). Also handle the negation in a different way
+                                        valuespec=TextInput(size=20,),
                                         validate=validate_only_services,
                                     ),
                                 ),
@@ -378,7 +416,7 @@ def notification_script_choices():
     choices = []
     for choice in user_script_choices("notifications") + [(None, _("ASCII Email (legacy)"))]:
         notificaton_plugin_name, _notification_plugin_title = choice
-        if config.user.may("notification_plugin.%s" % notificaton_plugin_name):
+        if user.may("notification_plugin.%s" % notificaton_plugin_name):
             choices.append(choice)
     return choices
 

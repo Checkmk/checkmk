@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 215 251" style="enable-background:new 0 0 215 251;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill-rule:evenodd;clip-rule:evenodd;fill:#B894EE;}
+	.st1{filter:url(#Adobe_OpacityMaskFilter);}
+	.st2{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;}
+	.st3{mask:url(#mask-2_1_);fill-rule:evenodd;clip-rule:evenodd;fill:#8F5ED8;}
+</style>
+<g id="Icons">
+	<g id="EXIT" transform="translate(-368.000000, -163.000000)">
+		<g id="system_dashboard" transform="translate(368.000000, 163.000000)">
+			<g id="Fill-3">
+				<path id="path-1_1_" class="st0" d="M107.2,0l107.2,62.8v124.6l-107.2,62.8L0,187.4V62.8L107.2,0z M36.6,90.6v41.2l50.9-33.2
+					v85.2l19.7,11.7l19.7-11.7V98.6l50.9,33.2V90.6l-70.6-44.8L36.6,90.6z"/>
+			</g>
+			<defs>
+				<filter id="Adobe_OpacityMaskFilter" filterUnits="userSpaceOnUse" x="114" y="-19" width="114" height="266">
+					<feColorMatrix  type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0"/>
+				</filter>
+			</defs>
+			<mask maskUnits="userSpaceOnUse" x="114" y="-19" width="114" height="266" id="mask-2_1_">
+				<g class="st1">
+					<path id="path-1_2_" class="st2" d="M107.2,0l107.2,62.8v124.6l-107.2,62.8L0,187.4V62.8L107.2,0z M36.6,90.6v41.2l50.9-33.2
+						v85.2l19.7,11.7l19.7-11.7V98.6l50.9,33.2V90.6l-70.6-44.8L36.6,90.6z"/>
+				</g>
+			</mask>
+			<rect id="Rectangle" x="114" y="-19" class="st3" width="114" height="266"/>
+		</g>
+	</g>
+</g>
+</svg>

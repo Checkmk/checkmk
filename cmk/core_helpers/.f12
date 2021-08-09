@@ -1,0 +1,37 @@
+#!/bin/bash
+set -e
+
+SITE=${SITE:-$(until [ $PWD == / ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+DESTDIR="$ROOT/lib/python3/cmk/core_helpers/"
+
+echo "Update site $SITE..."
+
+echo "Copy CRE files..."
+sudo rsync \
+  --exclude="__pycache__" \
+  --exclude="*.pyc" \
+  --exclude="flycheck*" \
+  --exclude="cee" \
+  -a * "$DESTDIR"
+
+# Also deploy all other directories of same type
+if [ ${ALL_EDITIONS:-1} != 0 ]; then
+    for WHAT in enterprise managed; do
+        if [ -e ../../$WHAT/cmk/core_helpers/.f12 ]; then
+            (
+                cd ../../$WHAT/cmk/core_helpers
+                ONLY_COPY=1 ALL_EDITIONS=0 bash .f12
+            )
+        fi
+    done
+fi
+
+echo "Compile Python file in site..."
+if [ -z "$ONLY_COPY" ]; then
+    sudo $ROOT/bin/python3 -m compileall -qq "$DESTDIR"
+fi

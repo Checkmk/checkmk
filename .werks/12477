@@ -1,0 +1,11 @@
+Title: Nimble volumes display graphs in correct scale
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1615476646
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+

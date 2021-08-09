@@ -8,7 +8,6 @@
 # type: ignore
 from cmk.base.plugins.agent_based.ucd_mem import parse_ucd_mem
 
-
 checkname = 'ucd_mem'
 
 
@@ -24,7 +23,7 @@ checks = {
             }, [
                 (1, u'Error: foobar', []),
                 (
-                    2, 'RAM: 78.09% - 47.89 GB of 61.33 GB (warn/crit at 20.0%/30.0% used)',
+                    2, 'RAM: 78.09% - 47.89 GB of 61.33 GB (warn/crit at 20.00%/30.00% used)',
                         [
                             ('mem_used', 51426668544, 13171448217.6, 19757172326.399998, 0, 65857241088),
                             ('mem_used_percent', 78.08810040384546, 20.0, 29.999999999999996, 0.0, None)

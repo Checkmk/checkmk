@@ -6,8 +6,9 @@
 
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore[import]
-from testlib import import_module
+import pytest
+
+from tests.testlib import import_module
 
 
 @pytest.fixture(scope="module")

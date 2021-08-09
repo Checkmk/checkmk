@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.utils import postgres
+
 # <<<postgres_bloat>>>
 # [databases_start]
 # postgres
@@ -124,12 +126,11 @@ def check_postgres_bloat(item, params, parsed):
 
 
 check_info['postgres_bloat'] = {
-    "parse_function": parse_postgres_dbs,
+    "parse_function": postgres.parse_dbs,
     "check_function": check_postgres_bloat,
     "inventory_function": inventory_postgres_bloat,
     "service_description": "PostgreSQL Bloat %s",
     "group": "db_bloat",
     "default_levels_variable": "postgres_bloat_default_levels",
     "has_perfdata": True,
-    "includes": ["postgres.include"]
 }

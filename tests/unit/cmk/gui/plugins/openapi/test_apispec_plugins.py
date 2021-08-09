@@ -4,12 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-
+import pytest
 from apispec import APISpec  # type: ignore[import]
-from marshmallow import Schema, fields, post_load  # type: ignore[import]
+from marshmallow import fields, post_load, Schema
 
-from cmk.gui.plugins.openapi.plugins import ValueTypedDictSchema, ValueTypedDictMarshmallowPlugin
+from cmk.gui.plugins.openapi.plugins import ValueTypedDictMarshmallowPlugin, ValueTypedDictSchema
 
 
 class Movie:
@@ -91,10 +90,10 @@ def test_apispec_plugin_value_typed_dict(spec):
 
 
 def test_apispec_load():
-    result = MoviesSchema().load(MOVIES).data
+    result = MoviesSchema().load(MOVIES)
     assert sorted(result) == sorted(EXPECTED_MOVIES)
 
 
 def test_apispec_dump():
-    result = MoviesSchema().dump(EXPECTED_MOVIES).data
+    result = MoviesSchema().dump(EXPECTED_MOVIES)
     assert result == MOVIES

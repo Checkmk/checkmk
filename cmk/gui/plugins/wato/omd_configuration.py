@@ -5,42 +5,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
-from pathlib import Path
 import subprocess
 import traceback
-from typing import Dict, Any
+from pathlib import Path
+from typing import Any, Dict
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 
-from cmk.gui.log import logger
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Age,
-    Dictionary,
-    Tuple,
-    Filesize,
-    Optional,
-    ListChoice,
-    DropdownChoice,
-    Checkbox,
-)
-
+from cmk.gui.log import logger
 from cmk.gui.plugins.wato import (
-    config_variable_group_registry,
-    ConfigVariableGroup,
-    config_domain_registry,
     ABCConfigDomain,
-    ConfigDomainOMD,
-    LivestatusViaTCP,
-    config_variable_registry,
-    ConfigVariable,
-    site_neutral_path,
     add_replication_paths,
+    config_domain_registry,
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigDomainOMD,
+    ConfigVariable,
+    ConfigVariableGroup,
+    LivestatusViaTCP,
     ReplicationPath,
+    site_neutral_path,
     wato_fileheader,
+)
+from cmk.gui.type_defs import ConfigDomainName
+from cmk.gui.valuespec import (
+    Age,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    Filesize,
+    Integer,
+    ListChoice,
+    Optional,
+    Tuple,
 )
 
 
@@ -223,8 +223,11 @@ class ConfigVariableSiteNSCA(ConfigVariable):
 class ConfigDomainDiskspace(ABCConfigDomain):
     needs_sync = True
     needs_activation = False
-    ident = "diskspace"
     diskspace_config = cmk.utils.paths.omd_root + '/etc/diskspace.conf'
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "diskspace"
 
     def activate(self):
         pass
@@ -274,7 +277,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         for k, v in sorted(config.items()):
             output += '%s = %r\n' % (k, v)
 
-        store.save_file(self.diskspace_config, output)
+        store.save_text_to_file(self.diskspace_config, output)
 
     def default_globals(self):
         diskspace_context: Dict[str, Any] = {}
@@ -395,7 +398,10 @@ add_replication_paths([
 class ConfigDomainApache(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "apache"
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "apache"
 
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/apache.d/wato/"
@@ -433,7 +439,7 @@ class ConfigDomainApache(ABCConfigDomain):
 
         config_file_path = os.path.join(cmk.utils.paths.omd_root, "etc/apache/conf.d",
                                         "zzz_check_mk.conf")
-        store.save_file(config_file_path, output)
+        store.save_text_to_file(config_file_path, output)
 
     def get_effective_config(self):
         config = self.load(site_specific=False)
@@ -514,7 +520,10 @@ class ConfigVariableSiteApacheProcessTuning(ConfigVariable):
 class ConfigDomainRRDCached(ABCConfigDomain):
     needs_sync = True
     needs_activation = True
-    ident = "rrdcached"
+
+    @classmethod
+    def ident(cls) -> ConfigDomainName:
+        return "rrdcached"
 
     def config_dir(self):
         return cmk.utils.paths.default_config_dir + "/rrdcached.d/wato/"
@@ -550,7 +559,7 @@ class ConfigDomainRRDCached(ABCConfigDomain):
 
         config_file_path = os.path.join(cmk.utils.paths.omd_root, "etc/rrdcached.d",
                                         "zzz_check_mk.conf")
-        store.save_file(config_file_path, output)
+        store.save_text_to_file(config_file_path, output)
 
     def _get_effective_config(self):
         config = self.load(site_specific=False)

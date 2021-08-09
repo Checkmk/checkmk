@@ -6,7 +6,7 @@ Date: 1599135039
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The default setting for "Sync with LDAP connections" in the connection settings
 of central sites showed "Disabled user synchronization (use master site

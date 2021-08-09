@@ -10,10 +10,10 @@ import logging
 import sys
 from typing import Any, Dict, Union
 
-from requests.exceptions import ConnectionError as RequestsConnectionError
 import urllib3  # type: ignore[import]
 from jira import JIRA  # type: ignore[import]
 from jira.exceptions import JIRAError  # type: ignore[import]
+from requests.exceptions import ConnectionError as RequestsConnectionError
 
 urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
 

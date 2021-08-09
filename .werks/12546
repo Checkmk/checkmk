@@ -1,0 +1,14 @@
+Title: Tags: Fix exception when changing existing tag ID
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1615559153
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0i1
+
+When changing the tag id of an already used tag and choose "Fix affected
+folders, hosts and rules" when saving those changes, the following exception
+appears: <tt>TypeError (isinstance() arg 2 must be a class, type, or tuple of classes and types)</tt>.

@@ -6,20 +6,21 @@
 
 import base64
 import copy
-from io import BytesIO
 import json
 import os
 import subprocess
 import sys
 import time
+from io import BytesIO
 from typing import Any, Dict, List
 
-import pytest  # type: ignore[import]
+import pytest
 from PIL import Image  # type: ignore[import]
 
+from tests.testlib import APIError, wait_until, web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib.utils import get_standard_linux_agent_output
+
 import cmk.utils.version as cmk_version
-from testlib import web, APIError, wait_until  # noqa: F401 # pylint: disable=unused-import
-from testlib.utils import get_standard_linux_agent_output
 
 
 @pytest.fixture(name="local_test_hosts")
@@ -211,11 +212,12 @@ def test_get_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert response == {
         'ruleset': {
             '': [{
+                'id': '814bf932-6341-4f96-983d-283525b5416d',
                 'value': 'd,r,f,s',
                 'condition': {}
             }]
         },
-        'configuration_hash': 'b76f205bbe674300f677a282d9ccd71f',
+        'configuration_hash': 'a8ee55e0ced14609df741e5a82462e3a',
     }
 
     # TODO: Move testing of initial wato rules to unit tests
@@ -223,6 +225,7 @@ def test_get_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert response == {
         'ruleset': {
             '': [{
+                'id': 'b0ee8a51-703c-47e4-aec4-76430281604d',
                 'condition': {
                     'host_labels': {
                         u'cmk/check_mk_server': u'yes',
@@ -234,7 +237,7 @@ def test_get_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
                 }
             }]
         },
-        'configuration_hash': '0ef816195d483f9ed828a4dc84bdf706',
+        'configuration_hash': '68e05dd8ab82cea5bebc9c6184c0ee08',
     }
 
 
@@ -243,6 +246,7 @@ def test_set_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
     assert orig_ruleset == {
         'ruleset': {
             '': [{
+                'id': 'b92a5406-1d57-4f1d-953d-225b111239e5',
                 'value': True,
                 'condition': {
                     'host_tags': {
@@ -257,7 +261,7 @@ def test_set_ruleset(web):  # noqa: F811 # pylint: disable=redefined-outer-name
                 }
             }]
         },
-        'configuration_hash': '0cca93426feb558f7c9f09631340c63c',
+        'configuration_hash': '9abf6316805b3daf10ac7745864f13f8',
     }
 
     # Now modify something
@@ -386,6 +390,7 @@ def test_write_host_tags(web, site):  # noqa: F811 # pylint: disable=redefined-o
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
+            "cmk_agent_connection": {},
         }
 
         exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
@@ -424,6 +429,7 @@ def test_write_host_labels(web, site):  # noqa: F811 # pylint: disable=redefined
             "host_labels": {},
             "ipaddresses": {},
             "host_attributes": {},
+            "cmk_agent_connection": {},
         }
 
         exec(site.read_file("etc/check_mk/conf.d/wato/hosts.mk"), cfg, cfg)
@@ -669,12 +675,6 @@ def test_bulk_discovery_start_with_defaults(web, local_test_hosts):  # noqa: F81
     assert "discovery successful" in status["job"]["result_msg"]
     assert "discovery started" in status["job"]["output"]
     assert "test-host: discovery successful" in status["job"]["output"]
-    # FIXME:
-    #   There are supposed to be 63 services to be discovered. Due to the ongoing migration
-    #   however, the services in testlib.base:KNOWN_AUTO_MIGRATION_FAILURES can't be detected
-    #   right now. Please add the 63 in here once KNOWN_AUTO_MIGRATION_FAILURES is empty.
-    assert "60 added" in status["job"]["output"]
-    assert "discovery successful" in status["job"]["output"]
 
 
 def test_bulk_discovery_start_with_parameters(web, local_test_hosts):  # noqa: F811 # pylint: disable=redefined-outer-name
@@ -974,20 +974,58 @@ def test_get_inventory(web):  # noqa: F811 # pylint: disable=redefined-outer-nam
 
         inv = web.get_inventory([host_name])
         assert inv[host_name] == {
-            u'hardware': {
-                u'memory': {
-                    u'foo': 1,
-                    u'ram': 10000
-                },
-                u'blubb': 42
+            'Attributes': {},
+            'Table': {},
+            'Nodes': {
+                'hardware': {
+                    'Attributes': {
+                        'Pairs': {
+                            'blubb': 42
+                        }
+                    },
+                    'Table': {},
+                    'Nodes': {
+                        'memory': {
+                            'Attributes': {
+                                'Pairs': {
+                                    'ram': 10000,
+                                    'foo': 1
+                                }
+                            },
+                            'Table': {},
+                            'Nodes': {}
+                        }
+                    }
+                }
             }
         }
 
         inv = web.get_inventory([host_name], paths=['.hardware.memory.'])
-        assert inv[host_name] == {u'hardware': {u'memory': {u'foo': 1, u'ram': 10000}}}
+        assert inv[host_name] == {
+            'Attributes': {},
+            'Table': {},
+            'Nodes': {
+                'hardware': {
+                    'Attributes': {},
+                    'Table': {},
+                    'Nodes': {
+                        'memory': {
+                            'Attributes': {
+                                'Pairs': {
+                                    'ram': 10000,
+                                    'foo': 1
+                                }
+                            },
+                            'Table': {},
+                            'Nodes': {}
+                        }
+                    }
+                }
+            }
+        }
 
         inv = web.get_inventory([host_name], paths=['.hardware.mumpf.'])
-        assert inv[host_name] == {}
+        assert inv[host_name] == {'Attributes': {}, 'Nodes': {}, 'Table': {}}
     finally:
         web.delete_host(host_name)
 
@@ -1106,6 +1144,7 @@ def test_get_graph_recipes(web, graph_test_config):  # noqa: F811 # pylint: disa
                 u'specification': [
                     u'template', {
                         u'graph_index': 0,
+                        'graph_id': 'cmk_cpu_time_by_phase',
                         u'host_name': u'test-host-get-graph',
                         u'service_description': u'Check_MK',
                         u'site': web.site.id

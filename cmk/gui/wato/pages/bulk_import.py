@@ -9,49 +9,42 @@ by pasting the contents of a CSV file into a textbox."""
 
 import csv
 import time
-from typing import Dict, Type, List, Optional, Any
-from pathlib import Path
-
 from difflib import SequenceMatcher
-from six import ensure_str
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Type
 
 import cmk.utils.store as store
 
 import cmk.gui.pages
-import cmk.gui.weblib as weblib
-import cmk.gui.config as config
 import cmk.gui.watolib as watolib
-from cmk.gui.table import table_element
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.type_defs import PermissionName
+import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
+    make_form_submit_link,
+    make_simple_form_page_menu,
     PageMenu,
     PageMenuDropdown,
-    PageMenuTopic,
     PageMenuEntry,
-    make_simple_form_page_menu,
-    make_form_submit_link,
+    PageMenuTopic,
 )
-from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
-from cmk.gui.wato.pages.folders import ModeFolder
-
+from cmk.gui.plugins.wato import ActionResult, flash, mode_registry, mode_url, redirect, WatoMode
+from cmk.gui.table import table_element
+from cmk.gui.type_defs import PermissionName
+from cmk.gui.utils.escaping import escape_html_permissive
 from cmk.gui.valuespec import (
-    Hostname,
     Checkbox,
     Dictionary,
     FixedValue,
-    TextAscii,
+    Hostname,
+    TextInput,
     UploadOrPasteTextFile,
 )
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    ActionResult,
-    mode_registry,
-)
+from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
+from cmk.gui.wato.pages.folders import ModeFolder
+from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 # Was not able to get determine the type of csv._reader / _csv.reader
 CSVReader = Any
@@ -72,7 +65,7 @@ class ModeBulkImport(WatoMode):
         return ModeFolder
 
     def __init__(self) -> None:
-        super(ModeBulkImport, self).__init__()
+        super().__init__()
         self._params: Optional[Dict[str, Any]] = None
         self._has_title_line = True
 
@@ -84,13 +77,12 @@ class ModeBulkImport(WatoMode):
         return _("Bulk host import")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        if not html.request.has_var("file_id"):
-            return make_simple_form_page_menu(
-                breadcrumb,
-                form_name="upload",
-                button_name="_do_upload",
-                save_title=_("Upload"),
-            )
+        if not request.has_var("file_id"):
+            return make_simple_form_page_menu(_("Hosts"),
+                                              breadcrumb,
+                                              form_name="upload",
+                                              button_name="_do_upload",
+                                              save_title=_("Upload"))
 
         # preview phase, after first upload
         return PageMenu(
@@ -125,19 +117,19 @@ class ModeBulkImport(WatoMode):
         )
 
     def action(self) -> ActionResult:
-        if html.transaction_valid():
-            if html.request.has_var("_do_upload"):
+        if transactions.transaction_valid():
+            if request.has_var("_do_upload"):
                 self._upload_csv_file()
 
             csv_reader = self._open_csv_file()
 
-            if html.request.var("_do_import"):
+            if request.var("_do_import"):
                 return self._import(csv_reader)
         return None
 
     def _file_path(self) -> Path:
-        file_id = html.request.get_unicode_input_mandatory(
-            "file_id", "%s-%d" % (config.user.id, int(time.time())))
+        file_id = request.get_unicode_input_mandatory("file_id",
+                                                      "%s-%d" % (user.id, int(time.time())))
         return self._upload_tmp_path / ("%s.csv" % file_id)
 
     # Upload the CSV file into a temporary directoy to make it available not only
@@ -150,17 +142,16 @@ class ModeBulkImport(WatoMode):
 
         upload_info = self._vs_upload().from_html_vars("_upload")
         self._vs_upload().validate_value(upload_info, "_upload")
-        _file_name, _mime_type, content = upload_info["file"]
 
-        file_id = "%s-%d" % (config.user.id, int(time.time()))
+        file_id = "%s-%d" % (user.id, int(time.time()))
 
-        store.save_text_to_file(self._file_path(), ensure_str(content))
+        store.save_text_to_file(self._file_path(), upload_info["file"])
 
         # make selections available to next page
-        html.request.set_var("file_id", file_id)
+        request.set_var("file_id", file_id)
 
         if upload_info["do_service_detection"]:
-            html.request.set_var("do_service_detection", "1")
+            request.set_var("do_service_detection", "1")
 
     def _cleanup_old_files(self) -> None:
         for path in self._upload_tmp_path.iterdir():
@@ -181,7 +172,7 @@ class ModeBulkImport(WatoMode):
             raise MKUserError(
                 None, _("Failed to read the previously uploaded CSV file. Please upload it again."))
 
-        if list(html.request.itervars(prefix="_preview")):
+        if list(request.itervars(prefix="_preview")):
             params = self._vs_parse_params().from_html_vars("_preview")
         else:
             params = {
@@ -221,20 +212,27 @@ class ModeBulkImport(WatoMode):
         num_succeeded, num_failed = 0, 0
         fail_messages = []
         selected = []
+        imported_hosts = []
 
-        for row in csv_reader:
+        for row_num, row in enumerate(csv_reader):
             if not row:
                 continue  # skip empty lines
 
-            host_name, attributes = self._get_host_info_from_row(row)
+            host_name, attributes = self._get_host_info_from_row(row, row_num)
             try:
-                watolib.Folder.current().create_hosts([(host_name, attributes, None)])
+                watolib.Folder.current().create_hosts(
+                    [(host_name, attributes, None)],
+                    bake_hosts=False,
+                )
+                imported_hosts.append(host_name)
                 selected.append('_c_%s' % host_name)
                 num_succeeded += 1
             except Exception as e:
                 fail_messages.append(
                     _("Failed to create a host from line %d: %s") % (csv_reader.line_num, e))
                 num_failed += 1
+
+        watolib.hosts_and_folders.try_bake_agents_for_hosts(imported_hosts)
 
         self._delete_csv_file()
 
@@ -246,25 +244,36 @@ class ModeBulkImport(WatoMode):
                 msg += "<li>%s</li>" % fail_msg
             msg += "</ul>"
 
-        if num_succeeded > 0 and html.request.var("do_service_detection") == "1":
+        folder_path = watolib.Folder.current().path()
+        if num_succeeded > 0 and request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
-            config.user.set_rowselection(weblib.selection_id(),
-                                         'wato-folder-/' + watolib.Folder.current().path(),
-                                         selected, 'set')
-            html.request.set_var('mode', 'bulkinventory')
-            html.request.set_var('_bulk_inventory', '1')
-            html.request.set_var('show_checkboxes', '1')
-            return "bulkinventory"
-        return "folder", msg
+            user.set_rowselection(
+                weblib.selection_id(),
+                'wato-folder-/' + folder_path,
+                selected,
+                "set",
+            )
+            return redirect(
+                mode_url(
+                    "bulkinventory",
+                    _bulk_inventory='1',
+                    show_checkboxes='1',
+                    selection=weblib.selection_id(),
+                ))
+        flash(msg)
+        return redirect(mode_url("folder", folder=folder_path))
 
     def _delete_csv_file(self) -> None:
         self._file_path().unlink()
 
-    def _get_host_info_from_row(self, row):
+    def _get_host_info_from_row(self, row, row_num):
         host_name = None
         attributes: Dict[str, str] = {}
         for col_num, value in enumerate(row):
-            attribute = html.request.var("attribute_%d" % col_num)
+            if not value:
+                continue
+
+            attribute = request.var("attribute_%d" % col_num)
             if attribute == "host_name":
                 Hostname().validate_value(value, "host")
                 host_name = value
@@ -277,17 +286,31 @@ class ModeBulkImport(WatoMode):
                           "You can not populate one attribute from multiple columns. "
                           "The column to attribute associations need to be unique.") % attribute)
 
-                # FIXME: Couldn't we decode all attributes?
+                attr = host_attribute_registry[attribute]()
+
+                # TODO: The value handling here is incorrect. The correct way would be to use the
+                # host attributes from_html_vars and validate_input, just like collect_attributes()
+                # from cmk/gui/watolib/host_attributes.py is doing it.
+                # The problem here is that we get the value in a different way (from row instead of
+                # HTTP request vars) which from_html_vars can not work with.
+
                 if attribute == "alias":
-                    attributes[attribute] = value.decode("utf-8")
+                    attributes[attribute] = value
                 else:
-                    try:
-                        str(value)
-                    except UnicodeDecodeError:
+                    if not value.isascii():
                         raise MKUserError(
                             None,
                             _("Non-ASCII characters are not allowed in the "
                               "attribute \"%s\".") % attribute)
+
+                    try:
+                        attr.validate_input(value, "")
+                    except MKUserError as e:
+                        raise MKUserError(
+                            None,
+                            _("Invalid value in column %d (%s) of row %d: %s") %
+                            (col_num, attribute, row_num, e))
+
                     attributes[attribute] = value
 
         if host_name is None:
@@ -296,7 +319,7 @@ class ModeBulkImport(WatoMode):
         return host_name, attributes
 
     def page(self) -> None:
-        if not html.request.has_var("file_id"):
+        if not request.has_var("file_id"):
             self._upload_form()
         else:
             self._preview()
@@ -316,13 +339,10 @@ class ModeBulkImport(WatoMode):
     def _vs_upload(self):
         return Dictionary(
             elements=[
-                ("file",
-                 UploadOrPasteTextFile(
-                     title=_("Import Hosts"),
-                     file_title=_("CSV File"),
-                     allow_empty=False,
-                     default_mode="upload",
-                 )),
+                ("file", UploadOrPasteTextFile(
+                    title=_("Import Hosts"),
+                    file_title=_("CSV File"),
+                )),
                 ("do_service_detection", Checkbox(title=_("Perform automatic service discovery"),)),
             ],
             render="form",
@@ -381,13 +401,13 @@ class ModeBulkImport(WatoMode):
             table.row()
             for col_num in range(num_columns):
                 header = headers[col_num] if len(headers) > col_num else None
-                table.cell(html.render_text(header))
+                table.cell(escape_html_permissive(header))
                 attribute_varname = "attribute_%d" % col_num
-                if html.request.var(attribute_varname):
-                    attribute_method = html.request.get_ascii_input_mandatory(attribute_varname)
+                if request.var(attribute_varname):
+                    attribute_method = request.get_ascii_input_mandatory(attribute_varname)
                 else:
                     attribute_method = self._try_detect_default_attribute(attributes, header)
-                    html.request.del_var(attribute_varname)
+                    request.del_var(attribute_varname)
 
                 html.dropdown("attribute_%d" % col_num,
                               attributes,
@@ -398,7 +418,7 @@ class ModeBulkImport(WatoMode):
             for row in rows:
                 table.row()
                 for cell in row:
-                    table.cell(None, html.render_text(cell))
+                    table.cell(None, cell)
 
         html.end_form()
 
@@ -414,7 +434,7 @@ class ModeBulkImport(WatoMode):
         return Dictionary(
             elements=[
                 ("field_delimiter",
-                 TextAscii(
+                 TextInput(
                      title=_("Set field delimiter"),
                      default_value=";",
                      size=1,
@@ -439,9 +459,9 @@ class ModeBulkImport(WatoMode):
             ("host_name", _("Hostname")),
             ("alias", _("Alias")),
             ("site", _("Monitored on site")),
-            ("ipaddress", _("IPv4 Address")),
-            ("ipv6address", _("IPv6 Address")),
-            ("snmp_community", _("SNMP Community")),
+            ("ipaddress", _("IPv4 address")),
+            ("ipv6address", _("IPv6 address")),
+            ("snmp_community", _("SNMP community")),
         ]
 
         # Add tag groups

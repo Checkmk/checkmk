@@ -5,16 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    MonitoringState,
-    TextAscii,
-    Dictionary,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
     CheckParameterRulespecWithItem,
     rulespec_registry,
+    RulespecGroupCheckParametersApplications,
 )
+from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _parameter_valuespec_couchbase_status():
@@ -53,7 +49,7 @@ rulespec_registry.register(
         check_group_name="couchbase_status",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextAscii(title=_('Node name')),
+        item_spec=lambda: TextInput(title=_('Node name')),
         parameter_valuespec=_parameter_valuespec_couchbase_status,
         title=lambda: _("Couchbase Status"),
     ))

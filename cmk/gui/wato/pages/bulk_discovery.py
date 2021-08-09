@@ -7,31 +7,30 @@
 this mode is used."""
 
 import copy
-from typing import List, Tuple, cast, Type, Optional
+from typing import cast, List, Optional, Tuple, Type
 
-import cmk.gui.config as config
-import cmk.gui.sites as sites
 import cmk.gui.forms as forms
-from cmk.gui.log import logger
-from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
+import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.page_menu import PageMenu, make_simple_form_page_menu
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.page_menu import make_simple_form_page_menu, PageMenu
+from cmk.gui.plugins.wato import (
+    ActionResult,
+    get_hostnames_from_checkboxes,
+    mode_registry,
+    WatoMode,
+)
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.bulk_discovery import (
     BulkDiscoveryBackgroundJob,
-    vs_bulk_discovery,
     DiscoveryHost,
     get_tasks,
+    vs_bulk_discovery,
 )
-
-from cmk.gui.plugins.wato import (
-    WatoMode,
-    mode_registry,
-    get_hostnames_from_checkboxes,
-)
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 
 @mode_registry.register
@@ -49,8 +48,8 @@ class ModeBulkDiscovery(WatoMode):
         return ModeFolder
 
     def _from_vars(self):
-        self._start = bool(html.request.var("_start"))
-        self._all = bool(html.request.var("all"))
+        self._start = bool(request.var("_start"))
+        self._all = bool(request.var("all"))
         self._just_started = False
         self._get_bulk_discovery_params()
         self._job = BulkDiscoveryBackgroundJob()
@@ -69,31 +68,42 @@ class ModeBulkDiscovery(WatoMode):
          self._only_ok_agent) = cast(Tuple[bool, bool, bool, bool],
                                      self._bulk_discovery_params["selection"])
 
-        # The cast is needed for the moment, because mypy does not understand our data structure here
-        (self._do_scan, self._bulk_size) = cast(Tuple[bool, int],
-                                                self._bulk_discovery_params["performance"])
-
+        self._do_scan, self._bulk_size = self._get_performance_params()
         self._mode = self._bulk_discovery_params["mode"]
         self._error_handling = self._bulk_discovery_params["error_handling"]
+
+    def _get_performance_params(self) -> Tuple[bool, int]:
+        performance_params = self._bulk_discovery_params["performance"]
+        assert isinstance(performance_params, tuple)
+
+        if len(performance_params) == 3:
+            # In previous Checkmk versions (< 2.0) there was a third performance parameter:
+            # 'use_cache' in the first place.
+            do_scan, bulk_size = performance_params[1:]
+        else:
+            do_scan, bulk_size = performance_params
+
+        assert isinstance(do_scan, bool)
+        assert isinstance(bulk_size, int)
+        return do_scan, bulk_size
 
     def title(self):
         return _("Bulk discovery")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(
-            breadcrumb,
-            form_name="bulkinventory",
-            button_name="_start",
-            save_title=_("Start"),
-        )
+        return make_simple_form_page_menu(_("Discovery"),
+                                          breadcrumb,
+                                          form_name="bulkinventory",
+                                          button_name="_start",
+                                          save_title=_("Start"))
 
-    def action(self):
-        config.user.need_permission("wato.services")
+    def action(self) -> ActionResult:
+        user.need_permission("wato.services")
 
         tasks = get_tasks(self._get_hosts_to_discover(), self._bulk_size)
 
         try:
-            html.check_transaction()
+            transactions.check_transaction()
             self._job.set_function(self._job.do_execute, self._mode, self._do_scan,
                                    self._error_handling, tasks)
             self._job.start()
@@ -108,7 +118,7 @@ class ModeBulkDiscovery(WatoMode):
         raise HTTPRedirect(self._job.detail_url())
 
     def page(self):
-        config.user.need_permission("wato.services")
+        user.need_permission("wato.services")
 
         job_status_snapshot = self._job.get_status_snapshot()
         if job_status_snapshot.is_active():

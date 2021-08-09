@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _item_spec_siemens_plc_counter():
-    return TextAscii(
+    return TextInput(
         title=_("Device Name and Value Ident"),
         help=_("You need to concatenate the device name which is configured in the special agent "
                "for the PLC device separated by a space with the ident of the value which is also "

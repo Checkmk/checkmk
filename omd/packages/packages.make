@@ -121,12 +121,14 @@ debug:
 # Include rules to make packages
 include \
     packages/openssl/openssl.make \
+    packages/redis/redis.make \
     packages/apache-omd/apache-omd.make \
+    packages/lasso/lasso.make \
+    packages/mod_auth_mellon/mod_auth_mellon.make \
     packages/stunnel/stunnel.make \
     packages/check_mk/check_mk.make \
     packages/check_mysql_health/check_mysql_health.make \
     packages/check_oracle_health/check_oracle_health.make \
-    packages/dokuwiki/dokuwiki.make \
     packages/freetds/freetds.make \
     packages/heirloom-pkgtools/heirloom-pkgtools.make \
     packages/perl-modules/perl-modules.make \
@@ -146,6 +148,7 @@ include \
     packages/openhardwaremonitor/openhardwaremonitor.make \
     packages/patch/patch.make \
     packages/pnp4nagios/pnp4nagios.make \
+    packages/protobuf/protobuf.make \
     packages/Python3/Python3.make \
     packages/python3-modules/python3-modules.make \
     packages/omd/omd.make \
@@ -159,6 +162,9 @@ include \
     packages/appliance/appliance.make
 
 ifeq ($(EDITION),enterprise)
+include $(REPO_PATH)/enterprise/enterprise.make
+endif
+ifeq ($(EDITION),free)
 include $(REPO_PATH)/enterprise/enterprise.make
 endif
 ifeq ($(EDITION),managed)

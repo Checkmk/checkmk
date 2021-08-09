@@ -11,5 +11,5 @@ description:
 item:
  The outdoor temperature ID.
 
-inventory:
+discovery:
  One service is created for each outdoor temperature sensor.

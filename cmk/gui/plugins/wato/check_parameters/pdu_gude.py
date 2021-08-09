@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_pdu_gude():
@@ -68,7 +62,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="pdu_gude",
         group=RulespecGroupCheckParametersEnvironment,
-        item_spec=lambda: TextAscii(title=_("Phase Number"),
+        item_spec=lambda: TextInput(title=_("Phase Number"),
                                     help=_("The Number of the power Phase.")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_pdu_gude,

@@ -6,13 +6,15 @@
 
 import os
 import platform
-import pytest  # type: ignore
 import re
-from local import actual_output, make_yaml_config, local_test, wait_agent, write_config, user_dir
 import shutil
 
+import pytest  # type: ignore
 
-class TestPaths(object):
+from .local import local_test, user_dir
+
+
+class TestPaths():
     drive = os.getcwd()[:2]
 
     def tempdir1(self):
@@ -43,19 +45,22 @@ class TestPaths(object):
         self.drive = self.drive.lower()
 
 
-class Globals(object):
+class Globals():
     section = 'fileinfo'
     alone = True
     paths = TestPaths()
 
 
-@pytest.fixture
-def testfile(request):
+@pytest.fixture(name="testfile")
+def testfile_engine():
     return os.path.basename(__file__)
 
 
-@pytest.fixture(params=['uppercase_drive', 'lowercase_drive'])
-def testconfig_drive(request, make_yaml_config):
+@pytest.fixture(
+    name="testconfig_drive",
+    params=['uppercase_drive', 'lowercase_drive'],
+)
+def testconfig_drive_engine(request, make_yaml_config):
     if request.param == 'uppercase_drive':
         Globals.paths.drive_upper()
     else:
@@ -63,10 +68,13 @@ def testconfig_drive(request, make_yaml_config):
     return make_yaml_config
 
 
-@pytest.fixture(params=[(Globals.paths.tempdir1, '**', True), (Globals.paths.tempdir2, 'Te*', True),
-                        (Globals.paths.tempdir2, 'Te*', False)],
-                ids=['recursive_glob', 'simple_glob_alone', 'simple_glob_with_systemtime'])
-def testconfig(request, testconfig_drive):
+@pytest.fixture(
+    name="testconfig",
+    params=[(Globals.paths.tempdir1, '**', True), (Globals.paths.tempdir2, 'Te*', True),
+            (Globals.paths.tempdir2, 'Te*', False)],
+    ids=['recursive_glob', 'simple_glob_alone', 'simple_glob_with_systemtime'],
+)
+def testconfig_engine(request, testconfig_drive):
     if platform.system() == 'Windows':
         Globals.alone = request.param[2]
         Globals.alone = request.param == 'alone'
@@ -76,7 +84,7 @@ def testconfig(request, testconfig_drive):
             testconfig_drive['global']['sections'] = [Globals.section, "systemtime"]
 
         path_array = []
-        if request.param[0] != Globals.paths.tempdir1:
+        if request.param[0] != Globals.paths.tempdir1:  # pylint: disable=comparison-with-callable
             path_array.append(Globals.paths.tempfile1())
             path_array.append(
                 os.path.join(Globals.paths.tempdir1(),
@@ -89,11 +97,11 @@ def testconfig(request, testconfig_drive):
         return testconfig_drive
 
 
-@pytest.fixture
-def expected_output():
+@pytest.fixture(name="expected_output")
+def expected_output_engine():
     if platform.system() == 'Windows':
         # this variable is for a future release
-        expected_modern = [
+        _ = [
             re.escape(r'<<<%s:sep(124)>>>' % Globals.section), r'\d+',
             re.escape(r'[[[header]]]'),
             re.escape(r'name|status|size|time'),

@@ -4,31 +4,93 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+from pathlib import Path
 
-# No stub file
-from testlib import CheckManager  # type: ignore[import]
-# No stub file
-from testlib.base import Scenario  # type: ignore[import]
+import pytest
 
+from tests.testlib.base import Scenario
+
+import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName
+
+import cmk.core_helpers.config_path
+from cmk.core_helpers.config_path import LATEST_CONFIG
+
 import cmk.base.config as config
 import cmk.base.core_config as core_config
+import cmk.base.nagios_utils
 from cmk.base.check_utils import Service
+from cmk.base.core_factory import create_core
 
 
-def test_active_check_arguments(mocker):
+def test_do_create_config_nagios(core_scenario):
+    core_config.do_create_config(create_core("nagios"))
+
+    assert Path(cmk.utils.paths.nagios_objects_file).exists()
+    assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()
+
+
+def test_active_check_arguments_basics():
+    assert core_config.active_check_arguments("bla", "blub", u"args 123 -x 1 -y 2") \
+        == u"args 123 -x 1 -y 2"
+
+    assert core_config.active_check_arguments("bla", "blub", ["args", "123", "-x", "1", "-y", "2"]) \
+        == "'args' '123' '-x' '1' '-y' '2'"
+
+    assert core_config.active_check_arguments("bla", "blub", ["args", "1 2 3", "-d=2",
+        "--hallo=eins", 9]) \
+        == "'args' '1 2 3' '-d=2' '--hallo=eins' 9"
+
+    with pytest.raises(MKGeneralException):
+        core_config.active_check_arguments("bla", "blub", (1, 2))  # type: ignore[arg-type]
+
+
+@pytest.mark.parametrize("pw", ["abc", "123", "x'äd!?", u"aädg"])
+def test_active_check_arguments_password_store(monkeypatch, pw):
+    monkeypatch.setattr(config, "stored_passwords", {"pw-id": {"password": pw,}})
+    assert core_config.active_check_arguments("bla", "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]) \
+        == "--pwstore=2@11@pw-id 'arg1' '--password=%s' 'arg3'" % ("*" * len(pw))
+
+
+def test_active_check_arguments_not_existing_password(capsys):
+    assert core_config.active_check_arguments("bla", "blub", ["arg1", ("store", "pw-id", "--password=%s"), "arg3"]) \
+        == "--pwstore=2@11@pw-id 'arg1' '--password=***' 'arg3'"
+    stderr = capsys.readouterr().err
+    assert "The stored password \"pw-id\" used by service \"blub\" on host \"bla\"" in stderr
+
+
+def test_active_check_arguments_wrong_types():
     with pytest.raises(MKGeneralException):
         core_config.active_check_arguments("bla", "blub", 1)  # type: ignore[arg-type]
 
     with pytest.raises(MKGeneralException):
         core_config.active_check_arguments("bla", "blub", (1, 2))  # type: ignore[arg-type]
 
-    prepare_check_command = mocker.patch.object(config, "prepare_check_command")
-    core_config.active_check_arguments("bla", "blub", u"args 123 -x 1 -y 2")
-    assert prepare_check_command.called_once()
+
+def test_active_check_arguments_str():
+    assert core_config.active_check_arguments("bla", "blub",
+                                              u"args 123 -x 1 -y 2") == 'args 123 -x 1 -y 2'
+
+
+def test_active_check_arguments_list():
+    assert core_config.active_check_arguments("bla", "blub", ["a", "123"]) == "'a' '123'"
+
+
+def test_active_check_arguments_list_with_numbers():
+    assert core_config.active_check_arguments("bla", "blub", [1, 1.2]) == "1 1.2"
+
+
+def test_active_check_arguments_list_with_pwstore_reference():
+    assert core_config.active_check_arguments(
+        "bla", "blub",
+        ["a", ("store", "pw1", "--password=%s")]) == "--pwstore=2@11@pw1 'a' '--password=***'"
+
+
+def test_active_check_arguments_list_with_invalid_type():
+    with pytest.raises(MKGeneralException):
+        core_config.active_check_arguments("bla", "blub", [None])  # type: ignore[list-item]
 
 
 def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
@@ -67,6 +129,7 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     assert attrs == expected_attrs
 
 
+@pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("hostname,result", [
     ("localhost", {
         'check_interval': 1.0,
@@ -77,8 +140,6 @@ def test_get_host_attributes(fixup_ip_lookup, monkeypatch):
     }),
 ])
 def test_get_cmk_passive_service_attributes(monkeypatch, hostname, result):
-    CheckManager().load(["cpu"])
-
     ts = Scenario().add_host("localhost")
     ts.add_host("blub")
     ts.set_option(

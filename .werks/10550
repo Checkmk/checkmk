@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When trying to move Event console rules in the table while the action row
 at the top of the table is enabled, the rows were always positioned one

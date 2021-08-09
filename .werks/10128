@@ -6,7 +6,7 @@ Date: 1599124867
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The rrdtool library used by the Nagios Event Broker and the Micro Core has a
 subtle bug, which could lead to undefined behavior when the rrdcached is

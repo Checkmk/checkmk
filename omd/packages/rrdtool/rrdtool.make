@@ -1,6 +1,5 @@
 RRDTOOL := rrdtool
-# Note: We actually use the snapshot f1edd121a from 2017-06-11
-RRDTOOL_VERS := 1.7.1
+RRDTOOL_VERS := 1.7.2
 RRDTOOL_DIR := $(RRDTOOL)-$(RRDTOOL_VERS)
 
 RRDTOOL_PATCHING := $(BUILD_HELPER_DIR)/$(RRDTOOL_DIR)-patching
@@ -66,7 +65,7 @@ $(RRDTOOL_BUILD_LIBRARY): $(RRDTOOL_CONFIGURE)
 	$(MAKE) -C $(RRDTOOL_BUILD_DIR)/etc all
 	$(TOUCH) $@
 
-$(RRDTOOL_BUILD_BINDINGS): $(RRDTOOL_CONFIGURE) $(RRDTOOL_BUILD_LIBRARY) $(PYTHON3_CACHE_PKG_PROCESS) $(PYTHON3_MODULES_INTERMEDIATE_INSTALL) $(MODULEBUILDRC_PATH) $(PERL_MODULES_INTERMEDIATE_INSTALL)
+$(RRDTOOL_BUILD_BINDINGS): $(RRDTOOL_CONFIGURE) $(RRDTOOL_BUILD_LIBRARY) $(PYTHON3_CACHE_PKG_PROCESS) $(PYTHON3_MODULES_CACHE_PKG_PROCESS) $(MODULEBUILDRC_PATH) $(PERL_MODULES_CACHE_PKG_PROCESS)
 # TODO: We need to find out which variables here are needed for the configure and which for the make calls
 	set -e ; \
 	unset DESTDIR MAKEFLAGS ; \
@@ -102,7 +101,7 @@ $(RRDTOOL_INSTALL_LIBRARY): $(RRDTOOL_BUILD_LIBRARY)
 	$(TOUCH) $@
 
 # TODO: We need to find out which variables here are needed for the configure and which for the make calls
-$(RRDTOOL_INSTALL_BINDINGS): $(RRDTOOL_BUILD_BINDINGS) $(PERL_MODULES_INTERMEDIATE_INSTALL)
+$(RRDTOOL_INSTALL_BINDINGS): $(RRDTOOL_BUILD_BINDINGS) $(PERL_MODULES_CACHE_PKG_PROCESS)
 	set -e ; \
 	unset DESTDIR MAKEFLAGS ; \
 	export PYTHONPATH=$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH) ; \
@@ -112,6 +111,9 @@ $(RRDTOOL_INSTALL_BINDINGS): $(RRDTOOL_BUILD_BINDINGS) $(PERL_MODULES_INTERMEDIA
 	export PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" ; \
 	export PERL5LIB=$(PACKAGE_PERL_MODULES_PERL5LIB); \
 	$(MAKE) DESTDIR=$(DESTDIR) -C $(RRDTOOL_BUILD_DIR)/bindings install
+# Fixup some library permissions. They need to be owner writable to make
+# dh_strip command of deb packaging procedure work
+	find $(DESTDIR)$(OMD_ROOT)/lib/perl5/lib/perl5 -type f -name RRDs.so -exec chmod u+w {} \;
 # clean up perl man pages which end up in wrong location
 # clean up systemd init files. Note that on RPM based distros this
 # seem to be located in /usr/lib and on debian /lib.

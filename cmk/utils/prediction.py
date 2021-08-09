@@ -6,18 +6,21 @@
 
 import json
 import logging
-import os
 import time
-from typing import Dict, Callable, List, Optional, Tuple
+from contextlib import suppress
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any, Callable, Dict, Iterable, Iterator, List, Literal, NewType, Optional, Tuple
 
 from six import ensure_str
 
 import livestatus
-from cmk.utils.exceptions import MKGeneralException
+
 import cmk.utils.debug
-from cmk.utils.log import VERBOSE
 import cmk.utils.paths
-from cmk.utils.type_defs import Timestamp, Seconds, MetricName, ServiceName, HostName
+from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.log import VERBOSE
+from cmk.utils.type_defs import HostName, MetricName, Seconds, ServiceName, Timestamp
 
 logger = logging.getLogger("cmk.prediction")
 
@@ -26,10 +29,68 @@ RRDColumnFunction = Callable[[Timestamp, Timestamp], "TimeSeries"]
 TimeSeriesValue = Optional[float]
 TimeSeriesValues = List[TimeSeriesValue]
 ConsolidationFunctionName = str
-Timegroup = str
+Timegroup = NewType('Timegroup', str)
 EstimatedLevel = Optional[float]
 EstimatedLevels = Tuple[EstimatedLevel, EstimatedLevel, EstimatedLevel, EstimatedLevel]
-PredictionInfo = Dict  # TODO: improve this type
+PredictionParameters = Dict[str, Any]  # TODO: improve this type
+
+_DataStatValue = Optional[float]
+_DataStat = List[_DataStatValue]
+DataStats = List[_DataStat]
+
+_LevelsType = Literal["absolute", "relative", "stdev"]
+_LevelsSpec = Tuple[_LevelsType, Tuple[float, float]]
+
+
+@dataclass(frozen=True)
+class PredictionInfo:
+    name: Timegroup
+    time: int
+    range: Tuple[Timestamp, Timestamp]
+    cf: ConsolidationFunctionName
+    dsname: MetricName
+    slice: int
+    params: PredictionParameters
+
+    @classmethod
+    def loads(cls, raw: str, *, name: Timegroup) -> 'PredictionInfo':
+        data = json.loads(raw)
+        range_ = data["range"]
+        return cls(
+            name=name,  # explicitly passed. (not in `data` before 2.1)
+            time=int(data["time"]),
+            range=(Timestamp(range_[0]), Timestamp(range_[1])),
+            cf=ConsolidationFunctionName(data["cf"]),
+            dsname=MetricName(data["dsname"]),
+            slice=int(data["slice"]),
+            params=dict(data["params"]),
+        )
+
+    def dumps(self) -> str:
+        return json.dumps(asdict(self))
+
+
+@dataclass(frozen=True)
+class PredictionData:
+    columns: List[str]
+    points: DataStats
+    num_points: int
+    data_twindow: List[Timestamp]
+    step: Seconds
+
+    @classmethod
+    def loads(cls, raw: str) -> 'PredictionData':
+        data = json.loads(raw)
+        return cls(
+            columns=[str(e) for e in data["columns"]],
+            points=[[None if e is None else float(e) for e in elist] for elist in data["points"]],
+            num_points=int(data["num_points"]),
+            data_twindow=[Timestamp(e) for e in data["data_twindow"]],
+            step=Seconds(data["step"]),
+        )
+
+    def dumps(self) -> str:
+        return json.dumps(asdict(self))
 
 
 def is_dst(timestamp: float) -> bool:
@@ -87,11 +148,14 @@ class TimeSeries:
             Includes [start, end, step, *values]
         timewindow: tuple
             describes (start, end, step), in this case data has only values
+        **metadata:
+            additional information arguments
 
     """
     def __init__(self,
                  data: TimeSeriesValues,
-                 timewindow: Optional[Tuple[float, float, float]] = None) -> None:
+                 timewindow: Optional[Tuple[float, float, float]] = None,
+                 **metadata: str) -> None:
         if timewindow is None:
             if data[0] is None or data[1] is None or data[2] is None:
                 raise ValueError("timewindow must not contain None")
@@ -103,6 +167,7 @@ class TimeSeries:
         self.end = int(timewindow[1])
         self.step = int(timewindow[2])
         self.values = data
+        self.metadata = metadata
 
     @property
     def twindow(self) -> TimeWindow:
@@ -176,6 +241,9 @@ class TimeSeries:
 
     def __len__(self) -> int:
         return len(self.values)
+
+    def __iter__(self) -> Iterator[TimeSeriesValue]:
+        yield from self.values
 
 
 def lq_logic(filter_condition: str, values: List[str], join: str) -> str:
@@ -261,97 +329,148 @@ def rrd_datacolum(hostname: HostName, service_description: ServiceName, varname:
     return time_boundaries
 
 
-def predictions_dir(hostname: HostName, service_description: ServiceName,
-                    dsname: MetricName) -> str:
-    return os.path.join(cmk.utils.paths.var_dir, "prediction", hostname,
-                        cmk.utils.pnp_cleanup(ensure_str(service_description)),
-                        cmk.utils.pnp_cleanup(dsname))
+class PredictionStore:
+    def __init__(
+        self,
+        host_name: HostName,
+        service_description: ServiceName,
+        dsname: MetricName,
+    ) -> None:
+        self._dir = Path(
+            cmk.utils.paths.var_dir,
+            "prediction",
+            host_name,
+            cmk.utils.pnp_cleanup(service_description),
+            cmk.utils.pnp_cleanup(dsname),
+        )
 
+    def available_predictions(self) -> Iterable[PredictionInfo]:
+        return (tg_info for f in self._dir.glob('*.info')
+                if (tg_info := self.get_info(Timegroup(f.stem))) is not None)
 
-def clean_prediction_files(pred_file: str, force: bool = False) -> None:
-    # In previous versions it could happen that the files were created with 0 bytes of size
-    # which was never handled correctly so that the prediction could never be used again until
-    # manual removal of the files. Clean this up.
-    for file_path in [pred_file, pred_file + '.info']:
-        if os.path.exists(file_path) and (os.stat(file_path).st_size == 0 or force):
-            logger.log(VERBOSE, "Removing obsolete prediction %s", os.path.basename(file_path))
-            os.remove(file_path)
+    def _data_file(self, timegroup: Timegroup) -> Path:
+        return self._dir / timegroup
 
+    def _info_file(self, timegroup: Timegroup) -> Path:
+        return self._dir / f'{timegroup}.info'
 
-# TODO: We should really *parse* the loaded data, currently the type signature
-# is a blatant lie!
-# (mo) And, in fact, this function returns at least 2 different types of dataset.
-def retrieve_data_for_prediction(info_file: str, timegroup: Timegroup) -> Optional[PredictionInfo]:
-    try:
-        return json.loads(open(info_file).read())
-    except IOError:
-        logger.log(VERBOSE, "No previous prediction for group %s available.", timegroup)
-    except ValueError:
-        logger.log(VERBOSE, "Invalid prediction file %s, old format", info_file)
-        pred_file = info_file[:-5] if info_file.endswith(".info") else info_file
-        clean_prediction_files(pred_file, force=True)
-    return None
+    def save_predictions(
+        self,
+        info: PredictionInfo,
+        data_for_pred: PredictionData,
+    ) -> None:
+        self._dir.mkdir(exist_ok=True, parents=True)
+        with self._info_file(info.name).open("w") as fname:
+            fname.write(info.dumps())
+        with self._data_file(info.name).open("w") as fname:
+            fname.write(data_for_pred.dumps())
+
+    def clean_prediction_files(self, timegroup: Timegroup, force: bool = False) -> None:
+        # In previous versions it could happen that the files were created with 0 bytes of size
+        # which was never handled correctly so that the prediction could never be used again until
+        # manual removal of the files. Clean this up.
+        for file_path in [self._data_file(timegroup), self._info_file(timegroup)]:
+            with suppress(FileNotFoundError):
+                if force or file_path.stat().st_size == 0:
+                    file_path.unlink()
+                    logger.log(VERBOSE, "Removed obsolete prediction %s", file_path.name)
+
+    def get_info(self, timegroup: Timegroup) -> Optional[PredictionInfo]:
+        raw = self._read_file(self._info_file(timegroup))
+        return None if raw is None else PredictionInfo.loads(raw, name=timegroup)
+
+    def get_data(self, timegroup: Timegroup) -> Optional[PredictionData]:
+        raw = self._read_file(self._data_file(timegroup))
+        return None if raw is None else PredictionData.loads(raw)
+
+    def _read_file(self, file_path: Path) -> Optional[str]:
+        try:
+            with file_path.open() as fh:
+                return fh.read()
+        except IOError:
+            logger.log(VERBOSE, "No previous prediction for group %s available.", file_path.stem)
+        except ValueError:
+            logger.log(VERBOSE, "Invalid prediction file %s, old format", file_path)
+            self.clean_prediction_files(Timegroup(file_path.stem), force=True)
+        return None
 
 
 def estimate_levels(
-    reference: Dict[str, Optional[float]],
-    params: Dict,
+    *,
+    reference_value: Optional[float],
+    stdev: Optional[float],
+    levels_lower: Optional[_LevelsSpec],
+    levels_upper: Optional[_LevelsSpec],
+    levels_upper_lower_bound: Optional[Tuple[float, float]],
     levels_factor: float,
-) -> Tuple[Optional[float], EstimatedLevels]:
-    ref_value = reference["average"]
-    if not ref_value:  # No reference data available
-        return ref_value, (None, None, None, None)
+) -> EstimatedLevels:
+    if not reference_value:  # No reference data available
+        return (None, None, None, None)
 
-    stdev = reference["stdev"]
+    estimated_upper_warn, estimated_upper_crit = _get_levels_from_params(
+        levels=levels_upper,
+        sig=1,
+        reference_value=reference_value,
+        stdev=stdev,
+        levels_factor=levels_factor,
+    ) if levels_upper else (None, None)
 
-    levels_upper = _get_levels_from_params("upper", 1, params, ref_value, stdev, levels_factor)
-    levels_lower = _get_levels_from_params("lower", -1, params, ref_value, stdev, levels_factor)
-    return ref_value, levels_upper + levels_lower
+    estimated_lower_warn, estimated_lower_crit = _get_levels_from_params(
+        levels=levels_lower,
+        sig=-1,
+        reference_value=reference_value,
+        stdev=stdev,
+        levels_factor=levels_factor,
+    ) if levels_lower else (None, None)
+
+    if levels_upper_lower_bound:
+        estimated_upper_warn = None if estimated_upper_warn is None else max(
+            levels_upper_lower_bound[0], estimated_upper_warn)
+        estimated_upper_crit = None if estimated_upper_crit is None else max(
+            levels_upper_lower_bound[1], estimated_upper_crit)
+
+    return (estimated_upper_warn, estimated_upper_crit, estimated_lower_warn, estimated_lower_crit)
 
 
 def _get_levels_from_params(
-    what: str,
-    sig: int,
-    params: Dict,
-    ref_value: float,
+    *,
+    levels: _LevelsSpec,
+    sig: Literal[1, -1],
+    reference_value: float,
     stdev: Optional[float],
-    levels_factor: float,
-) -> Tuple[EstimatedLevel, EstimatedLevel]:
-    p = "levels_" + what
-    if p not in params:
-        return None, None
-
-    this_levels = estimate_level_bounds(ref_value, stdev, sig, params[p], levels_factor)
-    if what == "upper" and "levels_upper_min" in params:
-        limit_warn, limit_crit = params["levels_upper_min"]
-        this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
-    return this_levels
-
-
-def estimate_level_bounds(
-    ref_value: float,
-    stdev: Optional[float],
-    sig: int,
-    params: Tuple[str, Tuple[float, float]],
     levels_factor: float,
 ) -> Tuple[float, float]:
-    how, (warn, crit) = params
-    if how == "absolute":
-        return (
-            ref_value + (sig * warn * levels_factor),
-            ref_value + (sig * crit * levels_factor),
-        )
-    if how == "relative":
-        return (
-            ref_value + sig * (ref_value * warn / 100.0),
-            ref_value + sig * (ref_value * crit / 100.0),
-        )
 
-    # how == "stdev":
+    levels_type, (warn, crit) = levels
+
+    reference_deviation = _get_reference_deviation(
+        levels_type=levels_type,
+        reference_value=reference_value,
+        stdev=stdev,
+        levels_factor=levels_factor,
+    )
+
+    estimated_warn = reference_value + sig * warn * reference_deviation
+    estimated_crit = reference_value + sig * crit * reference_deviation
+
+    return estimated_warn, estimated_crit
+
+
+def _get_reference_deviation(
+    *,
+    levels_type: _LevelsType,
+    reference_value: float,
+    stdev: Optional[float],
+    levels_factor: float,
+) -> float:
+    if levels_type == "absolute":
+        return levels_factor
+
+    if levels_type == "relative":
+        return reference_value / 100.0
+
+    # levels_type == "stdev":
     if stdev is None:  # just make explicit what would have happend anyway:
         raise TypeError("stdev is None")
 
-    return (
-        ref_value + sig * (stdev * warn),
-        ref_value + sig * (stdev * crit),
-    )
+    return stdev

@@ -11,22 +11,22 @@ import abc
 import base64
 import contextlib
 import inspect
-from itertools import islice
 import json
-from pathlib import Path
 import pprint
 import sys
 import traceback
-from typing import Any, Dict, Iterator, Optional, Tuple, Type
-import uuid
 import urllib.parse
+import uuid
+from itertools import islice
+from pathlib import Path
+from typing import Any, Dict, Iterator, Optional, Tuple, Type
 
 from six import ensure_str
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
-import cmk.utils.store as store
 import cmk.utils.plugin_registry
+import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 
 
 @contextlib.contextmanager
@@ -48,7 +48,7 @@ class RobustJSONEncoder(json.JSONEncoder):
 
 
 class CrashReportStore:
-    _keep_num_crashes = 20
+    _keep_num_crashes = 200
     """Caring about the persistance of crash reports in the local site"""
     def save(self, crash: 'ABCCrashReport') -> None:
         """Save the crash report instance to it's crash report directory"""
@@ -126,10 +126,8 @@ class CrashReportStore:
 
 class ABCCrashReport(metaclass=abc.ABCMeta):
     """Base class for the component specific crash report types"""
-
-    # TODO: Can not use this with python 2
-    #@abc.abstractclassmethod
     @classmethod
+    @abc.abstractmethod
     def type(cls) -> str:
         raise NotImplementedError()
 
@@ -172,7 +170,7 @@ class ABCCrashReport(metaclass=abc.ABCMeta):
         return self._serialize_attributes()
 
     def __init__(self, crash_info: Dict) -> None:
-        super(ABCCrashReport, self).__init__()
+        super().__init__()
         self.crash_info = crash_info
 
     def ident(self) -> Tuple[str, ...]:
@@ -254,8 +252,8 @@ def _get_local_vars_of_last_exception() -> str:
         for key, val in inspect.trace()[-1][0].f_locals.items():
             local_vars[key] = _format_var_for_export(val)
     except IndexError:
-        # please don't crash in the attempt to report a crash.
-        # Don't know why inspect.trace() causes an IndexError but it does happen
+        # Handle case where sys.exc_info has no crash information
+        # (https://docs.python.org/2/library/sys.html#sys.exc_info)
         pass
 
     # This needs to be encoded as the local vars might contain binary data which can not be

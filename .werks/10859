@@ -6,7 +6,7 @@ Date: 1582719398
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 This change introduces the kube-state-metrics package into the Prometheus
 agent. It allows to monitor the connected Kubernetes cluster and associating

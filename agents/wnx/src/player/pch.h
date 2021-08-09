@@ -1,6 +1,7 @@
 // Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
-// This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
-// conditions defined in the file COPYING, which is part of this source code package.
+// This file is part of Checkmk (https://checkmk.com). It is subject to the
+// terms and conditions defined in the file COPYING, which is part of this
+// source code package.
 
 // ----------------------------------------------
 // main PRECOMPILED header file for Plugin player
@@ -17,10 +18,6 @@
 #define FMT_HEADER_ONLY
 
 #include <filesystem>
-inline std::filesystem::path G_ProjectPath = PROJECT_DIR;
-inline std::filesystem::path G_TestPath = G_ProjectPath / "test";
-
-// TODO: add headers that you want to pre-compile here
 
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"

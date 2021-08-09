@@ -25,11 +25,11 @@
 """Wrapper functions for interactive dialogs using the dialog cmd tool"""
 
 import os
-import sys
 import subprocess
+import sys
 import termios
 from tty import setraw
-from typing import TYPE_CHECKING, Tuple, Pattern, Optional, List
+from typing import List, Optional, Pattern, Tuple, TYPE_CHECKING
 
 from cmk.utils import tty
 from cmk.utils.exceptions import MKTerminate

@@ -6,24 +6,21 @@
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
 import collections
-from typing import NamedTuple, List, Optional, Type
+from typing import List, NamedTuple, Optional, Type
 
 import cmk.utils.store as store
+from cmk.utils.type_defs import HostName
 
-import cmk.gui.config as config
-import cmk.gui.watolib as watolib
 import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
-from cmk.gui.globals import html
+import cmk.gui.watolib as watolib
+from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.globals import config, html, request, transactions, user
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.exceptions import HTTPRedirect, MKUserError
+from cmk.gui.plugins.wato import ActionResult, get_hosts_from_checkboxes, mode_registry, WatoMode
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.plugins.wato import (
-    mode_registry,
-    WatoMode,
-    get_hosts_from_checkboxes,
-)
+from cmk.gui.watolib.hosts_and_folders import CREFolder
 
 ParentScanTask = collections.namedtuple("ParentScanTask", [
     "site_id",
@@ -59,7 +56,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         return _("Parent scan")
 
     def __init__(self):
-        super(ParentScanBackgroundJob, self).__init__(
+        super().__init__(
             self.job_prefix,
             title=_("Parent scan"),
             lock_wato=False,
@@ -136,7 +133,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
             # The following code updates the host config. The progress from loading the WATO folder
             # until it has been saved needs to be locked.
             with store.lock_checkmk_configuration():
-                self._configure_host_and_gateway(task, settings, state, gateway)
+                self._configure_host_and_gateway(task, settings, gateway)
         else:
             self._logger.error(error)
 
@@ -154,7 +151,8 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         if state in ["failed", "dnserror", "garbled"]:
             self._num_errors += 1
 
-    def _configure_host_and_gateway(self, task, settings, state, gateway):
+    def _configure_host_and_gateway(self, task: ParentScanTask, settings: ParentScanSettings,
+                                    gateway: Optional[ParentScanResult]) -> None:
         watolib.Folder.invalidate_caches()
         folder = watolib.Folder.folder(task.folder_path)
 
@@ -166,7 +164,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
                               (",".join(parents) if parents else _("none")))
             return
 
-        if settings["force_explicit"] or host.folder().effective_attribute("parents") != parents:
+        if settings.force_explicit or host.folder().effective_attribute("parents") != parents:
             host.update_attributes({"parents": parents})
         else:
             # Check which parents the host would have inherited
@@ -180,7 +178,9 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
 
         self._num_new_parents_configured += 1
 
-    def _configure_gateway(self, task, settings, gateway, folder):
+    def _configure_gateway(self, task: ParentScanTask, settings: ParentScanSettings,
+                           gateway: Optional[ParentScanResult],
+                           folder: CREFolder) -> List[HostName]:
         """Ensure there is a gateway host in the Check_MK configuration (or raise an exception)
 
         If we have found a gateway, we need to know a matching host name from our configuration.
@@ -192,10 +192,10 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
         if gateway.existing_gw_host_name:
             return [gateway.existing_gw_host_name]  # Nothing needs to be created
 
-        if settings["where"] == "nowhere":
+        if settings.where == "nowhere":
             raise MKUserError(None, _("Need parent %s, but not allowed to create one") % gateway.ip)
 
-        gw_folder = self._determine_gateway_folder(settings["where"], folder)
+        gw_folder = self._determine_gateway_folder(settings.where, folder)
         gw_host_name = self._determine_gateway_host_name(task, gateway)
         gw_host_attributes = self._determine_gateway_attributes(task, settings, gateway, gw_folder)
 
@@ -204,7 +204,7 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
 
         return [gw_host_name]
 
-    def _determine_gateway_folder(self, where, folder):
+    def _determine_gateway_folder(self, where: str, folder: CREFolder) -> CREFolder:
         if where == "here":  # directly in current folder
             return watolib.Folder.current_disk_folder()
 
@@ -223,7 +223,8 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
 
         raise NotImplementedError()
 
-    def _determine_gateway_host_name(self, task, gateway):
+    def _determine_gateway_host_name(self, task: ParentScanTask,
+                                     gateway: ParentScanResult) -> HostName:
         if gateway.dns_name:
             return gateway.dns_name
 
@@ -232,13 +233,14 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
 
         return "gw-%s" % (gateway.ip.replace(".", "-"))
 
-    def _determine_gateway_attributes(self, task, settings, gateway, gw_folder):
+    def _determine_gateway_attributes(self, task: ParentScanTask, settings: ParentScanSettings,
+                                      gateway: ParentScanResult, gw_folder: CREFolder) -> dict:
         new_host_attributes = {
             "ipaddress": gateway.ip,
         }
 
-        if settings["alias"]:
-            new_host_attributes["alias"] = settings["alias"]
+        if settings.alias:
+            new_host_attributes["alias"] = settings.alias
 
         if gw_folder.site_id() != task.site_id:
             new_host_attributes["site"] = task.site_id
@@ -264,30 +266,30 @@ class ModeParentScan(WatoMode):
         return ModeFolder
 
     def _from_vars(self):
-        self._start = bool(html.request.var("_start"))
+        self._start = bool(request.var("_start"))
         # 'all' not set -> only scan checked hosts in current folder, no recursion
         # otherwise: all host in this folder, maybe recursively
-        self._all = bool(html.request.var("all"))
+        self._all = bool(request.var("all"))
         self._complete_folder = self._all
 
         # Ignored during initial form display
         self._settings = ParentScanSettings(
-            where=html.request.get_ascii_input_mandatory("where", "subfolder"),
-            alias=html.request.get_unicode_input_mandatory("alias", "").strip(),
+            where=request.get_ascii_input_mandatory("where", "subfolder"),
+            alias=request.get_unicode_input_mandatory("alias", "").strip(),
             recurse=html.get_checkbox("recurse") or False,
-            select=html.request.get_ascii_input_mandatory("select", "noexplicit"),
-            timeout=html.request.get_integer_input_mandatory("timeout", 8),
-            probes=html.request.get_integer_input_mandatory("probes", 2),
-            max_ttl=html.request.get_integer_input_mandatory("max_ttl", 10),
+            select=request.get_ascii_input_mandatory("select", "noexplicit"),
+            timeout=request.get_integer_input_mandatory("timeout", 8),
+            probes=request.get_integer_input_mandatory("probes", 2),
+            max_ttl=request.get_integer_input_mandatory("max_ttl", 10),
             force_explicit=html.get_checkbox("force_explicit") or False,
-            ping_probes=html.request.get_integer_input_mandatory("ping_probes", 5),
+            ping_probes=request.get_integer_input_mandatory("ping_probes", 5),
         )
         self._job = ParentScanBackgroundJob()
 
-    def action(self):
+    def action(self) -> ActionResult:
         try:
-            html.check_transaction()
-            config.user.save_file("parentscan", dict(self._settings._asdict()))
+            transactions.check_transaction()
+            user.save_file("parentscan", dict(self._settings._asdict()))
 
             self._job.set_function(self._job.do_execute, self._settings, self._get_tasks())
             self._job.start()
@@ -302,7 +304,7 @@ class ModeParentScan(WatoMode):
         raise HTTPRedirect(self._job.detail_url())
 
     def _get_tasks(self):
-        if not html.request.var("all"):
+        if not request.var("all"):
             return self._get_current_folder_host_tasks()
         return self._get_folder_tasks()
 
@@ -376,7 +378,7 @@ class ModeParentScan(WatoMode):
 
         forms.header(_("Settings for Parent Scan"))
 
-        self._settings = ParentScanSettings(**config.user.load_file(
+        self._settings = ParentScanSettings(**user.load_file(
             "parentscan", {
                 "where": "subfolder",
                 "alias": _("Created by parent scan"),

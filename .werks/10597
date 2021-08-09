@@ -6,7 +6,7 @@ Date: 1581418664
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Previously services corresponding to local checks based on outdated asynchronous agent data had been skipped.
 Due to timing related uncertanties this could result in services never leaving the PENDING state.

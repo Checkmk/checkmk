@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The previous "docker build" mechanism was using docker build arguments for
 handing over the Checkmk enterprise download credentials to the docker image

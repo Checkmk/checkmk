@@ -4,28 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 from argparse import Namespace
 from glob import glob
-import os
-from typing import Dict, List
 from importlib import import_module
+from typing import Dict, List
 
-import pytest  # type: ignore[import]
-from testlib import cmk_path
+import pytest
+
+from tests.testlib import cmk_path
 
 # TODO: Actually fix this stuff.
 NOT_TESTED_YET = {
     'agent_3par',
-    'agent_activemq',
     'agent_appdynamics',
     'agent_bi',
     'agent_ddn_s2a',
     'agent_emcvnx',
     'agent_hp_msa',
-    'agent_innovaphone',
     'agent_ipmi_sensors',
     'agent_jolokia',
-    'agent_netapp',
     'agent_prism',
     'agent_random',
     'agent_ruckus_spot',
@@ -68,16 +66,29 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
     'agent_ibmsvc': ['HOSTNAME'],
     'agent_jenkins': ['HOSTNAME'],
     'agent_jira': ['-P', 'PROTOCOL', '-u', 'USER', '-s', 'PASSWORD', '--hostname', 'HOSTNAME'],
-    'agent_kubernetes': ['--token', 'TOKEN', '--infos', 'INFOS', 'HOST'],
+    'agent_kubernetes': [
+        '--token', 'TOKEN', '--infos', 'INFOS', '--api-server-endpoint', 'ENDPOINT'
+    ],
     'agent_prometheus': [],
     'agent_rabbitmq': [
         '-P', 'PROTOCOL', '-m', 'SECTIONS', '-u', 'USER', '-s', 'PASSWORD', '--hostname', 'HOSTNAME'
     ],
     'agent_splunk': ['HOSTNAME'],
     'agent_vsphere': ['HOSTNAME'],
-    'agent_proxmox': ['HOSTNAME'],
+    'agent_proxmox_ve': ['HOSTNAME'],
     'agent_storeonce4x': ['USER', 'PASSWORD', 'HOST'],
     'agent_cisco_prime': ['--hostname', 'HOSTNAME'],
+    'agent_innovaphone': [
+        '--debug', '--verbose', '--vcrtrace', 'TRACEFILE', 'User', 'MyPass', 'Hostname'
+    ],
+    'agent_netapp': ["address", "user", "password"],
+    'agent_activemq': ["server", "1234"],
+    'agent_datadog': [
+        'HOSTNAME',
+        'API_KEY',
+        'APP_KEY',
+        'ADDRESS',
+    ],
 }
 
 

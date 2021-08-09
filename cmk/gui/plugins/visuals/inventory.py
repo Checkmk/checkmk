@@ -6,29 +6,25 @@
 
 import re
 import time
-from typing import List, Optional, Tuple, Callable
+from typing import List, Optional, Tuple, Union
 
-import cmk.gui.utils as utils
-import cmk.gui.inventory as inventory
 import cmk.utils.defines as defines
-from cmk.gui.valuespec import (
-    Age,
-    DualListChoice,
-    ValueSpec,
-)
-from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.exceptions import MKUserError
 
+import cmk.gui.inventory as inventory
+import cmk.gui.utils as utils
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.globals import html
+from cmk.gui.i18n import _
 from cmk.gui.plugins.visuals import (
-    filter_registry,
     Filter,
+    filter_registry,
     FilterTristate,
-    VisualInfo,
     visual_info_registry,
+    VisualInfo,
 )
-from cmk.gui.type_defs import (
-    Rows,)
+from cmk.gui.plugins.visuals.utils import display_filter_radiobuttons
+from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Rows, VisualContext
+from cmk.gui.valuespec import Age, DualListChoice, ValueSpec
 
 
 class FilterInvtableText(Filter):
@@ -40,19 +36,15 @@ class FilterInvtableText(Filter):
                          htmlvars=[ident],
                          link_columns=[])
 
-    def display(self) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
-        value = html.request.get_unicode_input(htmlvar)
-        if value is not None:
-            html.text_input(htmlvar, value)
+        html.text_input(htmlvar, value.get(htmlvar, ""))
 
-    def filter_table(self, rows: Rows) -> Rows:
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        value = context.get(self.ident, {})
+        assert not isinstance(value, str)
         htmlvar = self.htmlvars[0]
-        request_var = html.request.var(htmlvar)
-        if request_var is None:
-            return rows
-
-        filtertext = request_var.strip().lower()
+        filtertext = value.get(htmlvar, "").strip().lower()
         if not filtertext:
             return rows
 
@@ -61,15 +53,11 @@ class FilterInvtableText(Filter):
         except re.error:
             raise MKUserError(
                 htmlvar,
-                _('You search statement is not valid. You need to provide a regular '
+                _('Your search statement is not valid. You need to provide a regular '
                   'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
                   'if you like to search for a single backslash.'))
 
-        newrows = []
-        for row in rows:
-            if regex.search(row.get(htmlvar, "")):
-                newrows.append(row)
-        return newrows
+        return [row for row in rows if regex.search(row.get(htmlvar, ""))]
 
 
 class FilterInvtableTimestampAsAge(Filter):
@@ -83,20 +71,21 @@ class FilterInvtableTimestampAsAge(Filter):
                          htmlvars=[self._from_varprefix + "_days", self._to_varprefix + "_days"],
                          link_columns=[])
 
-    def display(self) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.open_table()
 
+        from_value, to_value = (self._days_to_seconds(value.get(v, "")) for v in self.htmlvars)
         html.open_tr()
         html.td("%s:" % _("from"), style="vertical-align: middle;")
         html.open_td()
-        self._valuespec().render_input(self._from_varprefix, 0)
+        self._valuespec().render_input(self._from_varprefix, from_value)
         html.close_td()
         html.close_tr()
 
         html.open_tr()
         html.td("%s:" % _("to"), style="vertical-align: middle;")
         html.open_td()
-        self._valuespec().render_input(self._to_varprefix, 0)
+        self._valuespec().render_input(self._to_varprefix, to_value)
         html.close_td()
         html.close_tr()
 
@@ -105,17 +94,28 @@ class FilterInvtableTimestampAsAge(Filter):
     def _valuespec(self) -> ValueSpec:
         return Age(display=["days"])
 
-    def filter_table_with_conversion(self, rows: Rows, conv: Callable[[float], float]) -> Rows:
-        from_value = self._valuespec().from_html_vars(self._from_varprefix)
-        to_value = self._valuespec().from_html_vars(self._to_varprefix)
+    @staticmethod
+    def _days_to_seconds(value: str) -> int:
+        try:
+            return int(value) * 3600 * 24
+        except ValueError:
+            return 0
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+
+        values = context.get(self.ident, {})
+        assert not isinstance(values, str)
+        from_value, to_value = (self._days_to_seconds(values.get(v, "")) for v in self.htmlvars)
+
         if not from_value and not to_value:
             return rows
 
+        now = time.time()
         newrows = []
         for row in rows:
             value = row.get(self.ident, None)
             if value is not None:
-                age = conv(value)
+                age = now - value
                 if from_value and age < from_value:
                     continue
 
@@ -123,10 +123,6 @@ class FilterInvtableTimestampAsAge(Filter):
                     continue
                 newrows.append(row)
         return newrows
-
-    def filter_table(self, rows: Rows) -> Rows:
-        now = time.time()
-        return self.filter_table_with_conversion(rows, lambda timestamp: now - timestamp)
 
 
 class FilterInvtableIDRange(Filter):
@@ -139,15 +135,22 @@ class FilterInvtableIDRange(Filter):
                          htmlvars=[ident + "_from", ident + "_to"],
                          link_columns=[])
 
-    def display(self) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.write_text(_("from:") + " ")
-        html.text_input(self.ident + "_from", size=8, cssclass="number")
+        html.text_input(self.ident + "_from",
+                        default_value=value.get(self.ident + "_from", ""),
+                        size=8,
+                        cssclass="number")
         html.write_text("&nbsp; %s: " % _("to"))
-        html.text_input(self.ident + "_to", size=8, cssclass="number")
+        html.text_input(self.ident + "_to",
+                        default_value=value.get(self.ident + "_to", ""),
+                        size=8,
+                        cssclass="number")
 
-    def filter_table(self, rows: Rows) -> Rows:
-        from_value = utils.saveint(html.request.var(self.ident + "_from"))
-        to_value = utils.saveint(html.request.var(self.ident + "_to"))
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        values = context.get(self.ident, {})
+        assert not isinstance(values, str)
+        from_value, to_value = (utils.saveint(values.get(v, 0)) for v in self.htmlvars)
 
         if not from_value and not to_value:
             return rows
@@ -174,7 +177,7 @@ class FilterInvtableOperStatus(Filter):
                          htmlvars=[ident + "_" + str(x) for x in defines.interface_oper_states()],
                          link_columns=[])
 
-    def display(self) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.begin_checkbox_group()
         for state, state_name in sorted(defines.interface_oper_states().items()):
             if not isinstance(state, int):  # needed because of silly types
@@ -182,27 +185,24 @@ class FilterInvtableOperStatus(Filter):
             if state >= 8:
                 continue  # skip artificial state 8 (degraded) and 9 (admin down)
             varname = self.ident + "_" + str(state)
-            html.checkbox(varname, True, label=state_name)
+            html.checkbox(varname, bool(value.get(varname, True)), label=state_name)
             if state in (4, 7):
                 html.br()
         html.end_checkbox_group()
 
-    def filter_table(self, rows: Rows) -> Rows:
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         # We consider the filter active if not all checkboxes
         # are either on (default) or off (unset)
-        settings = set([])
-        for varname in self.htmlvars:
-            settings.add(html.request.var(varname))
+        values = context.get(self.ident, {})
+        assert not isinstance(values, str)
+        settings = {values.get(v, "") for v in self.htmlvars}
         if len(settings) == 1:
             return rows
 
-        new_rows = []
-        for row in rows:
-            oper_status = row["invinterface_oper_status"]
-            varname = "%s_%d" % (self.ident, oper_status)
-            if html.get_checkbox(varname):
-                new_rows.append(row)
-        return new_rows
+        return [
+            row for row in rows
+            if values.get("%s_%d" % (self.ident, row["invinterface_oper_status"]), "")
+        ]
 
 
 class FilterInvtableAdminStatus(Filter):
@@ -214,23 +214,24 @@ class FilterInvtableAdminStatus(Filter):
                          htmlvars=[ident],
                          link_columns=[])
 
-    def display(self) -> None:
-        html.begin_radio_group(horizontal=True)
-        for value, text in [("1", _("up")), ("2", _("down")), ("-1", _("(ignore)"))]:
-            html.radiobutton(self.ident, value, value == "-1", text + " &nbsp; ")
-        html.end_radio_group()
+    def display(self, value: FilterHTTPVariables) -> None:
+        display_filter_radiobuttons(varname=self.ident,
+                                    options=[
+                                        ("1", _("up")),
+                                        ("2", _("down")),
+                                        ("-1", _("(ignore)")),
+                                    ],
+                                    default="-1",
+                                    value=value)
 
-    def filter_table(self, rows: Rows) -> Rows:
-        current = html.request.var(self.ident)
-        if current not in ("1", "2"):
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        values = context.get(self.ident, {})
+        assert not isinstance(values, str)
+        current = values.get(self.ident, '-1')
+        if current == "-1":
             return rows
 
-        new_rows = []
-        for row in rows:
-            admin_status = str(row["invinterface_admin_status"])
-            if admin_status == current:
-                new_rows.append(row)
-        return new_rows
+        return [row for row in rows if str(row["invinterface_admin_status"]) == current]
 
 
 class FilterInvtableAvailable(Filter):
@@ -242,25 +243,24 @@ class FilterInvtableAvailable(Filter):
                          htmlvars=[ident],
                          link_columns=[])
 
-    def display(self) -> None:
-        html.begin_radio_group(horizontal=True)
-        for value, text in [("no", _("used")), ("yes", _("free")), ("", _("(ignore)"))]:
-            html.radiobutton(self.ident, value, value == "", text + " &nbsp; ")
-        html.end_radio_group()
+    def display(self, value: FilterHTTPVariables) -> None:
+        display_filter_radiobuttons(varname=self.ident,
+                                    options=[
+                                        ("no", _("used")),
+                                        ("yes", _("free")),
+                                        ("", _("(ignore)")),
+                                    ],
+                                    default="",
+                                    value=value)
 
-    def filter_table(self, rows: Rows) -> Rows:
-        current = html.request.var(self.ident)
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        value = context.get(self.ident, {})
+        current = value if isinstance(value, str) else value.get(self.ident, "")
+
         if current not in ("no", "yes"):
             return rows
 
-        f = current == "yes"
-
-        new_rows = []
-        for row in rows:
-            available = row.get("invinterface_available")
-            if available == f:
-                new_rows.append(row)
-        return new_rows
+        return [row for row in rows if (current == "yes") == row.get("invinterface_available")]
 
 
 class FilterInvtableInterfaceType(Filter):
@@ -284,29 +284,24 @@ class FilterInvtableInterfaceType(Filter):
             custom_order=True,
         )
 
-    def selection(self) -> List[str]:
-        request_var = html.request.var(self.ident)
-        if request_var is None:
-            return []
-        current = request_var.strip().split("|")
+    def selection(self, value: FilterHTTPVariables) -> List[str]:
+        current = value.get(self.ident, "").strip().split("|")
         if current == ['']:
             return []
         return current
 
-    def display(self) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.open_div(class_="multigroup")
-        self.valuespec().render_input(self.ident, self.selection())
+        self.valuespec().render_input(self.ident, self.selection(value))
         html.close_div()
 
-    def filter_table(self, rows: Rows) -> Rows:
-        current = self.selection()
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        value = context.get(self.ident, {})
+        assert not isinstance(value, str)
+        current = self.selection(value)
         if len(current) == 0:
             return rows  # No types selected, filter is unused
-        new_rows = []
-        for row in rows:
-            if str(row[self.ident]) in current:
-                new_rows.append(row)
-        return new_rows
+        return [row for row in rows if str(row[self.ident]) in current]
 
 
 class FilterInvtableVersion(Filter):
@@ -318,16 +313,17 @@ class FilterInvtableVersion(Filter):
                          htmlvars=[ident + "_from", ident + "_to"],
                          link_columns=[])
 
-    def display(self) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.write_text(_("Min.&nbsp;Version:"))
-        html.text_input(self.htmlvars[0], size=7)
+        html.text_input(self.htmlvars[0], default_value=value.get(self.htmlvars[0], ""), size=7)
         html.write_text(" &nbsp; ")
         html.write_text(_("Max.&nbsp;Version:"))
-        html.text_input(self.htmlvars[1], size=7)
+        html.text_input(self.htmlvars[1], default_value=value.get(self.htmlvars[1], ""), size=7)
 
-    def filter_table(self, rows: Rows) -> Rows:
-        from_version = html.request.var(self.htmlvars[0])
-        to_version = html.request.var(self.htmlvars[1])
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        values = context.get(self.ident, {})
+        assert not isinstance(values, str)
+        from_version, to_version = (values.get(v) for v in self.htmlvars)
         if not from_version and not to_version:
             return rows  # Filter not used
 
@@ -344,31 +340,31 @@ class FilterInvtableVersion(Filter):
 
 
 class FilterInvText(Filter):
-    def __init__(self, *, ident: str, title: str, inv_path: str) -> None:
+    def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
         super().__init__(ident=ident,
                          title=title,
                          sort_index=800,
                          info="host",
                          htmlvars=[ident],
-                         link_columns=[])
+                         link_columns=[],
+                         is_show_more=is_show_more)
         self._invpath = inv_path
 
-    @property
-    def filtertext(self):
+    def filtertext(self, value: FilterHTTPVariables) -> FilterHeader:
         "Returns the string to filter"
-        return html.request.get_str_input_mandatory(self.htmlvars[0], "").strip().lower()
+        return value.get(self.htmlvars[0], "").strip().lower()
 
-    def need_inventory(self) -> bool:
-        return bool(self.filtertext)
+    def need_inventory(self, value) -> bool:
+        return bool(self.filtertext(value))
 
-    def display(self) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
-        value = html.request.var(htmlvar)
-        if value is not None:
-            html.text_input(htmlvar, value)
+        html.text_input(htmlvar, value[htmlvar] if value else "")
 
-    def filter_table(self, rows: Rows) -> Rows:
-        filtertext = self.filtertext
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        values = context.get(self.ident, {})
+        assert not isinstance(values, str)
+        filtertext = self.filtertext(values)
         if not filtertext:
             return rows
 
@@ -377,14 +373,14 @@ class FilterInvText(Filter):
         except re.error:
             raise MKUserError(
                 self.htmlvars[0],
-                _('You search statement is not valid. You need to provide a regular '
+                _('Your search statement is not valid. You need to provide a regular '
                   'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
                   'if you like to search for a single backslash.'))
 
         newrows = []
         for row in rows:
-            invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
-            if invdata is None:
+            invdata = inventory.get_inventory_attribute(row["host_inventory"], self._invpath)
+            if not isinstance(invdata, str):
                 invdata = ""
             if regex.search(invdata):
                 newrows.append(row)
@@ -392,55 +388,66 @@ class FilterInvText(Filter):
 
 
 class FilterInvFloat(Filter):
-    def __init__(self, *, ident: str, title: str, inv_path: str, unit: Optional[str],
-                 scale: Optional[float]) -> None:
+    def __init__(self,
+                 *,
+                 ident: str,
+                 title: str,
+                 inv_path: str,
+                 unit: Optional[str],
+                 scale: Optional[float],
+                 is_show_more: bool = True) -> None:
         super().__init__(ident=ident,
                          title=title,
                          sort_index=800,
                          info="host",
                          htmlvars=[ident + "_from", ident + "_to"],
-                         link_columns=[])
+                         link_columns=[],
+                         is_show_more=is_show_more)
         self._invpath = inv_path
         self._unit = unit
         self._scale = scale if scale is not None else 1.0
 
-    def display(self) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.write_text(_("From: "))
         htmlvar = self.htmlvars[0]
-        current_value = html.request.var(htmlvar, "")
-        html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
+        current_value = value.get(htmlvar, "")
+        html.text_input(htmlvar, default_value=current_value, size=8, cssclass="number")
         if self._unit:
-            html.write(self._unit)
+            html.write_text(" %s" % self._unit)
 
         html.write_text("&nbsp;&nbsp;" + _("To: "))
         htmlvar = self.htmlvars[1]
-        current_value = html.request.var(htmlvar, "")
-        html.text_input(htmlvar, default_value=str(current_value), size=8, cssclass="number")
+        current_value = value.get(htmlvar, "")
+        html.text_input(htmlvar, default_value=current_value, size=8, cssclass="number")
         if self._unit:
-            html.write(self._unit)
+            html.write_text(" %s" % self._unit)
 
-    def filter_configs(self):
+    def filter_configs(self, values: FilterHTTPVariables) -> List[Optional[float]]:
         "Returns scaled lower and upper bounds"
 
-        def _scaled_bound(value):
+        def _scaled_bound(name) -> Optional[float]:
             try:
-                return html.request.get_float_input_mandatory(value) * self._scale
-            except MKUserError:
+                return float(values.get(name, "")) * self._scale
+            except ValueError:
                 return None
 
-        return [_scaled_bound(val) for val in self.htmlvars[:2]]
+        return [_scaled_bound(name) for name in self.htmlvars[:2]]
 
-    def need_inventory(self) -> bool:
-        return any(self.filter_configs())
+    def need_inventory(self, value) -> bool:
+        return any(self.filter_configs(value))
 
-    def filter_table(self, rows: Rows) -> Rows:
-        lower, upper = self.filter_configs()
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        values = context.get(self.ident, {})
+        assert not isinstance(values, str)
+        lower, upper = self.filter_configs(values)
         if not any((lower, upper)):
             return rows
 
         newrows = []
         for row in rows:
-            invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
+            invdata = inventory.get_inventory_attribute(row["host_inventory"], self._invpath)
+            if not isinstance(invdata, (int, float)):
+                continue
             if lower is not None and invdata < lower:
                 continue
             if upper is not None and invdata > upper:
@@ -450,25 +457,32 @@ class FilterInvFloat(Filter):
 
 
 class FilterInvBool(FilterTristate):
-    def __init__(self, *, ident: str, title: str, inv_path: str) -> None:
-        super().__init__(ident=ident, title=title, sort_index=800, info="host", column=ident)
+    def __init__(self, *, ident: str, title: str, inv_path: str, is_show_more: bool = True) -> None:
+        super().__init__(ident=ident,
+                         title=title,
+                         sort_index=800,
+                         info="host",
+                         column=ident,
+                         is_show_more=is_show_more)
         self._invpath = inv_path
 
-    def need_inventory(self) -> bool:
-        return self.tristate_value() != -1
+    def need_inventory(self, value) -> bool:
+        return self.tristate_value(value) != -1
 
-    def filter(self, infoname):
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return ""  # No Livestatus filtering right now
 
-    def filter_table(self, rows: Rows) -> Rows:
-        tri = self.tristate_value()
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        value = context.get(self.ident, {})
+        assert not isinstance(value, str)
+        tri = self.tristate_value(value)
         if tri == -1:
             return rows
 
         wanted_value = tri == 1
         newrows = []
         for row in rows:
-            invdata = inventory.get_inventory_data(row["host_inventory"], self._invpath)
+            invdata = inventory.get_inventory_attribute(row["host_inventory"], self._invpath)
             if wanted_value == invdata:
                 newrows.append(row)
         return newrows
@@ -481,16 +495,19 @@ class FilterHasInv(FilterTristate):
                          title=_("Has Inventory Data"),
                          sort_index=801,
                          info="host",
-                         column="host_inventory")
+                         column="host_inventory",
+                         is_show_more=True)
 
-    def need_inventory(self) -> bool:
-        return self.tristate_value() != -1
+    def need_inventory(self, value) -> bool:
+        return self.tristate_value(value) != -1
 
-    def filter(self, infoname):
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return ""  # No Livestatus filtering right now
 
-    def filter_table(self, rows: Rows) -> Rows:
-        tri = self.tristate_value()
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        value = context.get(self.ident, {})
+        assert not isinstance(value, str)
+        tri = self.tristate_value(value)
         if tri == -1:
             return rows
         if tri == 1:
@@ -512,62 +529,66 @@ class FilterInvHasSoftwarePackage(Filter):
                              self._varprefix + "version_from",
                              self._varprefix + "version_to",
                              self._varprefix + "negate",
+                             self._varprefix + "match",
                          ],
-                         link_columns=[])
+                         link_columns=[],
+                         is_show_more=True)
 
-    @property
-    def filtername(self):
-        return html.request.get_unicode_input(self._varprefix + "name")
+    def need_inventory(self, value: FilterHTTPVariables) -> bool:
+        return bool(value.get(self._varprefix + "name"))
 
-    def need_inventory(self) -> bool:
-        return bool(self.filtername)
-
-    def display(self) -> None:
+    def display(self, value: FilterHTTPVariables) -> None:
         html.text_input(self._varprefix + "name")
         html.br()
-        html.begin_radio_group(horizontal=True)
-        html.radiobutton(self._varprefix + "match", "exact", True, label=_("exact match"))
-        html.radiobutton(self._varprefix + "match",
-                         "regex",
-                         False,
-                         label=_("regular expression, substring match"))
-        html.end_radio_group()
+        display_filter_radiobuttons(varname=self._varprefix + "match",
+                                    options=[("exact", _("exact match")),
+                                             ("regex", _("regular expression, substring match"))],
+                                    default="exact",
+                                    value=value)
         html.br()
-        html.write_text(_("Min.&nbsp;Version:"))
-        html.text_input(self._varprefix + "version_from", size=9)
+        html.open_span(class_="min_max_row")
+        html.write_text(_("Min.&nbsp;Version: "))
+        html.text_input(self._varprefix + "version_from",
+                        default_value=value.get(self._varprefix + "version_from", ""),
+                        size=9)
         html.write_text(" &nbsp; ")
-        html.write_text(_("Max.&nbsp;Vers.:"))
-        html.text_input(self._varprefix + "version_to", size=9)
+        html.write_text(_("Max.&nbsp;Vers.: "))
+        html.text_input(self._varprefix + "version_to",
+                        default_value=value.get(self._varprefix + "version_from", ""),
+                        size=9)
+        html.close_span()
         html.br()
         html.checkbox(self._varprefix + "negate",
                       False,
                       label=_("Negate: find hosts <b>not</b> having this package"))
 
-    def filter_table(self, rows: Rows) -> Rows:
-        name = self.filtername
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        value = context.get(self.ident, {})
+        assert not isinstance(value, str)
+        name: Union[str, re.Pattern] = value.get(self._varprefix + "name", "")
         if not name:
             return rows
 
-        from_version = html.request.var(self._varprefix + "from_version")
-        to_version = html.request.var(self._varprefix + "to_version")
-        negate = html.get_checkbox(self._varprefix + "negate")
-        match = html.request.var(self._varprefix + "match")
+        from_version = value[self._varprefix + "from_version"]
+        to_version = value[self._varprefix + "to_version"]
+        negate = bool(value[self._varprefix + "negate"])
+        match = value[self._varprefix + "match"]
         if match == "regex":
             try:
                 name = re.compile(name)
             except re.error:
                 raise MKUserError(
                     self._varprefix + "name",
-                    _('You search statement is not valid. You need to provide a regular '
+                    _('Your search statement is not valid. You need to provide a regular '
                       'expression (regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> '
                       'if you like to search for a single backslash.'))
 
         new_rows = []
         for row in rows:
-            packages_numeration = row["host_inventory"].get_sub_numeration(["software", "packages"])
-            if packages_numeration is None:
+            packages_table = row["host_inventory"].get_table(["software", "packages"])
+            if packages_table is None:
                 continue
-            packages = packages_numeration.get_child_data()
+            packages = packages_table.data
             is_in = self.find_package(packages, name, from_version, to_version)
             if is_in != negate:
                 new_rows.append(row)

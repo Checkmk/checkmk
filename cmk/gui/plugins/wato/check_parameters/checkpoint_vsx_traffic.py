@@ -5,17 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
-    rulespec_registry,
     Levels,
+    rulespec_registry,
     RulespecGroupCheckParametersNetworking,
 )
+from cmk.gui.valuespec import Dictionary, TextInput
 
 
 def _parameter_valuespec_checkpoint_vsx_traffic():
@@ -42,7 +38,7 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="checkpoint_vsx_traffic",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextAscii(title=_("VSID")),
+        item_spec=lambda: TextInput(title=_("VSID")),
         parameter_valuespec=_parameter_valuespec_checkpoint_vsx_traffic,
         title=lambda: _("Checkpoint VSID traffic rate"),
     ))

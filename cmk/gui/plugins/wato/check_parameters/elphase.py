@@ -4,20 +4,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any, Dict
+
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersEnvironment,
+)
 from cmk.gui.valuespec import (
     Dictionary,
     Float,
     Integer,
     ListOf,
     MonitoringState,
-    TextAscii,
+    TextInput,
+    Transform,
     Tuple,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersEnvironment,
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
 )
 
 
@@ -85,7 +88,7 @@ def _phase_elements():
 
 
 def _item_spec_el_inphase():
-    return TextAscii(title=_("Input Name"), help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
+    return TextInput(title=_("Input Name"), help=_("The name of the input, e.g. <tt>Phase 1</tt>"))
 
 
 def _parameter_valuespec_el_inphase():
@@ -96,12 +99,13 @@ def _parameter_valuespec_el_inphase():
         elements=_phase_elements() + [
             ("map_device_states",
              ListOf(
-                 Tuple(elements=[TextAscii(size=10), MonitoringState()]),
+                 Tuple(elements=[TextInput(size=10), MonitoringState()]),
                  title=_("Map device state"),
                  help=_("Here you can enter either device state number (eg. from SNMP devices) "
                         "or exact device state name and the related monitoring state."),
              )),
         ],
+        ignored_keys=['_item_key'],
     )
 
 
@@ -117,30 +121,39 @@ rulespec_registry.register(
 
 
 def _item_spec_ups_outphase():
-    return TextAscii(title=_("Output Name"),
+    return TextInput(title=_("Output Name"),
                      help=_("The name of the output, e.g. <tt>Phase 1</tt>/<tt>PDU 1</tt>"))
 
 
-def _parameter_valuespec_ups_outphase():
-    return Dictionary(
-        help=_("This rule allows you to specify levels for the voltage, current, load, power "
-               "and apparent power of your device. The levels will only be applied if the device "
-               "actually supplies values for these parameters."),
-        elements=_phase_elements() + [
-            ("load",
-             Tuple(title=_("Load"),
-                   elements=[
-                       Integer(title=_("warning at"), unit=u"%", default_value=80),
-                       Integer(title=_("critical at"), unit=u"%", default_value=90),
-                   ])),
-            ("map_device_states",
-             ListOf(
-                 Tuple(elements=[TextAscii(size=10), MonitoringState()]),
-                 title=_("Map device state"),
-                 help=_("Here you can enter either device state number (eg. from SNMP devices) "
-                        "or exact device state name and the related monitoring state."),
-             )),
-        ],
+def _transform_parameter_valuespec_ups_outphase(params: Dict[str, Any]) -> Dict[str, Any]:
+    changed_keys = {"load": "output_load"}
+    return {changed_keys.get(k, k): v for k, v in params.items()}
+
+
+def _parameter_valuespec_ups_outphase() -> Transform:
+    return Transform(
+        Dictionary(
+            help=_(
+                "This rule allows you to specify levels for the voltage, current, load, power "
+                "and apparent power of your device. The levels will only be applied if the device "
+                "actually supplies values for these parameters."),
+            elements=_phase_elements() + [
+                ("output_load",
+                 Tuple(title=_("Load"),
+                       elements=[
+                           Integer(title=_("warning at"), unit=u"%", default_value=80),
+                           Integer(title=_("critical at"), unit=u"%", default_value=90),
+                       ])),
+                ("map_device_states",
+                 ListOf(
+                     Tuple(elements=[TextInput(size=10), MonitoringState()]),
+                     title=_("Map device state"),
+                     help=_("Here you can enter either device state number (eg. from SNMP devices) "
+                            "or exact device state name and the related monitoring state."),
+                 )),
+            ],
+        ),
+        forth=_transform_parameter_valuespec_ups_outphase,
     )
 
 

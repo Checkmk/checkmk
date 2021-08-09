@@ -4,6 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dateutil.parser
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.ibm_mq import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<ibm_mq_queues:sep(10)>>>
 # QMNAME(MY.TEST)                                           STATUS(RUNNING)
 # 5724-H72 (C) Copyright IBM Corp. 1994, 2015.
@@ -32,8 +40,6 @@
 # 2 MQSC commands read.
 # No commands have a syntax error.
 # All valid MQSC commands were processed.
-
-import dateutil
 
 factory_settings["ibm_mq_queues_default_levels"] = {}
 
@@ -78,11 +84,21 @@ def check_ibm_mq_queues(item, params, parsed):
 
     if "IPPROCS" in data:
         cnt = data["IPPROCS"]
-        yield ibm_mq_procs(cnt, 'Open input count', 'ipprocs', 'reading', params)
+        yield ibm_mq_procs(cnt, 'Open input handles', 'ipprocs', 'ipprocs', params)
 
     if "OPPROCS" in data:
         cnt = data["OPPROCS"]
-        yield ibm_mq_procs(cnt, 'Open output count', 'opprocs', 'writing', params)
+        yield ibm_mq_procs(cnt, 'Open output handles', 'opprocs', 'opprocs', params)
+
+    if "QTIME" in data:
+        qtimes = data["QTIME"]
+        tuple_value = regex(r"^([0-9]*),[\s]*([0-9]*)$")
+        qtimes_match = tuple_value.match(qtimes)
+        if qtimes_match:
+            qtime_short = qtimes_match.group(1)
+            qtime_long = qtimes_match.group(2)
+            yield ibm_mq_get_qtime(qtime_short, 'Qtime short', 'qtime_short')
+            yield ibm_mq_get_qtime(qtime_long, 'Qtime long', 'qtime_long')
 
 
 def ibm_mq_depth(cur_depth, max_depth, params):
@@ -103,7 +119,7 @@ def ibm_mq_depth(cur_depth, max_depth, params):
             state = 1
         if state:
             levelstext.append("%d/%d" % (warn, crit))
-    perfdata = [("messages_in_queue", cur_depth, warn, crit, 0, max_depth)]
+    perfdata = [("curdepth", cur_depth, warn, crit, 0, max_depth)]
 
     if cur_depth and max_depth:
         state_perc = 0
@@ -130,7 +146,7 @@ def ibm_mq_msg_age(msg_age, params):
     if not msg_age:
         return (0, label + ": n/a", [])
     return check_levels(int(msg_age),
-                        "age_oldest",
+                        "msgage",
                         params.get("msgage"),
                         human_readable_func=get_age_human_readable,
                         infoname=label)
@@ -170,6 +186,18 @@ def ibm_mq_procs(cnt, label, levels_key, metric, params):
                         infoname=label)
 
 
+def ibm_mq_get_qtime(qtime, label, key):
+    if not qtime or qtime == '999999999':
+        time_in_seconds = 0
+        info_value = "n/a"
+    else:
+        time_in_seconds = int(qtime) / 1000000
+        info_value = get_age_human_readable(time_in_seconds)
+    infotext = "%s: %s" % (label, info_value)
+    perfdata = [(key, time_in_seconds, None, None)]
+    return (0, infotext, perfdata)
+
+
 check_info["ibm_mq_queues"] = {
     "parse_function": parse_ibm_mq_queues,
     "inventory_function": inventory_ibm_mq_queues,
@@ -178,5 +206,4 @@ check_info["ibm_mq_queues"] = {
     "has_perfdata": True,
     "default_levels_variable": "ibm_mq_queues_default_levels",
     "group": "ibm_mq_queues",
-    "includes": ["ibm_mq.include"],
 }

@@ -21,16 +21,32 @@ class Logger;
 class MonitoringCore;
 class Query;
 
-// NOTE: This macro leads to undefined behaviour for non-POD/non-standard-layout
-// classes, e.g. Entity, Host, etc., nevertheless we have to use it below. :-/
-// On top of that, we use -1 as placeholder so that the result must be
-// converted to int in the end.
-#define DANGEROUS_OFFSETOF(typename, member)                             \
-    (static_cast<int>(reinterpret_cast<size_t>(                          \
-                          &(reinterpret_cast<typename *>(32))->member) - \
-                      32))
-
 /// A table-like view for some underlying data, exposed via LQL.
+///
+/// table               | primary key
+/// ------------------- | ---------------------------------------
+/// columns             | table;name
+/// commands            | name
+/// comments            | id
+/// contactgroups       | name
+/// contacts            | name
+/// crashreports        | id
+/// downtimes           | id
+/// eventconsoleevents  | event_id
+/// eventconsolehistory | _none, problem: history_line unusable_
+/// eventconsolerules   | rule_id
+/// eventconsolestatus  | _none, but just a single-row table_
+/// hostgroups          | name
+/// hosts               | name
+/// hostsbygroup        | hostgroup_name;name
+/// log                 | time;lineno
+/// servicegroups       | name
+/// services            | host_name;description
+/// servicesbygroup     | servicegroup_name;host_name;description
+/// servicesbyhostgroup | hostgroup_name;host_name;description
+/// statehist           | _none, totally unclear_
+/// status              | _none, but just a single-row table_
+/// timeperiods         | name
 class Table {
 public:
     explicit Table(MonitoringCore *mc);
@@ -40,7 +56,7 @@ public:
 
     template <typename Predicate>
     bool any_column(Predicate pred) const {
-        for (auto &c : _columns) {
+        for (const auto &c : _columns) {
             if (pred(c.second)) {
                 return true;
             }
@@ -89,7 +105,11 @@ public:
     // be a real correctness problem! This has to be fixed...
     virtual void answerQuery(Query *query) = 0;
     virtual bool isAuthorized(Row row, const contact *ctc) const;
-    [[nodiscard]] virtual Row findObject(const std::string &objectspec) const;
+
+    [[nodiscard]] virtual Row get(const std::string &primary_key) const;
+
+    // We have funny single-row tables without a primary key!
+    [[nodiscard]] virtual Row getDefault() const;
 
     template <typename T>
     [[nodiscard]] const T *rowData(Row row) const {

@@ -9,7 +9,6 @@
 
 // https://github.com/include-what-you-use/include-what-you-use/issues/166
 // IWYU pragma: no_include <ext/alloc_traits.h>
-// IWYU pragma: no_include <type_traits>
 #include "config.h"
 
 #include <fcntl.h>
@@ -28,6 +27,7 @@
 #include <cstring>
 #include <deque>
 #include <filesystem>
+#include <map>
 #include <memory>
 #include <optional>
 #include <sstream>
@@ -36,9 +36,11 @@
 
 #include "Average.h"
 #include "ChronoUtils.h"
+#include "DowntimeOrComment.h"
 #include "InputBuffer.h"
 #include "Logger.h"
 #include "NagiosCore.h"
+#include "NagiosGlobals.h"
 #include "OutputBuffer.h"
 #include "Poller.h"
 #include "Queue.h"
@@ -53,34 +55,40 @@
 
 using namespace std::chrono_literals;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
-#ifndef NAGIOS4
-extern int event_broker_options;
-#else
-extern unsigned long event_broker_options;
-#endif  // NAGIOS4
-extern int enable_environment_macros;
 
 // maximum idle time for connection in keep alive state
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static std::chrono::milliseconds fl_idle_timeout = 5min;
 
 // maximum time for reading a query
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static std::chrono::milliseconds fl_query_timeout = 10s;
 
 // allow 10 concurrent connections per default
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 size_t g_livestatus_threads = 10;
 // current number of queued connections (for statistics)
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_queued_connections = 0;
 // current number of active connections (for statistics)
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::atomic_int32_t g_livestatus_active_connections{0};
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 size_t g_thread_stack_size = 1024 * 1024; /* stack size of threads */
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 void *g_nagios_handle;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_unix_socket = -1;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_max_fd_ever = 0;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosPaths fl_paths;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static bool fl_should_terminate = false;
 
 struct ThreadInfo {
@@ -88,34 +96,52 @@ struct ThreadInfo {
     std::string name;
 };
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static std::vector<ThreadInfo> fl_thread_info;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static thread_local ThreadInfo *tl_info;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosLimits fl_limits;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_thread_running = 0;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosAuthorization fl_authorization;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Encoding fl_data_encoding{Encoding::utf8};
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static Logger *fl_logger_nagios = nullptr;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static LogLevel fl_livestatus_log_level = LogLevel::notice;
 using ClientQueue_t = Queue<std::deque<int>>;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static ClientQueue_t *fl_client_queue = nullptr;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 TimeperiodsCache *g_timeperiods_cache = nullptr;
 
 /* simple statistics data for TableStatus */
-extern host *host_list;
-extern service *service_list;
-extern int log_initial_states;
-
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_hosts;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int g_num_services;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 bool g_any_event_handler_enabled;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 double g_average_active_latency;
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 Average g_avg_livestatus_usage;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static std::map<unsigned long, std::unique_ptr<Downtime>> fl_downtimes;
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static std::map<unsigned long, std::unique_ptr<Comment>> fl_comments;
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static NagiosCore *fl_core = nullptr;
 
 namespace {
@@ -157,8 +183,6 @@ void update_status() {
 }
 }  // namespace
 
-void *voidp;
-
 void livestatus_count_fork() { counterIncrement(Counter::forks); }
 
 void livestatus_cleanup_after_fork() {
@@ -182,7 +206,7 @@ void livestatus_cleanup_after_fork() {
     // wird mit mutexes rumgemacht....
     for (int i = 3; i < g_max_fd_ever; i++) {
         if (0 == fstat(i, &st) && S_ISSOCK(st.st_mode)) {
-            close(i);
+            ::close(i);
         }
     }
 }
@@ -204,7 +228,7 @@ void *main_thread(void *data) {
             }
             break;
         }
-        int cc = accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
+        int cc = ::accept4(g_unix_socket, nullptr, nullptr, SOCK_CLOEXEC);
         if (cc == -1) {
             generic_error ge("cannot accept client connection");
             Warning(logger) << ge;
@@ -228,7 +252,7 @@ void *main_thread(void *data) {
         counterIncrement(Counter::connections);
     }
     Notice(logger) << "socket thread has terminated";
-    return voidp;
+    return nullptr;
 }
 
 void *client_thread(void *data) {
@@ -252,11 +276,11 @@ void *client_thread(void *data) {
                 OutputBuffer output_buffer(*cc, fl_should_terminate, logger);
                 keepalive = fl_core->answerRequest(input_buffer, output_buffer);
             }
-            close(*cc);
+            ::close(*cc);
         }
         g_livestatus_active_connections--;
     }
-    return voidp;
+    return nullptr;
 }
 
 namespace {
@@ -317,18 +341,30 @@ void start_threads() {
         << "starting main thread and " << g_livestatus_threads
         << " client threads";
 
-    pthread_atfork(livestatus_count_fork, nullptr,
-                   livestatus_cleanup_after_fork);
+    if (auto result = pthread_atfork(livestatus_count_fork, nullptr,
+                                     livestatus_cleanup_after_fork);
+        result != 0) {
+        Warning(fl_logger_nagios)
+            << generic_error{result, "cannot set fork handler"};
+    }
 
     pthread_attr_t attr;
-    pthread_attr_init(&attr);
+    if (auto result = pthread_attr_init(&attr); result != 0) {
+        Warning(fl_logger_nagios) << generic_error{
+            result, "cannot create livestatus thread attributes"};
+    }
     size_t defsize = 0;
-    if (pthread_attr_getstacksize(&attr, &defsize) == 0) {
+    if (auto result = pthread_attr_getstacksize(&attr, &defsize); result != 0) {
+        Warning(fl_logger_nagios) << generic_error{
+            result, "cannot get default livestatus thread stack size"};
+    } else {
         Debug(fl_logger_nagios) << "default stack size is " << defsize;
     }
-    if (pthread_attr_setstacksize(&attr, g_thread_stack_size) != 0) {
-        Warning(fl_logger_nagios)
-            << "cannot set thread stack size to " << g_thread_stack_size;
+    if (auto result = pthread_attr_setstacksize(&attr, g_thread_stack_size);
+        result != 0) {
+        Warning(fl_logger_nagios) << generic_error{
+            result, "cannot set livestatus thread stack size to " +
+                        std::to_string(g_thread_stack_size)};
     } else {
         Debug(fl_logger_nagios)
             << "setting thread stack size to " << g_thread_stack_size;
@@ -340,35 +376,52 @@ void start_threads() {
         if (idx == 0) {
             // start thread that listens on socket
             info.name = "main";
-            pthread_create(&info.id, nullptr, main_thread, &info);
+            if (auto result =
+                    pthread_create(&info.id, nullptr, main_thread, &info);
+                result != 0) {
+                Warning(fl_logger_nagios)
+                    << generic_error{result, "cannot create main thread"};
+            }
             // Our current thread (i.e. the main one, confusing terminology)
             // needs thread-local infos for logging, too.
             tl_info = &info;
         } else {
             info.name = "client " + std::to_string(idx);
-            pthread_create(&info.id, &attr, client_thread, &info);
+            if (auto result =
+                    pthread_create(&info.id, &attr, client_thread, &info);
+                result != 0) {
+                Warning(fl_logger_nagios)
+                    << generic_error{result, "cannot create livestatus thread"};
+            }
         }
     }
 
     g_thread_running = 1;
-    pthread_attr_destroy(&attr);
+    if (auto result = pthread_attr_destroy(&attr); result != 0) {
+        Warning(fl_logger_nagios) << generic_error{
+            result, "cannot destroy livestatus thread attributes"};
+    }
 }
 
 void terminate_threads() {
     if (g_thread_running != 0) {
         fl_should_terminate = true;
         Informational(fl_logger_nagios) << "waiting for main to terminate...";
-        pthread_join(fl_thread_info[0].id, nullptr);
+        if (auto result = pthread_join(fl_thread_info[0].id, nullptr);
+            result != 0) {
+            Warning(fl_logger_nagios) << generic_error{
+                result, "cannot join thread " + fl_thread_info[0].name};
+        }
         Informational(fl_logger_nagios)
             << "waiting for client threads to terminate...";
         fl_client_queue->join();
         while (auto fd = fl_client_queue->try_pop()) {
-            close(*fd);
+            ::close(*fd);
         }
         for (const auto &info : fl_thread_info) {
-            if (pthread_join(info.id, nullptr) != 0) {
+            if (auto result = pthread_join(info.id, nullptr); result != 0) {
                 Warning(fl_logger_nagios)
-                    << "could not join thread " << info.name;
+                    << generic_error{result, "cannot join thread " + info.name};
             }
         }
         Informational(fl_logger_nagios)
@@ -382,7 +435,7 @@ void terminate_threads() {
 bool open_unix_socket() {
     struct stat st;
     if (stat(fl_paths._socket.c_str(), &st) == 0) {
-        if (unlink(fl_paths._socket.c_str()) == 0) {
+        if (::unlink(fl_paths._socket.c_str()) == 0) {
             Debug(fl_logger_nagios)
                 << "removed old socket file " << fl_paths._socket;
         } else {
@@ -393,7 +446,7 @@ bool open_unix_socket() {
         }
     }
 
-    g_unix_socket = socket(PF_UNIX, SOCK_STREAM, 0);
+    g_unix_socket = ::socket(PF_UNIX, SOCK_STREAM, 0);
     g_max_fd_ever = g_unix_socket;
     if (g_unix_socket < 0) {
         generic_error ge("cannot create UNIX socket");
@@ -402,10 +455,10 @@ bool open_unix_socket() {
     }
 
     // Imortant: close on exec -> check plugins must not inherit it!
-    if (fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) == -1) {
+    if (::fcntl(g_unix_socket, F_SETFD, FD_CLOEXEC) == -1) {
         generic_error ge("cannot set close-on-exec bit on socket");
         Alert(fl_logger_nagios) << ge;
-        close(g_unix_socket);
+        ::close(g_unix_socket);
         return false;
     }
 
@@ -416,29 +469,29 @@ bool open_unix_socket() {
     strncpy(sockaddr.sun_path, fl_paths._socket.c_str(),
             sizeof(sockaddr.sun_path) - 1);
     sockaddr.sun_path[sizeof(sockaddr.sun_path) - 1] = '\0';
-    if (bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
-             sizeof(sockaddr)) < 0) {
+    if (::bind(g_unix_socket, reinterpret_cast<struct sockaddr *>(&sockaddr),
+               sizeof(sockaddr)) < 0) {
         generic_error ge("cannot bind UNIX socket to address " +
                          fl_paths._socket);
         Error(fl_logger_nagios) << ge;
-        close(g_unix_socket);
+        ::close(g_unix_socket);
         return false;
     }
 
     // Make writable group members (fchmod didn't do nothing for me. Don't
     // know why!)
-    if (0 != chmod(fl_paths._socket.c_str(), 0660)) {
+    if (0 != ::chmod(fl_paths._socket.c_str(), 0660)) {
         generic_error ge("cannot change file permissions for UNIX socket at " +
                          fl_paths._socket + " to 0660");
         Error(fl_logger_nagios) << ge;
-        close(g_unix_socket);
+        ::close(g_unix_socket);
         return false;
     }
 
-    if (0 != listen(g_unix_socket, 3 /* backlog */)) {
+    if (0 != ::listen(g_unix_socket, 3 /* backlog */)) {
         generic_error ge("cannot listen to UNIX socket at " + fl_paths._socket);
         Error(fl_logger_nagios) << ge;
-        close(g_unix_socket);
+        ::close(g_unix_socket);
         return false;
     }
 
@@ -448,9 +501,9 @@ bool open_unix_socket() {
 }
 
 void close_unix_socket() {
-    unlink(fl_paths._socket.c_str());
+    ::unlink(fl_paths._socket.c_str());
     if (g_unix_socket >= 0) {
-        close(g_unix_socket);
+        ::close(g_unix_socket);
         g_unix_socket = -1;
     }
 }
@@ -480,7 +533,26 @@ int broker_check(int event_type, void *data) {
 
 int broker_comment(int event_type __attribute__((__unused__)), void *data) {
     auto *co = static_cast<nebstruct_comment_data *>(data);
-    fl_core->registerComment(co);
+    unsigned long id = co->comment_id;
+    switch (co->type) {
+        case NEBTYPE_COMMENT_ADD:
+        case NEBTYPE_COMMENT_LOAD:
+            fl_comments[id] = std::make_unique<Comment>(
+                ::find_host(co->host_name),
+                co->service_description == nullptr
+                    ? nullptr
+                    : ::find_service(co->host_name, co->service_description),
+                co);
+            break;
+        case NEBTYPE_COMMENT_DELETE:
+            if (fl_comments.erase(id) == 0) {
+                Informational(fl_logger_nagios)
+                    << "Cannot delete non-existing comment " << id;
+            }
+            break;
+        default:
+            break;
+    }
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::comment);
     return 0;
@@ -488,7 +560,26 @@ int broker_comment(int event_type __attribute__((__unused__)), void *data) {
 
 int broker_downtime(int event_type __attribute__((__unused__)), void *data) {
     auto *dt = static_cast<nebstruct_downtime_data *>(data);
-    fl_core->registerDowntime(dt);
+    unsigned long id = dt->downtime_id;
+    switch (dt->type) {
+        case NEBTYPE_DOWNTIME_ADD:
+        case NEBTYPE_DOWNTIME_LOAD:
+            fl_downtimes[id] = std::make_unique<Downtime>(
+                ::find_host(dt->host_name),
+                dt->service_description == nullptr
+                    ? nullptr
+                    : ::find_service(dt->host_name, dt->service_description),
+                dt);
+            break;
+        case NEBTYPE_DOWNTIME_DELETE:
+            if (fl_downtimes.erase(id) == 0) {
+                Informational(fl_logger_nagios)
+                    << "Cannot delete non-existing downtime " << id;
+            }
+            break;
+        default:
+            break;
+    }
     counterIncrement(Counter::neb_callbacks);
     fl_core->triggers().notify_all(Triggers::Kind::downtime);
     return 0;
@@ -538,7 +629,6 @@ int broker_program(int event_type __attribute__((__unused__)),
 }
 
 void livestatus_log_initial_states() {
-    extern scheduled_downtime *scheduled_downtime_list;
     // It's a bit unclear if we need to log downtimes of hosts *before*
     // their corresponding service downtimes, so let's play safe...
     for (auto *dt = scheduled_downtime_list; dt != nullptr; dt = dt->next) {
@@ -577,8 +667,9 @@ int broker_process(int event_type __attribute__((__unused__)), void *data) {
     auto *ps = static_cast<struct nebstruct_process_struct *>(data);
     switch (ps->type) {
         case NEBTYPE_PROCESS_START:
-            fl_core = new NagiosCore(fl_paths, fl_limits, fl_authorization,
-                                     fl_data_encoding);
+            fl_core =
+                new NagiosCore(fl_downtimes, fl_comments, fl_paths, fl_limits,
+                               fl_authorization, fl_data_encoding);
             fl_client_queue = new ClientQueue_t{};
             g_timeperiods_cache = new TimeperiodsCache(fl_logger_nagios);
             break;
@@ -719,9 +810,7 @@ std::string check_path(const std::string &name, const std::string &path) {
 
 void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
     {
-        // set default path to our logfile to be in the same path as
-        // nagios.log
-        extern char *log_file;
+        // set default path to our logfile to be in the same path as nagios.log
         std::string lf{log_file};
         auto slash = lf.rfind('/');
         fl_paths._logfile =
@@ -822,27 +911,30 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
                 }
             } else if (left == "service_authorization") {
                 if (right == "strict") {
-                    fl_authorization._service = AuthorizationKind::strict;
+                    fl_authorization._service = ServiceAuthorization::strict;
                 } else if (right == "loose") {
-                    fl_authorization._service = AuthorizationKind::loose;
+                    fl_authorization._service = ServiceAuthorization::loose;
                 } else {
                     Warning(logger) << "invalid service authorization mode, "
                                        "allowed are strict and loose";
                 }
             } else if (left == "group_authorization") {
                 if (right == "strict") {
-                    fl_authorization._group = AuthorizationKind::strict;
+                    fl_authorization._group = GroupAuthorization::strict;
                 } else if (right == "loose") {
-                    fl_authorization._group = AuthorizationKind::loose;
+                    fl_authorization._group = GroupAuthorization::loose;
                 } else {
                     Warning(logger)
                         << "invalid group authorization mode, allowed are strict and loose";
                 }
             } else if (left == "pnp_path") {
                 fl_paths._pnp = check_path("PNP perfdata directory", right);
-            } else if (left == "crash_report_path") {
+            } else if (left == "crash_reports_path") {
                 fl_paths._crash_reports_path =
                     check_path("Path to the crash reports", right);
+            } else if (left == "license_usage_history_path") {
+                fl_paths._license_usage_history_path =
+                    check_path("Path to the license usage", right);
             } else if (left == "mk_inventory_path") {
                 fl_paths._mk_inventory =
                     check_path("Check_MK Inventory directory", right);

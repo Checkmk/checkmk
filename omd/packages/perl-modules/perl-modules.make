@@ -1,9 +1,16 @@
 PERL_MODULES := perl-modules
-PERL_MODULES_VERS := $(OMD_VERSION)
+# Use some pseudo version here. Don't use OMD_VERSION (would break the package cache)
+PERL_MODULES_VERS := 1.0
 PERL_MODULES_DIR := $(PERL_MODULES)-$(PERL_MODULES_VERS)
+# Increase this to enforce a recreation of the build cache
+# Note: Because the versions of the individual modules is not reflected in PERL_MODULES_VERS,
+#       like it is done in other OMD packages, we'll have to increase the BUILD_ID on every package
+#       change.
+PERL_MODULES_BUILD_ID := 1
 
 PERL_MODULES_BUILD := $(BUILD_HELPER_DIR)/$(PERL_MODULES_DIR)-build
 PERL_MODULES_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(PERL_MODULES_DIR)-install-intermediate
+PERL_MODULES_CACHE_PKG_PROCESS := $(BUILD_HELPER_DIR)/$(PERL_MODULES_DIR)-cache-pkg-process
 PERL_MODULES_INSTALL := $(BUILD_HELPER_DIR)/$(PERL_MODULES_DIR)-install
 
 PERL_MODULES_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(PERL_MODULES_DIR)
@@ -60,7 +67,7 @@ PERL_MODULES_LIST2 := \
                   Try-Tiny-0.22.tar.gz \
                   Perl-OSType-1.008.tar.gz \
                   base-2.18.tar.gz \
-                  Archive-Zip-1.43.tar.gz \
+                  Archive-Zip-1.59.tar.gz \
                   HTML-Parser-3.71.tar.gz \
                   Term-Clui-1.70.tar.gz \
                   URI-1.67.tar.gz \
@@ -78,7 +85,7 @@ PERL_MODULES_LIST2 := \
                   ExtUtils-ParseXS-3.24.tar.gz \
                   Module-Metadata-1.000027.tar.gz \
                   IO-1.25.tar.gz \
-                  LWP-Protocol-https-6.06.tar.gz \
+                  LWP-Protocol-https-6.07.tar.gz \
                   List-AllUtils-0.09.tar.gz \
                   libwww-perl-6.13.tar.gz \
                   Module-Build-0.4007.tar.gz \
@@ -117,6 +124,16 @@ $(PACKAGE_DIR)/$(PERL_MODULES)/src/%-patched.tar.gz: $(PACKAGE_DIR)/$(PERL_MODUL
 	tar -cz -C $(PERL_MODULES_WORK_DIR) -f $@ $*
 
 
+PERL_MODULES_CACHE_PKG_PATH := $(call cache_pkg_path,$(PERL_MODULES_DIR),$(PERL_MODULES_BUILD_ID))
+
+$(PERL_MODULES_CACHE_PKG_PATH):
+	$(call pack_pkg_archive,$@,$(PERL_MODULES_DIR),$(PERL_MODULES_BUILD_ID),$(PERL_MODULES_INTERMEDIATE_INSTALL))
+
+$(PERL_MODULES_CACHE_PKG_PROCESS): $(PERL_MODULES_CACHE_PKG_PATH)
+	$(call unpack_pkg_archive,$(PERL_MODULES_CACHE_PKG_PATH),$(PERL_MODULES_DIR))
+	$(call upload_pkg_archive,$(PERL_MODULES_CACHE_PKG_PATH),$(PERL_MODULES_DIR),$(PERL_MODULES_BUILD_ID))
+	$(TOUCH) $@
+
 $(PERL_MODULES_BUILD): $(PACKAGE_DIR)/$(PERL_MODULES)/src/Crypt-SSLeay-0.72-patched.tar.gz
 	$(MKDIR) $(PERL_MODULES_BUILD_DESTDIR)
 	$(MKDIR) $(PERL_MODULES_BUILD_SRCDIR)
@@ -145,6 +162,9 @@ $(PERL_MODULES_BUILD): $(PACKAGE_DIR)/$(PERL_MODULES)/src/Crypt-SSLeay-0.72-patc
 	    export PERL_JSON_BACKEND='JSON::XS'; \
 	    cd $(PERL_MODULES_BUILD_SRCDIR) ; \
 	    ./build_module.pl -d "$(DISTRO_INFO)" -p $(PERL_MODULES_BUILD_DESTDIR) $(PERL_MODULES_LIST2)
+# Fixup some library permissions. They need to be owner writable to make
+# dh_strip command of deb packaging procedure work
+	find $(PERL_MODULES_BUILD_DESTDIR)/lib -type f -name \*.so -exec chmod u+w {} \;
 	cd $(PERL_MODULES_BUILD_PERL5LIB)/ ; $(RM) utils.pm ; ln -s ../../../nagios/plugins/utils.pm .
 	$(MKDIR) $(PERL_MODULES_BUILD_PERL5LIB)/CPAN
 	cp $(PACKAGE_DIR)/$(PERL_MODULES)/MyConfig.pm $(PERL_MODULES_BUILD_PERL5LIB)/CPAN/MyConfig.skel
@@ -159,7 +179,7 @@ $(PERL_MODULES_INTERMEDIATE_INSTALL): $(PERL_MODULES_BUILD)
 	install -m 755 $(PACKAGE_DIR)/$(PERL_MODULES)/bin/cpan.wrapper $(PERL_MODULES_INSTALL_DIR)/bin/cpan.wrapper
 	$(TOUCH) $@
 
-$(PERL_MODULES_INSTALL): $(PERL_MODULES_INTERMEDIATE_INSTALL)
+$(PERL_MODULES_INSTALL): $(PERL_MODULES_CACHE_PKG_PROCESS)
 	$(RSYNC) $(PERL_MODULES_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 	echo "install  --install_base  ###ROOT###/local/lib/perl5" > $(SKEL)/.modulebuildrc
 	$(TOUCH) $@

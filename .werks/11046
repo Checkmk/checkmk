@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When the reload of a view was set to "off" and the number
 of columns was modified this lead to infinite reloads of

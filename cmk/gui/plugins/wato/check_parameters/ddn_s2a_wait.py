@@ -5,18 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    Float,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice, Float, Tuple
 
 
 def _item_spec_ddn_s2a_wait() -> DropdownChoice:
@@ -87,5 +81,5 @@ rulespec_registry.register(
         item_spec=_item_spec_ddn_s2a_wait,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ddn_s2a_wait,
-        title=lambda: _("Read/write wait for DDN S2A devices"),
+        title=lambda: _("DDN S2A read/write wait"),
     ))

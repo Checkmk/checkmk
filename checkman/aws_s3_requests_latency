@@ -23,7 +23,7 @@ description:
 item:
  Name of the bucket
 
-inventory:
+discovery:
  One service is created for each bucket if all required metrics
  (TotalRequestLatency) are given.
 

@@ -71,7 +71,7 @@ tearDown () {
     unset ONLY_SIDS SKIP_SIDS EXCLUDE_MYSID EXCLUDE_OtherSID SYNC_SECTIONS_MYSID ASYNC_SECTIONS_MYSID
     unset MK_SYNC_SECTIONS_QUERY MK_ASYNC_SECTIONS_QUERY
     unset ORACLE_SID MK_SID MK_ORA_SECTIONS
-    unset custom_sqls_sections
+    unset custom_sqls_sections custom_sqls_sids
 }
 
 #.
@@ -87,6 +87,7 @@ test_mk_oracle_default_config () {
     assertEquals "asm_diskgroup" "$ASYNC_ASM_SECTIONS"
     assertEquals "600" "$CACHE_MAXAGE"
     assertEquals "/etc/oracle/olr.loc" "$OLRLOC"
+    assertEquals "1" "$MAX_TASKS"
 }
 
 
@@ -99,6 +100,7 @@ SYNC_ASM_SECTIONS=instance
 ASYNC_ASM_SECTIONS=asm_diskgroup
 CACHE_MAXAGE=300
 OLRLOC=/other/path
+MAX_TASKS=5
 EOF
 
     load_config
@@ -109,8 +111,21 @@ EOF
     assertEquals "asm_diskgroup" "$ASYNC_ASM_SECTIONS"
     assertEquals "300" "$CACHE_MAXAGE"
     assertEquals "/other/path" "$OLRLOC"
+    assertEquals "5" "$MAX_TASKS"
 }
 
+test_mk_oracle_load_config_custom_all_sids () {
+    cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"
+# custom sqls assignement
+SQLS_SIDS="\$SIDS"
+EOF
+
+    export SIDS="XE MYSID"
+    load_config
+
+    #shellcheck disable=SC2154
+    assertEquals "XE MYSID" "$custom_sqls_sids"
+}
 
 test_mk_oracle_load_config_sections_opt () {
     cat <<EOF >"${MK_CONFDIR}/mk_oracle.cfg"

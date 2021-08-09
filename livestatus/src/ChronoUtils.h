@@ -18,6 +18,14 @@
 
 using minutes_d = std::chrono::duration<double, std::ratio<60>>;
 
+namespace mk {
+#if __cplusplus > 201703L
+using days = std::chrono::days;
+#else
+using days = std::chrono::duration<int64_t, std::ratio<86400>>;
+#endif
+}  // namespace mk
+
 inline double elapsed_ms_since(std::chrono::steady_clock::time_point then) {
     return std::chrono::duration_cast<
                std::chrono::duration<double, std::milli>>(
@@ -41,8 +49,6 @@ inline tm to_tm(std::chrono::system_clock::time_point tp) {
     // Win32 variant, it keeps us entertained with swapped parameters and a
     // different return value, yay! Signature:
     //    errno_t localtime_s(struct tm* _tm, const time_t *time)
-    // We have to de-confuse cppcheck:
-    // cppcheck-suppress uninitvar
     localtime_s(&ret, &t);
 #else
     // POSIX.1-2008 variant, available under MinGW64 only under obscure
@@ -51,8 +57,6 @@ inline tm to_tm(std::chrono::system_clock::time_point tp) {
     //                           struct tm *restrict result);
     localtime_r(&t, &ret);
 #endif
-    // Reason: see Win32 section above
-    // cppcheck-suppress uninitvar
     return ret;
 }
 
@@ -94,31 +98,18 @@ typename Dur::rep time_point_part(std::chrono::system_clock::time_point &tp) {
         .count();
 }
 
-class FormattedTimePoint {
-public:
-    explicit FormattedTimePoint(std::chrono::system_clock::time_point tp,
-                                std::string format = default_format)
-        : _tp(tp), _format(std::move(format)) {}
-    explicit FormattedTimePoint(time_t t, std::string format = default_format)
-        : _tp(std::chrono::system_clock::from_time_t(t))
-        , _format(std::move(format)) {}
+struct FormattedTimePoint {
+    explicit FormattedTimePoint(
+        std::chrono::system_clock::time_point time_point)
+        : tp(time_point) {}
+
+    std::chrono::system_clock::time_point tp;
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const FormattedTimePoint &f) {
-        tm local = to_tm(f._tp);
-        return os << std::put_time(&local, f._format.c_str());
+        tm local = to_tm(f.tp);
+        return os << std::put_time(&local, "%Y-%m-%d %H:%M:%S");
     }
-
-private:
-    std::chrono::system_clock::time_point _tp;
-    std::string _format;
-
-    // NOTE: In a perfect world we would simply use "%F %T" below, but the "%F"
-    // format is a C99 addition, and the "%T" format is part of The Single Unix
-    // Specification. Both formats should be available in any C++11-compliant
-    // compiler, but the MinGW cross compiler doesn't get this right. So let's
-    // use their ancient expansions...
-    static constexpr auto default_format = "%Y-%m-%d %H:%M:%S";
 };
 
 #endif  // ChronoUtils_h

@@ -7,9 +7,9 @@
 from typing import List, Optional, Pattern
 
 import cmk.utils.debug
-from cmk.utils.regex import regex
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.regex import regex
 
 # Conveniance macros for legacy tuple based host and service rules
 PHYSICAL_HOSTS = ['@physical']  # all hosts but not clusters

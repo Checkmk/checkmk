@@ -5,18 +5,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
-# Library for pylint checks of Check_MK
+# Library for pylint checks of Checkmk
 
-import os
 import getpass
 import glob
-import time
 import multiprocessing
+import os
 import subprocess
+import time
 
-from pylint.reporters.text import ColorizedTextReporter, ParseableTextReporter  # type: ignore[import]
+from tests.testlib import cmk_path, is_enterprise_repo, repo_path
 
-from testlib import repo_path, cmk_path, is_enterprise_repo
+from pylint.reporters.text import (  # type: ignore[import] # isort: skip
+    ColorizedTextReporter, ParseableTextReporter,
+)
 
 
 def check_files(base_dir):
@@ -110,7 +112,7 @@ def is_python_file(path, shebang_name=None):
     return False
 
 
-# Check_MK currently uses a packed version of it's files to
+# Checkmk currently uses a packed version of it's files to
 # run the pylint tests because it's not well structured in
 # python modules. This custom reporter rewrites the found
 # messages to tell the users the original location in the
@@ -119,6 +121,12 @@ def is_python_file(path, shebang_name=None):
 # to real modules
 class CMKFixFileMixin:
     def handle_message(self, msg):
+        if msg.abspath is None:
+            # NOTE: I'm too lazy to define a Protocol for this mixin which is
+            # already on death row, so let's use a reflection hack...
+            getattr(super(CMKFixFileMixin, self), "handle_message")(msg)
+            return
+
         new_path, new_line = self._orig_location_from_compiled_file(msg)
 
         if new_path is None:

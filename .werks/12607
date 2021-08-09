@@ -1,0 +1,12 @@
+Title: Fix deletion of failed notifications
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1616151895
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0i1
+
+Failed notification were not deleted on confirm. Furthermore, the main
+dashboard was opened after confirm.

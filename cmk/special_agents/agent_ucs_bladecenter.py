@@ -12,7 +12,10 @@ from typing import Any, Dict, List, Tuple
 
 import requests
 from requests.packages import urllib3  # pylint: disable=import-error
+
 from cmk.utils.exceptions import MKException
+
+from cmk.special_agents.utils import vcrtrace
 
 ElementAttributes = Dict[str, str]
 
@@ -233,6 +236,12 @@ class Server:
             logging.debug("Server.login: Found cookie")
             self._cookie = cookie
 
+    @staticmethod
+    def filter_credentials(request):
+        if b'inPassword=' in request.body:
+            request.body = b"login request filtered out"
+        return request
+
     def logout(self):
         logging.debug("Server.logout: Logout")
         attributes: ElementAttributes = {}
@@ -379,6 +388,10 @@ def debug():
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument(
+        "--vcrtrace",
+        action=vcrtrace(before_record_request=Server.filter_credentials),
+    )
     parser.add_argument("--no-cert-check",
                         action="store_true",
                         help="Disables the checking of the servers ssl certificate.")
@@ -460,3 +473,7 @@ def main(args=None):
 
     handle.logout()
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -6,21 +6,17 @@
 
 # pylint: disable=redefined-outer-name
 
-import pytest  # type: ignore[import]
-
-from agent_aws_fake_clients import (
-    FakeCloudwatchClient,
-    GlacierListVaultsIB,
-    GlacierVaultTaggingIB,
-)
+import pytest
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
-    ResultDistributor,
+    Glacier,
     GlacierLimits,
     GlacierSummary,
-    Glacier,
+    ResultDistributor,
 )
+
+from .agent_aws_fake_clients import FakeCloudwatchClient, GlacierListVaultsIB, GlacierVaultTaggingIB
 
 
 class FakeGlacierClient:

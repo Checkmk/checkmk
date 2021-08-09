@@ -1,0 +1,12 @@
+Title: Fix exception on editing users if rulebased notifications are disabled
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1613651866
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0i1
+
+If rulebased notifications were not used, editing a user resulted in an error
+"(invalid notification period None)".

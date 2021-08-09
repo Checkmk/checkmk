@@ -7,11 +7,13 @@
 main change is that all strings get a prefix. Basically a dumbed-down version
 of Python's own pprint module plus the prefix change."""
 
-from io import StringIO as StrIO
 import sys
-from typing import List, Any, Callable, Dict, IO, Iterable, Optional, Tuple
+from io import StringIO as StrIO
+from typing import Any, Callable, Dict, IO, Iterable, List, Optional, Tuple
 
 from cmk.utils.type_defs import EvalableFloat
+
+from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
 _bytes = bytes
 _str = str
@@ -118,6 +120,10 @@ def _format_object(printer: PythonPrinter, obj: object) -> None:
     printer._format(obj)
 
 
+def _format_snmp_backend(printer: PythonPrinter, obj: SNMPBackendEnum) -> None:
+    printer._format(obj.value)
+
+
 def _format_dict_item(printer: PythonPrinter, item: Tuple[object, object]) -> None:
     printer._format(item[0])
     printer._write(': ')
@@ -151,6 +157,7 @@ _dispatch: Dict[Any, Any] = {
     _str: _format_unicode_string,
     tuple: _format_tuple,
     type(None): _format_via_repr,
+    SNMPBackendEnum: _format_snmp_backend,
 }
 
 

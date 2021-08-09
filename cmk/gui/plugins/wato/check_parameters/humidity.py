@@ -5,19 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    Percentage,
-    TextAscii,
-    Transform,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
+from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Transform, Tuple
 
 
 def transform_humidity(p):
@@ -30,7 +23,7 @@ def transform_humidity(p):
 
 
 def _item_spec_humidity():
-    return TextAscii(
+    return TextInput(
         title=_("Sensor name"),
         help=_("The identifier of the sensor."),
     )
@@ -58,6 +51,7 @@ def _parameter_valuespec_humidity():
                      ],
                  )),
             ],
+            ignored_keys=['_item_key'],
         ),
         forth=transform_humidity,
     )

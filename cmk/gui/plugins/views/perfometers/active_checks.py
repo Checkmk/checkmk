@@ -5,12 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.plugins.views.perfometers import (
-    perfometers,
+    LegacyPerfometerResult,
+    Perfdata,
     perfometer_logarithmic,
+    perfometers,
+    Row,
 )
 
 
-def perfometer_check_tcp(row, check_command, perfdata):
+def perfometer_check_tcp(row: Row, check_command: str,
+                         perfdata: Perfdata) -> LegacyPerfometerResult:
     time_ms = float(perfdata[0][1]) * 1000.0
     return "%.3f ms" % time_ms, \
         perfometer_logarithmic(time_ms, 1000, 10, "#20dd30")
@@ -21,7 +25,8 @@ perfometers["check_tcp"] = perfometer_check_tcp
 perfometers["check_mk_active-tcp"] = perfometer_check_tcp
 
 
-def perfometer_check_http(row, check_command, perfdata):
+def perfometer_check_http(row: Row, check_command: str,
+                          perfdata: Perfdata) -> LegacyPerfometerResult:
     try:
         time_ms = float(perfdata[0][1]) * 1000.0
     except (IndexError, ValueError):

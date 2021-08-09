@@ -3,18 +3,14 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+"""Basic functions for cmk_figures"""
 
-# Basic functions for cmk_figures
+from typing import Any, Dict
 
-import abc
-import json
-from typing import Type
-
-from cmk.gui.plugins.dashboard import Dashlet
-from cmk.gui.globals import html
+FigureResponse = Dict[str, Any]
 
 
-def create_figures_response(data, context=None):
+def create_figures_response(data, context=None) -> FigureResponse:
     """ Any data for a figure is always wrapped into a dictionary
         This makes future extensions (meta_data, etc.) easier, preventing
         intermingling of dictionary keys """
@@ -22,90 +18,6 @@ def create_figures_response(data, context=None):
     if context:
         response["context"] = context
     return response
-
-
-class ABCDataGenerator(metaclass=abc.ABCMeta):
-    @classmethod
-    @abc.abstractmethod
-    def vs_parameters(cls):
-        raise NotImplementedError()
-
-    @classmethod
-    @abc.abstractmethod
-    def generate_response_data(cls, properties, context):
-        raise NotImplementedError()
-
-    @classmethod
-    def generate_response_from_request(cls):
-        properties = cls.vs_parameters().value_from_json(
-            json.loads(html.request.get_str_input_mandatory("properties")))
-        context = json.loads(html.request.get_str_input_mandatory("context", "{}"))
-        response_data = cls.generate_response_data(properties, context)
-        return create_figures_response(response_data)
-
-
-class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
-    """ Base class for cmk_figures based graphs
-        Only contains the dashlet spec, the data generation is handled in the
-        DataGenerator classes, to split visualization and data
-    """
-    @classmethod
-    def type_name(cls):
-        return "figure_dashlet"
-
-    @classmethod
-    def sort_index(cls):
-        return 95
-
-    @classmethod
-    def initial_refresh_interval(cls):
-        return False
-
-    @classmethod
-    def initial_size(cls):
-        return (56, 40)
-
-    @classmethod
-    def default_settings(cls):
-        return {"show_title": False}
-
-    @classmethod
-    def infos(cls):
-        return ["host", "service"]
-
-    @classmethod
-    def single_infos(cls):
-        return []
-
-    @classmethod
-    def has_context(cls):
-        return True
-
-    @property
-    def instance_name(self):
-        # Note: This introduces the restriction one graph type per dashlet
-        return "%s_%s" % (self.type_name(), self._dashlet_id)
-
-    @classmethod
-    def vs_parameters(cls):
-        return cls.data_generator().vs_parameters()
-
-    @classmethod
-    @abc.abstractmethod
-    def data_generator(cls) -> Type[ABCDataGenerator]:
-        raise NotImplementedError()
-
-    @property
-    def update_interval(self):
-        return 60
-
-    def on_resize(self):
-        return ("if (typeof %(instance)s != 'undefined') {"
-                "%(instance)s.resize();"
-                "%(instance)s.render();"
-                "}") % {
-                    "instance": self.instance_name
-                }
 
 
 class TableFigureDataCreator:
@@ -139,6 +51,10 @@ class TableFigureDataCreator:
         return cell
 
     @classmethod
+    def get_number_cell(cls, text, attrs=None, classes=None):
+        return cls.get_text_cell(text, attrs, ["number"] + classes if classes else ["number"])
+
+    @classmethod
     def get_text_cell(cls, text, attrs=None, classes=None):
         cell = {"text": text}
         cell.update(cls.compute_attr_and_classes(attrs, classes))
@@ -154,7 +70,7 @@ class TableFigureDataCreator:
     # This cell is generally used by graphs
     @classmethod
     def get_empty_cell(cls, attrs=None, classes=None):
-        return cls.compute_attr_and_classes(attrs, classes)
+        return cls.compute_attr_and_classes(attrs, ["empty"] + classes if classes else ["empty"])
 
     @classmethod
     def compute_attr_and_classes(cls, attrs, classes):

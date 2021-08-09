@@ -26,10 +26,10 @@ def test_parse_command_line():
     assert msi_engine.opt_verbose
 
 
-EXPECTED_FILE_TABLE = ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.8.zip"]
+EXPECTED_FILE_TABLE = ["check_mk_install_yml", "checkmk.dat", "plugins_cap", "python_3.8.cab"]
 
 EXPECTED_COMPONENT_TABLE = [
-    "check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.8.zip"
+    "check_mk_install_yml_", "checkmk.dat", "plugins_cap_", "python_3.8.cab"
 ]
 
 

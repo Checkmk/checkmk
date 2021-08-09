@@ -5,12 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with Check_MK tags"""
 
-import re
 import abc
-from typing import Any, Dict, List, Optional, Set
+import re
+from typing import Any, Dict, List, Optional, Set, Union
 
-from cmk.utils.i18n import _
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.i18n import _
+from cmk.utils.type_defs import TaggroupID, TagID
 
 
 def get_effective_tag_config(tag_config: Dict) -> 'TagConfig':
@@ -45,7 +46,7 @@ def _validate_tag_id(tag_id):
 
 class ABCTag(metaclass=abc.ABCMeta):
     def __init__(self):
-        super(ABCTag, self).__init__()
+        super().__init__()
         # TODO: See below, this was self._initialize()
         # NOTE: All the Optionals below are probably just plain wrong and just
         # an artifact of our broken 2-stage initialization.
@@ -94,20 +95,18 @@ class ABCTag(metaclass=abc.ABCMeta):
 
 
 class AuxTag(ABCTag):
-    is_aux_tag = True
-
     def __init__(self, data=None):
-        super(AuxTag, self).__init__()
+        super().__init__()
         if data:
             self.parse_config(data)
 
     def _parse_from_dict(self, tag_info):
-        super(AuxTag, self)._parse_from_dict(tag_info)
+        super()._parse_from_dict(tag_info)
         if "topic" in tag_info:
             self.topic = tag_info["topic"]
 
     def _parse_legacy_format(self, tag_info):
-        super(AuxTag, self)._parse_legacy_format(tag_info)
+        super()._parse_legacy_format(tag_info)
         self.topic, self.title = _parse_legacy_title(self.title)
 
     def get_dict_format(self):
@@ -196,20 +195,19 @@ class AuxTagList:
 
 
 class GroupedTag(ABCTag):
-    is_aux_tag = False
-
     def __init__(self, group, data=None):
-        super(GroupedTag, self).__init__()
+        super().__init__()
+        self.id: Optional[str]
         self.group = group
         self.aux_tag_ids = []
         self.parse_config(data)
 
     def _parse_from_dict(self, tag_info):
-        super(GroupedTag, self)._parse_from_dict(tag_info)
+        super()._parse_from_dict(tag_info)
         self.aux_tag_ids = tag_info["aux_tags"]
 
     def _parse_legacy_format(self, tag_info):
-        super(GroupedTag, self)._parse_legacy_format(tag_info)
+        super()._parse_legacy_format(tag_info)
 
         if len(tag_info) == 3:
             self.aux_tag_ids = tag_info[2]
@@ -220,7 +218,12 @@ class GroupedTag(ABCTag):
 
 class TagGroup:
     def __init__(self, data=None):
-        super(TagGroup, self).__init__()
+        super().__init__()
+        self.id: Optional[str]
+        self.title: Optional[str]
+        self.topic: Optional[str]
+        self.help: Optional[str]
+        self.tags: List[GroupedTag]
         self._initialize()
 
         if data:
@@ -275,6 +278,8 @@ class TagGroup:
         return
 
     def get_tag_ids(self):
+        if self.is_checkbox_tag_group:
+            return {None, self.tags[0].id}
         return {tag.id for tag in self.tags}
 
     def get_dict_format(self):
@@ -315,7 +320,7 @@ class TagConfig:
     """Container object encapsulating a whole set of configured
     tag groups with auxiliary tags"""
     def __init__(self):
-        super(TagConfig, self).__init__()
+        super().__init__()
         self._initialize()
 
     # TODO: As usual, we *really* have to nuke our _initialize() methods, everywhere!
@@ -331,6 +336,9 @@ class TagConfig:
 
         self.aux_tag_list += other.aux_tag_list
         return self
+
+    def get_tag_groups(self):
+        return self.tag_groups
 
     def get_topic_choices(self):
         names = set([])
@@ -408,8 +416,12 @@ class TagConfig:
                         ])
         return response
 
-    def get_tag_or_aux_tag(self, tag_id):
-        for tag_group in self.tag_groups:
+    def get_tag_or_aux_tag(
+        self,
+        taggroupd_id: TaggroupID,
+        tag_id: Optional[TagID],
+    ) -> Optional[Union[GroupedTag, AuxTag]]:
+        for tag_group in (t_grp for t_grp in self.tag_groups if t_grp.id == taggroupd_id):
             for grouped_tag in tag_group.tags:
                 if grouped_tag.id == tag_id:
                     return grouped_tag
@@ -417,6 +429,8 @@ class TagConfig:
         for aux_tag in self.aux_tag_list.get_tags():
             if aux_tag.id == tag_id:
                 return aux_tag
+
+        return None
 
     def parse_config(self, data):
         self._initialize()
@@ -474,6 +488,16 @@ class TagConfig:
             if aux_tag.id in seen_ids:
                 raise MKGeneralException(_("The tag ID \"%s\" is used twice.") % aux_tag.id)
             seen_ids.add(aux_tag.id)
+
+    def valid_id(self, tag_aux_id):
+        """Verify if the proposed id is not already in use"""
+        if tag_aux_id in [tag_group.id for tag_group in self.tag_groups]:
+            return False
+
+        if tag_aux_id in [aux_tag.id for aux_tag in self.aux_tag_list.get_tags()]:
+            return False
+
+        return True
 
     # TODO: cleanup this mess
     # This validation is quite gui specific, I do not want to introduce this into the base classes
@@ -544,7 +568,7 @@ class BuiltinAuxTagList(AuxTagList):
 
 class BuiltinTagConfig(TagConfig):
     def __init__(self):
-        super(BuiltinTagConfig, self).__init__()
+        super().__init__()
         self.parse_config({
             "tag_groups": self._builtin_tag_groups(),
             "aux_tags": self._builtin_aux_tags(),
@@ -558,27 +582,27 @@ class BuiltinTagConfig(TagConfig):
         return [
             {
                 'id': 'agent',
-                'title': _('Checkmk Agent'),
-                'topic': _('Data sources'),
+                'title': _('Checkmk agent / API integrations'),
+                'topic': _('Monitoring agents'),
                 'tags': [
                     {
                         'id': 'cmk-agent',
-                        'title': _('Normal Checkmk agent, or special agent if configured'),
-                        'aux_tags': ['tcp'],
+                        'title': _('API integrations if configured, else Checkmk agent'),
+                        'aux_tags': ['tcp', 'checkmk-agent'],
                     },
                     {
                         'id': 'all-agents',
-                        'title': _('Normal Checkmk agent, all configured special agents'),
-                        'aux_tags': ['tcp'],
+                        'title': _('Configured API integrations and Checkmk agent'),
+                        'aux_tags': ['tcp', 'checkmk-agent'],
                     },
                     {
                         'id': 'special-agents',
-                        'title': _('No Checkmk agent, all configured special agents'),
+                        'title': _('Configured API integrations, no Checkmk agent'),
                         'aux_tags': ['tcp'],
                     },
                     {
                         'id': 'no-agent',
-                        'title': _('No agent'),
+                        'title': _('No API integrations, no Checkmk agent'),
                         'aux_tags': [],
                     },
                 ],
@@ -586,7 +610,7 @@ class BuiltinTagConfig(TagConfig):
             {
                 'id': 'piggyback',
                 'title': _("Piggyback"),
-                'topic': _('Data sources'),
+                'topic': _('Monitoring agents'),
                 'help': _(
                     "By default every host has the piggyback data source "
                     "<b>Use piggyback data from other hosts if present</b>. "
@@ -619,7 +643,7 @@ class BuiltinTagConfig(TagConfig):
             {
                 'id': 'snmp_ds',
                 'title': _('SNMP'),
-                'topic': _('Data sources'),
+                'topic': _('Monitoring agents'),
                 'tags': [{
                     'id': 'no-snmp',
                     'title': _('No SNMP'),
@@ -636,7 +660,7 @@ class BuiltinTagConfig(TagConfig):
             },
             {
                 'id': 'address_family',
-                'title': _('IP Address Family'),
+                'title': _('IP address family'),
                 'topic': u'Address',
                 'tags': [
                     {
@@ -678,17 +702,22 @@ class BuiltinTagConfig(TagConfig):
             },
             {
                 'id': 'snmp',
-                'topic': _('Data sources'),
+                'topic': _('Monitoring agents'),
                 'title': _('Monitor via SNMP'),
             },
             {
                 'id': 'tcp',
-                'topic': _('Data sources'),
+                'topic': _('Monitoring agents'),
+                'title': _('Monitor via Checkmk Agent or special agent'),
+            },
+            {
+                'id': 'checkmk-agent',
+                'topic': _('Monitoring agents'),
                 'title': _('Monitor via Checkmk Agent'),
             },
             {
                 'id': 'ping',
-                'topic': _('Data sources'),
+                'topic': _('Monitoring agents'),
                 'title': _('Only ping this device'),
             },
         ]

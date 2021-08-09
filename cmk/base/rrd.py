@@ -5,14 +5,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import xml.etree.ElementTree as ET
+from pathlib import Path
 from typing import Optional, Tuple
 
-from pathlib import Path
 from six import ensure_str
 
-import cmk.utils.paths
 import cmk.utils
-from cmk.utils.type_defs import MetricName, HostName
+import cmk.utils.paths
+from cmk.utils.type_defs import HostName, MetricName
 
 RRDServiceName = str
 

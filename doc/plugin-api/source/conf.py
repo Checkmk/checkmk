@@ -19,6 +19,7 @@
 import os
 import sys
 from typing import List
+
 sys.path.insert(0, os.path.abspath('../../../'))
 
 # -- Project information -----------------------------------------------------
@@ -50,7 +51,10 @@ exclude_patterns: List[str] = []
 # Instead of absolute module names like "cmk.gui.plugins.dashboard.dashboard_api.v0.IFrameDashlet",
 # that fill the whole page, use the plain module local names of the classes.
 add_module_names = False
-autodoc_default_options = {'member-order': 'bysource'}
+autodoc_default_options = {
+    'member-order': 'bysource',
+    'exclude-members': 'to_json, from_json, serialize, deserialize',
+}
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

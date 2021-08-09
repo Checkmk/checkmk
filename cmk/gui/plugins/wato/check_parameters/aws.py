@@ -4,36 +4,40 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Type, Optional, List
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    ValueSpec,
-    DictionaryEntry,
-    Alternative,
-    Dictionary,
-    Integer,
-    Tuple,
-    Float,
-    Percentage,
-    Age,
-    FixedValue,
-    TextAscii,
-    Filesize,
-    ListOf,
-    CascadingDropdown,
-    Transform,
-)
-from cmk.gui.plugins.wato import (
-    RulespecGroupCheckParametersApplications,
-    CheckParameterRulespecWithoutItem,
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-)
+from typing import Callable, Iterable, List, Optional
+from typing import Tuple as TupleType
+from typing import Type
+
 from cmk.utils.aws_constants import (
-    AWSEC2InstTypes,
     AWSEC2InstFamilies,
+    AWSEC2InstTypes,
     AWSEC2LimitsDefault,
     AWSEC2LimitsSpecial,
+)
+
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+)
+from cmk.gui.valuespec import (
+    Age,
+    Alternative,
+    CascadingDropdown,
+    Dictionary,
+    DictionaryEntry,
+    Filesize,
+    FixedValue,
+    Float,
+    Integer,
+    ListOf,
+    Percentage,
+    TextInput,
+    Transform,
+    Tuple,
+    ValueSpec,
 )
 
 
@@ -105,18 +109,23 @@ def _vs_cpu_credits_balance():
                         ]))
 
 
-def _vs_elements_http_errors(http_err_codes, title_add=lambda http_err_code: ""):
-    return [('levels_http_%s_perc' % http_err_code,
-             Tuple(
-                 title=_("Upper percentual levels for HTTP %s errors" % http_err_code.upper() +
-                         title_add(http_err_code)),
-                 help=_("Specify levels for HTTP %s errors in percent "
-                        "which refer to the total number of requests." % http_err_code.upper()),
-                 elements=[
-                     Percentage(title=_("Warning at")),
-                     Percentage(title=_("Critical at")),
-                 ],
-             )) for http_err_code in http_err_codes]
+def _vs_elements_http_errors(
+    http_err_codes: Iterable[str],
+    title_add: Callable[[str], str] = lambda http_err_code: "",
+) -> Iterable[TupleType[str, Tuple]]:
+    return [(
+        'levels_http_%s_perc' % http_err_code,
+        Tuple(
+            title=_("Upper percentual levels for HTTP %s errors") % http_err_code.upper() +
+            title_add(http_err_code),
+            help=_("Specify levels for HTTP %s errors in percent "
+                   "which refer to the total number of requests.") % http_err_code.upper(),
+            elements=[
+                Percentage(title=_("Warning at")),
+                Percentage(title=_("Critical at")),
+            ],
+        ),
+    ) for http_err_code in http_err_codes]
 
 
 def _vs_latency():
@@ -131,32 +140,33 @@ def _vs_latency():
 
 
 def _item_spec_aws_limits_generic():
-    return TextAscii(title=_("Region name"), help=_("An AWS region name such as 'eu-central-1'"))
+    return TextInput(title=_("Region name"), help=_("An AWS region name such as 'eu-central-1'"))
 
 
-def _vs_limits(resource: str,
-               default_limit: int,
-               vs_limit_cls: Optional[Type[Filesize]] = None,
-               unit: Optional[str] = None,
-               title_default: str = "Limit from AWS API") -> Alternative:
-
-    if unit is None:
-        unit = resource
+def _vs_limits(
+        resource: str,
+        default_limit: int,
+        vs_limit_cls: Optional[Type[Filesize]] = None,
+        unit: str = "",
+        title_default: str = _("Limit from AWS API"),
+) -> Alternative:
 
     if vs_limit_cls is None:
         vs_limit = Integer(
-            unit=_("%s" % unit),
+            title=resource,
+            unit=unit,
             minvalue=1,
             default_value=default_limit,
         )
     else:
         vs_limit = vs_limit_cls(
+            title=resource,
             minvalue=1,
             default_value=default_limit,
         )
 
     if resource:
-        title: Optional[str] = _("Set limit and levels for %s" % resource)
+        title: Optional[str] = _("Set limit and levels for %s") % resource
     else:
         title = None
 
@@ -165,10 +175,15 @@ def _vs_limits(resource: str,
         elements=[
             Tuple(title=_("Set levels"),
                   elements=[
-                      Alternative(elements=[FixedValue(
-                          None,
-                          totext=_(title_default),
-                      ), vs_limit]),
+                      Alternative(orientation="horizontal",
+                                  elements=[
+                                      FixedValue(
+                                          None,
+                                          title=title_default,
+                                          totext="",
+                                      ),
+                                      vs_limit,
+                                  ]),
                       Percentage(title=_("Warning at"), default_value=80.0),
                       Percentage(title=_("Critical at"), default_value=90.0),
                   ]),
@@ -178,7 +193,8 @@ def _vs_limits(resource: str,
                       FixedValue(None, totext=""),
                       FixedValue(None, totext=""),
                   ]),
-        ])
+        ],
+    )
 
 
 #.
@@ -193,7 +209,7 @@ def _vs_limits(resource: str,
 
 
 def _item_spec_aws_glacier_vault_archives():
-    return TextAscii(title=_("The vault name"))
+    return TextInput(title=_("The vault name"))
 
 
 rulespec_registry.register(
@@ -221,8 +237,11 @@ rulespec_registry.register(
     ))
 
 
-def _parameter_valuespec_aws_glacier_limits():
-    return Dictionary(elements=[('number_of_vaults', _vs_limits("Vaults", 1000))])
+def _parameter_valuespec_aws_glacier_limits() -> Dictionary:
+    return Dictionary(elements=[(
+        'number_of_vaults',
+        _vs_limits(_("Vaults"), 1000),
+    )])
 
 
 rulespec_registry.register(
@@ -247,7 +266,7 @@ rulespec_registry.register(
 
 
 def _item_spec_aws_s3_buckets():
-    return TextAscii(title=_("Bucket name"))
+    return TextInput(title=_("Bucket name"))
 
 
 rulespec_registry.register(
@@ -410,10 +429,13 @@ rulespec_registry.register(
     ))
 
 
-def _parameter_valuespec_aws_s3_limits():
-    return Dictionary(
-        elements=[('buckets',
-                   _vs_limits("Buckets", 100, title_default="Default limit set by AWS"))])
+def _parameter_valuespec_aws_s3_limits() -> Dictionary:
+    return Dictionary(elements=[
+        (
+            'buckets',
+            _vs_limits(_("Buckets"), 100, title_default=_("Default limit set by AWS")),
+        ),
+    ])
 
 
 rulespec_registry.register(
@@ -472,7 +494,7 @@ def _vs_limits_inst_types():
         CascadingDropdown(orientation="horizontal",
                           choices=[(inst_type, inst_type,
                                     _vs_limits(
-                                        "%s instances" % inst_type,
+                                        _("%s instances") % inst_type,
                                         AWSEC2LimitsSpecial.get(inst_type, AWSEC2LimitsDefault)[0]))
                                    for inst_type in AWSEC2InstTypes]),
         title=_("Set limits and levels for running on-demand instances"),
@@ -492,19 +514,19 @@ def _vs_limits_vcpu_families():
     )
 
 
-def _parameter_valuespec_aws_ec2_limits():
+def _parameter_valuespec_aws_ec2_limits() -> Dictionary:
     return Dictionary(elements=[
-        ('vpc_elastic_ip_addresses', _vs_limits("VPC Elastic IP Addresses", 5)),
-        ('elastic_ip_addresses', _vs_limits("Elastic IP Addresses", 5)),
-        ('vpc_sec_group_rules', _vs_limits("Rules of VPC security group", 120)),
-        ('vpc_sec_groups', _vs_limits("VPC security groups", 2500)),
-        ('if_vpc_sec_group', _vs_limits("VPC security groups of elastic network interface", 5)),
-        ('spot_inst_requests', _vs_limits("Spot Instance Requests", 20)),
-        ('active_spot_fleet_requests', _vs_limits("Active Spot Fleet Requests", 1000)),
+        ('vpc_elastic_ip_addresses', _vs_limits(_("VPC Elastic IP Addresses"), 5)),
+        ('elastic_ip_addresses', _vs_limits(_("Elastic IP Addresses"), 5)),
+        ('vpc_sec_group_rules', _vs_limits(_("Rules of VPC security group"), 120)),
+        ('vpc_sec_groups', _vs_limits(_("VPC security groups"), 2500)),
+        ('if_vpc_sec_group', _vs_limits(_("VPC security groups of elastic network interface"), 5)),
+        ('spot_inst_requests', _vs_limits(_("Spot Instance Requests"), 20)),
+        ('active_spot_fleet_requests', _vs_limits(_("Active Spot Fleet Requests"), 1000)),
         ('spot_fleet_total_target_capacity',
-         _vs_limits("Spot Fleet Requests Total Target Capacity", 5000)),
+         _vs_limits(_("Spot Fleet Requests Total Target Capacity"), 5000)),
         ('running_ondemand_instances_total',
-         _vs_limits("Total Running On-Demand Instances(Deprecated by AWS)", 20)),
+         _vs_limits(_("Total Running On-Demand Instances(Deprecated by AWS)"), 20)),
         ('running_ondemand_instances_vcpus', _vs_limits_vcpu_families()),
         ('running_ondemand_instances', _vs_limits_inst_types()),
     ])
@@ -532,7 +554,7 @@ rulespec_registry.register(
 
 
 def _item_spec_aws_costs_and_usage():
-    return TextAscii(title=_("The service name"))
+    return TextInput(title=_("The service name"))
 
 
 def _parameter_valuespec_aws_costs_and_usage():
@@ -708,12 +730,12 @@ rulespec_registry.register(
     ))
 
 
-def _parameter_valuespec_aws_elb_limits():
+def _parameter_valuespec_aws_elb_limits() -> Dictionary:
     return Dictionary(elements=[
-        ('load_balancers', _vs_limits("Load balancers", 20)),
-        ('load_balancer_listeners', _vs_limits("Listeners per load balancer", 100)),
+        ('load_balancers', _vs_limits(_("Load balancers"), 20)),
+        ('load_balancer_listeners', _vs_limits(_("Listeners per load balancer"), 100)),
         ('load_balancer_registered_instances',
-         _vs_limits("Registered instances per load balancer", 1000)),
+         _vs_limits(_("Registered instances per load balancer"), 1000)),
     ])
 
 
@@ -738,21 +760,21 @@ rulespec_registry.register(
 #   '----------------------------------------------------------------------'
 
 
-def _parameter_valuespec_aws_elbv2_limits():
+def _parameter_valuespec_aws_elbv2_limits() -> Dictionary:
     return Dictionary(elements=[
-        ('application_load_balancers', _vs_limits("Application Load balancers", 20)),
-        ('application_load_balancer_rules', _vs_limits("Application Load Balancer Rules", 100)),
+        ('application_load_balancers', _vs_limits(_("Application Load balancers"), 20)),
+        ('application_load_balancer_rules', _vs_limits(_("Application Load Balancer Rules"), 100)),
         ('application_load_balancer_listeners',
-         _vs_limits("Application Load Balancer Listeners", 50)),
+         _vs_limits(_("Application Load Balancer Listeners"), 50)),
         ('application_load_balancer_target_groups',
-         _vs_limits("Application Load Balancer Target Groups", 3000)),
+         _vs_limits(_("Application Load Balancer Target Groups"), 3000)),
         ('application_load_balancer_certificates',
-         _vs_limits("Application Load balancer Certificates", 25)),
-        ('network_load_balancers', _vs_limits("Network Load balancers", 20)),
-        ('network_load_balancer_listeners', _vs_limits("Network Load Balancer Listeners", 50)),
+         _vs_limits(_("Application Load balancer Certificates"), 25)),
+        ('network_load_balancers', _vs_limits(_("Network Load balancers"), 20)),
+        ('network_load_balancer_listeners', _vs_limits(_("Network Load Balancer Listeners"), 50)),
         ('network_load_balancer_target_groups',
-         _vs_limits("Network Load Balancer Target Groups", 3000)),
-        ('load_balancer_target_groups', _vs_limits("Load balancers Target Groups", 3000)),
+         _vs_limits(_("Network Load Balancer Target Groups"), 3000)),
+        ('load_balancer_target_groups', _vs_limits(_("Load balancers Target Groups"), 3000)),
     ])
 
 
@@ -807,7 +829,7 @@ def _parameter_valuespec_aws_elbv2_application_target_errors():
 
 
 def _item_spec_aws_elbv2_target_errors():
-    return TextAscii(title=_("Target group name"))
+    return TextInput(title=_("Target group name"))
 
 
 rulespec_registry.register(
@@ -832,7 +854,7 @@ rulespec_registry.register(
 
 
 def _item_spec_aws_ebs_burst_balance():
-    return TextAscii(title=_("Block storage name"))
+    return TextInput(title=_("Block storage name"))
 
 
 rulespec_registry.register(
@@ -846,21 +868,22 @@ rulespec_registry.register(
     ))
 
 
-def _parameter_valuespec_aws_ebs_limits():
+def _parameter_valuespec_aws_ebs_limits() -> Dictionary:
     return Dictionary(elements=[
-        ('block_store_snapshots', _vs_limits("Total Block store snapshots", 100000)),
+        ('block_store_snapshots', _vs_limits(_("Total Block store snapshots"), 100000)),
         ('block_store_space_standard',
-         _vs_limits("Total Magnetic volumes space", 300 * 1024**4, vs_limit_cls=Filesize)),
+         _vs_limits(_("Total Magnetic volumes space"), 300 * 1024**4, vs_limit_cls=Filesize)),
         ('block_store_space_io1',
-         _vs_limits("Total Provisioned IOPS SSD space", 300 * 1024**4, vs_limit_cls=Filesize)),
+         _vs_limits(_("Total Provisioned IOPS SSD space"), 300 * 1024**4, vs_limit_cls=Filesize)),
         ('block_store_iops_io1',
-         _vs_limits("Total Provisioned IOPS SSD IO operations per seconds", 300000)),
+         _vs_limits(_("Total Provisioned IOPS SSD IO operations per seconds"), 300000)),
         ('block_store_space_gp2',
-         _vs_limits("Total General Purpose SSD space", 300 * 1024**4, vs_limit_cls=Filesize)),
+         _vs_limits(_("Total General Purpose SSD space"), 300 * 1024**4, vs_limit_cls=Filesize)),
         ('block_store_space_sc1',
-         _vs_limits("Total Cold HDD space", 300 * 1024**4, vs_limit_cls=Filesize)),
+         _vs_limits(_("Total Cold HDD space"), 300 * 1024**4, vs_limit_cls=Filesize)),
         ('block_store_space_st1',
-         _vs_limits("Total Throughput Optimized HDD space", 300 * 1024**4, vs_limit_cls=Filesize)),
+         _vs_limits(_("Total Throughput Optimized HDD space"), 300 *
+                    1024**4, vs_limit_cls=Filesize)),
     ])
 
 
@@ -886,7 +909,7 @@ rulespec_registry.register(
 
 
 def _item_spec_aws_rds():
-    return TextAscii(
+    return TextInput(
         title=_("Instance identifier & region"),
         help="Identfier of the DB instance and the name of the region in square brackets, e.g. "
         "'db-instance-1 \\[eu-central-1\\]'.")
@@ -992,24 +1015,24 @@ rulespec_registry.register(
     ))
 
 
-def _parameter_valuespec_aws_rds_limits():
+def _parameter_valuespec_aws_rds_limits() -> Dictionary:
     return Dictionary(elements=[
-        ('db_instances', _vs_limits("DB instances", 40)),
-        ('reserved_db_instances', _vs_limits("Reserved DB instances", 40)),
+        ('db_instances', _vs_limits(_("DB instances"), 40)),
+        ('reserved_db_instances', _vs_limits(_("Reserved DB instances"), 40)),
         ('allocated_storage',
-         _vs_limits("Allocated storage", 100 * 1024**4, vs_limit_cls=Filesize)),
-        ('db_security_groups', _vs_limits("DB security groups", 25)),
-        ('auths_per_db_security_groups', _vs_limits("Authorizations per DB security group", 20)),
-        ('db_parameter_groups', _vs_limits("DB parameter groups", 50)),
-        ('manual_snapshots', _vs_limits("Manual snapshots", 100)),
-        ('event_subscriptions', _vs_limits("Event subscriptions", 20)),
-        ('db_subnet_groups', _vs_limits("DB subnet groups", 50)),
-        ('option_groups', _vs_limits("Option groups", 20)),
-        ('subnet_per_db_subnet_groups', _vs_limits("Subnet per DB subnet groups", 20)),
-        ('read_replica_per_master', _vs_limits("Read replica per master", 5)),
-        ('db_clusters', _vs_limits("DB clusters", 40)),
-        ('db_cluster_parameter_groups', _vs_limits("DB cluster parameter groups", 50)),
-        ('db_cluster_roles', _vs_limits("DB cluster roles", 5)),
+         _vs_limits(_("Allocated storage"), 100 * 1024**4, vs_limit_cls=Filesize)),
+        ('db_security_groups', _vs_limits(_("DB security groups"), 25)),
+        ('auths_per_db_security_groups', _vs_limits(_("Authorizations per DB security group"), 20)),
+        ('db_parameter_groups', _vs_limits(_("DB parameter groups"), 50)),
+        ('manual_snapshots', _vs_limits(_("Manual snapshots"), 100)),
+        ('event_subscriptions', _vs_limits(_("Event subscriptions"), 20)),
+        ('db_subnet_groups', _vs_limits(_("DB subnet groups"), 50)),
+        ('option_groups', _vs_limits(_("Option groups"), 20)),
+        ('subnet_per_db_subnet_groups', _vs_limits(_("Subnet per DB subnet groups"), 20)),
+        ('read_replica_per_master', _vs_limits(_("Read replica per master"), 5)),
+        ('db_clusters', _vs_limits(_("DB clusters"), 40)),
+        ('db_cluster_parameter_groups', _vs_limits(_("DB cluster parameter groups"), 50)),
+        ('db_cluster_roles', _vs_limits(_("DB cluster roles"), 5)),
     ])
 
 
@@ -1034,9 +1057,9 @@ rulespec_registry.register(
 #   '----------------------------------------------------------------------'
 
 
-def _parameter_valuespec_aws_cloudwatch_alarms_limits():
+def _parameter_valuespec_aws_cloudwatch_alarms_limits() -> Dictionary:
     return Dictionary(elements=[
-        ('cloudwatch_alarms', _vs_limits("CloudWatch Alarms", 5000)),
+        ('cloudwatch_alarms', _vs_limits(_("CloudWatch Alarms"), 5000)),
     ])
 
 
@@ -1061,13 +1084,22 @@ rulespec_registry.register(
 #   '----------------------------------------------------------------------'
 
 
-def _parameter_valuespec_aws_dynamodb_limits():
+def _parameter_valuespec_aws_dynamodb_limits() -> Dictionary:
     return Dictionary(elements=[
-        ('number_of_tables',
-         _vs_limits(
-             "Number of tables", 256, unit='tables', title_default="Default limit set by AWS")),
-        ('read_capacity', _vs_limits("Read capacity", 80000, unit='RCU')),
-        ('write_capacity', _vs_limits("Write capacity", 80000, unit='WCU')),
+        (
+            'number_of_tables',
+            _vs_limits(
+                _("Number of tables"), 256, unit='tables',
+                title_default="Default limit set by AWS"),
+        ),
+        (
+            'read_capacity',
+            _vs_limits(_("Read capacity"), 80000, unit='RCU'),
+        ),
+        (
+            'write_capacity',
+            _vs_limits(_("Write capacity"), 80000, unit='WCU'),
+        ),
     ])
 
 
@@ -1082,7 +1114,7 @@ rulespec_registry.register(
     ))
 
 
-def _vs_aws_dynamodb_capacity(title, unit):
+def _vs_aws_dynamodb_capacity(title: str, unit: str) -> Dictionary:
 
     elements_extr: List[ValueSpec] = [
         Float(title=_("Warning at"), unit=unit),
@@ -1125,22 +1157,30 @@ def _vs_aws_dynamodb_capacity(title, unit):
 
     elements_single_minmmax: List[DictionaryEntry] = [
         ('levels_%s' % extr,
-         Dictionary(title=_("Levels on %s single-request consumption" % extr),
+         Dictionary(title=_("Levels on %s single-request consumption") % extr,
                     elements=[
                         ("levels_upper", Tuple(title=_("Upper levels"), elements=elements_extr)),
                         ("levels_lower", Tuple(title=_("Lower levels"), elements=elements_extr)),
                     ])) for extr in ['minimum', 'maximum']
     ]
 
-    return Dictionary(title=_(title), elements=elements_avg + elements_single_minmmax)
+    return Dictionary(title=title, elements=elements_avg + elements_single_minmmax)
 
 
-def _parameter_valuespec_aws_dynamodb_capacity():
-    return Dictionary(title=_("Levels on Read/Write Capacity"),
-                      elements=[('levels_read',
-                                 _vs_aws_dynamodb_capacity('Levels on read capacity', 'RCU')),
-                                ('levels_write',
-                                 _vs_aws_dynamodb_capacity('Levels on write capacity', 'WCU'))])
+def _parameter_valuespec_aws_dynamodb_capacity() -> Dictionary:
+    return Dictionary(
+        title=_("Levels on Read/Write Capacity"),
+        elements=[
+            (
+                'levels_read',
+                _vs_aws_dynamodb_capacity(_('Levels on read capacity'), 'RCU'),
+            ),
+            (
+                'levels_write',
+                _vs_aws_dynamodb_capacity(_('Levels on write capacity'), 'WCU'),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -1153,19 +1193,19 @@ rulespec_registry.register(
     ))
 
 
-def _parameter_valuespec_aws_dynamodb_latency():
-    return Dictionary(title=_("Levels on latency"),
-                      elements=[
-                          ("levels_seconds_%s_%s" % (operation.lower(), statistic),
-                           Tuple(title=_("Upper levels on %s latency of successful %s requests" %
-                                         (statistic, operation)),
-                                 elements=[
-                                     Float(title=_("Warning at"), unit='ms'),
-                                     Float(title=_("Critical at"), unit='ms'),
-                                 ]))
-                          for operation in ['Query', 'GetItem', 'PutItem']
-                          for statistic in ['average', 'maximum']
-                      ])
+def _parameter_valuespec_aws_dynamodb_latency() -> Dictionary:
+    return Dictionary(
+        title=_("Levels on latency"),
+        elements=[("levels_seconds_%s_%s" % (operation.lower(), statistic),
+                   Tuple(title=_("Upper levels on %s latency of successful %s requests") %
+                         (statistic, operation),
+                         elements=[
+                             Float(title=_("Warning at"), unit='ms'),
+                             Float(title=_("Critical at"), unit='ms'),
+                         ]))
+                  for operation in ['Query', 'GetItem', 'PutItem']
+                  for statistic in ['average', 'maximum']],
+    )
 
 
 rulespec_registry.register(
@@ -1189,28 +1229,39 @@ rulespec_registry.register(
 
 
 def _item_spec_aws_wafv2_limits():
-    return TextAscii(title=_("Region name"),
+    return TextInput(title=_("Region name"),
                      help=_("An AWS region name such as 'eu-central-1' or 'CloudFront' for WAFs in "
                             "front of CloudFront resources"))
 
 
-def _parameter_valuespec_aws_wafv2_limits():
-    return Dictionary(title=_('Limits and levels'),
-                      elements=[
-                          ('web_acls',
-                           _vs_limits("Web ACLs", 100, title_default="Default limit set by AWS")),
-                          ('rule_groups',
-                           _vs_limits("Rule groups", 100,
-                                      title_default="Default limit set by AWS")),
-                          ('ip_sets',
-                           _vs_limits("IP sets", 100, title_default="Default limit set by AWS")),
-                          ('regex_pattern_sets',
-                           _vs_limits("Regex sets", 10, title_default="Default limit set by AWS")),
-                          ('web_acl_capacity_units',
-                           _vs_limits("Web ACL capacity units (WCUs)",
-                                      1500,
-                                      title_default="Default limit set by AWS")),
-                      ])
+def _parameter_valuespec_aws_wafv2_limits() -> Dictionary:
+    return Dictionary(
+        title=_('Limits and levels'),
+        elements=[
+            (
+                'web_acls',
+                _vs_limits(_("Web ACLs"), 100, title_default="Default limit set by AWS"),
+            ),
+            (
+                'rule_groups',
+                _vs_limits(_("Rule groups"), 100, title_default="Default limit set by AWS"),
+            ),
+            (
+                'ip_sets',
+                _vs_limits(_("IP sets"), 100, title_default="Default limit set by AWS"),
+            ),
+            (
+                'regex_pattern_sets',
+                _vs_limits(_("Regex sets"), 10, title_default="Default limit set by AWS"),
+            ),
+            (
+                'web_acl_capacity_units',
+                _vs_limits(_("Web ACL capacity units (WCUs)"),
+                           1500,
+                           title_default="Default limit set by AWS"),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -1224,16 +1275,18 @@ rulespec_registry.register(
     ))
 
 
-def _parameter_valuespec_aws_wafv2_web_acl():
-    return Dictionary(title=_('Levels on Web ACL requests'),
-                      elements=[
-                          ("%s_requests_perc" % action,
-                           Tuple(title=_("Upper levels on percentage of %s requests" % action),
-                                 elements=[
-                                     Percentage(title=_("Warning at")),
-                                     Percentage(title=_("Critical at")),
-                                 ])) for action in ['allowed', 'blocked']
-                      ])
+def _parameter_valuespec_aws_wafv2_web_acl() -> Dictionary:
+    return Dictionary(
+        title=_('Levels on Web ACL requests'),
+        elements=[(
+            "%s_requests_perc" % action,
+            Tuple(title=_("Upper levels on percentage of %s requests") % action,
+                  elements=[
+                      Percentage(title=_("Warning at")),
+                      Percentage(title=_("Critical at")),
+                  ]),
+        ) for action in ['allowed', 'blocked']],
+    )
 
 
 rulespec_registry.register(
@@ -1243,4 +1296,245 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_aws_wafv2_web_acl,
         title=lambda: _("AWS/WAFV2 Web ACL Requests"),
+    ))
+
+#.
+#   .--Lambda--------------------------------------------------------------.
+#   |               _                    _         _                       |
+#   |              | |    __ _ _ __ ___ | |__   __| | __ _                 |
+#   |              | |   / _` | '_ ` _ \| '_ \ / _` |/ _` |                |
+#   |              | |__| (_| | | | | | | |_) | (_| | (_| |                |
+#   |              |_____\__,_|_| |_| |_|_.__/ \__,_|\__,_|                |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def _parameter_valuespec_aws_lambda_performance():
+    return Dictionary(elements=[
+        ('levels_duration_percent',
+         Tuple(
+             title=_("Upper levels for duration in percent of the timeout"),
+             elements=[
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=0.9),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=0.95),
+             ],
+             help=
+             _("Specify the upper levels for the elapsed time of a function’s execution (duration) in percent of the AWS Lambda configuration value \"Timeout\"."
+              ),
+         )),
+        ('levels_duration_absolute',
+         Tuple(
+             title=_("Upper levels for duration in seconds"),
+             elements=[
+                 Float(title=_("Warning at"), unit="s"),
+                 Float(title=_("Critical at"), unit="s"),
+             ],
+             help=
+             _("Specify the upper levels for the elapsed time of a function’s execution (duration)."
+              ),
+         )),
+        ('levels_errors',
+         Tuple(
+             title=_("Upper levels for errors"),
+             elements=[
+                 Float(title=_("Warning at"), size=6, display_format="%.5f", default_value=0.00028),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f",
+                       default_value=0.00028),
+             ],
+             help=
+             _("Specify the upper levels for the number of failed invocations per second due to function errors. Default is CRIT for more than one error per hour (ca. 1.0/3600)."
+              ),
+         )),
+        ('levels_invocations',
+         Tuple(
+             title=_("Upper levels for invocations"),
+             elements=[
+                 Float(title=_("Warning at")),
+                 Float(title=_("Critical at")),
+             ],
+             help=_("Specify the upper levels for the number of invocations per second."),
+         )),
+        ('levels_throttles',
+         Tuple(
+             title=_("Upper levels for throttles"),
+             elements=[
+                 Float(title=_("Warning at"), size=6, display_format="%.5f", default_value=0.00028),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f",
+                       default_value=0.00028),
+             ],
+             help=
+             _("Specify the upper levels for the number of invocations per second that exceeded the concurrent limits (throttles). Default is CRIT for more than one error per hour (ca. 1.0/3600)."
+              ),
+         )),
+        ('levels_iterator_age',
+         Tuple(
+             title=_("Upper levels for iterator age"),
+             elements=[
+                 Float(title=_("Warning at")),
+                 Float(title=_("Critical at")),
+             ],
+             help=
+             _("Specify the upper levels in seconds for the age of the last record for each batch of records processed (iterator age). "
+               "A high iterator age could result from the following scenarios: a high execution duration for a function, not enough shards in a stream, invocation errors, insufficient batch size. "
+               "This metric is only reported for stream-based invocations."),
+         )),
+        ('levels_dead_letter_errors',
+         Tuple(
+             title=_("Upper levels for dead letter errors"),
+             elements=[
+                 Float(title=_("Warning at"), size=6, display_format="%.5f", default_value=0.00028),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f",
+                       default_value=0.00028),
+             ],
+             help=
+             _("Specify the upper levels for the number of discarded events per second that could not be processed. "
+               "This metric is only reported for asynchronous invocations. Default is CRIT for more than one error per hour (ca. 1.0/3600)."
+              ),
+         )),
+    ],)
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="aws_lambda_performance",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_lambda_performance,
+        title=lambda: _("AWS/Lambda Performance"),
+    ))
+
+
+def _parameter_valuespec_aws_lambda_concurrency():
+    return Dictionary(elements=[
+        ('levels_concurrent_executions_in_percent',
+         Tuple(
+             title=_("Upper levels for concurrent executions in percent of the region limit"),
+             elements=[
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=0.9),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=0.95),
+             ],
+         )),
+        ('levels_unreserved_concurrent_executions_in_percent',
+         Tuple(
+             title=_(
+                 "Upper levels for unreserved concurrent executions in percent of the region limit"
+             ),
+             elements=[
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=0.9),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=0.95),
+             ],
+         )),
+        ('levels_concurrent_executions_absolute',
+         Tuple(
+             title=_("Upper levels for concurrent executions"),
+             elements=[
+                 Float(title=_("Warning at"), display_format="%.1f"),
+                 Float(title=_("Critical at"), display_format="%.1f"),
+             ],
+         )),
+        ('levels_unreserved_concurrent_executions_absolute',
+         Tuple(
+             title=_("Upper levels for unreserved concurrent executions"),
+             elements=[
+                 Float(title=_("Warning at"), display_format="%.1f"),
+                 Float(title=_("Critical at"), display_format="%.1f"),
+             ],
+         )),
+        ('levels_provisioned_concurrency_executions',
+         Tuple(
+             title=_("Upper levels for provisioned concurrent executions per second"),
+             elements=[
+                 Float(title=_("Warning at"), size=6, display_format="%.5f"),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f"),
+             ],
+         )),
+        ('levels_provisioned_concurrency_invocations',
+         Tuple(
+             title=_("Upper levels for provisioned concurrent invocations per second"),
+             elements=[
+                 Float(title=_("Warning at"), size=6, display_format="%.5f"),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f"),
+             ],
+         )),
+        ('levels_provisioned_concurrency_spillover_invocations',
+         Tuple(
+             title=_("Upper levels for provisioned concurrency spillover invocations per second"),
+             elements=[
+                 Float(title=_("Warning at"), size=6, display_format="%.5f", default_value=0.00028),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f",
+                       default_value=0.00028),
+             ],
+             help=
+             _("Specify the upper levels for the number of invocations per second that are run on non-provisioned concurrency"
+               " (spillover invocations) when all provisioned concurrency is in use."
+               " Default is CRIT for more than one spillover invocation per hour (ca. 1.0/3600)."),
+         )),
+        ('levels_provisioned_concurrency_utilization',
+         Tuple(
+             title=_("Upper levels provisioned concurrency utilization"),
+             elements=[
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=0.9),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=0.95),
+             ],
+         )),
+    ],)
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="aws_lambda_concurrency",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_lambda_concurrency,
+        title=lambda: _("AWS/Lambda Concurrency"),
+    ))
+
+
+def _parameter_valuespec_aws_lambda_memory() -> Dictionary:
+    return Dictionary(elements=[
+        ('levels_code_size_in_percent',
+         Tuple(
+             title=_("Upper levels for code size in percent of the region limit"),
+             elements=[
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=0.9),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=0.95),
+             ],
+         )),
+        ('levels_code_size_absolute',
+         Tuple(
+             title=_("Upper levels for code size"),
+             elements=[
+                 Filesize(title=_("Warning at")),
+                 Filesize(title=_("Critical at")),
+             ],
+         )),
+        ('levels_memory_used_in_percent',
+         Tuple(
+             title=_("Upper levels for memory used in percent of the Lambda function limit"),
+             elements=[
+                 Percentage(title=_("Warning at"), display_format="%.2f", default_value=0.9),
+                 Percentage(title=_("Critical at"), display_format="%.2f", default_value=0.95),
+             ],
+         )),
+        ('levels_memory_size_absolute',
+         Tuple(
+             title=_("Upper levels for memory used"),
+             elements=[
+                 Filesize(title=_("Warning at")),
+                 Filesize(title=_("Critical at")),
+             ],
+         )),
+    ],)
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="aws_lambda_memory",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_lambda_memory,
+        title=lambda: _("AWS/Lambda Memory"),
     ))

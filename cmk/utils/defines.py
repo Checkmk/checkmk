@@ -10,7 +10,7 @@ from typing import Dict, List, Tuple, Union
 
 from cmk.utils.i18n import _
 
-# TODO: Investigate Check_MK code for more defines and other places
+# TODO: Investigate Checkmk code for more defines and other places
 #       where similar strucures are defined and use the things from
 #       here or move new stuff to this module.
 

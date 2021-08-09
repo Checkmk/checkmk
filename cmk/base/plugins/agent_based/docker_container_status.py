@@ -5,29 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from typing import (
-    Any,
-    Dict,
-    Optional,
-)
-from .utils import docker
-from .utils.legacy_docker import DeprecatedDict
-from .snmp_uptime import check_snmp_uptime
+from typing import Any, Dict, Mapping, Optional
+
+from .agent_based_api.v1 import HostLabel, IgnoreResults, register, Result, Service
+from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import (
-    DiscoveryGenerator,
-    AgentStringTable,
-    CheckGenerator,
+    CheckResult,
+    DiscoveryResult,
     HostLabelGenerator,
-    Parameters,
+    StringTable,
 )
-from .agent_based_api.v1 import (
-    register,
-    Service,
-    Result,
-    state,
-    HostLabel,
-    IgnoreResults,
-)
+from .utils import docker, uptime
 
 RESTART_POLICIES_TO_DISCOVER = ("always",)
 
@@ -40,13 +28,13 @@ HEALTH_STATUS_MAP = {
 
 def _is_active_container(section: Dict[str, Any]) -> bool:
     '''return wether container is or should be running'''
-    if section.get("Status") == "running":
+    if section.get("Status") in ("running", "exited"):
         return True
     restart_policy_name = section.get("RestartPolicy", {}).get("Name")
     return restart_policy_name in RESTART_POLICIES_TO_DISCOVER
 
 
-def parse_docker_container_status(string_table: AgentStringTable) -> Dict[str, Any]:
+def parse_docker_container_status(string_table: StringTable) -> Dict[str, Any]:
     '''process the first line to a JSON object
 
     In case there are multiple lines of output sent by the agent only process the first
@@ -54,37 +42,55 @@ def parse_docker_container_status(string_table: AgentStringTable) -> Dict[str, A
     When a container got piggyback data from multiple hosts (e.g. a cluster) this results
     in multiple JSON objects handed over to this check.
     '''
-    version = docker.get_version(string_table)  # pylint: disable=undefined-variable
-
-    index = 0 if version is None else 1
-    section = docker.json_get_obj(string_table[index]) or {} if string_table[index:] else {}  # pylint: disable=undefined-variable
-
-    if version is None:
-        return DeprecatedDict(section)  # pylint: disable=undefined-variable
-    return section
+    return docker.parse(string_table, strict=False).data
 
 
 def host_labels_docker_container_status(section) -> HostLabelGenerator:
-    """
-    >>> from pprint import pprint as pp
-    >>> list(host_labels_docker_container_status({}))
-    [HostLabel('cmk/docker_object', 'container', plugin_name=None)]
-    >>> list(host_labels_docker_container_status({"ImageTags": []}))
-    [HostLabel('cmk/docker_object', 'container', plugin_name=None)]
-    >>> pp(list(host_labels_docker_container_status({"ImageTags": ["doctor:strange"]})))
-    [HostLabel('cmk/docker_object', 'container', plugin_name=None),
-     HostLabel('cmk/docker_image', 'doctor:strange', plugin_name=None),
-     HostLabel('cmk/docker_image_name', 'doctor', plugin_name=None),
-     HostLabel('cmk/docker_image_version', 'strange', plugin_name=None)]
-    >>> pp(list(host_labels_docker_container_status({"ImageTags": ["fiction/doctor:strange"]})))
-    [HostLabel('cmk/docker_object', 'container', plugin_name=None),
-     HostLabel('cmk/docker_image', 'fiction/doctor:strange', plugin_name=None),
-     HostLabel('cmk/docker_image_name', 'doctor', plugin_name=None),
-     HostLabel('cmk/docker_image_version', 'strange', plugin_name=None)]
-    >>> pp(list(host_labels_docker_container_status({"ImageTags": ["library:8080/fiction/doctor"]})))
-    [HostLabel('cmk/docker_object', 'container', plugin_name=None),
-     HostLabel('cmk/docker_image', 'library:8080/fiction/doctor', plugin_name=None),
-     HostLabel('cmk/docker_image_name', 'doctor', plugin_name=None)]
+    """Host label function
+
+    Labels:
+
+        cmk/docker_object:container :
+            This label is set if the corresponding host is a docker container.
+
+        cmk/docker_image:
+            This label is set to the docker image if the corresponding host is
+            a docker container.
+            For instance: "docker.io/library/nginx:latest"
+
+        cmk/docker_image_name:
+            This label is set to the docker image name if the corresponding host
+            is a docker container. For instance: "nginx".
+
+        cmk/docker_image_version:
+            This label is set to the docker images version if the corresponding
+            host is a docker container. For instance: "latest".
+
+    Examples:
+
+        >>> from pprint import pprint
+        >>> def show(gen):
+        ...     for l in gen: print(':'.join(l))
+        ...
+        >>> show(host_labels_docker_container_status({}))
+        cmk/docker_object:container
+        >>> show(host_labels_docker_container_status({"ImageTags": []}))
+        cmk/docker_object:container
+        >>> show(host_labels_docker_container_status({"ImageTags": ["doctor:strange"]}))
+        cmk/docker_object:container
+        cmk/docker_image:doctor:strange
+        cmk/docker_image_name:doctor
+        cmk/docker_image_version:strange
+        >>> show(host_labels_docker_container_status({"ImageTags": ["fiction/doctor:strange"]}))
+        cmk/docker_object:container
+        cmk/docker_image:fiction/doctor:strange
+        cmk/docker_image_name:doctor
+        cmk/docker_image_version:strange
+        >>> show(host_labels_docker_container_status({"ImageTags": ["library:8080/fiction/doctor"]}))
+        cmk/docker_object:container
+        cmk/docker_image:library:8080/fiction/doctor
+        cmk/docker_image_name:doctor
+
     """
     yield HostLabel("cmk/docker_object", "container")
 
@@ -124,7 +130,7 @@ register.agent_section(
 #   '----------------------------------------------------------------------'
 
 
-def discover_docker_container_status_health(section: Dict[str, Any]) -> DiscoveryGenerator:
+def discover_docker_container_status_health(section: Dict[str, Any]) -> DiscoveryResult:
     if not _is_active_container(section):
         return
     # Only discover if a healthcheck and health is configured.
@@ -134,7 +140,7 @@ def discover_docker_container_status_health(section: Dict[str, Any]) -> Discover
         yield Service()
 
 
-def check_docker_container_status_health(section: Dict[str, Any]) -> CheckGenerator:
+def check_docker_container_status_health(section: Dict[str, Any]) -> CheckResult:
     if section.get("Status") != "running":
         yield IgnoreResults("Container is not running")
         return
@@ -187,13 +193,7 @@ def discover_docker_container_status(section: Dict[str, Any]):
         yield Service()
 
 
-def check_docker_container_status(section: Dict[str, Any]) -> CheckGenerator:
-    if isinstance(section, DeprecatedDict):
-        yield Result(
-            state=state.WARN,
-            summary=
-            "Deprecated plugin/agent! You are using legacy code, which may lead to crashes and/or incomplete information. Please upgrade the monitored host to use the plugin 'mk_docker.py'."
-        )
+def check_docker_container_status(section: Dict[str, Any]) -> CheckResult:
     status = section.get("Status", "unknown")
     cur_state = {"running": state.OK, "unknown": state.UNKNOWN}.get(status, state.CRIT)
 
@@ -229,12 +229,14 @@ register.check_plugin(
 
 
 def discover_docker_container_status_uptime(
-        section_docker_container_status: Optional[Dict[str, Any]],
-        section_uptime: Optional[Dict[str, Any]]) -> DiscoveryGenerator:
+    section_docker_container_status: Optional[Dict[str, Any]],
+    section_uptime: Optional[uptime.Section],
+) -> DiscoveryResult:
     if section_uptime:
-        # if the uptime section of the checkmk agent is
-        # present, we don't need this service.
-        return
+        for _service in uptime.discover(section_uptime):
+            # if the uptime service of the checkmk agent is
+            # present, we don't need this service.
+            return
     if not section_docker_container_status:
         return
     if _is_active_container(
@@ -242,9 +244,13 @@ def discover_docker_container_status_uptime(
         yield Service()
 
 
-def check_docker_container_status_uptime(params: Parameters,
-                                         section_docker_container_status: Dict[str, Any],
-                                         section_uptime: Dict[str, Any]):
+def check_docker_container_status_uptime(
+    params: Mapping[str, Any],
+    section_docker_container_status: Optional[Dict[str, Any]],
+    section_uptime: Optional[uptime.Section],
+) -> CheckResult:
+    if not section_docker_container_status:
+        return
     started_str = section_docker_container_status.get("StartedAt")
     if not started_str:
         return
@@ -255,9 +261,9 @@ def check_docker_container_status_uptime(params: Parameters,
     op_status = section_docker_container_status["Status"]
     if op_status == "running":
         uptime_sec = (datetime.datetime.utcnow() - utc_start).total_seconds()
-        yield from check_snmp_uptime(params, int(uptime_sec))
+        yield from uptime.check(params, uptime.Section(int(uptime_sec), None))
     else:
-        yield from check_snmp_uptime(params, 0)
+        yield from uptime.check(params, uptime.Section(0, None))
         yield Result(state=state.OK, summary="Operation State: %s" % op_status)
 
 

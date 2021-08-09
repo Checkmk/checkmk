@@ -5,12 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.plugins.metrics import (
-    perfometer_info,
-    MB,
     GB,
-    TB,
     MAX_NUMBER_HOPS,
+    MB,
+    perfometer_info,
     skype_mobile_devices,
+    TB,
 )
 
 #.
@@ -369,13 +369,6 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type": "logarithmic",
-    "metric": "dedup_rate",
-    "half_value": 30.0,
-    "exponent": 1.2,
-})
-
-perfometer_info.append({
-    "type": "logarithmic",
     "metric": "major_page_faults",
     "half_value": 1000.0,
     "exponent": 2.0
@@ -433,6 +426,12 @@ perfometer_info.append({
 perfometer_info.append({
     "type": "linear",
     "segments": ["util",],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["util_numcpu_as_max",],
     "total": 100.0,
 })
 
@@ -533,6 +532,13 @@ perfometer_info.append({
     ],
     "total": 100,
     "label": ("fs_used(%)", "%"),
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
+    "metric": "dedup_rate",
+    "half_value": 30.0,
+    "exponent": 1.2,
 })
 
 perfometer_info.append({
@@ -1380,6 +1386,13 @@ perfometer_info.append({
 
 perfometer_info.append({
     "type": "logarithmic",
+    "metric": "battery_seconds_remaining",
+    "half_value": 1800,
+    "exponent": 2,
+})
+
+perfometer_info.append({
+    "type": "logarithmic",
     "metric": "fan",
     "half_value": 3000,
     "exponent": 2,
@@ -1602,5 +1615,11 @@ perfometer_info.append({
 perfometer_info.append({
     "type": "linear",
     "segments": ["log_file_utilization"],
+    "total": 100.0,
+})
+
+perfometer_info.append({
+    "type": "linear",
+    "segments": ["disk_utilization"],
     "total": 100.0,
 })

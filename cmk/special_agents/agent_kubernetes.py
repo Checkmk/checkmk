@@ -11,8 +11,7 @@ is supported: https://github.com/kubernetes-client/python
 """
 
 import argparse
-from collections import OrderedDict, defaultdict
-from collections.abc import MutableSequence
+import ast
 import contextlib
 import functools
 import itertools
@@ -20,19 +19,24 @@ import json
 import logging
 import operator
 import os
+import re
 import sys
 import time
-from typing import Any, Dict, Generic, List, Mapping, Optional, TypeVar, Union
+from collections import defaultdict, OrderedDict
+from collections.abc import MutableSequence
+from typing import Any, Callable, Dict, Generic, Iterator, List, Mapping, Optional, TypeVar, Union
 
+import dateutil.parser
 import urllib3  # type: ignore[import]
 
-from dateutil.parser import parse as parse_time
 # We currently have no typeshed for kubernetes
 from kubernetes import client  # type: ignore[import] # pylint: disable=import-error
-from kubernetes.client.rest import ApiException  # type: ignore[import] # pylint: disable=import-error
 
-import cmk.utils.profile
 import cmk.utils.password_store
+import cmk.utils.profile
+
+from kubernetes.client.rest import (  # type: ignore[import] # pylint: disable=import-error,ungrouped-imports # isort: skip
+    ApiException,)
 
 
 @contextlib.contextmanager
@@ -60,8 +64,7 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
                    action='count',
                    default=0,
                    help='Verbose mode (for even more output use -vvv)')
-    p.add_argument('host', metavar='HOST', help='Kubernetes host to connect to')
-    p.add_argument('--port', type=int, default=443, help='Port to connect to')
+    p.add_argument('--port', type=int, default=None, help='Port to connect to')
     p.add_argument('--token', required=True, help='Token for that user')
     p.add_argument(
         '--infos',
@@ -69,7 +72,9 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         required=True,
         help='Comma separated list of items that should be fetched',
     )
-    p.add_argument('--url-prefix', help='Custom URL prefix for Kubernetes API calls')
+    p.add_argument('--api-server-endpoint',
+                   required=True,
+                   help='API server endpoint for Kubernetes API calls')
     p.add_argument('--path-prefix',
                    default='',
                    action=PathPrefixAction,
@@ -78,6 +83,13 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
     p.add_argument('--prefix-namespace',
                    action='store_true',
                    help='Prefix piggyback hosts with namespace')
+    p.add_argument(
+        '--namespace-include-patterns',
+        '-n',
+        action='append',
+        default=[],
+        help='Regex patterns of namespaces to show in the output',
+    )
     p.add_argument('--profile',
                    metavar='FILE',
                    help='Profile the performance of the agent and write the output to a file')
@@ -161,7 +173,7 @@ class Metadata:
         if metadata:
             self._name = metadata.name
             self.namespace = metadata.namespace
-            self.creation_timestamp = (time.mktime(metadata.creation_timestamp.utctimetuple())
+            self.creation_timestamp = (metadata.creation_timestamp.timestamp()
                                        if metadata.creation_timestamp else None)
             self.labels = metadata.labels if metadata.labels else {}
         else:
@@ -199,14 +211,26 @@ class Metadata:
 
 class Node(Metadata):
     def __init__(self, node: client.V1Node, stats: str) -> None:
-        super(Node, self).__init__(node.metadata)
+        super().__init__(node.metadata)
         self._status = node.status
         # kubelet replies statistics for the last 2 minutes with 10s
         # intervals. We only need the latest state.
-        self.stats = eval(stats)['stats'][-1]
+        self.stats = ast.literal_eval(stats)['stats'][-1] if stats else {}
         # The timestamps are returned in RFC3339Nano format which cannot be parsed
         # by Pythons time module. Therefore we use dateutils parse function here.
-        self.stats['timestamp'] = time.mktime(parse_time(self.stats['timestamp']).utctimetuple())
+        self.stats['timestamp'] = (dateutil.parser.parse(self.stats['timestamp']).timestamp()
+                                   if self.stats.get('timestamp') else time.time())
+
+        is_control_plane = (
+            # 1.18 returns an empty string, 1.20 returns 'true'
+            ('node-role.kubernetes.io/control-plane' in self.labels) or
+            ('node-role.kubernetes.io/master' in self.labels))
+
+        if is_control_plane:
+            self.labels['cmk/kubernetes_object'] = "control-plane_node"
+        else:
+            self.labels['cmk/kubernetes_object'] = "worker_node"
+        self.labels['cmk/kubernetes'] = "yes"
 
     @property
     def conditions(self) -> Optional[Dict[str, str]]:
@@ -251,7 +275,7 @@ class Node(Metadata):
 
 class ComponentStatus(Metadata):
     def __init__(self, status: client.V1ComponentStatus) -> None:
-        super(ComponentStatus, self).__init__(status.metadata)
+        super().__init__(status.metadata)
         self._conditions = status.conditions
 
     @property
@@ -263,7 +287,7 @@ class ComponentStatus(Metadata):
 
 class Service(Metadata):
     def __init__(self, service, use_namespace):
-        super(Service, self).__init__(service.metadata, "service", use_namespace)
+        super().__init__(service.metadata, "service", use_namespace)
 
         spec = service.spec
         if spec:
@@ -314,7 +338,7 @@ class Service(Metadata):
 class Deployment(Metadata):
     # TODO: include pods of the deployment?
     def __init__(self, deployment: client.V1Deployment, use_namespace: bool) -> None:
-        super(Deployment, self).__init__(deployment.metadata, "deployment", use_namespace)
+        super().__init__(deployment.metadata, "deployment", use_namespace)
         spec = deployment.spec
         if spec:
             self._paused = spec.paused
@@ -361,7 +385,7 @@ class Deployment(Metadata):
 
 class Ingress(Metadata):
     def __init__(self, ingress, use_namespace):
-        super(Ingress, self).__init__(ingress.metadata, "ingress", use_namespace)
+        super().__init__(ingress.metadata, "ingress", use_namespace)
         self._backends = []  # list of (path, service_name, service_port)
         self._hosts = defaultdict(list)  # secret -> list of hosts
         self._load_balancers = []
@@ -414,7 +438,7 @@ class Ingress(Metadata):
 
 class Pod(Metadata):
     def __init__(self, pod: client.V1Pod, use_namespace: bool) -> None:
-        super(Pod, self).__init__(pod.metadata, "pod", use_namespace)
+        super().__init__(pod.metadata, "pod", use_namespace)
         spec = pod.spec
         if spec:
             self.node = spec.node_name
@@ -539,7 +563,7 @@ class Endpoint(Metadata):
     #   https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/V1Endpoints.md
 
     def __init__(self, endpoint, use_namespace):
-        super(Endpoint, self).__init__(endpoint.metadata, "endpoint", use_namespace)
+        super().__init__(endpoint.metadata, "endpoint", use_namespace)
         # There is no spec here.
         self._subsets = [
             self._parse_subset(subset) for subset in (endpoint.subsets if endpoint.subsets else ())
@@ -578,7 +602,7 @@ class Endpoint(Metadata):
 
 class Job(Metadata):
     def __init__(self, job, use_namespace):
-        super(Job, self).__init__(job.metadata, "job", use_namespace)
+        super().__init__(job.metadata, "job", use_namespace)
         spec = job.spec
         if spec:
             self._pod = spec.template
@@ -650,7 +674,7 @@ class Job(Metadata):
 
 class DaemonSet(Metadata):
     def __init__(self, daemon_set, use_namespace):
-        super(DaemonSet, self).__init__(daemon_set.metadata, "daemon_set", use_namespace)
+        super().__init__(daemon_set.metadata, "daemon_set", use_namespace)
         status = daemon_set.status
         if status:
             self.collision_count = status.collision_count
@@ -707,7 +731,7 @@ class DaemonSet(Metadata):
 
 class StatefulSet(Metadata):
     def __init__(self, stateful_set, use_namespace):
-        super(StatefulSet, self).__init__(stateful_set.metadata, "stateful_set", use_namespace)
+        super().__init__(stateful_set.metadata, "stateful_set", use_namespace)
         spec = stateful_set.spec
         strategy = spec.update_strategy
         if strategy:
@@ -742,7 +766,7 @@ class Namespace(Metadata):
     # TODO: namespaces may have resource quotas and limits
     # https://kubernetes.io/docs/tasks/administer-cluster/namespaces/
     def __init__(self, namespace: client.V1Namespace) -> None:
-        super(Namespace, self).__init__(namespace.metadata)
+        super().__init__(namespace.metadata)
         self._status = namespace.status
 
     @property
@@ -754,7 +778,7 @@ class Namespace(Metadata):
 
 class PersistentVolume(Metadata):
     def __init__(self, pv: client.V1PersistentVolume) -> None:
-        super(PersistentVolume, self).__init__(pv.metadata)
+        super().__init__(pv.metadata)
         self._status = pv.status
         self._spec = pv.spec
 
@@ -782,7 +806,7 @@ class PersistentVolume(Metadata):
 
 class PersistentVolumeClaim(Metadata):
     def __init__(self, pvc: client.V1PersistentVolumeClaim) -> None:
-        super(PersistentVolumeClaim, self).__init__(pvc.metadata)
+        super().__init__(pvc.metadata)
         self._status = pvc.status
         self._spec = pvc.spec
 
@@ -801,14 +825,14 @@ class PersistentVolumeClaim(Metadata):
 
 class StorageClass(Metadata):
     def __init__(self, storage_class: client.V1StorageClass) -> None:
-        super(StorageClass, self).__init__(storage_class.metadata)
+        super().__init__(storage_class.metadata)
         self.provisioner = storage_class.provisioner
         self.reclaim_policy = storage_class.reclaim_policy
 
 
 class Role(Metadata):
     def __init__(self, role: Union[client.V1Role, client.V1ClusterRole]) -> None:
-        super(Role, self).__init__(role.metadata)
+        super().__init__(role.metadata)
 
 
 ListElem = TypeVar('ListElem', bound=Metadata)
@@ -816,7 +840,7 @@ ListElem = TypeVar('ListElem', bound=Metadata)
 
 class K8sList(Generic[ListElem], MutableSequence):  # pylint: disable=too-many-ancestors
     def __init__(self, elements: List[ListElem]) -> None:
-        super(K8sList, self).__init__()
+        super().__init__()
         self._elements = elements
 
     def __getitem__(self, index):
@@ -869,6 +893,7 @@ class NodeList(K8sList[Node]):  # pylint: disable=too-many-ancestors
         result = functools.reduce(merge, stats.values())
         # During the merging process the sum of all timestamps is calculated.
         # To obtain the average time of all nodes devide by the number of nodes.
+        #
         result['timestamp'] = round(result['timestamp'] / len(stats), 1)  # fixed: true-division
         return result
 
@@ -914,7 +939,7 @@ class StatefulSetList(K8sList[StatefulSet]):  # pylint: disable=too-many-ancesto
 
 class PodList(K8sList[Pod]):  # pylint: disable=too-many-ancestors
     def pods_per_node(self) -> Dict[str, Dict[str, Dict[str, int]]]:
-        pods_sorted = sorted(self, key=lambda pod: pod.node)
+        pods_sorted = sorted(self, key=lambda pod: pod.node or '')
         by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
         return {
             node: {
@@ -950,7 +975,7 @@ class PodList(K8sList[Pod]):  # pylint: disable=too-many-ancestors
         may consume any amount of resources.
         """
 
-        pods_sorted = sorted(self, key=lambda pod: pod.node)
+        pods_sorted = sorted(self, key=lambda pod: pod.node or '')
         by_node = itertools.groupby(pods_sorted, lambda pod: pod.node)
         merge = functools.partial(left_join_dicts, operation=operator.add)
         return {
@@ -1038,41 +1063,12 @@ class RoleList(K8sList[Role]):  # pylint: disable=too-many-ancestors
         } for role in self if role.name]
 
 
-class Metric(Metadata):
-    def __init__(self, metric):
-        # Initialize Metric objects without metadata for now, because
-        # the provided metadata only contains a selfLink and no other
-        # valuable information.
-        super(Metric, self).__init__(metadata=None)
-        self.from_object = metric['describedObject']
-        self.metrics = {metric['metricName']: metric.get('value')}
-
-    def __add__(self, other):
-        assert self.from_object == other.from_object
-        self.metrics.update(other.metrics)
-        return self
-
-    def __str__(self):
-        return str(self.__dict__)
-
-    def __repr__(self):
-        return str(self.__dict__)
-
-
-class MetricList(K8sList[Metric]):  # pylint: disable=too-many-ancestors
-    def __add__(self, other):
-        return MetricList([a + b for a, b in zip(self, other)])
-
-    def list_metrics(self):
-        return [item.__dict__ for item in self]
-
-
 class PiggybackGroup:
     """
     A group of elements where an element is e.g. a piggyback host.
     """
     def __init__(self) -> None:
-        super(PiggybackGroup, self).__init__()
+        super().__init__()
         self._elements: OrderedDict[str, PiggybackHost] = OrderedDict()
 
     def get(self, element_name: str) -> 'PiggybackHost':
@@ -1100,7 +1096,7 @@ class PiggybackHost:
     An element that bundles a collection of sections.
     """
     def __init__(self) -> None:
-        super(PiggybackHost, self).__init__()
+        super().__init__()
         self._sections: OrderedDict[str, Section] = OrderedDict()
 
     def get(self, section_name: str) -> 'Section':
@@ -1121,7 +1117,7 @@ class Section:
     An agent section.
     """
     def __init__(self) -> None:
-        super(Section, self).__init__()
+        super().__init__()
         self._content: OrderedDict[str, Dict[str, Any]] = OrderedDict()
 
     def insert(self, data: Dict[str, Any]) -> None:
@@ -1142,8 +1138,14 @@ class ApiData:
     """
     Contains the collected API data.
     """
-    def __init__(self, api_client: client.ApiClient, prefix_namespace: bool) -> None:
-        super(ApiData, self).__init__()
+    def __init__(
+        self,
+        api_client: client.ApiClient,
+        prefix_namespace: bool,
+        namespace_include_patterns: List[str],
+    ) -> None:
+        super().__init__()
+        self.namespace_include_patterns = namespace_include_patterns
         logging.info('Collecting API data')
 
         logging.debug('Constructing API client wrappers')
@@ -1154,111 +1156,115 @@ class ApiData:
         batch_api = client.BatchV1Api(api_client)
         apps_api = client.AppsV1Api(api_client)
 
-        self.custom_api = client.CustomObjectsApi(api_client)
-
+        # FIXME: Improve typing
         logging.debug('Retrieving data')
-        storage_classes = storage_api.list_storage_class()
-        namespaces = core_api.list_namespace()
-        roles = rbac_authorization_api.list_role_for_all_namespaces()
-        cluster_roles = rbac_authorization_api.list_cluster_role()
-        component_statuses = core_api.list_component_status()
-        nodes = core_api.list_node()
+        storage_classes: Iterator = storage_api.list_storage_class().items
+        namespaces: Iterator = core_api.list_namespace().items
+        roles: Iterator = rbac_authorization_api.list_role_for_all_namespaces().items
+        cluster_roles: Iterator = rbac_authorization_api.list_cluster_role().items
+        component_statuses: Iterator = core_api.list_component_status().items
+        nodes: Iterator = core_api.list_node().items
         # Try to make it a post, when client api support sending post data
         # include {"num_stats": 1} to get the latest only and use less bandwidth
-        nodes_stats = [
-            core_api.connect_get_node_proxy_with_path(node.metadata.name, "stats")
-            for node in nodes.items
-        ]
-        pvs = core_api.list_persistent_volume()
-        pvcs = core_api.list_persistent_volume_claim_for_all_namespaces()
-        pods = core_api.list_pod_for_all_namespaces()
-        endpoints = core_api.list_endpoints_for_all_namespaces()
-        jobs = batch_api.list_job_for_all_namespaces()
-        services = core_api.list_service_for_all_namespaces()
-        ingresses = ext_api.list_ingress_for_all_namespaces()
         try:
-            deployments = apps_api.list_deployment_for_all_namespaces()
-            daemon_sets = apps_api.list_daemon_set_for_all_namespaces()
+            nodes_stats = [
+                core_api.connect_get_node_proxy_with_path(node.metadata.name, "stats")
+                for node in nodes
+            ]
+        except Exception:
+            # The /stats endpoint was removed in new versions in favour of the /stats/summary
+            # endpoint. Since it has a new format we skip the output here for now. For
+            # compatibility we leave the stats endpoint in place. When the oldest supported
+            # version is 1.18 we can remove this code.
+            nodes_stats = [None for _node in nodes]
+        pvs: Iterator = core_api.list_persistent_volume().items
+        pvcs: Iterator = core_api.list_persistent_volume_claim_for_all_namespaces().items
+        pods: Iterator = core_api.list_pod_for_all_namespaces().items
+        endpoints: Iterator = core_api.list_endpoints_for_all_namespaces().items
+        jobs: Iterator = batch_api.list_job_for_all_namespaces().items
+        services: Iterator = core_api.list_service_for_all_namespaces().items
+        ingresses: Iterator = ext_api.list_ingress_for_all_namespaces().items
+        try:
+            deployments: Iterator = apps_api.list_deployment_for_all_namespaces().items
+            daemon_sets: Iterator = apps_api.list_daemon_set_for_all_namespaces().items
         except ApiException:
             # deprecated endpoints removed in Kubernetes 1.16
-            deployments = ext_api.list_deployment_for_all_namespaces()
-            daemon_sets = ext_api.list_daemon_set_for_all_namespaces()
-        stateful_sets = apps_api.list_stateful_set_for_all_namespaces()
+            deployments = ext_api.list_deployment_for_all_namespaces().items
+            daemon_sets = ext_api.list_daemon_set_for_all_namespaces().items
+        stateful_sets: Iterator = apps_api.list_stateful_set_for_all_namespaces().items
+
+        if self.namespace_include_patterns:
+            logging.debug('Filtering for matching namespaces')
+            storage_classes = self._items_matching_namespaces(storage_classes)
+            namespaces = self._items_matching_namespaces(
+                namespaces,
+                namespace_reader=self._namespace_from_item_name,
+            )
+            roles = self._items_matching_namespaces(roles)
+            cluster_roles = self._items_matching_namespaces(cluster_roles)
+            component_statuses = self._items_matching_namespaces(component_statuses)
+            nodes = self._items_matching_namespaces(nodes)
+            pvs = self._items_matching_namespaces(pvs)
+            pvcs = self._items_matching_namespaces(pvcs)
+            pods = self._items_matching_namespaces(pods)
+            endpoints = self._items_matching_namespaces(endpoints)
+            jobs = self._items_matching_namespaces(jobs)
+            services = self._items_matching_namespaces(services)
+            deployments = self._items_matching_namespaces(deployments)
+            ingresses = self._items_matching_namespaces(ingresses)
+            daemon_sets = self._items_matching_namespaces(daemon_sets)
+            stateful_sets = self._items_matching_namespaces(stateful_sets)
 
         logging.debug('Assigning collected data')
-        self.storage_classes = StorageClassList(list(map(StorageClass, storage_classes.items)))
-        self.namespaces = NamespaceList(list(map(Namespace, namespaces.items)))
-        self.roles = RoleList(list(map(Role, roles.items)))
-        self.cluster_roles = RoleList(list(map(Role, cluster_roles.items)))
-        self.component_statuses = ComponentStatusList(
-            list(map(ComponentStatus, component_statuses.items)))
-        self.nodes = NodeList(list(map(Node, nodes.items, nodes_stats)))
-        self.persistent_volumes = PersistentVolumeList(list(map(PersistentVolume, pvs.items)))
+        self.storage_classes = StorageClassList(list(map(StorageClass, storage_classes)))
+        self.namespaces = NamespaceList(list(map(Namespace, namespaces)))
+        self.roles = RoleList(list(map(Role, roles)))
+        self.cluster_roles = RoleList(list(map(Role, cluster_roles)))
+        self.component_statuses = ComponentStatusList(list(map(ComponentStatus,
+                                                               component_statuses)))
+        self.nodes = NodeList(list(map(Node, nodes, nodes_stats)))
+        self.persistent_volumes = PersistentVolumeList(list(map(PersistentVolume, pvs)))
         self.persistent_volume_claims = PersistentVolumeClaimList(
-            list(map(PersistentVolumeClaim, pvcs.items)))
-        self.pods = PodList([Pod(item, prefix_namespace) for item in pods.items])
-        self.endpoints = EndpointList(
-            [Endpoint(item, prefix_namespace) for item in endpoints.items])
-        self.jobs = JobList([Job(item, prefix_namespace) for item in jobs.items])
-        self.services = ServiceList([Service(item, prefix_namespace) for item in services.items])
+            list(map(PersistentVolumeClaim, pvcs)))
+        self.pods = PodList([Pod(item, prefix_namespace) for item in pods])
+        self.endpoints = EndpointList([Endpoint(item, prefix_namespace) for item in endpoints])
+        self.jobs = JobList([Job(item, prefix_namespace) for item in jobs])
+        self.services = ServiceList([Service(item, prefix_namespace) for item in services])
         self.deployments = DeploymentList(
-            [Deployment(item, prefix_namespace) for item in deployments.items])
-        self.ingresses = IngressList([Ingress(item, prefix_namespace) for item in ingresses.items])
+            [Deployment(item, prefix_namespace) for item in deployments])
+        self.ingresses = IngressList([Ingress(item, prefix_namespace) for item in ingresses])
         self.daemon_sets = DaemonSetList(
-            [DaemonSet(item, prefix_namespace) for item in daemon_sets.items])
+            [DaemonSet(item, prefix_namespace) for item in daemon_sets])
         self.stateful_sets = StatefulSetList(
-            [StatefulSet(item, prefix_namespace) for item in stateful_sets.items])
+            [StatefulSet(item, prefix_namespace) for item in stateful_sets])
 
-        pods_custom_metrics = {
-            "memory": ['memory_rss', 'memory_swap', 'memory_usage_bytes', 'memory_max_usage_bytes'],
-            "fs": ['fs_inodes', 'fs_reads', 'fs_writes', 'fs_limit_bytes', 'fs_usage_bytes'],
-            "cpu": ['cpu_system', 'cpu_user', 'cpu_usage']
-        }
+    def _namespace_from_item_namespace(self, metadata: Metadata) -> str:
+        return metadata.namespace
 
-        self.pods_Metrics: Dict[str, Dict[str, List]] = dict()
-        for metric_group, metrics in pods_custom_metrics.items():
-            self.pods_Metrics[metric_group] = self.get_namespaced_group_metric(metrics)
+    def _namespace_from_item_name(self, metadata: Metadata) -> str:
+        return metadata.name  # for filtering namespaces, which are themselves global objects
 
-    def get_namespaced_group_metric(self, metrics: List[str]) -> Dict[str, List]:
-        queries = [self.get_namespaced_custom_pod_metric(metric) for metric in metrics]
+    def _items_matching_namespaces(
+        self,
+        items: Iterator,
+        *,
+        namespace_reader: Optional[Callable[[Metadata], str]] = None,
+    ) -> Iterator:
 
-        grouped_metrics: Dict[str, List] = {}
-        for response in queries:
-            for namespace in response:
-                grouped_metrics.setdefault(namespace, []).append(response[namespace])
+        if namespace_reader is None:
+            namespace_reader = self._namespace_from_item_namespace
 
-        for namespace in grouped_metrics:
-            grouped_metrics[namespace] = functools.reduce(
-                operator.add, grouped_metrics[namespace]).list_metrics()
-
-        return grouped_metrics
-
-    def get_namespaced_custom_pod_metric(self, metric: str) -> Dict:
-
-        logging.debug('Query Custom Metrics Endpoint: %s', metric)
-        custom_metric = {}
-        for namespace in self.namespaces:
-            try:
-                data = list(
-                    map(
-                        Metric,
-                        self.custom_api.get_namespaced_custom_object(
-                            'custom.metrics.k8s.io',
-                            'v1beta1',
-                            namespace.name,
-                            'pods/*',
-                            metric,
-                        )['items']))
-                custom_metric[namespace.name] = MetricList(data)
-            except ApiException as err:
-                if err.status == 404:
-                    logging.info('Data unavailable. No pods in namespace %s', namespace.name)
-                elif err.status == 500:
-                    logging.info('Data unavailable. %s', err)
-                else:
-                    raise err
-
-        return custom_metric
+        for item in items:
+            item_namespace = namespace_reader(item.metadata)
+            if item_namespace is None:
+                # objects that do not have a namespace set are global objects and
+                # should always be shown
+                yield item
+                continue
+            for pattern in self.namespace_include_patterns:
+                if re.match(pattern, item_namespace):
+                    yield item
+                    break
 
     def cluster_sections(self) -> str:
         logging.info('Output cluster sections')
@@ -1288,13 +1294,6 @@ class ApiData:
         g.join('k8s_stats', self.nodes.stats())
         g.join('k8s_conditions', self.nodes.conditions())
         return '\n'.join(g.output())
-
-    def custom_metrics_section(self) -> str:
-        logging.info('Output pods custom metrics')
-        e = PiggybackHost()
-        for c_metric in self.pods_Metrics:
-            e.get('k8s_pods_%s' % c_metric).insert(self.pods_Metrics[c_metric])
-        return '\n'.join(e.output())
 
     def pod_sections(self):
         logging.info('Output pod sections')
@@ -1371,12 +1370,13 @@ def get_api_client(arguments: argparse.Namespace) -> client.ApiClient:
     logging.info('Constructing API client')
 
     config = client.Configuration()
-    if arguments.url_prefix:
-        config.host = '%s:%s%s' % (arguments.url_prefix.rstrip("/"), arguments.port,
-                                   arguments.path_prefix)
-    else:
-        config.host = 'https://%s:%s%s' % (arguments.host, arguments.port, arguments.path_prefix)
 
+    host = arguments.api_server_endpoint
+    if arguments.port is not None:
+        host = "%s:%s" % (host, arguments.port)
+    if arguments.path_prefix:
+        host = "%s%s" % (host, arguments.path_prefix)
+    config.host = host
     config.api_key_prefix['authorization'] = 'Bearer'
     config.api_key['authorization'] = arguments.token
 
@@ -1403,9 +1403,12 @@ def main(args: Optional[List[str]] = None) -> int:
         with cmk.utils.profile.Profile(enabled=bool(arguments.profile),
                                        profile_file=arguments.profile):
             api_client = get_api_client(arguments)
-            api_data = ApiData(api_client, arguments.prefix_namespace)
+            api_data = ApiData(
+                api_client,
+                arguments.prefix_namespace,
+                arguments.namespace_include_patterns,
+            )
             print(api_data.cluster_sections())
-            print(api_data.custom_metrics_section())
             if 'nodes' in arguments.infos:
                 print(api_data.node_sections())
             if 'pods' in arguments.infos:

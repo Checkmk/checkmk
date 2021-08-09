@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
+
+from tests.testlib import ActiveCheck
 
 pytestmark = pytest.mark.checks
 
@@ -14,7 +16,7 @@ pytestmark = pytest.mark.checks
                           (["foo", {
                               "port": 22
                           }], ["-H", "$HOSTADDRESS$", "-C", "foo", "-p", 22])])
-def test_check_by_ssh_argument_parsing(check_manager, params, expected_args):
+def test_check_by_ssh_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    active_check = check_manager.get_active_check("check_by_ssh")
+    active_check = ActiveCheck("check_by_ssh")
     assert active_check.run_argument_function(params) == expected_args

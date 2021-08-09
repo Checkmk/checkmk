@@ -8,7 +8,6 @@
 import re
 
 import astroid  # type: ignore[import]
-
 from pylint.checkers import BaseChecker, utils  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
 
@@ -65,6 +64,7 @@ class TranslationBaseChecker(BaseChecker):
     __implements__ = (IAstroidChecker,)
     TRANSLATION_FUNCTIONS = {
         '_',
+        '_l',
         'gettext',
         'ngettext',
         'ngettext_lazy',
@@ -95,7 +95,7 @@ class TranslationBaseChecker(BaseChecker):
         raise NotImplementedError()
 
     @utils.check_messages(MESSAGE_ID)
-    def visit_callfunc(self, node):
+    def visit_call(self, node):
         """Called for every function call in the source code."""
 
         if not self.linter.is_message_enabled(self.MESSAGE_ID, line=node.fromlineno):
@@ -210,7 +210,7 @@ class EscapingChecker(TranslationBaseChecker):
         _("hello <tt> World </tt>")
         _("This is a &lt;HOST&gt;.")
 
-    The message id is `protection-of-html-tags`.
+    The message id is `escaping-of-html-tags`.
 
     """
     name = "escaping-checker"

@@ -20,7 +20,8 @@
 # 506 Cannot talk to daemon
 from typing import Any, Dict
 
-from .agent_based_api.v1 import check_levels, register, Result, Service, state
+from .agent_based_api.v1 import check_levels, register, Result, Service
+from .agent_based_api.v1 import State as state
 
 
 def parse_chrony(string_table):
@@ -107,18 +108,14 @@ def check_chrony(params, section_chrony, section_ntp):
     sys_time_offset = section_chrony.get("System time")
     stratum = section_chrony.get("Stratum")
 
-    if address in [None, "", "()"]:
-        # Check reference id: if brackets are empty, NTP servers are unreachable
-        yield Result(state=state.WARN, summary="NTP servers unreachable. Reference ID: %s" % ref_id)
-        return
+    if address in (None, "", "()"):
+        # if brackets are empty, NTP servers are unreachable
+        address = "unreachable"
 
-    if stratum is not None:
-        yield from check_levels(
-            stratum,
-            levels_upper=(crit_stratum, crit_stratum),
-            render_func=lambda v: "%d" % v,
-            label="Stratum",
-        )
+    yield Result(
+        state=state.WARN if address == "unreachable" else state.OK,
+        notice=f"NTP servers: {address}\nReference ID: {ref_id}",
+    )
 
     if sys_time_offset is not None:
         yield from check_levels(
@@ -127,10 +124,17 @@ def check_chrony(params, section_chrony, section_ntp):
             metric_name="offset",
             render_func=lambda x: "%.4f ms" % x,
             label="Offset",
+            boundaries=(0, None),
         )
 
-    if ref_id is not None:
-        yield Result(state=state.OK, summary="Reference ID: %s" % ref_id)
+    if stratum is not None:
+        yield from check_levels(
+            stratum,
+            levels_upper=(crit_stratum, crit_stratum),
+            render_func=lambda v: "%d" % v,
+            label="Stratum",
+            boundaries=(0, None),
+        )
 
 
 register.check_plugin(

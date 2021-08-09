@@ -6,47 +6,10 @@
 
 import typing
 
+from cmk.base.plugins.agent_based.utils import cache_helper
+
 LegacyMetricTuple = typing.Tuple[str, float, typing.Optional[float], typing.Optional[float],
                                  typing.Optional[float], typing.Optional[float]]
-
-
-def parse_mrpe(info):
-    PluginData = collections.namedtuple("PluginData", ("name", "state", "info"))
-
-    parsed = {}
-    for line in info:
-        # New Linux agent sends (check_name) in first column. Stay
-        # compatible with MRPE versions not providing this info
-        if line[0].startswith("("):
-            name = line[0].strip('()')
-            line = line[1:]
-        else:
-            name = None
-
-        if len(line) < 2:
-            continue
-
-        import urllib.parse
-        item = urllib.parse.unquote(line[0])
-        state = line[1]
-        line = line[2:]
-
-        try:
-            state = int(state)
-        except ValueError:
-            pass
-
-        if state not in (0, 1, 2, 3):
-            line.insert(0, "Invalid plugin status '%s'. Output is:" % state)
-            state = 3
-
-        # convert to original format by joining and splitting at \1 (which replaced \n)
-        info = " ".join(line).split("\1")
-
-        dataset = PluginData(name, state, info)
-        parsed.setdefault(item, []).append(dataset)
-
-    return parsed
 
 
 def _opt_float(string: str) -> typing.Optional[float]:
@@ -71,10 +34,18 @@ def _strip_unit_float(string: str) -> float:
 
 
 def parse_nagios_perfstring(perfinfo: str) -> typing.Optional[LegacyMetricTuple]:
-    if '=' not in perfinfo:
+    try:
+        name, valuetxt = perfinfo.split("=", 1)
+    except ValueError:
         return None
-    name, valuetxt = perfinfo.split("=", 1)
+    if valuetxt.startswith("U"):
+        # Nagios perfstrings can start with a value 'U' to indicate an undefined value
+        # see https://nagios-plugins.org/doc/guidelines.html#AEN200
+        return None
     values = valuetxt.split(";")
+
+    # for the migrator: the code above ^^^^^ should go to a separate function
+
     # perfdata must not contain values with colons. So we split
     # these values and use the upper levels only.
     values = [v.split(':')[-1] for v in values][:5]
@@ -123,6 +94,9 @@ def check_mrpe(_no_item, _no_params, data):
         if new_perf:
             perf_parsed.append(new_perf)
 
+    if dataset.cache_info is not None:
+        yield 0, cache_helper.render_cache_info(dataset.cache_info)
+
     yield dataset.state, "\n".join(output), perf_parsed
 
     # name of check command needed for PNP to choose the correct template
@@ -131,7 +105,7 @@ def check_mrpe(_no_item, _no_params, data):
 
 
 check_info["mrpe"] = {
-    'parse_function': parse_mrpe,
+    # section already migrated!
     'inventory_function': discover(),
     'check_function': check_mrpe,
     'service_description': '%s',

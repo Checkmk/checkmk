@@ -6,7 +6,7 @@ Date: 1575992674
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 The event console history queries had a rather serious performance
 regression in 1.6.0: For common queries, the EC tries to pre-filter the

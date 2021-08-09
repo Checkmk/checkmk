@@ -64,20 +64,17 @@ def check_windows_updates(_no_item, params, info):
             this_txt = '%d %s updates' % (cur, label)
             if crit and cur >= crit:
                 this_txt += ' >=%d (!!)' % crit
-                if status < 2:
-                    status = 2
+                status = max(status, 2)
             elif warn and cur >= warn:
                 this_txt += ' >=%d (!)' % warn
-                if status < 1:
-                    status = 1
+                status = max(status, 1)
             if label == 'important' and cur > 0 and verbose:
                 this_txt += ', (%s) --- ' % updates
             txt.append(this_txt)
             perfdata.append((label, cur, warn, crit))
 
         if reboot_required == 1:
-            if status < 1:
-                status = 1
+            status = max(status, 1)
             txt.append('Reboot required to finish updates(!)')
 
         if forced_reboot != "":

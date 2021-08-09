@@ -1,0 +1,18 @@
+Title: aws_agent: enable cache to reduce live data requests
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1603451125
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The first time the AWS agent is executed, it stores data in a cache file and
+only retrieves live data from the AWS API once the data in this file is
+considered out-of-date, or the configuration of the agent has changed. This is
+especially useful, because AWS charges a fee for each query to the API. The
+mechanism for determining whether the configuration of the agent has changed
+contained a defect, leading to undeterministic configuration signatures, which
+the agent erroneously interpreted as a configuration change. This has been
+fixed.

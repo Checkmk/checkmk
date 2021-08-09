@@ -15,6 +15,6 @@ description:
 item:
  Backend of the ingress
 
-inventory:
+discovery:
  One service is created for each path.
 

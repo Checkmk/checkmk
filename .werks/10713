@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Werk #10696, which was shipped with 1.6.0p8, already fixed issues on the
 "service object parameter page" that lead to wrong effective settings being

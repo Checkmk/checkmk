@@ -6,7 +6,7 @@ Date: 1597751271
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When configuring a Metric History column on a view on your report
 additional to the predefined fixed time ranges it is now possible to

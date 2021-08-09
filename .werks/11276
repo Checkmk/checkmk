@@ -6,7 +6,7 @@ Date: 1595238391
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Creation of Jira issues sometimes failed because the field 'labels' is not existing.
 Jira Service Desk does not have the 'labels' field by default, but Jira Software does.

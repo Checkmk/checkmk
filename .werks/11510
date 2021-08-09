@@ -1,0 +1,14 @@
+Title: Discovered host labels are stored for cluster and each node
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1602224880
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0i1
+
+A Chechmk cluster host inherits host labels from its nodes. These labels are
+discovered on the nodes. Previously these labels were stored only for the
+cluster. Now the host labels are stored for the cluster and each node. This
+means that host labels can now be used on clusters and nodes.

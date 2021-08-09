@@ -12,60 +12,13 @@
 #include <cstring>
 #include <ctime>
 #include <filesystem>
-#include <iterator>
-#include <ostream>
 #include <set>
 #include <type_traits>
-#include <utility>
 
-#include "DynamicRRDColumn.h"
 #include "Logger.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
-#include "Renderer.h"
-#include "Row.h"
-#if defined(CMC)
-#include "cmc.h"
-#else
-#include "nagios.h"
-#endif
 #include "strutil.h"
-
-RRDColumn::RRDColumn(const std::string &name, const std::string &description,
-                     const ColumnOffsets &offsets, MonitoringCore *mc,
-                     RRDColumnArgs args)
-    : ListColumn(name, description, offsets), _mc(mc), _args(std::move(args)) {}
-
-void RRDColumn::output(Row row, RowRenderer &r, const contact * /* auth_user */,
-                       std::chrono::seconds /*timezone_offset*/) const {
-    // We output meta data as first elements in the list. Note: In Python or
-    // JSON we could output nested lists. In CSV mode this is not possible and
-    // we rather stay compatible with CSV mode.
-    auto data = getData(row);
-    ListRenderer l(r);
-    l.output(data.start);
-    l.output(data.end);
-    l.output(data.step);
-    for (const auto &value : data.values) {
-        l.output(value);
-    }
-}
-
-std::vector<std::string> RRDColumn::getValue(
-    Row row, const contact * /*auth_user*/,
-    std::chrono::seconds timezone_offset) const {
-    auto data = getData(row);
-    std::vector<std::string> strings;
-    strings.push_back(std::to_string(
-        std::chrono::system_clock::to_time_t(data.start + timezone_offset)));
-    strings.push_back(std::to_string(
-        std::chrono::system_clock::to_time_t(data.end + timezone_offset)));
-    strings.push_back(std::to_string(data.step));
-    std::transform(data.values.begin(), data.values.end(),
-                   std::back_inserter(strings),
-                   [](const auto &value) { return std::to_string(value); });
-    return strings;
-}
 
 namespace {
 bool isVariableName(const std::string &token) {
@@ -112,12 +65,9 @@ std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
 // and that have a different syntax then we have in our metrics system.
 // >= --> GE. Or should we also go with GE instead of >=?
 // Look at http://oss.oetiker.ch/rrdtool/doc/rrdgraph_rpn.en.html for details!
-RRDColumn::Data RRDColumn::getData(Row row) const {
-    auto host_name_service_description = getHostNameServiceDesc(row);
-    if (!host_name_service_description) {
-        return {};
-    }
-
+detail::RRDDataMaker::Data detail::RRDDataMaker::make(
+    const std::pair<std::string, std::string> &host_name_service_description)
+    const {
     // Prepare the arguments for rrdtool xport in a dynamic array of strings.
     // Note: The actual step might be different!
     std::vector<std::string> argv_s{
@@ -172,8 +122,8 @@ RRDColumn::Data RRDColumn::getData(Row row) const {
         // by '_' here.
         auto [var, cf] = getVarAndCF(token);
         auto location =
-            _mc->metricLocation(host_name_service_description->first,
-                                host_name_service_description->second, var);
+            _mc->metricLocation(host_name_service_description.first,
+                                host_name_service_description.second, var);
         std::string rrd_varname;
         if (location.path_.empty() || location.data_source_name_.empty()) {
             rrd_varname = replace_all(var.string(), ".", '_');

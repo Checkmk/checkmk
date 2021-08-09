@@ -4,7 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
+
+from tests.testlib import Check
 
 pytestmark = pytest.mark.checks
 
@@ -35,8 +37,8 @@ pytestmark = pytest.mark.checks
             48
         ], 14320896),  # "00 00 00 00 00 DA 85 00"
     ])
-def test_services_split(check_manager, oid_value, expected):
-    check = check_manager.get_check('fc_port')
+def test_services_split(oid_value, expected):
+    check = Check('fc_port')
     fc_parse_counter = check.context['fc_parse_counter']
     actual = fc_parse_counter(oid_value)
     assert actual == expected

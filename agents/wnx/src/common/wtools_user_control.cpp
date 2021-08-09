@@ -5,8 +5,8 @@
 
 // WINDOWS STUFF
 #if defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-
+#include <minwindef.h>
+//
 #include <lmaccess.h>
 #include <lmapibuf.h>
 #include <lmerr.h>
@@ -22,7 +22,7 @@ namespace wtools {
 namespace uc {
 
 Status LdapControl::userAdd(std::wstring_view user_name,
-                            std::wstring_view pwd_string) {
+                            std::wstring_view pwd_string) noexcept {
     USER_INFO_1 user_info;
     // Set up the USER_INFO_1 structure.
     user_info.usri1_name = const_cast<wchar_t*>(user_name.data());
@@ -82,7 +82,7 @@ bool LdapControl::clearAsSpecialUser(std::wstring_view user_name) {
     return SetRegistryValue(getSpecialUserRegistryPath(), user_name, 1u);
 }
 
-Status LdapControl::userDel(std::wstring_view user_name) {
+Status LdapControl::userDel(std::wstring_view user_name) noexcept {
     auto err =
         ::NetUserDel(primary_dc_name_,                         // PDC name
                      const_cast<wchar_t*>(user_name.data()));  // user name
@@ -101,41 +101,69 @@ Status LdapControl::userDel(std::wstring_view user_name) {
     }
 }
 
-static bool CheckGroupIsForbidden(std::wstring_view group_name) {
-    using namespace std::literals::string_literals;
-    static const std::wstring PredefinedeGroupsForbiddentoDelete[] = {
-        L"Access Control Assistance Operators"s,
-        L"Administrators"s,
-        L"Backup Operators"s,
-        L"Cryptographic Operators"s,
-        L"Device Owners"s,
-        L"Distributed COM Users"s,
-        L"Event Log Readers"s,
-        L"Guests"s,
-        L"Hyper-V Administrators"s,
-        L"IIS_IUSRS"s,
-        L"Network Configuration Operators"s,
-        L"Performance Log Users"s,
-        L"Performance Monitor Users"s,
-        L"Power Users"s,
-        L"Remote Desktop Users"s,
-        L"Remote Management Users"s,
-        L"Replicator"s,
-        L"System Managed Accounts Group"s,
-        L"Users"s};
+class ForbiddenGroups {
+public:
+    ForbiddenGroups() {
+        constexpr std::wstring_view sids[] = {
+            L"S-1-5-32-579",  // L"Access Control Assistance Operators",
+            L"S-1-5-32-544",  // L"Administrators",
+            L"S-1-5-32-551",  // L"Backup Operators",
+            L"S-1-5-32-569",  // L"Cryptographic Operators",
+            L"S-1-5-32-562",  // L"Distributed COM Users",
+            L"S-1-5-32-573",  // L"Event Log Readers",
+            L"S-1-5-32-546",  // L"Guests",
+            L"S-1-5-32-578",  // L"Hyper-V Administrators",
+            L"S-1-5-32-556",  // L"Network Configuration Operators",
+            L"S-1-5-32-559",  // L"Performance Log Users",
+            L"S-1-5-32-558",  // L"Performance Monitor Users",
+            L"S-1-5-32-547",  // L"Power Users",
+            L"S-1-5-32-555",  // L"Remote Desktop Users",
+            L"S-1-5-32-580",  // L"Remote Management Users",
+            L"S-1-5-32-552",  // L"Replicator",
+            L"S-1-5-32-545",  // L"Users"};
+        };
+
+        constexpr std::wstring_view no_sid_groups[] = {
+            L"Device Owners",
+            L"IIS_IUSRS",
+            L"System Managed Accounts Group",
+        };
+
+        for (auto sid : sids) {
+            auto name = wtools::SidToName(sid, SidTypeGroup);
+            groups_.emplace_back(name);
+        }
+        for (auto name : no_sid_groups) {
+            groups_.emplace_back(name);
+        }
+    }
+
+    const std::vector<std::wstring>& groups() const { return groups_; }
+
+private:
+    std::vector<std::wstring> groups_;
+};
+
+namespace {
+
+wtools::uc::ForbiddenGroups g_forbidden_groups;
+
+bool CheckGroupIsForbidden(std::wstring_view group_name) noexcept {
+    auto groups_forbidden_to_delete = g_forbidden_groups.groups();
 
     return std::any_of(
-        std::begin(PredefinedeGroupsForbiddentoDelete),
-        std::end(PredefinedeGroupsForbiddentoDelete),
+        std::begin(groups_forbidden_to_delete),
+        std::end(groups_forbidden_to_delete),
         // predicate:
         [group_name](std::wstring_view name) { return group_name == name; });
 }
+}  // namespace
 
 Status LdapControl::localGroupAdd(std::wstring_view group_name,
                                   std::wstring_view group_comment) {
     auto forbidden = CheckGroupIsForbidden(group_name);
     if (forbidden) {
-        XLOG::d("Groups is '{}' predefined group", ConvertToUTF8(group_name));
+        XLOG::d("Groups is '{}' predefined group", ToUtf8(group_name));
         return Status::error;
     }
 
@@ -166,7 +194,7 @@ Status LdapControl::localGroupAdd(std::wstring_view group_name,
 Status LdapControl::localGroupDel(std::wstring_view group_name) {
     auto forbidden = CheckGroupIsForbidden(group_name);
     if (forbidden) {
-        XLOG::d("Groups is '{}' predefined group", ConvertToUTF8(group_name));
+        XLOG::d("Groups is '{}' predefined group", ToUtf8(group_name));
         return Status::error;
     }
 

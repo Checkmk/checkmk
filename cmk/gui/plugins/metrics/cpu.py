@@ -5,13 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-    indexed_color,
-    MAX_CORES,
-)
+from cmk.gui.plugins.metrics import graph_info, indexed_color, MAX_CORES, metric_info
 
 #.
 #   .--Metrics-------------------------------------------------------------.
@@ -50,6 +44,12 @@ metric_info["predict_load15"] = {
     "title": _("Predicted average for 15 minute CPU load"),
     "unit": "",
     "color": "#a0b0c0",
+}
+
+metric_info["load_instant"] = {
+    "title": _("Instantaneous CPU load"),
+    "unit": "",
+    "color": "42/a",
 }
 
 metric_info["context_switches"] = {
@@ -497,6 +497,7 @@ graph_info["fgpa_utilization"] = {
 #
 
 graph_info["util_average_1"] = {
+    "title": _("CPU utilization"),
     "metrics": [
         ("util", "area"),
         ("util_average", "line"),
@@ -505,7 +506,7 @@ graph_info["util_average_1"] = {
         "util:warn",
         "util:crit",
     ],
-    "range": ("util:min", "util:max"),
+    "range": (0, 100),
 }
 
 graph_info["util_average_2"] = {
@@ -733,16 +734,17 @@ graph_info["cpu_utilization_8"] = {
 }
 
 graph_info["util_fallback"] = {
+    "title": _("CPU utilization"),
     "metrics": [("util", "area"),],
     "scalars": [
         "util:warn",
         "util:crit",
     ],
-    "range": ("util:min", "util:max"),
     "conflicting_metrics": [
         "util_average",
         "system",
     ],
+    "range": (0, 100),
 }
 
 graph_info["cpu_entitlement"] = {
@@ -782,6 +784,7 @@ graph_info["threads"] = {
 }
 
 graph_info["thread_usage"] = {
+    "title": _("Thread usage"),
     "metrics": [("thread_usage", "area"),],
     "scalars": ["thread_usage:warn", "thread_usage:crit"],
     "range": (0, 100),

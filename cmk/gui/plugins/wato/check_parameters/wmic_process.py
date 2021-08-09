@@ -5,21 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Integer,
-    Percentage,
-    TextAscii,
-    Tuple,
-)
 from cmk.gui.plugins.wato import (
-    RulespecGroupManualChecksApplications,
-    rulespec_registry,
     ManualCheckParameterRulespec,
+    rulespec_registry,
+    RulespecGroupEnforcedServicesApplications,
 )
+from cmk.gui.valuespec import Integer, Percentage, TextInput, Tuple
 
 
 def _item_spec_wmic_process():
-    return TextAscii(
+    return TextInput(
         title=_("Process name for usage in the Nagios service description"),
         allow_empty=False,
     )
@@ -27,7 +22,7 @@ def _item_spec_wmic_process():
 
 def _parameter_valuespec_wmic_process():
     return Tuple(elements=[
-        TextAscii(
+        TextInput(
             title=_("Name of the process"),
             allow_empty=False,
         ),
@@ -43,7 +38,7 @@ def _parameter_valuespec_wmic_process():
 rulespec_registry.register(
     ManualCheckParameterRulespec(
         check_group_name="wmic_process",
-        group=RulespecGroupManualChecksApplications,
+        group=RulespecGroupEnforcedServicesApplications,
         item_spec=_item_spec_wmic_process,
         parameter_valuespec=_parameter_valuespec_wmic_process,
         title=lambda: _("Memory and CPU of processes on Windows"),

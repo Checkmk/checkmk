@@ -7,6 +7,6 @@ description:
  This check measures the number of existing (not neccessarily
  running) processes on OpenVMS. You can set levels on the number.
 
-inventory:
+discovery:
  One service is created for each OpenVMS system.
 

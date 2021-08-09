@@ -6,19 +6,15 @@
 
 import math
 import time
-from typing import List, Tuple, Union, Optional, Callable, Iterable
 from functools import partial
 from itertools import zip_longest
+from typing import Callable, Iterable, List, Optional, Tuple, Union
 
 import cmk.utils.render
 
-from cmk.gui import config
+from cmk.gui.globals import request, theme, user
 from cmk.gui.i18n import _
-from cmk.gui.globals import html
-from cmk.gui.plugins.metrics import unit_info
-
-from cmk.gui.plugins.metrics import timeseries
-from cmk.gui.plugins.metrics import rrd_fetch
+from cmk.gui.plugins.metrics import rrd_fetch, timeseries, unit_info
 
 Label = Tuple[int, Optional[str], int]
 
@@ -66,9 +62,9 @@ def get_default_graph_render_options():
 def _graph_colors(theme_id):
     return {
         "modern-dark": {
-            "background_color": "#282828",
+            "background_color": None,
             "foreground_color": "#ffffff",
-            "canvas_color": "#282828",
+            "canvas_color": None,
         },
         "pdf": {
             "background_color": "#f8f4f0",
@@ -76,21 +72,21 @@ def _graph_colors(theme_id):
             "canvas_color": "#ffffff",
         },
     }.get(theme_id, {
-        "background_color": "#f0f2f4",
+        "background_color": None,
         "foreground_color": "#000000",
-        "canvas_color": "#ffffff",
+        "canvas_color": None,
     })
 
 
 def add_default_render_options(graph_render_options, render_unthemed=False):
     options = get_default_graph_render_options()
     options.update(graph_render_options)
-    options.setdefault("size", config.user.load_file("graph_size", (70, 16)))
+    options.setdefault("size", user.load_file("graph_size", (70, 16)))
 
     # Update the graph colors that are set to "default" with the theme specific colors.
     # When rendering to PDF the theme colors must not be applied, but the regular colors
     # have to be used.
-    theme_colors = _graph_colors(html.get_theme() if not render_unthemed else "pdf")
+    theme_colors = _graph_colors(theme.get() if not render_unthemed else "pdf")
     for attr_name in ["background_color", "foreground_color", "canvas_color"]:
         if options[attr_name] == "default":
             options[attr_name] = theme_colors[attr_name]
@@ -117,15 +113,19 @@ def add_default_render_options(graph_render_options, render_unthemed=False):
 def compute_graph_artwork(graph_recipe, graph_data_range, graph_render_options):
     graph_render_options = add_default_render_options(graph_render_options)
 
-    start_time, end_time, step, curves = compute_graph_artwork_curves(graph_recipe,
-                                                                      graph_data_range)
+    curves = compute_graph_artwork_curves(graph_recipe, graph_data_range)
 
     pin_time = load_graph_pin()
-    _compute_scalars(graph_recipe, curves, start_time, end_time, step, pin_time)
+    _compute_scalars(graph_recipe, curves, pin_time)
 
     layouted_curves, mirrored = layout_graph_curves(curves)  # do stacking, mirroring
 
     width, height = graph_render_options["size"]
+
+    try:
+        start_time, end_time, step = curves[0]['rrddata'].twindow
+    except IndexError:  # Empty graph
+        (start_time, end_time), step = graph_data_range["time_range"], 60
 
     return {
         # Labelling, size, layout
@@ -194,6 +194,13 @@ def layout_graph_curves(curves):
         if curve.get("dont_paint"):
             continue
 
+        line_type = curve["line_type"]
+        raw_points = halfstep_interpolation(curve["rrddata"])
+
+        if line_type == "ref":  # Only for forecast graphs
+            stacks[1] = raw_points
+            continue
+
         layouted_curve = {
             "color": curve["color"],
             "title": curve["title"],
@@ -201,8 +208,6 @@ def layout_graph_curves(curves):
         }
         layouted_curves.append(layouted_curve)
 
-        line_type = curve["line_type"]
-        raw_points = halfstep_interpolation(curve["rrddata"])
         if line_type[0] == '-':
             raw_points = list(map(mirror_point, raw_points))
             line_type = line_type[1:]
@@ -258,15 +263,11 @@ def compute_graph_artwork_curves(graph_recipe, graph_data_range):
     rrd_data = rrd_fetch.fetch_rrd_data_for_graph(graph_recipe, graph_data_range)
 
     curves = timeseries.compute_graph_curves(graph_recipe["metrics"], rrd_data)
-    try:
-        start_time, end_time, step = curves[0]['rrddata'].twindow
-    except (AttributeError, IndexError):
-        start_time, end_time, step = rrd_data['__range']
 
     if graph_recipe.get("omit_zero_metrics"):
         curves = [curve for curve in curves if any(curve["rrddata"])]
 
-    return start_time, end_time, step, curves
+    return curves
 
 
 # Result is a list with len(rrddata)*2 + 1 vertical values
@@ -305,7 +306,7 @@ def halfstep_interpolation(rrddata):
 #   '----------------------------------------------------------------------'
 
 
-def _compute_scalars(graph_recipe, curves, start_time, end_time, step, pin_time):
+def _compute_scalars(graph_recipe, curves, pin_time):
     unit = unit_info[graph_recipe["unit"]]
 
     for curve in curves:
@@ -316,7 +317,7 @@ def _compute_scalars(graph_recipe, curves, start_time, end_time, step, pin_time)
 
         pin = None
         if pin_time is not None:
-            pin = _get_value_at_timestamp(start_time, end_time, step, pin_time, rrddata)
+            pin = _get_value_at_timestamp(pin_time, rrddata)
 
         rrddata = timeseries.clean_time_series_point(rrddata)
         if rrddata:
@@ -336,8 +337,7 @@ def _compute_scalars(graph_recipe, curves, start_time, end_time, step, pin_time)
             curve["scalars"][key] = _render_scalar_value(value, unit)
 
 
-def _compute_curve_values_at_timestamp(graph_recipe, curves, hover_time, start_time, end_time,
-                                       step):
+def _compute_curve_values_at_timestamp(graph_recipe, curves, hover_time):
     unit = unit_info[graph_recipe["unit"]]
 
     curve_values = []
@@ -347,7 +347,7 @@ def _compute_curve_values_at_timestamp(graph_recipe, curves, hover_time, start_t
 
         rrddata = curve["rrddata"]
 
-        value = _get_value_at_timestamp(start_time, end_time, step, hover_time, rrddata)
+        value = _get_value_at_timestamp(hover_time, rrddata)
 
         curve_values.append({
             "title": curve["title"],
@@ -364,7 +364,8 @@ def _render_scalar_value(value, unit):
     return value, unit["render"](value)
 
 
-def _get_value_at_timestamp(start_time, end_time, step, pin_time, rrddata):
+def _get_value_at_timestamp(pin_time, rrddata):
+    start_time, _, step = rrddata.twindow
     nth_value = (pin_time - start_time) // step
     if 0 <= nth_value < len(rrddata):
         return rrddata[nth_value]
@@ -631,7 +632,7 @@ def create_vertical_axis_labels(min_value, max_value, unit, label_distance, sub_
                 line_width = 2
             else:
                 label_value = None
-                line_width = 1
+                line_width = 0
 
             label_specs.append((pos, label_value, line_width))
             if len(label_specs) > 1000:
@@ -777,7 +778,7 @@ def compute_graph_t_axis(start_time, end_time, width, step):
     # vertical axis, but here the division is not done by 1, 2 and
     # 5 but we need to stick to user friendly time sections - that
     # might even not be equal in size (like months!)
-    num_t_labels = int((width - 7) / label_size)
+    num_t_labels = max(int((width - 7) / label_size), 2)
     label_distance_at_least = max(label_distance_at_least, time_range / num_t_labels)
 
     # Get a distribution function. The function is called with start_time end
@@ -920,13 +921,7 @@ def dist_month(start_time, end_time, months):
                     broken_tm_yday,
                     broken_tm_isdst,
                 ))
-                yield pos, 1, False
-
-    # Add weeks if months are low
-    if months <= 2:
-        for pos, line_width, _has_label in dist_week(start_time, end_time):
-            if line_width == 2:
-                yield pos, 1, False
+                yield pos, 0, False
 
 
 # These distance functions yield a sequence of useful
@@ -960,7 +955,7 @@ def dist_equal(start_time, end_time, distance, subdivision):
         if f <= 0.0000001 or f >= 0.9999999:
             yield (pos, 2, True)
         else:
-            yield (pos, 1, False)
+            yield (pos, 0, False)
         pos += subdivision
 
 
@@ -979,12 +974,12 @@ def dist_equal(start_time, end_time, distance, subdivision):
 
 
 def load_graph_pin():
-    return config.user.load_file("graph_pin", None)
+    return user.load_file("graph_pin", None)
 
 
 def save_graph_pin() -> None:
     try:
-        pin_timestamp = html.request.get_integer_input("pin")
+        pin_timestamp = request.get_integer_input("pin")
     except ValueError:
         pin_timestamp = None
-    config.user.save_file("graph_pin", None if pin_timestamp == -1 else pin_timestamp)
+    user.save_file("graph_pin", None if pin_timestamp == -1 else pin_timestamp)

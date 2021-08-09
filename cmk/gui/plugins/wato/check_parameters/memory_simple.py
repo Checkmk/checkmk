@@ -5,26 +5,25 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato import (
+    CheckParameterRulespecWithItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersOperatingSystem,
+)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     Filesize,
     MonitoringState,
     Percentage,
-    TextAscii,
+    TextInput,
     Transform,
     Tuple,
 )
 
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersOperatingSystem,
-)
-
 
 def _item_spec_memory_simple():
-    return TextAscii(
+    return TextInput(
         title=_("Module name or empty"),
         help=_("Leave this empty for systems without modules, which just "
                "have one global memory usage."),

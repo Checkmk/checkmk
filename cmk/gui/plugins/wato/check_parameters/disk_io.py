@@ -5,25 +5,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Checkbox,
-    Dictionary,
-    Float,
-    Integer,
-    TextAscii,
-    Tuple,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
-    rulespec_registry,
     Levels,
+    rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
+from cmk.gui.valuespec import Checkbox, Dictionary, Float, Integer, TextInput, Tuple
 
 
 def _item_spec_disk_io():
-    return TextAscii(
+    return TextInput(
         title=_("Device"),
         help=_("For a summarized throughput of all disks, specify <tt>SUMMARY</tt>, for a "
                "sum of read or write throughput write <tt>read</tt> or <tt>write</tt> resp. "
@@ -114,5 +106,5 @@ rulespec_registry.register(
         item_spec=_item_spec_disk_io,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_disk_io,
-        title=lambda: _("Levels on disk IO (old style checks)"),
+        title=lambda: _("Disk IO levels (old style checks)"),
     ))

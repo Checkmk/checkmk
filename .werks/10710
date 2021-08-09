@@ -6,7 +6,7 @@ Date: 1580052268
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 When the agent is queried via systemd, the socket unit creates an instance
 of the agent service unit template. These are named something like

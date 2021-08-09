@@ -15,5 +15,5 @@ description:
 
  This check uses the PowerNet-MIB.
 
-inventory:
+discovery:
  One service is created.

@@ -9,31 +9,23 @@ To add a new example (new language, library, etc.), a new Jinja2-Template has to
 be referenced in the result of _build_code_templates.
 
 """
+import functools
 import json
 import re
-import threading
-from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Type, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Type, Union
 
 import jinja2
 import yapf.yapflib.yapf_api  # type: ignore[import]
 from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[import]
 from marshmallow import Schema  # type: ignore[import]
 
+from cmk.utils.site import omd_site
+
+from cmk.gui.plugins.openapi import fields
+from cmk.gui.plugins.openapi.restful_objects.params import fill_out_path_template, to_openapi
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
-from cmk.gui.plugins.openapi.restful_objects.type_defs import (
-    AnyParameter,
-    AnyParameterAndReference,
-    fill_out_path_template,
-    HTTPMethod,
-    LocationType,
-    OperationSpecType,
-    ParamDict,
-    RequestSchema,
-)
+from cmk.gui.plugins.openapi.restful_objects.type_defs import CodeSample, OpenAPIParameter
 
-CODE_TEMPLATES_LOCK = threading.Lock()
-
-# This is
 CODE_TEMPLATE_MACROS = """
 {%- macro comments(comment_format="# ", request_schema_multiple=False) %}
 {%- set cf = comment_format %}
@@ -45,8 +37,8 @@ CODE_TEMPLATE_MACROS = """
 
 {%- macro list_params(params, indent=8) -%}
 {%- for param in params %}{% if not (param.example is defined and param.example) %}{% continue %}{% endif %}
-{{ " " * indent }}"{{ param.name }}": "{{
-            param.example }}",{% if param.description is defined and param.description %}  #
+{{ " " * indent }}"{{ param.name }}": {{
+            param.example | repr }},{% if param.description is defined and param.description %}  #
         {%- if param.required %} (required){% endif %} {{
             param.description | first_sentence }}{% endif %}
 {%- endfor %}
@@ -76,13 +68,16 @@ CODE_TEMPLATE_MACROS = """
 CODE_TEMPLATE_URLLIB = """
 #!/usr/bin/env python3
 import json
+{%- set downloadable = endpoint.content_type == 'application/octet-stream' %}
+{%- if downloadable %}
+import shutil{% endif %}
 {%- if query_params %}
 import urllib.parse{% endif %}
 import urllib.request
 
 HOST_NAME = "{{ hostname }}"
 SITE_NAME = "{{ site }}"
-API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0"
+API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0"
 
 USERNAME = "{{ username }}"
 PASSWORD = "{{ password }}"
@@ -101,8 +96,8 @@ request = urllib.request.Request(
     method="{{ request_method | upper }}",
     headers={
         "Authorization": f"Bearer {USERNAME} {PASSWORD}",
-        "Accept": "application/json",
-        {{- list_params(headers) }}
+        "Accept": "{{ endpoint.content_type }}",
+        {{- list_params(header_params) }}
     },
     {{- comments(comment_format="    # ", request_schema_multiple=request_schema_multiple) }}
     {%- if request_schema %}
@@ -114,49 +109,81 @@ request = urllib.request.Request(
     {%- endif %}
 )
 response = urllib.request.urlopen(request)
-data = json.loads(response.read())
+if response.status == 200:
+    pprint.pprint(json.loads(response.read()))
+elif response.status == 204:
+    {%- if downloadable %}
+    file_name = response.headers["content-disposition"].split("filename=")[1].strip("\"")
+    with open(file_name, 'wb') as out_file:
+        shutil.copyfileobj(response, out_file)
+    {%- endif %}
+    print("Done")
+else:
+    raise RuntimeError(response.read())
 """
 
 CODE_TEMPLATE_CURL = """
 #!/bin/bash
+
+# NOTE: We recommend all shell users to use the "httpie" examples instead.
+
 HOST_NAME="{{ hostname }}"
 SITE_NAME="{{ site }}"
-API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
+API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
 
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
 
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
-curl \\
-    -X {{ request_method | upper }} \\
+out=$(
+  curl \\
+{%- if query_params %}
+    -G \\
+{%- endif %}
+    --request {{ request_method | upper }} \\
+    --write-out "\\nxxx-status_code=%{http_code}\\n" \\
     --header "Authorization: Bearer $USERNAME $PASSWORD" \\
-    --header "Accept: application/json" \\
-{%- for header in headers %}
+    --header "Accept: {{ endpoint.content_type }}" \\
+{%- for header in header_params %}
     --header "{{ header.name }}: {{ header.example }}" \\
 {%- endfor %}
 {%- if query_params %}
-    -G  \\
  {%- for param in query_params %}
   {%- if param.example is defined and param.example %}
-    --data-urlencode "{{ param.name }}={{ param.example }}"{% if not loop.last %} \\{% endif %}
+    --data-urlencode {{ (param.name + "=" + param.example) | repr }} \\
   {%- endif %}
  {%- endfor %}
 {%- endif %}
-{%- if request_schema %} \\
+{%- if request_schema %}
     --data '{{ request_schema |
             to_dict |
             to_json(indent=2, sort_keys=True) |
             indent(skip_lines=1, spaces=8) }}' \\
 {%- endif %}
-    "$API_URL{{ request_endpoint | fill_out_parameters }}"
+    "$API_URL{{ request_endpoint | fill_out_parameters }}")
+
+resp=$( echo "${out}" | grep -v "xxx-status_code" )
+code=$( echo "${out}" | awk -F"=" '/^xxx-status_code/ {print $2}')
+
+# For indentation, please install 'jq' (JSON query tool)
+echo "$resp" | jq
+# echo "$resp"
+
+if [[ $code -lt 400 ]]; then
+    echo "OK"
+    exit 0
+else
+    echo "Request error"
+    exit 1
+fi
 """
 
 CODE_TEMPLATE_HTTPIE = """
 #!/bin/bash
 HOST_NAME="{{ hostname }}"
 SITE_NAME="{{ site }}"
-API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/v0"
+API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
 
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
@@ -164,42 +191,52 @@ PASSWORD="{{ password }}"
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
+    {%- if endpoint.does_redirects %}
+    --follow \\
+    --all \\
+    {%- endif %}
     "Authorization: Bearer $USERNAME $PASSWORD" \\
-    "Accept: application/json" \\
-{%- for header in headers %}
+    "Accept: {{ endpoint.content_type }}" \\
+{%- for header in header_params %}
     '{{ header.name }}:{{ header.example }}' \\
-{% endfor -%}
+{%- endfor %}
 {%- if query_params %}
  {%- for param in query_params %}
   {%- if param.example is defined and param.example %}
-    {{ param.name }}=="{{ param.example }}" \\
+    {{ param.name }}=='{{ param.example }}' \\
   {%- endif %}
  {%- endfor %}
 {%- endif %}
 {%- if request_schema %}
- {%- for key, value in (request_schema | to_dict).items() | sort %}
-    {{ key }}='{{ value | to_env }}' \\
+ {%- for key, field in request_schema.declared_fields.items() %}
+    {{ key }}='{{ field | field_value }}' \\
  {%- endfor %}
 {%- endif %}
-    --json
+{%- if endpoint.content_type == 'application/octet-stream' %}
+    --download \\
+{%- endif %}
 
 """
 
 # Beware, correct whitespace handling in this template is a bit tricky.
 CODE_TEMPLATE_REQUESTS = """
 #!/usr/bin/env python3
+import pprint
 import requests
+{%- set downloadable = endpoint.content_type == 'application/octet-stream' %}
+{%- if downloadable %}
+import shutil {%- endif %}
 
 HOST_NAME = "{{ hostname }}"
 SITE_NAME = "{{ site }}"
-API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/v0"
+API_URL = f"http://{HOST_NAME}/{SITE_NAME}/check_mk/api/1.0"
 
 USERNAME = "{{ username }}"
 PASSWORD = "{{ password }}"
 
 session = requests.session()
 session.headers['Authorization'] = f"Bearer {USERNAME} {PASSWORD}"
-session.headers['Accept'] = 'application/json'
+session.headers['Accept'] = '{{ endpoint.content_type }}'
 {%- set method = request_method | lower %}
 
 {%- from '_macros' import show_params, comments %}
@@ -207,7 +244,7 @@ session.headers['Accept'] = 'application/json'
 resp = session.{{ method }}(
     f"{API_URL}{{ request_endpoint | fill_out_parameters }}",
     {{- show_params("params", query_params, comment="goes into query string") }}
-    {{- show_params("headers", headers) }}
+    {{- show_params("headers", header_params) }}
     {{- comments(comment_format="    # ", request_schema_multiple=request_schema_multiple) }}
     {%- if request_schema %}
     json={{
@@ -216,9 +253,22 @@ resp = session.{{ method }}(
             to_python |
             indent(skip_lines=1, spaces=4) }},
     {%- endif %}
+    {%- if endpoint.does_redirects %}
+    allow_redirects=True,
+    {%- endif %}
 )
-resp.raise_for_status()
-data = resp.json()
+if resp.status_code == 200:
+    pprint.pprint(resp.json())
+elif resp.status_code == 204:
+    {%- if downloadable %}
+    file_name = resp.headers["content-disposition"].split("filename=")[1].strip("\"")
+    with open(file_name, 'wb') as out_file:
+        resp.raw.decode_content = True
+        shutil.copyfileobj(resp.raw, out_file)
+    {%- endif %}
+    print("Done")
+else:
+    raise RuntimeError(pprint.pformat(resp.json()))
 """
 
 CodeExample = NamedTuple("CodeExample", [('lang', str), ('label', str), ('template', str)])
@@ -227,8 +277,8 @@ CodeExample = NamedTuple("CodeExample", [('lang', str), ('label', str), ('templa
 CODE_EXAMPLES: List[CodeExample] = [
     CodeExample(lang='python', label='requests', template=CODE_TEMPLATE_REQUESTS),
     CodeExample(lang='python', label='urllib', template=CODE_TEMPLATE_URLLIB),
-    CodeExample(lang='bash', label='curl', template=CODE_TEMPLATE_CURL),
     CodeExample(lang='bash', label='httpie', template=CODE_TEMPLATE_HTTPIE),
+    CodeExample(lang='bash', label='curl', template=CODE_TEMPLATE_CURL),
 ]
 
 # The examples will appear in the order they are put in above, as starting from Python 3.7, dicts
@@ -269,23 +319,29 @@ def first_sentence(text: str) -> str:
     return ''.join(re.split(r'(\w\.)', text)[:2])
 
 
+def field_value(field: fields.Field) -> str:
+    return field.metadata['example']
+
+
 def to_dict(schema: Schema) -> Dict[str, str]:
     """Convert a Schema-class to a dict-representation.
 
     Examples:
 
-        >>> from marshmallow import Schema, fields
-        >>> class SayHello(Schema):
+        >>> from marshmallow import fields
+        >>> from cmk.gui.plugins.openapi.utils import BaseSchema
+        >>> class SayHello(BaseSchema):
         ...      message = fields.String(example="Hello world!")
+        ...      message2 = fields.String(example="Hello Bob!")
         >>> to_dict(SayHello())
-        {'message': 'Hello world!'}
+        {'message': 'Hello world!', 'message2': 'Hello Bob!'}
 
-        >>> class Nobody(Schema):
+        >>> class Nobody(BaseSchema):
         ...      expects = fields.String()
         >>> to_dict(Nobody())
         Traceback (most recent call last):
         ...
-        KeyError: "Schema 'Nobody.expects' has no example."
+        KeyError: "Field 'Nobody.expects' has no 'example'"
 
     Args:
         schema:
@@ -295,17 +351,16 @@ def to_dict(schema: Schema) -> Dict[str, str]:
         A dict with the field-names as a key and their example as value.
 
     """
+    if not getattr(schema.Meta, 'ordered', False):
+        # NOTE: We need this to make sure our checkmk.yaml spec file is always predictably sorted.
+        raise Exception(f"Schema '{schema.__module__}.{schema.__class__.__name__}' is not ordered.")
     ret = {}
-    for name, field in schema.fields.items():
-        if 'example' not in field.metadata:
-            raise KeyError(f"Schema '{schema.__class__.__name__}.{name}' has no example.")
-        ret[name] = field.metadata['example']
+    for name, field in schema.declared_fields.items():
+        try:
+            ret[name] = field.metadata['example']
+        except KeyError as exc:
+            raise KeyError(f"Field '{schema.__class__.__name__}.{name}' has no {exc}")
     return ret
-
-
-def _is_parameter(param):
-    is_primitive_param = isinstance(param, dict) and 'name' in param and 'in' in param
-    return isinstance(param, ParamDict) or is_primitive_param
 
 
 def _transform_params(param_list):
@@ -324,79 +379,83 @@ def _transform_params(param_list):
         ... ])
         {'foo': {'name': 'foo', 'in': 'query'}}
 
-        >>> transformed = _transform_params([
-        ...      ParamDict.create('foo', 'query'),
-        ...      ParamDict.create('bar', 'header'),
-        ... ])
-        >>> expected = {
-        ...     'foo': {
-        ...         'name': 'foo',
-        ...         'in': 'query',
-        ...         'required': True,
-        ...         'allowEmptyValue': False,
-        ...         'schema': {'type': 'string'},
-        ...     }
-        ... }
-        >>> assert expected == transformed, transformed
 
     Returns:
         A dict with the key being the parameters name and the value being the parameter.
     """
     return {
-        param['name']: param
-        for param in param_list
-        if _is_parameter(param) and param['in'] != 'header'
+        param['name']: param for param in param_list if 'in' in param and param['in'] != 'header'
     }
 
 
-# noinspection PyDefaultArgument
 def code_samples(
-    path: str,
-    method: HTTPMethod,
-    request_schema: RequestSchema,
-    operation_spec: OperationSpecType,
-) -> List[Dict[str, str]]:
+    endpoint,
+    header_params,
+    path_params,
+    query_params,
+) -> List[CodeSample]:
     """Create a list of rendered code sample Objects
 
-    These are not specified by OpenAPI but are specific to ReDoc."""
+    These are not specified by OpenAPI but are specific to ReDoc.
+
+    Examples:
+
+        >>> class Endpoint:
+        ...     path = 'foo'
+        ...     method = 'get'
+        ...     content_type = 'application/json'
+        ...     request_schema = _get_schema('CreateHost')
+        ...     does_redirects = False
+
+        >>> _endpoint = Endpoint()
+        >>> import os
+        >>> from unittest import mock
+        >>> with mock.patch.dict(os.environ, {"OMD_SITE": "heute"}):
+        ...     samples = code_samples(_endpoint, [], [], [])
+
+        >>> assert len(samples)
+
+    """
     env = _jinja_environment()
-
-    parameters = operation_spec.get('parameters', [])
-
-    headers = _filter_params(parameters, 'header')
-    query_params = _filter_params(parameters, 'query')
 
     return [{
         'label': example.label,
         'lang': example.lang,
         'source': env.get_template(example.label).render(
             hostname='localhost',
-            site='heute',
+            site=omd_site(),
             username='automation',
             password='test123',
-            request_endpoint=path,
-            request_method=method,
-            request_schema=_get_schema(request_schema),
-            request_schema_multiple=_schema_is_multiple(request_schema),
-            endpoint_parameters=_transform_params(parameters),
-            headers=headers,
-            query_params=query_params,
+            endpoint=endpoint,
+            path_params=to_openapi(path_params, 'path'),
+            query_params=to_openapi(query_params, 'query'),
+            header_params=to_openapi(header_params, 'header'),
+            request_endpoint=endpoint.path,
+            request_method=endpoint.method,
+            request_schema=_get_schema(endpoint.request_schema),
+            request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
         ).strip(),
     } for example in CODE_EXAMPLES]
 
 
-def _filter_params(
-    parameters: Sequence[AnyParameterAndReference],
-    param_location: LocationType,
-) -> Sequence[AnyParameter]:
-    query_parameters = []
-    for param in parameters:
-        if isinstance(param, (dict, ParamDict)) and param['in'] == param_location:
-            query_parameters.append(param)
-    return query_parameters
+def yapf_format(obj) -> str:
+    """Format the object nicely.
 
+    Examples:
 
-def yapf_format(obj):
+        While this should format in a stable manner, I'm not quite sure about it.
+
+        >>> yapf_format({'password': 'foo', 'username': 'bar'})
+        "{'password': 'foo', 'username': 'bar'}\\n"
+
+    Args:
+        obj:
+            A python object, which gets represented as valid Python-code when a str() is applied.
+
+    Returns:
+        A string of the object, formatted nicely.
+
+    """
     style = {
         'COLUMN_LIMIT': 50,
         'ALLOW_SPLIT_BEFORE_DICT_VALUE': False,
@@ -429,25 +488,35 @@ def _get_schema(schema: Optional[Union[str, Type[Schema]]]) -> Optional[Schema]:
     # We just take the first one and go with that, as we have no way of letting the user chose
     # the dispatching-key by himself (this is a limitation of ReDoc).
     _schema: Schema = resolve_schema_instance(schema)
-    if _schema_is_multiple(_schema):
-        first_key = list(_schema.type_schemas.keys())[0]
-        _schema = resolve_schema_instance(_schema.type_schemas[first_key])
+    if _schema_is_multiple(schema):
+        type_schemas = _schema.type_schemas  # type: ignore[attr-defined]
+        first_key = list(type_schemas.keys())[0]
+        _schema = resolve_schema_instance(type_schemas[first_key])
 
     return _schema
 
 
-def _schema_is_multiple(schema: Optional[Union[str, Schema]]) -> bool:
+def _schema_is_multiple(schema: Optional[Union[str, Type[Schema]]]) -> bool:
     if schema is None:
         return False
     _schema = resolve_schema_instance(schema)
-    return hasattr(_schema, 'type_schemas') and _schema.type_schemas
+    return bool(getattr(_schema, 'type_schemas', None))
 
 
+@functools.lru_cache()
 def _jinja_environment() -> jinja2.Environment:
     """Create a map with code templates, ready to render.
 
     We don't want to build all this stuff at the module-level as it is only needed when
     re-generating the SPEC file.
+
+    >>> class Endpoint:
+    ...     path = 'foo'
+    ...     method = 'get'
+    ...     content_type = 'application/json'
+    ...     request_schema = _get_schema('CreateHost')
+
+    >>> endpoint = Endpoint()
 
     >>> env = _jinja_environment()
     >>> result = env.get_template('curl').render(
@@ -455,13 +524,14 @@ def _jinja_environment() -> jinja2.Environment:
     ...     site='heute',
     ...     username='automation',
     ...     password='test123',
-    ...     request_endpoint='foo',
-    ...     request_method='get',
-    ...     request_schema=_get_schema('CreateHost'),
-    ...     request_schema_multiple=_schema_is_multiple('CreateHost'),
-    ...     endpoint_parameters={},
+    ...     path_params=[],
     ...     query_params=[],
-    ...     headers=[],
+    ...     header_params=[],
+    ...     endpoint=endpoint,
+    ...     request_endpoint=endpoint.path,
+    ...     request_method=endpoint.method,
+    ...     request_schema=_get_schema(endpoint.request_schema),
+    ...     request_schema_multiple=_schema_is_multiple('CreateHost'),
     ... )
     >>> assert '&' not in result, result
 
@@ -481,27 +551,45 @@ def _jinja_environment() -> jinja2.Environment:
         fill_out_parameters=fill_out_parameters,
         first_sentence=first_sentence,
         indent=indent,
+        field_value=field_value,
         to_dict=to_dict,
         to_env=_to_env,
         to_json=json.dumps,
         to_python=yapf_format,
+        repr=repr,
     )
     # These objects will be available in the templates
-    tmpl_env.globals.update(
-        spec=SPEC,
-        parameters=SPEC.components.to_dict().get('parameters', {}),
-    )
+    tmpl_env.globals.update(spec=SPEC,)
     return tmpl_env
 
 
+def to_param_dict(params: List[OpenAPIParameter]) -> Dict[str, OpenAPIParameter]:
+    """
+
+    >>> to_param_dict([{'name': 'Foo'}, {'name': 'Bar'}])
+    {'Foo': {'name': 'Foo'}, 'Bar': {'name': 'Bar'}}
+
+    Args:
+        params:
+
+    Returns:
+
+    """
+    res = {}
+    for entry in params:
+        if 'name' not in entry:
+            raise ValueError(f'Illegal parameter (name missing) ({entry!r}) in {params!r}')
+        res[entry['name']] = entry
+    return res
+
+
 @jinja2.contextfilter
-def fill_out_parameters(ctx: Dict[str, Any], val):
+def fill_out_parameters(ctx: Dict[str, Any], val) -> str:
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 
     This assumes the parameters to be defined as such:
 
-        ctx['parameters']: Dict[str, ParamDict]
-        ctx['endpoint_parameters']: Dict[str, ParamDict]
+        ctx['parameters']: Dict[str, Dict[str, str]]
 
     Args:
         ctx: A Jinja2 context
@@ -514,39 +602,25 @@ def fill_out_parameters(ctx: Dict[str, Any], val):
         >>> parameters = {}
         >>> env = jinja2.Environment()
         >>> env.filters['fill_out_parameters'] = fill_out_parameters
-        >>> env.globals['parameters'] = parameters
 
-        >>> global_host_param = ParamDict.create('host', 'path', example='global_host')
-        >>> host = ParamDict.create('host', 'path', example='host')
-        >>> service = ParamDict.create('service', 'path', example='service')
+        >>> host = {'name': 'host', 'in': 'path', 'example': 'example.com'}
+        >>> service = {'name': 'service', 'in': 'path', 'example': 'CPU'}
 
         >>> tmpl_source = '{{ "/{host}/{service}" | fill_out_parameters }}'
         >>> tmpl = env.from_string(tmpl_source)
 
-        >>> tmpl.render(endpoint_parameters={})
+        >>> tmpl.render(path_params=[])
         Traceback (most recent call last):
         ...
-        ValueError: Parameter 'host' needed, but not supplied.
+        ValueError: Parameter 'host' needed, but not supplied in {}
 
-        >>> tmpl.render(endpoint_parameters={'host': host, 'service': service})
-        '/host/service'
-
-        >>> parameters['host'] = global_host_param
-        >>> tmpl.render(endpoint_parameters={'host': host, 'service': service})
-        '/host/service'
-
-        >>> parameters['host'] = global_host_param
-        >>> tmpl.render(endpoint_parameters={'service': service})
-        '/global_host/service'
-
+        >>> tmpl.render(path_params=[host, service])
+        '/example.com/CPU'
 
     Returns:
         A filled out string.
     """
-    parameters = {}
-    parameters.update(ctx['parameters'])
-    parameters.update(ctx['endpoint_parameters'])
-    return fill_out_path_template(val, parameters)
+    return fill_out_path_template(val, to_param_dict(ctx['path_params']))
 
 
 def indent(s, skip_lines=0, spaces=2):

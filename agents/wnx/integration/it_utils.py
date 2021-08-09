@@ -5,10 +5,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import print_function
-import pytest  # type: ignore
+
 import os
-import subprocess
 import platform
+import subprocess
+
+import pytest  # type: ignore
 
 
 # we are checking that input is OK(long enough for example)

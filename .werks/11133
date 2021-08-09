@@ -6,7 +6,7 @@ Date: 1593610102
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 1.7.0i1
+Version: 2.0.0i1
 
 Symbolic links of logfiles no longer get resolved to the actual path.
 Some log file paths might change on a daily basis, so resolving symlink paths could result in missing files for the software.

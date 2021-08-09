@@ -10,6 +10,7 @@ from contextlib import contextmanager
 from typing import Any, Generator, IO, Optional
 
 import cmk.utils.tty as tty
+
 from ._level import VERBOSE
 
 

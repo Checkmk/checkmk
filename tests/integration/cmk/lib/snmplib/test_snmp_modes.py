@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.exceptions import MKGeneralException
 
@@ -22,7 +22,9 @@ import cmk.snmplib.snmp_modes as snmp_modes
 # https://github.com/pytest-dev/pytest/issues/363
 @pytest.fixture(scope="module")
 def monkeymodule(request):
-    from _pytest.monkeypatch import MonkeyPatch  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    from _pytest.monkeypatch import (
+        MonkeyPatch,  # type: ignore[import] # pylint: disable=import-outside-toplevel
+    )
     mpatch = MonkeyPatch()
     yield mpatch
     mpatch.undo()
@@ -77,8 +79,8 @@ def test_get_single_oid_cache(backend):
     expected_value = "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
     assert snmp_modes.get_single_oid(oid, backend=backend) == expected_value
-    assert snmp_cache.is_in_single_oid_cache(oid)
-    cached_oid = snmp_cache.get_oid_from_single_oid_cache(oid)
+    assert oid in snmp_cache.single_oid_cache()
+    cached_oid = snmp_cache.single_oid_cache()[oid]
     assert cached_oid == expected_value
     assert isinstance(cached_oid, str)
 

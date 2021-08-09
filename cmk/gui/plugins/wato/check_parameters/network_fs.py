@@ -5,42 +5,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    TextAscii,
-)
-
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-
 from cmk.gui.plugins.wato.check_parameters.utils import (
     fs_levels_elements,
     fs_magic_elements,
     size_trend_elements,
+    transform_trend_mb_to_trend_bytes,
 )
+from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput, Transform
 
 
 def _item_spec_network_fs():
-    return TextAscii(title=_("Name of the mount point"),
+    return TextInput(title=_("Name of the mount point"),
                      help=_("For NFS enter the name of the mount point."))
 
 
 def _parameter_valuespec_network_fs():
-    return Dictionary(elements=(fs_levels_elements + fs_magic_elements + size_trend_elements + [
-        (
-            "has_perfdata",
-            DropdownChoice(title=_("Performance data settings"),
-                           choices=[
-                               (True, _("Enable performance data")),
-                               (False, _("Disable performance data")),
-                           ],
-                           default_value=False),
-        ),
-    ]),)
+    return Transform(
+        Dictionary(elements=fs_levels_elements + fs_magic_elements + size_trend_elements + [
+            (
+                "has_perfdata",
+                DropdownChoice(
+                    title=_("Performance data settings"),
+                    choices=[
+                        (True, _("Enable performance data")),
+                        (False, _("Disable performance data")),
+                    ],
+                    default_value=False,
+                ),
+            ),
+        ],),
+        forth=transform_trend_mb_to_trend_bytes,
+    )
 
 
 rulespec_registry.register(

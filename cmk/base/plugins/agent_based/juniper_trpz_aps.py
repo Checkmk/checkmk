@@ -3,36 +3,28 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from typing import Mapping, Tuple
+from typing import List, Mapping, Optional, Tuple
 
-from .agent_based_api.v1 import (
-    SNMPTree,
-    Service,
-    Metric,
-    Result,
-    state,
-    register,
-    any_of,
-    startswith,
-)
-from .agent_based_api.v1.type_defs import SNMPStringTable, DiscoveryGenerator, CheckGenerator
+from .agent_based_api.v1 import any_of, Metric, register, Result, Service, SNMPTree, startswith
+from .agent_based_api.v1 import State as state
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 Section = Tuple[int, int]
 
 
-def parse_juniper_trpz_aps(string_table: SNMPStringTable) -> Section:
+def parse_juniper_trpz_aps(string_table: List[StringTable]) -> Optional[Section]:
     """
     >>> parse_juniper_trpz_aps([[['1', '0']]])
     (1, 0)
     """
-    return int(string_table[0][0][0]), int(string_table[0][0][1])
+    return (int(string_table[0][0][0]), int(string_table[0][0][1])) if string_table[0] else None
 
 
-def discovery_juniper_trpz_aps(section: Section) -> DiscoveryGenerator:
+def discovery_juniper_trpz_aps(section: Section) -> DiscoveryResult:
     yield Service()
 
 
-def _check_common_juniper_trpz_aps(node_name: str, section: Section) -> CheckGenerator:
+def _check_common_juniper_trpz_aps(node_name: str, section: Section) -> CheckResult:
     yield Result(
         state=state.OK,
         summary="%sOnline access points: %d, Sessions: %d" %
@@ -40,28 +32,28 @@ def _check_common_juniper_trpz_aps(node_name: str, section: Section) -> CheckGen
     )
 
 
-def check_juniper_trpz_aps(section: Section) -> CheckGenerator:
+def check_juniper_trpz_aps(section: Section) -> CheckResult:
     """
     >>> for result in check_juniper_trpz_aps((1, 0)):
     ...   print(result)
-    Metric('ap_devices_total', 1.0, levels=(None, None), boundaries=(None, None))
-    Metric('total_sessions', 0.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='Online access points: 1, Sessions: 0', details='Online access points: 1, Sessions: 0')
+    Metric('ap_devices_total', 1.0)
+    Metric('total_sessions', 0.0)
+    Result(state=<State.OK: 0>, summary='Online access points: 1, Sessions: 0')
     """
     yield Metric('ap_devices_total', section[0])
     yield Metric('total_sessions', section[1])
     yield from _check_common_juniper_trpz_aps("", section)
 
 
-def cluster_check_juniper_trpz_aps(section: Mapping[str, Section]) -> CheckGenerator:
+def cluster_check_juniper_trpz_aps(section: Mapping[str, Section]) -> CheckResult:
     """
     >>> for result in cluster_check_juniper_trpz_aps({"node1": (1, 2), "node2": (3, 4)}):
     ...   print(result)
-    Result(state=<state.OK: 0>, summary='Total: 4 access points, Sessions: 6', details='Total: 4 access points, Sessions: 6')
-    Metric('ap_devices_total', 4.0, levels=(None, None), boundaries=(None, None))
-    Metric('total_sessions', 6.0, levels=(None, None), boundaries=(None, None))
-    Result(state=<state.OK: 0>, summary='[node1] Online access points: 1, Sessions: 2', details='[node1] Online access points: 1, Sessions: 2')
-    Result(state=<state.OK: 0>, summary='[node2] Online access points: 3, Sessions: 4', details='[node2] Online access points: 3, Sessions: 4')
+    Result(state=<State.OK: 0>, summary='Total: 4 access points, Sessions: 6')
+    Metric('ap_devices_total', 4.0)
+    Metric('total_sessions', 6.0)
+    Result(state=<State.OK: 0>, summary='[node1] Online access points: 1, Sessions: 2')
+    Result(state=<State.OK: 0>, summary='[node2] Online access points: 3, Sessions: 4')
     """
     total_aps = sum(n[0] for n in section.values())
     total_sessions = sum(n[1] for n in section.values())
@@ -83,7 +75,7 @@ register.snmp_section(
     detect=any_of(startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.1"),
                   startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.3")),
     parse_function=parse_juniper_trpz_aps,
-    trees=[
+    fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.14525.4",
             oids=[

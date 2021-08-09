@@ -1,0 +1,14 @@
+Title: prism_containers: Fix evaluation of percentage levels and scale of levels in graphs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1603269045
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.0.0i1
+
+Levels for the usage regarding the capacity can be set absolute or in percent.
+The percentage levels did not apply correctly. Also the warn and crit values
+were not displayed correct in the related graphs.

@@ -5,11 +5,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from typing import Dict, List, Mapping, NamedTuple, Optional, Tuple, Union
-
-from .agent_based_api.v1.type_defs import CheckGenerator, DiscoveryGenerator
+from typing import List, Mapping, NamedTuple, Optional, Tuple, Union
 
 from .agent_based_api.v1 import (
+    Attributes,
     get_average,
     get_value_store,
     Metric,
@@ -17,9 +16,9 @@ from .agent_based_api.v1 import (
     render,
     Result,
     Service,
-    state,
+    State,
 )
-
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult
 from .utils import memory
 
 
@@ -31,10 +30,8 @@ class MemBytes(NamedTuple('MemBytes', [('bytes', int), ('kb', float), ('mb', flo
         return render.bytes(self.bytes)
 
 
-def discover_mem_used(section: Dict[str, int]) -> DiscoveryGenerator:
-    if ("MemTotal" in section and "PageTotal" not in section and
-            not memory.is_linux_section(section)  # handled by more modern check
-       ):
+def discover_mem_used(section: memory.SectionMemUsed) -> DiscoveryResult:
+    if "MemTotal" in section:
         yield Service()
 
 
@@ -62,15 +59,26 @@ def _get_total_usage(
     return totalused, "Total (%s)" % " + ".join(details)
 
 
-def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckGenerator:
+def check_mem_used(params: Mapping, section: memory.SectionMemUsed) -> CheckResult:
     # we have used a parse function that creates bytes, but this function
     # still expects kB:
-    meminfo = {k: v / 1024.0 for k, v in section.items()}
+    meminfo = {
+        k: v / 1024.0  # type: ignore[operator] # `v` is int, not object ...
+        for k, v in section.items()
+    }
 
     if isinstance(params, tuple):
         params = {"levels": params}
 
     memtotal = MemBytes(meminfo['MemTotal'])
+    if memtotal.bytes == 0:
+        yield Result(
+            state=State.UNKNOWN,
+            summary=("Reported total memory is 0 B, this may be "
+                     "caused by the lack of a memory cgroup in the kernel"),
+        )
+        return
+
     memused = MemBytes(memtotal.kb - meminfo['MemFree'])
 
     swaptotal: Optional[MemBytes] = None
@@ -99,14 +107,13 @@ def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckGenerator:
 
     totalused, totalused_descr = _get_total_usage(ramused, swapused, pagetables)
 
-    result = next(  # pylint: disable=stop-iteration-return  # this won't raise.
-        memory.check_element(
-            totalused_descr,
-            totalused.bytes,
-            memtotal.bytes,
-            ("ignore", (None, None)),
-            label_total="RAM" if totalused_descr != "RAM" else "",
-        ))
+    result, *_ = memory.check_element(
+        totalused_descr,
+        totalused.bytes,
+        memtotal.bytes,
+        ("ignore", (None, None)),
+        label_total="RAM" if totalused_descr != "RAM" else "",
+    )
     assert isinstance(result, Result)
     infotext = result.summary
 
@@ -149,11 +156,11 @@ def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckGenerator:
         ))
 
     # Check levels
-    my_state = memory.compute_state(comp_mb, warn_mb, crit_mb)
-    if my_state != state.OK and levels_text:
+    state = memory.compute_state(comp_mb, warn_mb, crit_mb)
+    if state != State.OK and levels_text:
         infotext = "%s (%s)" % (infotext, levels_text)
 
-    yield Result(state=my_state, summary=infotext)
+    yield Result(state=state, summary=infotext)
     yield from metrics
 
     if totalused_descr != "RAM":
@@ -172,7 +179,7 @@ def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckGenerator:
                 ("ignore", (None, None)),
             )
         if pagetables:
-            yield Result(state=state.OK, summary="Pagetables: %s" % pagetables.render())
+            yield Result(state=State.OK, summary="Pagetables: %s" % pagetables.render())
 
     # Add additional metrics, provided by Linux.
     if meminfo.get('Mapped'):
@@ -182,18 +189,45 @@ def check_mem_used(params: Mapping, section: Dict[str, int]) -> CheckGenerator:
             ('Shmem', 'Shared', 'mem_lnx_shmem'),
         ):
             value = MemBytes(meminfo.get(key, 0))
-            yield Result(state=state.OK, summary="%s: %s" % (label, value.render()))
+            yield Result(state=State.OK, summary="%s: %s" % (label, value.render()))
             yield Metric(metric, value.bytes)
 
 
 register.check_plugin(
     name="mem_used",
     service_name="Memory",
-    sections=["mem"],
     discovery_function=discover_mem_used,
     check_function=check_mem_used,
     check_default_parameters={
         "levels": (150.0, 200.0),
     },
     check_ruleset_name="memory",
+)
+
+# Different default parameters!
+register.check_plugin(
+    name="fortisandbox_mem_usage",
+    service_name="Memory",
+    discovery_function=discover_mem_used,
+    check_function=check_mem_used,
+    check_default_parameters={"levels": (80.0, 90.0)},
+    check_ruleset_name="memory",
+)
+
+
+def inventory_mem_used(section: memory.SectionMemUsed) -> InventoryResult:
+    yield from (  #
+        Attributes(
+            path=["hardware", "memory"],
+            inventory_attributes={key: value},
+        ) for key, value in (
+            ("total_ram_usable", section.get("MemTotal")),
+            ("total_swap", section.get("SwapTotal")),
+        ) if value is not None  #
+    )
+
+
+register.inventory_plugin(
+    name="mem_used",
+    inventory_function=inventory_mem_used,
 )

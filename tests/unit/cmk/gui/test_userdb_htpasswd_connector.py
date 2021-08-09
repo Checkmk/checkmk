@@ -6,7 +6,7 @@
 
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 from passlib.hash import sha256_crypt  # type: ignore[import]
 
 import cmk.gui.plugins.userdb.htpasswd as htpasswd

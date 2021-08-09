@@ -4,6 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
+# NOTE: Careful when replacing the *-import below with a more specific import. This can cause
+# problems because it might remove variables from the check-context which are necessary for
+# resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
+# it might also remove variables needed for accessing discovery rulesets.
+from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.37954.1.2.7.1.0 RZ1SE-KLIMA-NEU  sensor name
 # .1.3.6.1.4.1.37954.1.2.7.2.0 159              temperature     INTEGER (0..1000)
 # .1.3.6.1.4.1.37954.1.2.7.3.0 474              humidity        INTEGER (0..1000)
@@ -79,7 +91,6 @@ check_info['kentix_amp_sensors'] = {
     'group': 'temperature',
     'snmp_info': [(".1.3.6.1.4.1.37954.1.2", [""])],
     'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.332.11.6"),
-    'includes': ["temperature.include"],
 }
 
 #.
@@ -104,7 +115,6 @@ check_info['kentix_amp_sensors.humidity'] = {
     'service_description': 'Humidity %s',
     'has_perfdata': True,
     'group': 'humidity',
-    'includes': ["humidity.include"],
 }
 
 #.
@@ -117,13 +127,17 @@ check_info['kentix_amp_sensors.humidity'] = {
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-kentix_amp_sensors_smoke_default_levels = (1, 5)
+kentix_amp_sensors_smoke_default_levels = {'levels': (1, 5)}
 
 
 def check_kentix_amp_sensors_smoke(item, params, parsed):
     if item in parsed:
         sensor_smoke = parsed[item]['smoke']
-        warn, crit = params
+
+        if isinstance(params, tuple):
+            warn, crit = params
+        else:
+            warn, crit = params['levels']
 
         if sensor_smoke >= crit:
             status = 2

@@ -1,0 +1,16 @@
+Title: nimble_latency: changed metric unit to percent of total volume
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1602250408
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0i1
+
+The check nimble_latency measures the latency of read and write I/O operations.
+The data is captured as the number of operations within several latency
+ranges (e.g. 1-2 milliseconds, 2-5 milliseconds, etc.). The data was
+reported as a time interval, rather than a count. This has been fixed, so that
+the number of operations within each range is now now shown as a percentage
+of the total number of operations across all the ranges.

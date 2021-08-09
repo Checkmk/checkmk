@@ -12,6 +12,6 @@ description:
  is shown in the long output. If a user wants to accept the diff a
  service rediscovery can be performed.
 
-inventory:
+discovery:
  One service is created for each system if the agent plugin mk_iptables was deployed.
 

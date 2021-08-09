@@ -10,26 +10,32 @@ import gettext
 import subprocess
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
-from testlib import cmk_path
+from tests.testlib import cmk_path
 
 import cmk.utils.paths
+
 import cmk.gui.i18n as i18n
 
 
+@pytest.fixture(scope="session")
+def locale_base_dir():
+    return Path("%s/locale" % cmk_path())
+
+
 @pytest.fixture(autouse=True)
-def locale_paths(tmp_path, monkeypatch):
-    monkeypatch.setattr(cmk.utils.paths, "locale_dir", Path("%s/locale" % cmk_path()))
+def locale_paths(tmp_path, monkeypatch, locale_base_dir):
+    monkeypatch.setattr(cmk.utils.paths, "locale_dir", locale_base_dir)
     monkeypatch.setattr(cmk.utils.paths, "local_locale_dir", tmp_path / "locale")
 
 
-@pytest.fixture(autouse=True)
-def compile_builtin_po_files(locale_paths):
-    builtin_dir = cmk.utils.paths.locale_dir / "de" / "LC_MESSAGES"
+@pytest.fixture(autouse=True, scope="session")
+def compile_builtin_po_files(locale_base_dir):
+    builtin_dir = locale_base_dir / "de" / "LC_MESSAGES"
     po_file = builtin_dir / "multisite.po"
     mo_file = builtin_dir / "multisite.mo"
-    if po_file.exists() and not mo_file.exists():
+    if po_file.exists():
         subprocess.call(['msgfmt', str(po_file), '-o', str(mo_file)])
 
 
@@ -108,7 +114,7 @@ def test_init_language_only_builtin():
     trans = i18n._init_language("de")
     assert isinstance(trans, gettext.GNUTranslations)
     assert trans.info()["language"] == "de"
-    assert trans.info()["project-id-version"] == "Check_MK Multisite translation 0.1"
+    assert trans.info()["project-id-version"] == "Checkmk user interface translation 0.1"
 
     translated = trans.gettext("bla")
     assert isinstance(translated, str)
@@ -166,16 +172,28 @@ def test_get_language_local_alias(local_translation):
 
 def test_get_languages():
     assert i18n.get_languages() == [
+        ("nl", "Dutch (machine-supported translation)"),
         ("", "English"),
+        ("fr", "French (machine-supported translation)"),
         ("de", "German"),
+        ("it", "Italian (machine-supported translation)"),
+        ("ja", "Japanese"),
+        ("pt_PT", "Portuguese (Portugal) (machine-supported translation)"),
         ("ro", "Romanian"),
+        ("es", "Spanish (machine-supported translation)"),
     ]
 
 
 def test_get_languages_new_local_language(local_translation):
     assert i18n.get_languages() == [
+        ("nl", "Dutch (machine-supported translation)"),
         ("", "English"),
+        ("fr", "French (machine-supported translation)"),
+        ("it", "Italian (machine-supported translation)"),
+        ("ja", "Japanese"),
+        ("pt_PT", "Portuguese (Portugal) (machine-supported translation)"),
         ("ro", "Romanian"),
+        ("es", "Spanish (machine-supported translation)"),
         ("xz", "Xz"),
-        ('de', u'\xc4xtended German'),
+        ("de", "Äxtended German"),
     ]

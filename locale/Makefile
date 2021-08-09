@@ -33,7 +33,7 @@ mo:
 # https://www.gnu.org/software/gettext/manual/html_node/xgettext-Invocation.html
 # "Note that using this option will lead to an error if the resulting file would not entirely be in ASCII."
 update-pot:
-	git pull
+	git pull --rebase
 	xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 -o scanned.pot \
 	../web/app/index.wsgi \
 	../livestatus/api/python/livestatus.py \
@@ -43,7 +43,7 @@ update-pot:
 	cat header scanned.pot > ../../$$CHECKMK_LOCALE_DIR/$(MULTISITE_POT) # Add our header and write to Checkmk localization repo
 	rm scanned.pot
 	cd ../../$$CHECKMK_LOCALE_DIR; \
-	git pull; \
+	git pull --rebase; \
 	if [[ $$(git diff | wc -l) -gt 0 ]]; then \
 		git commit $(MULTISITE_POT) -m "Updated $(MULTISITE_POT)"; \
 		git push; \
@@ -55,9 +55,9 @@ update-pot:
 # This is executed in a cronjob on the VM webdeploy. See https://wiki.lan.tribe29.com/link/898#bkmrk-backend.
 update-pos:
 	rm -f $$MSGFMT_OUT
-	git pull
+	git pull --rebase
 	cd ../../$$CHECKMK_LOCALE_DIR; \
-	git pull; \
+	git pull --rebase; \
 	for lang in $(LANGUAGES); do \
 		sed '/^#[.:|]/d' $$lang/multisite.po > ../$$CHECKMK_DIR/locale/$$lang/LC_MESSAGES/multisite.po; \
 		(msgfmt --check-format -o temp.mo ../$$CHECKMK_DIR/locale/$$lang/LC_MESSAGES/multisite.po &>> $$MSGFMT_OUT) || true; \

@@ -5,8 +5,9 @@
 
 #include <cstddef>
 #include <deque>
-#include <memory>
 #include <optional>
+#include <string>
+#include <utility>
 
 #include "Queue.h"
 #include "gtest/gtest.h"
@@ -117,4 +118,36 @@ TEST_F(BoundedQueueTest, DontPushWhenFull) {
     EXPECT_EQ(4, queue.try_pop());
     EXPECT_EQ(5, queue.try_pop());
     EXPECT_EQ(0UL, queue.approx_size());
+}
+
+class MoveOnlyQueueTest : public ::testing::Test {
+public:
+    class MoveOnly {
+    public:
+        explicit MoveOnly(std::string id) : id_{std::move(id)} {};
+        ~MoveOnly() = default;
+        MoveOnly(const MoveOnly&) = delete;
+        MoveOnly& operator=(const MoveOnly&) = delete;
+        MoveOnly(MoveOnly&&) noexcept = default;
+        MoveOnly& operator=(MoveOnly&&) noexcept = default;
+        [[nodiscard]] std::string id() const { return id_; }
+
+    private:
+        std::string id_;
+    };
+
+    Queue<std::deque<MoveOnly>> queue{};
+};
+
+TEST_F(MoveOnlyQueueTest, MoveOnlyTest) {
+    auto strategy = queue_overflow_strategy::dont_push;
+
+    EXPECT_EQ(queue_status::ok, queue.push(MoveOnly{"1st"}, strategy));
+    EXPECT_EQ(queue_status::ok, queue.push(MoveOnly{"2nd"}, strategy));
+
+    auto o1 = queue.try_pop();
+    EXPECT_EQ("1st", o1->id());
+
+    auto o2 = queue.pop();
+    EXPECT_EQ("2nd", o2->id());
 }

@@ -150,7 +150,7 @@ std::optional<typename Queue<S>::value_type> Queue<S>::try_pop() {
     if (q_.empty()) {
         return std::nullopt;
     }
-    value_type elem = q_.front();
+    auto elem = std::move(q_.front());
     q_.pop_front();
     not_full_.notify_one();
     return elem;
@@ -163,7 +163,7 @@ std::optional<typename Queue<S>::value_type> Queue<S>::pop() {
     if (joinable_) {
         return std::nullopt;
     }
-    value_type elem = q_.front();
+    auto elem = std::move(q_.front());
     q_.pop_front();
     not_full_.notify_one();
     return elem;

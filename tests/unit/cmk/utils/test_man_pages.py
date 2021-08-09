@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from typing import Set
 
 import pytest
 
@@ -153,18 +154,25 @@ def test_find_missing_manpages_active(fix_plugin_legacy, all_pages):
         assert plugin_name in all_pages, "Manpage missing: %s" % plugin_name
 
 
-def test_find_missing_manpages_cluster_section(fix_register, all_pages):
-    missing_cluster_description = set()
+def test_cluster_check_functions_match_manpages_cluster_sections(fix_register, all_pages):
+    missing_cluster_description: Set[str] = set()
+    unexpected_cluster_description: Set[str] = set()
+
     for plugin in fix_register.check_plugins.values():
-        if (plugin.cluster_check_function is None or
-                plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell"):
-            continue
         man_page = all_pages[str(plugin.name)]
         assert man_page
-        if "cluster" not in man_page["header"]:
-            missing_cluster_description.add(str(plugin.name))
+        has_cluster_doc = "cluster" in man_page["header"]
+        has_cluster_func = not (plugin.cluster_check_function is None or
+                                plugin.cluster_check_function.__name__
+                                == "cluster_legacy_mode_from_hell")
+        if has_cluster_doc is not has_cluster_func:
+            (
+                missing_cluster_description,
+                unexpected_cluster_description,
+            )[has_cluster_doc].add(str(plugin.name))
 
     assert not missing_cluster_description
+    assert not unexpected_cluster_description
 
 
 def test_no_subtree_and_entries_on_same_level(catalog):

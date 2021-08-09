@@ -21,7 +21,7 @@ import re
 import subprocess
 import time
 from pathlib import Path, PureWindowsPath
-from typing import Any, Dict, List, Optional, Set, Tuple, Callable
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 import cmk.utils
 import cmk.utils.debug
@@ -56,14 +56,8 @@ import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-vio
 import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
 import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.bi import BIManager  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.plugins.dashboard.utils import (  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.dashboard.utils import (
     transform_stats_dashlet,  # pylint: disable=cmk-module-layer-violation
-)
-from cmk.gui.plugins.dashboard.utils import (  # pylint: disable=cmk-module-layer-violation
-    builtin_dashboards, get_all_dashboards, transform_topology_dashlet,
-)
-from cmk.gui.plugins.userdb.utils import (  # pylint: disable=cmk-module-layer-violation
-    load_connection_config, save_connection_config, USER_SCHEME_SERIAL,
 )
 from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.plugins.watolib.utils import (
@@ -72,17 +66,24 @@ from cmk.gui.plugins.watolib.utils import (
 from cmk.gui.sites import is_wato_slave_site  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.userdb import load_users, save_users  # pylint: disable=cmk-module-layer-violation
 from cmk.gui.utils.logged_in import SuperUserContext  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.utils.script_helpers import (  # pylint: disable=cmk-module-layer-violation
-    application_and_request_context, initialize_gui_environment,
-)
-from cmk.gui.watolib.changes import (  # pylint: disable=cmk-module-layer-violation
-    AuditLogStore, ObjectRef, ObjectRefType,
-)
-from cmk.gui.watolib.sites import (  # pylint: disable=cmk-module-layer-violation
-    site_globals_editable, SiteManagementFactory,
-)
 
 import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
+
+from cmk.gui.plugins.dashboard.utils import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    builtin_dashboards, get_all_dashboards, transform_topology_dashlet,
+)
+from cmk.gui.plugins.userdb.utils import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    load_connection_config, save_connection_config, USER_SCHEME_SERIAL,
+)
+from cmk.gui.utils.script_helpers import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    application_and_request_context, initialize_gui_environment,
+)
+from cmk.gui.watolib.changes import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    AuditLogStore, ObjectRef, ObjectRefType,
+)
+from cmk.gui.watolib.sites import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    site_globals_editable, SiteManagementFactory,
+)
 
 # mapping removed check plugins to their replacement:
 REMOVED_CHECK_PLUGIN_MAP = {

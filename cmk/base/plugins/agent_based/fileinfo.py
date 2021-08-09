@@ -4,18 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Any
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import register, Result, State
+from .agent_based_api.v1.type_defs import CheckResult
 from .utils.fileinfo import (
-    parse_fileinfo,
-    discovery_fileinfo,
-    discovery_fileinfo_groups,
     check_fileinfo_data,
     check_fileinfo_groups_data,
+    discovery_fileinfo,
+    discovery_fileinfo_groups,
     Fileinfo,
+    parse_fileinfo,
 )
-from .agent_based_api.v1.type_defs import CheckResult
 
 
 def check_fileinfo(item: str, params: Mapping[str, Any], section: Fileinfo) -> CheckResult:

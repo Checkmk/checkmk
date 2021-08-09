@@ -316,6 +316,7 @@ from cmk.gui.plugins.wato.utils.html_elements import (
     wato_html_footer,
     wato_html_head,
 )
+
 from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility with pre 1.6 plugins # isort: skip
     MainMenu, MenuItem, register_modules, WatoModule,
 )

@@ -95,30 +95,7 @@ from cmk.gui.permissions import (
     permission_section_registry,
     PermissionSection,
 )
-
-# Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import # isort: skip
-    get_icons, get_multisite_icons, IconEntry, IconObjectType, iconpainter_columns, LegacyIconEntry,
-    multisite_icons_and_actions,
-)
 from cmk.gui.plugins.views.icons.utils import Icon, icon_and_action_registry
-from cmk.gui.plugins.views.perfometers import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    perfometers,)
-from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    _parse_url_sorters, ABCDataSource, Cell, cmp_custom_variable, cmp_insensitive_string,
-    cmp_ip_address, cmp_num_split, cmp_service_name_equiv, cmp_simple_number, cmp_simple_string,
-    cmp_string_list, Command, command_registry, CommandExecutor, CommandGroup, CommandSpec,
-    compare_ips, data_source_registry, declare_1to1_sorter, declare_simple_sorter,
-    DerivedColumnsSorter, exporter_registry, format_plugin_output, get_all_views, get_custom_var,
-    get_linked_visual_request_vars, get_perfdata_nth_value, get_permitted_views, get_tag_groups,
-    get_view_infos, group_value, inventory_displayhints, is_stale, join_row, JoinCell, Layout,
-    layout_registry, make_host_breadcrumb, make_linked_visual_url, make_service_breadcrumb,
-    multisite_builtin_views, paint_age, paint_host_list, paint_stalified, Painter, painter_exists,
-    painter_registry, PainterOptions, PainterRegistry, register_command_group,
-    register_legacy_command, register_painter, register_sorter, replace_action_url_macros, row_id,
-    Sorter, sorter_registry, SorterEntry, SorterListEntry, SorterRegistry, SorterSpec,
-    transform_action_url, view_hooks, view_is_enabled, view_title,
-)
 from cmk.gui.plugins.visuals.utils import (
     Filter,
     get_livestatus_filter_headers,
@@ -146,6 +123,29 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.activate_changes import get_pending_changes_info
+
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.views.icons import (  # noqa: F401  # pylint: disable=unused-import # isort: skip
+    get_icons, get_multisite_icons, IconEntry, IconObjectType, iconpainter_columns, LegacyIconEntry,
+    multisite_icons_and_actions,
+)
+from cmk.gui.plugins.views.perfometers import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    perfometers,)
+from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    _parse_url_sorters, ABCDataSource, Cell, cmp_custom_variable, cmp_insensitive_string,
+    cmp_ip_address, cmp_num_split, cmp_service_name_equiv, cmp_simple_number, cmp_simple_string,
+    cmp_string_list, Command, command_registry, CommandExecutor, CommandGroup, CommandSpec,
+    compare_ips, data_source_registry, declare_1to1_sorter, declare_simple_sorter,
+    DerivedColumnsSorter, exporter_registry, format_plugin_output, get_all_views, get_custom_var,
+    get_linked_visual_request_vars, get_perfdata_nth_value, get_permitted_views, get_tag_groups,
+    get_view_infos, group_value, inventory_displayhints, is_stale, join_row, JoinCell, Layout,
+    layout_registry, make_host_breadcrumb, make_linked_visual_url, make_service_breadcrumb,
+    multisite_builtin_views, paint_age, paint_host_list, paint_stalified, Painter, painter_exists,
+    painter_registry, PainterOptions, PainterRegistry, register_command_group,
+    register_legacy_command, register_painter, register_sorter, replace_action_url_macros, row_id,
+    Sorter, sorter_registry, SorterEntry, SorterListEntry, SorterRegistry, SorterSpec,
+    transform_action_url, view_hooks, view_is_enabled, view_title,
+)
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.views  # pylint: disable=no-name-in-module

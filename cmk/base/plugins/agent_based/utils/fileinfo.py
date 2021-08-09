@@ -4,28 +4,41 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import fnmatch
 import re
 import time
-import fnmatch
-from typing import (Dict, List, Tuple, Set, Union, Match, Any, NamedTuple, Optional, Mapping,
-                    Iterable, Callable)
 from enum import Enum
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Match,
+    NamedTuple,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
-from .interfaces import saveint
 import cmk.base.plugins.agent_based.utils.eval_regex as eval_regex
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    check_levels,
+    regex,
+    render,
+    Result,
+    Service,
+    State,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     CheckResult,
     DiscoveryResult,
     StringTable,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    Service,
-    Result,
-    State,
-    check_levels,
-    regex,
-    render,
-)
+
+from .interfaces import saveint
 
 
 class FileinfoItem(NamedTuple):

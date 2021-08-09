@@ -7,9 +7,11 @@
 from pathlib import Path
 
 from livestatus import SiteId
+
 from cmk.utils.i18n import _
-from cmk.post_rename_site.main import logger
 from cmk.utils.log.console import warning
+
+from cmk.post_rename_site.main import logger
 from cmk.post_rename_site.registry import rename_action_registry, RenameAction
 
 

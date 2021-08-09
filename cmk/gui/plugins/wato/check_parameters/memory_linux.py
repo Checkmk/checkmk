@@ -10,10 +10,11 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import CascadingDropdown, Dictionary, Transform
+
 from cmk.gui.plugins.wato.check_parameters.memory_arbor import (  # PredictiveMemoryChoice, # not yet implemented # isort: skip
     DualMemoryLevels, FreePercentage, FreeSize, UsedPercentage, UsedSize,
 )
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, Transform
 
 
 def UpperMemoryLevels(what, default_percents=None, of_what=None):

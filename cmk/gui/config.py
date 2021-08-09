@@ -29,12 +29,12 @@ import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.globals import config, local
 from cmk.gui.i18n import _
+from cmk.gui.plugins.config.base import CREConfig
 
 # Kept for compatibility with pre 1.6 GUI plugins
 from cmk.gui.permissions import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     declare_permission, declare_permission_section,
 )
-from cmk.gui.plugins.config.base import CREConfig
 
 if not cmk_version.is_raw_edition():
     from cmk.gui.cee.plugins.config.cee import CEEConfig  # pylint: disable=no-name-in-module

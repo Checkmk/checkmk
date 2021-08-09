@@ -7,6 +7,7 @@
 from typing import Callable
 
 from livestatus import SiteId
+
 from cmk.utils.plugin_registry import Registry
 
 RenameActionHandler = Callable[[SiteId, SiteId], None]

@@ -4,25 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
-from typing import List
 import argparse
+import logging
 from itertools import chain
+from typing import List
 
 from livestatus import SiteId
-import cmk.utils.site
-import cmk.utils.log as log
-from cmk.utils.log import VERBOSE
+
 import cmk.utils.debug
+import cmk.utils.log as log
 import cmk.utils.plugin_registry
-from cmk.utils.version import is_raw_edition
+import cmk.utils.site
+from cmk.utils.log import VERBOSE
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
+from cmk.utils.version import is_raw_edition
+
+from cmk.gui.utils.logged_in import SuperUserContext
 
 # This special script needs persistence and conversion code from different places of Checkmk. We may
 # centralize the conversion and move the persistence to a specific layer in the future, but for the
 # the moment we need to deal with it.
 from cmk.gui.utils.script_helpers import application_and_request_context, initialize_gui_environment
-from cmk.gui.utils.logged_in import SuperUserContext
 
 from .registry import rename_action_registry
 

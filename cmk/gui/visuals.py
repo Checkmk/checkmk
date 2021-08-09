@@ -59,12 +59,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import page_registry
 from cmk.gui.permissions import declare_permission, permission_registry
-
-# Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    Filter, filter_registry, FilterTime, FilterTristate, get_livestatus_filter_headers,
-    get_only_sites_from_context, visual_info_registry, visual_type_registry,
-)
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import (
     FilterHTTPVariables,
@@ -106,6 +100,12 @@ from cmk.gui.valuespec import (
     TextInput,
     Transform,
     ValueSpec,
+)
+
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
+    Filter, filter_registry, FilterTime, FilterTristate, get_livestatus_filter_headers,
+    get_only_sites_from_context, visual_info_registry, visual_type_registry,
 )
 
 if not cmk_version.is_raw_edition():

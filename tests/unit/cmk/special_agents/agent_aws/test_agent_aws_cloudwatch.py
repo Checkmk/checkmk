@@ -9,7 +9,6 @@
 from typing import List, Optional, Tuple
 
 import pytest
-from .agent_aws_fake_clients import FakeCloudwatchClient  # type: ignore[import] # pylint: disable=import-error # isort: skip
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
@@ -17,6 +16,8 @@ from cmk.special_agents.agent_aws import (
     CloudwatchAlarmsLimits,
     ResultDistributor,
 )
+
+from .agent_aws_fake_clients import FakeCloudwatchClient  # type: ignore[import] # pylint: disable=import-error # isort: skip
 
 
 @pytest.fixture()

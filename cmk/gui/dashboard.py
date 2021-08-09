@@ -96,6 +96,10 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.plugins.dashboard  # pylint: disable=no-name-in-module
 
 from cmk.gui.node_visualization import get_topology_view_and_filters
+from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
+from cmk.gui.plugins.views.utils import data_source_registry
+from cmk.gui.utils.ntop import is_ntop_configured
+from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 
 # Can be used by plugins
 from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
@@ -105,10 +109,6 @@ from cmk.gui.plugins.dashboard.utils import (  # noqa: F401 # pylint: disable=un
     DashletRefreshAction, DashletRefreshInterval, DashletSize, DashletType, DashletTypeName,
     get_all_dashboards, get_permitted_dashboards, GROW, MAX, save_all_dashboards,
 )
-from cmk.gui.plugins.metrics.html_render import default_dashlet_graph_render_options
-from cmk.gui.plugins.views.utils import data_source_registry
-from cmk.gui.utils.ntop import is_ntop_configured
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 
 loaded_with_language: Union[None, bool, str] = False
 

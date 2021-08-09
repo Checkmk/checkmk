@@ -22,10 +22,10 @@ from cmk.gui.plugins.views.utils import (  # noqa: F401 # pylint: disable=unused
     Sorter, sorter_registry, transform_action_url, url_to_visual, view_is_enabled, view_title,
     VisualLinkSpec,
 )
-from cmk.gui.type_defs import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.type_defs import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     Perfdata, PerfometerSpec, TranslatedMetrics,
 )
-from cmk.gui.view_utils import (  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.view_utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     get_labels, render_labels, render_tag_groups,
 )
 

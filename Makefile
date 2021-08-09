@@ -482,7 +482,7 @@ config.status: $(CONFIG_DEPS)
 	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$RRD_OPT" "$$RE2_OPT" ; \
 	fi
 
-protobuf-files: .venv
+protobuf-files:
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise protobuf-files
 endif

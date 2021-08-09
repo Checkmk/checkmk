@@ -89,10 +89,3 @@ class Service:
             self.parameters,
             self.service_labels.to_dict(),
         )
-
-
-# Management board checks
-# These are only used in the legacy check_api.py and checking._legacy_mode.
-MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST
-HOST_PRECEDENCE = "host_precedence"  # Check is only executed for mgmt board (e.g. Managegment Uptime)
-HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. interfaces)

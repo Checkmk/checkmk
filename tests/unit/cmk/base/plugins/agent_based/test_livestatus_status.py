@@ -442,34 +442,3 @@ def test_check():
         ))
 
     assert yielded_results == _RESULTS
-
-
-def test_cluster_check(monkeypatch):
-
-    monkeypatch.setattr(
-        livestatus_status,
-        "get_value_store",
-        lambda: {
-            "host_checks": [1, 2],
-            "service_checks": [1, 2],
-            "forks": [1, 2],
-            "connections": [1, 2],
-            "requests": [1, 2],
-            "log_messages": [1, 2],
-        },
-    )
-
-    monkeypatch.setattr(
-        livestatus_status.time,
-        "time",
-        lambda: 581785200,
-    )
-    yielded_results = list(
-        livestatus_status.cluster_check_livestatus_status(
-            "heute",
-            Parameters(livestatus_status.livestatus_status_default_levels),
-            {"node1": PARSED_STATUS},
-            {"node1": PARSED_SSL},
-        ))
-
-    assert yielded_results == _RESULTS

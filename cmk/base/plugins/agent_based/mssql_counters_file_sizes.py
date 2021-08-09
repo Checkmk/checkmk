@@ -8,13 +8,7 @@ from typing import Any, Mapping
 
 from .agent_based_api.v1 import check_levels, Metric, register, render
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.mssql_counters import (
-    accumulate_node_results,
-    discovery_mssql_counters_generic,
-    get_int,
-    get_item,
-    Section,
-)
+from .utils.mssql_counters import discovery_mssql_counters_generic, get_int, get_item, Section
 
 
 def discovery_mssql_counters_file_sizes(section: Section) -> DiscoveryResult:
@@ -104,31 +98,6 @@ def check_mssql_counters_file_sizes(
     yield from _check_mssql_file_sizes("", item, params, section)
 
 
-def cluster_check_mssql_counters_file_sizes(
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Section],
-) -> CheckResult:
-    """
-    >>> for result in cluster_check_mssql_counters_file_sizes(
-    ...     "MSSQL_VEEAMSQL2012 tempdb cache_hit_ratio", {}, {"node1": {
-    ...       ('MSSQL_VEEAMSQL2012', 'tempdb'): {'data_file(s)_size_(kb)': 164928, 'log_file(s)_size_(kb)': 13624, 'log_file(s)_used_size_(kb)': 8768, 'percent_log_used': 64, 'active_transactions': 0}
-    ... }}):
-    ...   print(result)
-    Result(state=<State.OK: 0>, summary='[node1] Data files: 161 MiB')
-    Metric('data_files', 168886272.0, boundaries=(0.0, None))
-    Result(state=<State.OK: 0>, summary='[node1] Log files total: 13.3 MiB')
-    Metric('log_files', 13950976.0, boundaries=(0.0, None))
-    Result(state=<State.OK: 0>, summary='Log files used: 8.56 MiB')
-    Metric('log_files_used', 8978432.0, boundaries=(0.0, None))
-    """
-    yield from accumulate_node_results(
-        node_check_function=lambda node_name, node_section: _check_mssql_file_sizes(
-            "[%s] " % node_name, item, params, node_section),
-        section=section,
-    )
-
-
 register.check_plugin(
     name="mssql_counters_file_sizes",
     sections=['mssql_counters'],
@@ -137,5 +106,4 @@ register.check_plugin(
     check_default_parameters={},
     check_ruleset_name="mssql_file_sizes",
     check_function=check_mssql_counters_file_sizes,
-    cluster_check_function=cluster_check_mssql_counters_file_sizes,
 )

@@ -8,13 +8,7 @@ from typing import Any, Mapping, MutableMapping
 
 from .agent_based_api.v1 import check_levels, get_value_store, IgnoreResults, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.mssql_counters import (
-    accumulate_node_results,
-    get_int,
-    get_item,
-    get_rate_or_none,
-    Section,
-)
+from .utils.mssql_counters import get_int, get_item, get_rate_or_none, Section
 
 
 def discovery_mssql_counters_sqlstats(section: Section) -> DiscoveryResult:
@@ -92,39 +86,6 @@ def check_mssql_counters_sqlstats(
     yield from _check_base(get_value_store(), time.time(), item, params, section)
 
 
-def _cluster_check_base(
-    value_store: MutableMapping[str, Any],
-    time_point: float,
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Section],
-) -> CheckResult:
-    """
-    >>> vs = {}
-    >>> for i in range(2):
-    ...   for result in _cluster_check_base(vs, 1597839904 + i, "MSSQL_VEEAMSQL2012:SQL_Statistics None sql_compilations/sec", {}, {"node1": {
-    ...       ('MSSQL_VEEAMSQL2012:SQL_Statistics', 'None'): { 'batch_requests/sec': 22476651, 'forced_parameterizations/sec': 0, 'auto-param_attempts/sec': 1133, 'failed_auto-params/sec': 1027, 'safe_auto-params/sec': 8, 'unsafe_auto-params/sec': 98, 'sql_compilations/sec': 2189403 + i, 'sql_re-compilations/sec': 272134, 'sql_attention_rate': 199, 'guided_plan_executions/sec': 0, 'misguided_plan_executions/sec': 0},
-    ...   }}):
-    ...     print(result)
-    Cannot calculate rates yet
-    Result(state=<State.OK: 0>, summary='[node1] 1.0/s')
-    Metric('sql_compilations_per_second', 1.0, boundaries=(0.0, None))
-    """
-    yield from accumulate_node_results(
-        node_check_function=lambda node_name, node_section: _check_common(
-            value_store, time_point, node_name, item, params, node_section),
-        section=section,
-    )
-
-
-def cluster_check_mssql_counters_sqlstats(
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Section],
-) -> CheckResult:
-    yield from _cluster_check_base(get_value_store(), time.time(), item, params, section)
-
-
 register.check_plugin(
     name="mssql_counters_sqlstats",
     sections=['mssql_counters'],
@@ -133,5 +94,4 @@ register.check_plugin(
     check_default_parameters={},
     check_ruleset_name="mssql_stats",
     check_function=check_mssql_counters_sqlstats,
-    cluster_check_function=cluster_check_mssql_counters_sqlstats,
 )

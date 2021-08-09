@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
-
 import pytest
 
 import cmk.base.plugins.agent_based.local as local
@@ -318,85 +316,6 @@ def test_compute_state():
                                              summary="Value 2: 20.00 (warn/crit at 20.00/50.00)"),
                                       Metric("value2", 20, levels=(20, 50), boundaries=(0, 100)),
                                   ]
-
-
-def test_cluster():
-    section: Dict[str, local.LocalSection] = {
-        "node0": local.LocalSection(errors=[],
-                                    data={
-                                        "item": local.LocalResult(
-                                            cache_info=None,
-                                            item="Clustered service",
-                                            state=State.OK,
-                                            apply_levels=False,
-                                            text="Service is OK",
-                                            perfdata=[],
-                                        )
-                                    }),
-        "node1": local.LocalSection(errors=[],
-                                    data={
-                                        "item": local.LocalResult(
-                                            cache_info=None,
-                                            item="Clustered service",
-                                            state=State.WARN,
-                                            apply_levels=False,
-                                            text="Service is WARN",
-                                            perfdata=[],
-                                        )
-                                    }),
-        "node2": local.LocalSection(errors=[],
-                                    data={
-                                        "item": local.LocalResult(
-                                            cache_info=None,
-                                            item="Clustered service",
-                                            state=State.CRIT,
-                                            apply_levels=False,
-                                            text="Service is CRIT",
-                                            perfdata=[],
-                                        )
-                                    }),
-    }
-
-    worst = local.cluster_check_local("item", {}, section)
-    best = local.cluster_check_local("item", {"outcome_on_cluster": "best"}, section)
-
-    assert list(worst) == [
-        Result(state=State.CRIT, notice="[node2]: Service is CRIT"),
-        Result(state=State.OK, notice="[node0]: Service is OK"),
-        Result(state=State.WARN, notice="[node1]: Service is WARN"),
-    ]
-    assert list(best) == [
-        Result(state=State.OK, summary="[node0]: Service is OK"),
-        Result(state=State.OK, notice="[node1]: Service is WARN(!)"),
-        Result(state=State.OK, notice="[node2]: Service is CRIT(!!)"),
-    ]
-
-
-def test_cluster_missing_item():
-    section: Dict[str, local.LocalSection] = {
-        "node0": local.LocalSection(errors=[],
-                                    data={
-                                        "item": local.LocalResult(
-                                            cache_info=None,
-                                            item="Clustered service",
-                                            state=State.OK,
-                                            apply_levels=False,
-                                            text="Service is OK",
-                                            perfdata=[],
-                                        )
-                                    }),
-        "node1": local.LocalSection(errors=[], data={}),
-    }
-
-    worst = local.cluster_check_local("item", {}, section)
-    best = local.cluster_check_local("item", {"outcome_on_cluster": "best"}, section)
-
-    assert list(worst) == [
-        Result(state=State.OK, summary="[node0]: Service is OK"),
-    ]
-    assert list(best) == [
-        Result(state=State.OK, summary="[node0]: Service is OK"),
-    ]
 
 
 if __name__ == "__main__":

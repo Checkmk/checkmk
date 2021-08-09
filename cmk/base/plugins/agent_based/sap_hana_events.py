@@ -65,5 +65,4 @@ register.check_plugin(
     service_name="SAP HANA Events %s",
     discovery_function=discovery_sap_hana_events,
     check_function=check_sap_hana_events,
-    cluster_check_function=sap_hana.get_cluster_check(check_sap_hana_events),
 )

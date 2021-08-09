@@ -63,5 +63,4 @@ register.check_plugin(
     check_function=check_sap_hana_memrate,
     check_ruleset_name="sap_hana_memory",
     check_default_parameters={"levels": ("perc_used", (70.0, 80.0))},
-    cluster_check_function=sap_hana.get_cluster_check_with_params(check_sap_hana_memrate),
 )

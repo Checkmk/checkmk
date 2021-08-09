@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Infoblox services and node services
 """
-from typing import Dict, List, Mapping, Tuple
+from typing import Dict, List, Tuple
 
 from .agent_based_api.v1 import any_of, contains, register, Result, Service, SNMPTree, startswith
 from .agent_based_api.v1 import State as state
@@ -143,38 +143,9 @@ def check_infoblox_services(item: str, section: Section) -> CheckResult:
     ...     print(result)
     Result(state=<State.OK: 0>, summary='Status: working (14% - System memory usage is OK.)')
     """
-    if not item in section:
+    if item not in section:
         return
     status, description = section[item]
-    yield Result(
-        state=STATE[status],
-        summary="Status: %s%s" % (status, description and " (%s)" % description),
-    )
-
-
-def cluster_check_infoblox_services(item: str, section: Mapping[str, Section]) -> CheckResult:
-    """
-    >>> for result in cluster_check_infoblox_services("memory", {
-    ...     "node1": {
-    ...         'memory': ('warning', '54% - System memory usage is LOW.'),
-    ...         'replication': ('working', 'Online'),
-    ...     }, "node2": {
-    ...         'memory': ('working', '14% - System memory usage is OK.'),
-    ...         'replication': ('working', 'Online'),
-    ...     }, "node3": {
-    ...         'memory': ('failed', '74% - System memory usage is CRIT.'),
-    ...         'replication': ('working', 'Online'),
-    ... }}):
-    ...     print(result)
-    Result(state=<State.OK: 0>, summary='Status: working (14% - System memory usage is OK.)')
-    """
-    try:
-        status, description = min(
-            (node_section[item] for node_section in section.values() if item in node_section),
-            key=lambda x: STATE[x[0]].value)
-    except ValueError:
-        # no node with given item found
-        return
     yield Result(
         state=STATE[status],
         summary="Status: %s%s" % (status, description and " (%s)" % description),
@@ -201,7 +172,6 @@ register.check_plugin(
     service_name="Service %s",
     discovery_function=discovery_infoblox_services,
     check_function=check_infoblox_services,
-    cluster_check_function=cluster_check_infoblox_services,
 )
 
 register.snmp_section(
@@ -224,5 +194,4 @@ register.check_plugin(
     service_name="Node service %s",
     discovery_function=discovery_infoblox_services,
     check_function=check_infoblox_services,
-    cluster_check_function=cluster_check_infoblox_services,
 )

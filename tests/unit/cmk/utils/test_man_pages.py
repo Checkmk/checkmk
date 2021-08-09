@@ -162,9 +162,7 @@ def test_cluster_check_functions_match_manpages_cluster_sections(fix_register, a
         man_page = all_pages[str(plugin.name)]
         assert man_page
         has_cluster_doc = "cluster" in man_page["header"]
-        has_cluster_func = not (plugin.cluster_check_function is None or
-                                plugin.cluster_check_function.__name__
-                                == "cluster_legacy_mode_from_hell")
+        has_cluster_func = plugin.cluster_check_function is not None
         if has_cluster_doc is not has_cluster_func:
             (
                 missing_cluster_description,

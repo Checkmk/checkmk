@@ -52,10 +52,3 @@ discovery:
 
 item:
  A string-combination of servername and port, e.g. {127.0.0.1:5000}.
-
-cluster:
- On a cluster we aggregate over all node results -- but we
- expect to only get data from the active node.
- Note that the plugin will not warn you if more than one
- node sends data.
-

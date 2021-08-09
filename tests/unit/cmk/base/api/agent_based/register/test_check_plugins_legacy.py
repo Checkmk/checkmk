@@ -18,8 +18,7 @@ from cmk.base.check_api import Service as OldService
 
 
 def dummy_generator(section):  # pylint: disable=unused-argument
-    return
-    yield  # pylint: disable=unreachable
+    yield from ()
 
 
 MINIMAL_CHECK_INFO = {
@@ -125,8 +124,7 @@ def test_create_check_plugin_from_legacy_wo_params():
     assert plugin.check_function.__name__ == 'check_migration_wrapper'
     assert plugin.check_default_parameters == {}
     assert plugin.check_ruleset_name is None
-    assert (plugin.cluster_check_function and
-            plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell")
+    assert plugin.cluster_check_function is None
 
 
 def test_create_check_plugin_from_legacy_with_params():
@@ -159,8 +157,7 @@ def test_create_check_plugin_from_legacy_with_params():
         "levels_lower": (1, 2),
     }
     assert plugin.check_ruleset_name == RuleSetName("norris_rule")
-    assert (plugin.cluster_check_function and
-            plugin.cluster_check_function.__name__ == "cluster_legacy_mode_from_hell")
+    assert plugin.cluster_check_function is None
 
 
 def test_get_default_params_clean_case():

@@ -6,7 +6,7 @@
 
 from typing import Any, Mapping
 
-from .agent_based_api.v1 import check_levels, register, render, Result, Service, State
+from .agent_based_api.v1 import check_levels, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.mssql_counters import Counters, Section
 
@@ -71,50 +71,12 @@ def check_mssql_counters_page_life_expectancy(
     )
 
 
-def _get_node_results(
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Section],
-) -> CheckResult:
-    yield from (
-        result_set for node_section in section.values()
-        for result_set in check_mssql_counters_page_life_expectancy(item, params, node_section))
-
-
-def cluster_check_mssql_counters_page_life_expectancy(
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Section],
-) -> CheckResult:
-    """
-    Hosts are clustered because page life expectancy services may switch back and forth between different nodes.
-    This means the service only exists on one node at a time. This is why the metric is not aggregated or summarised, but shown as is.
-
-    >>> list(cluster_check_mssql_counters_page_life_expectancy(
-    ...   "MSSQL_VEEAMSQL2012:Buffer_Manager", {'mssql_min_page_life_expectancy': (350, 300)}, {
-    ...     "node0": {
-    ...     ('MSSQL_VEEAMSQL2012:Memory_Broker_Clerks', 'Buffer_Pool'): {'memory_broker_clerk_size': 180475, 'simulation_benefit': 0},
-    ...     ('MSSQL_VEEAMSQL2012:Buffer_Manager', 'None'): {'buffer_cache_hit_ratio': 3090, 'buffer_cache_hit_ratio_base': 3090, 'page_life_expectancy': 370},
-    ...    }
-    ... }))
-    [Result(state=<State.OK: 0>, summary='6 minutes 10 seconds'), Metric('page_life_expectancy', 370.0)]
-    """
-    node_results = iter(_get_node_results(item, params, section))
-    try:
-        yield next(node_results)
-    except StopIteration:
-        yield Result(state=State.UNKNOWN, summary='Item not found in monitoring data')
-    else:
-        yield from node_results
-
-
 register.check_plugin(
     name="mssql_counters_page_life_expectancy",
     sections=['mssql_counters'],
     service_name="MSSQL %s",
     discovery_function=discover_mssql_counters_page_life_expectancy,
     check_function=check_mssql_counters_page_life_expectancy,
-    cluster_check_function=cluster_check_mssql_counters_page_life_expectancy,
     check_ruleset_name='mssql_counters_page_life_expectancy',
     check_default_parameters={
         'mssql_min_page_life_expectancy': (350, 300),  # 300 sec is the min defined by Microsoft

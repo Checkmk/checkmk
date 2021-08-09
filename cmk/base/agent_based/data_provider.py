@@ -83,14 +83,6 @@ class SectionsParser:
         return "%s(host_sections=%r)" % (type(self).__name__, self._host_sections)
 
     @property
-    def raw_data(self):  # This is needed for the legacy mode from hell :-(. Remove ASAP
-        return self._host_sections
-
-    @property
-    def sections(self) -> Iterable[SectionName]:  # TODO: see if we really need this in the long run
-        return self._host_sections.sections.keys()
-
-    @property
     def parsing_errors(self) -> Sequence[str]:
         return self._parsing_errors
 
@@ -195,7 +187,7 @@ class ParsedSectionsResolver:
             if (result := self.resolve(parser, psn)) is not None)
 
 
-class ParsedSectionsBroker(Mapping[HostKey, Tuple[ParsedSectionsResolver, SectionsParser]]):
+class ParsedSectionsBroker:
     """Object for aggregating, parsing and disributing the sections
 
     An instance of this class allocates all raw sections of a given host or cluster and
@@ -209,16 +201,6 @@ class ParsedSectionsBroker(Mapping[HostKey, Tuple[ParsedSectionsResolver, Sectio
     ) -> None:
         super().__init__()
         self._providers: Final = providers
-
-    # TODO: see if we need the mapping interface once .checking._legacy_mode is gone
-    def __len__(self) -> int:
-        return len(self._providers)
-
-    def __iter__(self) -> Iterator[HostKey]:
-        return self._providers.__iter__()
-
-    def __getitem__(self, key: HostKey) -> Tuple[ParsedSectionsResolver, SectionsParser]:
-        return self._providers.__getitem__(key)
 
     def get_cache_info(
         self,

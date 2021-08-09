@@ -33,11 +33,6 @@ def check_f5_bigip_vcmpguests(section: Section) -> CheckResult:
         yield Result(state=state.OK, summary="Guest [%s] is %s" % (guest, status))
 
 
-def cluster_check_f5_bigip_vcmpguests(section: Mapping[str, Section]) -> CheckResult:
-    for gueststates in section.values():
-        yield from check_f5_bigip_vcmpguests(gueststates)
-
-
 register.snmp_section(
     name="f5_bigip_vcmpguests",
     detect=all_of(F5_BIGIP, VERSION_V11_2_PLUS),
@@ -57,5 +52,4 @@ register.check_plugin(
     service_name="BIG-IP vCMP Guests",
     discovery_function=discovery_f5_bigip_vcmpguests,
     check_function=check_f5_bigip_vcmpguests,
-    cluster_check_function=cluster_check_f5_bigip_vcmpguests,
 )

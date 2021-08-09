@@ -10,7 +10,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.f5_bigip_vcmpguests import (
     check_f5_bigip_vcmpguests,
-    cluster_check_f5_bigip_vcmpguests,
     parse_f5_bigip_vcmpguests,
 )
 
@@ -40,20 +39,3 @@ def test_parse_f5_bigip_vcmpguests(string_table, expected_parsed_data):
 ])
 def test_check_f5_bigip_vcmpguests(section, result):
     assert list(check_f5_bigip_vcmpguests(section)) == result
-
-
-@pytest.mark.parametrize("section,result", [
-    (({
-        "node1": {
-            'easl2001': 'active',
-            'pasl2001': 'active',
-            'tasl2001': 'active'
-        }
-    }), [
-        Result(state=state.OK, summary="Guest [easl2001] is active"),
-        Result(state=state.OK, summary="Guest [pasl2001] is active"),
-        Result(state=state.OK, summary="Guest [tasl2001] is active"),
-    ]),
-])
-def test_cluster_check_f5_bigip_vcmpguests(section, result):
-    assert list(cluster_check_f5_bigip_vcmpguests(section)) == result

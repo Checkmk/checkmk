@@ -6,7 +6,7 @@
 
 # pylint: disable=protected-access
 
-from typing import Callable, Iterable, List, Mapping, Optional, Tuple
+from typing import Callable, Iterable, Mapping
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -23,13 +23,11 @@ from cmk.utils.type_defs import (
 from cmk.core_helpers.type_defs import AgentRawDataSection
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.agent_based.checking._legacy_mode import _MultiHostSections
 from cmk.base.agent_based.data_provider import (
     ParsedSectionsBroker,
     ParsedSectionsResolver,
     SectionsParser,
 )
-from cmk.base.check_utils import HOST_ONLY, HOST_PRECEDENCE, MGMT_ONLY
 from cmk.base.sources.agent import AgentHostSections
 
 
@@ -153,93 +151,3 @@ def test_parse_sections_superseded(monkeypatch: MonkeyPatch) -> None:
     assert ParsedSectionsResolver(
         section_plugins=(SECTION_ONE, SECTION_THREE, SECTION_FOUR),).resolve(
             _get_parser(), ParsedSectionName("parsed")) is None
-
-
-@pytest.mark.parametrize(
-    "hostname,host_entries,cluster_node_keys,expected_result",
-    [
-        # No clusters
-        (
-            HostName("heute"),
-            [
-                (HostName('heute'), NODE_1),
-            ],
-            None,
-            NODE_1,
-        ),
-        # Clusters: host_of_clustered_service returns cluster name. That means that
-        # the service is assigned to the cluster
-        (
-            HostName("cluster"),
-            [
-                (HostName('node1'), NODE_1),
-                (HostName('node2'), NODE_2),
-            ],
-            [
-                HostKey(HostName("node1"), HostAddress("127.0.0.1"), SourceType.HOST),
-                HostKey(HostName("node2"), HostAddress("127.0.0.1"), SourceType.HOST),
-            ],
-            NODE_1 + NODE_2,
-        ),
-        # host_of_clustered_service returns either the cluster or node name.
-        # That means that the service is assigned to the cluster resp. not to the cluster
-        (
-            HostName("cluster"),
-            [
-                (HostName('node1'), NODE_1),
-                (HostName('node2'), NODE_2),
-            ],
-            [
-                HostKey(HostName("node2"), HostAddress("127.0.0.1"), SourceType.HOST),
-            ],
-            NODE_2,
-        ),
-    ])
-def test_get_section_content(hostname: HostName, host_entries: List[Tuple[HostName,
-                                                                          AgentRawDataSection]],
-                             cluster_node_keys: Optional[List[HostKey]],
-                             expected_result: AgentRawDataSection) -> None:
-
-    parsed_sections_broker = ParsedSectionsBroker({
-        HostKey(nodename, "127.0.0.1", SourceType.HOST): (
-            ParsedSectionsResolver(
-                # NOTE: this tests the legacy functionality. The "proper" ParsedSectionsBroker
-                # methods are bypassed, so these will not matter at all:
-                section_plugins=[],),
-            SectionsParser(host_sections=AgentHostSections(
-                sections={SectionName("section_plugin_name"): node_section_content})),
-        ) for nodename, node_section_content in host_entries
-    })
-
-    mhs = _MultiHostSections(parsed_sections_broker)
-
-    section_content = mhs.get_section_content(
-        HostKey(hostname, "127.0.0.1", SourceType.HOST),
-        HOST_ONLY,
-        "section_plugin_name",
-        False,
-        cluster_node_keys=cluster_node_keys,
-        check_legacy_info={},  # only for parse_function lookup, not needed in this test
-    )
-    assert expected_result == section_content
-
-    section_content = mhs.get_section_content(
-        HostKey(hostname, "127.0.0.1", SourceType.HOST),
-        HOST_PRECEDENCE,
-        "section_plugin_name",
-        False,
-        cluster_node_keys=cluster_node_keys,
-        check_legacy_info={},  # only for parse_function lookup, not needed in this test
-    )
-    assert expected_result == section_content
-
-    section_content = mhs.get_section_content(
-        HostKey(hostname, "127.0.0.1", SourceType.MANAGEMENT),
-        MGMT_ONLY,
-        "section_plugin_name",
-        False,
-        cluster_node_keys=None if cluster_node_keys is None else
-        [HostKey(hn, ip, SourceType.MANAGEMENT) for (hn, ip, _st) in cluster_node_keys],
-        check_legacy_info={},  # only for parse_function lookup, not needed in this test
-    )
-    assert section_content is None

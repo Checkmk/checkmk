@@ -44,5 +44,4 @@ register.check_plugin(
     service_name="SAP HANA Database Status %s",
     discovery_function=discovery_sap_hana_db_status,
     check_function=check_sap_hana_db_status,
-    cluster_check_function=sap_hana.get_cluster_check(check_sap_hana_db_status),
 )

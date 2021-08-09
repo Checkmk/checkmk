@@ -17,7 +17,6 @@ from .agent_based_api.v1 import (
     State,
     type_defs,
 )
-from .agent_based_api.v1.clusterize import make_node_notice_results
 
 # <<<job>>>
 # ==> asd ASD <==
@@ -275,43 +274,6 @@ _STATE_TO_STR = {
     State.UNKNOWN: 'UNKNOWN',
 }
 
-
-def cluster_check_job(
-    item: str,
-    params: Mapping[str, Any],
-    section: Dict[str, Section],
-) -> type_defs.CheckResult:
-    """
-    This check used to simply yield all metrics from all nodes, which is useless, since the user
-    cannot interpret these numbers. For now, we do not yield any metrics until a better solution is
-    found.
-    """
-
-    states = []
-    best_outcome = params.get("outcome_on_cluster") == "best"
-
-    for node, node_section in section.items():
-        node_result = list(check_job(item, params, node_section))
-        node_states = [r.state for r in node_result if isinstance(r, Result)]
-        if node_states:
-            states.append(State.worst(*node_states))
-        yield from make_node_notice_results(node, node_result, force_ok=best_outcome)
-
-    if not states:
-        return
-
-    summary = []
-    for stat, state_name in _STATE_TO_STR.items():
-        count = states.count(stat)
-        nodes = 'node' if count == 1 else 'nodes'
-        summary.append(f'{count} {nodes} in state {state_name}')
-
-    if best_outcome:
-        yield Result(state=State.best(*states), summary=', '.join(summary))
-    else:
-        yield Result(state=State.worst(*states), summary=', '.join(summary))
-
-
 register.check_plugin(
     name='job',
     service_name='Job %s',
@@ -319,5 +281,4 @@ register.check_plugin(
     check_default_parameters={},
     check_ruleset_name="job",
     check_function=check_job,
-    cluster_check_function=cluster_check_job,
 )

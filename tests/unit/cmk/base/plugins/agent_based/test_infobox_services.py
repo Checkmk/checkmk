@@ -10,7 +10,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.infoblox_services import (
     check_infoblox_services,
-    cluster_check_infoblox_services,
     discovery_infoblox_services,
     parse_infoblox_services,
 )
@@ -108,12 +107,3 @@ def test_discovery_infoblox_services(section, result):
 ])
 def test_check_infoblox_services(item, section, result):
     assert list(check_infoblox_services(item, section)) == result
-
-
-@pytest.mark.parametrize("item,section,result", [
-    ("memory", {
-        "node1": example_parsed_data
-    }, [Result(state=state.OK, summary='Status: working (14% - System memory usage is OK.)')]),
-])
-def test_cluster_check_infoblox_services(item, section, result):
-    assert list(cluster_check_infoblox_services(item, section)) == result

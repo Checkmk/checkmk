@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Literal, Mapping, Optional, Tuple, TypedDict
 from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
 from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.mssql_counters import accumulate_node_results
 
 
 class MSSQLInstanceData(TypedDict):
@@ -208,18 +207,6 @@ def check_mssql_common(item: str, params: Mapping[str, Any],
                                               max_size_sum, unlimited_sum)
 
 
-def cluster_check_mssql_common(
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, SectionDatafiles],
-) -> CheckResult:
-    yield from accumulate_node_results(
-        node_check_function=lambda node_name, node_section: check_mssql_common(
-            item, params, node_section),
-        section=section,
-    )
-
-
 register.check_plugin(
     name="mssql_datafiles",
     service_name="MSSQL Datafile %s",
@@ -230,7 +217,6 @@ register.check_plugin(
     check_function=check_mssql_common,
     check_default_parameters={'used_levels': (80.0, 90.0)},
     check_ruleset_name="mssql_datafiles",
-    cluster_check_function=cluster_check_mssql_common,
 )
 
 register.check_plugin(
@@ -243,5 +229,4 @@ register.check_plugin(
     check_function=check_mssql_common,
     check_default_parameters={'used_levels': (80.0, 90.0)},
     check_ruleset_name="mssql_transactionlogs",
-    cluster_check_function=cluster_check_mssql_common,
 )

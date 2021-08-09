@@ -22,6 +22,11 @@ from cmk.gui.valuespec import (
 )
 
 
+def _deprecation_message() -> str:
+    return _('This option is deprecated. Please use the ruleset <i>"%s"</i> instead.') % _(
+        "Aggregation options for clustered services")
+
+
 def _parameter_valuespec_job():
     return Dictionary(elements=[
         ("age",
@@ -51,15 +56,14 @@ def _parameter_valuespec_job():
          )),
         ("outcome_on_cluster",
          DropdownChoice(
-             title=_("Clusters: Prefered check result of local checks"),
-             help=_("If you're running local checks on clusters via clustered services rule "
-                    "you can influence the check result with this rule. You can choose between "
-                    "best or worst state. Default setting is worst state."),
-             choices=[
-                 ("worst", _("Worst state")),
-                 ("best", _("Best state")),
-             ],
-             default_value="worst")),
+             title="%s - %s" % (
+                 _("Clusters: Prefered check result of local checks"),
+                 _deprecation_message(),
+             ),
+             choices=[],
+             deprecated_choices=("worst", "best"),
+             invalid_choice_title=_('Old setting: "%s". Choose that in the new ruleset.'),
+         )),
     ],)
 
 

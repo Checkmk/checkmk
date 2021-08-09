@@ -284,29 +284,6 @@ def _create_wrapped_parameters(
     return wrap_parameters(default_parameters)
 
 
-def _create_cluster_legacy_mode_from_hell(check_function: Callable) -> Callable:
-    # copy signature of check function:
-    @functools.wraps(check_function, ('__attributes__',))
-    def cluster_legacy_mode_from_hell(*args, **kwargs):
-        # This function will *almost* never be called:
-        #
-        # If legacy plugins are executed on clusters, the original check function is called,
-        # as it is impossible to recreate the "complex" behavior of the legacy API using the new API.
-        # We maintain an extra code path in cmk/base/agent_based/checking.py for those cases.
-        #
-        # Unfortunately, when discovering cluster hosts, this function will still be called, as
-        # part of the code designed for the new API is used.
-        # Since fixing this issue would dramatically worsen the code in
-        # cmk/base/agent_based/checking.py, we simply issue an Message here, similar to the preview
-        # for counter based checks:
-        yield Result(
-            state=State.OK,
-            summary="Service preview for legacy plugins on clusters not available.",
-        )
-
-    return cluster_legacy_mode_from_hell
-
-
 def create_check_plugin_from_legacy(
     check_plugin_name: str,
     check_info_dict: Dict[str, Any],
@@ -363,7 +340,6 @@ def create_check_plugin_from_legacy(
         check_function=check_function,
         check_default_parameters=check_default_parameters,
         check_ruleset_name=check_info_dict.get("group"),
-        cluster_check_function=_create_cluster_legacy_mode_from_hell(check_function),
         # Legacy check plugins may return an item even if the service description
         # does not contain a '%s'. In this case the old check API assumes an implicit,
         # trailing '%s'. Therefore, we disable this validation for legacy check plugins.

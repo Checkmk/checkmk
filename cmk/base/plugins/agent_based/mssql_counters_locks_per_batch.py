@@ -114,38 +114,6 @@ def check_mssql_counters_locks_per_batch(
     yield from _check_base(get_value_store(), item, params, section)
 
 
-def _cluster_check_base(
-    value_store: MutableMapping[str, Any],
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Section],
-) -> CheckResult:
-    """
-    >>> from contextlib import suppress
-    >>> vs = {}
-    >>> for i in range(2):
-    ...   with suppress(IgnoreResultsError):
-    ...     for result in _cluster_check_base(vs, "MSSQL_VEEAMSQL2012", {}, {"node1": {
-    ...         ('MSSQL_VEEAMSQL2012:SQL_Statistics', 'None'): {'batch_requests/sec': 22476651+i, 'forced_parameterizations/sec': 0, 'auto-param_attempts/sec': 1133, 'failed_auto-params/sec': 1027, 'safe_auto-params/sec': 8, 'unsafe_auto-params/sec': 98, 'sql_compilations/sec': 2189403, 'sql_re-compilations/sec': 272134, 'sql_attention_rate': 199, 'guided_plan_executions/sec': 0, 'misguided_plan_executions/sec': 0},
-    ...         ('MSSQL_VEEAMSQL2012:Locks', '_Total'): {'lock_requests/sec': 3900449701+i, 'lock_timeouts/sec': 86978, 'number_of_deadlocks/sec': 19, 'lock_waits/sec': 938, 'lock_wait_time_(ms)': 354413, 'average_wait_time_(ms)': 354413, 'average_wait_time_base': 938, 'lock_timeouts_(timeout_>_0)/sec': 0},
-    ...     }}):
-    ...       print(result)
-    Cannot calculate rates yet
-    Result(state=<State.OK: 0>, summary='[node1] 1.0')
-    Metric('locks_per_batch', 1.0, boundaries=(0.0, None))
-    """
-    for node_name, node_section in section.items():
-        yield from _check_common(value_store, node_name, item, params, node_section)
-
-
-def cluster_check_mssql_counters_locks_per_batch(
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Section],
-) -> CheckResult:
-    yield from _cluster_check_base(get_value_store(), item, params, section)
-
-
 register.check_plugin(
     name="mssql_counters_locks_per_batch",
     sections=['mssql_counters'],
@@ -154,5 +122,4 @@ register.check_plugin(
     check_default_parameters={},
     check_ruleset_name="mssql_stats",
     check_function=check_mssql_counters_locks_per_batch,
-    cluster_check_function=cluster_check_mssql_counters_locks_per_batch,
 )

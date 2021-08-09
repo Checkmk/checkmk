@@ -69,5 +69,4 @@ register.check_plugin(
     service_name="SAP HANA ESS %s",
     discovery_function=discovery_sap_hana_ess,
     check_function=check_sap_hana_ess,
-    cluster_check_function=sap_hana.get_cluster_check(check_sap_hana_ess),
 )

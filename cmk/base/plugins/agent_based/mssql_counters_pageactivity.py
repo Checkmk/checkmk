@@ -16,12 +16,7 @@ from .agent_based_api.v1 import (
     register,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.mssql_counters import (
-    accumulate_node_results,
-    discovery_mssql_counters_generic,
-    get_item,
-    Section,
-)
+from .utils.mssql_counters import discovery_mssql_counters_generic, get_item, Section
 
 
 def discovery_mssql_counters_pageactivity(section: Section) -> DiscoveryResult:
@@ -108,45 +103,6 @@ def check_mssql_counters_pageactivity(
     yield from _check_base(get_value_store(), time.time(), item, params, section)
 
 
-def _cluster_check_base(
-    value_store: MutableMapping[str, Any],
-    time_point: float,
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Section],
-) -> CheckResult:
-    """
-    >>> vs = {}
-    >>> for i in range(2):
-    ...   for result in _cluster_check_base(vs, 1597839904 + i, "MSSQL_VEEAMSQL2012:Buffer_Manager None", {}, {"node1": {
-    ...       ('MSSQL_VEEAMSQL2012:Buffer_Manager', 'None'): {'page_lookups/sec': 6649047653 + i, 'readahead_pages/sec': 1424319, 'page_reads/sec': 3220650 + i, 'page_writes/sec': 3066377 + i},
-    ...   }}):
-    ...     print(result)
-    Cannot calculate rates yet
-    Cannot calculate rates yet
-    Cannot calculate rates yet
-    Result(state=<State.OK: 0>, summary='[node1] Reads: 1.0/s')
-    Metric('page_reads_per_second', 1.0, boundaries=(0.0, None))
-    Result(state=<State.OK: 0>, summary='[node1] Writes: 1.0/s')
-    Metric('page_writes_per_second', 1.0, boundaries=(0.0, None))
-    Result(state=<State.OK: 0>, summary='[node1] Lookups: 1.0/s')
-    Metric('page_lookups_per_second', 1.0, boundaries=(0.0, None))
-    """
-    yield from accumulate_node_results(
-        node_check_function=lambda node_name, node_section: _check_common(
-            value_store, time_point, node_name, item, params, node_section),
-        section=section,
-    )
-
-
-def cluster_check_mssql_counters_pageactivity(
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Section],
-) -> CheckResult:
-    yield from _cluster_check_base(get_value_store(), time.time(), item, params, section)
-
-
 register.check_plugin(
     name="mssql_counters_pageactivity",
     sections=['mssql_counters'],
@@ -155,5 +111,4 @@ register.check_plugin(
     check_default_parameters={},
     check_ruleset_name="mssql_page_activity",
     check_function=check_mssql_counters_pageactivity,
-    cluster_check_function=cluster_check_mssql_counters_pageactivity,
 )

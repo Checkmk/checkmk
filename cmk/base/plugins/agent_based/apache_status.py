@@ -229,15 +229,6 @@ def _scoreboard_results(data: Dict[str, float]) -> CheckResult:
     yield Result(state=State.OK, notice='Scoreboard states:\n  %s' % '\n  '.join(states))
 
 
-def cluster_check_apache_status(
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, Section],
-) -> CheckResult:
-    for _node_name, node_section in section.items():
-        yield from check_apache_status(item, params, node_section)
-
-
 register.check_plugin(
     name="apache_status",
     service_name="Apache %s Status",
@@ -245,5 +236,4 @@ register.check_plugin(
     check_function=check_apache_status,
     check_default_parameters={},
     check_ruleset_name="apache_status",
-    cluster_check_function=cluster_check_apache_status,
 )

@@ -69,7 +69,7 @@ from cmk.base.api.agent_based.register.check_plugins_legacy import wrap_paramete
 from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.check_utils import LegacyCheckParameters, Service
 
-from . import _cluster_modes, _legacy_mode, _submit_to_core
+from . import _cluster_modes, _submit_to_core
 from .utils import AggregatedResult, CHECK_NOT_IMPLEMENTED, ITEM_NOT_FOUND, RECEIVED_NO_DATA
 
 #.
@@ -399,30 +399,16 @@ def _execute_check(
 
     plugin = agent_based_register.get_check_plugin(service.check_plugin_name)
 
-    # check if we must use legacy mode. remove this block entirely one day
-    if _legacy_mode.is_applicable(host_config.is_cluster, plugin):
-        submittable = _legacy_mode.get_aggregated_result(
-            parsed_sections_broker,
-            host_config.hostname,
-            ipaddress,
-            service,
-            used_params=(  #
-                time_resolved_check_parameters(service.parameters)  #
-                if isinstance(service.parameters, cmk.base.config.TimespecificParamList) else
-                service.parameters),
-            value_store_manager=value_store_manager,
-        )
-    else:  # This is the new, shiny, 'normal' case.
-        submittable = get_aggregated_result(
-            parsed_sections_broker,
-            host_config,
-            ipaddress,
-            service,
-            plugin,
-            lambda: _final_read_only_check_parameters(service.parameters),
-            value_store_manager=value_store_manager,
-            persist_value_store_changes=not dry_run,
-        )
+    submittable = get_aggregated_result(
+        parsed_sections_broker,
+        host_config,
+        ipaddress,
+        service,
+        plugin,
+        lambda: _final_read_only_check_parameters(service.parameters),
+        value_store_manager=value_store_manager,
+        persist_value_store_changes=not dry_run,
+    )
 
     if submittable.submit:
         _submit_to_core.check_result(

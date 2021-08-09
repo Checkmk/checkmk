@@ -8,7 +8,7 @@ from typing import Any, Mapping
 
 from .agent_based_api.v1 import check_levels, register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
-from .utils.mssql_counters import accumulate_node_results, get_int, get_item, Section
+from .utils.mssql_counters import get_int, get_item, Section
 
 
 def discovery_mssql_counters_cache_hits(
@@ -69,30 +69,6 @@ def check_mssql_counters_cache_hits(
     yield from _check_common("", item, section)
 
 
-def cluster_check_mssql_counters_cache_hits(
-    item: str,
-    section: Mapping[str, Section],
-) -> CheckResult:
-    """
-    >>> for result in cluster_check_mssql_counters_cache_hits(
-    ...   "MSSQL_VEEAMSQL2012:Catalog_Metadata mssqlsystemresource cache_hit_ratio", {
-    ...     "node1": {
-    ...       ('None', 'None'): {'utc_time': 1597839904.0},
-    ...       ('MSSQL_VEEAMSQL2012:SQL_Statistics', 'None'): {'batch_requests/sec': 22476651, 'forced_parameterizations/sec': 0, 'auto-param_attempts/sec': 1133, 'failed_auto-params/sec': 1027, 'safe_auto-params/sec': 8, 'unsafe_auto-params/sec': 98, 'sql_compilations/sec': 2189403, 'sql_re-compilations/sec': 272134, 'sql_attention_rate': 199, 'guided_plan_executions/sec': 0, 'misguided_plan_executions/sec': 0},
-    ...       ('MSSQL_VEEAMSQL2012:Catalog_Metadata', 'mssqlsystemresource'): {'cache_hit_ratio': 77478, 'cache_hit_ratio_base': 77796, 'cache_entries_count': 73, 'cache_entries_pinned_count': 0},
-    ...     },
-    ... }):
-    ...   print(result)
-    Result(state=<State.OK: 0>, summary='[node1] 99.59%')
-    Metric('cache_hit_ratio', 99.59123862409379)
-    """
-    yield from accumulate_node_results(
-        node_check_function=lambda node_name, node_section: _check_common(
-            node_name, item, node_section),
-        section=section,
-    )
-
-
 register.check_plugin(
     name="mssql_counters_cache_hits",
     sections=['mssql_counters'],
@@ -101,5 +77,4 @@ register.check_plugin(
     discovery_ruleset_name='inventory_mssql_counters_rules',
     discovery_default_parameters={},
     check_function=check_mssql_counters_cache_hits,
-    cluster_check_function=cluster_check_mssql_counters_cache_hits,
 )

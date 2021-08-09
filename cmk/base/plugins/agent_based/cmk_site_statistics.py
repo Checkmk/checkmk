@@ -167,24 +167,10 @@ def check_cmk_site_statistics(
         )
 
 
-def cluster_check_cmk_site_statistics(
-    item: str,
-    section_cmk_site_statistics: Mapping[str, CMKSiteStatisticsSection],
-    section_livestatus_status: Mapping[str, LivestatusSection],
-) -> Generator[Union[Metric, Result], None, None]:
-    for node_name, node_section in section_cmk_site_statistics.items():
-        yield from check_cmk_site_statistics(
-            item,
-            node_section,
-            section_livestatus_status.get(node_name),
-        )
-
-
 register.check_plugin(
     name="cmk_site_statistics",
     sections=["cmk_site_statistics", "livestatus_status"],
     service_name="Site %s statistics",
     discovery_function=discover_cmk_site_statistics,
     check_function=check_cmk_site_statistics,
-    cluster_check_function=cluster_check_cmk_site_statistics,
 )

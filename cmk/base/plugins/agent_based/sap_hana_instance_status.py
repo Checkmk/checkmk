@@ -103,5 +103,4 @@ register.check_plugin(
     service_name="SAP HANA Instance Status %s",
     discovery_function=discovery_sap_hana_instance_status,
     check_function=check_sap_hana_instance_status,
-    cluster_check_function=sap_hana.get_cluster_check(check_sap_hana_instance_status),
 )

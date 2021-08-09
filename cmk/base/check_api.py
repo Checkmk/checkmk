@@ -134,16 +134,6 @@ from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
 from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels
 from cmk.base.discovered_labels import ServiceLabel  # noqa: F401 # pylint: disable=unused-import
 
-from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    HOST_ONLY,  # Check is only executed for real SNMP host (e.g. interfaces),
-)
-from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    HOST_PRECEDENCE,  # Check is only executed for mgmt board (e.g. Managegment Uptime),
-)
-
-from cmk.base.check_utils import (  # noqa: F401 # pylint: disable=unused-import; Use host address/credentials when it's a SNMP HOST, # isort: skip
-    MGMT_ONLY,)
-
 # The class 'as_float' has been moved; import it here under the old name
 from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     EvalableFloat as as_float,)
@@ -159,6 +149,11 @@ from cmk.base.plugin_contexts import (  # noqa: F401 # pylint: disable=unused-im
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]
 Levels = Tuple  # Has length 2 or 4
+
+# These 3 are no longer used, but we keep the names around, so old plugins won't crash.
+MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST
+HOST_PRECEDENCE = "host_precedence"  # Check is only executed for mgmt board (e.g. Managegment Uptime)
+HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. interfaces)
 
 
 def host_name() -> str:

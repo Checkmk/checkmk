@@ -16,10 +16,9 @@ import time
 # P Some_yet_other_Service temp=40;30;50|humidity=28;50:100;0:50;0;100
 # P Has-no-var - This has no variable
 # P No-Text hirn=-8;-20
-from typing import Any, Dict, Iterable, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import Any, Iterable, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
 
 from .agent_based_api.v1 import check_levels, Metric, register, Result, Service, State
-from .agent_based_api.v1.clusterize import make_node_notice_results
 from .agent_based_api.v1.type_defs import DiscoveryResult, StringTable
 from .utils.cache_helper import CacheInfo, render_cache_info
 
@@ -398,79 +397,6 @@ def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> 
         yield Result(state=State.OK, summary=render_cache_info(local_result.cache_info))
 
 
-def cluster_check_local(
-    item: str,
-    params: Mapping[str, Any],
-    section: Mapping[str, LocalSection],
-) -> LocalCheckResult:
-
-    # collect the result instances and yield the rest
-    results_by_node: Dict[str, LocalCheckResult] = {}
-    for node, node_section in section.items():
-        node_results = list(check_local(item, {}, node_section))
-        if node_results:
-            results_by_node[node] = node_results
-    if not results_by_node:
-        return
-
-    if params is None or params.get("outcome_on_cluster", "worst") == "worst":
-        yield from _aggregate_worst(results_by_node)
-    else:
-        yield from _aggregate_best(results_by_node)
-
-
-def _aggregate_worst(node_results: Dict[str, LocalCheckResult]) -> LocalCheckResult:
-    node_states: Dict[State, str] = {}
-    for node_name, results in node_results.items():
-        node_states.setdefault(
-            State.worst(*(r.state for r in results if isinstance(r, Result))),
-            node_name,
-        )
-
-    global_worst_state = State.worst(*node_states)
-    worst_node = node_states[global_worst_state]
-
-    for node_result in node_results[worst_node]:
-        if isinstance(node_result, Result):
-            yield Result(
-                state=node_result.state,
-                summary="[%s]: %s" % (worst_node, node_result.summary),
-                details="[%s]: %s" % (worst_node, node_result.details),
-            )
-        else:  # Metric
-            yield node_result
-
-    for node, results in node_results.items():
-        if node != worst_node:
-            yield from make_node_notice_results(node, results)
-
-
-def _aggregate_best(node_results: Dict[str, LocalCheckResult]) -> LocalCheckResult:
-    node_states: Dict[State, str] = {}
-    for node_name, results in node_results.items():
-        node_states.setdefault(
-            State.worst(*(r.state for r in results if isinstance(r, Result))),
-            node_name,
-        )
-
-    global_best_state = State.best(*node_states)
-    best_node = node_states[global_best_state]
-
-    for node_result in node_results[best_node]:
-        if isinstance(node_result, Result):
-            yield Result(
-                state=node_result.state,
-                summary="[%s]: %s" % (best_node, node_result.summary),
-                details="[%s]: %s" % (best_node, node_result.details),
-            )
-        else:  # Metric
-            yield node_result
-
-    for node, results in node_results.items():
-        if node != best_node:
-            yield from make_node_notice_results(node, results, force_ok=True)
-
-
 register.check_plugin(
     name="local",
     service_name="%s",
@@ -478,5 +404,4 @@ register.check_plugin(
     check_default_parameters={},
     check_ruleset_name="local",
     check_function=check_local,
-    cluster_check_function=cluster_check_local,
 )

@@ -7,10 +7,28 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato import (
     CheckParameterRulespecWithItem,
+    ManualCheckParameterRulespec,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
+    RulespecGroupEnforcedServicesApplications,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput
+from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput, Transform
+
+rulespec_registry.register(
+    ManualCheckParameterRulespec(
+        check_group_name="local",
+        group=RulespecGroupEnforcedServicesApplications,
+        item_spec=lambda: TextInput(title=_("Name of local item")),
+        parameter_valuespec=lambda: Transform(Dictionary(elements=[]), forth=lambda p: {}),
+        title=lambda: _("Local checks"),
+    ))
+
+# We only need the above, there are no "true" parameters to this check plugin.
+
+
+def _deprecation_message() -> str:
+    return _('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.') % _(
+        "Aggregation options for clustered services")
 
 
 def _parameter_valuespec_local():
@@ -21,11 +39,13 @@ def _parameter_valuespec_local():
                  ("worst", _("Worst state")),
                  ("best", _("Best state")),
              ],
-             title=_("Clusters: Prefered check result of local checks"),
-             help=_("If you're running local checks on clusters via clustered services rule "
-                    "you can influence the check result with this rule. You can choose between "
-                    "best or worst state. Default setting is worst state."),
-             default_value="worst"))
+             title="%s - %s %s" % (
+                 _("Clusters: Prefered check result of local checks"),
+                 _deprecation_message(),
+                 _("Old setting"),
+             ),
+             default_value="worst",
+         )),
     ],)
 
 
@@ -36,5 +56,6 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Name of local item")),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_local,
-        title=lambda: _("Local checks in Checkmk clusters"),
+        title=lambda: _("Local checks in Checkmk clusters") + " - " + _("Deprecated"),
+        is_deprecated=True,
     ))

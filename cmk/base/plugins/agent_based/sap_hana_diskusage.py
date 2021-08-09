@@ -91,5 +91,4 @@ register.check_plugin(
     check_function=check_sap_hana_diskusage,
     check_ruleset_name="filesystem",
     check_default_parameters=df.FILESYSTEM_DEFAULT_LEVELS,
-    cluster_check_function=sap_hana.get_cluster_check_with_params(check_sap_hana_diskusage),
 )

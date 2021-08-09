@@ -3,7 +3,7 @@ PROTOBUF := protobuf
 PROTOBUF_VERS := 3.17.3
 PROTOBUF_DIR := $(PROTOBUF)-$(PROTOBUF_VERS)
 # Increase this to enforce a recreation of the build cache
-PROTOBUF_BUILD_ID := 6
+PROTOBUF_BUILD_ID := 7
 
 PROTOBUF_PATCHING := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-patching
 PROTOBUF_UNPACK := $(BUILD_HELPER_DIR)/$(PROTOBUF_DIR)-unpack
@@ -24,7 +24,9 @@ PACKAGE_PROTOBUF_LD_LIBRARY_PATH := $(PACKAGE_PROTOBUF_DESTDIR)/lib
 PACKAGE_PROTOBUF_INCLUDE_PATH    := $(PACKAGE_PROTOBUF_DESTDIR)/include/google/protobuf
 PACKAGE_PROTOBUF_PROTOC_BIN      := $(PACKAGE_PROTOBUF_DESTDIR)/bin/protoc
 
-protobuf-build-library: $(PROTOBUF_BUILD_LIBRARY)
+# Executed from enterprise/core/src/Makefile.am, enterprise/core/src/.f12
+# and ./enterprise/Makefile
+$(PROTOBUF)-build-library: $(BUILD_HELPER_DIR) $(PROTOBUF_CACHE_PKG_PROCESS)
 
 # We have a globally defined $(PROTOBUF_UNPACK) target, but we need some special
 # handling here, because downloaded archive name does not match the omd package name
@@ -42,7 +44,9 @@ $(PROTOBUF_BUILD_LIBRARY): $(PROTOBUF_PATCHING)
 		`: -fPIC is needed for python static linking ` \
 		   CXXFLAGS="-fPIC" \
 		   LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
-	    ./configure --disable-shared && \
+	    ./configure \
+		--prefix="" \
+		--disable-shared && \
 	    make -j6 && \
 	    `: Hack needed for protoc to be linked statically. Tried a lot of different things to make it ` \
 	    `: work with the standard Makefile and libtool stuff, but had no luck. It always ended with a ` \
@@ -76,13 +80,13 @@ $(PROTOBUF_CACHE_PKG_PATH):
 $(PROTOBUF_CACHE_PKG_PROCESS): $(PROTOBUF_CACHE_PKG_PATH)
 	$(call unpack_pkg_archive,$(PROTOBUF_CACHE_PKG_PATH),$(PROTOBUF_DIR))
 	$(call upload_pkg_archive,$(PROTOBUF_CACHE_PKG_PATH),$(PROTOBUF_DIR),$(PROTOBUF_BUILD_ID))
+	$(MKDIR) $(BUILD_HELPER_DIR)
 	$(TOUCH) $@
 
 $(PROTOBUF_INTERMEDIATE_INSTALL): $(PROTOBUF_BUILD)
 	file $(PROTOBUF_BUILD_DIR)/src/protoc | grep ELF >/dev/null
 	ldd $(PROTOBUF_BUILD_DIR)/src/protoc | grep -v libstdc++ >/dev/null
-	mkdir -p $(PROTOBUF_INSTALL_DIR)/bin
-	install -m 0750 $(PROTOBUF_BUILD_DIR)/src/protoc $(PACKAGE_PROTOBUF_PROTOC_BIN)
+	make -C $(PROTOBUF_BUILD_DIR) DESTDIR=$(PROTOBUF_INSTALL_DIR) install
 	cd $(PROTOBUF_BUILD_DIR)/python && \
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
 	    $(PACKAGE_PYTHON_EXECUTABLE) setup.py install \

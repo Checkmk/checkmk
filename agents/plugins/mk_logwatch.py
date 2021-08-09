@@ -18,6 +18,9 @@ You should find an example configuration file at
 '../cfg_examples/logwatch.cfg' relative to this file.
 """
 
+# this file has to work with both Python 2 and 3
+# pylint: disable=super-with-arguments
+
 from __future__ import with_statement
 
 __version__ = "2.1.0i1"

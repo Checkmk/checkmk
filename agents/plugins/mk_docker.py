@@ -21,6 +21,9 @@ from __future__ import with_statement
 
 __version__ = "2.1.0i1"
 
+# this file has to work with both Python 2 and 3
+# pylint: disable=super-with-arguments
+
 # N O T E:
 # docker is available for python versions from 2.6 / 3.3
 

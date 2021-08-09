@@ -59,8 +59,7 @@ class RowTableEC(RowTableLivestatus):
             if c not in columns:
                 columns.append(c)
 
-        row_data = super(RowTableEC, self).query(view, columns, headers, only_sites, limit,
-                                                 all_active_filters)
+        row_data = super().query(view, columns, headers, only_sites, limit, all_active_filters)
 
         if isinstance(row_data, tuple):
             rows, _unfiltered_amount_of_rows = row_data

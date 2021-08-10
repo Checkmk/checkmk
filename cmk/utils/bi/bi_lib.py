@@ -76,22 +76,21 @@ class BIStates:
     HOST_UNREACHABLE = 2
 
 
-NodeComputeResult = NamedTuple("NodeComputeResult", [
-    ("state", int),
-    ("downtime_state", int),
-    ("acknowledged", bool),
-    ("output", str),
-    ("in_service_period", bool),
-    ("state_messages", dict),
-    ("custom_infos", dict),
-])
+class NodeComputeResult(NamedTuple):
+    state: int
+    downtime_state: int
+    acknowledged: bool
+    output: str
+    in_service_period: bool
+    state_messages: dict
+    custom_infos: dict
 
-NodeResultBundle = NamedTuple("NodeResultBundle", [
-    ("actual_result", NodeComputeResult),
-    ("assumed_result", Optional[NodeComputeResult]),
-    ("nested_results", List),
-    ("instance", Any),
-])
+
+class NodeResultBundle(NamedTuple):
+    actual_result: NodeComputeResult
+    assumed_result: Optional[NodeComputeResult]
+    nested_results: List
+    instance: Any
 
 
 class QueryCallback(Protocol):
@@ -104,70 +103,75 @@ class QueryCallback(Protocol):
         ...
 
 
-SitesCallback = NamedTuple("SitesCallback", [
-    ("states", Callable),
-    ("query", QueryCallback),
-])
+class SitesCallback(NamedTuple):
+    states: Callable
+    query: QueryCallback
+
 
 MapGroup2Value = Dict[str, str]
 
-BIServiceData = NamedTuple("BIServiceData", [
-    ("tags", Set[str]),
-    ("labels", MapGroup2Value),
-])
 
-BIHostData = NamedTuple("BIHostData", [
-    ("site_id", str),
-    ("tags", Set[Tuple[TaggroupID, TagID]]),
-    ("labels", MapGroup2Value),
-    ("folder", str),
-    ("services", Dict[str, BIServiceData]),
-    ("children", Tuple[HostName]),
-    ("parents", Tuple[HostName]),
-    ("alias", str),
-    ("name", HostName),
-])
+class BIServiceData(NamedTuple):
+    tags: Set[str]
+    labels: MapGroup2Value
 
-BIHostSpec = NamedTuple("BIHostSpec", [
-    ("site_id", SiteId),
-    ("host_name", HostName),
-])
+
+class BIHostData(NamedTuple):
+    site_id: str
+    tags: Set[Tuple[TaggroupID, TagID]]
+    labels: MapGroup2Value
+    folder: str
+    services: Dict[str, BIServiceData]
+    children: Tuple[HostName]
+    parents: Tuple[HostName]
+    alias: str
+    name: HostName
+
+
+class BIHostSpec(NamedTuple):
+    site_id: SiteId
+    host_name: HostName
+
+
 BINeededHosts = Set[BIHostSpec]
 
-BIServiceWithFullState = NamedTuple("BIServiceWithFullState", [
-    ("state", Optional[ServiceState]),
-    ("has_been_checked", bool),
-    ("plugin_output", ServiceDetails),
-    ("hard_state", Optional[ServiceState]),
-    ("current_attempt", int),
-    ("max_check_attempts", int),
-    ("scheduled_downtime_depth", int),
-    ("acknowledged", bool),
-    ("in_service_period", bool),
-])
-BIHostStatusInfoRow = NamedTuple("BIHostStatusInfoRow", [
-    ("state", Optional[HostState]),
-    ("has_been_checked", bool),
-    ("hard_state", Optional[HostState]),
-    ("plugin_output", str),
-    ("scheduled_downtime_depth", int),
-    ("in_service_period", bool),
-    ("acknowledged", bool),
-    ("services_with_fullstate", Dict[ServiceName, BIServiceWithFullState]),
-    ("remaining_row_keys", dict),
-])
+
+class BIServiceWithFullState(NamedTuple):
+    state: Optional[ServiceState]
+    has_been_checked: bool
+    plugin_output: ServiceDetails
+    hard_state: Optional[ServiceState]
+    current_attempt: int
+    max_check_attempts: int
+    scheduled_downtime_depth: int
+    acknowledged: bool
+    in_service_period: bool
+
+
+class BIHostStatusInfoRow(NamedTuple):
+    state: Optional[HostState]
+    has_been_checked: bool
+    hard_state: Optional[HostState]
+    plugin_output: str
+    scheduled_downtime_depth: int
+    in_service_period: bool
+    acknowledged: bool
+    services_with_fullstate: Dict[ServiceName, BIServiceWithFullState]
+    remaining_row_keys: dict
+
+
 BIStatusInfo = Dict[BIHostSpec, BIHostStatusInfoRow]
 
-BIHostSearchMatch = NamedTuple("BIHostSearchMatch", [
-    ("host", BIHostData),
-    ("match_groups", tuple),
-])
 
-BIServiceSearchMatch = NamedTuple("BIServiceSearchMatch", [
-    ("host_match", BIHostSearchMatch),
-    ("service_description", str),
-    ("match_groups", tuple),
-])
+class BIHostSearchMatch(NamedTuple):
+    host: BIHostData
+    match_groups: tuple
+
+
+class BIServiceSearchMatch(NamedTuple):
+    host_match: BIHostSearchMatch
+    service_description: str
+    match_groups: tuple
 
 
 class ABCWithSchema(metaclass=abc.ABCMeta):

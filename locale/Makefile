@@ -33,6 +33,10 @@ mo:
 # https://www.gnu.org/software/gettext/manual/html_node/xgettext-Invocation.html
 # "Note that using this option will lead to an error if the resulting file would not entirely be in ASCII."
 update-pot:
+	# pull in CHECKMK_LOCALE_DIR
+	cd ../../$$CHECKMK_LOCALE_DIR; \
+	git pull --rebase
+	# back in CHECKMK_DIR
 	git pull --rebase
 	xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 -o scanned.pot \
 	../web/app/index.wsgi \
@@ -43,7 +47,6 @@ update-pot:
 	cat header scanned.pot > ../../$$CHECKMK_LOCALE_DIR/$(MULTISITE_POT) # Add our header and write to Checkmk localization repo
 	rm scanned.pot
 	cd ../../$$CHECKMK_LOCALE_DIR; \
-	git pull --rebase; \
 	if [[ $$(git diff | wc -l) -gt 0 ]]; then \
 		git commit $(MULTISITE_POT) -m "Updated $(MULTISITE_POT)"; \
 		git push; \

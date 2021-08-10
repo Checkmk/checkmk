@@ -147,10 +147,9 @@ def _get_extensions():
     return LicenseUsageExtensions.deserialize(raw_extensions)
 
 
-EntityCounter = NamedTuple("EntityCounter", [
-    ("included", int),
-    ("excluded", int),
-])
+class EntityCounter(NamedTuple):
+    included: int
+    excluded: int
 
 
 def _get_hosts_counter() -> EntityCounter:

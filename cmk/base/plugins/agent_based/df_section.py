@@ -12,13 +12,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.df import DfBlock
 
-DfInode = NamedTuple("DfInode", [
-    ("device", Optional[str]),
-    ("total", int),
-    ("avail", int),
-    ("mountpoint", str),
-    ("uuid", Optional[str]),
-])
+
+class DfInode(NamedTuple):
+    device: Optional[str]
+    total: int
+    avail: int
+    mountpoint: str
+    uuid: Optional[str]
+
 
 LsblkMap = Mapping[str, str]
 BlocksSubsection = Sequence[DfBlock]

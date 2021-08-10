@@ -137,13 +137,14 @@ CheckContext = Dict[str, Any]
 GetCheckApiContext = Callable[[], Dict[str, Any]]
 CheckIncludes = List[str]
 DiscoveryCheckParameters = Dict
-SpecialAgentConfiguration = NamedTuple(
-    "SpecialAgentConfiguration",
-    [
-        ("args", List[str]),
-        # None makes the stdin of suprocess /dev/null
-        ("stdin", Optional[str]),
-    ])
+
+
+class SpecialAgentConfiguration(NamedTuple):
+    args: List[str]
+    # None makes the stdin of suprocess /dev/null
+    stdin: Optional[str]
+
+
 SpecialAgentInfoFunctionResult = Union[str, List[Union[str, int, float, Tuple[str, str, str]]],
                                        SpecialAgentConfiguration]
 SpecialAgentInfoFunction = Callable[[Dict[str, Any], str, Optional[str]],

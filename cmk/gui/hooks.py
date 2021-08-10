@@ -12,10 +12,11 @@ import cmk.gui.i18n
 from cmk.gui.globals import config, html
 from cmk.gui.i18n import _
 
-Hook = NamedTuple("Hook", [
-    ("handler", Callable),
-    ("is_builtin", bool),
-])
+
+class Hook(NamedTuple):
+    handler: Callable
+    is_builtin: bool
+
 
 hooks: Dict[str, List[Hook]] = {}
 

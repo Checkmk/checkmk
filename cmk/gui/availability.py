@@ -1080,11 +1080,10 @@ def reclassify_by_annotations(what: AVObjectType, av_rawdata: AVRawData) -> AVRa
     return reclassified_rawdata
 
 
-ReclassifyConfig = NamedTuple("ReclassifyConfig", [
-    ("downtime", _Optional[Any]),
-    ("host_state", _Optional[Any]),
-    ("service_state", _Optional[Any]),
-])
+class ReclassifyConfig(NamedTuple):
+    downtime: _Optional[Any]
+    host_state: _Optional[Any]
+    service_state: _Optional[Any]
 
 
 def reclassify_history_by_annotations(history: List[AVSpan],

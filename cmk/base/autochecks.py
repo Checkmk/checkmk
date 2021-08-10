@@ -27,7 +27,11 @@ GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]
 
-ServiceWithNodes = NamedTuple("ServiceWithNodes", [("service", Service), ("nodes", List[HostName])])
+
+class ServiceWithNodes(NamedTuple):
+    service: Service
+    nodes: List[HostName]
+
 
 logger = logging.getLogger('cmk.base.autochecks')
 

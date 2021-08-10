@@ -16,10 +16,10 @@ from cmk.gui.type_defs import MegaMenu
 if TYPE_CHECKING:
     from cmk.gui.pagetypes import PagetypeTopics
 
-BreadcrumbItem = NamedTuple("BreadcrumbItem", [
-    ("title", str),
-    ("url", Optional[str]),
-])
+
+class BreadcrumbItem(NamedTuple):
+    title: str
+    url: Optional[str]
 
 
 class Breadcrumb(MutableSequence[BreadcrumbItem]):  # pylint: disable=too-many-ancestors

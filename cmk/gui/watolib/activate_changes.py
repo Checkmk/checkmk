@@ -104,20 +104,19 @@ ACTIVATION_TIME_PROFILE_SYNC = "profile-sync"
 
 var_dir = cmk.utils.paths.var_dir + "/wato/"
 
-SnapshotSettings = NamedTuple(
-    "SnapshotSettings",
-    [
-        # TODO: Refactor to Path
-        ("snapshot_path", str),
-        # TODO: Refactor to Path
-        ("work_dir", str),
-        # TODO: Clarify naming (-> replication path or snapshot component?)
-        ("snapshot_components", List[ReplicationPath]),
-        ("component_names", Set[str]),
-        ("site_config", SiteConfiguration),
-        # TODO: Remove with 1.8
-        ("create_pre_17_snapshot", bool),
-    ])
+
+class SnapshotSettings(NamedTuple):
+    # TODO: Refactor to Path
+    snapshot_path: str
+    # TODO: Refactor to Path
+    work_dir: str
+    # TODO: Clarify naming (-> replication path or snapshot component?)
+    snapshot_components: List[ReplicationPath]
+    component_names: Set[str]
+    site_config: SiteConfiguration
+    # TODO: Remove with 1.8
+    create_pre_17_snapshot: bool
+
 
 # Directories and files to synchronize during replication
 _replication_paths: List[ReplicationPath] = []
@@ -2111,12 +2110,12 @@ def _unpack_sync_archive(sync_archive: bytes, base_dir: Path) -> None:
             _("Failed to create sync archive [%d]: %s") % (p.returncode, ensure_str(stderr)))
 
 
-ConfigSyncFileInfo = NamedTuple("ConfigSyncFileInfo", [
-    ("st_mode", int),
-    ("st_size", int),
-    ("link_target", Optional[str]),
-    ("file_hash", Optional[str]),
-])
+class ConfigSyncFileInfo(NamedTuple):
+    st_mode: int
+    st_size: int
+    link_target: Optional[str]
+    file_hash: Optional[str]
+
 
 # Would've used some kind of named tuple here, but the serialization and deserialization is a pain.
 # Using some simpler data structure for transport now to reduce the pain.
@@ -2228,12 +2227,11 @@ def _config_generation_path():
     return Path(cmk.utils.paths.var_dir) / "wato" / "config-generation.mk"
 
 
-ReceiveConfigSyncRequest = NamedTuple("ReceiveConfigSyncRequest", [
-    ("site_id", SiteId),
-    ("sync_archive", bytes),
-    ("to_delete", List[str]),
-    ("config_generation", int),
-])
+class ReceiveConfigSyncRequest(NamedTuple):
+    site_id: SiteId
+    sync_archive: bytes
+    to_delete: List[str]
+    config_generation: int
 
 
 @automation_command_registry.register

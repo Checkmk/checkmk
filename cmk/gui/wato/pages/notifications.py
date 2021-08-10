@@ -417,12 +417,11 @@ class ABCNotificationsMode(ABCEventsMode):
                                      clone=clone_url)
 
 
-NotificationRuleLinks = NamedTuple('NotificationRuleLinks', [
-    ('delete', str),
-    ('edit', str),
-    ('drag', str),
-    ('clone', str),
-])
+class NotificationRuleLinks(NamedTuple):
+    delete: str
+    edit: str
+    drag: str
+    clone: str
 
 
 @mode_registry.register

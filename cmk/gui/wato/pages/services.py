@@ -68,12 +68,12 @@ from cmk.gui.watolib.utils import may_edit_ruleset
 
 AjaxDiscoveryRequest = Dict[str, Any]
 
-TableGroupEntry = NamedTuple("TableGroupEntry", [
-    ("table_group", str),
-    ("show_bulk_actions", bool),
-    ("title", str),
-    ("help_text", str),
-])
+
+class TableGroupEntry(NamedTuple):
+    table_group: str
+    show_bulk_actions: bool
+    title: str
+    help_text: str
 
 
 @mode_registry.register
@@ -1535,14 +1535,13 @@ def _page_menu_service_configuration_entries(host: watolib.CREHost,
     )
 
 
-BulkEntry = NamedTuple("BulkEntry", [
-    ("is_shortcut", bool),
-    ("is_show_more", bool),
-    ("source", str),
-    ("target", str),
-    ("title", str),
-    ("explanation", Optional[str]),
-])
+class BulkEntry(NamedTuple):
+    is_shortcut: bool
+    is_show_more: bool
+    source: str
+    target: str
+    title: str
+    explanation: Optional[str]
 
 
 def _page_menu_selected_services_entries(host: watolib.CREHost,

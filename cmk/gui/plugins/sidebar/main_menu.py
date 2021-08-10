@@ -20,12 +20,12 @@ from cmk.gui.type_defs import Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils.popups import MethodInline
 from cmk.gui.werks import may_acknowledge, num_unacknowledged_incompatible_werks
 
-MainMenuItem = NamedTuple("MainMenuItem", [
-    ("name", str),
-    ("title", str),
-    ("icon", Icon),
-    ("onopen", Optional[str]),
-])
+
+class MainMenuItem(NamedTuple):
+    name: str
+    title: str
+    icon: Icon
+    onopen: Optional[str]
 
 
 class MainMenuRenderer:

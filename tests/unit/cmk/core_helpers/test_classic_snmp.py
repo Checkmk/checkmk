@@ -8,10 +8,9 @@ import collections
 
 import pytest
 
-from cmk.utils.type_defs import HostName
-
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import logger
+from cmk.utils.type_defs import HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 

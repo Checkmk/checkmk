@@ -168,10 +168,9 @@ class CheckmkFileSensitivity(Enum):
     unknown = 3
 
 
-CheckmkFileInfo = NamedTuple("CheckmkFileInfo", [
-    ("components", List[str]),
-    ("sensitivity", CheckmkFileSensitivity),
-])
+class CheckmkFileInfo(NamedTuple):
+    components: List[str]
+    sensitivity: CheckmkFileSensitivity
 
 
 def get_checkmk_file_sensitivity_for_humans(rel_filepath: str, file_info: CheckmkFileInfo) -> str:

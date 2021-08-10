@@ -426,44 +426,46 @@ class ResultDistributorS3Limits(ResultDistributor):
 
 #   ---sections/colleagues--------------------------------------------------
 
-AWSSectionResults = NamedTuple("AWSSectionResults", [
-    ("results", List),
-    ("cache_timestamp", float),
-])
 
-AWSSectionResult = NamedTuple("AWSSectionResult", [
-    ("piggyback_hostname", AWSStrings),
-    ("content", Any),
-])
+class AWSSectionResults(NamedTuple):
+    results: List
+    cache_timestamp: float
 
-# ToDo:
-# after migration to python 3.7 change this to:
-# class AWSLimit(NamedTuple):
-#     key: AWSStrings
-#     title: AWSStrings
-#     limit: int
-#     amount: int
-#     region: AWSStrings = "global"
-AWSLimit = NamedTuple("AWSLimit", [("key", AWSStrings), ("title", AWSStrings), ("limit", int),
-                                   ("amount", int)])
-AWSRegionLimit = NamedTuple("AWSRegionLimit", [("key", AWSStrings), ("title", AWSStrings),
-                                               ("limit", int), ("amount", int),
-                                               ("region", AWSStrings)])
 
-AWSColleagueContents = NamedTuple("AWSColleagueContents", [
-    ("content", Any),
-    ("cache_timestamp", float),
-])
+class AWSSectionResult(NamedTuple):
+    piggyback_hostname: AWSStrings
+    content: Any
 
-AWSRawContent = NamedTuple("AWSRawContent", [
-    ("content", Any),
-    ("cache_timestamp", float),
-])
 
-AWSComputedContent = NamedTuple("AWSComputedContent", [
-    ("content", Any),
-    ("cache_timestamp", float),
-])
+class AWSLimit(NamedTuple):
+    key: AWSStrings
+    title: AWSStrings
+    limit: int
+    amount: int
+
+
+class AWSRegionLimit(NamedTuple):
+    key: AWSStrings
+    title: AWSStrings
+    limit: int
+    amount: int
+    region: AWSStrings
+
+
+class AWSColleagueContents(NamedTuple):
+    content: Any
+    cache_timestamp: float
+
+
+class AWSRawContent(NamedTuple):
+    content: Any
+    cache_timestamp: float
+
+
+class AWSComputedContent(NamedTuple):
+    content: Any
+    cache_timestamp: float
+
 
 AWSCacheFilePath = Path(tmp_dir) / "agents" / "agent_aws"
 
@@ -4724,14 +4726,15 @@ class AWSSectionsGeneric(AWSSections):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-AWSServiceAttributes = NamedTuple("AWSServiceAttributes", [
-    ("key", str),
-    ("title", str),
-    ("global_service", bool),
-    ("filter_by_names", bool),
-    ("filter_by_tags", bool),
-    ("limits", bool),
-])
+
+class AWSServiceAttributes(NamedTuple):
+    key: str
+    title: str
+    global_service: bool
+    filter_by_names: bool
+    filter_by_tags: bool
+    limits: bool
+
 
 AWSServices = [
     AWSServiceAttributes(key="ce",

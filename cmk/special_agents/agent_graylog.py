@@ -18,10 +18,10 @@ import cmk.utils.password_store
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 cmk.utils.password_store.replace_passwords()
 
-GraylogSection = NamedTuple("GraylogSection", [
-    ("name", str),
-    ("uri", str),
-])
+
+class GraylogSection(NamedTuple):
+    name: str
+    uri: str
 
 
 def main(argv=None):

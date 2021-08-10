@@ -90,30 +90,30 @@ class DiscoveryAction:
 CheckTableEntry = Tuple  # TODO: Improve this type
 CheckTable = List[CheckTableEntry]  # TODO: Improve this type
 
-DiscoveryResult = NamedTuple("DiscoveryResult", [
-    ("job_status", dict),
-    ("check_table_created", int),
-    ("check_table", CheckTable),
-    ("host_labels", dict),
-    ("new_labels", dict),
-    ("vanished_labels", dict),
-    ("changed_labels", dict),
-])
 
-DiscoveryOptions = NamedTuple("DiscoveryOptions", [
-    ("action", str),
-    ("show_checkboxes", bool),
-    ("show_parameters", bool),
-    ("show_discovered_labels", bool),
-    ("show_plugin_names", bool),
-    ("ignore_errors", bool),
-])
+class DiscoveryResult(NamedTuple):
+    job_status: dict
+    check_table_created: int
+    check_table: CheckTable
+    host_labels: dict
+    new_labels: dict
+    vanished_labels: dict
+    changed_labels: dict
 
-StartDiscoveryRequest = NamedTuple("StartDiscoveryRequest", [
-    ("host", watolib.CREHost),
-    ("folder", watolib.CREFolder),
-    ("options", DiscoveryOptions),
-])
+
+class DiscoveryOptions(NamedTuple):
+    action: str
+    show_checkboxes: bool
+    show_parameters: bool
+    show_discovered_labels: bool
+    show_plugin_names: bool
+    ignore_errors: bool
+
+
+class StartDiscoveryRequest(NamedTuple):
+    host: watolib.CREHost
+    folder: watolib.CREFolder
+    options: DiscoveryOptions
 
 
 class Discovery:

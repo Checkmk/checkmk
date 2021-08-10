@@ -11,18 +11,18 @@ import pytest
 import cmk.gui.plugins.views.icons as icons
 import cmk.gui.plugins.views.icons.mkeventd as mkeventd_icon
 
-IconRenderArgs = NamedTuple("IconRenderArgs", [
-    ("what", str),
-    ("row", Dict),
-    ("tags", List),
-    ("custom_vars", Dict),
-])
 
-IconRenderResult = NamedTuple("IconRenderResult", [
-    ("name", str),
-    ("title", str),
-    ("url", str),
-])
+class IconRenderArgs(NamedTuple):
+    what: str
+    row: Dict
+    tags: List
+    custom_vars: Dict
+
+
+class IconRenderResult(NamedTuple):
+    name: str
+    title: str
+    url: str
 
 
 @pytest.mark.parametrize(

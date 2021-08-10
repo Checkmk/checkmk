@@ -86,13 +86,13 @@ def test_transform_cluster_hosts():
             ], is_binary=False, is_service=False)
 
 
-Case = NamedTuple("Case", [
-    ("is_service", bool),
-    ("is_binary", bool),
-    ("old", tuple),
-    ("new", dict),
-    ("ident", str),
-])
+class Case(NamedTuple):
+    is_service: bool
+    is_binary: bool
+    old: tuple
+    new: dict
+    ident: str
+
 
 NON_BINARY_HOST_RULESET = [
     Case(

@@ -336,7 +336,12 @@ def process_by_status_code(response: requests.models.Response, success_code: int
         sys.exit(2)
 
 
-StateInfo = NamedTuple('StateInfo', [('state', int), ('type', str), ('title', str)])
+class StateInfo(NamedTuple):
+    state: int
+    type: str
+    title: str
+
+
 StatusCodeRange = Tuple[int, int]
 
 

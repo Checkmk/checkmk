@@ -12,14 +12,13 @@ from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 
 from dateutil.relativedelta import relativedelta
 
-RawSubscriptionDetails = NamedTuple(
-    "RawSubscriptionDetails",
-    [
-        ("start", Optional[int]),
-        ("end", Optional[int]),
-        ("limit", Optional[int]),
-    ],
-)
+
+class RawSubscriptionDetails(NamedTuple):
+    start: Optional[int]
+    end: Optional[int]
+    limit: Optional[int]
+
+
 RawMonthlyServiceAverage = Dict[str, Union[int, float]]
 RawMonthlyServiceAverages = List[RawMonthlyServiceAverage]
 DailyServices = Dict[datetime, Counter]

@@ -29,11 +29,13 @@ from cmk.utils.bi.bi_search import BIHostSearch, BIServiceSearch
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
 
-RuleReferencesResult = NamedTuple("RuleReferencesResult", [
-    ("aggr_refs", int),
-    ("rule_refs", int),
-    ("level", int),
-])
+
+class RuleReferencesResult(NamedTuple):
+    aggr_refs: int
+    rule_refs: int
+    level: int
+
+
 #   .--Packs---------------------------------------------------------------.
 #   |                      ____            _                               |
 #   |                     |  _ \ __ _  ___| | _____                        |

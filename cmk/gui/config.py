@@ -5,40 +5,38 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import contextlib
-import sys
-import errno
-import os
 import copy
+import errno
 import json
-from types import ModuleType
-from typing import Set, Any, AnyStr, Callable, Dict, Iterator, List, Optional, Tuple, Union
-from pathlib import Path
+import os
+import sys
 import time
+from pathlib import Path
+from types import ModuleType
+from typing import Any, AnyStr, Callable, Dict, Iterator, List, Optional, Set, Tuple, Union
 
 from six import ensure_str
 
-from livestatus import SiteId, SiteConfiguration, SiteConfigurations
+from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
-import cmk.utils.version as cmk_version
-import cmk.utils.tags
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.tags
+import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
+import cmk.gui.i18n
+import cmk.gui.log as log
+import cmk.gui.permissions as permissions
+import cmk.gui.plugins.config
+import cmk.gui.utils as utils
+from cmk.gui.exceptions import MKAuthException, MKConfigError
 # TODO: Nuke the 'user' import and simply use cmk.gui.globals.user. Currently
 # this is a bit difficult due to our beloved circular imports. :-/ Or should we
 # do this the other way round? Anyway, we will know when the cycle has been
 # broken...
 from cmk.gui.globals import local, user
-import cmk.gui.utils as utils
-import cmk.gui.i18n
 from cmk.gui.i18n import _
-import cmk.gui.log as log
-from cmk.gui.exceptions import MKConfigError, MKAuthException
-import cmk.gui.permissions as permissions
-
-import cmk.gui.plugins.config
-
 # This import is added for static analysis tools like pylint to make them
 # know about all shipped config options. The default config options are
 # later handled with the default_config dict and _load_default_config()
@@ -199,6 +197,11 @@ def load_config() -> None:
         sites = default_single_site_configuration()
 
     _prepare_tag_config()
+
+    # Make sure, builtin roles are present, even if not modified and saved with WATO.
+    for br in builtin_role_ids:
+        roles.setdefault(br, {})
+
     execute_post_config_load_hooks()
 
 
@@ -227,17 +230,7 @@ def register_post_config_load_hook(func: Callable[[], None]) -> None:
 
 
 def _initialize_with_default_config() -> None:
-    vars_before_plugins = all_nonfunction_vars(globals())
-    load_plugins(True)
-    vars_after_plugins = all_nonfunction_vars(globals())
-    new_vars = vars_after_plugins.difference(vars_before_plugins)
-
-    # Keep the known plugin vars during whole module lifetime.
-    # Extend the known plugin vars with each config loading.
-    _legacy_plugin_vars.update({k: globals()[k] for k in new_vars})
-
-    _load_default_config(_legacy_plugin_vars)
-
+    _load_default_config()
     _apply_default_config()
 
 
@@ -248,10 +241,10 @@ def _apply_default_config() -> None:
         globals()[k] = v
 
 
-def _load_default_config(legacy_plugin_var_defaults: Dict[str, Any]) -> None:
+def _load_default_config() -> None:
     default_config.clear()
     _load_default_config_from_module_plugins()
-    _load_default_config_from_legacy_plugins(legacy_plugin_var_defaults)
+    _load_default_config_from_legacy_plugins()
 
 
 def _load_default_config_from_module_plugins() -> None:
@@ -271,8 +264,8 @@ def _load_default_config_from_module_plugins() -> None:
         default_config[k] = v
 
 
-def _load_default_config_from_legacy_plugins(legacy_plugin_var_defaults: Dict[str, Any]) -> None:
-    default_config.update(legacy_plugin_var_defaults)
+def _load_default_config_from_legacy_plugins() -> None:
+    utils.load_web_plugins("config", default_config)
 
 
 def _config_plugin_modules() -> List[ModuleType]:
@@ -295,13 +288,6 @@ def combined_graphs_available() -> bool:
 
 def hide_language(lang: str) -> bool:
     return lang in hide_languages
-
-
-def all_nonfunction_vars(var_dict: Dict[str, Any]) -> Set[str]:
-    return {
-        name for name, value in var_dict.items()
-        if name[0] != '_' and not hasattr(value, '__call__')
-    }
 
 
 def get_language() -> Optional[str]:
@@ -1262,27 +1248,6 @@ def activation_sites() -> SiteConfigurations:
 
 
 #.
-#   .--Plugins-------------------------------------------------------------.
-#   |                   ____  _             _                              |
-#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
-#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
-#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
-#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
-#   |                                 |___/                                |
-#   +----------------------------------------------------------------------+
-#   |  Handling of our own plugins. In plugins other software pieces can   |
-#   |  declare defaults for configuration variables.                       |
-#   '----------------------------------------------------------------------'
-
-
-def load_plugins(force: bool) -> None:
-    utils.load_web_plugins("config", globals())
-
-    # Make sure, builtin roles are present, even if not modified and saved with WATO.
-    for br in builtin_role_ids:
-        roles.setdefault(br, {})
-
-
 def theme_choices() -> List[Tuple[str, str]]:
     themes = {}
 

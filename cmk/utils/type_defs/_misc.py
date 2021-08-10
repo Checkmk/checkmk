@@ -158,11 +158,10 @@ class SourceType(enum.Enum):
     MANAGEMENT = "MANAGEMENT"
 
 
-HostKey = NamedTuple("HostKey", [
-    ("hostname", HostName),
-    ("ipaddress", Optional[HostAddress]),
-    ("source_type", SourceType),
-])
+class HostKey(NamedTuple):
+    hostname: HostName
+    ipaddress: Optional[HostAddress]
+    source_type: SourceType
 
 
 # TODO: We should really parse our configuration file and use a

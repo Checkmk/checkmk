@@ -83,11 +83,12 @@ PackageName = str
 PartName = str
 PartPath = str
 
-PackagePart = NamedTuple("PackagePart", [
-    ("ident", PartName),
-    ("title", str),
-    ("path", PartPath),
-])
+
+class PackagePart(NamedTuple):
+    ident: PartName
+    title: str
+    path: PartPath
+
 
 PackageInfo = Dict
 Packages = Dict[PackageName, PackageInfo]

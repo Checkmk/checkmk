@@ -3225,18 +3225,19 @@ class PackageManagerRPM(PackageManager):
         return output.strip().split("\n")
 
 
-Option = NamedTuple("Option", [
-    ("long_opt", str),
-    ("short_opt", Optional[str]),
-    ("needs_arg", bool),
-    ("description", str),
-])
+class Option(NamedTuple):
+    long_opt: str
+    short_opt: Optional[str]
+    needs_arg: bool
+    description: str
+
 
 exclude_options = [
     Option("no-rrds", None, False, "do not copy RRD files (performance data)"),
     Option("no-logs", None, False, "do not copy the monitoring history and log files"),
     Option("no-past", "N", False, "do not copy RRD files, the monitoring history and log files"),
 ]
+
 
 #  command       The id of the command
 #  only_root     This option is only available when omd command is run as root
@@ -3253,22 +3254,20 @@ exclude_options = [
 #  options_spec  List of individual arguments for this command
 #  description   Text for the help of omd
 #  confirm_text  Confirm text to show before calling the handler function
-Command = NamedTuple(
-    "Command",
-    [
-        ("command", str),
-        ("only_root", bool),
-        ("no_suid", bool),
-        ("needs_site", int),
-        # TODO: Refactor to bool
-        ("site_must_exist", int),
-        ("confirm", bool),
-        ("args_text", str),
-        ("handler", Callable),
-        ("options", List[Option]),
-        ("description", str),
-        ("confirm_text", str),
-    ])
+class Command(NamedTuple):
+    command: str
+    only_root: bool
+    no_suid: bool
+    needs_site: int
+    # TODO: Refactor to bool
+    site_must_exist: int
+    confirm: bool
+    args_text: str
+    handler: Callable
+    options: List[Option]
+    description: str
+    confirm_text: str
+
 
 commands: List[Command] = []
 
@@ -3764,12 +3763,12 @@ commands.append(
         confirm_text="",
     ))
 
-GlobalOptions = NamedTuple("GlobalOptions", [
-    ("verbose", bool),
-    ("force", bool),
-    ("interactive", bool),
-    ("orig_working_directory", str),
-])
+
+class GlobalOptions(NamedTuple):
+    verbose: bool
+    force: bool
+    interactive: bool
+    orig_working_directory: str
 
 
 def handle_global_option(global_opts: GlobalOptions, main_args: Arguments, opt: str,

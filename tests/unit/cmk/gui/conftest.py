@@ -39,12 +39,12 @@ from cmk.gui.wsgi import make_app
 
 SPEC_LOCK = threading.Lock()
 
-Automation = NamedTuple("Automation", [
-    ("automation", MagicMock),
-    ("local_automation", MagicMock),
-    ("remote_automation", MagicMock),
-    ("responses", Any),
-])
+
+class Automation(NamedTuple):
+    automation: MagicMock
+    local_automation: MagicMock
+    remote_automation: MagicMock
+    responses: Any
 
 HTTPMethod = Literal[
     "get", "put", "post", "delete",

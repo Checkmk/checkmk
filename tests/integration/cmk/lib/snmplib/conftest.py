@@ -30,10 +30,10 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-ProcessDef = NamedTuple("ProcessDef", [
-    ("port", int),
-    ("process", subprocess.Popen),
-])
+
+class ProcessDef(NamedTuple):
+    port: int
+    process: subprocess.Popen
 
 
 @pytest.fixture(name="snmp_data_dir", scope="module")

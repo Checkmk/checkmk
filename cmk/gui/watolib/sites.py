@@ -688,10 +688,9 @@ def _delete_distributed_wato_file():
         store.save_text_to_file(p, "")
 
 
-PushSnapshotRequest = NamedTuple("PushSnapshotRequest", [
-    ("site_id", str),
-    ("tar_content", bytes),
-])
+class PushSnapshotRequest(NamedTuple):
+    site_id: str
+    tar_content: bytes
 
 
 @automation_command_registry.register

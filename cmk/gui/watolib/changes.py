@@ -190,14 +190,13 @@ def _wato_var_dir() -> Path:
 
 
 class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
-    Entry = NamedTuple("Entry", [
-        ("time", int),
-        ("object_ref", Optional[ObjectRef]),
-        ("user_id", str),
-        ("action", str),
-        ("text", LogMessage),
-        ("diff_text", Optional[str]),
-    ])
+    class Entry(NamedTuple):
+        time: int
+        object_ref: Optional[ObjectRef]
+        user_id: str
+        action: str
+        text: LogMessage
+        diff_text: Optional[str]
 
     @staticmethod
     def make_path(*args: str) -> Path:

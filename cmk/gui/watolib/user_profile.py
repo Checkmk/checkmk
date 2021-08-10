@@ -199,7 +199,8 @@ def push_user_profiles_to_site(site, user_profiles):
                                 timeout=60)
 
 
-PushUserProfilesRequest = NamedTuple("PushUserProfilesRequest", [("user_profiles", dict)])
+class PushUserProfilesRequest(NamedTuple):
+    user_profiles: dict
 
 
 @automation_command_registry.register

@@ -18,16 +18,17 @@ from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
-DiscoveryHost = NamedTuple("DiscoveryHost", [
-    ("site_id", str),
-    ("folder_path", str),
-    ("host_name", str),
-])
-DiscoveryTask = NamedTuple("DiscoveryTask", [
-    ("site_id", str),
-    ("folder_path", str),
-    ("host_names", list),
-])
+
+class DiscoveryHost(NamedTuple):
+    site_id: str
+    folder_path: str
+    host_name: str
+
+
+class DiscoveryTask(NamedTuple):
+    site_id: str
+    folder_path: str
+    host_names: list
 
 
 def get_tasks(hosts_to_discover: List[DiscoveryHost], bulk_size: int) -> List[DiscoveryTask]:

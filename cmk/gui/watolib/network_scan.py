@@ -32,7 +32,11 @@ from cmk.gui.watolib.hosts_and_folders import Folder, Host, update_metadata
 
 NetworkScanFoundHosts = List[Tuple[HostName, HostAddress]]
 NetworkScanResult = Dict[str, Any]
-NetworkScanRequest = NamedTuple("NetworkScanRequest", [("folder_path", str)])
+
+
+class NetworkScanRequest(NamedTuple):
+    folder_path: str
+
 
 if TYPE_CHECKING:
     from cmk.gui.watolib.hosts_and_folders import CREFolder

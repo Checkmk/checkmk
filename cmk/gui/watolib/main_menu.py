@@ -78,12 +78,11 @@ class MenuItem:
             (self.__class__.__name__, self.mode_or_url, self.title, self.icon, self.permission, self.description, self.sort_index)
 
 
-MainModuleTopic = NamedTuple("MainModuleTopic", [
-    ("name", str),
-    ("title", str),
-    ("icon_name", str),
-    ("sort_index", int),
-])
+class MainModuleTopic(NamedTuple):
+    name: str
+    title: str
+    icon_name: str
+    sort_index: int
 
 
 class MainModuleTopicRegistry(cmk.utils.plugin_registry.Registry[MainModuleTopic]):

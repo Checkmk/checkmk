@@ -57,6 +57,10 @@ from cmk.gui.plugins.wato import (
     HostnameTranslation,
     ConfigHostname,
 )
+from cmk.utils.type_defs import (
+    HostName,
+    List,
+)
 
 
 @host_attribute_registry.register
@@ -370,6 +374,9 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
                                                                 ("host", hn)])) for hn in value
         ]
         return "", HTML(", ").join(parts)
+
+    def filter_matches(self, crit: List, value: List, hostname: HostName) -> bool:
+        return any(item in value for item in crit)
 
 
 def validate_host_parents(host):

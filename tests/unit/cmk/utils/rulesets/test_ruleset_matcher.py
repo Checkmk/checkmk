@@ -18,6 +18,7 @@ from cmk.utils.type_defs import (
     HostName,
     RuleSpec,
     RuleValue,
+    ServiceName,
     TagCondition,
     TaggroupID,
 )
@@ -26,33 +27,37 @@ from cmk.base.check_utils import Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
 
-def test_ruleset_match_object_no_conditions():
+def test_ruleset_match_object_no_conditions() -> None:
     x = RulesetMatchObject(host_name=None, service_description=None)
     assert x.host_name is None
     assert x.service_description is None
 
 
-def test_ruleset_match_object_host_name():
+def test_ruleset_match_object_host_name() -> None:
     obj = RulesetMatchObject(host_name=HostName("abc"), service_description=None)
     assert obj.host_name == "abc"
 
 
-def test_ruleset_match_object_service_description():
-    obj = RulesetMatchObject(host_name=None, service_description=u"Ümlaut")
-    assert obj.service_description == u"Ümlaut"
+def test_ruleset_match_object_service_description() -> None:
+    obj = RulesetMatchObject(host_name=None, service_description="Ümlaut")
+    assert obj.service_description == "Ümlaut"
 
 
-def test_ruleset_match_object_service_cache_id():
-    obj1 = RulesetMatchObject(host_name=HostName("host"),
-                              service_description="svc",
-                              service_labels={u"a": u"v1"})
-    obj2 = RulesetMatchObject(host_name=HostName("host"),
-                              service_description="svc",
-                              service_labels={u"a": u"v2"})
+def test_ruleset_match_object_service_cache_id() -> None:
+    obj1 = RulesetMatchObject(
+        host_name=HostName("host"),
+        service_description="svc",
+        service_labels={u"a": u"v1"},
+    )
+    obj2 = RulesetMatchObject(
+        host_name=HostName("host"),
+        service_description="svc",
+        service_labels={u"a": u"v2"},
+    )
     assert obj1.service_cache_id != obj2.service_cache_id
 
 
-def test_ruleset_match_object_service_cache_id_no_labels():
+def test_ruleset_match_object_service_cache_id_no_labels() -> None:
     obj = RulesetMatchObject(host_name=HostName("host"), service_description="svc")
     assert obj.service_cache_id == ("svc", hash(None))
 
@@ -145,29 +150,31 @@ host_label_ruleset = [
 ]
 
 
-@pytest.mark.parametrize("hostname,expected_result", [
+@pytest.mark.parametrize("hostname_str,expected_result", [
     ("host1", ["os_linux", "abc", "BLA"]),
     ("host2", ["hu", "BLA"]),
 ])
-def test_ruleset_matcher_get_host_ruleset_values_labels(monkeypatch, hostname, expected_result):
+def test_ruleset_matcher_get_host_ruleset_values_labels(monkeypatch: MonkeyPatch, hostname_str: str,
+                                                        expected_result: Sequence[str]) -> None:
     ts = Scenario()
-    ts.add_host("host1", labels={"os": "linux", "abc": "xä", "hu": "ha"})
-    ts.add_host("host2")
+    ts.add_host(HostName("host1"), labels={"os": "linux", "abc": "xä", "hu": "ha"})
+    ts.add_host(HostName("host2"))
     config_cache = ts.apply(monkeypatch)
     matcher = config_cache.ruleset_matcher
 
     assert list(
-        matcher.get_host_ruleset_values(RulesetMatchObject(host_name=hostname,
+        matcher.get_host_ruleset_values(RulesetMatchObject(host_name=HostName(hostname_str),
                                                            service_description=None),
                                         ruleset=host_label_ruleset,
                                         is_binary=False)) == expected_result
 
 
-def test_basic_get_host_ruleset_values(monkeypatch):
-    ts = Scenario().add_host("abc")
-    ts.add_host("xyz")
-    ts.add_host("host1")
-    ts.add_host("host2")
+def test_basic_get_host_ruleset_values(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("abc"))
+    ts.add_host(HostName("xyz"))
+    ts.add_host(HostName("host1"))
+    ts.add_host(HostName("host2"))
     config_cache = ts.apply(monkeypatch)
     matcher = config_cache.ruleset_matcher
 
@@ -193,12 +200,13 @@ def test_basic_get_host_ruleset_values(monkeypatch):
                                         is_binary=False)) == ["BLUB"]
 
 
-def test_basic_get_host_ruleset_values_subfolders(monkeypatch):
-    ts = Scenario().add_host("abc")
-    ts.add_host("xyz")
-    ts.add_host("lvl1", host_path="/lvl1/hosts.mk")
-    ts.add_host("lvl2", host_path="/lvl1/lvl2/hosts.mk")
-    ts.add_host("lvl1a", host_path="/lvl1_a/hosts.mk")
+def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("abc"))
+    ts.add_host(HostName("xyz"))
+    ts.add_host(HostName("lvl1"), host_path="/lvl1/hosts.mk")
+    ts.add_host(HostName("lvl2"), host_path="/lvl1/lvl2/hosts.mk")
+    ts.add_host(HostName("lvl1a"), host_path="/lvl1_a/hosts.mk")
     config_cache = ts.apply(monkeypatch)
     matcher = config_cache.ruleset_matcher
 
@@ -267,12 +275,13 @@ dict_ruleset = [
 ]
 
 
-def test_basic_host_ruleset_get_merged_dict_values(monkeypatch):
-    ts = Scenario().add_host("abc")
-    ts.add_host("abc")
-    ts.add_host("xyz")
-    ts.add_host("host1")
-    ts.add_host("host2")
+def test_basic_host_ruleset_get_merged_dict_values(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("abc"))
+    ts.add_host(HostName("abc"))
+    ts.add_host(HostName("xyz"))
+    ts.add_host(HostName("host1"))
+    ts.add_host(HostName("host2"))
     config_cache = ts.apply(monkeypatch)
 
     matcher = config_cache.ruleset_matcher
@@ -332,12 +341,13 @@ binary_ruleset = [
 ]
 
 
-def test_basic_host_ruleset_is_matching_host_ruleset(monkeypatch):
-    ts = Scenario().add_host("abc")
-    ts.add_host("abc")
-    ts.add_host("xyz")
-    ts.add_host("host1")
-    ts.add_host("host2")
+def test_basic_host_ruleset_is_matching_host_ruleset(monkeypatch: MonkeyPatch) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("abc"))
+    ts.add_host(HostName("abc"))
+    ts.add_host(HostName("xyz"))
+    ts.add_host(HostName("host1"))
+    ts.add_host(HostName("host2"))
     config_cache = ts.apply(monkeypatch)
 
     matcher = config_cache.ruleset_matcher
@@ -434,24 +444,33 @@ tag_ruleset = [
     (HostName("host3"), ["not_lan", "not_wan_and_not_lan", "BLA"]),
 ])
 def test_ruleset_matcher_get_host_ruleset_values_tags(
-    monkeypatch,
+    monkeypatch: MonkeyPatch,
     hostname: HostName,
-    expected_result,
-):
+    expected_result: Sequence[str],
+) -> None:
     ts = Scenario()
-    ts.add_host("host1", tags={
-        "criticality": "prod",
-        "agent": "cmk-agent",
-        "networking": "lan",
-    })
-    ts.add_host("host2", tags={
-        "criticality": "test",
-        "networking": "wan",
-    })
-    ts.add_host("host3", tags={
-        "criticality": "test",
-        "networking": "dmz",
-    })
+    ts.add_host(
+        HostName("host1"),
+        tags={
+            "criticality": "prod",
+            "agent": "cmk-agent",
+            "networking": "lan",
+        },
+    )
+    ts.add_host(
+        HostName("host2"),
+        tags={
+            "criticality": "test",
+            "networking": "wan",
+        },
+    )
+    ts.add_host(
+        HostName("host3"),
+        tags={
+            "criticality": "test",
+            "networking": "dmz",
+        },
+    )
     config_cache = ts.apply(monkeypatch)
     matcher = config_cache.ruleset_matcher
 
@@ -591,12 +610,14 @@ service_label_ruleset = [
     (HostName("host1"), "CPU load", ["os_linux", "abc", "BLA"]),
     (HostName("host2"), "CPU load", ["hu", "BLA"]),
 ])
-def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname: HostName,
-                                                           service_description, expected_result):
+def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch: MonkeyPatch,
+                                                           hostname: HostName,
+                                                           service_description: str,
+                                                           expected_result: Sequence[str]) -> None:
     ts = Scenario()
 
-    ts.add_host("host1")
-    ts.set_autochecks("host1", [
+    ts.add_host(HostName("host1"))
+    ts.set_autochecks(HostName("host1"), [
         Service(CheckPluginName("cpu_load"),
                 None,
                 "CPU load",
@@ -608,8 +629,8 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname
                 ))
     ])
 
-    ts.add_host("host2")
-    ts.set_autochecks("host2", [
+    ts.add_host(HostName("host2"))
+    ts.set_autochecks(HostName("host2"), [
         Service(
             CheckPluginName("cpu_load"),
             None,
@@ -624,12 +645,12 @@ def test_ruleset_matcher_get_service_ruleset_values_labels(monkeypatch, hostname
 
     assert list(
         matcher.get_service_ruleset_values(config_cache.ruleset_match_object_of_service(
-            hostname, service_description),
+            hostname, ServiceName(service_description)),
                                            ruleset=service_label_ruleset,
                                            is_binary=False)) == expected_result
 
 
-def test_ruleset_optimizer_clear_ruleset_caches(monkeypatch):
+def test_ruleset_optimizer_clear_ruleset_caches(monkeypatch: MonkeyPatch) -> None:
     config_cache = Scenario().apply(monkeypatch)
     ruleset_optimizer = config_cache.ruleset_matcher.ruleset_optimizer
     ruleset_optimizer.get_service_ruleset(ruleset, False, False)

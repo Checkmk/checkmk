@@ -104,9 +104,9 @@ from cmk.gui.valuespec import (
 
 # Needed for legacy (pre 1.6) plugins
 from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    active_filter_flag, Filter, filter_registry, FilterTime, FilterTristate,
-    get_livestatus_filter_headers, get_only_sites_from_context, visual_info_registry,
-    visual_type_registry,
+    active_filter_flag, Filter, filter_registry, filters_allowed_for_info,
+    filters_allowed_for_infos, FilterTime, FilterTristate, get_livestatus_filter_headers,
+    get_only_sites_from_context, visual_info_registry, visual_type_registry,
 )
 
 if not cmk_version.is_raw_edition():
@@ -1271,18 +1271,6 @@ def get_filter(name: str) -> Filter:
     return filter_registry[name]
 
 
-def filters_allowed_for_info(info: str) -> Iterator[Tuple[str, Filter]]:
-    """Returns a map of filter names and filter objects that are registered for the given info"""
-    for fname, filt in filter_registry.items():
-        if filt.info is None or info == filt.info:
-            yield fname, filt
-
-
-def filters_allowed_for_infos(info_list: List[str]) -> Dict[str, Filter]:
-    """Same as filters_allowed_for_info() but for multiple infos"""
-    return dict(chain.from_iterable(map(filters_allowed_for_info, info_list)))
-
-
 # For all single_infos which are configured for a view which datasource
 # does not provide these infos, try to match the keys of the single_info
 # attributes to a filter which can then be used to filter the data of
@@ -1573,14 +1561,15 @@ class VisualFilterListWithAddPopup(VisualFilterList):
 
 
 def active_context_from_request(infos: List[str]) -> VisualContext:
+    vs_filterlist = VisualFilterListWithAddPopup(info_list=infos)
     if request.has_var("_active"):
-        return VisualFilterListWithAddPopup(info_list=infos).from_html_vars("")
+        return vs_filterlist.from_html_vars("")
     # Test if filters are in url and rescostruct them. This is because we
     # contruct crosslinks manually without the filter menu.
-    if flag := active_filter_flag(request.itervars()):
+    if flag := active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):
         with request.stashed_vars():
             request.set_var("_active", flag)
-            return VisualFilterListWithAddPopup(info_list=infos).from_html_vars("")
+            return vs_filterlist.from_html_vars("")
     return {}
 
 

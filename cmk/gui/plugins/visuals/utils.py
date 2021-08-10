@@ -9,7 +9,8 @@
 
 import abc
 import time
-from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Tuple, Type, Union
+from itertools import chain
+from typing import Dict, Iterable, Iterator, List, Mapping, Optional, Set, Tuple, Type, Union
 
 from livestatus import SiteId
 
@@ -513,10 +514,22 @@ class FilterRegistry(cmk.utils.plugin_registry.Registry[Filter]):
 filter_registry = FilterRegistry()
 
 
-def active_filter_flag(url_vars: Iterator[Tuple[str, str]]) -> str:
+def filters_allowed_for_info(info: str) -> Iterator[Tuple[str, Filter]]:
+    """Returns a map of filter names and filter objects that are registered for the given info"""
+    for fname, filt in filter_registry.items():
+        if filt.info is None or info == filt.info:
+            yield fname, filt
+
+
+def filters_allowed_for_infos(info_list: List[str]) -> Dict[str, Filter]:
+    """Same as filters_allowed_for_info() but for multiple infos"""
+    return dict(chain.from_iterable(map(filters_allowed_for_info, info_list)))
+
+
+def active_filter_flag(allowed_filters: Set[str], url_vars: Iterator[Tuple[str, str]]) -> str:
     active_filters = {
         filt for var, value in url_vars  #
-        if (filt := filter_registry.htmlvars_to_filter.get(var))
+        if (filt := filter_registry.htmlvars_to_filter.get(var)) and filt in allowed_filters
     }
     return ";".join(sorted(active_filters))
 

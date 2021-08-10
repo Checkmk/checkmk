@@ -825,12 +825,12 @@ def get_online_user_ids() -> List[UserId]:
     online_threshold = time.time() - config.user_online_maxage
     users = []
     for user_id, user in load_users(lock=False).items():
-        if get_last_activity(user_id, user) >= online_threshold:
+        if get_last_activity(user) >= online_threshold:
             users.append(user_id)
     return users
 
 
-def get_last_activity(user_id: UserId, user: UserSpec) -> int:
+def get_last_activity(user: UserSpec) -> int:
     return max([s.last_activity for s in user.get("session_info", {}).values()] + [0])
 
 

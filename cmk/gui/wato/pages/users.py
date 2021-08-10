@@ -358,7 +358,7 @@ class ModeUsers(WatoMode):
 
                 # Online/Offline
                 if user.may("wato.show_last_user_activity"):
-                    last_seen = userdb.get_last_activity(uid, user_spec)
+                    last_seen = userdb.get_last_activity(user_spec)
                     if last_seen >= online_threshold:
                         title = _('Online')
                         img_txt = 'online'

@@ -409,14 +409,14 @@ def test_get_last_activity(with_user, session_valid):
     user_id = with_user[0]
     user = _load_users_uncached(lock=False)[user_id]
     assert "session_info" not in user
-    assert userdb.get_last_activity(user_id, user) == 0
+    assert userdb.get_last_activity(user) == 0
 
     userdb.on_access(user_id, session_valid)
     userdb.on_end_of_request(user_id)
 
     user = _load_users_uncached(lock=False)[user_id]
     assert "session_info" in user
-    assert userdb.get_last_activity(user_id, user) == time.time()
+    assert userdb.get_last_activity(user) == time.time()
 
 
 def test_user_attribute_sync_plugins(request_context, monkeypatch):

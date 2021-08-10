@@ -5733,6 +5733,7 @@ def test_get_needed_regular_columns(view):
         'host_comments_with_extra_info',
         'host_custom_variable_names',
         'host_custom_variable_values',
+        'host_custom_variables',
         'host_downtimes',
         'host_downtimes_with_extra_info',
         'host_filename',
@@ -5774,8 +5775,7 @@ def test_get_needed_join_columns(view):
 
     if cmk_version.is_managed_edition():
         expected_columns += [
-            "host_custom_variable_names",
-            "host_custom_variable_values",
+            "host_custom_variables",
         ]
 
     assert sorted(columns) == sorted(expected_columns)
@@ -6319,6 +6319,8 @@ def test_view_page(logged_in_wsgi_app, mock_livestatus):
             d[prefix + key] = value
         return d
 
+    custom_variable_names = ['FILENAME', 'ADDRESS_FAMILY', 'ADDRESS_4', 'ADDRESS_6', 'TAGS']
+    custom_variable_values = ['/wato/hosts.mk', 4, '127.0.0.1', '', '/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp']
     live: MockLiveStatusConnection = mock_livestatus
     live.set_sites(['NO_SITE', 'remote'])
     live.add_table('hosts', [_prepend('host_', {
@@ -6331,8 +6333,9 @@ def test_view_page(logged_in_wsgi_app, mock_livestatus):
         'check_type': 0,
         'comments_with_extra_info': '',
         'custom_variable_name': '',
-        'custom_variable_names': ['FILENAME', 'ADDRESS_FAMILY', 'ADDRESS_4', 'ADDRESS_6', 'TAGS'],
-        'custom_variable_values': ['/wato/hosts.mk', 4, '127.0.0.1', '', '/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp'],
+        'custom_variable_names': custom_variable_names,
+        'custom_variable_values': custom_variable_values,
+        'custom_variables': dict(zip(custom_variable_names, custom_variable_values)),
         'downtimes': '',
         'downtimes_with_extra_info': '',
         'filename': '/wato/hosts.mk',
@@ -6363,7 +6366,7 @@ def test_view_page(logged_in_wsgi_app, mock_livestatus):
         "GET hosts\n"
         "Columns: host_accept_passive_checks host_acknowledged host_action_url_expanded "
         "host_active_checks_enabled host_address host_check_command host_check_type "
-        "host_comments_with_extra_info host_custom_variable_names host_custom_variable_values "
+        "host_comments_with_extra_info host_custom_variable_names host_custom_variable_values host_custom_variables "
         "host_downtimes host_downtimes_with_extra_info host_filename host_has_been_checked "
         "host_icon_image host_in_check_period host_in_notification_period host_in_service_period "
         "host_is_flapping host_labels host_modified_attributes_list host_name host_notes_url_expanded "

@@ -6,6 +6,7 @@
 import time
 
 import cmk.utils.tags
+from cmk.utils.type_defs import HostName, List
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -360,6 +361,9 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             for hn in value
         ]
         return "", HTML(", ").join(parts)
+
+    def filter_matches(self, crit: List, value: List, hostname: HostName) -> bool:
+        return any(item in value for item in crit)
 
 
 def validate_host_parents(host):

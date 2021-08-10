@@ -43,11 +43,13 @@ from cmk.utils.memoize import MemoizeCache
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import (
     ABCHostsStorage,
+    apply_hosts_file_to_object,
+    get_host_storage_loaders,
+    get_hosts_file_variables,
     get_storage_format,
     GroupRuleType,
     HostAttributeMapping,
     HostsData,
-    load_hosts_file,
     make_experimental_hosts_storage,
     StandardHostsStorage,
     UnifiedHostStorage,
@@ -791,8 +793,13 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         return attributes
 
     def _load_hosts_file(self) -> Optional[HostsData]:
-        return load_hosts_file(Path(self.hosts_file_path_without_extension()),
-                               get_storage_format(config.config_storage_format))
+        variables = get_hosts_file_variables()
+        apply_hosts_file_to_object(
+            Path(self.hosts_file_path_without_extension()),
+            get_host_storage_loaders(config.config_storage_format),
+            variables,
+        )
+        return variables
 
     def _load_wato_hosts(self) -> Optional[WATOHosts]:
         if (variables := self._load_hosts_file()) is None:
@@ -918,7 +925,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         unified_storage = UnifiedHostStorage()
         unified_storage.save_locked_hosts()
-        unified_storage.save_group_rules_list(group_rules_list)
+        unified_storage.save_host_contact_groups(group_rules_list)
         unified_storage.save_all_hosts(all_hosts)
         unified_storage.save_clusters(clusters)
         unified_storage.save_host_tags(host_tags)
@@ -926,7 +933,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         unified_storage.save_attributes(attribute_mappings)
         unified_storage.save_extra_host_conf(custom_macros)
         unified_storage.save_explicit_host_settings(explicit_host_settings)
-        unified_storage.save_contact_groups(self.path_for_rule_matching(), self.groups())
+        unified_storage.save_folder_contact_groups(self.path_for_rule_matching(), self.groups())
         unified_storage.save_cleaned_hosts(cleaned_hosts)
 
         storage_list: List[ABCHostsStorage] = [StandardHostsStorage()]
@@ -1062,10 +1069,14 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
         return self.name()
 
-    def path_for_rule_matching(self):
+    def path_for_gui_rule_matching(self):
         if self.is_root():
             return "/"
         return "/wato/%s/" % self.path()
+
+    def path_for_rule_matching(self):
+        path = self.path()
+        return "/wato/%s/" % path if path else "/wato/"
 
     def object_ref(self) -> ObjectRef:
         return ObjectRef(ObjectRefType.Folder, self.path())

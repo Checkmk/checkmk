@@ -953,7 +953,7 @@ class Rule:
         matcher = cmk.base.export.get_ruleset_matcher()
 
         rule_dict = self.to_config()
-        rule_dict["condition"]["host_folder"] = self.folder.path_for_rule_matching()
+        rule_dict["condition"]["host_folder"] = self.folder.path_for_gui_rule_matching()
 
         # The cache uses some id(ruleset) to build indexes for caches. When we are using
         # dynamically allocated ruleset list objects, that are quickly invalidated, it

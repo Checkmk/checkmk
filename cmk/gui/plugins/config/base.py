@@ -550,4 +550,4 @@ class CREConfig:
     bi_use_legacy_compilation: bool = False
 
     # new in 2.1
-    config_storage_format: Literal["standard", "raw"] = "standard"
+    config_storage_format: Literal["standard", "raw", "pickle"] = "standard"

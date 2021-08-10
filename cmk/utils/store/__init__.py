@@ -13,7 +13,7 @@ import pickle
 import pprint
 from contextlib import nullcontext
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Union
 
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
@@ -212,129 +212,6 @@ def save_bytes_to_file(path: Union[Path, str], content: bytes, mode: int = 0o660
     #    not!
     with locked(path):
         ObjectStore(Path(path), serializer=BytesSerializer()).write_obj(content, mode=mode)
-
-
-class ABCStorageLoader(abc.ABC):
-    __slots__ = ["_loaded", "_data"]
-    """This is WIP class: minimal working functionality. OOP and more clear API is planned"""
-    def __init__(self) -> None:
-        self._loaded: Dict[str, Any] = {}
-
-    @abc.abstractmethod
-    def read(self, filename: Path) -> None:
-        raise NotImplementedError()
-
-    @abc.abstractmethod
-    def parse(self) -> None:
-        raise NotImplementedError()
-
-    def apply(self, variables: Dict[str, Any]) -> bool:
-        # TODO: will be changed to read from self._all_hosts, self._host_tags, etc.
-        # List based settings
-        for var_list in ["all_hosts"]:
-            variables[var_list].extend(self._loaded.get(var_list, {}))
-
-        # Dict based settings
-        # Note: host_attributes is not loaded / not required by cmk.base
-        for var_dict in [
-                "clusters",
-                "host_tags",
-                "host_labels",
-                "ipaddresses",
-                "ipv6addresses",
-                "explicit_snmp_communities",
-                "management_ipmi_credentials",
-                "management_snmp_credentials",
-                "management_protocol",
-                "explicit_host_conf",
-        ]:
-            variables[var_dict].update(self._loaded.get(var_dict, {}))
-        return True
-
-    def _all_hosts(self) -> List[str]:
-        return self._loaded.get("all_hosts", [])
-
-    def _host_tags(self) -> Dict[str, Any]:
-        return self._loaded.get("host_tags", {})
-
-    def _host_labels(self) -> Dict[str, Any]:
-        return self._loaded.get("host_labels", {})
-
-    def _attributes(self) -> Dict[str, Dict[str, Any]]:
-        return self._loaded.get("attributes", {})
-
-    def _host_attributes(self) -> Dict[str, Any]:
-        return self._loaded.get("host_attributes", {})
-
-    def _explicit_host_conf(self) -> Dict[str, Dict[str, Any]]:
-        return self._loaded.get("explicit_host_conf", {})
-
-    def _extra_host_conf(self) -> Dict[str, List[Tuple[str, List[str]]]]:
-        return self._loaded.get("extra_host_conf", {})
-
-
-class RawStorageLoader(ABCStorageLoader):
-    def __init__(self) -> None:
-        super().__init__()
-        self._data: str = ""
-
-    def read(self, filename: Path) -> None:
-        with filename.open() as f:
-            self._data = f.read()
-
-    def parse(self) -> None:
-        to_run = "loaded.update(" + self._data + ")"
-        exec(to_run, {'__builtins__': None}, {"loaded": self._loaded})
-
-    def apply(self, variables: Dict[str, Any]) -> bool:
-        """stub"""
-        return True
-
-
-class PickleStorageLoader(ABCStorageLoader):
-    """Supports pickled config files."""
-    def __init__(self) -> None:
-        super().__init__()
-        self._data: bytes = b""
-
-    def read(self, filename: Path) -> None:
-        with filename.open("rb") as f:
-            self._data = f.read()
-
-    def parse(self) -> None:
-        self._loaded = pickle.loads(self._data)
-
-    def apply(self, variables: Dict[str, Any]) -> bool:
-        """stub"""
-        return True
-
-
-class StorageFormat(enum.Enum):
-    STANDARD = "standard"
-    PICKLE = "pickle"
-    RAW = "raw"
-
-    def __str__(self) -> str:
-        return str(self.value)
-
-    @classmethod
-    def from_str(cls, value: str) -> 'StorageFormat':
-        return cls[value.upper()]
-
-    def extension(self) -> str:
-        # This typing error is a false positive.  There are tests to demonstrate that.
-        return {  # type: ignore[return-value]
-            StorageFormat.STANDARD: ".mk",
-            StorageFormat.PICKLE: ".pkl",
-            StorageFormat.RAW: ".cfg",
-        }[self]
-
-    def hosts_file(self) -> str:
-        return "hosts" + self.extension()
-
-    def is_hosts_config(self, filename: str) -> bool:
-        """Unified method to determine that the file is hosts config."""
-        return filename.startswith("/wato/") and filename.endswith("/" + self.hosts_file())
 
 
 class PickleSerializer:

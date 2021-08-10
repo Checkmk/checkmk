@@ -3,11 +3,9 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import ast
 import enum
 import errno
 import os
-import pickle
 import queue
 import stat
 import threading
@@ -22,6 +20,12 @@ from tests.testlib import import_module, wait_until
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.store.host_storage import (
+    get_hosts_file_variables,
+    get_standard_hosts_storage,
+    StandardStorageLoader,
+    StorageFormat,
+)
 
 
 @pytest.mark.parametrize("path_type", [str, Path])
@@ -383,7 +387,7 @@ class LockTestJob(enum.Enum):
 
 class LockTestThread(threading.Thread):
     def __init__(self, store_mod, path):
-        super(LockTestThread, self).__init__()
+        super().__init__()
         self.daemon = True
 
         self.store = store_mod
@@ -647,169 +651,74 @@ def test_non_blocking_decorated_locking_while_already_locked(locked_file, path_t
 
 
 @pytest.mark.parametrize("text, storage_format", [
-    ("standard", store.StorageFormat.STANDARD),
-    ("raw", store.StorageFormat.RAW),
+    ("standard", StorageFormat.STANDARD),
+    ("raw", StorageFormat.RAW),
+    ("pickle", StorageFormat.PICKLE),
 ])
 def test_storage_format(text, storage_format):
-    assert store.StorageFormat(text) == storage_format
+    assert StorageFormat(text) == storage_format
     assert str(storage_format) == text
-    assert store.StorageFormat.from_str(text) == storage_format
+    assert StorageFormat.from_str(text) == storage_format
 
 
 @pytest.mark.parametrize("storage_format, expected_extension", [
-    (store.StorageFormat.STANDARD, ".mk"),
-    (store.StorageFormat.RAW, ".cfg"),
+    (StorageFormat.STANDARD, ".mk"),
+    (StorageFormat.RAW, ".cfg"),
+    (StorageFormat.PICKLE, ".pkl"),
 ])
 def test_storage_format_extension(storage_format, expected_extension):
     assert storage_format.extension() == expected_extension
 
 
 def test_storage_format_other():
-    assert store.StorageFormat("standard") != store.StorageFormat.RAW
+    assert StorageFormat("standard") != StorageFormat.RAW
     with pytest.raises(KeyError):
-        store.StorageFormat.from_str("bad")
+        StorageFormat.from_str("bad")
 
 
-@pytest.mark.parametrize("storage_format, expected_file", [
-    (store.StorageFormat.STANDARD, "hosts.mk"),
-    (store.StorageFormat.RAW, "hosts.cfg"),
-])
-def test_storage_host_file(storage_format, expected_file):
-    assert storage_format.hosts_file() == expected_file
+_hosts_mk_test_data = """
+# Created by WATO
+# encoding: utf-8
 
+host_contactgroups += [{'value': 'contactgroup_omni', 'condition': {'host_name': ['test']}},
+                       {'value': 'testgroup', 'condition': {'host_name': ['test']}}]
 
-@pytest.mark.parametrize("file_path, valid_for_standard, valid_for_raw", [
-    ("/wato/the/aaa/hosts.mk", True, False),
-    ("wato/the/aaa/hosts.mk", False, False),
-    ("/wato/the/aaa/hosts.m", False, False),
-    ("/wato/the/aaa/hosts.cfg", False, True),
-    ("wato/the/aaa/hosts.cfg", False, False),
-    ("/wato/the/aaa/hosts.c", False, False),
-])
-def test_storage_is_hosts_config(file_path, valid_for_standard, valid_for_raw):
-    assert store.StorageFormat.STANDARD.is_hosts_config(file_path) == valid_for_standard
-    assert store.StorageFormat.RAW.is_hosts_config(file_path) == valid_for_raw
+service_contactgroups += [{'value': 'contactgroup_omni', 'condition': {'host_name': ['test']}},
+                          {'value': 'testgroup', 'condition': {'host_name': ['test']}}]
 
+all_hosts += ['test']
 
-_raw_storage_loader_test_data = """{
-    'all_hosts': ['0699z0abcnpsl01', '0699z0abcnpsl02'],
-    'host_tags': {
-        '0699z0abcnpsl01': {
-            'site': 'heute',
-            'address_family': 'ip-v4-only',
-            'ip-v4': 'ip-v4',
-            'agent': 'cmk-agent',
-            'tcp': 'tcp',
-            'piggyback': 'auto-piggyback',
-            'snmp_ds': 'no-snmp',
-            'criticality': 'prod',
-            'networking': 'lan'
-        },
-        '0699z0abcnpsl02': {
-            'site': 'heute',
-            'address_family': 'ip-v4-only',
-            'ip-v4': 'ip-v4',
-            'agent': 'cmk-agent',
-            'tcp': 'tcp',
-            'piggyback': 'auto-piggyback',
-            'snmp_ds': 'no-snmp',
-            'criticality': 'prod',
-            'networking': 'lan'
-        }
-    },
-    'host_labels': {
-        '0699z0abcnpsl01': {
-            'hw': 'test1'
-        },
-        '0699z0abcnpsl02': {
-            'hw': 'test2'
-        }
-    },
-    'attributes': {
-        'ipaddresses': {
-            '0699z0abcnpsl01': '10.211.162.80',
-            '0699z0abcnpsl02': '10.211.162.81'
-        },
-    },
-    'extra_host_conf': {
-        'alias': [(u'699 Radius Server 02', ['0699z0abcnpsl02']),
-                  (u'699 Radius Server 01', ['0699z0abcnpsl01'])],
-        '_neui_country_id': [(u'699', ['0699z0abcnpsl02']), (u'699', ['0699z0abcnpsl01'])]
-    },
-    'explicit_host_conf': {
-        'alias': {
-            '0699z0abcnpsl01': '699 Radius Server 01',
-            '0699z0abcnpsl02': '699 Radius Server 02'
-        },
-    },
-    'contact_groups': {},
-    'host_attributes': {
-        '0699z0abcnpsl01': {
-            'alias': '699 Radius Server 01',
-            'ipaddress': '10.211.162.80',
-            'meta_data': {
-                'created_at': 1619089977.0,
-                'created_by': 'cmkadmin',
-                'updated_at': 1619094577.9326406
-            },
-            'labels': {
-                'hw': 'test1'
-            },
-            'tag_agent': 'cmk-agent',
-            'tag_snmp_ds': 'no-snmp',
-            'tag_criticality': 'prod'
-        },
-        '0699z0abcnpsl02': {
-            'alias': '699 Radius Server 02',
-            'ipaddress': '10.211.162.81',
-            'meta_data': {
-                'created_at': 1619089977.0,
-                'created_by': 'cmkadmin',
-                'updated_at': 1619094577.9345043
-            },
-            'labels': {
-                'hw': 'test2'
-            },
-            'tag_agent': 'cmk-agent',
-            'tag_snmp_ds': 'no-snmp',
-            'tag_criticality': 'prod'
-        }
-    },
-}
+host_tags.update({'test': {'site': 'heute', 'address_family': 'ip-v4-only', 'ip-v4': 'ip-v4',
+                  'dns_forward': 'dns_forward_active', 'agent': 'cmk-agent', 'tcp': 'tcp',
+                  'agent_encryption': 'encryption_enforce', 'piggyback': 'auto-piggyback',
+                  'snmp_ds': 'no-snmp', 'criticality': 'prod', 'networking': 'lan'}})
+
+host_labels.update({})
+
+# ipaddresses
+ipaddresses.update({'test': '1.2.3.4'})
+
+# Explicit settings for alias
+explicit_host_conf.setdefault('alias', {})
+explicit_host_conf['alias'].update({'test': 'testalias'})
+
+host_contactgroups.insert(0,
+[{'value': ['testgroup', 'contactgroup_omnibus'], 'condition': {'host_folder': '/wato/'}}])
+
+service_contactgroups.insert(0, {'value': 'testgroup', 'condition': {'host_folder': '/wato/'}})
+service_contactgroups.insert(0, {'value': 'contactgroup_omni', 'condition': {'host_folder': '/wato/'}})
+# Host attributes (needed for WATO)
+host_attributes.update({'test': {'contactgroups': {'groups': ['contactgroup_omni', 'testgroup'], 'recurse_perms': False, 'use': True,
+                    'use_for_services': True, 'recurse_use': False}, 'alias': 'testalias',
+                    'ipaddress': '1.2.3.4', 'additional_ipv4addresses': ['1.2.3.4', '2.3.4.5'],
+                    'meta_data': {'created_at': 1628585059.0, 'created_by': 'cmkadmin', 'updated_at': 1628694855.4644992},
+                    'tag_address_family': 'ip-v4-only'}})
 """
 
 
-@pytest.fixture(scope="function")
-def raw_loader():
-    loader = store.RawStorageLoader()
-    loader._data = _raw_storage_loader_test_data
-    loader.parse()
-    loader.apply({})
-    yield loader
-
-
-@pytest.fixture(scope="function")
-def pickle_loader():
-    loader = store.PickleStorageLoader()
-    loader._data = pickle.dumps(ast.literal_eval(_raw_storage_loader_test_data))
-    loader.parse()
-    loader.apply({})
-    yield loader
-
-
-@pytest.mark.parametrize("loader_name", ["raw_loader", "pickle_loader"])
-def test_raw_storage_loader(loader_name, request):
-    storage_loader = request.getfixturevalue(loader_name)
-    hosts = storage_loader._all_hosts()
-    assert hosts == ['0699z0abcnpsl01', '0699z0abcnpsl02']
-    ips = storage_loader._attributes()["ipaddresses"]
-    host_conf_alias = storage_loader._explicit_host_conf()["alias"]
-    for h in hosts:
-        assert isinstance(storage_loader._host_tags()[h], dict)
-        assert isinstance(storage_loader._host_labels()[h], dict)
-        assert isinstance(storage_loader._host_attributes()[h], dict)
-        assert isinstance(ips[h], str)
-        assert isinstance(host_conf_alias[h], str)
-
-    assert isinstance(storage_loader._extra_host_conf()['alias'], list)
-    assert isinstance(storage_loader._extra_host_conf()['_neui_country_id'], list)
+def tests_standard_format_loader():
+    # More tests will follow once the UnifiedHostStorage has been changed to a dataclass
+    standard_loader = StandardStorageLoader(get_standard_hosts_storage())
+    variables = get_hosts_file_variables()
+    standard_loader.apply(_hosts_mk_test_data, variables)
+    assert variables["all_hosts"] == ["test"]

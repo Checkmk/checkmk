@@ -12,14 +12,14 @@ from cmk.utils.bi.bi_lib import RequiredBIElement
 from cmk.utils.bi.bi_trees import BICompiledAggregation, BICompiledRule, NodeResultBundle
 from cmk.utils.type_defs import HostName, ServiceName
 
-BIAggregationFilter = NamedTuple("BIAggregationFilter", [
-    ("hosts", List[HostName]),
-    ("services", List[Tuple[HostName, ServiceName]]),
-    ("aggr_ids", List[str]),
-    ("aggr_titles", List[str]),
-    ("group_names", List[str]),
-    ("group_path_prefix", List[str]),
-])
+
+class BIAggregationFilter(NamedTuple):
+    hosts: List[HostName]
+    services: List[Tuple[HostName, ServiceName]]
+    aggr_ids: List[str]
+    aggr_titles: List[str]
+    group_names: List[str]
+    group_path_prefix: List[str]
 
 
 class ABCPostprocessComputeResult:

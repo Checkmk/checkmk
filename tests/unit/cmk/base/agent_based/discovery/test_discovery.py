@@ -689,11 +689,10 @@ def test_commandline_discovery(monkeypatch):
     assert store.load() == _expected_host_labels
 
 
-RealHostScenario = NamedTuple("RealHostScenario", [
-    ("hostname", str),
-    ("ipaddress", str),
-    ("parsed_sections_broker", ParsedSectionsBroker),
-])
+class RealHostScenario(NamedTuple):
+    hostname: str
+    ipaddress: str
+    parsed_sections_broker: ParsedSectionsBroker
 
 
 @pytest.fixture(name="realhost_scenario")
@@ -772,13 +771,12 @@ def _realhost_scenario(monkeypatch):
     return RealHostScenario(hostname, ipaddress, broker)
 
 
-ClusterScenario = NamedTuple("ClusterScenario", [
-    ("host_config", config.HostConfig),
-    ("ipaddress", str),
-    ("parsed_sections_broker", ParsedSectionsBroker),
-    ("node1_hostname", str),
-    ("node2_hostname", str),
-])
+class ClusterScenario(NamedTuple):
+    host_config: config.HostConfig
+    ipaddress: str
+    parsed_sections_broker: ParsedSectionsBroker
+    node1_hostname: str
+    node2_hostname: str
 
 
 @pytest.fixture(name="cluster_scenario")
@@ -912,21 +910,20 @@ def _cluster_scenario(monkeypatch):
     )
 
 
-ExpectedDiscoveryResultRealHost = NamedTuple("ExpectedDiscoveryResultRealHost", [
-    ("expected_vanished_host_labels", Sequence[HostLabel]),
-    ("expected_old_host_labels", Sequence[HostLabel]),
-    ("expected_new_host_labels", Sequence[HostLabel]),
-    ("expected_stored_labels", Dict),
-])
+class ExpectedDiscoveryResultRealHost(NamedTuple):
+    expected_vanished_host_labels: Sequence[HostLabel]
+    expected_old_host_labels: Sequence[HostLabel]
+    expected_new_host_labels: Sequence[HostLabel]
+    expected_stored_labels: Dict
 
-ExpectedDiscoveryResultCluster = NamedTuple("ExpectedDiscoveryResultCluster", [
-    ("expected_vanished_host_labels", Sequence[HostLabel]),
-    ("expected_old_host_labels", Sequence[HostLabel]),
-    ("expected_new_host_labels", Sequence[HostLabel]),
-    ("expected_stored_labels_cluster", Dict),
-    ("expected_stored_labels_node1", Dict),
-    ("expected_stored_labels_node2", Dict),
-])
+
+class ExpectedDiscoveryResultCluster(NamedTuple):
+    expected_vanished_host_labels: Sequence[HostLabel]
+    expected_old_host_labels: Sequence[HostLabel]
+    expected_new_host_labels: Sequence[HostLabel]
+    expected_stored_labels_cluster: Dict
+    expected_stored_labels_node1: Dict
+    expected_stored_labels_node2: Dict
 
 
 class DiscoveryTestCase(NamedTuple):

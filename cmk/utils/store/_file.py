@@ -83,7 +83,7 @@ class ObjectStore(Generic[TObject]):
     def write_obj(self, obj: TObject, *, mode: int = 0o660) -> None:
         return self._save_bytes_to_file(data=self._serializer.serialize(obj), mode=mode)
 
-    def read_obj(self, *, default=TDefault) -> Union[TObject, TDefault]:
+    def read_obj(self, *, default: TDefault) -> Union[TObject, TDefault]:
         raw = self._load_bytes_from_file()
         return self._serializer.deserialize(raw) if raw else default
 

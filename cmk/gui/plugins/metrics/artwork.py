@@ -83,13 +83,9 @@ def add_default_render_options(graph_render_options, render_unthemed=False):
     options.update(graph_render_options)
     options.setdefault("size", user.load_file("graph_size", (70, 16)))
 
-    # Update the graph colors that are set to "default" with the theme specific colors.
-    # When rendering to PDF the theme colors must not be applied, but the regular colors
-    # have to be used.
+    # Users can't modify graph colors. Only defaults are allowed
     theme_colors = _graph_colors(theme.get() if not render_unthemed else "pdf")
-    for attr_name in ["background_color", "foreground_color", "canvas_color"]:
-        if options[attr_name] == "default":
-            options[attr_name] = theme_colors[attr_name]
+    options.update(theme_colors)
 
     return options
 

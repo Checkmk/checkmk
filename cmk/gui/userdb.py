@@ -15,7 +15,7 @@ import traceback
 from contextlib import suppress
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Callable, cast, Dict, List, Literal, Optional, Tuple, Union
+from typing import Any, Callable, cast, Dict, Iterable, List, Literal, Optional, Tuple, Union
 
 from six import ensure_str
 
@@ -56,7 +56,7 @@ from cmk.gui.sites import is_wato_slave_site
 from cmk.gui.utils.logged_in import LoggedInUser
 from cmk.gui.utils.roles import roles_of_user
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec
+from cmk.gui.valuespec import DEF_VALUE, DropdownChoice, TextInput, ValueSpec, ValueSpecHelp
 
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language: Union[bool, None, str] = False
@@ -269,19 +269,32 @@ def _multisite_dir() -> str:
 # TODO: Change to factory
 class UserSelection(DropdownChoice):
     """Dropdown for choosing a multisite user"""
-    def __init__(self, **kwargs):
-        only_contacts = kwargs.pop("only_contacts", False)
-        only_automation = kwargs.pop("only_automation", False)
-        kwargs["choices"] = self._generate_wato_users_elements_function(
-            kwargs.pop("none", None), only_contacts=only_contacts, only_automation=only_automation)
-        kwargs["invalid_choice"] = "complain"  # handle vanished users correctly!
-        DropdownChoice.__init__(self, **kwargs)
+    def __init__(  # pylint: disable=redefined-builtin
+        self,
+        only_contacts: bool = False,
+        only_automation: bool = False,
+        none: Optional[str] = None,
+        # ValueSpec
+        title: Optional[str] = None,
+        help: Optional[ValueSpecHelp] = None,
+        default_value: Any = DEF_VALUE,
+    ) -> None:
+        DropdownChoice.__init__(
+            self,
+            choices=self._generate_wato_users_elements_function(none,
+                                                                only_contacts=only_contacts,
+                                                                only_automation=only_automation),
+            invalid_choice="complain",
+            title=title,
+            help=help,
+            default_value=default_value,
+        )
 
     def _generate_wato_users_elements_function(self,
-                                               none_value,
-                                               only_contacts=False,
-                                               only_automation=False):
-        def get_wato_users(nv):
+                                               none_value: Optional[str],
+                                               only_contacts: bool = False,
+                                               only_automation: bool = False):
+        def get_wato_users(nv: Optional[str]) -> List[Tuple[Optional[UserId], str]]:
             users = load_users()
             elements: List[Tuple[Optional[UserId], str]] = sorted([
                 (name, "%s - %s" % (name, us.get("alias", name)))
@@ -290,8 +303,7 @@ class UserSelection(DropdownChoice):
                 (not only_automation or us.get("automation_secret"))
             ])
             if nv is not None:
-                empty: List[Tuple[Optional[UserId], str]] = [(None, none_value)]
-                elements = empty + elements
+                elements.insert(0, (None, nv))
             return elements
 
         return lambda: get_wato_users(none_value)
@@ -409,7 +421,7 @@ class SessionInfo:
     last_activity: int
     flashes: List[str] = field(default_factory=list)
 
-    def to_json(self):
+    def to_json(self) -> Dict:
         return asdict(self)
 
 
@@ -477,7 +489,7 @@ def _initialize_session(username: UserId) -> str:
     return session_id
 
 
-def _set_session(user_id: UserId, session_info: SessionInfo):
+def _set_session(user_id: UserId, session_info: SessionInfo) -> None:
     local.session = Session(user_id=user_id, session_info=session_info)
 
 
@@ -701,7 +713,7 @@ def load_users(lock: bool = False) -> Users:
     # they are getting according to the multisite old-style
     # configuration variables.
 
-    def readlines(f):
+    def readlines(f: str) -> Iterable[str]:
         try:
             return Path(f).open(encoding="utf-8")
         except IOError:
@@ -1389,14 +1401,14 @@ class UserProfileCleanupBackgroundJob(gui_background_job.GUIBackgroundJob):
             stoppable=False,
         )
 
-    def do_execute(self, job_interface):
+    def do_execute(self, job_interface: background_job.BackgroundProcessInterface) -> None:
         try:
             self._do_cleanup()
             job_interface.send_result_message(_("Job finished"))
         finally:
             UserProfileCleanupBackgroundJob.last_run_path().touch(exist_ok=True)
 
-    def _do_cleanup(self):
+    def _do_cleanup(self) -> None:
         """Cleanup abandoned profile directories
 
         The cleanup is done like this:

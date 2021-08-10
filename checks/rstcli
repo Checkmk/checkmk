@@ -65,7 +65,7 @@ def parse_rstcli_sections(info):
 # interpret the volumes section
 def parse_rstcli_volumes(rows):
     volumes = {}
-    current_volume = {}  # unused!
+    current_volume = {}
 
     for row in rows:
         if row[0] == "Name":
@@ -80,7 +80,7 @@ def parse_rstcli_volumes(rows):
 # interpret the disks section
 def parse_rstcli_disks(rows):
     disks = []
-    current_disk = None
+    current_disk = {}
 
     for row in rows:
         if row[0] == "ID":

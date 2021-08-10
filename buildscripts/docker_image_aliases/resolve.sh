@@ -8,6 +8,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 DOCKER_RESULT=$(docker build --pull "${SCRIPT_DIR}/$1" 2>docker-image-alias-resolve-error.txt)
 RESULT_IMAGE_ID=$(awk '/Successfully built/{print $3}' <<< "${DOCKER_RESULT}")
+REPO_TAGS=$(docker image inspect  -f '{{join .RepoTags " "}}' ${RESULT_IMAGE_ID})
+
+# We need to pull also the tags, otherwise Nexus may delete those images
+for tag in $REPO_TAGS; do
+    docker pull -q ${tag} > /dev/null
+done
 
 if [ -n "$RESULT_IMAGE_ID" ] ; then
     rm docker-image-alias-resolve-error.txt

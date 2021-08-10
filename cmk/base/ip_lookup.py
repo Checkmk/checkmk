@@ -213,13 +213,13 @@ class IPLookupCacheSerializer:
     def __init__(self) -> None:
         self._dim_serializer = store.DimSerializer()
 
-    def serialize(self, data: Mapping[IPLookupCacheId, HostName]) -> bytes:
+    def serialize(self, data: Mapping[IPLookupCacheId, HostAddress]) -> bytes:
         return self._dim_serializer.serialize({(str(hn), {
             socket.AF_INET: 4,
             socket.AF_INET6: 6
         }[f]): v for (hn, f), v in data.items()})
 
-    def deserialize(self, raw: bytes) -> Mapping[IPLookupCacheId, HostName]:
+    def deserialize(self, raw: bytes) -> Mapping[IPLookupCacheId, HostAddress]:
         loaded_object = self._dim_serializer.deserialize(raw)
         assert isinstance(loaded_object, dict)
 
@@ -228,7 +228,7 @@ class IPLookupCacheSerializer:
             if isinstance(k, str) else (HostName(k[0]), {
                 4: socket.AF_INET,
                 6: socket.AF_INET6
-            }[k[1]]): str(v) for k, v in loaded_object.items()
+            }[k[1]]): HostAddress(v) for k, v in loaded_object.items()
         }
 
 

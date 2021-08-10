@@ -446,8 +446,11 @@ def _show_graph_legend(graph_artwork, graph_render_options) -> None:
     html.close_table()
 
 
-Bounds = NamedTuple("Bounds", [("top", float), ("right", float), ("bottom", float),
-                               ("left", float)])
+class Bounds(NamedTuple):
+    top: float
+    right: float
+    bottom: float
+    left: float
 
 
 def _graph_padding_styles(graph_render_options):

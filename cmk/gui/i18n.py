@@ -24,11 +24,12 @@ import cmk.utils.paths
 #   | Handling of the regular localization of the GUI                      |
 #   '----------------------------------------------------------------------'
 
+
 # NullTranslations is the base class used by all translation classes in gettext
-Translation = NamedTuple("Translation", [
-    ("translation", gettext_module.NullTranslations),
-    ("name", str),
-])
+class Translation(NamedTuple):
+    translation: gettext_module.NullTranslations
+    name: str
+
 
 # Current active translation object
 _translation: Optional[Translation] = None

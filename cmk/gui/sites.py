@@ -415,10 +415,9 @@ def set_limit(limit: Optional[int]) -> Iterator[None]:
         live().set_limit()  # removes limit
 
 
-GroupedSiteState = NamedTuple("GroupedSiteState", [
-    ("readable", str),
-    ("site_ids", List[SiteId]),
-])
+class GroupedSiteState(NamedTuple):
+    readable: str
+    site_ids: List[SiteId]
 
 
 def get_grouped_site_states() -> Dict[str, GroupedSiteState]:

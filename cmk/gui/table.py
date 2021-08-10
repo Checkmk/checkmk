@@ -37,32 +37,33 @@ if TYPE_CHECKING:
     from cmk.gui.htmllib import HTMLContent, HTMLTagAttributes
     from cmk.gui.type_defs import CSSSpec
 
-TableHeader = NamedTuple("TableHeader", [
-    ("title", HTML),
-    ("css", 'CSSSpec'),
-    ("help_txt", Optional[str]),
-    ("sortable", bool),
-])
 
-CellSpec = NamedTuple("CellSpec", [
-    ("content", HTML),
-    ("css", 'CSSSpec'),
-    ("colspan", Optional[int]),
-])
+class TableHeader(NamedTuple):
+    title: HTML
+    css: 'CSSSpec'
+    help_txt: Optional[str]
+    sortable: bool
 
-TableRow = NamedTuple("TableRow", [
-    ("cells", List[CellSpec]),
-    ("css", Optional[str]),
-    ("state", int),
-    ("fixed", bool),
-    ("row_attributes", 'HTMLTagAttributes'),
-])
 
-GroupHeader = NamedTuple("GroupHeader", [
-    ("title", str),
-    ("fixed", bool),
-    ("row_attributes", 'HTMLTagAttributes'),
-])
+class CellSpec(NamedTuple):
+    content: HTML
+    css: 'CSSSpec'
+    colspan: Optional[int]
+
+
+class TableRow(NamedTuple):
+    cells: List[CellSpec]
+    css: Optional[str]
+    state: int
+    fixed: bool
+    row_attributes: 'HTMLTagAttributes'
+
+
+class GroupHeader(NamedTuple):
+    title: str
+    fixed: bool
+    row_attributes: 'HTMLTagAttributes'
+
 
 TableRows = List[Union[TableRow, GroupHeader]]
 

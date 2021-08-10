@@ -1958,10 +1958,11 @@ class ListOf(ValueSpec):
 
 ListOfMultipleChoices = Sequence[_Tuple[str, ValueSpec]]
 
-ListOfMultipleChoiceGroup = NamedTuple("ListOfMultipleChoiceGroup", [
-    ("title", str),
-    ("choices", ListOfMultipleChoices),
-])
+
+class ListOfMultipleChoiceGroup(NamedTuple):
+    title: str
+    choices: ListOfMultipleChoices
+
 
 GroupedListOfMultipleChoices = List[ListOfMultipleChoiceGroup]
 

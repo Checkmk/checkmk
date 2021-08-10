@@ -642,8 +642,9 @@ class ModeAjaxActivationState(AjaxPage):
         return manager.get_state()
 
 
-ActivateChangesRequest = NamedTuple("ActivateChangesRequest", [("site_id", str),
-                                                               ("domains", List[str])])
+class ActivateChangesRequest(NamedTuple):
+    site_id: str
+    domains: List[str]
 
 
 @watolib.automation_command_registry.register

@@ -33,17 +33,17 @@ ParentScanResult = collections.namedtuple("ParentScanResult", [
     "dns_name",
 ])
 
-ParentScanSettings = NamedTuple("ParentScanSettings", [
-    ("where", str),
-    ("alias", str),
-    ("recurse", bool),
-    ("select", str),
-    ("timeout", int),
-    ("probes", int),
-    ("max_ttl", int),
-    ("force_explicit", bool),
-    ("ping_probes", int),
-])
+
+class ParentScanSettings(NamedTuple):
+    where: str
+    alias: str
+    recurse: bool
+    select: str
+    timeout: int
+    probes: int
+    max_ttl: int
+    force_explicit: bool
+    ping_probes: int
 
 
 # TODO: This job should be executable multiple times at once

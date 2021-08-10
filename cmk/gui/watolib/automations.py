@@ -384,18 +384,17 @@ def do_site_login(site_id, name, password):
     return eval_response
 
 
-CheckmkAutomationRequest = NamedTuple("CheckmkAutomationRequest", [
-    ("command", str),
-    ("args", Optional[Sequence[str]]),
-    ("indata", Any),
-    ("stdin_data", Optional[str]),
-    ("timeout", Optional[int]),
-])
+class CheckmkAutomationRequest(NamedTuple):
+    command: str
+    args: Optional[Sequence[str]]
+    indata: Any
+    stdin_data: Optional[str]
+    timeout: Optional[int]
 
-CheckmkAutomationGetStatusResponse = NamedTuple("CheckmkAutomationGetStatusResponse", [
-    ("job_status", Dict[str, Any]),
-    ("result", Any),
-])
+
+class CheckmkAutomationGetStatusResponse(NamedTuple):
+    job_status: Dict[str, Any]
+    result: Any
 
 
 # There are already at least two custom background jobs that are wrapping remote automation

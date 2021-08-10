@@ -834,16 +834,15 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
                 html.render_span(message, style="vertical-align:middle"))
 
 
-PingResult = NamedTuple("PingResult", [
-    ("version", str),
-    ("edition", str),
-])
+class PingResult(NamedTuple):
+    version: str
+    edition: str
 
-ReplicationStatus = NamedTuple("ReplicationStatus", [
-    ("site_id", str),
-    ("success", bool),
-    ("response", Union[PingResult, Exception]),
-])
+
+class ReplicationStatus(NamedTuple):
+    site_id: str
+    success: bool
+    response: Union[PingResult, Exception]
 
 
 class ReplicationStatusFetcher:
@@ -1098,25 +1097,24 @@ class ModeEditSiteGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditSiteGlobals.mode_url(site=self._site_id)
 
 
-ChainVerifyResult = NamedTuple("ChainVerifyResult", [
-    ("cert_pem", str),
-    ("error_number", int),
-    ("error_depth", int),
-    ("error_message", str),
-    ("is_valid", bool),
-])
+class ChainVerifyResult(NamedTuple):
+    cert_pem: str
+    error_number: int
+    error_depth: int
+    error_message: str
+    is_valid: bool
 
-CertificateDetails = NamedTuple("CertificateDetails", [
-    ("issued_to", str),
-    ("issued_by", str),
-    ("valid_from", str),
-    ("valid_till", str),
-    ("signature_algorithm", str),
-    ("digest_sha256", str),
-    ("serial_number", int),
-    ("is_ca", bool),
-    ("verify_result", ChainVerifyResult),
-])
+
+class CertificateDetails(NamedTuple):
+    issued_to: str
+    issued_by: str
+    valid_from: str
+    valid_till: str
+    signature_algorithm: str
+    digest_sha256: str
+    serial_number: int
+    is_ca: bool
+    verify_result: ChainVerifyResult
 
 
 @mode_registry.register

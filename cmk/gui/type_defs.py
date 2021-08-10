@@ -33,10 +33,13 @@ ChoiceText = str
 ChoiceId = Optional[str]
 Choice = Tuple[ChoiceId, ChoiceText]
 Choices = List[Choice]
-ChoiceGroup = NamedTuple("ChoiceGroup", [
-    ("title", Text),
-    ("choices", Choices),
-])
+
+
+class ChoiceGroup(NamedTuple):
+    title: Text
+    choices: Choices
+
+
 GroupedChoices = List[ChoiceGroup]
 UserSpec = Dict[str, Any]  # TODO: Improve this type
 
@@ -49,10 +52,12 @@ VisualTypeName = str
 VisualContext = Mapping[FilterName, FilterHTTPVariables]
 InfoName = str
 SingleInfos = List[InfoName]
-VisualLinkSpec = NamedTuple("VisualLinkSpec", [
-    ("type_name", VisualTypeName),
-    ("name", VisualName),
-])
+
+
+class VisualLinkSpec(NamedTuple):
+    type_name: VisualTypeName
+    name: VisualName
+
 
 # View specific
 Row = Dict[str, Any]  # TODO: Improve this type

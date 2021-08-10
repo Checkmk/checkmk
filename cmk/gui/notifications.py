@@ -33,10 +33,11 @@ from cmk.gui.table import table_element
 from cmk.gui.utils.flashed_messages import get_flashed_messages
 from cmk.gui.utils.urls import make_confirm_link, makeactionuri
 
-FailedNotificationTimes = NamedTuple("FailedNotificationTimes", [
-    ("acknowledged_unitl", float),
-    ("modified", float),
-])
+
+class FailedNotificationTimes(NamedTuple):
+    acknowledged_unitl: float
+    modified: float
+
 
 g_columns: List[str] = [
     "time", "contact_name", "type", "host_name", "service_description", "comment"

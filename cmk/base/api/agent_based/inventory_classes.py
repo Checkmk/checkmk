@@ -162,14 +162,12 @@ class TableRow(
 
 InventoryResult = Iterable[Union[Attributes, TableRow]]
 InventoryFunction = Callable[..., InventoryResult]
-InventoryPlugin = NamedTuple(
-    "InventoryPlugin",
-    [
-        ("name", InventoryPluginName),
-        ("sections", List[ParsedSectionName]),
-        ("inventory_function", InventoryFunction),
-        ("inventory_default_parameters", ParametersTypeAlias),
-        ("inventory_ruleset_name", Optional[RuleSetName]),
-        ("module", Optional[str]),  # not available for auto migrated plugins.
-    ],
-)
+
+
+class InventoryPlugin(NamedTuple):
+    name: InventoryPluginName
+    sections: List[ParsedSectionName]
+    inventory_function: InventoryFunction
+    inventory_default_parameters: ParametersTypeAlias
+    inventory_ruleset_name: Optional[RuleSetName]
+    module: Optional[str]  # not available for auto migrated plugins.

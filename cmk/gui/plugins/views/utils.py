@@ -436,10 +436,10 @@ class ViewLayoutRegistry(cmk.utils.plugin_registry.Registry[Type[Layout]]):
 
 layout_registry = ViewLayoutRegistry()
 
-Exporter = NamedTuple("Exporter", [
-    ("name", str),
-    ("handler", Callable[["View", Rows], None]),
-])
+
+class Exporter(NamedTuple):
+    name: str
+    handler: Callable[["View", Rows], None]
 
 
 class ViewExporterRegistry(cmk.utils.plugin_registry.Registry[Exporter]):
@@ -2199,28 +2199,29 @@ class Cell:
         return content != ""
 
 
-SorterSpec = NamedTuple(
-    "SorterSpec",
-    [
-        # some Sorter need an additional parameter e.g. svc_metrics_hist, svc_metrics_forecast
-        # The parameter is then encoded in the sorter name. "[sorter]:[param]"
-        # other Sorter (custom host metric) do the same when the information is
-        # coming from the url, but use a CascadingDropdown to let the user
-        # input the information. This results in a Tuple as a result variable.
-        # TODO: perhaps it could be possible to use the ValueSpec to
-        #       transparently transform the tuple into a single string?!
-        ("sorter", Union[SorterName, Tuple[SorterName, Dict[str, str]]]),
-        ("negate", bool),
-        ("join_key", Optional[str]),
-    ])
+class SorterSpec(NamedTuple):
+    # some Sorter need an additional parameter e.g. svc_metrics_hist, svc_metrics_forecast
+    # The parameter is then encoded in the sorter name. "[sorter]:[param]"
+    # other Sorter (custom host metric) do the same when the information is
+    # coming from the url, but use a CascadingDropdown to let the user
+    # input the information. This results in a Tuple as a result variable.
+    # TODO: perhaps it could be possible to use the ValueSpec to
+    #       transparently transform the tuple into a single string?!
+    sorter: Union[SorterName, Tuple[SorterName, Dict[str, str]]]
+    negate: bool
+    join_key: Optional[str]
+
+
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterSpec.__new__.__defaults__ = (None,) * len(SorterSpec._fields)  # type: ignore[attr-defined]
 
-SorterEntry = NamedTuple("SorterEntry", [
-    ("sorter", Sorter),
-    ("negate", bool),
-    ("join_key", Optional[str]),
-])
+
+class SorterEntry(NamedTuple):
+    sorter: Sorter
+    negate: bool
+    join_key: Optional[str]
+
+
 # Is used to add default arguments to the named tuple. Would be nice to have a cleaner solution
 SorterEntry.__new__.__defaults__ = (None,) * len(SorterEntry._fields)  # type: ignore[attr-defined]
 

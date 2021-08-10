@@ -271,7 +271,12 @@ else:
     raise RuntimeError(pprint.pformat(resp.json()))
 """
 
-CodeExample = NamedTuple("CodeExample", [('lang', str), ('label', str), ('template', str)])
+
+class CodeExample(NamedTuple):
+    lang: str
+    label: str
+    template: str
+
 
 # NOTE: To add a new code-example, you need to add them to this list.
 CODE_EXAMPLES: List[CodeExample] = [

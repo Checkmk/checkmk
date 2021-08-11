@@ -206,9 +206,7 @@ class UserSidebarConfig:
         user_config = self._from_config(user_config)
 
         # Remove entries the user is not allowed for
-        user_config["snapins"] = [
-            e for e in user_config["snapins"] if user.may(e.snapin_type.permission_name())
-        ]
+        user_config["snapins"] = [e for e in user_config["snapins"] if e.snapin_type.may_see()]
 
         return user_config
 

@@ -10,25 +10,27 @@ import pytest
 
 from testlib import Check
 
-_STRING_TABLE = [
-    ["TowerA_InfeedA", "1", "1097"],
-    ["TowerA_InfeedB", "1", "261"],
-    ["TowerA_InfeedC", "1", "0"],
-    ["TowerB_InfeedA", "1", "665"],
-    ["TowerB_InfeedB", "1", "203"],
-    ["TowerB_InfeedC", "1", "0"],
-]
+from cmk.base.plugins.agent_based.sentry_pdu import PDU
+
+_SECTION = {
+    "TowerA_InfeedA": PDU(state="on", power=1097),
+    "TowerA_InfeedB": PDU(state="on", power=261),
+    "TowerA_InfeedC": PDU(state="on", power=0),
+    "TowerB_InfeedA": PDU(state="on", power=665),
+    "TowerB_InfeedB": PDU(state="unknown", power=203),
+    "TowerB_InfeedC": PDU(state="on", power=0)
+}
 
 
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_inventory_sentry_pdu() -> None:
-    assert list(Check("sentry_pdu").run_discovery(_STRING_TABLE)) == [
-        ("TowerA_InfeedA", 1),
-        ("TowerA_InfeedB", 1),
-        ("TowerA_InfeedC", 1),
-        ("TowerB_InfeedA", 1),
-        ("TowerB_InfeedB", 1),
-        ("TowerB_InfeedC", 1),
+    assert list(Check("sentry_pdu").run_discovery(_SECTION)) == [
+        ("TowerA_InfeedA", "on"),
+        ("TowerA_InfeedB", "on"),
+        ("TowerA_InfeedC", "on"),
+        ("TowerB_InfeedA", "on"),
+        ("TowerB_InfeedB", "unknown"),
+        ("TowerB_InfeedC", "on"),
     ]
 
 
@@ -37,7 +39,7 @@ def test_inventory_sentry_pdu() -> None:
     [
         pytest.param(
             "TowerA_InfeedA",
-            1,
+            "on",
             [
                 (0, "Status: on"),
                 (0, "Power: 1097 Watt", [("power", 1097)]),
@@ -46,7 +48,7 @@ def test_inventory_sentry_pdu() -> None:
         ),
         pytest.param(
             "TowerA_InfeedA",
-            0,
+            "off",
             [
                 (2, "Status: on"),
                 (0, "Power: 1097 Watt", [("power", 1097)]),
@@ -84,5 +86,5 @@ def test_check_sentry_pdu(
     assert list(Check("sentry_pdu").run_check(
         item,
         params,
-        _STRING_TABLE,
+        _SECTION,
     )) == expected_result

@@ -129,8 +129,7 @@ def main():
         print(f'FROM {remote_image_name}', file=dockerfile)
 
     with open(alias_dir / "meta.yml", "w") as metafile:
-        yaml.dump({"source": source_name}, stream=metafile)
-
+        yaml.dump({"source": source_name, "tag": name_in_registry}, stream=metafile)
 
 if __name__ == "__main__":
     main()

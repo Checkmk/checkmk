@@ -8,12 +8,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 DOCKER_RESULT=$(docker build --pull "${SCRIPT_DIR}/$1" 2>docker-image-alias-resolve-error.txt)
 RESULT_IMAGE_ID=$(awk '/Successfully built/{print $3}' <<< "${DOCKER_RESULT}")
-REPO_TAGS=$(docker image inspect  -f '{{join .RepoTags " "}}' ${RESULT_IMAGE_ID})
 
-# We need to pull also the tags, otherwise Nexus may delete those images
-for tag in $REPO_TAGS; do
-    docker pull -q ${tag} > /dev/null
-done
+# Get the nexus repo tag via the meta.yml file. You're asking why not via docker image inspect?
+# It seems that we don't always get the nexus repo tag via the field "RepoTags", so we go this way...
+REPO_TAG=$(grep "tag:" "${SCRIPT_DIR}/$1/meta.yml" | awk '{ print $2}')
+
+# We need to pull also the tag, otherwise Nexus may delete those images
+docker pull -q "${REPO_TAG}" > /dev/null
 
 if [ -n "$RESULT_IMAGE_ID" ] ; then
     rm docker-image-alias-resolve-error.txt

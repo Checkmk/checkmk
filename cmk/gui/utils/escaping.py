@@ -9,7 +9,7 @@ from html import escape as html_escape
 from typing import Union
 from urllib.parse import urlparse
 
-from six import ensure_str
+from flask_babel.speaklater import LazyString  # type: ignore[import]
 
 from cmk.gui.utils.html import HTML
 
@@ -27,7 +27,7 @@ from cmk.gui.utils.html import HTML
 
 # TODO: Figure out if this should actually be HTMLTagValue or HTMLContent or...
 # All the HTML-related types are slightly chaotic...
-EscapableEntity = Union[None, int, HTML, str]
+EscapableEntity = Union[None, int, HTML, str, LazyString]
 
 _UNESCAPER_TEXT = re.compile(
     r'&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
@@ -71,28 +71,25 @@ def escape_attribute(value: EscapableEntity) -> str:
     Returns:
 
     """
-    attr_type = type(value)
+    if isinstance(value, str):
+        return html_escape(value, quote=True)
+    if isinstance(value, HTML):
+        return str(value)  # HTML code which must not be escaped
     if value is None:
         return ''
-    if attr_type == int:
+    if isinstance(value, (int, float)):
         return str(value)
-    if isinstance(value, HTML):
-        return str(value)  # This is HTML code which must not be escaped
-    if isinstance(attr_type, str):
-        return html_escape(value, quote=True)
-    if isinstance(attr_type, bytes):  # TODO: Not in the signature!
-        return html_escape(ensure_str(value), quote=True)
-    # TODO: What is this case for? Exception?
-    return html_escape(str(value), quote=True)  # TODO: Not in the signature!
+    if isinstance(value, LazyString):
+        return html_escape(str(value), quote=True)
+    raise TypeError(f'Unsupported type {type(value)}')
 
 
 def unescape_attributes(value: str) -> str:
     # In python3 use html.unescape
-    return ensure_str(value  #
-                      .replace("&amp;", "&")  #
-                      .replace("&quot;", "\"")  #
-                      .replace("&lt;", "<")  #
-                      .replace("&gt;", ">"))
+    return (value.replace("&amp;", "&")  #
+            .replace("&quot;", "\"")  #
+            .replace("&lt;", "<")  #
+            .replace("&gt;", ">"))
 
 
 def escape_text(text: EscapableEntity) -> str:
@@ -199,13 +196,11 @@ def strip_tags(ht: EscapableEntity) -> str:
         A string without working HTML tags.
 
     """
-    if isinstance(ht, HTML):
+    if isinstance(ht, (HTML, LazyString)):
         ht = str(ht)
 
     if not isinstance(ht, str):
         return str(ht)
-
-    ht = ensure_str(ht)
 
     while True:
         x = ht.find('<')

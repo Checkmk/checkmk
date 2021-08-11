@@ -105,14 +105,11 @@ def test_escape_text(inp, out):
     assert escaping.escape_text(inp) == out
 
 
-@pytest.mark.parametrize(
-    "inp,out",
-    [
-        ('foo bar', 'foo bar'),
-        ('some <a>link</a> in text', 'some link in text'),
-        (HTML('some <a>link</a> in html text'), 'some link in html text'),
-        # FIXME: LazyStrings are fixed in the next commit
-        # (LazyString(lambda: 'some <a>link</a> in lazy text'), 'some link in text'),
-    ])
+@pytest.mark.parametrize("inp,out", [
+    ('foo bar', 'foo bar'),
+    ('some <a>link</a> in text', 'some link in text'),
+    (HTML('some <a>link</a> in html text'), 'some link in html text'),
+    (LazyString(lambda: 'some <a>link</a> in lazy text'), 'some link in lazy text'),
+])
 def test_strip_tags(inp, out):
     assert escaping.strip_tags(inp) == out

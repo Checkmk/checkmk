@@ -1337,9 +1337,16 @@ def _parameter_valuespec_aws_lambda_performance():
          Tuple(
              title=_("Upper levels for errors"),
              elements=[
-                 Float(title=_("Warning at"), size=6, display_format="%.5f", default_value=0.00028),
-                 Float(title=_("Critical at"), size=6, display_format="%.5f",
-                       default_value=0.00028),
+                 Float(title=_("Warning at"),
+                       size=6,
+                       display_format="%.5f",
+                       default_value=0.00028,
+                       unit="1/s"),
+                 Float(title=_("Critical at"),
+                       size=6,
+                       display_format="%.5f",
+                       default_value=0.00028,
+                       unit="1/s"),
              ],
              help=
              _("Specify the upper levels for the number of failed invocations per second due to function errors. Default is CRIT for more than one error per hour (ca. 1.0/3600)."
@@ -1349,8 +1356,8 @@ def _parameter_valuespec_aws_lambda_performance():
          Tuple(
              title=_("Upper levels for invocations"),
              elements=[
-                 Float(title=_("Warning at")),
-                 Float(title=_("Critical at")),
+                 Float(title=_("Warning at"), unit="1/s"),
+                 Float(title=_("Critical at"), unit="1/s"),
              ],
              help=_("Specify the upper levels for the number of invocations per second."),
          )),
@@ -1358,9 +1365,16 @@ def _parameter_valuespec_aws_lambda_performance():
          Tuple(
              title=_("Upper levels for throttles"),
              elements=[
-                 Float(title=_("Warning at"), size=6, display_format="%.5f", default_value=0.00028),
-                 Float(title=_("Critical at"), size=6, display_format="%.5f",
-                       default_value=0.00028),
+                 Float(title=_("Warning at"),
+                       size=6,
+                       display_format="%.5f",
+                       default_value=0.00028,
+                       unit="1/s"),
+                 Float(title=_("Critical at"),
+                       size=6,
+                       display_format="%.5f",
+                       default_value=0.00028,
+                       unit="1/s"),
              ],
              help=
              _("Specify the upper levels for the number of invocations per second that exceeded the concurrent limits (throttles). Default is CRIT for more than one error per hour (ca. 1.0/3600)."
@@ -1370,8 +1384,8 @@ def _parameter_valuespec_aws_lambda_performance():
          Tuple(
              title=_("Upper levels for iterator age"),
              elements=[
-                 Float(title=_("Warning at")),
-                 Float(title=_("Critical at")),
+                 Float(title=_("Warning at"), unit="s"),
+                 Float(title=_("Critical at"), unit="s"),
              ],
              help=
              _("Specify the upper levels in seconds for the age of the last record for each batch of records processed (iterator age). "
@@ -1382,9 +1396,16 @@ def _parameter_valuespec_aws_lambda_performance():
          Tuple(
              title=_("Upper levels for dead letter errors"),
              elements=[
-                 Float(title=_("Warning at"), size=6, display_format="%.5f", default_value=0.00028),
-                 Float(title=_("Critical at"), size=6, display_format="%.5f",
-                       default_value=0.00028),
+                 Float(title=_("Warning at"),
+                       size=6,
+                       display_format="%.5f",
+                       default_value=0.00028,
+                       unit="1/s"),
+                 Float(title=_("Critical at"),
+                       size=6,
+                       display_format="%.5f",
+                       default_value=0.00028,
+                       unit="1/s"),
              ],
              help=
              _("Specify the upper levels for the number of discarded events per second that could not be processed. "
@@ -1447,41 +1468,48 @@ def _parameter_valuespec_aws_lambda_concurrency():
          Tuple(
              title=_("Upper levels for concurrent executions"),
              elements=[
-                 Float(title=_("Warning at"), display_format="%.1f"),
-                 Float(title=_("Critical at"), display_format="%.1f"),
+                 Float(title=_("Warning at"), display_format="%.1f", unit="1/s"),
+                 Float(title=_("Critical at"), display_format="%.1f", unit="1/s"),
              ],
          )),
         ('levels_unreserved_concurrent_executions_absolute',
          Tuple(
              title=_("Upper levels for unreserved concurrent executions"),
              elements=[
-                 Float(title=_("Warning at"), display_format="%.1f"),
-                 Float(title=_("Critical at"), display_format="%.1f"),
+                 Float(title=_("Warning at"), display_format="%.1f", unit="1/s"),
+                 Float(title=_("Critical at"), display_format="%.1f", unit="1/s"),
              ],
          )),
         ('levels_provisioned_concurrency_executions',
          Tuple(
              title=_("Upper levels for provisioned concurrent executions per second"),
              elements=[
-                 Float(title=_("Warning at"), size=6, display_format="%.5f"),
-                 Float(title=_("Critical at"), size=6, display_format="%.5f"),
+                 Float(title=_("Warning at"), size=6, display_format="%.5f", unit="1/s"),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f", unit="1/s"),
              ],
          )),
         ('levels_provisioned_concurrency_invocations',
          Tuple(
              title=_("Upper levels for provisioned concurrent invocations per second"),
              elements=[
-                 Float(title=_("Warning at"), size=6, display_format="%.5f"),
-                 Float(title=_("Critical at"), size=6, display_format="%.5f"),
+                 Float(title=_("Warning at"), size=6, display_format="%.5f", unit="1/s"),
+                 Float(title=_("Critical at"), size=6, display_format="%.5f", unit="1/s"),
              ],
          )),
         ('levels_provisioned_concurrency_spillover_invocations',
          Tuple(
              title=_("Upper levels for provisioned concurrency spillover invocations per second"),
              elements=[
-                 Float(title=_("Warning at"), size=6, display_format="%.5f", default_value=0.00028),
-                 Float(title=_("Critical at"), size=6, display_format="%.5f",
-                       default_value=0.00028),
+                 Float(title=_("Warning at"),
+                       size=6,
+                       display_format="%.5f",
+                       default_value=0.00028,
+                       unit="1/s"),
+                 Float(title=_("Critical at"),
+                       size=6,
+                       display_format="%.5f",
+                       default_value=0.00028,
+                       unit="1/s"),
              ],
              help=
              _("Specify the upper levels for the number of invocations per second that are run on non-provisioned concurrency"

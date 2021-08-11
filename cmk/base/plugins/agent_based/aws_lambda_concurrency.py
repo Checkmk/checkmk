@@ -135,7 +135,7 @@ def check_aws_lambda_concurrency(
                 levels_upper=levels_concurrent_executions,
                 metric_name='aws_lambda_concurrent_executions',
                 label='Concurrent executions',
-                render_func=lambda f: "%.2f" % f,
+                render_func=lambda f: "%.2f/s" % f,
             )
 
     if metrics.UnreservedConcurrentExecutions:
@@ -146,7 +146,7 @@ def check_aws_lambda_concurrency(
                 levels_upper=levels_unreserved_concurrent_executions,
                 metric_name='aws_lambda_unreserved_concurrent_executions',
                 label='unreserved concurrent executions',
-                render_func=lambda f: "%.2f" % f,
+                render_func=lambda f: "%.2f/s" % f,
             )
 
     if metrics.ProvisionedConcurrentExecutions:
@@ -155,7 +155,7 @@ def check_aws_lambda_concurrency(
             levels_upper=params.get('levels_provisioned_concurrency_executions'),
             metric_name='aws_lambda_provisioned_concurrency_executions',
             label='provisioned concurrent executions',
-            render_func=lambda f: "%.4f" % f,
+            render_func=lambda f: "%.4f/s" % f,
         )
 
     if metrics.ProvisionedConcurrencyInvocations:
@@ -164,7 +164,7 @@ def check_aws_lambda_concurrency(
             levels_upper=params.get('levels_provisioned_concurrency_invocations'),
             metric_name='aws_lambda_provisioned_concurrency_invocations',
             label='provisioned concurrency invocations',
-            render_func=lambda f: "%.4f" % f,
+            render_func=lambda f: "%.4f/s" % f,
         )
     if metrics.ProvisionedConcurrencySpilloverInvocations:
         yield from check_levels(
@@ -172,7 +172,7 @@ def check_aws_lambda_concurrency(
             levels_upper=params['levels_provisioned_concurrency_spillover_invocations'],
             metric_name='aws_lambda_provisioned_concurrency_spillover_invocations',
             label='provisioned concurrency spillover invocations',
-            render_func=lambda f: "%.4f" % f,
+            render_func=lambda f: "%.4f/s" % f,
         )
     if metrics.ProvisionedConcurrencyUtilization:
         yield from check_levels(

@@ -788,12 +788,6 @@ metric_info['aws_lambda_throttles'] = {
     'color': '26/a',
 }
 
-metric_info['aws_lambda_timeout'] = {
-    'title': _('Timeout'),
-    'unit': 'count',
-    'color': '11/a',
-}
-
 metric_info['aws_lambda_iterator_age'] = {
     'title': _('Iterator age'),
     'unit': 's',
@@ -826,7 +820,7 @@ metric_info['aws_lambda_concurrent_executions_in_percent'] = {
 
 metric_info['aws_lambda_concurrent_executions'] = {
     'title': _('Concurrent executions'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '36/a',
 }
 
@@ -838,7 +832,7 @@ metric_info['aws_lambda_unreserved_concurrent_executions_in_percent'] = {
 
 metric_info['aws_lambda_unreserved_concurrent_executions'] = {
     'title': _('Unreserved concurrent executions'),
-    'unit': 'count',
+    'unit': '1/s',
     'color': '26/a',
 }
 

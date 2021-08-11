@@ -493,14 +493,14 @@ _PARAMETERS_WITH_ABSOLUTE_LEVELS["levels_unreserved_concurrent_executions_absolu
             _STRING_TABLE_AWS_LAMBDA_CONCURRENCY,
             _STRING_TABLE_AWS_LAMBDA_REGION_LIMITS_NOT_AVAILABLE,
             [
-                Result(state=State.OK, summary='provisioned concurrent executions: 0.0167'),
+                Result(state=State.OK, summary='provisioned concurrent executions: 0.0167/s'),
                 Metric('aws_lambda_provisioned_concurrency_executions', 0.016666666666666666),
-                Result(state=State.OK, summary='provisioned concurrency invocations: 0.0167'),
+                Result(state=State.OK, summary='provisioned concurrency invocations: 0.0167/s'),
                 Metric('aws_lambda_provisioned_concurrency_invocations', 0.016666666666666666),
                 Result(
                     state=State.CRIT,
                     summary=
-                    'provisioned concurrency spillover invocations: 0.0017 (warn/crit at 0.0003/0.0003)'
+                    'provisioned concurrency spillover invocations: 0.0017/s (warn/crit at 0.0003/s/0.0003/s)'
                 ),
                 Metric('aws_lambda_provisioned_concurrency_spillover_invocations',
                        0.0016666666666666668,
@@ -527,19 +527,21 @@ _PARAMETERS_WITH_ABSOLUTE_LEVELS["levels_unreserved_concurrent_executions_absolu
                        0.10050251256281408,
                        levels=(90.0, 95.0)),
                 Result(state=State.CRIT,
-                       summary='Concurrent executions: 2.00 (warn/crit at 1.00/2.00)'),
+                       summary='Concurrent executions: 2.00/s (warn/crit at 1.00/s/2.00/s)'),
                 Metric('aws_lambda_concurrent_executions', 2.0, levels=(1.0, 2.0)),
-                Result(state=State.WARN,
-                       summary='unreserved concurrent executions: 1.00 (warn/crit at 1.00/2.00)'),
+                Result(
+                    state=State.WARN,
+                    summary='unreserved concurrent executions: 1.00/s (warn/crit at 1.00/s/2.00/s)'
+                ),
                 Metric('aws_lambda_unreserved_concurrent_executions', 1.0, levels=(1.0, 2.0)),
-                Result(state=State.OK, summary='provisioned concurrent executions: 0.0167'),
+                Result(state=State.OK, summary='provisioned concurrent executions: 0.0167/s'),
                 Metric('aws_lambda_provisioned_concurrency_executions', 0.016666666666666666),
-                Result(state=State.OK, summary='provisioned concurrency invocations: 0.0167'),
+                Result(state=State.OK, summary='provisioned concurrency invocations: 0.0167/s'),
                 Metric('aws_lambda_provisioned_concurrency_invocations', 0.016666666666666666),
                 Result(
                     state=State.CRIT,
                     summary=
-                    'provisioned concurrency spillover invocations: 0.0017 (warn/crit at 0.0003/0.0003)'
+                    'provisioned concurrency spillover invocations: 0.0017/s (warn/crit at 0.0003/s/0.0003/s)'
                 ),
                 Metric('aws_lambda_provisioned_concurrency_spillover_invocations',
                        0.0016666666666666668,

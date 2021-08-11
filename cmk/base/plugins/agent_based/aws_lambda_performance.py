@@ -65,7 +65,7 @@ def check_invocations(invocations: float, params) -> Generator[Union[Result, Met
         levels_upper=params.get('levels_invocations'),
         metric_name='aws_lambda_invocations',
         label='Invocations',
-        render_func=lambda f: "%.4f" % f,
+        render_func=lambda f: "%.4f/s" % f,
     )
 
 
@@ -122,7 +122,7 @@ def check_aws_lambda_performance(
         levels_upper=params['levels_errors'],
         metric_name='error_rate',
         label='Errors',
-        render_func=lambda f: "%.4f" % f,
+        render_func=lambda f: "%.4f/s" % f,
     )
     yield from check_invocations(metrics.Invocations, params)
     yield from check_levels(
@@ -130,7 +130,7 @@ def check_aws_lambda_performance(
         levels_upper=params['levels_throttles'],
         metric_name='aws_lambda_throttles',
         label='Throttles',
-        render_func=lambda f: "%.4f" % f,
+        render_func=lambda f: "%.4f/s" % f,
     )
 
     if metrics.IteratorAge:
@@ -149,7 +149,7 @@ def check_aws_lambda_performance(
             levels_upper=params['levels_dead_letter_errors'],
             metric_name='aws_lambda_dead_letter_errors',
             label='DeadLetterErrors',
-            render_func=lambda f: "%.4f" % f,
+            render_func=lambda f: "%.4f/s" % f,
         )
 
     if section_aws_lambda_cloudwatch_insights and (

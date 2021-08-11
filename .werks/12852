@@ -1,0 +1,13 @@
+Title: Hosts/Folders: Fix TypeError when displaying the network scan attribute
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p26
+Date: 1628692703
+Class: fix
+
+When displaying the folder properties, a TypeError exception with the message
+"cannot concatenate 'str' and 'NoneType' objects" could happen.
+
+This issue was already solved in the 2.0 versions.

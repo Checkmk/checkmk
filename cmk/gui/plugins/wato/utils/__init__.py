@@ -1697,7 +1697,8 @@ def configure_attributes(new,
                 if not new and not is_editable and active:
                     value = values[0]
                 else:
-                    explanation = " (" + inherited_from + ")"
+                    if inherited_from:
+                        explanation = " (" + inherited_from + ")"
                     value = inherited_value
 
             if for_what != "host_search" and not (for_what == "bulk" and not unique):

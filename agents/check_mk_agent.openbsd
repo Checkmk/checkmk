@@ -42,7 +42,7 @@ else
 fi
 
 echo "<<<check_mk>>>"
-echo "Version: 2.0.0p9"
+echo "Version: 2.0.0p10"
 echo "AgentOS: openbsd"
 echo "Hostname: $(hostname)"
 echo "AgentDirectory: $MK_CONFDIR"

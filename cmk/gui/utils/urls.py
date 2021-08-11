@@ -6,7 +6,7 @@
 
 import json
 import urllib.parse
-from typing import Mapping, Optional, Sequence, Tuple
+from typing import Mapping, Optional, Sequence, Tuple, Union
 
 from cmk.gui.http import Request
 from cmk.gui.type_defs import HTTPVariables
@@ -16,26 +16,23 @@ from cmk.gui.utils.transaction_manager import TransactionManager
 QueryVars = Mapping[str, Sequence[str]]
 
 
+def _quote_pair(varname: str, value: Union[None, int, str]):
+    assert isinstance(varname, str)
+    if isinstance(value, int):
+        return "%s=%s" % (urllib.parse.quote_plus(varname), urllib.parse.quote_plus(str(value)))
+    if value is None:
+        # TODO: This is not ideal and should better be cleaned up somehow. Shouldn't
+        # variables with None values simply be skipped? We currently can not find the
+        # call sites easily. This may be cleaned up once we establish typing. Until then
+        # we need to be compatible with the previous behavior.
+        return "%s=" % urllib.parse.quote_plus(varname)
+    return "%s=%s" % (urllib.parse.quote_plus(varname), urllib.parse.quote_plus(value))
+
+
 # TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless
 def urlencode_vars(vars_: HTTPVariables) -> str:
     """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string"""
-    assert isinstance(vars_, list)
-    pairs = []
-    for varname, value in sorted(vars_):
-        assert isinstance(varname, str)
-
-        if isinstance(value, int):
-            value = str(value)
-        elif value is None:
-            # TODO: This is not ideal and should better be cleaned up somehow. Shouldn't
-            # variables with None values simply be skipped? We currently can not find the
-            # call sites easily. This may be cleaned up once we establish typing. Until then
-            # we need to be compatible with the previous behavior.
-            value = ""
-
-        pairs.append((varname, value))
-
-    return urllib.parse.urlencode(pairs)
+    return '&'.join([_quote_pair(var, val) for var, val in sorted(vars_)])
 
 
 # TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless

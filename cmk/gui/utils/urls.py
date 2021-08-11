@@ -15,18 +15,43 @@ from cmk.gui.utils.transaction_manager import TransactionManager
 
 QueryVars = Mapping[str, Sequence[str]]
 
+_ALWAYS_SAFE = frozenset(b'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                         b'abcdefghijklmnopqrstuvwxyz'
+                         b'0123456789'
+                         b'_.-~'
+                         b' ')
+_ALWAYS_SAFE_BYTES = bytes(_ALWAYS_SAFE)
+_QUOTED = {b: chr(b) if b in _ALWAYS_SAFE else '%{:02X}'.format(b) for b in range(256)}
+
+
+def quote(string: str) -> str:
+    """More performant version of urllib.parse equivalent to the call quote(string, safe=' ')."""
+    if not string:
+        return string
+    bs = string.encode('utf-8', 'strict')
+    if not bs.rstrip(_ALWAYS_SAFE_BYTES):
+        return bs.decode()
+    return ''.join([_QUOTED[char] for char in bs])
+
+
+def quote_plus(string: str) -> str:
+    """More performant version of urllib.parse equivalent to the call quote_plus(string)."""
+    if ' ' not in string:
+        return quote(string)
+    return quote(string).replace(' ', '+')
+
 
 def _quote_pair(varname: str, value: Union[None, int, str]):
     assert isinstance(varname, str)
     if isinstance(value, int):
-        return "%s=%s" % (urllib.parse.quote_plus(varname), urllib.parse.quote_plus(str(value)))
+        return "%s=%s" % (quote_plus(varname), quote_plus(str(value)))
     if value is None:
         # TODO: This is not ideal and should better be cleaned up somehow. Shouldn't
         # variables with None values simply be skipped? We currently can not find the
         # call sites easily. This may be cleaned up once we establish typing. Until then
         # we need to be compatible with the previous behavior.
-        return "%s=" % urllib.parse.quote_plus(varname)
-    return "%s=%s" % (urllib.parse.quote_plus(varname), urllib.parse.quote_plus(value))
+        return "%s=" % quote_plus(varname)
+    return "%s=%s" % (quote_plus(varname), quote_plus(value))
 
 
 # TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless
@@ -38,7 +63,7 @@ def urlencode_vars(vars_: HTTPVariables) -> str:
 # TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless
 def urlencode(value: Optional[str]) -> str:
     """Replace special characters in string using the %xx escape."""
-    return "" if value is None else urllib.parse.quote_plus(value)
+    return "" if value is None else quote_plus(value)
 
 
 def _file_name_from_path(path: str) -> str:
@@ -134,7 +159,7 @@ def makeuri_contextless_rulespec_group(
 
 def make_confirm_link(*, url: str, message: str) -> str:
     return "javascript:cmk.forms.confirm_link(%s, %s),cmk.popup_menu.close_popup()" % (
-        json.dumps(urllib.parse.quote_plus(url)),
+        json.dumps(quote_plus(url)),
         json.dumps(escape_text(message)),
     )
 

@@ -4,11 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+_STATE_TO_MONSTATE = {
+    "unknown": 3,
+}
+
 
 def inventory_sentry_pdu(section):
     yield from ((
         name,
-        pdu.state,
+        {
+            "discovered_state": pdu.state
+        },
     ) for name, pdu in section.items())
 
 
@@ -17,10 +23,16 @@ def check_sentry_pdu(item, params, section):
         return
 
     infotext = "Status: %s" % pdu.state
-    if pdu.state != params:
+    if pdu.state != params.get(
+            "required_state",
+            params["discovered_state"],
+    ):
         yield 2, infotext
     else:
-        yield 0, infotext
+        yield _STATE_TO_MONSTATE.get(
+            pdu.state,
+            0,
+        ), infotext
 
     if pdu.power:
         infotext = "Power: %s Watt" % pdu.power

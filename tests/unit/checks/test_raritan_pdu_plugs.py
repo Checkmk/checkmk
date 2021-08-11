@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Sequence, Tuple, TypedDict
+from typing import Sequence, Tuple, TypedDict
 
 import pytest
 
@@ -39,7 +39,7 @@ _SECTION = {
     },
     "7": {
         "outlet_name": "broken",
-        "state": (None, None)
+        "state": (3, "unknown")
     },
 }
 
@@ -97,7 +97,7 @@ def test_inventory_raritan_pdu_plugs() -> None:
         (
             "7",
             {
-                "discovered_state": None
+                "discovered_state": "unknown"
             },
         ),
     ]
@@ -105,7 +105,7 @@ def test_inventory_raritan_pdu_plugs() -> None:
 
 class CombinedParams(TypedDict, total=False):
     required_state: str
-    discovered_state: Optional[str]
+    discovered_state: str
 
 
 @pytest.mark.parametrize(
@@ -166,12 +166,12 @@ class CombinedParams(TypedDict, total=False):
         pytest.param(
             "7",
             {
-                "discovered_state": None,
+                "discovered_state": "unknown",
                 "required_state": "off",
             },
             [
                 (0, "broken"),
-                (None, "Status: None"),
+                (3, "Status: unknown"),
                 (2, "Expected: off"),
             ],
             id="unknown status",
@@ -181,7 +181,7 @@ class CombinedParams(TypedDict, total=False):
 def test_check_raritan_pdu_plugs(
     item: str,
     params: CombinedParams,
-    expected_result: Sequence[Tuple[Optional[int], str]],
+    expected_result: Sequence[Tuple[int, str]],
 ) -> None:
     assert list(Check("raritan_pdu_plugs").run_check(
         item,

@@ -12,13 +12,15 @@ import itertools
 import os
 import subprocess
 from pathlib import Path
+from typing import Dict
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, HostName
 
 from cmk.core_helpers.config_path import VersionedConfigPath
 
@@ -27,7 +29,7 @@ import cmk.base.core_config as core_config
 import cmk.base.core_nagios as core_nagios
 
 
-def test_format_nagios_object():
+def test_format_nagios_object() -> None:
     spec = {
         "use": "ding",
         "bla": u"däng",
@@ -46,7 +48,7 @@ def test_format_nagios_object():
 """ % tuple(itertools.chain(*sorted(spec.items(), key=lambda x: x[0])))
 
 
-@pytest.mark.parametrize("hostname,result", [
+@pytest.mark.parametrize("hostname_str,result", [
     ("localhost", {
         '_ADDRESS_4': '127.0.0.1',
         '_ADDRESS_6': '',
@@ -174,22 +176,24 @@ def test_format_nagios_object():
         'use': 'check_mk_host',
     }),
 ])
-def test_create_nagios_host_spec(hostname, result, monkeypatch):
+def test_create_nagios_host_spec(hostname_str: str, result: Dict[str, str],
+                                 monkeypatch: MonkeyPatch) -> None:
     if cmk_version.is_managed_edition():
         result = result.copy()
         result['_CUSTOMER'] = 'provider'
 
-    ts = Scenario().add_host("localhost")
-    ts.add_host("host2")
-    ts.add_cluster("cluster1")
+    ts = Scenario()
+    ts.add_host(HostName("localhost"))
+    ts.add_host(HostName("host2"))
+    ts.add_cluster(HostName("cluster1"))
 
-    ts.add_cluster("cluster2", nodes=["node1", "node2"])
-    ts.add_host("node1")
-    ts.add_host("node2")
-    ts.add_host("switch")
+    ts.add_cluster(HostName("cluster2"), nodes=["node1", "node2"])
+    ts.add_host(HostName("node1"))
+    ts.add_host(HostName("node2"))
+    ts.add_host(HostName("switch"))
     ts.set_option("ipaddresses", {
-        "node1": "127.0.0.1",
-        "node2": "127.0.0.2",
+        HostName("node1"): "127.0.0.1",
+        HostName("node2"): "127.0.0.2",
     })
 
     ts.set_option("extra_host_conf", {
@@ -205,6 +209,7 @@ def test_create_nagios_host_spec(hostname, result, monkeypatch):
             "parents": [('switch', ['node1', 'node2']),],
         })
 
+    hostname = HostName(hostname_str)
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
 
@@ -221,21 +226,22 @@ def fixture_config_path() -> VersionedConfigPath:
 
 
 class TestHostCheckStore:
-    def test_host_check_file_path(self, config_path):
-        assert core_nagios.HostCheckStore.host_check_file_path(config_path, "abc") == Path(
-            Path(config_path),
-            "host_checks",
-            "abc",
-        )
+    def test_host_check_file_path(self, config_path: VersionedConfigPath) -> None:
+        assert core_nagios.HostCheckStore.host_check_file_path(config_path,
+                                                               HostName("abc")) == Path(
+                                                                   Path(config_path),
+                                                                   "host_checks",
+                                                                   "abc",
+                                                               )
 
-    def test_host_check_source_file_path(self, config_path):
+    def test_host_check_source_file_path(self, config_path: VersionedConfigPath) -> None:
         assert core_nagios.HostCheckStore.host_check_source_file_path(
             config_path,
-            "abc",
+            HostName("abc"),
         ) == Path(config_path) / "host_checks" / "abc.py"
 
-    def test_write(self, config_path):
-        hostname = "aaa"
+    def test_write(self, config_path: VersionedConfigPath) -> None:
+        hostname = HostName("aaa")
         store = core_nagios.HostCheckStore()
 
         assert config.delay_precompile is False
@@ -257,8 +263,10 @@ class TestHostCheckStore:
         assert os.access(store.host_check_file_path(config_path, hostname), os.X_OK)
 
 
-def test_dump_precompiled_hostcheck(monkeypatch, config_path):
-    ts = Scenario().add_host("localhost")
+def test_dump_precompiled_hostcheck(monkeypatch: MonkeyPatch,
+                                    config_path: VersionedConfigPath) -> None:
+    hostname = HostName("localhost")
+    ts = Scenario().add_host(hostname)
     config_cache = ts.apply(monkeypatch)
 
     # Ensure a host check is created
@@ -271,35 +279,39 @@ def test_dump_precompiled_hostcheck(monkeypatch, config_path):
     host_check = core_nagios._dump_precompiled_hostcheck(
         config_cache,
         config_path,
-        "localhost",
+        hostname,
     )
     assert host_check is not None
     assert host_check.startswith("#!/usr/bin/env python3")
 
 
-def test_dump_precompiled_hostcheck_without_check_mk_service(monkeypatch, config_path):
-    ts = Scenario().add_host("localhost")
+def test_dump_precompiled_hostcheck_without_check_mk_service(
+        monkeypatch: MonkeyPatch, config_path: VersionedConfigPath) -> None:
+    hostname = HostName("localhost")
+    ts = Scenario().add_host(hostname)
     config_cache = ts.apply(monkeypatch)
     host_check = core_nagios._dump_precompiled_hostcheck(
         config_cache,
         config_path,
-        "localhost",
+        hostname,
     )
     assert host_check is None
 
 
-def test_dump_precompiled_hostcheck_not_existing_host(monkeypatch, config_path):
+def test_dump_precompiled_hostcheck_not_existing_host(monkeypatch: MonkeyPatch,
+                                                      config_path: VersionedConfigPath) -> None:
     config_cache = Scenario().apply(monkeypatch)
     host_check = core_nagios._dump_precompiled_hostcheck(
         config_cache,
         config_path,
-        "not-existing",
+        HostName("not-existing"),
     )
     assert host_check is None
 
 
-def test_compile_delayed_host_check(monkeypatch, config_path):
-    hostname = "localhost"
+def test_compile_delayed_host_check(monkeypatch: MonkeyPatch,
+                                    config_path: VersionedConfigPath) -> None:
+    hostname = HostName("localhost")
     ts = Scenario().add_host(hostname)
     ts.set_option("delay_precompile", True)
     config_cache = ts.apply(monkeypatch)

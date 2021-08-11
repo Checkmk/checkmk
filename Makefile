@@ -36,12 +36,13 @@ LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
                       src/{Makefile.am,{,test/}*.{cc,h}} standalone/config_files.m4
 
 FILES_TO_FORMAT_LINUX := \
+                      $(filter-out %.pb.cc %.pb.h, \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
                       $(wildcard $(addprefix livestatus/src/test/,*.cc *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/,*.cc *.h)) \
-                      $(wildcard $(addprefix enterprise/core/src/test/,*.cc *.h))
+                      $(wildcard $(addprefix enterprise/core/src/test/,*.cc *.h)))
 
 WERKS              := $(wildcard .werks/[0-9]*)
 

@@ -13,13 +13,14 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.valuespec import Dictionary, DropdownChoice, TextInput, Transform
 
 
-def _item_spec_plugs():
+def _item_spec_plugs() -> TextInput:
     return TextInput(
         title=_("Plug item number or name"),
         help=
         _("Whether you need the number or the name depends on the check. Just take a look to the service description."
          ),
-        allow_empty=True)
+        allow_empty=True,
+    )
 
 
 def _transform(params):
@@ -30,22 +31,24 @@ def _transform(params):
     return {}
 
 
-def _parameter_valuespec_plugs():
+def _parameter_valuespec_plugs() -> Transform:
     return Transform(
         Dictionary(
             ignored_keys=['discoverd_state'],
             elements=[
-                ('required_state',
-                 DropdownChoice(
-                     help=_("This rule sets the required state of a PDU plug. It is meant to "
-                            "be independent of the hardware manufacturer."),
-                     title=_("Required plug state"),
-                     choices=[
-                         ("on", _("Plug is ON")),
-                         ("off", _("Plug is OFF")),
-                     ],
-                     default_value="on",
-                 )),
+                (
+                    'required_state',
+                    DropdownChoice(
+                        help=_("This rule sets the required state of a PDU plug. It is meant to "
+                               "be independent of the hardware manufacturer."),
+                        title=_("Required plug state"),
+                        choices=[
+                            ("on", _("Plug is ON")),
+                            ("off", _("Plug is OFF")),
+                        ],
+                        default_value="on",
+                    ),
+                ),
             ],
         ),
         forth=_transform,

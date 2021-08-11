@@ -567,7 +567,7 @@ def ajax_snapin():
         except KeyError:
             continue  # Skip not existing snapins
 
-        if not user.may(snapin_instance.permission_name()):
+        if not snapin_instance.may_see():
             continue
 
         # When restart snapins are about to be refreshed, only render
@@ -765,7 +765,7 @@ def page_add_snapin() -> None:
     for name, snapin_class in sorted(snapin_registry.items()):
         if name in used_snapins:
             continue
-        if not user.may(snapin_class.permission_name()):
+        if not snapin_class.may_see():
             continue  # not allowed for this user
 
         html.open_div(class_="snapinadder",

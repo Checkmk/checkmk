@@ -160,7 +160,8 @@ def check_cmk_site_statistics(
     # This part is needed for the timeseries graphs which show host and service problems in the
     # main dashboard (to as far as possible uniquely cross-match sites in this agent output with
     # sites to which are remotely connected)
-    if section_livestatus_status and item in section_livestatus_status:
+    if (section_livestatus_status and item in section_livestatus_status and
+            section_livestatus_status[item]):
         yield Result(
             state=State.OK,
             notice=f"Core PID: {section_livestatus_status[item]['core_pid']}",

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Sequence, Tuple, Union
+from typing import Sequence, Tuple, TypedDict, Union
 
 import pytest
 
@@ -25,13 +25,48 @@ _SECTION = {
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_inventory_sentry_pdu() -> None:
     assert list(Check("sentry_pdu").run_discovery(_SECTION)) == [
-        ("TowerA_InfeedA", "on"),
-        ("TowerA_InfeedB", "on"),
-        ("TowerA_InfeedC", "on"),
-        ("TowerB_InfeedA", "on"),
-        ("TowerB_InfeedB", "unknown"),
-        ("TowerB_InfeedC", "on"),
+        (
+            "TowerA_InfeedA",
+            {
+                "discovered_state": "on"
+            },
+        ),
+        (
+            "TowerA_InfeedB",
+            {
+                "discovered_state": "on"
+            },
+        ),
+        (
+            "TowerA_InfeedC",
+            {
+                "discovered_state": "on"
+            },
+        ),
+        (
+            "TowerB_InfeedA",
+            {
+                "discovered_state": "on"
+            },
+        ),
+        (
+            "TowerB_InfeedB",
+            {
+                "discovered_state": "unknown"
+            },
+        ),
+        (
+            "TowerB_InfeedC",
+            {
+                "discovered_state": "on"
+            },
+        ),
     ]
+
+
+class CombinedParams(TypedDict, total=False):
+    required_state: str
+    discovered_state: str
 
 
 @pytest.mark.parametrize(
@@ -39,7 +74,9 @@ def test_inventory_sentry_pdu() -> None:
     [
         pytest.param(
             "TowerA_InfeedA",
-            "on",
+            {
+                "discovered_state": "on",
+            },
             [
                 (0, "Status: on"),
                 (0, "Power: 1097 Watt", [("power", 1097)]),
@@ -48,39 +85,56 @@ def test_inventory_sentry_pdu() -> None:
         ),
         pytest.param(
             "TowerA_InfeedA",
-            "off",
+            {
+                "discovered_state": "off",
+            },
             [
                 (2, "Status: on"),
                 (0, "Power: 1097 Watt", [("power", 1097)]),
             ],
             id="discovered params, not ok",
         ),
-        # The following 2 configurations do not work correctly and will be fixed in the following
-        # commits
         pytest.param(
             "TowerA_InfeedA",
-            {"required_state": "on"},
+            {
+                "discovered_state": "on",
+                "required_state": "on",
+            },
             [
-                (2, "Status: on"),
+                (0, "Status: on"),
                 (0, "Power: 1097 Watt", [("power", 1097)]),
             ],
-            id="checks params, ok",
+            id="discovered and check params, ok",
         ),
         pytest.param(
             "TowerA_InfeedA",
-            {"required_state": "off"},
+            {
+                "discovered_state": "on",
+                "required_state": "off",
+            },
             [
                 (2, "Status: on"),
                 (0, "Power: 1097 Watt", [("power", 1097)]),
             ],
-            id="checks params, not ok",
+            id="discovered and check params, not ok",
+        ),
+        pytest.param(
+            "TowerB_InfeedB",
+            {
+                "discovered_state": "unknown",
+            },
+            [
+                (3, "Status: unknown"),
+                (0, "Power: 203 Watt", [("power", 203)]),
+            ],
+            id="unknown status",
         ),
     ],
 )
 @pytest.mark.usefixtures("config_load_all_checks")
 def test_check_sentry_pdu(
     item: str,
-    params,  # we will type this parameter later
+    params: CombinedParams,
     expected_result: Sequence[Union[Tuple[int, str], Tuple[int, str, Tuple[str, int]]]],
 ) -> None:
     assert list(Check("sentry_pdu").run_check(

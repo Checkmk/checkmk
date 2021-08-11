@@ -622,14 +622,18 @@ class Overridable(Base):
         # ## elif visual["public"] and owner == "":
         # ##     builtin.append((owner, visual_name, visual))
 
+    # TODO: Shouldn't this be `may_see` and `may_see` should be some internal helper to be used
+    # together with `is_mine`?
+    def is_permitted(self) -> bool:
+        """Whether or not a user is allowed to see an instance
+
+        Same logic as `permitted_instances_sorted`."""
+        return ((self.is_mine() and self.may_see()) or
+                (not self.is_mine() and self.is_published_to_me() and self.may_see()))
+
     @classmethod
     def permitted_instances_sorted(cls):
-        instances = []
-        for instance in cls.instances_sorted():
-            if (instance.is_mine() and instance.may_see()) or \
-               (not instance.is_mine() and instance.is_published_to_me() and instance.may_see()):
-                instances.append(instance)
-        return instances
+        return [i for i in cls.instances_sorted() if i.is_permitted()]
 
     def may_delete(self):
         if self.is_builtin():

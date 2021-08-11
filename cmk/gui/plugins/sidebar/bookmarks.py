@@ -149,8 +149,7 @@ class BookmarkList(pagetypes.Overridable):
     def _topic_choices(cls):
         topics = set()
         for instance in cls.instances_sorted():
-            if (instance.is_mine() and instance.may_see()) or \
-               (not instance.is_mine() and instance.is_published_to_me() and instance.may_see()):
+            if instance.is_permitted():
                 for topic, _bookmarks in instance.bookmarks_by_topic():
                     if topic is None:
                         topic = instance.default_bookmark_topic()
@@ -278,8 +277,7 @@ class Bookmarks(SidebarSnapin):
         topics: Dict[Any, List[Any]] = {}
         BookmarkList.load()
         for instance in BookmarkList.instances_sorted():
-            if (instance.is_mine() and instance.may_see()) or \
-               (not instance.is_mine() and instance.is_published_to_me() and instance.may_see()):
+            if instance.is_permitted():
                 for topic, bookmarks in instance.bookmarks_by_topic():
                     if topic is None:
                         topic = instance.default_bookmark_topic()

@@ -106,6 +106,10 @@ class SidebarSnapin(metaclass=abc.ABCMeta):
     def allowed_roles(cls) -> List[RoleName]:
         return ["admin", "user", "guest"]
 
+    @classmethod
+    def may_see(cls) -> bool:
+        return config.user.may(cls.permission_name())
+
     def styles(self) -> Optional[str]:
         return None
 
@@ -213,6 +217,10 @@ class SnapinRegistry(cmk.utils.plugin_registry.Registry[Type[SidebarSnapin]]):
                 @classmethod
                 def permission_name(cls) -> PermissionName:
                     return "custom_snapin.%s" % cls.type_name()
+
+                @classmethod
+                def may_see(cls) -> bool:
+                    return cls._custom_snapin.is_permitted()
 
             _it_is_really_used = CustomSnapin  # noqa: F841
 

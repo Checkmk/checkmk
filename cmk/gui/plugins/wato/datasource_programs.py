@@ -639,6 +639,57 @@ def _check_not_empty_exporter_dict(value, _varprefix):
         raise MKUserError("dict_selection", _("Please select at least one element"))
 
 
+def _prometheus_authentication():
+    return ("auth_basic",
+            Transform(
+                CascadingDropdown(
+                    title=_("Authentication"),
+                    choices=[
+                        (
+                            'auth_login',
+                            _("Basic authentication"),
+                            Dictionary(
+                                elements=[
+                                    (
+                                        'username',
+                                        TextInput(
+                                            title=_('Login username'),
+                                            allow_empty=False,
+                                        ),
+                                    ),
+                                    (
+                                        "password",
+                                        IndividualOrStoredPassword(
+                                            title=_("Password"),
+                                            allow_empty=False,
+                                        ),
+                                    ),
+                                ],
+                                optional_keys=[],
+                            ),
+                        ),
+                        (
+                            'auth_token',
+                            _("Token authentication"),
+                            Dictionary(
+                                elements=[
+                                    (
+                                        'token',
+                                        IndividualOrStoredPassword(
+                                            title=_('Login token'),
+                                            allow_empty=False,
+                                        ),
+                                    ),
+                                ],
+                                optional_keys=[],
+                            ),
+                        ),
+                    ],
+                ),
+                forth=lambda v: ("auth_login", v) if "username" in v else v,
+            ))
+
+
 def _valuespec_generic_metrics_prometheus():
     namespace_element = (
         "prepend_namespaces",
@@ -683,19 +734,7 @@ def _valuespec_generic_metrics_prometheus():
                 title=_('Prometheus web port'),
                 default_value=9090,
             )),
-            ('auth_basic',
-             Dictionary(elements=[
-                 ('username', TextInput(
-                     title=_('Login username'),
-                     allow_empty=False,
-                 )),
-                 ("password", IndividualOrStoredPassword(
-                     title=_("Password"),
-                     allow_empty=False,
-                 )),
-             ],
-                        optional_keys=[],
-                        title=_("Basic authentication"))),
+            _prometheus_authentication(),
             ("protocol",
              DropdownChoice(title=_("Protocol"), choices=[
                  ("http", "HTTP"),

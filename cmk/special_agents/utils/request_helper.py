@@ -114,6 +114,7 @@ def create_api_connect_session(
     api_url: str,
     no_cert_check: bool = False,
     auth: Any = None,
+    token: Optional[str] = None,
 ) -> 'ApiSession':
     """Create a custom requests Session
 
@@ -128,6 +129,8 @@ def create_api_connect_session(
         auth:
             authentication option (either username & password or OAuth1 object)
 
+        token:
+            token for Bearer token request
     """
     ssl_verify = None
     if not no_cert_check:
@@ -137,6 +140,8 @@ def create_api_connect_session(
 
     if auth:
         session.auth = auth
+    elif token:
+        session.headers.update({"Authorization": "Bearer " + token})
 
     return session
 

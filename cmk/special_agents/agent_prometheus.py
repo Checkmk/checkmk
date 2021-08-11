@@ -1950,8 +1950,12 @@ def _extract_connection_args(config):
         connection_args.update({"url_custom": config["connection"][1]['url_address']})
 
     if "auth_basic" in config:
-        auth_info = config["auth_basic"]
-        connection_args.update({"auth": (auth_info["username"], auth_info["password"][1])})
+        if config["auth_basic"][0] == "auth_login":
+            auth_info = config["auth_basic"][1]
+            connection_args.update({"auth": (auth_info["username"], auth_info["password"][1])})
+        else:
+            auth_info = config["auth_basic"][1]
+            connection_args.update({"token": auth_info["token"][1]})
 
     return connection_args
 
@@ -1970,7 +1974,11 @@ def _generate_api_session(connection_options):
             protocol=connection_options['protocol'],
             port=connection_options['port'],
         )
-    return create_api_connect_session(api_url, auth=connection_options.get("auth"))
+    return create_api_connect_session(
+        api_url,
+        auth=connection_options.get("auth"),
+        token=connection_options.get("token"),
+    )
 
 
 def main(argv=None):

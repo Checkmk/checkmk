@@ -3731,6 +3731,10 @@ msgstr "Opciones adicionales"
 msgid "Additional rules for outliers"
 msgstr "Reglas adicionales para los valores atípicos"
 
+#, fuzzy
+msgid "Additional values per metric"
+msgstr "Reglas adicionales para los valores atípicos"
+
 msgid "Additive: Effects of seasonality are added to the trend."
 msgstr "Aditivo: Los efectos de la estacionalidad se añaden a la tendencia."
 
@@ -4240,10 +4244,6 @@ msgstr ""
 "Los agentes no aceptarán paquetes que no estén firmados por al menos una "
 "clave que ellos acepten."
 
-#, fuzzy
-msgid "Aggreation options for clustered services"
-msgstr "Agregaciones afectadas por el servicio"
-
 msgid "Aggregate"
 msgstr "Agregado"
 
@@ -4312,6 +4312,10 @@ msgstr "Nombre de la agregación"
 
 msgid "Aggregation of Downtimes"
 msgstr "Agregación de tiempos de inactividad"
+
+#, fuzzy
+msgid "Aggregation options for clustered services"
+msgstr "Agregaciones afectadas por el servicio"
 
 msgid "Aggregation status output"
 msgstr "Salida del estado de agregación"
@@ -6791,12 +6795,22 @@ msgstr "Debajo de esta carpeta"
 msgid "Best - take best of all node states"
 msgstr "Lo mejor - tomar lo mejor de todos los estados de los nodos"
 
+#, fuzzy
+msgid "Best node wins"
+msgstr "IPs de los nodos de cluster"
+
 msgid "Best state"
 msgstr "El mejor estado"
 
 #, python-format
 msgid "Best state, %d nodes, restrict to %s"
 msgstr "Mejor estado, %d nodos, restringir a %s"
+
+msgid ""
+"Best: The check function of the plugin will be applied to each individual "
+"node. The best outcome will determine the overall state of the clustered "
+"service."
+msgstr ""
 
 msgid "Biggest input buffer"
 msgstr "El mayor búfer de entrada"
@@ -18529,6 +18543,9 @@ msgstr "Fallo: %s"
 msgid "Failing collectors"
 msgstr "Recolectores fallidos"
 
+msgid "Failover (only one node should be active)"
+msgstr ""
+
 msgid "Failover Servers"
 msgstr "Servidores de conmutación por error"
 
@@ -18555,6 +18572,13 @@ msgstr "Estado de conmutación por error: NONE"
 
 msgid "Failover states"
 msgstr "Estados de conmutación por error"
+
+msgid ""
+"Failover: The check function of the plugin will be applied to each "
+"individual node. The worst outcome will determine the overall state of the "
+"clustered service. However only one node is supposed to send data, any "
+"additional nodes results will least trigger a WARNING state."
+msgstr ""
 
 msgid "Failures of the join launcher service"
 msgstr "Fallos en el servicio de lanzamiento de la unión"
@@ -23263,6 +23287,12 @@ msgid ""
 msgstr ""
 "Si se utiliza la autenticación por contraseña, esta opción especifica si el "
 "servidor permite el acceso a cuentas con contraseñas vacías"
+
+msgid ""
+"If provided, the service result is expected to originate from the prefered "
+"node. If the result originates from any other node, the service will at "
+"least be in a WARNING state (even if the result itself is OK)."
+msgstr ""
 
 msgid ""
 "If set, the plugin may be called repeately - up to this many times or until "
@@ -30292,6 +30322,10 @@ msgstr "Métrica"
 msgid "Metrics graph of a single service"
 msgstr "Gráfico de métricas de un solo servicio"
 
+#, fuzzy
+msgid "Metrics of service"
+msgstr "Eventos de servicio"
+
 msgid "Metrics system"
 msgstr "Sistema de métricas"
 
@@ -30513,12 +30547,24 @@ msgid "Missing render parameter"
 msgstr "Falta el parámetro de renderización"
 
 #, fuzzy
+msgid "Missing required \"Host name\" selection."
+msgstr "Información de contacto del servicio"
+
+#, fuzzy
+msgid "Missing required \"Service name\" selection."
+msgstr "Información de contacto del servicio"
+
+#, fuzzy
 msgid "Missing required context information"
 msgstr "Información de contacto del servicio"
 
 #, python-format
 msgid "Missing required key(s): %s"
 msgstr "Falta la(s) clave(s) requerida(s): %s"
+
+#, fuzzy
+msgid "Missing required selection."
+msgstr "Información de contacto del servicio"
 
 msgid "Missing secret for automation command."
 msgstr "Falta el secreto para el comando de automatización."
@@ -36772,6 +36818,10 @@ msgstr "Niveles de predicción (sólo en CMC)"
 msgid "Prefer systemd, fallback to xinetd if xinetd is available"
 msgstr "Preferir systemd, recurrir a xinetd si xinetd está disponible"
 
+#, fuzzy
+msgid "Prefered node"
+msgstr "Referencia"
+
 msgid "Prefetch data hit ratio"
 msgstr "Ratio de aciertos en la precarga de datos"
 
@@ -37728,6 +37778,9 @@ msgstr "Aleatorizar la contraseña"
 
 msgid "Range limits"
 msgstr "Límites de la gama"
+
+msgid "Range of values (min/max)"
+msgstr ""
 
 msgid "Raritan EMX Rack: Temperature"
 msgstr "Raritan EMX Rack: Temperatura"
@@ -41114,6 +41167,10 @@ msgstr "El servicio está aleteando"
 msgid "Service is stale"
 msgstr "El servicio es anticuado"
 
+#, fuzzy
+msgid "Service label"
+msgstr "Etiquetas de servicio"
+
 msgid "Service labels"
 msgstr "Etiquetas de servicio"
 
@@ -44276,6 +44333,10 @@ msgstr "Estado de un servicio"
 msgid "State of event changed by user"
 msgstr "Estado del evento cambiado por el usuario"
 
+#, fuzzy
+msgid "State of host"
+msgstr "Estado de un anfitrión"
+
 msgid "State of incident if acknowledgement is set"
 msgstr "Estado del incidente si se establece el acuse de recibo"
 
@@ -44319,6 +44380,10 @@ msgstr "Estado del incidente si se establece la recuperación (predefinido)"
 
 msgid "State of remaining services"
 msgstr "Estado de los servicios restantes"
+
+#, fuzzy
+msgid "State of service"
+msgstr "Estado de un servicio"
 
 msgid "State of the event (0/1/2/3)"
 msgstr "Estado del evento (0/1/2/3)"
@@ -45689,6 +45754,10 @@ msgstr "Etiquetas de la alerta."
 #, fuzzy
 msgid "Tags shown in Event Console"
 msgstr "Host que ejecuta la Consola de Eventos"
+
+#, fuzzy
+msgid "Tags to use"
+msgstr "Regiones a utilizar"
 
 msgid "Tags using this auxiliary tag"
 msgstr "Etiquetas que utilizan esta etiqueta auxiliar"
@@ -49163,6 +49232,20 @@ msgstr ""
 "El servicio resultante tendrá esta entrada como descripción del servicio"
 
 msgid ""
+"The results of the node in the best state are displayed most prominently. If "
+"multiple nodes share the same 'best' state and a prefered node is "
+"configured, the result of the prefered node will be chosen. This is "
+"hopefully relevant most of the time: when all nodes are OK."
+msgstr ""
+
+msgid ""
+"The results of the node in the worst state are displayed most prominently. "
+"If multiple nodes share the same 'worst' state and a prefered node is "
+"configured, the result of the prefered node will be chosen. This is "
+"hopefully relevant most of the time: when all nodes are OK."
+msgstr ""
+
+msgid ""
 "The retrieved information from the cAdvisor will be aggregated according to "
 "the selected entity level. Resulting services will be allocated to the "
 "created Checkmk piggyback hosts."
@@ -50970,6 +51053,10 @@ msgstr "Esta conexión"
 
 #, fuzzy
 msgid "This connection is currently disabled"
+msgstr "Esta agregación está actualmente desactivada."
+
+#, fuzzy
+msgid "This connection is currently enabled"
 msgstr "Esta agregación está actualmente desactivada."
 
 msgid "This connection is currently not being used for synchronization."
@@ -54213,6 +54300,10 @@ msgstr "Hilos"
 
 msgid "Threshold for slow views"
 msgstr "Umbral de vistas lentas"
+
+#, fuzzy
+msgid "Thresholds"
+msgstr "Treshold"
 
 msgid "Thresholds for Notifications per Contact"
 msgstr "Umbrales de notificaciones por contacto"
@@ -61866,11 +61957,6 @@ msgstr ""
 "grupos. Sólo se agruparán los servicios que estén en estado <i>OK</i>. Los "
 "grupos de un solo servicio no se presentarán. Si varios patrones coinciden "
 "con un servicio, el servicio se añadirá al primer grupo que coincida."
-
-msgid ""
-"You can use this ruleset to exclude or include the metrics of specific "
-"services."
-msgstr ""
 
 #, python-format
 msgid ""

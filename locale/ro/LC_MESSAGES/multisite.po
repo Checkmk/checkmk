@@ -3527,6 +3527,10 @@ msgstr "Opțiuni adiționale"
 msgid "Additional rules for outliers"
 msgstr "Linii de header adiționale"
 
+#, fuzzy
+msgid "Additional values per metric"
+msgstr "Linii de header adiționale"
+
 msgid "Additive: Effects of seasonality are added to the trend."
 msgstr ""
 
@@ -3971,10 +3975,6 @@ msgid ""
 "they accept."
 msgstr ""
 
-#, fuzzy
-msgid "Aggreation options for clustered services"
-msgstr "Un titlu pentru view"
-
 msgid "Aggregate"
 msgstr ""
 
@@ -4050,6 +4050,10 @@ msgstr ""
 #, fuzzy
 msgid "Aggregation of Downtimes"
 msgstr "Întreruperi adhoc"
+
+#, fuzzy
+msgid "Aggregation options for clustered services"
+msgstr "Un titlu pentru view"
 
 msgid "Aggregation status output"
 msgstr ""
@@ -6453,11 +6457,21 @@ msgstr "Folder nou"
 msgid "Best - take best of all node states"
 msgstr ""
 
+#, fuzzy
+msgid "Best node wins"
+msgstr "Numele Elementului"
+
 msgid "Best state"
 msgstr ""
 
 #, python-format
 msgid "Best state, %d nodes, restrict to %s"
+msgstr ""
+
+msgid ""
+"Best: The check function of the plugin will be applied to each individual "
+"node. The best outcome will determine the overall state of the clustered "
+"service."
 msgstr ""
 
 #, fuzzy
@@ -17869,6 +17883,9 @@ msgstr "Adăugat %s"
 msgid "Failing collectors"
 msgstr "sesiuni"
 
+msgid "Failover (only one node should be active)"
+msgstr ""
+
 msgid "Failover Servers"
 msgstr ""
 
@@ -17894,6 +17911,13 @@ msgid "Failover State: NONE"
 msgstr ""
 
 msgid "Failover states"
+msgstr ""
+
+msgid ""
+"Failover: The check function of the plugin will be applied to each "
+"individual node. The worst outcome will determine the overall state of the "
+"clustered service. However only one node is supposed to send data, any "
+"additional nodes results will least trigger a WARNING state."
 msgstr ""
 
 msgid "Failures of the join launcher service"
@@ -22198,6 +22222,12 @@ msgstr ""
 msgid ""
 "If password authentication is used this option specifies wheter the server "
 "allows login to accounts with empty passwords"
+msgstr ""
+
+msgid ""
+"If provided, the service result is expected to originate from the prefered "
+"node. If the result originates from any other node, the service will at "
+"least be in a WARNING state (even if the result itself is OK)."
 msgstr ""
 
 msgid ""
@@ -28789,6 +28819,10 @@ msgstr ""
 msgid "Metrics graph of a single service"
 msgstr ""
 
+#, fuzzy
+msgid "Metrics of service"
+msgstr "servicii"
+
 msgid "Metrics system"
 msgstr ""
 
@@ -29021,12 +29055,24 @@ msgid "Missing render parameter"
 msgstr ""
 
 #, fuzzy
+msgid "Missing required \"Host name\" selection."
+msgstr "Informații Adiționale"
+
+#, fuzzy
+msgid "Missing required \"Service name\" selection."
+msgstr "Informații Adiționale"
+
+#, fuzzy
 msgid "Missing required context information"
 msgstr "Informații Adiționale"
 
 #, python-format
 msgid "Missing required key(s): %s"
 msgstr ""
+
+#, fuzzy
+msgid "Missing required selection."
+msgstr "Informații Adiționale"
 
 msgid "Missing secret for automation command."
 msgstr ""
@@ -35223,6 +35269,10 @@ msgstr "Liber Exact"
 msgid "Prefer systemd, fallback to xinetd if xinetd is available"
 msgstr ""
 
+#, fuzzy
+msgid "Prefered node"
+msgstr "Agregare noua"
+
 msgid "Prefetch data hit ratio"
 msgstr ""
 
@@ -36231,6 +36281,9 @@ msgstr ""
 #, fuzzy
 msgid "Range limits"
 msgstr "Arata in masa"
+
+msgid "Range of values (min/max)"
+msgstr ""
 
 msgid "Raritan EMX Rack: Temperature"
 msgstr ""
@@ -39663,6 +39716,10 @@ msgid "Service is stale"
 msgstr ""
 
 #, fuzzy
+msgid "Service label"
+msgstr "Numele Elementului"
+
+#, fuzzy
 msgid "Service labels"
 msgstr "Numele Elementului"
 
@@ -42565,6 +42622,10 @@ msgstr ""
 msgid "State of event changed by user"
 msgstr ""
 
+#, fuzzy
+msgid "State of host"
+msgstr "% / gamă"
+
 msgid "State of incident if acknowledgement is set"
 msgstr ""
 
@@ -42613,6 +42674,10 @@ msgstr "Întreruperi adhoc"
 
 msgid "State of remaining services"
 msgstr ""
+
+#, fuzzy
+msgid "State of service"
+msgstr "Numarul maxim de mesaje"
 
 msgid "State of the event (0/1/2/3)"
 msgstr ""
@@ -44053,6 +44118,9 @@ msgstr "Numele elementului pentru eveniment"
 #, fuzzy
 msgid "Tags shown in Event Console"
 msgstr "Acces la Consola de Evenimente"
+
+msgid "Tags to use"
+msgstr ""
 
 msgid "Tags using this auxiliary tag"
 msgstr ""
@@ -46707,6 +46775,20 @@ msgid "The resulting service will get this entry as service description"
 msgstr ""
 
 msgid ""
+"The results of the node in the best state are displayed most prominently. If "
+"multiple nodes share the same 'best' state and a prefered node is "
+"configured, the result of the prefered node will be chosen. This is "
+"hopefully relevant most of the time: when all nodes are OK."
+msgstr ""
+
+msgid ""
+"The results of the node in the worst state are displayed most prominently. "
+"If multiple nodes share the same 'worst' state and a prefered node is "
+"configured, the result of the prefered node will be chosen. This is "
+"hopefully relevant most of the time: when all nodes are OK."
+msgstr ""
+
+msgid ""
 "The retrieved information from the cAdvisor will be aggregated according to "
 "the selected entity level. Resulting services will be allocated to the "
 "created Checkmk piggyback hosts."
@@ -48041,6 +48123,10 @@ msgstr "Conexiune Noua"
 
 #, fuzzy
 msgid "This connection is currently disabled"
+msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "This connection is currently enabled"
 msgstr "Conexiune Noua"
 
 msgid "This connection is currently not being used for synchronization."
@@ -50251,6 +50337,10 @@ msgstr "fire"
 
 msgid "Threshold for slow views"
 msgstr ""
+
+#, fuzzy
+msgid "Thresholds"
+msgstr "fire"
 
 msgid "Thresholds for Notifications per Contact"
 msgstr ""
@@ -57047,11 +57137,6 @@ msgid ""
 "will be folded together. Groups of only one service will not be rendered. If "
 "multiple patterns match a service, the service will be added to the first "
 "matching group."
-msgstr ""
-
-msgid ""
-"You can use this ruleset to exclude or include the metrics of specific "
-"services."
 msgstr ""
 
 #, python-format

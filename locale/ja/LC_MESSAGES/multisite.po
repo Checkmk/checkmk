@@ -3570,6 +3570,10 @@ msgstr "追加オプション"
 msgid "Additional rules for outliers"
 msgstr "外れ値の追加ルール"
 
+#, fuzzy
+msgid "Additional values per metric"
+msgstr "外れ値の追加ルール"
+
 msgid "Additive: Effects of seasonality are added to the trend."
 msgstr "添加:季節性の影響がトレンドに追加されます。"
 
@@ -4042,10 +4046,6 @@ msgstr ""
 "エージェントは、受け入れる少なくとも1つのキーで署名されていないパッケージを受"
 "け入れません。"
 
-#, fuzzy
-msgid "Aggreation options for clustered services"
-msgstr "サービスの影響を受ける集約"
-
 msgid "Aggregate"
 msgstr "集計"
 
@@ -4114,6 +4114,10 @@ msgstr "集計名"
 
 msgid "Aggregation of Downtimes"
 msgstr "ダウンタイムの集計"
+
+#, fuzzy
+msgid "Aggregation options for clustered services"
+msgstr "サービスの影響を受ける集約"
 
 msgid "Aggregation status output"
 msgstr "集計ステータスの出力"
@@ -6505,12 +6509,22 @@ msgstr "このフォルダの下"
 msgid "Best - take best of all node states"
 msgstr "ベスト-すべてのノード状態をベストに活用する"
 
+#, fuzzy
+msgid "Best node wins"
+msgstr "クラスターノードIP"
+
 msgid "Best state"
 msgstr "最高の状態"
 
 #, python-format
 msgid "Best state, %d nodes, restrict to %s"
 msgstr "最良の状態 %d ノード %s に制限"
+
+msgid ""
+"Best: The check function of the plugin will be applied to each individual "
+"node. The best outcome will determine the overall state of the clustered "
+"service."
+msgstr ""
 
 msgid "Biggest input buffer"
 msgstr ""
@@ -17797,6 +17811,9 @@ msgstr "失敗:%s"
 msgid "Failing collectors"
 msgstr "失敗したコレクター"
 
+msgid "Failover (only one node should be active)"
+msgstr ""
+
 msgid "Failover Servers"
 msgstr "フェイルオーバーサーバー"
 
@@ -17823,6 +17840,13 @@ msgstr "フェイルオーバー状態:なし"
 
 msgid "Failover states"
 msgstr "フェイルオーバー状態"
+
+msgid ""
+"Failover: The check function of the plugin will be applied to each "
+"individual node. The worst outcome will determine the overall state of the "
+"clustered service. However only one node is supposed to send data, any "
+"additional nodes results will least trigger a WARNING state."
+msgstr ""
 
 msgid "Failures of the join launcher service"
 msgstr "ジョインランチャーサービスの失敗"
@@ -22281,6 +22305,12 @@ msgid ""
 msgstr ""
 "パスワード認証が使用されている場合、このオプションは、サーバーが空のパスワー"
 "ドでログインをユーザーに許可するかどうかを指定します。"
+
+msgid ""
+"If provided, the service result is expected to originate from the prefered "
+"node. If the result originates from any other node, the service will at "
+"least be in a WARNING state (even if the result itself is OK)."
+msgstr ""
 
 msgid ""
 "If set, the plugin may be called repeately - up to this many times or until "
@@ -28961,6 +28991,10 @@ msgstr "メトリクス"
 msgid "Metrics graph of a single service"
 msgstr "単一サービスのメトリクスグラフ"
 
+#, fuzzy
+msgid "Metrics of service"
+msgstr "サービスのイベント"
+
 msgid "Metrics system"
 msgstr "メトリックシステム"
 
@@ -29180,12 +29214,24 @@ msgid "Missing render parameter"
 msgstr "レンダリングパラメータがありません"
 
 #, fuzzy
+msgid "Missing required \"Host name\" selection."
+msgstr "サービスの連絡先情報"
+
+#, fuzzy
+msgid "Missing required \"Service name\" selection."
+msgstr "サービスの連絡先情報"
+
+#, fuzzy
 msgid "Missing required context information"
 msgstr "サービスの連絡先情報"
 
 #, python-format
 msgid "Missing required key(s): %s"
 msgstr "必要なキーがありません: %s"
+
+#, fuzzy
+msgid "Missing required selection."
+msgstr "サービスの連絡先情報"
 
 msgid "Missing secret for automation command."
 msgstr "自動化コマンドのシークレットがありません。"
@@ -35208,6 +35254,10 @@ msgstr "予測レベル(CMCのみ)"
 msgid "Prefer systemd, fallback to xinetd if xinetd is available"
 msgstr "systemdを優先し、xinetdが利用可能な場合はxinetdにフォールバックします"
 
+#, fuzzy
+msgid "Prefered node"
+msgstr "参照"
+
 msgid "Prefetch data hit ratio"
 msgstr "先読みデータヒット率"
 
@@ -36147,6 +36197,9 @@ msgstr "パスワードをランダム化する"
 
 msgid "Range limits"
 msgstr "範囲制限"
+
+msgid "Range of values (min/max)"
+msgstr ""
 
 msgid "Raritan EMX Rack: Temperature"
 msgstr "Raritan EMXラック: 温度"
@@ -39422,6 +39475,10 @@ msgstr "サービスがフラッピングしている"
 msgid "Service is stale"
 msgstr "サービスが古くなっている"
 
+#, fuzzy
+msgid "Service label"
+msgstr "サービスラベル"
+
 msgid "Service labels"
 msgstr "サービスラベル"
 
@@ -42389,6 +42446,10 @@ msgstr "サービスの状態"
 msgid "State of event changed by user"
 msgstr "ユーザーによって変更されたイベントの状態"
 
+#, fuzzy
+msgid "State of host"
+msgstr "ホストの状態"
+
 msgid "State of incident if acknowledgement is set"
 msgstr "確認応答が設定されている場合のインシデントの状態"
 
@@ -42427,6 +42488,10 @@ msgstr "リカバリが設定されている場合のインシデントの状態
 
 msgid "State of remaining services"
 msgstr "残りのサービスの状態"
+
+#, fuzzy
+msgid "State of service"
+msgstr "サービスの状態"
 
 msgid "State of the event (0/1/2/3)"
 msgstr "イベントの状態 (0/1/2/3)"
@@ -43775,6 +43840,10 @@ msgstr "アラートのタグ"
 #, fuzzy
 msgid "Tags shown in Event Console"
 msgstr "イベントコンソールを実行しているホスト"
+
+#, fuzzy
+msgid "Tags to use"
+msgstr "このユーザー"
 
 msgid "Tags using this auxiliary tag"
 msgstr "この補助タグを使用したタグ"
@@ -46890,6 +46959,20 @@ msgid "The resulting service will get this entry as service description"
 msgstr "結果のサービスは、このエントリをサービスの説明として取得します"
 
 msgid ""
+"The results of the node in the best state are displayed most prominently. If "
+"multiple nodes share the same 'best' state and a prefered node is "
+"configured, the result of the prefered node will be chosen. This is "
+"hopefully relevant most of the time: when all nodes are OK."
+msgstr ""
+
+msgid ""
+"The results of the node in the worst state are displayed most prominently. "
+"If multiple nodes share the same 'worst' state and a prefered node is "
+"configured, the result of the prefered node will be chosen. This is "
+"hopefully relevant most of the time: when all nodes are OK."
+msgstr ""
+
+msgid ""
 "The retrieved information from the cAdvisor will be aggregated according to "
 "the selected entity level. Resulting services will be allocated to the "
 "created Checkmk piggyback hosts."
@@ -48514,6 +48597,10 @@ msgstr "この接続"
 
 #, fuzzy
 msgid "This connection is currently disabled"
+msgstr "この集計は現在無効になっています。"
+
+#, fuzzy
+msgid "This connection is currently enabled"
 msgstr "この集計は現在無効になっています。"
 
 msgid "This connection is currently not being used for synchronization."
@@ -51345,6 +51432,10 @@ msgstr "スレッド"
 
 msgid "Threshold for slow views"
 msgstr ""
+
+#, fuzzy
+msgid "Thresholds"
+msgstr "しきい値"
 
 msgid "Thresholds for Notifications per Contact"
 msgstr "連絡先ごとの通知のしきい値"
@@ -58505,11 +58596,6 @@ msgid ""
 "will be folded together. Groups of only one service will not be rendered. If "
 "multiple patterns match a service, the service will be added to the first "
 "matching group."
-msgstr ""
-
-msgid ""
-"You can use this ruleset to exclude or include the metrics of specific "
-"services."
 msgstr ""
 
 #, python-format

@@ -3706,6 +3706,10 @@ msgstr "Extra opties"
 msgid "Additional rules for outliers"
 msgstr "Aanvullende regels voor uitschieters"
 
+#, fuzzy
+msgid "Additional values per metric"
+msgstr "Aanvullende regels voor uitschieters"
+
 msgid "Additive: Effects of seasonality are added to the trend."
 msgstr ""
 "Additief: De effecten van seizoensinvloeden worden bij de trend opgeteld."
@@ -4207,10 +4211,6 @@ msgstr ""
 "Agenten zullen geen pakketten aanvaarden die niet ondertekend zijn door ten "
 "minste één sleutel die zij aanvaarden."
 
-#, fuzzy
-msgid "Aggreation options for clustered services"
-msgstr "Aggregaties waarop de dienst betrekking heeft"
-
 msgid "Aggregate"
 msgstr "Geaggregeerd"
 
@@ -4279,6 +4279,10 @@ msgstr "Naam aggregatie"
 
 msgid "Aggregation of Downtimes"
 msgstr "Aggregatie van downtimes"
+
+#, fuzzy
+msgid "Aggregation options for clustered services"
+msgstr "Aggregaties waarop de dienst betrekking heeft"
 
 msgid "Aggregation status output"
 msgstr "Uitgang aggregatiestatus"
@@ -6742,12 +6746,22 @@ msgstr "Onder deze map"
 msgid "Best - take best of all node states"
 msgstr "Best - neem het beste van alle knooppunt staten"
 
+#, fuzzy
+msgid "Best node wins"
+msgstr "IP's van clusterknooppunten"
+
 msgid "Best state"
 msgstr "Beste staat"
 
 #, python-format
 msgid "Best state, %d nodes, restrict to %s"
 msgstr "Beste staat, %d knooppunten, beperken tot %s"
+
+msgid ""
+"Best: The check function of the plugin will be applied to each individual "
+"node. The best outcome will determine the overall state of the clustered "
+"service."
+msgstr ""
 
 msgid "Biggest input buffer"
 msgstr "Grootste ingangsbuffer"
@@ -18369,6 +18383,9 @@ msgstr "Mislukt: %s"
 msgid "Failing collectors"
 msgstr "Falende verzamelaars"
 
+msgid "Failover (only one node should be active)"
+msgstr ""
+
 msgid "Failover Servers"
 msgstr "Failover-servers"
 
@@ -18395,6 +18412,13 @@ msgstr "Failover status: NONE"
 
 msgid "Failover states"
 msgstr "Failover staten"
+
+msgid ""
+"Failover: The check function of the plugin will be applied to each "
+"individual node. The worst outcome will determine the overall state of the "
+"clustered service. However only one node is supposed to send data, any "
+"additional nodes results will least trigger a WARNING state."
+msgstr ""
 
 msgid "Failures of the join launcher service"
 msgstr "Storingen van de join launcher service"
@@ -23069,6 +23093,12 @@ msgid ""
 msgstr ""
 "Als wachtwoordauthenticatie wordt gebruikt, specificeert deze optie of de "
 "server toestaat dat wordt ingelogd op accounts met lege wachtwoorden"
+
+msgid ""
+"If provided, the service result is expected to originate from the prefered "
+"node. If the result originates from any other node, the service will at "
+"least be in a WARNING state (even if the result itself is OK)."
+msgstr ""
 
 msgid ""
 "If set, the plugin may be called repeately - up to this many times or until "
@@ -30040,6 +30070,10 @@ msgstr "Metriek"
 msgid "Metrics graph of a single service"
 msgstr "Metriekgrafiek van een enkele dienst"
 
+#, fuzzy
+msgid "Metrics of service"
+msgstr "Gebeurtenissen van dienst"
+
 msgid "Metrics system"
 msgstr "Metriek systeem"
 
@@ -30260,12 +30294,24 @@ msgid "Missing render parameter"
 msgstr "Ontbrekende render parameter"
 
 #, fuzzy
+msgid "Missing required \"Host name\" selection."
+msgstr "Contactinformatie dienst"
+
+#, fuzzy
+msgid "Missing required \"Service name\" selection."
+msgstr "Contactinformatie dienst"
+
+#, fuzzy
 msgid "Missing required context information"
 msgstr "Contactinformatie dienst"
 
 #, python-format
 msgid "Missing required key(s): %s"
 msgstr "Ontbrekende vereiste sleutel(s): %s"
+
+#, fuzzy
+msgid "Missing required selection."
+msgstr "Contactinformatie dienst"
 
 msgid "Missing secret for automation command."
 msgstr "Ontbrekend geheim voor automatiseringscommando."
@@ -36459,6 +36505,10 @@ msgid "Prefer systemd, fallback to xinetd if xinetd is available"
 msgstr ""
 "Voorkeur voor systemd, fallback naar xinetd indien xinetd beschikbaar is"
 
+#, fuzzy
+msgid "Prefered node"
+msgstr "Referentie"
+
 msgid "Prefetch data hit ratio"
 msgstr "Prefetch data hit ratio"
 
@@ -37405,6 +37455,9 @@ msgstr "Willekeurig wachtwoord"
 
 msgid "Range limits"
 msgstr "Bereik grenzen"
+
+msgid "Range of values (min/max)"
+msgstr ""
 
 msgid "Raritan EMX Rack: Temperature"
 msgstr "Raritan EMX Rack: Temperatuur"
@@ -40757,6 +40810,10 @@ msgstr "De dienst wappert"
 msgid "Service is stale"
 msgstr "Service is muf"
 
+#, fuzzy
+msgid "Service label"
+msgstr "Dienstetiketten"
+
 msgid "Service labels"
 msgstr "Dienstetiketten"
 
@@ -43882,6 +43939,10 @@ msgstr "Staat van een dienst"
 msgid "State of event changed by user"
 msgstr "Toestand van gebeurtenis gewijzigd door gebruiker"
 
+#, fuzzy
+msgid "State of host"
+msgstr "Staat van een host"
+
 msgid "State of incident if acknowledgement is set"
 msgstr "Staat van incident indien bevestiging is ingesteld"
 
@@ -43923,6 +43984,10 @@ msgstr "Staat van het incident indien herstel is ingesteld (voorgedefinieerd)"
 
 msgid "State of remaining services"
 msgstr "Staat van resterende diensten"
+
+#, fuzzy
+msgid "State of service"
+msgstr "Staat van een dienst"
 
 msgid "State of the event (0/1/2/3)"
 msgstr "Toestand van de gebeurtenis (0/1/2/3)"
@@ -45285,6 +45350,10 @@ msgstr "Tags van de waarschuwing."
 #, fuzzy
 msgid "Tags shown in Event Console"
 msgstr "Host die Event Console uitvoert"
+
+#, fuzzy
+msgid "Tags to use"
+msgstr "Te gebruiken regio's"
 
 msgid "Tags using this auxiliary tag"
 msgstr "Tags die deze hulptag gebruiken"
@@ -48743,6 +48812,20 @@ msgstr ""
 "De resulterende dienst zal deze vermelding krijgen als dienstbeschrijving"
 
 msgid ""
+"The results of the node in the best state are displayed most prominently. If "
+"multiple nodes share the same 'best' state and a prefered node is "
+"configured, the result of the prefered node will be chosen. This is "
+"hopefully relevant most of the time: when all nodes are OK."
+msgstr ""
+
+msgid ""
+"The results of the node in the worst state are displayed most prominently. "
+"If multiple nodes share the same 'worst' state and a prefered node is "
+"configured, the result of the prefered node will be chosen. This is "
+"hopefully relevant most of the time: when all nodes are OK."
+msgstr ""
+
+msgid ""
 "The retrieved information from the cAdvisor will be aggregated according to "
 "the selected entity level. Resulting services will be allocated to the "
 "created Checkmk piggyback hosts."
@@ -50538,6 +50621,10 @@ msgstr "Deze verbinding"
 
 #, fuzzy
 msgid "This connection is currently disabled"
+msgstr "Deze aggregatie is momenteel uitgeschakeld."
+
+#, fuzzy
+msgid "This connection is currently enabled"
 msgstr "Deze aggregatie is momenteel uitgeschakeld."
 
 msgid "This connection is currently not being used for synchronization."
@@ -53744,6 +53831,10 @@ msgstr "Draad"
 
 msgid "Threshold for slow views"
 msgstr "Drempel voor langzame weergave"
+
+#, fuzzy
+msgid "Thresholds"
+msgstr "Treshold"
 
 msgid "Thresholds for Notifications per Contact"
 msgstr "Drempels voor Kennisgevingen per Contact"
@@ -61352,11 +61443,6 @@ msgstr ""
 "slechts één service zullen niet worden weergegeven. Als meerdere patronen "
 "overeenkomen met een dienst, zal de dienst worden toegevoegd aan de eerste "
 "overeenkomende groep."
-
-msgid ""
-"You can use this ruleset to exclude or include the metrics of specific "
-"services."
-msgstr ""
 
 #, python-format
 msgid ""

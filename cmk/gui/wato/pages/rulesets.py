@@ -864,7 +864,8 @@ class ModeEditRuleset(WatoMode):
                                searchable=False,
                                sortable=False,
                                limit=None,
-                               foldable=True) as table:
+                               foldable=True,
+                               omit_update_header=True) as table:
                 for _folder, rulenr, rule in folder_rules:
                     num_rows += 1
                     table.row(css=self._css_for_rule(search_options, rule))

@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import shutil
 from pathlib import Path
 
 import pytest
@@ -16,7 +17,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import CheckPluginName, HostName
 
 import cmk.core_helpers.config_path
-from cmk.core_helpers.config_path import LATEST_CONFIG
+from cmk.core_helpers.config_path import ConfigPath, LATEST_CONFIG
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
@@ -25,7 +26,16 @@ from cmk.base.check_utils import Service
 from cmk.base.core_factory import create_core
 
 
-def test_do_create_config_nagios(core_scenario):
+@pytest.fixture
+def config_path():
+    ConfigPath.ROOT.mkdir(parents=True, exist_ok=True)
+    try:
+        yield ConfigPath.ROOT
+    finally:
+        shutil.rmtree(ConfigPath.ROOT)
+
+
+def test_do_create_config_nagios(core_scenario, config_path):
     core_config.do_create_config(create_core("nagios"))
 
     assert Path(cmk.utils.paths.nagios_objects_file).exists()

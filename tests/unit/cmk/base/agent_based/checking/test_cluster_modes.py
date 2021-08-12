@@ -148,6 +148,18 @@ def test_cluster_check_worst_yield_worst_nodes_metrics() -> None:
     },) if isinstance(m, Metric))[0] == Metric("n", 42)  # Nodeberts value
 
 
+def test_cluster_check_worst_yield_selected_nodes_metrics() -> None:
+
+    check_worst = _get_cluster_check_function(_simple_check,
+                                              mode="worst",
+                                              clusterization_parameters={"metrics_node": "Nodett"})
+
+    assert list(m for m in check_worst(section={
+        "Nodett": [0, 23],
+        "Nodebert": [1, 42],
+    },) if isinstance(m, Metric))[0] == Metric("n", 23)  # Nodetts value
+
+
 def test_cluster_check_worst_unprefered_node_is_ok() -> None:
 
     check_failover = _get_cluster_check_function(

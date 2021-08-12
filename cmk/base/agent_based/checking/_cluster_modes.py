@@ -141,7 +141,7 @@ def _cluster_check(
     yield from summarizer.secondary_results(
         levels_additional_nodes_count=levels_additional_nodes_count)
 
-    yield from summarizer.metrics()
+    yield from summarizer.metrics(clusterization_parameters.get('metrics_node'))
 
 
 class NodeResults(NamedTuple):
@@ -231,8 +231,15 @@ class Summarizer:
         count = len(secondary_nodes)
         return State.CRIT if count >= levels[1] else State(count >= levels[0])
 
-    def metrics(self) -> Iterable[Metric]:
-        return self._node_results.metrics[self._pivoting]
+    def metrics(self, node_name: Optional[str]) -> CheckResult:
+        used_node = node_name or self._pivoting
+        if not (metrics := self._node_results.metrics.get(used_node, ())):
+            return
+        yield Result(
+            state=State.OK,
+            notice=f"[{used_node}] Metrics: {', '.join(m.name for m in metrics)}",
+        )
+        yield from metrics
 
 
 class NodeCheckExecutor:

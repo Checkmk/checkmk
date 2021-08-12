@@ -3833,6 +3833,20 @@ def _valuespec_prefered_node(help_: str) -> _Tuple[str, ConfigHostname]:
     return ('primary_node', ConfigHostname(title=_("Prefered node"), help=help_))
 
 
+def _valuespec_metrics_node() -> _Tuple[str, ConfigHostname]:
+    return (
+        'metrics_node',
+        ConfigHostname(
+            title=_("Override automatic metric selection"),
+            label=_("Use Metrics of"),
+            help=_("Since all nodes yield metrics with the same name, Checkmk has to decide which "
+                   "nodes' metrics to keep. By default, it will select the node that was crucial "
+                   "for the overall result (the prefered one if in doubt). "
+                   "You can override this automatism by specifying a node here."),
+        ),
+    )
+
+
 def _valuespec_clustered_services_config():
     return CascadingDropdown(
         title=_("Aggregation options for clustered services"),
@@ -3862,6 +3876,7 @@ def _valuespec_clustered_services_config():
                      _("If provided, the service result is expected to originate from the prefered "
                        "node. If the result originates from any other node, the service will at least "
                        "be in a WARNING state (even if the result itself is OK).")),
+                 _valuespec_metrics_node(),
              ])),
             ("worst", _("Worst node wins"),
              Dictionary(elements=[
@@ -3870,6 +3885,7 @@ def _valuespec_clustered_services_config():
                        "If multiple nodes share the same 'worst' state and a prefered "
                        "node is configured, the result of the prefered node will be chosen. "
                        "This is hopefully relevant most of the time: when all nodes are OK.")),
+                 _valuespec_metrics_node(),
              ])),
             ("best", _("Best node wins"),
              Dictionary(elements=[
@@ -3878,8 +3894,10 @@ def _valuespec_clustered_services_config():
                        "If multiple nodes share the same 'best' state and a prefered "
                        "node is configured, the result of the prefered node will be chosen. "
                        "This is hopefully relevant most of the time: when all nodes are OK.")),
+                 _valuespec_metrics_node(),
              ])),
         ],
+        sorted=False,  # "leave them as they are", "yes, they are sorted the way I want" :-)
     )
 
 

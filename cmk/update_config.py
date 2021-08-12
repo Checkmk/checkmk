@@ -39,51 +39,44 @@ from cmk.utils.type_defs import CheckPluginName, HostName, UserId
 # places of Checkmk. We may centralize the conversion and move the persistance
 # to a specific layer in the future, but for the the moment we need to deal
 # with it.
-import cmk.base.autochecks  # pylint: disable=cmk-module-layer-violation
-import cmk.base.check_api  # pylint: disable=cmk-module-layer-violation
-import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.api.agent_based import register  # pylint: disable=cmk-module-layer-violation
-from cmk.base.check_utils import Service  # pylint: disable=cmk-module-layer-violation
+import cmk.base.autochecks
+import cmk.base.check_api
+import cmk.base.config
+from cmk.base.api.agent_based import register
+from cmk.base.check_utils import Service
 
-import cmk.gui.config  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.groups  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.modules  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.pagetypes as pagetypes  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.utils  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.visuals as visuals  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.watolib.groups  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.watolib.hosts_and_folders  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.watolib.rulesets  # pylint: disable=cmk-module-layer-violation
-import cmk.gui.watolib.tags  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.bi import BIManager  # pylint: disable=cmk-module-layer-violation
+import cmk.gui.config
+import cmk.gui.groups
+import cmk.gui.modules
+import cmk.gui.pagetypes as pagetypes
+import cmk.gui.utils
+import cmk.gui.visuals as visuals
+import cmk.gui.watolib.groups
+import cmk.gui.watolib.hosts_and_folders
+import cmk.gui.watolib.rulesets
+import cmk.gui.watolib.tags
+from cmk.gui.bi import BIManager
 from cmk.gui.plugins.dashboard.utils import (
-    transform_stats_dashlet,  # pylint: disable=cmk-module-layer-violation
+    builtin_dashboards,
+    get_all_dashboards,
+    transform_stats_dashlet,
+    transform_topology_dashlet,
 )
-from cmk.gui.plugins.views.utils import get_all_views  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.plugins.watolib.utils import (
-    filter_unknown_settings,  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.userdb.utils import (
+    load_connection_config,
+    save_connection_config,
+    USER_SCHEME_SERIAL,
 )
-from cmk.gui.sites import is_wato_slave_site  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.userdb import load_users, save_users  # pylint: disable=cmk-module-layer-violation
-from cmk.gui.utils.logged_in import SuperUserContext  # pylint: disable=cmk-module-layer-violation
+from cmk.gui.plugins.views.utils import get_all_views
+from cmk.gui.plugins.watolib.utils import filter_unknown_settings
+from cmk.gui.sites import is_wato_slave_site
+from cmk.gui.userdb import load_users, save_users
+from cmk.gui.utils.logged_in import SuperUserContext
+from cmk.gui.utils.script_helpers import application_and_request_context, initialize_gui_environment
+from cmk.gui.watolib.changes import AuditLogStore, ObjectRef, ObjectRefType
+from cmk.gui.watolib.sites import site_globals_editable, SiteManagementFactory
 
 import cmk.update_rrd_fs_names  # pylint: disable=cmk-module-layer-violation  # TODO: this should be fine
-
-from cmk.gui.plugins.dashboard.utils import (  # pylint: disable=cmk-module-layer-violation # isort: skip
-    builtin_dashboards, get_all_dashboards, transform_topology_dashlet,
-)
-from cmk.gui.plugins.userdb.utils import (  # pylint: disable=cmk-module-layer-violation # isort: skip
-    load_connection_config, save_connection_config, USER_SCHEME_SERIAL,
-)
-from cmk.gui.utils.script_helpers import (  # pylint: disable=cmk-module-layer-violation # isort: skip
-    application_and_request_context, initialize_gui_environment,
-)
-from cmk.gui.watolib.changes import (  # pylint: disable=cmk-module-layer-violation # isort: skip
-    AuditLogStore, ObjectRef, ObjectRefType,
-)
-from cmk.gui.watolib.sites import (  # pylint: disable=cmk-module-layer-violation # isort: skip
-    site_globals_editable, SiteManagementFactory,
-)
 
 # mapping removed check plugins to their replacement:
 REMOVED_CHECK_PLUGIN_MAP = {
@@ -672,7 +665,7 @@ class UpdateConfig:
 
         # Reports
         try:
-            import cmk.gui.cee.reporting as reporting  # pylint: disable=cmk-module-layer-violation
+            import cmk.gui.cee.reporting as reporting
         except ImportError:
             reporting = None  # type: ignore[assignment]
 

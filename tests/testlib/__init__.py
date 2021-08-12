@@ -96,6 +96,8 @@ def fake_version_and_paths():
                         os.path.join(tmp_dir, "tmp/check_mk/counters"))
     monkeypatch.setattr("cmk.utils.paths.tcp_cache_dir", os.path.join(tmp_dir,
                                                                       "tmp/check_mk/cache"))
+    monkeypatch.setattr("cmk.utils.paths.trusted_ca_file",
+                        os.path.join(tmp_dir, "var/ssl/ca-certificates.crt"))
     monkeypatch.setattr("cmk.utils.paths.data_source_cache_dir",
                         os.path.join(tmp_dir, "tmp/check_mk/data_source_cache"))
     monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))

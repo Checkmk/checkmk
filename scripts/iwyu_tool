@@ -369,14 +369,15 @@ def slice_compilation_db(compilation_db, selection):
 
 def execute(invocations, verbose, formatter, jobs, max_load_average=0):
     """ Launch processes described by invocations. """
-    num_all_errors = 0
+    exit_code = 0
     if jobs == 1:
         for invocation in invocations:
             proc = invocation.start(verbose)
             messages, num_errors = formatter(proc.get_output())
             print(messages)
-            num_all_errors += num_errors
-        return num_all_errors
+            if num_errors:
+                exit_code = 2
+        return exit_code
 
     pending = []
     while invocations or pending:
@@ -386,7 +387,8 @@ def execute(invocations, verbose, formatter, jobs, max_load_average=0):
             pending.remove(proc)
             messages, num_errors = formatter(proc.get_output())
             print(messages)
-            num_all_errors += num_errors
+            if num_errors:
+                exit_code = 2
 
         # Schedule new processes if there's room.
         capacity = jobs - len(pending)
@@ -407,7 +409,7 @@ def execute(invocations, verbose, formatter, jobs, max_load_average=0):
 
         # Yield CPU.
         time.sleep(0.0001)
-    return num_all_errors
+    return exit_code
 
 
 def main(compilation_db_path, source_files, verbose, formatter, jobs,
@@ -441,7 +443,7 @@ def main(compilation_db_path, source_files, verbose, formatter, jobs,
         Invocation.from_compile_command(e, extra_args) for e in compilation_db
     ]
 
-    return 2 if execute(invocations, verbose, formatter, jobs, max_load_average) else 0
+    return execute(invocations, verbose, formatter, jobs, max_load_average)
 
 
 def _bootstrap(sys_argv):

@@ -150,8 +150,9 @@ $popup-menu-select-bg-color: $ux-theme-1;
 
 $dragging-bg-color: $ux-theme-1;
 
-$invtree-th-bg-color: $grey-3;
-$invtree-td-bg-color: rgb(100, 100, 100);
+$invtree-th-bg-color: $table-highlight-color;
+$invtree-td-bg-color: $inpage-highlight-color;
+$invnew-font-color: $success;
 
 $unmonitored-bg-color: rgb(134, 134, 134);
 $hostdown-bg-color: rgb(0, 102, 170);
@@ -201,7 +202,7 @@ $agent-config-td-color: $white;
 
 $pnp4nagios-img-filter: invert(84%);
 
-$matches-search-bg-color: darken($success, 5%);
+$matches-search-bg-color: $success-dimmed;
 
 $help-bg-color: rgba(255, 235, 131, 0.85);
 

@@ -856,6 +856,9 @@ class LoggedInUser:
                 return 0
             raise
 
+    def get_docs_base_url(self) -> str:
+        return "https://docs.checkmk.com/2.0.0/%s" % ("de" if self.language == "de" else "en")
+
 
 # Login a user that has all permissions. This is needed for making
 # Livestatus queries from unauthentiated page handlers

@@ -9,6 +9,8 @@ Entries of the main_menu_registry must NOT be registered in this module to keep 
 in this module as small as possible.
 """
 
+import time
+from datetime import timedelta
 from typing import List
 
 from cmk.utils.plugin_registry import Registry
@@ -19,10 +21,10 @@ from cmk.utils.version import (
     is_expired_trial,
     is_free_edition,
 )
-from cmk.gui.i18n import _, _l, get_current_language
-from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, TopicMenuItem
-from datetime import timedelta
-import time
+
+from cmk.gui.config import user
+from cmk.gui.i18n import _, _l
+from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 
 
 def any_show_more_items(topics: List[TopicMenuTopic]) -> bool:
@@ -76,7 +78,6 @@ mega_menu_registry = MegaMenuRegistry()
 
 
 def _help_menu_topics() -> List[TopicMenuTopic]:
-    user_guide_language = "de" if get_current_language() == "de" else "en"
     return [
         TopicMenuTopic(
             name="version",
@@ -137,7 +138,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="manual",
                     title=_("User guide"),
-                    url="https://docs.checkmk.com/2.0.0/%s" % user_guide_language,
+                    url=user.get_docs_base_url(),
                     target="_blank",
                     sort_index=30,
                     icon=None,  # TODO(CMK-5773): add an icon

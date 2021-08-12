@@ -11,19 +11,13 @@ from typing import Any, Final, Iterator
 import cmk.utils.paths
 import cmk.utils.store as store
 
-__all__ = ["root", "ConfigPath", "VersionedConfigPath", "LATEST_CONFIG"]
-
-
-def root() -> Path:
-    return cmk.utils.paths.core_helper_config_dir
-
-
-def _serial_mk() -> Path:
-    return root() / "serial.mk"
+__all__ = ["ConfigPath", "VersionedConfigPath", "LATEST_CONFIG"]
 
 
 class ConfigPath(abc.ABC):
     __slots__ = ()
+
+    ROOT: Final = cmk.utils.paths.core_helper_config_dir
 
     @property
     @abc.abstractmethod
@@ -42,11 +36,13 @@ class ConfigPath(abc.ABC):
         return hash(type(self)) ^ hash(self._path_elem)
 
     def __fspath__(self) -> str:
-        return str(root() / self._path_elem)
+        return str(self.ROOT / self._path_elem)
 
 
 class VersionedConfigPath(ConfigPath, Iterator):
     __slots__ = ("serial",)
+
+    _SERIAL_MK: Final = ConfigPath.ROOT / "serial.mk"
 
     def __init__(self, serial: int) -> None:
         super().__init__()
@@ -62,7 +58,7 @@ class VersionedConfigPath(ConfigPath, Iterator):
     @classmethod
     def current(cls) -> VersionedConfigPath:
         serial: int = store.load_object_from_file(
-            _serial_mk(),
+            VersionedConfigPath._SERIAL_MK,
             default=0,
             lock=True,
         )
@@ -72,12 +68,12 @@ class VersionedConfigPath(ConfigPath, Iterator):
         serial = self.serial
         while True:
             serial += 1
-            store.save_object_to_file(_serial_mk(), serial)
+            store.save_object_to_file(VersionedConfigPath._SERIAL_MK, serial)
             yield VersionedConfigPath(serial)
 
     def __next__(self) -> VersionedConfigPath:
         serial = self.serial + 1
-        store.save_object_to_file(_serial_mk(), serial)
+        store.save_object_to_file(VersionedConfigPath._SERIAL_MK, serial)
         return VersionedConfigPath(serial)
 
     @contextmanager
@@ -92,10 +88,10 @@ class VersionedConfigPath(ConfigPath, Iterator):
         self._link_latest()
 
     def _cleanup(self) -> None:
-        if not root().exists():
+        if not self.ROOT.exists():
             return
 
-        for path in root().iterdir():
+        for path in self.ROOT.iterdir():
             if path.is_symlink() or not path.is_dir():
                 continue
 

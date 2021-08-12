@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2021-07-15 13:19+0000\n"
-"Last-Translator: Pablo Mazzú <pmazzu@gmail.com>\n"
+"PO-Revision-Date: 2021-08-12 06:00+0000\n"
+"Last-Translator: Christopher Gyllen <christopher.gyllen@gmail.com>\n"
 "Language-Team: Spanish <https://translate.checkmk.com/projects/checkmk/"
 "software/es/>\n"
 "Language: es\n"
@@ -300,11 +300,11 @@ msgstr "%% de %s"
 
 #, python-format
 msgid "%%d locked element"
-msgstr ""
+msgstr "%%d elemento bloqueado"
 
 #, python-format
 msgid "%%d locked elements"
-msgstr ""
+msgstr "%%d elemento bloqueado"
 
 #, python-format
 msgid "%.1f mm"
@@ -10035,6 +10035,10 @@ msgstr ""
 
 msgid "Cold HDD space"
 msgstr "Espacio de disco duro frío"
+
+#, fuzzy
+msgid "Cold starts in percent"
+msgstr "CPU en porcentaje"
 
 msgid "Collect diagnostic dump"
 msgstr "Recoger el volcado de diagnóstico"
@@ -25284,6 +25288,13 @@ msgstr "Heredar del rango de tiempo del informe (sólo para informes)"
 
 msgid "Inherited from "
 msgstr "Heredado de "
+
+#, fuzzy
+msgid "Init duration"
+msgstr "con duración"
+
+msgid "Init duration with absolute limits"
+msgstr ""
 
 msgid "Initial Scheduling"
 msgstr "Programación inicial"
@@ -43722,6 +43733,12 @@ msgid "Specify the token to be used to connect to InfluxDB."
 msgstr ""
 "Especifique el protocolo utilizado para conectarse a la tarjeta de "
 "administración."
+
+#, fuzzy
+msgid ""
+"Specify the upper levels for the cold starts in percent of total invocations."
+msgstr ""
+"Niveles superiores para el número de conexiones activas a la base de datos"
 
 msgid ""
 "Specify the upper levels for the elapsed time of a function’s execution "

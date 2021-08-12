@@ -10080,6 +10080,10 @@ msgstr "Codec qui doit être utilisé pour décoder les fichiers correspondants"
 msgid "Cold HDD space"
 msgstr "Espace froid sur le disque dur"
 
+#, fuzzy
+msgid "Cold starts in percent"
+msgstr "CPU en pourcentage"
+
 msgid "Collect diagnostic dump"
 msgstr "Collecte des données de diagnostic"
 
@@ -25397,6 +25401,13 @@ msgstr "Hériter de la plage horaire du rapport (Reporting uniquement)"
 
 msgid "Inherited from "
 msgstr "Hérité de "
+
+#, fuzzy
+msgid "Init duration"
+msgstr "avec la durée"
+
+msgid "Init duration with absolute limits"
+msgstr ""
 
 msgid "Initial Scheduling"
 msgstr "Programmation initiale"
@@ -43889,6 +43900,12 @@ msgstr ""
 
 msgid "Specify the token to be used to connect to InfluxDB."
 msgstr "Spécifiez le jeton à utiliser pour se connecter à InfluxDB."
+
+#, fuzzy
+msgid ""
+"Specify the upper levels for the cold starts in percent of total invocations."
+msgstr ""
+"Niveaux supérieurs pour le nombre de connexions actives à la base de données"
 
 msgid ""
 "Specify the upper levels for the elapsed time of a function’s execution "

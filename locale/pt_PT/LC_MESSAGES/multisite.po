@@ -9970,6 +9970,10 @@ msgstr ""
 msgid "Cold HDD space"
 msgstr "Espaço frio no HDD"
 
+#, fuzzy
+msgid "Cold starts in percent"
+msgstr "CPU em percentagem"
+
 msgid "Collect diagnostic dump"
 msgstr "Recolher o lixo de diagnóstico"
 
@@ -25075,6 +25079,13 @@ msgstr "Herdar do intervalo de tempo do relatório (somente relatório)"
 
 msgid "Inherited from "
 msgstr "Herdado de "
+
+#, fuzzy
+msgid "Init duration"
+msgstr "com duração"
+
+msgid "Init duration with absolute limits"
+msgstr ""
 
 msgid "Initial Scheduling"
 msgstr "Programação inicial"
@@ -43367,6 +43378,11 @@ msgstr ""
 #, fuzzy
 msgid "Specify the token to be used to connect to InfluxDB."
 msgstr "Especifique o protocolo utilizado para se ligar ao quadro de gestão."
+
+#, fuzzy
+msgid ""
+"Specify the upper levels for the cold starts in percent of total invocations."
+msgstr "Níveis superiores para o número de ligações a bases de dados activas"
 
 msgid ""
 "Specify the upper levels for the elapsed time of a function’s execution "

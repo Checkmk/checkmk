@@ -9574,6 +9574,10 @@ msgstr "一致するファイルをデコードするために使用する必要
 msgid "Cold HDD space"
 msgstr "コールドHDDスペース"
 
+#, fuzzy
+msgid "Cold starts in percent"
+msgstr "CPU(パーセント)"
+
 msgid "Collect diagnostic dump"
 msgstr "診断ダンプを収集する"
 
@@ -24118,6 +24122,13 @@ msgstr "レポートの時間範囲から継承(レポートのみ)"
 
 msgid "Inherited from "
 msgstr "から継承 "
+
+#, fuzzy
+msgid "Init duration"
+msgstr "期間あり"
+
+msgid "Init duration with absolute limits"
+msgstr ""
 
 msgid "Initial Scheduling"
 msgstr "初期スケジューリング"
@@ -41861,6 +41872,11 @@ msgstr ""
 
 msgid "Specify the token to be used to connect to InfluxDB."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Specify the upper levels for the cold starts in percent of total invocations."
+msgstr "アクティブなデータベース接続数の上位レベル"
 
 msgid ""
 "Specify the upper levels for the elapsed time of a function’s execution "

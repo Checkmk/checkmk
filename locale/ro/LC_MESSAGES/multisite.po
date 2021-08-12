@@ -9399,6 +9399,10 @@ msgid "Cold HDD space"
 msgstr ""
 
 #, fuzzy
+msgid "Cold starts in percent"
+msgstr "Nivelurile maxime pentru incarcare in procente"
+
+#, fuzzy
 msgid "Collect diagnostic dump"
 msgstr "Adaugă informații despre contact"
 
@@ -23628,6 +23632,13 @@ msgid "Inherit from report time range (Reporting only)"
 msgstr ""
 
 msgid "Inherited from "
+msgstr ""
+
+#, fuzzy
+msgid "Init duration"
+msgstr "Optiuni tabel"
+
+msgid "Init duration with absolute limits"
 msgstr ""
 
 msgid "Initial Scheduling"
@@ -42053,6 +42064,11 @@ msgstr ""
 
 msgid "Specify the token to be used to connect to InfluxDB."
 msgstr ""
+
+#, fuzzy
+msgid ""
+"Specify the upper levels for the cold starts in percent of total invocations."
+msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid ""
 "Specify the upper levels for the elapsed time of a function’s execution "

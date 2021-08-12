@@ -9959,6 +9959,10 @@ msgstr ""
 msgid "Cold HDD space"
 msgstr "Koude HDD ruimte"
 
+#, fuzzy
+msgid "Cold starts in percent"
+msgstr "CPU in procenten"
+
 msgid "Collect diagnostic dump"
 msgstr "Verzamel diagnostische dump"
 
@@ -25073,6 +25077,13 @@ msgstr "Erven van rapportagetijdbereik (alleen rapportage)"
 
 msgid "Inherited from "
 msgstr "Geërfd van "
+
+#, fuzzy
+msgid "Init duration"
+msgstr "met duur"
+
+msgid "Init duration with absolute limits"
+msgstr ""
 
 msgid "Initial Scheduling"
 msgstr "Initiële planning"
@@ -43332,6 +43343,11 @@ msgid "Specify the token to be used to connect to InfluxDB."
 msgstr ""
 "Specificeer het protocol dat wordt gebruikt om verbinding te maken met de "
 "beheersraad."
+
+#, fuzzy
+msgid ""
+"Specify the upper levels for the cold starts in percent of total invocations."
+msgstr "Bovenste niveaus voor het aantal actieve databaseverbindingen"
 
 msgid ""
 "Specify the upper levels for the elapsed time of a function’s execution "

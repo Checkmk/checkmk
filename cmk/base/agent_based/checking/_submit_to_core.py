@@ -52,9 +52,9 @@ def check_result(
     dry_run: bool,
     show_perfdata: bool,
 ) -> None:
-    state, infotext, perfdata = result
+    state, infotext, metric_tuples = result
 
-    perftexts = [_convert_perf_data(p) for p in perfdata]
+    perftexts = [_serialize_metric(*mt) for mt in metric_tuples]
     if perftexts:
         check_command = _extract_check_command(infotext)
         if check_command and config.perfdata_format == "pnp":
@@ -82,17 +82,25 @@ def finalize() -> None:
             pass
 
 
-def _convert_perf_data(p: Sequence[Union[None, str, float]]) -> str:
-    # replace None with "" and fill up to 6 values
-    normalized = [_convert_perf_value(v) for v in p]
-    normalized.extend([""] * 6)
-    return "%s=%s;%s;%s;%s;%s" % tuple(normalized[:6])
+def _serialize_metric(
+    name: str,
+    value: float,
+    warn: Optional[float],
+    crit: Optional[float],
+    min_: Optional[float],
+    max_: Optional[float],
+) -> str:
+    """
+        >>> _serialize_metric("hot_chocolate", 2.3, None, 42.0, 0.0, None)
+        'hot_chocolate=2.3;;42;0;'
+
+    """
+    return (f"{name}={_serialize_value(value)};{_serialize_value(warn)};{_serialize_value(crit)};"
+            f"{_serialize_value(min_)};{_serialize_value(max_)}")
 
 
-def _convert_perf_value(x: Union[None, str, float]) -> str:
-    if isinstance(x, float):
-        return ("%.6f" % x).rstrip("0").rstrip(".")
-    return str(x or "")
+def _serialize_value(x: Optional[float]) -> str:
+    return "" if x is None else ("%.6f" % x).rstrip("0").rstrip(".")
 
 
 def _extract_check_command(infotext: str) -> Optional[str]:

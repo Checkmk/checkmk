@@ -376,7 +376,7 @@ def execute(invocations, verbose, formatter, jobs, max_load_average=0):
             messages, num_errors = formatter(proc.get_output())
             print(messages)
             if num_errors:
-                exit_code = 2
+                exit_code = 1
         return exit_code
 
     pending = []
@@ -388,7 +388,7 @@ def execute(invocations, verbose, formatter, jobs, max_load_average=0):
             messages, num_errors = formatter(proc.get_output())
             print(messages)
             if num_errors:
-                exit_code = 2
+                exit_code = 1
 
         # Schedule new processes if there's room.
         capacity = jobs - len(pending)

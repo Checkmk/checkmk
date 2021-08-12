@@ -130,7 +130,7 @@ class ABCDiscoveredLabelsStore(metaclass=abc.ABCMeta):
 
 
 class DiscoveredHostLabelsStore(ABCDiscoveredLabelsStore):
-    def __init__(self, hostname: str) -> None:
+    def __init__(self, hostname: HostName) -> None:
         super().__init__()
         self._hostname = hostname
 

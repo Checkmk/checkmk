@@ -6,7 +6,7 @@
 
 # pylint: disable=redefined-outer-name
 
-from typing import Dict, NamedTuple, Sequence, Set, Tuple
+from typing import Dict, List, Literal, NamedTuple, Sequence, Set, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -20,7 +20,9 @@ from cmk.utils.type_defs import (
     CheckPluginName,
     DiscoveryResult,
     EVERYTHING,
+    HostAddress,
     HostKey,
+    HostName,
     SectionName,
     SourceType,
 )
@@ -44,28 +46,28 @@ from cmk.base.sources.agent import AgentHostSections
 from cmk.base.sources.snmp import SNMPHostSections
 
 
-def test_discovered_service_init():
-    ser = discovery.Service(CheckPluginName("abc"), u"Item", u"ABC Item", None)
+def test_discovered_service_init() -> None:
+    ser = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", None)
     assert ser.check_plugin_name == CheckPluginName("abc")
-    assert ser.item == u"Item"
-    assert ser.description == u"ABC Item"
+    assert ser.item == "Item"
+    assert ser.description == "ABC Item"
     assert ser.parameters is None
     assert ser.service_labels.to_dict() == {}
 
-    ser = discovery.Service(CheckPluginName("abc"), u"Item", u"ABC Item", None,
-                            DiscoveredServiceLabels(ServiceLabel(u"läbel", u"lübel")))
-    assert ser.service_labels.to_dict() == {u"läbel": u"lübel"}
+    ser = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", None,
+                            DiscoveredServiceLabels(ServiceLabel("läbel", "lübel")))
+    assert ser.service_labels.to_dict() == {"läbel": "lübel"}
 
     with pytest.raises(AttributeError):
         ser.xyz = "abc"  # type: ignore[attr-defined] # pylint: disable=assigning-non-slot
 
 
-def test_discovered_service_eq():
-    ser1 = discovery.Service(CheckPluginName("abc"), u"Item", u"ABC Item", None)
-    ser2 = discovery.Service(CheckPluginName("abc"), u"Item", u"ABC Item", None)
-    ser3 = discovery.Service(CheckPluginName("xyz"), u"Item", u"ABC Item", None)
-    ser4 = discovery.Service(CheckPluginName("abc"), u"Xtem", u"ABC Item", None)
-    ser5 = discovery.Service(CheckPluginName("abc"), u"Item", u"ABC Item", [])
+def test_discovered_service_eq() -> None:
+    ser1 = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", None)
+    ser2 = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", None)
+    ser3 = discovery.Service(CheckPluginName("xyz"), "Item", "ABC Item", None)
+    ser4 = discovery.Service(CheckPluginName("abc"), "Xtem", "ABC Item", None)
+    ser5 = discovery.Service(CheckPluginName("abc"), "Item", "ABC Item", [])
 
     assert ser1 == ser1  # pylint: disable=comparison-with-itself
     assert ser1 == ser2
@@ -178,7 +180,8 @@ def grouped_services() -> discovery.ServicesByTransition:
     }
 
 
-def test__group_by_transition(service_table, grouped_services):
+def test__group_by_transition(service_table: discovery.ServicesTable,
+                              grouped_services: discovery.ServicesByTransition) -> None:
     assert discovery._group_by_transition(service_table) == grouped_services
 
 
@@ -281,9 +284,13 @@ def test__group_by_transition(service_table, grouped_services):
             "service_blacklist": ["^Test Description Vanished Item 2"],
         }, ["Vanished Item 2"], (0, 1, 1)),
     ])
-def test__get_post_discovery_services(monkeypatch, grouped_services, mode, parameters_rediscovery,
-                                      result_new_item_names, result_counts):
-    def _get_service_description(_hostname, _check_plugin_name, item):
+def test__get_post_discovery_services(monkeypatch: MonkeyPatch,
+                                      grouped_services: discovery.ServicesByTransition,
+                                      mode: discovery.DiscoveryMode,
+                                      parameters_rediscovery: Dict[str, List[str]],
+                                      result_new_item_names: List[str],
+                                      result_counts: Tuple[int, int, int]) -> None:
+    def _get_service_description(_hostname, _check_plugin_name, item) -> str:
         return "Test Description %s" % item
 
     monkeypatch.setattr(config, "service_description", _get_service_description)
@@ -294,7 +301,7 @@ def test__get_post_discovery_services(monkeypatch, grouped_services, mode, param
 
     new_item_names = [
         entry.service.item or "" for entry in discovery._get_post_discovery_services(
-            "hostname",
+            HostName("hostname"),
             grouped_services,
             service_filters,
             result,
@@ -476,21 +483,23 @@ def test__get_post_discovery_services(monkeypatch, grouped_services, mode, param
         }, True),
     ])
 def test__check_service_table(
-    monkeypatch,
-    grouped_services,
-    parameters,
-    result_need_rediscovery,
-):
+    monkeypatch: MonkeyPatch,
+    grouped_services: discovery.ServicesByTransition,
+    parameters: Dict[Literal["inventory_rediscovery"], Dict[str, Union[discovery.DiscoveryMode,
+                                                                       List[str]]]],
+    result_need_rediscovery: bool,
+) -> None:
     def _get_service_description(_hostname, _check_plugin_name, item):
         return "Test Description %s" % item
 
     monkeypatch.setattr(config, "service_description", _get_service_description)
 
     rediscovery_parameters = parameters.get("inventory_rediscovery", {}).copy()
-    discovery_mode = rediscovery_parameters.pop('mode', "")
+    discovery_mode = rediscovery_parameters.pop('mode', discovery.DiscoveryMode.FALLBACK)
+    assert isinstance(discovery_mode, discovery.DiscoveryMode)  # for mypy
     (status, infotexts, long_infotexts,
      perfdata), need_rediscovery = discovery._check_service_lists(
-         host_name="hostname",
+         host_name=HostName("hostname"),
          services_by_transition=grouped_services,
          params=parameters,
          service_filters=discovery._ServiceFilters.from_settings(rediscovery_parameters),
@@ -513,11 +522,11 @@ def test__check_service_table(
 
 
 @pytest.mark.usefixtures("fix_register")
-def test__find_candidates():
+def test__find_candidates() -> None:
     broker = ParsedSectionsBroker({
         # we just care about the keys here, content set to arbitrary values that can be parsed.
         # section names are chosen arbitrarily.
-        HostKey("test_node", "1.2.3.4", SourceType.HOST): (
+        HostKey(HostName("test_node"), HostAddress("1.2.3.4"), SourceType.HOST): (
             ParsedSectionsResolver(section_plugins=[
                 agent_based_register.get_section_plugin(SectionName("kernel")),
                 agent_based_register.get_section_plugin(SectionName("uptime")),
@@ -528,7 +537,7 @@ def test__find_candidates():
                     SectionName("uptime"): [['123']],  # host & mgmt
                 }),),
         ),
-        HostKey("test_node", "1.2.3.4", SourceType.MANAGEMENT): (
+        HostKey(HostName("test_node"), HostAddress("1.2.3.4"), SourceType.MANAGEMENT): (
             ParsedSectionsResolver(section_plugins=[
                 agent_based_register.get_section_plugin(SectionName("uptime")),
                 agent_based_register.get_section_plugin(SectionName("liebert_fans")),
@@ -668,37 +677,38 @@ _expected_host_labels = {
 
 
 @pytest.mark.usefixtures("fix_register")
-def test_commandline_discovery(monkeypatch):
-    ts = Scenario().add_host("test-host", ipaddress="127.0.0.1")
-    ts.fake_standard_linux_agent_output("test-host")
+def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
+    testhost = HostName("test-host")
+    ts = Scenario().add_host(testhost, ipaddress="127.0.0.1")
+    ts.fake_standard_linux_agent_output(testhost)
     ts.apply(monkeypatch)
 
     with cmk_debug_enabled():
         discovery.commandline_discovery(
-            arg_hostnames={"test-host"},
+            arg_hostnames={testhost},
             selected_sections=NO_SELECTION,
             run_plugin_names=EVERYTHING,
             arg_only_new=False,
         )
 
-    services = autochecks.parse_autochecks_file("test-host", config.service_description)
+    services = autochecks.parse_autochecks_file(testhost, config.service_description)
     found = {(s.check_plugin_name, s.item): s.service_labels.to_dict() for s in services}
     assert found == _expected_services
 
-    store = DiscoveredHostLabelsStore("test-host")
+    store = DiscoveredHostLabelsStore(testhost)
     assert store.load() == _expected_host_labels
 
 
 class RealHostScenario(NamedTuple):
-    hostname: str
+    hostname: HostName
     ipaddress: str
     parsed_sections_broker: ParsedSectionsBroker
 
 
 @pytest.fixture(name="realhost_scenario")
-def _realhost_scenario(monkeypatch):
-    hostname = "test-realhost"
-    ipaddress = "1.2.3.4"
+def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
+    hostname = HostName("test-realhost")
+    ipaddress = HostAddress("1.2.3.4")
     ts = Scenario().add_host(hostname, ipaddress=ipaddress)
     ts.set_ruleset("inventory_df_rules", [{
         'value': {
@@ -713,7 +723,7 @@ def _realhost_scenario(monkeypatch):
     }])
     ts.apply(monkeypatch)
 
-    def fake_lookup_ip_address(*_a, **_kw):
+    def fake_lookup_ip_address(*_a, **_kw) -> HostAddress:
         return ipaddress
 
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
@@ -773,20 +783,20 @@ def _realhost_scenario(monkeypatch):
 
 class ClusterScenario(NamedTuple):
     host_config: config.HostConfig
-    ipaddress: str
+    ipaddress: HostAddress
     parsed_sections_broker: ParsedSectionsBroker
-    node1_hostname: str
-    node2_hostname: str
+    node1_hostname: HostName
+    node2_hostname: HostName
 
 
 @pytest.fixture(name="cluster_scenario")
-def _cluster_scenario(monkeypatch):
-    hostname = "test-clusterhost"
-    ipaddress = "1.2.3.4"
-    node1_hostname = 'test-node1'
-    node2_hostname = 'test-node2'
+def _cluster_scenario(monkeypatch) -> ClusterScenario:
+    hostname = HostName("test-clusterhost")
+    ipaddress = HostAddress("1.2.3.4")
+    node1_hostname = HostName('test-node1')
+    node2_hostname = HostName('test-node2')
 
-    def fake_lookup_ip_address(*_a, **_kw):
+    def fake_lookup_ip_address(*_a, **_kw) -> HostAddress:
         return ipaddress
 
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
@@ -1240,7 +1250,8 @@ _discovery_test_cases = [
 
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
-def test__discover_host_labels_and_services_on_realhost(realhost_scenario, discovery_test_case):
+def test__discover_host_labels_and_services_on_realhost(
+        realhost_scenario: RealHostScenario, discovery_test_case: DiscoveryTestCase) -> None:
     if discovery_test_case.only_host_labels:
         # check for consistency of the test case
         assert not discovery_test_case.expected_services
@@ -1274,7 +1285,8 @@ def test__discover_host_labels_and_services_on_realhost(realhost_scenario, disco
 
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
-def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_test_case):
+def test__perform_host_label_discovery_on_realhost(realhost_scenario: RealHostScenario,
+                                                   discovery_test_case: DiscoveryTestCase) -> None:
     scenario = realhost_scenario
 
     with cmk_debug_enabled():
@@ -1297,7 +1309,8 @@ def test__perform_host_label_discovery_on_realhost(realhost_scenario, discovery_
 
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
-def test__discover_services_on_cluster(cluster_scenario, discovery_test_case):
+def test__discover_services_on_cluster(cluster_scenario: ClusterScenario,
+                                       discovery_test_case: DiscoveryTestCase) -> None:
     if discovery_test_case.only_host_labels:
         # check for consistency of the test case
         assert not discovery_test_case.expected_services
@@ -1330,7 +1343,8 @@ def test__discover_services_on_cluster(cluster_scenario, discovery_test_case):
 
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize("discovery_test_case", _discovery_test_cases)
-def test__perform_host_label_discovery_on_cluster(cluster_scenario, discovery_test_case):
+def test__perform_host_label_discovery_on_cluster(cluster_scenario: ClusterScenario,
+                                                  discovery_test_case: DiscoveryTestCase) -> None:
     scenario = cluster_scenario
 
     with cmk_debug_enabled():
@@ -1392,7 +1406,7 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
     )
 
     assert discovery._get_node_services(
-        "horst",
+        HostName("horst"),
         None,
         ParsedSectionsBroker({}),
         OnError.RAISE,
@@ -1400,5 +1414,5 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
     ) == {(service.check_plugin_name, None): (
         discovery_status,
         service,
-        ["horst"],
+        [HostName("horst")],
     ) for discovery_status, service in services.items()}

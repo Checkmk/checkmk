@@ -260,8 +260,8 @@ class PageMenu:
             PageMenuEntry(
                 title=title,
                 icon_name="manual",
-                item=make_external_link("https://docs.checkmk.com/master/%s.html%s" %
-                                        (article_name, anchor)),
+                item=make_external_link("%s/%s.html%s" %
+                                        (user.get_docs_base_url(), article_name, anchor)),
             ))
 
     def add_youtube_reference(self, title: str, youtube_id: str) -> None:
@@ -336,7 +336,7 @@ def make_help_dropdown() -> PageMenuDropdown:
                     PageMenuEntry(
                         title=_("The official Checkmk user guide"),
                         icon_name="manual",
-                        item=make_external_link("https://docs.checkmk.com/master/index.html"),
+                        item=make_external_link(user.get_docs_base_url()),
                     ),
                 ],
             ),

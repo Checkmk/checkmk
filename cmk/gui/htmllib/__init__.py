@@ -983,12 +983,9 @@ class html(ABCHTMLGenerator):
         return self.render_div(HTML(help_text), class_="help", style=style)
 
     def resolve_help_text_macros(self, text: str) -> str:
-        if user.language == "de":
-            cmk_base_url = "https://docs.checkmk.com/master/de"
-        else:
-            cmk_base_url = "https://docs.checkmk.com/master/en"
-        return re.sub(r"\[([a-z0-9_-]+)(#[a-z0-9_-]+|)\|([^\]]+)\]",
-                      "<a href=\"%s/\\1.html\\2\" target=\"_blank\">\\3</a>" % cmk_base_url, text)
+        return re.sub(
+            r"\[([a-z0-9_-]+)(#[a-z0-9_-]+|)\|([^\]]+)\]",
+            "<a href=\"%s/\\1.html\\2\" target=\"_blank\">\\3</a>" % user.get_docs_base_url(), text)
 
     def enable_help_toggle(self) -> None:
         self.have_help = True

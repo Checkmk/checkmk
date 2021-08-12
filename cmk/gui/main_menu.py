@@ -22,6 +22,7 @@ from cmk.utils.version import (
     is_free_edition,
 )
 
+from cmk.gui.globals import user
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import MegaMenu, TopicMenuItem, TopicMenuTopic
 
@@ -137,7 +138,7 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                 TopicMenuItem(
                     name="manual",
                     title=_("User guide"),
-                    url="https://docs.checkmk.com",
+                    url=user.get_docs_base_url(),
                     target="_blank",
                     sort_index=30,
                     icon=None,  # TODO(CMK-5773): add an icon

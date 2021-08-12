@@ -369,16 +369,14 @@ def slice_compilation_db(compilation_db, selection):
 
 def execute(invocations, verbose, formatter, jobs, max_load_average=0):
     """ Launch processes described by invocations. """
-    num_all_errors = [0]  # emulate nonlocal
-    def process_result(p):
-        messages, num_errors = formatter(p.get_output())
-        print(messages)
-        num_all_errors[0] += num_errors
-
+    num_all_errors = 0
     if jobs == 1:
         for invocation in invocations:
-            process_result(invocation.start(verbose))
-        return num_all_errors[0]
+            proc = invocation.start(verbose)
+            messages, num_errors = formatter(proc.get_output())
+            print(messages)
+            num_all_errors += num_errors
+        return num_all_errors
 
     pending = []
     while invocations or pending:
@@ -386,7 +384,9 @@ def execute(invocations, verbose, formatter, jobs, max_load_average=0):
         complete = [proc for proc in pending if proc.poll() is not None]
         for proc in complete:
             pending.remove(proc)
-            process_result(proc)
+            messages, num_errors = formatter(proc.get_output())
+            print(messages)
+            num_all_errors += num_errors
 
         # Schedule new processes if there's room.
         capacity = jobs - len(pending)
@@ -407,7 +407,7 @@ def execute(invocations, verbose, formatter, jobs, max_load_average=0):
 
         # Yield CPU.
         time.sleep(0.0001)
-    return num_all_errors[0]
+    return num_all_errors
 
 
 def main(compilation_db_path, source_files, verbose, formatter, jobs,

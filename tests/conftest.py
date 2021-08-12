@@ -8,6 +8,7 @@
 # pylint: disable=redefined-outer-name,wrong-import-order
 
 import collections
+import enum
 import errno
 import shutil
 from pathlib import Path
@@ -38,18 +39,22 @@ if not Path(testlib.utils.cmc_path()).exists():
 # the other type will be skipped.
 #
 
-EXECUTE_IN_SITE, EXECUTE_IN_VENV = True, False
+
+class ExecutionType(enum.Enum):
+    Site = enum.auto()
+    VirtualEnv = enum.auto()
+
 
 test_types = collections.OrderedDict([
-    ("unit", EXECUTE_IN_VENV),
-    ("pylint", EXECUTE_IN_VENV),
-    ("docker", EXECUTE_IN_VENV),
-    ("agent-integration", EXECUTE_IN_VENV),
-    ("agent-plugin-unit", EXECUTE_IN_VENV),
-    ("integration", EXECUTE_IN_SITE),
-    ("gui_crawl", EXECUTE_IN_VENV),
-    ("packaging", EXECUTE_IN_VENV),
-    ("composition", EXECUTE_IN_VENV),
+    ("unit", ExecutionType.VirtualEnv),
+    ("pylint", ExecutionType.VirtualEnv),
+    ("docker", ExecutionType.VirtualEnv),
+    ("agent-integration", ExecutionType.VirtualEnv),
+    ("agent-plugin-unit", ExecutionType.VirtualEnv),
+    ("integration", ExecutionType.Site),
+    ("gui_crawl", ExecutionType.VirtualEnv),
+    ("packaging", ExecutionType.VirtualEnv),
+    ("composition", ExecutionType.VirtualEnv),
 ])
 
 
@@ -133,10 +138,15 @@ def pytest_cmdline_main(config):
         return  # missing option is handled later
 
     context = test_types[config.getoption("-T")]
-    if context == EXECUTE_IN_SITE and not testlib.is_running_as_site_user():
-        raise Exception()
+    if context == ExecutionType.VirtualEnv:
+        verify_virtualenv()
+    elif context == ExecutionType.Site:
+        verify_site()
 
-    verify_virtualenv()
+
+def verify_site():
+    if not testlib.is_running_as_site_user():
+        raise RuntimeError("Please run tests as site user.")
 
 
 def verify_virtualenv():

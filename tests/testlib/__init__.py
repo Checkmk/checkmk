@@ -193,7 +193,7 @@ def wait_until(condition, timeout=1, interval=0.1):
 def wait_until_liveproxyd_ready(site, site_ids):
     # First wait for the site sockets to appear
     def _all_sockets_opened():
-        return all([site.file_exists("tmp/run/liveproxy/%s" % s) for s in site_ids])
+        return all((site.file_exists("tmp/run/liveproxy/%s" % s) for s in site_ids))
 
     wait_until(_all_sockets_opened, timeout=60, interval=0.5)
 
@@ -278,8 +278,11 @@ def create_linux_test_host(request, web_fixture, site, hostname):
                 "var/check_mk/autochecks/%s.mk" % hostname,
                 "tmp/check_mk/counters/%s" % hostname,
                 "tmp/check_mk/cache/%s" % hostname,
-        ] + [str(p) for p in Path("tmp/check_mk/data_source_cache/").glob(f"*/{hostname}")]:
-            if os.path.exists(path):
+        ] + [
+                str(p.relative_to(site.root))
+                for p in Path(site.root, "tmp/check_mk/data_source_cache/").glob(f"*/{hostname}")
+        ]:
+            if site.file_exists(path):
                 site.delete_file(path)
 
     request.addfinalizer(finalizer)
@@ -327,7 +330,7 @@ class Check(BaseCheck):
     def __init__(self, name):
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
         from cmk.base.api.agent_based import register  # pylint: disable=import-outside-toplevel
-        super(Check, self).__init__(name)
+        super().__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
         self.info = config.check_info[self.name]
@@ -363,7 +366,7 @@ class Check(BaseCheck):
 class ActiveCheck(BaseCheck):
     def __init__(self, name):
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
-        super(ActiveCheck, self).__init__(name)
+        super().__init__(name)
         assert self.name.startswith(
             'check_'), 'Specify the full name of the active check, e.g. check_http'
         self.info = config.active_check_info[self.name[len('check_'):]]
@@ -378,7 +381,7 @@ class ActiveCheck(BaseCheck):
 class SpecialAgent:
     def __init__(self, name):
         import cmk.base.config as config  # pylint: disable=import-outside-toplevel
-        super(SpecialAgent, self).__init__()
+        super().__init__()
         self.name = name
         assert self.name.startswith(
             'agent_'), 'Specify the full name of the active check, e.g. agent_3par'

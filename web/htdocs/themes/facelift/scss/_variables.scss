@@ -14,6 +14,7 @@ $black: rgb(0, 0, 0);
 $warning: rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
 $danger: rgb(255, 50, 50);
 $success: rgb(19, 211, 137);
+$success-dimmed: darken($success, 5%);
 $info: rgb(255, 235, 131); //maybe an alternative rgb(255, 254, 68)
 $grey-1: rgb(250, 250, 250);
 $grey-2: rgb(189, 189, 189);
@@ -134,7 +135,7 @@ $color-perfometer-title: $font-color;
 // Tables
 // -----------------------------------------------------------------------------
 $color-table-border: rgb(204, 207, 219); // grey
-$color-table-background: rgb(250, 250, 250); // light grey
+$color-table-background: $grey-1; // light grey
 
 $color-table-border-dark: rgb(13, 15, 15); // dark grey
 $color-table-background-dark: rgb(28, 37, 40); // dark grey
@@ -309,6 +310,7 @@ $dragging-bg-color: $grey-1;
 
 $invtree-th-bg-color: $primary-th-bg-color;
 $invtree-td-bg-color: $primary-td-bg-color;
+$invnew-font-color: $success-dimmed;
 
 $availability-table-border-color: null;
 $availability-summary-bg-color: $grey-2;

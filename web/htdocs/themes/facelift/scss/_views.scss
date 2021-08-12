@@ -1028,16 +1028,14 @@ td.invtree {
   }
 }
 
-/* TODO: Reproduce this html element */
 td.invtree span.invold,
 span.invold table.data {
-  color: rgb(255, 0, 0);
+  color: $danger;
 }
 
-/* TODO: Reproduce this html element */
 td.invtree span.invnew,
 span.invnew table.data {
-  color: rgb(0, 191, 0);
+  color: $invnew-font-color;
 }
 
 /* Positioning of the link from an inventory dicttable to the matching multisite table */
@@ -1061,6 +1059,7 @@ table.data tr.data td.if_state {
   }
 
   &.if_state_down {
+    color: $white;
     background-color: $color-state-2-background;
   }
 

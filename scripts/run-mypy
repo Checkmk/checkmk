@@ -8,6 +8,7 @@
 set -e
 
 REPO_PATH=$(dirname $(dirname $(realpath "$0")))
+PYTHON_MAJOR_DOT_MINOR=$(make -f $REPO_PATH/defines.make print-PYTHON_MAJOR_DOT_MINOR)
 
 # Detect whether or not mypy is available and print out an error that is in the
 # same format as mypy issues. This message is understood by e.g. vims ALE and
@@ -29,7 +30,7 @@ fi
 # in messages relative, which will confuse e.g. Emacs' flycheck mode.
 MYPYPATH="$REPO_PATH:$REPO_PATH/livestatus/api/python:$REPO_PATH/omd/packages/omd" \
     exec "$REPO_PATH/scripts/run-pipenv" run mypy \
-    --python-version 3.8 \
+    --python-version ${PYTHON_MAJOR_DOT_MINOR} \
     --scripts-are-modules \
     --show-error-codes \
     --check-untyped-defs \

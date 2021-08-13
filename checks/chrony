@@ -43,7 +43,7 @@ ntp_default_levels = (10, 200.0, 500.0)  # stratum, ms offset
 
 factory_settings["ntp_time_default_levels"] = {
     "ntp_levels": ntp_default_levels,
-    "alert_delay": (300, 3600),
+    "alert_delay": (1800, 3600),  # chronys default maxpoll is 10 (1024s)
 }
 
 
@@ -116,7 +116,7 @@ def check_chrony(_item, params, parsed_extra):
     if isinstance(params, tuple):
         params = {
             "ntp_levels": params,
-            "alert_delay": (300, 3600),
+            "alert_delay": (1800, 3600),
         }
     crit_stratum, warn, crit = params["ntp_levels"]
 
@@ -124,6 +124,7 @@ def check_chrony(_item, params, parsed_extra):
     address = parsed.get("Reference ID").split(' ')[1]
     offset = float(parsed.get("System time").split(' ')[0]) * 1000  # ms
     stratum = int(parsed.get("Stratum"))
+    last_sync = time.time() - utc_mktime(time.strptime(parsed.get("Ref time (UTC)")))
 
     # Check reference id: if brackets are empty, NTP servers are unreachable
     if len(address) <= 2:
@@ -141,6 +142,12 @@ def check_chrony(_item, params, parsed_extra):
                        "offset", (warn, crit),
                        human_readable_func=lambda x: "%.4f ms" % x,
                        infoname="Offset")
+
+    yield check_levels(last_sync,
+                       None,
+                       params["alert_delay"],
+                       human_readable_func=get_age_human_readable,
+                       infoname="Time since last sync")
 
     # Show additional information
     yield 0, "Reference ID: %s" % parsed["Reference ID"]

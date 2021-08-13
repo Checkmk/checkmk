@@ -38,6 +38,7 @@ info = [[u'Reference', u'ID', u':', u'55DCBEF6', u'(ernie.gerger-net.de)'],
 
 extra_sections = {'': [[]]}
 
+freeze_time = "2019-07-09 08:05:06"
 
 discovery = {'': [(None, {})]}
 
@@ -48,4 +49,5 @@ checks = {'': [(None,
                  (1,
                   'Offset: 202.2751 ms (warn/crit at 200.0000 ms/500.0000 ms)',
                   [('offset', 202.275117, 200.0, 500.0, None, None)]),
+                 (0, 'Time since last sync: 4 m', []),
                  (0, u'Reference ID: 55DCBEF6 (ernie.gerger-net.de)', [])])]}

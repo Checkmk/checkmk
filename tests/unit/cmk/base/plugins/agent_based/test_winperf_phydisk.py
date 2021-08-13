@@ -6,12 +6,12 @@
 
 import pytest
 
-from tests.testlib import get_value_store_fixture
-
 from cmk.base.plugins.agent_based import winperf_phydisk
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, type_defs
-
-value_store_fixture = get_value_store_fixture(winperf_phydisk)
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_value_store,
+    IgnoreResultsError,
+    Metric,
+)
 
 STRING_TABLE = [
     ['1435670669.29', '234', '2', '3'],
@@ -94,17 +94,17 @@ def test_parse_winperf_phydisk():
     }
 
 
-def test_compute_rates_single_disk(value_store):
+def test_compute_rates_single_disk():
     # without frequency
     # first call should result in IgnoreResults, second call should yield rates
     with pytest.raises(IgnoreResultsError):
         winperf_phydisk._compute_rates_single_disk(
             DISK_WO_FREQUENCY,
-            value_store,
+            get_value_store(),
         )
     disk_with_rates = winperf_phydisk._compute_rates_single_disk(
         _increment_time_and_frequency(DISK_WO_FREQUENCY),
-        value_store,
+        get_value_store(),
     )
     _check_disk_with_rates(
         DISK_WO_FREQUENCY,
@@ -116,11 +116,11 @@ def test_compute_rates_single_disk(value_store):
     with pytest.raises(IgnoreResultsError):
         winperf_phydisk._compute_rates_single_disk(
             DISK,
-            value_store,
+            get_value_store(),
         )
     disk_with_rates = winperf_phydisk._compute_rates_single_disk(
         _increment_time_and_frequency(DISK),
-        value_store,
+        get_value_store(),
     )
     _check_disk_with_rates(
         DISK,
@@ -162,7 +162,7 @@ DISK_HALF = {k: int(v / 2) for k, v in DISK.items()}
     "item",
     ["item", "SUMMARY"],
 )
-def test_check_winperf_phydisk(value_store, item):
+def test_check_winperf_phydisk(item):
     section_1 = {
         item: DISK_HALF,
     }
@@ -181,7 +181,7 @@ def test_check_winperf_phydisk(value_store, item):
     "item",
     ["item", "SUMMARY"],
 )
-def test_cluster_check_winperf_phydisk(value_store, item):
+def test_cluster_check_winperf_phydisk(item):
     section_1 = {
         item: DISK_HALF,
     }

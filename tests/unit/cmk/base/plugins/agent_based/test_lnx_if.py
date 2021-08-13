@@ -9,15 +9,10 @@ from typing import Dict
 
 import pytest
 
-from tests.testlib import get_value_store_fixture
-
 from cmk.base.plugins.agent_based import lnx_if
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 from cmk.base.plugins.agent_based.utils import interfaces
-
-value_store_fixture = get_value_store_fixture(interfaces)
 
 
 @pytest.mark.parametrize('string_table, result', [
@@ -89,7 +84,7 @@ PARAMS = {
 }
 
 
-def test_check_lnx_if(monkeypatch, value_store):
+def test_check_lnx_if(monkeypatch):
     section_if = [INTERFACE]
     section: lnx_if.Section = (section_if, {})
     monkeypatch.setattr('time.time', lambda: 0)
@@ -115,7 +110,7 @@ def test_check_lnx_if(monkeypatch, value_store):
     assert result_lnx_if == result_interfaces
 
 
-def test_cluster_check_lnx_if(monkeypatch, value_store):
+def test_cluster_check_lnx_if(monkeypatch):
     section: Dict[str, lnx_if.Section] = {}
     ifaces = []
     for i in range(3):

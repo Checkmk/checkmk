@@ -6,14 +6,9 @@
 
 import pytest
 
-from tests.testlib import get_value_store_fixture
-
 from cmk.base.plugins.agent_based import netapp_api_cpu, netapp_api_vf_stats
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, Result
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
-
-value_store_fixture = get_value_store_fixture(netapp_api_vf_stats)
 
 SECTION_NETAPP_API_VF_STATS = {
     'vfiler0': {
@@ -72,7 +67,7 @@ SECTION_NETAPP_API_CPU: netapp_api_cpu.CPUSection = {
         ),
     ],
 )
-def test_check_netapp_api_vf_stats(value_store, params, exp_res):
+def test_check_netapp_api_vf_stats(params, exp_res):
     # initialize counters
     with pytest.raises(IgnoreResultsError):
         list(
@@ -91,7 +86,7 @@ def test_check_netapp_api_vf_stats(value_store, params, exp_res):
         )) == exp_res
 
 
-def test_check_netapp_api_vf_stats_traffic(value_store):
+def test_check_netapp_api_vf_stats_traffic():
     # initialize counters
     assert list(
         netapp_api_vf_stats.check_netapp_api_vf_stats_traffic(

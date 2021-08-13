@@ -4,11 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore
+import pytest
 
-import pytest  # type: ignore[import]
-
-from tests.testlib import get_value_store_fixture, on_time
+from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import smart
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -19,7 +17,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 
-value_store_fixture = get_value_store_fixture(smart)
 STRING_TABLE_SD = [
     [
         '/dev/sda', 'ATA', 'SAMSUNG_MZ7LM3T8', '5', 'Reallocated_Sector_Ct', '0x0033', '100', '100',
@@ -282,7 +279,7 @@ def test_check_smart_stats(item, params, section, result):
     assert list(smart.check_smart_stats(item, params, section)) == result
 
 
-def test_check_smart_command_timeout_rate(value_store):
+def test_check_smart_command_timeout_rate():
     section_timeout = {'/dev/sda': {'Command_Timeout': 0}}
     now_simulated = 581792400, "UTC"
     with pytest.raises(GetRateError), on_time(*now_simulated):

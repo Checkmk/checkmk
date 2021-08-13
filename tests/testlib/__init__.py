@@ -12,8 +12,6 @@ import tempfile
 import time
 from contextlib import contextmanager
 from pathlib import Path
-from types import ModuleType
-from typing import Any, Callable, Generator, MutableMapping
 
 import freezegun
 import pytest
@@ -418,16 +416,3 @@ def on_time(utctime, timezone):
 
     with set_timezone(timezone), freezegun.freeze_time(utctime):
         yield
-
-
-def get_value_store_fixture(
-        module: ModuleType
-) -> Callable[[MonkeyPatch], Generator[MutableMapping[str, Any], None, None]]:
-    """Creates a fixture for patching get_value_store (check API) in a given module"""
-    @pytest.fixture(name="value_store")
-    def value_store_fixture(monkeypatch):
-        value_store: MutableMapping[str, Any] = {}
-        monkeypatch.setattr(module, 'get_value_store', lambda: value_store)
-        yield value_store
-
-    return value_store_fixture

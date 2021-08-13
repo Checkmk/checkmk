@@ -4,18 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 import pytest
-
-from tests.testlib import get_value_store_fixture
 
 from cmk.base.plugins.agent_based import aix_diskiod
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, Result
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
-
-value_store_fixture = get_value_store_fixture(aix_diskiod)
 
 DISK = {
     'read_throughput': 2437253982208,
@@ -32,7 +25,7 @@ def test_parse_aix_diskiod():
     }
 
 
-def test_check_disk(value_store):
+def test_check_disk():
     with pytest.raises(IgnoreResultsError):
         list(aix_diskiod._check_disk({}, DISK))
     assert list(aix_diskiod._check_disk({}, DISK)) == [
@@ -70,7 +63,7 @@ DISK_HALF = {k: int(v / 2) for k, v in DISK.items()}
     "item",
     ["item", "SUMMARY"],
 )
-def test_check_aix_diskiod(value_store, item):
+def test_check_aix_diskiod(item):
     _test_check_aix_diskiod(
         item,
         {
@@ -87,7 +80,7 @@ def test_check_aix_diskiod(value_store, item):
     "item",
     ["item", "SUMMARY"],
 )
-def test_cluster_check_aix_diskiod(value_store, item):
+def test_cluster_check_aix_diskiod(item):
     _test_check_aix_diskiod(
         item,
         {

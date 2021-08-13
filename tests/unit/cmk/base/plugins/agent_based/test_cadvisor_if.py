@@ -4,13 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from tests.testlib import get_value_store_fixture
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.cadvisor_if import check_cadvisor_if, parse_cadvisor_if
-from cmk.base.plugins.agent_based.utils import interfaces
-
-value_store_fixture = get_value_store_fixture(interfaces)
 
 SECTION = {
     'if_out_discards': 0.0,
@@ -33,7 +28,7 @@ def test_parse_cadvisor_if():
     ]]) == SECTION
 
 
-def test_check_cadvisor_if(value_store):
+def test_check_cadvisor_if():
     # first run: initialize counters
     list(check_cadvisor_if("Summary", SECTION))
     assert list(check_cadvisor_if("Summary", SECTION)) == [

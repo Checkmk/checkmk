@@ -1953,12 +1953,12 @@ def test_cluster_check_ignore_discovered_params() -> None:
             ),
             # TODO: Fix the following two results
             Result(
-                state=State.CRIT,
+                state=State.OK,
                 summary="(up)",
                 details="Operational state: up",
             ),
             Result(
-                state=State.WARN,
-                summary="Speed: 100 kBit/s (expected: 200 kBit/s)",
+                state=State.OK,
+                summary="Speed: 100 kBit/s",
             ),
         ]

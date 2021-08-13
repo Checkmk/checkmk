@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from functools import lru_cache
 from html import escape as html_escape
 import re
 from typing import Union
@@ -37,6 +38,7 @@ _A_HREF = re.compile(
 
 
 # TODO: Cleanup the accepted types!
+@lru_cache(maxsize=8192)
 def escape_attribute(value: EscapableEntity) -> str:
     """Escape HTML attributes.
 

@@ -38,6 +38,9 @@ class HTML:
     def __repr__(self) -> str:
         return "HTML(\"%s\")" % self.value
 
+    def __hash__(self) -> int:
+        return hash(self.value)
+
     def to_json(self) -> str:
         return self.value
 

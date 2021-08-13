@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from functools import lru_cache
 from typing import Optional, Union
 
 from six import ensure_str
@@ -29,6 +30,7 @@ def quote(string: str) -> str:
     return ''.join([_QUOTED[char] for char in bs])
 
 
+@lru_cache(maxsize=4096)
 def quote_plus(string: str) -> str:
     """More performant version of urllib.parse equivalent to the call quote_plus(string)."""
     if ' ' not in string:

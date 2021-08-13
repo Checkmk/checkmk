@@ -11,7 +11,7 @@ from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.http import Request
 
 from cmk.gui.utils.transaction_manager import TransactionManager
-from cmk.gui.utils.url_encoder import URLEncoder
+from cmk.gui.utils.url_encoder import quote_plus, URLEncoder
 from cmk.gui.escaping import escape_text
 
 QueryVars = Mapping[str, Sequence[str]]
@@ -112,7 +112,7 @@ def makeuri_contextless_rulespec_group(
 
 def make_confirm_link(*, url: str, message: str) -> str:
     return "javascript:cmk.forms.confirm_link(%s, %s),cmk.popup_menu.close_popup()" % (
-        json.dumps(urllib.parse.quote_plus(url)),
+        json.dumps(quote_plus(url)),
         json.dumps(escape_text(message)),
     )
 

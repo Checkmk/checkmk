@@ -72,8 +72,9 @@ def format_plugin_output(output, row=None, shall_escape=True):
             "(?:&lt;A HREF=&quot;)?" + http_url + "(?: target=&quot;_blank&quot;&gt;)?",
             lambda p: str(
                 html.render_icon_button(
-                    p.group(1).replace('&quot;', ''),
-                    p.group(1).replace('&quot;', ''), "link")), output)
+                    html.escaper.unescape_attributes(p.group(1).replace('&quot;', '')),
+                    html.escaper.unescape_attributes(p.group(1).replace('&quot;', '')), "link")),
+            output)
 
         if output.endswith(" &lt;/A&gt;"):
             output = output[:-11]

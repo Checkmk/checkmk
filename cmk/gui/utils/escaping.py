@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
+from functools import lru_cache
 from html import escape as html_escape
 from typing import Union
 from urllib.parse import urlparse
@@ -49,6 +50,7 @@ def escape_html_permissive(value: str) -> HTML:
 # TODO: Cleanup the accepted types!
 # TODO: The name of the function is missleading. This does not care about HTML tag attribute
 # escaping.
+@lru_cache(maxsize=8192)
 def escape_attribute(value: EscapableEntity) -> str:
     """Escape HTML attributes.
 

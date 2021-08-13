@@ -6,6 +6,7 @@
 
 import json
 import urllib.parse
+from functools import lru_cache
 from typing import Mapping, Optional, Sequence, Tuple, Union
 
 from cmk.gui.http import Request
@@ -34,6 +35,7 @@ def quote(string: str) -> str:
     return ''.join([_QUOTED[char] for char in bs])
 
 
+@lru_cache(maxsize=4096)
 def quote_plus(string: str) -> str:
     """More performant version of urllib.parse equivalent to the call quote_plus(string)."""
     if ' ' not in string:

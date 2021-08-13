@@ -159,6 +159,7 @@ catalog_titles = {
 
     "app"      : "Applications",
         "ad"            : "Active Directory",
+        "alertmanager"  : "Alertmanager",
         "apache"        : "Apache Webserver",
         "activemq"      : "Apache ActiveMQ",
         "barracuda"     : "Barracuda",

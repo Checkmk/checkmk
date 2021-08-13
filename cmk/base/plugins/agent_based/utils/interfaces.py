@@ -672,6 +672,7 @@ def _check_ungrouped_ifs(
                         interface,
                         timestamp=timestamp,
                         input_is_rate=input_is_rate,
+                        use_discovered_state_and_speed=interface.node is None,
                     ))
             except IgnoreResultsError as excpt:
                 ignore_res_error = excpt

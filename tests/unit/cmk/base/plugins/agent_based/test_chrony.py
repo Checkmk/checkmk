@@ -112,5 +112,4 @@ def test_chrony_last_sync():
             summary=
             "Time since last sync: 31 minutes 0 seconds (warn/crit at 30 minutes 0 seconds/1 hour 0 minutes)",
         ),
-        Metric("last_updated", 1860, levels=(1800, 3600), boundaries=(0.0, None)),
     ]

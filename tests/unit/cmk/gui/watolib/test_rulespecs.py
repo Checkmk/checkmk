@@ -1089,7 +1089,6 @@ def test_grouped_rulespecs():
         ],
         'agents/agent_plugins': [
             'agent_config:jar_signature',
-            'agent_config:win_logwatch',
             'agent_config:mailman_lists',
             'agent_config:windows_multipath',
             'agent_config:windows_updates',

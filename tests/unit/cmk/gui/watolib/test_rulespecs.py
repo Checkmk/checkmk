@@ -178,6 +178,7 @@ def test_grouped_rulespecs():
             'agent_config:win_script_cache_age',
             'agent_config:win_script_retry_count',
             'agent_config:win_script_execution',
+            'agent_config:win_set_wmi_timeout',
             'agent_config:win_ps',
             'agent_config:win_openhardwaremonitor',
             'agent_config:win_printers',

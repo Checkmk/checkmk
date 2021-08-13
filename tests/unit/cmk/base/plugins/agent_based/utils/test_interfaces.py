@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from logging import WARN
 from typing import Any, Mapping, Sequence, Union
 
 import pytest
@@ -1896,3 +1897,41 @@ def test_cluster_check(monkeypatch: MonkeyPatch) -> None:
             ifaces,
         ))
     assert result_cluster_check == result_check_multiple_interfaces
+
+
+def test_cluster_check_ignore_discovered_params() -> None:
+    assert list(
+        interfaces.cluster_check(
+            "1",
+            {
+                "discovered_oper_status": ["2"],
+                "discovered_speed": 200000,
+            },
+            {
+                "node": [
+                    interfaces.Interface(
+                        index="1",
+                        descr="descr",
+                        alias="alias",
+                        type="10",
+                        speed=100000,
+                        oper_status="1",
+                    ),
+                ],
+            },
+        )) == [
+            Result(
+                state=State.OK,
+                summary="[alias] on node",
+            ),
+            # TODO: Fix the following two results
+            Result(
+                state=State.CRIT,
+                summary="(up)",
+                details="Operational state: up",
+            ),
+            Result(
+                state=State.WARN,
+                summary="Speed: 100 kBit/s (expected: 200 kBit/s)",
+            ),
+        ]

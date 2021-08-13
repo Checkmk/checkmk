@@ -521,6 +521,7 @@ class Site:
                 'cmk.livestatus': 7,
                 'cmk.notification': 7,
                 'cmk.rrd': 7,
+                'cmk.influxdb': 7,
                 'cmk.smartping': 7,
             })
 

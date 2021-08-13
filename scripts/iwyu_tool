@@ -56,7 +56,6 @@ GENERAL, ADD, REMOVE, LIST = range(4)
 def clang_formatter(output):
     """ Process iwyu's output into something clang-like. """
     formatted = []
-    num_errors = 0
 
     state = (GENERAL, None)
     for line in output.splitlines():
@@ -87,13 +86,11 @@ def clang_formatter(output):
             if match:
                 formatted.append("%s:1:1: error: add '%s' (%s)" %
                                     (state[1], match.group(1), match.group(2)))
-                num_errors += 1
                 continue
             match = ADD_FWD_DECL_RE.match(line)
             if match:
                 formatted.append("%s:1:1: error: add '%s'" %
                                     (state[1], match.group(1)))
-                num_errors += 1
                 continue
             raise ValueError("failed to parse %r", line)
         elif state[0] == REMOVE:
@@ -101,15 +98,13 @@ def clang_formatter(output):
             line_no = match.group(2) if match else '1'
             formatted.append("%s:%s:1: error: superfluous '%s'" %
                              (state[1], line_no, match.group(1)))
-            num_errors += 1
 
-    return (os.linesep.join(sorted(formatted)), num_errors)
+    return os.linesep.join(sorted(formatted))
 
 
 DEFAULT_FORMAT = 'iwyu'
 FORMATTERS = {
-    # TODO: calculate number of errors for iwyu format
-    'iwyu': lambda output: (output, 0),
+    'iwyu': lambda output: output,
     'clang': clang_formatter
 }
 
@@ -257,6 +252,10 @@ class Process(object):
         """
         return self.proc.poll()
 
+    @property
+    def returncode(self):
+        return self.proc.returncode
+
     def get_output(self):
         """ Return stdout+stderr output of the process.
 
@@ -373,9 +372,8 @@ def execute(invocations, verbose, formatter, jobs, max_load_average=0):
     if jobs == 1:
         for invocation in invocations:
             proc = invocation.start(verbose)
-            messages, num_errors = formatter(proc.get_output())
-            print(messages)
-            if num_errors:
+            print(formatter(proc.get_output()))
+            if proc.returncode != 2:
                 exit_code = 1
         return exit_code
 
@@ -385,9 +383,8 @@ def execute(invocations, verbose, formatter, jobs, max_load_average=0):
         complete = [proc for proc in pending if proc.poll() is not None]
         for proc in complete:
             pending.remove(proc)
-            messages, num_errors = formatter(proc.get_output())
-            print(messages)
-            if num_errors:
+            print(formatter(proc.get_output()))
+            if proc.returncode != 2:
                 exit_code = 1
 
         # Schedule new processes if there's room.

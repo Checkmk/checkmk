@@ -43,7 +43,7 @@ try:
 except IndexError:
     profile_file = "%s"
 stats = pstats.Stats(profile_file)
-stats.sort_stats('time').print_stats()""" % _profile_path)
+stats.sort_stats('cumtime').print_stats()""" % _profile_path)
 
     show_profile.chmod(0o755)
     out.output("Profile '%s' written. Please run %s.\n" % (_profile_path, show_profile),

@@ -49,7 +49,7 @@ class ProfileSwitcher:
                 f.write("#!/usr/bin/env python3\n"
                         "import pstats\n"
                         f'stats = pstats.Stats("{self.profile_file}")\n'
-                        "stats.sort_stats('time').print_stats()\n")
+                        "stats.sort_stats('cumtime').print_stats()\n")
             self.script_file.chmod(0o755)
             cmk.utils.log.logger.info("Created profile dump script: %s", self.script_file)
 

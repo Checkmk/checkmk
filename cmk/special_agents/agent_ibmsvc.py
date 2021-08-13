@@ -252,7 +252,7 @@ def main(sys_argv=None):
             .write("#!/usr/bin/python\n"
                    "import pstats\n"
                    "stats = pstats.Stats('%s')\n"
-                   "stats.sort_stats('time').print_stats()\n" % g_profile_path)
+                   "stats.sort_stats('cumtime').print_stats()\n" % g_profile_path)
         os.chmod(show_profile, 0o755)
 
         sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))

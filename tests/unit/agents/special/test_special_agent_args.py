@@ -46,6 +46,7 @@ AGENTS_WITHOUT_PARSE_ARGUMENTS = {
 }
 
 REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
+    'agent_alertmanager': [],
     'agent_allnet_ip_sensoric': ['HOSTNAME'],
     'agent_aws': [
         '--access-key-id', 'ACCESS_KEY_ID', '--secret-access-key', 'SECRET_ACCESS_KEY',

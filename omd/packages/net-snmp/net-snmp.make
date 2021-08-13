@@ -26,7 +26,7 @@ $(NET_SNMP_BUILD): $(NET_SNMP_PATCHING) $(PYTHON3_CACHE_PKG_PROCESS) $(PERL_MODU
 	    --enable-ipv6 \
 	    --disable-agent \
 	    --disable-snmptrapd-subagent \
-	    --with-mibdirs="\$$HOME/local/share/snmp/mibs:$(OMD_ROOT)/share/snmp/mibs:/usr/share/snmp/mibs" \
+	    --with-mibdirs="\$$HOME/local/share/snmp/mibs:\$$HOME/share/snmp/mibs:/usr/share/snmp/mibs" \
 	    --with-defaults \
 	    --disable-scripts \
 	    --prefix="/" && $(MAKE)

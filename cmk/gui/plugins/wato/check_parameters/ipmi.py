@@ -171,8 +171,8 @@ def _parameter_valuespec_ipmi():
                                 Tuple(
                                     title=_("Lower levels"),
                                     elements=[
-                                        Float(),
-                                        Float(),
+                                        Float(label=_("Warning at")),
+                                        Float(label=_("Critical at")),
                                     ],
                                 ),
                             ),
@@ -181,8 +181,8 @@ def _parameter_valuespec_ipmi():
                                 Tuple(
                                     title=_("Upper levels"),
                                     elements=[
-                                        Float(),
-                                        Float(),
+                                        Float(label=_("Warning at")),
+                                        Float(label=_("Critical at")),
                                     ],
                                 ),
                             ),

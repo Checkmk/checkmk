@@ -1430,7 +1430,9 @@ class MonitoringSearch(ABCMegaMenuSearch):
                     "sg: Servicegroup\n"
                     "ad: Address\n"
                     "al: Alias\n"
-                    "tg: Hosttag")
+                    "tg: Hosttag\n"
+                    "hl: Hostlabel\n"
+                    "sl: Servicelabel")
         html.input(id_=f"mk_side_search_field_{self.name}",
                    type_="text",
                    name="search",

@@ -60,7 +60,7 @@ def transform_ipmi_inventory_rules(p):
     }
 
 
-def _valuespec_inventory_ipmi_rules_single():
+def _valuespec_inventory_ipmi_rules_single() -> Dictionary:
     return Dictionary(elements=[
         (
             "ignored_sensors",
@@ -83,7 +83,7 @@ def _valuespec_inventory_ipmi_rules_single():
     ],)
 
 
-def _valuespec_inventory_ipmi_rules():
+def _valuespec_inventory_ipmi_rules() -> Transform:
     return Transform(
         Dictionary(
             title=_("IPMI sensor discovery"),
@@ -126,46 +126,71 @@ rulespec_registry.register(
 def _parameter_valuespec_ipmi():
     return Dictionary(
         elements=[
-            ("sensor_states",
-             ListOf(
-                 Tuple(elements=[TextAscii(), MonitoringState()],),
-                 title=_("Set states of IPMI sensor status texts"),
-                 help=_("The pattern specified here must match exactly the beginning of "
-                        "the sensor state (case sensitive)."),
-             )),
-            ("ignored_sensors",
-             ListOfStrings(title=_("Ignore the following IPMI sensors (only summary)"),
-                           help=_("Names of IPMI sensors that should be ignored when summarizing."
+            (
+                "sensor_states",
+                ListOf(
+                    Tuple(elements=[TextAscii(), MonitoringState()],),
+                    title=_("Set states of IPMI sensor status texts"),
+                    help=_("The pattern specified here must match exactly the beginning of "
+                           "the sensor state (case sensitive)."),
+                ),
+            ),
+            (
+                "ignored_sensors",
+                ListOfStrings(title=_("Ignore the following IPMI sensors (only summary)"),
+                              help=_(
+                                  "Names of IPMI sensors that should be ignored when summarizing."
                                   "The pattern specified here must match exactly the beginning of "
                                   "the actual sensor name (case sensitive)."),
-                           orientation="horizontal")),
-            ("ignored_sensorstates",
-             ListOfStrings(
-                 title=_("Ignore the following IPMI sensor states (only summary)"),
-                 help=_("IPMI sensors with these states that should be ignored when summarizing."
-                        "The pattern specified here must match exactly the beginning of "
-                        "the actual sensor state (case sensitive)."),
-                 orientation="horizontal",
-                 default_value=["nr", "ns"],
-             )),
-            ("numerical_sensor_levels",
-             ListOf(Tuple(elements=[
-                 TextAscii(title=_("Sensor name"),
-                           help=_(
-                               "Enter the name of the sensor. In single mode, this can be read off "
-                               "from the service descriptions of the services 'IPMI Sensor ...'.")),
-                 Dictionary(elements=[
-                     ("lower", Tuple(
-                         title=_("Lower levels"),
-                         elements=[Float(), Float()],
-                     )),
-                     ("upper", Tuple(
-                         title=_("Upper levels"),
-                         elements=[Float(), Float()],
-                     )),
-                 ],),
-             ],),
-                    title=_("Set lower and upper levels for numerical sensors"))),
+                              orientation="horizontal"),
+            ),
+            (
+                "ignored_sensorstates",
+                ListOfStrings(
+                    title=_("Ignore the following IPMI sensor states (only summary)"),
+                    help=_("IPMI sensors with these states that should be ignored when summarizing."
+                           "The pattern specified here must match exactly the beginning of "
+                           "the actual sensor state (case sensitive)."),
+                    orientation="horizontal",
+                    default_value=["nr", "ns"],
+                ),
+            ),
+            (
+                "numerical_sensor_levels",
+                ListOf(
+                    Tuple(elements=[
+                        TextAscii(
+                            title=_("Sensor name"),
+                            help=_(
+                                "Enter the name of the sensor. In single mode, this can be read off "
+                                "from the service descriptions of the services 'IPMI Sensor ...'."),
+                        ),
+                        Dictionary(elements=[
+                            (
+                                "lower",
+                                Tuple(
+                                    title=_("Lower levels"),
+                                    elements=[
+                                        Float(),
+                                        Float(),
+                                    ],
+                                ),
+                            ),
+                            (
+                                "upper",
+                                Tuple(
+                                    title=_("Upper levels"),
+                                    elements=[
+                                        Float(),
+                                        Float(),
+                                    ],
+                                ),
+                            ),
+                        ],),
+                    ],),
+                    title=_("Set lower and upper levels for numerical sensors"),
+                ),
+            ),
         ],
         ignored_keys=["ignored_sensors", "ignored_sensor_states"],
     )

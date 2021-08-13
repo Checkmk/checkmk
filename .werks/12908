@@ -11,7 +11,7 @@ Version: 2.1.0i1
 This werk changes the behaviour of (some) services on clusters.
 
 Affected services will go to UNKNOWN. To fix this, users must
-explicitly select the cluster mode they whish to use.
+explicitly select the cluster mode they wish to use.
 This can be done using the ruleset
 <i>"Aggregation options for clustered services"</i>.
 

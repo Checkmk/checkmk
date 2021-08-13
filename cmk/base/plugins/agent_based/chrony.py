@@ -129,7 +129,6 @@ def check_chrony(params, section_chrony, section_ntp):
         yield from check_levels(
             last_sync,
             levels_upper=params["alert_delay"],
-            metric_name="last_updated",
             render_func=render.timespan,
             label="Time since last sync",
             boundaries=(0, None),

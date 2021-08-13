@@ -23280,15 +23280,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"If you're running local checks on clusters via clustered services rule you "
-"can influence the check result with this rule. You can choose between best "
-"or worst state. Default setting is worst state."
-msgstr ""
-"クラスタ化サービスルールを介してクラスタでローカルチェックを実行している場合"
-"は、このルールを使用してチェック結果に影響を与えることができます。最良または"
-"最悪の状態から選択できます。デフォルト設定は最悪の状態です。"
-
-msgid ""
 "If your cluster has multiple namespaces, you can specify a list of regex "
 "patterns. Only matching namespaces will be monitored. Note that this "
 "concerns everything which is part of the matching namespaces such as pods "
@@ -23998,6 +23989,11 @@ msgstr "互換性のないワーク"
 
 msgid "Incomplete Calls"
 msgstr "不完全な呼び出し"
+
+msgid ""
+"Increase this value if WMI-based services are switching constantly into "
+"stale state. Default value is 3."
+msgstr ""
 
 msgid "Increasing counter"
 msgstr "増加するカウンター"
@@ -26837,6 +26833,10 @@ msgstr "ローカル変数"
 msgid "Local Volumes"
 msgstr ""
 
+#, fuzzy
+msgid "Local checks"
+msgstr "ホストチェック"
+
 msgid "Local checks in Checkmk clusters"
 msgstr "Checkmkクラスターのローカルチェック"
 
@@ -27200,6 +27200,10 @@ msgstr "ログイン可能"
 
 msgid "Login session idle timeout"
 msgstr "ログインセッションのアイドルタイムアウト"
+
+#, fuzzy
+msgid "Login token"
+msgstr "ログインモード"
 
 msgid "Login username"
 msgstr "ログインユーザー名"
@@ -32331,6 +32335,14 @@ msgstr "オフセット"
 
 msgid "Ok"
 msgstr "OK"
+
+#, fuzzy
+msgid "Old setting"
+msgstr "無題の設定"
+
+#, python-format
+msgid "Old setting: \"%s\". Choose that in the new ruleset."
+msgstr ""
 
 msgid "Older events"
 msgstr "古いイベント"
@@ -49283,6 +49295,11 @@ msgid ""
 "which may occur in case of too many current events at the same time."
 msgstr ""
 
+#, fuzzy, python-format
+msgid ""
+"This option is deprecated. Please use the ruleset <i>\"%s\"</i> instead."
+msgstr "このルールは非推奨です。代わりに\"%s\"を使用してください。"
+
 msgid ""
 "This option is just for testing. It will be removed in future. Do not use it "
 "unless you are told to do so!"
@@ -50704,6 +50721,11 @@ msgstr ""
 "のアクセスをチェックする従来のNagiosプラグイン<tt> check_disk_smb </tt>を構成"
 "するのに役立ちます。"
 
+#, fuzzy, python-format
+msgid ""
+"This ruleset is deprecated. Please use the ruleset <i>\"%s\"</i> instead."
+msgstr "このルールは非推奨です。代わりに\"%s\"を使用してください。"
+
 msgid ""
 "This ruleset is for deploying two plugins for monitoring Unitrends software."
 msgstr ""
@@ -51971,6 +51993,10 @@ msgstr "トークン"
 
 msgid "Token Bucket"
 msgstr "トークンバケット"
+
+#, fuzzy
+msgid "Token authentication"
+msgstr "VCenter認証"
 
 msgid "Tooltip"
 msgstr "ヒント"
@@ -57306,6 +57332,10 @@ msgstr "Windowsターミナルサーバーセッション"
 msgid "Windows Updates"
 msgstr "Windows Updates"
 
+#, fuzzy
+msgid "Windows WMI Timeout"
+msgstr "Windowsモジュール"
+
 msgid "Windows authentication"
 msgstr "Windows認証"
 
@@ -60042,6 +60072,30 @@ msgid "host"
 msgid_plural "hosts"
 msgstr[0] ""
 
+#, fuzzy
+msgid "host in total"
+msgstr "全体の問題"
+
+#, fuzzy
+msgid "host is down or has critical services"
+msgstr "ホストがダウンしているか、重要なサービスがあります"
+
+#, fuzzy
+msgid "host is in scheduled downtime"
+msgstr "ホストはスケジュールされたダウンタイムにあります"
+
+#, fuzzy
+msgid "host is unreachable or has unknown services"
+msgstr "ホストに到達できないか、不明なサービスがあります"
+
+#, fuzzy
+msgid "host is up and has no service problems"
+msgstr "ホストは稼働しており、サービスの問題はありません"
+
+#, fuzzy
+msgid "host is up but has services in warning state"
+msgstr "ホストは稼働していますが、サービスは警告状態にあります"
+
 msgid "host tags"
 msgstr "ホストタグ"
 
@@ -60065,6 +60119,10 @@ msgstr "ホストは稼働しており、サービスの問題はありません
 
 msgid "hosts are up but have services in warning state"
 msgstr "ホストは稼働していますが、サービスは警告状態にあります"
+
+#, fuzzy
+msgid "hosts in total"
+msgstr "全体の問題"
 
 msgid "hour"
 msgstr "時間"
@@ -61211,6 +61269,15 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "If you're running local checks on clusters via clustered services rule "
+#~ "you can influence the check result with this rule. You can choose between "
+#~ "best or worst state. Default setting is worst state."
+#~ msgstr ""
+#~ "クラスタ化サービスルールを介してクラスタでローカルチェックを実行している場"
+#~ "合は、このルールを使用してチェック結果に影響を与えることができます。最良ま"
+#~ "たは最悪の状態から選択できます。デフォルト設定は最悪の状態です。"
 
 #~ msgid "Deploy MongoDB plugin"
 #~ msgstr "MongoDBプラグインをデプロイする"

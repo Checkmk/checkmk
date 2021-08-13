@@ -24181,15 +24181,6 @@ msgstr ""
 "weglaat, dan zal <tt>check-mk-custom</tt> worden gebruikt."
 
 msgid ""
-"If you're running local checks on clusters via clustered services rule you "
-"can influence the check result with this rule. You can choose between best "
-"or worst state. Default setting is worst state."
-msgstr ""
-"Als je lokale controles uitvoert op clusters via geclusterde diensten regel "
-"dan kun je het controleresultaat beïnvloeden met deze regel. Je kunt kiezen "
-"tussen best of worst state. De standaard instelling is worst state."
-
-msgid ""
 "If your cluster has multiple namespaces, you can specify a list of regex "
 "patterns. Only matching namespaces will be monitored. Note that this "
 "concerns everything which is part of the matching namespaces such as pods "
@@ -24941,6 +24932,11 @@ msgstr "Onverenigbare werken"
 
 msgid "Incomplete Calls"
 msgstr "Onvolledige oproepen"
+
+msgid ""
+"Increase this value if WMI-based services are switching constantly into "
+"stale state. Default value is 3."
+msgstr ""
 
 msgid "Increasing counter"
 msgstr "Toenemende teller"
@@ -27875,6 +27871,10 @@ msgstr "Lokale Variabelen"
 msgid "Local Volumes"
 msgstr "Lokale Volumes"
 
+#, fuzzy
+msgid "Local checks"
+msgstr "Gastheer controleert"
+
 msgid "Local checks in Checkmk clusters"
 msgstr "Lokale controles in Checkmk-clusters"
 
@@ -28245,6 +28245,10 @@ msgstr "Inloggen mogelijk"
 
 msgid "Login session idle timeout"
 msgstr "Inlog sessie idle timeout"
+
+#, fuzzy
+msgid "Login token"
+msgstr "Inlogmodus"
 
 msgid "Login username"
 msgstr "Gebruikersnaam inloggen"
@@ -33462,6 +33466,14 @@ msgstr "Offset"
 
 msgid "Ok"
 msgstr "Ok"
+
+#, fuzzy
+msgid "Old setting"
+msgstr "Instelling zonder titel"
+
+#, python-format
+msgid "Old setting: \"%s\". Choose that in the new ruleset."
+msgstr ""
 
 msgid "Older events"
 msgstr "Oudere evenementen"
@@ -51407,6 +51419,11 @@ msgstr ""
 "Deze optie helpt u om de Event Console te beschermen tegen resourceproblemen "
 "die kunnen optreden in geval van te veel lopende events tegelijk."
 
+#, fuzzy, python-format
+msgid ""
+"This option is deprecated. Please use the ruleset <i>\"%s\"</i> instead."
+msgstr "Deze regel is verouderd. Gebruik in plaats daarvan \"%s\"."
+
 msgid ""
 "This option is just for testing. It will be removed in future. Do not use it "
 "unless you are told to do so!"
@@ -53027,6 +53044,11 @@ msgstr ""
 "<tt>check_disk_smb</tt> die de toegang controleert tot bestandssysteem "
 "shares die worden geëxporteerd via SMB/CIFS."
 
+#, fuzzy, python-format
+msgid ""
+"This ruleset is deprecated. Please use the ruleset <i>\"%s\"</i> instead."
+msgstr "Deze regel is verouderd. Gebruik in plaats daarvan \"%s\"."
+
 msgid ""
 "This ruleset is for deploying two plugins for monitoring Unitrends software."
 msgstr ""
@@ -54396,6 +54418,10 @@ msgstr "Penning"
 
 msgid "Token Bucket"
 msgstr "Token Bucket"
+
+#, fuzzy
+msgid "Token authentication"
+msgstr "VCenter-authenticatie"
 
 msgid "Tooltip"
 msgstr "Tooltip"
@@ -60007,6 +60033,10 @@ msgstr "Windows Terminal Server Sessies"
 msgid "Windows Updates"
 msgstr "Windows Updates"
 
+#, fuzzy
+msgid "Windows WMI Timeout"
+msgstr "Windows Modules"
+
 msgid "Windows authentication"
 msgstr "Windows-verificatie"
 
@@ -62967,6 +62997,30 @@ msgid_plural "hosts"
 msgstr[0] "host"
 msgstr[1] ""
 
+#, fuzzy
+msgid "host in total"
+msgstr "Problemen in totaal"
+
+#, fuzzy
+msgid "host is down or has critical services"
+msgstr "hosts zijn down of hebben kritieke diensten"
+
+#, fuzzy
+msgid "host is in scheduled downtime"
+msgstr "hosts zijn in geplande downtime"
+
+#, fuzzy
+msgid "host is unreachable or has unknown services"
+msgstr "hosts zijn onbereikbaar of hebben onbekende diensten"
+
+#, fuzzy
+msgid "host is up and has no service problems"
+msgstr "hosts zijn up en hebben geen service problemen"
+
+#, fuzzy
+msgid "host is up but has services in warning state"
+msgstr "hosts zijn up maar hebben services in warning state"
+
 msgid "host tags"
 msgstr "hostlabels"
 
@@ -62990,6 +63044,10 @@ msgstr "hosts zijn up en hebben geen service problemen"
 
 msgid "hosts are up but have services in warning state"
 msgstr "hosts zijn up maar hebben services in warning state"
+
+#, fuzzy
+msgid "hosts in total"
+msgstr "Problemen in totaal"
 
 msgid "hour"
 msgstr "uur"
@@ -64142,6 +64200,16 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid ""
+#~ "If you're running local checks on clusters via clustered services rule "
+#~ "you can influence the check result with this rule. You can choose between "
+#~ "best or worst state. Default setting is worst state."
+#~ msgstr ""
+#~ "Als je lokale controles uitvoert op clusters via geclusterde diensten "
+#~ "regel dan kun je het controleresultaat beïnvloeden met deze regel. Je "
+#~ "kunt kiezen tussen best of worst state. De standaard instelling is worst "
+#~ "state."
 
 #~ msgid "Deploy MongoDB plugin"
 #~ msgstr "MongoDB plugin uitrollen"

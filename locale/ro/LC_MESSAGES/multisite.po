@@ -22896,12 +22896,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"If you're running local checks on clusters via clustered services rule you "
-"can influence the check result with this rule. You can choose between best "
-"or worst state. Default setting is worst state."
-msgstr ""
-
-msgid ""
 "If your cluster has multiple namespaces, you can specify a list of regex "
 "patterns. Only matching namespaces will be monitored. Note that this "
 "concerns everything which is part of the matching namespaces such as pods "
@@ -23498,6 +23492,11 @@ msgid "Incompatible werks"
 msgstr "Confirmă Problemele"
 
 msgid "Incomplete Calls"
+msgstr ""
+
+msgid ""
+"Increase this value if WMI-based services are switching constantly into "
+"stale state. Default value is 3."
 msgstr ""
 
 msgid "Increasing counter"
@@ -26501,6 +26500,10 @@ msgstr ""
 msgid "Local Volumes"
 msgstr "sesiuni"
 
+#, fuzzy
+msgid "Local checks"
+msgstr "sesiuni"
+
 msgid "Local checks in Checkmk clusters"
 msgstr ""
 
@@ -26870,6 +26873,10 @@ msgstr ""
 
 msgid "Login session idle timeout"
 msgstr ""
+
+#, fuzzy
+msgid "Login token"
+msgstr "foloseste numele portului"
 
 #, fuzzy
 msgid "Login username"
@@ -32332,6 +32339,14 @@ msgid "Offset"
 msgstr ""
 
 msgid "Ok"
+msgstr ""
+
+#, fuzzy
+msgid "Old setting"
+msgstr "Setari"
+
+#, python-format
+msgid "Old setting: \"%s\". Choose that in the new ruleset."
 msgstr ""
 
 msgid "Older events"
@@ -48685,6 +48700,11 @@ msgid ""
 "which may occur in case of too many current events at the same time."
 msgstr ""
 
+#, python-format
+msgid ""
+"This option is deprecated. Please use the ruleset <i>\"%s\"</i> instead."
+msgstr ""
+
 msgid ""
 "This option is just for testing. It will be removed in future. Do not use it "
 "unless you are told to do so!"
@@ -49774,6 +49794,11 @@ msgid ""
 "This ruleset helps you to configure the classical Nagios plugin "
 "<tt>check_disk_smb</tt> that checks the access to filesystem shares that are "
 "exported via SMB/CIFS."
+msgstr ""
+
+#, python-format
+msgid ""
+"This ruleset is deprecated. Please use the ruleset <i>\"%s\"</i> instead."
 msgstr ""
 
 msgid ""
@@ -50874,6 +50899,10 @@ msgstr ""
 
 msgid "Token Bucket"
 msgstr ""
+
+#, fuzzy
+msgid "Token authentication"
+msgstr "trimite notificare"
 
 msgid "Tooltip"
 msgstr ""
@@ -56084,6 +56113,10 @@ msgid "Windows Updates"
 msgstr ""
 
 #, fuzzy
+msgid "Windows WMI Timeout"
+msgstr "(fără Nivel de serviciu)"
+
+#, fuzzy
 msgid "Windows authentication"
 msgstr "trimite notificare"
 
@@ -58544,6 +58577,28 @@ msgstr[0] ""
 msgstr[1] ""
 msgstr[2] ""
 
+#, fuzzy
+msgid "host in total"
+msgstr "Probleme"
+
+#, fuzzy
+msgid "host is down or has critical services"
+msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
+msgid "host is in scheduled downtime"
+msgstr "<b>șterge toți timpii morți programați</b> pentru "
+
+msgid "host is unreachable or has unknown services"
+msgstr ""
+
+#, fuzzy
+msgid "host is up and has no service problems"
+msgstr "Adaugă Excepție"
+
+msgid "host is up but has services in warning state"
+msgstr ""
+
 msgid "host tags"
 msgstr ""
 
@@ -58569,6 +58624,10 @@ msgstr "Adaugă Excepție"
 
 msgid "hosts are up but have services in warning state"
 msgstr ""
+
+#, fuzzy
+msgid "hosts in total"
+msgstr "Probleme"
 
 msgid "hour"
 msgstr ""
@@ -61541,10 +61600,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "The text <b><tt>%s</tt></b> is not a valid integer number."
 #~ msgstr "%s nu este un număr întreg valid."
-
-#, fuzzy
-#~ msgid "This host has no such service"
-#~ msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
 #~ msgid "This rule results in a positive outcome."

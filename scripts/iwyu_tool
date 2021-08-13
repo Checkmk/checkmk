@@ -99,7 +99,7 @@ def clang_formatter(output):
             formatted.append("%s:%s:1: error: superfluous '%s'" %
                              (state[1], line_no, match.group(1)))
 
-    return os.linesep.join(sorted(formatted))
+    return os.linesep.join(formatted)
 
 
 DEFAULT_FORMAT = 'iwyu'

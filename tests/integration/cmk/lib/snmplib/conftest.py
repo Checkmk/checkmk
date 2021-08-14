@@ -74,7 +74,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir):
         process=subprocess.Popen(
             [
                 "snmpsimd.py",
-                #"--log-level=error",
+                "--log-level=error",
                 "--cache-dir",
                 # Each snmpsim instance needs an own cache directory otherwise
                 # some instances occasionally crash
@@ -88,8 +88,8 @@ def _define_process(index, auth, tmp_path, snmp_data_dir):
             ] + auth,
             close_fds=True,
             # Silence the very noisy output. May be useful to enable this for debugging tests
-            stdout=open(os.devnull, "w"),
-            stderr=subprocess.STDOUT,
+            #stdout=open(os.devnull, "w"),
+            #stderr=subprocess.STDOUT,
         ))
 
 
@@ -133,6 +133,8 @@ def _is_listening(process_def):
     exitcode = p.poll()
     if exitcode is not None:
         raise Exception("snmpsimd died. Exit code: %d" % exitcode)
+
+    # Wait for snmpsimd to initialize the UDP sockets
     num_sockets = 0
     try:
         for e in os.listdir("/proc/%d/fd" % p.pid):
@@ -146,12 +148,16 @@ def _is_listening(process_def):
         if exitcode is None:
             raise
         raise Exception("snmpsimd died. Exit code: %d" % exitcode)
+
     if num_sockets < 2:
         return False
-    num_sockets = 0
+
+    # We got the expected number of listen sockets. One for IPv4 and one for IPv6. Now test
+    # whether or not snmpsimd is already answering.
+
     # Correct module is only available in the site
     import netsnmp  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
-    var = netsnmp.Varbind("sysDescr.0")
+    var = netsnmp.Varbind("SNMPv2-MIB::sysDescr.0")
     result = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:%s" % port, Community="public")
     if result is None or result[0] is None:
         return False

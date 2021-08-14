@@ -13269,14 +13269,6 @@ msgstr ""
 "einzuschließen."
 
 msgid ""
-"Define textfiles to be monitored. The full path is necessary. Glob pattern "
-"(* and ?) are supported and will produce multiple services at once."
-msgstr ""
-"Gegen Sie die Textdateien, die überwacht werden sollen, mit ihrem vollen "
-"Pfad an. Suchmuster (* und ?) werden unterstützt, es werden dann ggfs. "
-"mehrere Services mit einem Muster erzeugt."
-
-msgid ""
 "Define which monitoring state maps which input state. This applies for every "
 "single input."
 msgstr ""
@@ -14333,9 +14325,6 @@ msgstr "Ausschalten"
 
 msgid "Disable (drop encrypted data)"
 msgstr "Deaktivieren (verschlüsselte Daten verwerfen)"
-
-msgid "Disable Context"
-msgstr "Kontext deaktivieren"
 
 msgid "Disable Notifications"
 msgstr "Alarme ausschalten"
@@ -19673,9 +19662,6 @@ msgstr "Von %s bis %s (%s) %s"
 msgid "From 0 to Monitoring in <10min"
 msgstr "Monitoring von 0 auf in <10min"
 
-msgid "From Start"
-msgstr "Von Anfang an"
-
 msgid "From left of the page"
 msgstr "Vom linken Seitenrand"
 
@@ -23268,22 +23254,6 @@ msgstr ""
 "Wartungszeiten sind davon unberührt."
 
 msgid ""
-"If this is not ticked, the agent will only send lines that were added to the "
-"log after it first saw the file. If ticked, each file is reported completely."
-msgstr ""
-"Wenn dies deaktiviert ist schickt der Agent nur die Zeilen, die erzeugt "
-"wurden nachdem die Datei hinzugefügt wurde. Andernfalls wird jede Datei "
-"vollständig ausgeliefert."
-
-msgid ""
-"If this is not ticked, the agent will report the lines surrounding  an error "
-"message as well, since they might be related."
-msgstr ""
-"Wenn dies deaktiviert ist sendet der Agent zusätzlich zu \"problematischen\" "
-"Logeinträgen auch noch einige umgebende Zeilen, da diese im Zusammenhang "
-"stehen könnten."
-
-msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
 "check cycle but just every time the configured age has expired. Furthermore "
 "the plugin will be executed asynchronously as a backbround process. This is "
@@ -23302,15 +23272,6 @@ msgstr ""
 "Diese option sorgt dafür, dass die Ausgabe des Plugins gecacht wird und nur "
 "dann neu berechnet, wenn das eingestellte Alter des Caches überschritten "
 "wurde."
-
-msgid ""
-"If this is ticked, files matching the pattern are treated as one service and "
-"the agent will read them from oldest to newest. It should also correctly "
-"handle file renames."
-msgstr ""
-"Wenn dies aktiv ist werden alle Dateien die zum Muster passen als ein "
-"einziger Service behandelt und von der ältesten zur neuesten abgearbeitet. "
-"Auch Umbenennungen von Dateien sollten korrekt behandelt werden."
 
 msgid ""
 "If this option is activated, checkmk will pad port numbers of network "
@@ -25037,6 +24998,10 @@ msgstr "Inaktive Verbindungen"
 #, fuzzy
 msgid "InfluxDB instance"
 msgstr "DB-Instanzen"
+
+#, fuzzy
+msgid "InfluxDB processing"
+msgstr "RRD-Verarbeitung"
 
 #, fuzzy
 msgid "InfluxDB service rules"
@@ -28148,9 +28113,6 @@ msgstr "Logdatei"
 msgid "Logfile Grouping"
 msgstr "Logfile-Gruppierung"
 
-msgid "Logfile Names"
-msgstr "Logdateinamen"
-
 msgid "Logfile information of logwatch plugin"
 msgstr "Informationen zu Logdateien des Logwatch-Plugins"
 
@@ -28174,9 +28136,6 @@ msgstr "Muster der Logdatei %s auf allen Rechnern"
 #, python-format
 msgid "Logfile patterns of logfile %s on host %s"
 msgstr "Muster der Logdatei %s auf Host %s"
-
-msgid "Logfiles"
-msgstr "Logdateien"
 
 #, python-format
 msgid "Logfiles of Host %s: %s"
@@ -29310,9 +29269,6 @@ msgstr "Bedingungen"
 
 msgid "Matching Criteria"
 msgstr "Suchkriterium"
-
-msgid "Matching Pattern"
-msgstr "Suchmuster"
 
 msgid "Matching is inverted in this rule"
 msgstr "Das Matchen in dieser Regel ist invertiert"
@@ -31319,13 +31275,6 @@ msgstr ""
 "sollen. Das hier angegebene Muster muss exakt mit dem Anfang des "
 "Sensornamens übereinstimmen (Groß-/Kleinschreibung beachten)."
 
-msgid ""
-"Names/Pattern to identify log files. All files in this list will use the "
-"same line-patterns."
-msgstr ""
-"Namen/Muster zur identifikation von log Dateien. Alle Dateien in dieser "
-"Liste verwenden die gleichen Zeilen-Muster."
-
 msgid "Namespace"
 msgstr "Namensraum"
 
@@ -31710,9 +31659,6 @@ msgstr "TCP Port für die Verbindung zum Checkmk Agent"
 
 msgid "No Conditions"
 msgstr "Keine Bedingungen"
-
-msgid "No Context"
-msgstr "Kein Kontext"
 
 #, python-format
 msgid "No Forecast graph with the name <tt>%s</tt>"
@@ -32422,18 +32368,6 @@ msgstr ""
 "href='wato.py?mode=edit_ruleset&varname=snmp_exclude_sections'>SNMP-"
 "Abschnitte ein- oder ausschließen</a>. Beachten Sie, dass dies zu einer "
 "Erhöhung des SNMP-Verkehrs um ca. 5 % führen wird."
-
-msgid ""
-"Note: This rule still works. However, we encourage to use the generic 'Text "
-"logfiles (Linux, Windows)' rule, since it offers more configurable options. "
-"Keep in mind, that the patterns configured in this rule were always checked "
-"case insensitive, whereas the new rule also adheres upper- and lowercase."
-msgstr ""
-"Hinweis: Diese Regel funktioniert nach wie vor. Jedoch raten wir dazu die "
-"generische Regel 'Text logfiles (Linux, Windows)' zu verwenden, da sie mehr "
-"konfigurierbare Optionen bietet. Bitte beachten, dass die Match-Patterns in "
-"dieser Regel Case-Insensitiv sind, wobei die neue Regel Gross- und "
-"Kleinschreibung unterscheidet."
 
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
@@ -34434,6 +34368,10 @@ msgstr "Überläufe"
 msgid "Overprovisioned"
 msgstr "Überprovisioniert"
 
+#, fuzzy
+msgid "Override automatic metric selection"
+msgstr "Automatische Serviceerkennung"
+
 msgid "Override cache times configured by other rules"
 msgstr "Überschreibe Cache-Zeiten, die von anderen Regeln konfiguriert werden"
 
@@ -35007,18 +34945,12 @@ msgstr "Muster (Regex)"
 msgid "Pattern analyzer"
 msgstr "Muster Analyse"
 
-msgid "Patterns"
-msgstr "Muster"
-
 msgid "Patterns for each node"
 msgstr "Muster für jeden Knoten"
 
 msgid "Patterns for logfiles to monitor (allowing <tt>*</tt> and <tt>?</tt>)"
 msgstr ""
 "Muster für zu monitorende Logdateien (<tt>*</tt> und <tt>?</tt> erlaubt)"
-
-msgid "Patterns for matching lines in the specified logfiles"
-msgstr "Suchmuster für die Textzeilen der gewählten Logdateien"
 
 msgid "Paused"
 msgstr "Angehalten"
@@ -37606,9 +37538,6 @@ msgstr "Lesetreffer"
 msgid "Read latency"
 msgstr "Leselatenz"
 
-msgid "Read logs from beginning"
-msgstr "Logs von Anfang an auslesen"
-
 #, fuzzy
 msgid ""
 "Read more about [regexes|regular expression matching in Checkmk] in our user "
@@ -39061,12 +38990,6 @@ msgstr "Jeden Montag um 00:00 Ortszeit rotieren"
 
 msgid "Rotate once a minute (only for testing!)"
 msgstr "Jede Minute rotieren (nur zu Testzwecken)"
-
-msgid "Rotated"
-msgstr "rotiert"
-
-msgid "Rotated Log"
-msgstr "rotiertes Log"
 
 msgid "Round"
 msgstr "Rund"
@@ -42238,6 +42161,13 @@ msgstr ""
 "aktiviert haben, halten die Kommunikation aus Kompatibilitätsgründen "
 "unverschlüsselt. Es wird jedoch dringend empfohlen, auf eine verschlüsselte "
 "Kommunikation umzusteigen."
+
+msgid ""
+"Since all nodes yield metrics with the same name, Checkmk has to decide "
+"which nodes' metrics to keep. By default, it will select the node that was "
+"crucial for the overall result (the prefered one if in doubt). You can "
+"override this automatism by specifying a node here."
+msgstr ""
 
 msgid "Single"
 msgstr "Einzeln"
@@ -45639,9 +45569,6 @@ msgstr "Textgruppen von regulären Ausdrücken, mit Leerzeichen separiert"
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr "Text-Logdateien (Linux, Windows)"
 
-msgid "Text logfiles (Windows) - Deprecated (see help text)"
-msgstr "Text-Logdateien (Windows) - Veraltet (Siehe Hilfetext)"
-
 msgid "Text of the first match group from expression match"
 msgstr "Text der ersten Match-Gruppe des regulären Ausdrucks"
 
@@ -47911,6 +47838,14 @@ msgstr ""
 msgid ""
 "The log level for the communication between the Check_MK Micro Core and "
 "external Graphite/InfluxDB servers"
+msgstr ""
+"Der Loglevel für die Kommunikation zwischen dem Check_MK Micro Core und "
+"externen Graphite/InfluxDB-Servern"
+
+#, fuzzy
+msgid ""
+"The log level for the communication between the Check_MK Micro Core and its "
+"InfluxDB database"
 msgstr ""
 "Der Loglevel für die Kommunikation zwischen dem Check_MK Micro Core und "
 "externen Graphite/InfluxDB-Servern"
@@ -56672,6 +56607,10 @@ msgstr "LDAPS (SSL) verwenden"
 msgid "Use Livestatus Proxy Daemon"
 msgstr "Livestatus-Proxy-Daemon verwenden"
 
+#, fuzzy
+msgid "Use Metrics of"
+msgstr "Hostmetriken"
+
 msgid "Use Piggyback"
 msgstr "Huckepack-Modus verwenden"
 
@@ -64183,6 +64122,98 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid ""
+#~ "Define textfiles to be monitored. The full path is necessary. Glob "
+#~ "pattern (* and ?) are supported and will produce multiple services at "
+#~ "once."
+#~ msgstr ""
+#~ "Gegen Sie die Textdateien, die überwacht werden sollen, mit ihrem vollen "
+#~ "Pfad an. Suchmuster (* und ?) werden unterstützt, es werden dann ggfs. "
+#~ "mehrere Services mit einem Muster erzeugt."
+
+#~ msgid "Disable Context"
+#~ msgstr "Kontext deaktivieren"
+
+#~ msgid "From Start"
+#~ msgstr "Von Anfang an"
+
+#~ msgid ""
+#~ "If this is not ticked, the agent will only send lines that were added to "
+#~ "the log after it first saw the file. If ticked, each file is reported "
+#~ "completely."
+#~ msgstr ""
+#~ "Wenn dies deaktiviert ist schickt der Agent nur die Zeilen, die erzeugt "
+#~ "wurden nachdem die Datei hinzugefügt wurde. Andernfalls wird jede Datei "
+#~ "vollständig ausgeliefert."
+
+#~ msgid ""
+#~ "If this is not ticked, the agent will report the lines surrounding  an "
+#~ "error message as well, since they might be related."
+#~ msgstr ""
+#~ "Wenn dies deaktiviert ist sendet der Agent zusätzlich zu \"problematischen"
+#~ "\" Logeinträgen auch noch einige umgebende Zeilen, da diese im "
+#~ "Zusammenhang stehen könnten."
+
+#~ msgid ""
+#~ "If this is ticked, files matching the pattern are treated as one service "
+#~ "and the agent will read them from oldest to newest. It should also "
+#~ "correctly handle file renames."
+#~ msgstr ""
+#~ "Wenn dies aktiv ist werden alle Dateien die zum Muster passen als ein "
+#~ "einziger Service behandelt und von der ältesten zur neuesten "
+#~ "abgearbeitet. Auch Umbenennungen von Dateien sollten korrekt behandelt "
+#~ "werden."
+
+#~ msgid "Logfile Names"
+#~ msgstr "Logdateinamen"
+
+#~ msgid "Logfiles"
+#~ msgstr "Logdateien"
+
+#~ msgid "Matching Pattern"
+#~ msgstr "Suchmuster"
+
+#~ msgid ""
+#~ "Names/Pattern to identify log files. All files in this list will use the "
+#~ "same line-patterns."
+#~ msgstr ""
+#~ "Namen/Muster zur identifikation von log Dateien. Alle Dateien in dieser "
+#~ "Liste verwenden die gleichen Zeilen-Muster."
+
+#~ msgid "No Context"
+#~ msgstr "Kein Kontext"
+
+#~ msgid ""
+#~ "Note: This rule still works. However, we encourage to use the generic "
+#~ "'Text logfiles (Linux, Windows)' rule, since it offers more configurable "
+#~ "options. Keep in mind, that the patterns configured in this rule were "
+#~ "always checked case insensitive, whereas the new rule also adheres upper- "
+#~ "and lowercase."
+#~ msgstr ""
+#~ "Hinweis: Diese Regel funktioniert nach wie vor. Jedoch raten wir dazu die "
+#~ "generische Regel 'Text logfiles (Linux, Windows)' zu verwenden, da sie "
+#~ "mehr konfigurierbare Optionen bietet. Bitte beachten, dass die Match-"
+#~ "Patterns in dieser Regel Case-Insensitiv sind, wobei die neue Regel "
+#~ "Gross- und Kleinschreibung unterscheidet."
+
+#~ msgid "Patterns"
+#~ msgstr "Muster"
+
+#~ msgid "Patterns for matching lines in the specified logfiles"
+#~ msgstr "Suchmuster für die Textzeilen der gewählten Logdateien"
+
+#~ msgid "Read logs from beginning"
+#~ msgstr "Logs von Anfang an auslesen"
+
+#~ msgid "Rotated"
+#~ msgstr "rotiert"
+
+#~ msgid "Rotated Log"
+#~ msgstr "rotiertes Log"
+
+#~ msgid "Text logfiles (Windows) - Deprecated (see help text)"
+#~ msgstr "Text-Logdateien (Windows) - Veraltet (Siehe Hilfetext)"
+
+#~ msgid ""
 #~ "If you're running local checks on clusters via clustered services rule "
 #~ "you can influence the check result with this rule. You can choose between "
 #~ "best or worst state. Default setting is worst state."
@@ -64400,9 +64431,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Hint a service"
 #~ msgstr "Einen Service vorschlagen"
-
-#~ msgid "Host Metrics"
-#~ msgstr "Hostmetriken"
 
 #~ msgid "Hostname:"
 #~ msgstr "Hostname:"
@@ -66482,9 +66510,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Discard Changes!"
 #~ msgstr "Änderung. verwerfen!"
-
-#~ msgid "Discovery - automatic service detection"
-#~ msgstr "Automatische Serviceerkennung"
 
 #~ msgid "Discovery mode for Disk IO check"
 #~ msgstr "Erkennungsmodus für Platten I/O-Checks"

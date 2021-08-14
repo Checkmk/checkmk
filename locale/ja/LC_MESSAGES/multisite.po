@@ -12798,13 +12798,6 @@ msgstr ""
 "カーネル構成パラメーターをインベントリに含めるためのパターンを定義します。"
 
 msgid ""
-"Define textfiles to be monitored. The full path is necessary. Glob pattern "
-"(* and ?) are supported and will produce multiple services at once."
-msgstr ""
-"監視するテキストファイルを定義します。フルパスが必要です。グロブパターン(*お"
-"よび？)がサポートされており、一度に複数のサービスを生成します。"
-
-msgid ""
 "Define which monitoring state maps which input state. This applies for every "
 "single input."
 msgstr ""
@@ -13825,9 +13818,6 @@ msgstr "無効にする"
 
 msgid "Disable (drop encrypted data)"
 msgstr "無効にする(暗号化されたデータを削除する)"
-
-msgid "Disable Context"
-msgstr "コンテキストを無効にする"
 
 msgid "Disable Notifications"
 msgstr "通知を無効にする"
@@ -19024,9 +19014,6 @@ msgstr "%s から %s (%s) %sまで"
 msgid "From 0 to Monitoring in <10min"
 msgstr "0から10分未満での監視"
 
-msgid "From Start"
-msgstr "最初から"
-
 msgid "From left of the page"
 msgstr "ページの左から"
 
@@ -22432,21 +22419,6 @@ msgstr ""
 "を受けません。"
 
 msgid ""
-"If this is not ticked, the agent will only send lines that were added to the "
-"log after it first saw the file. If ticked, each file is reported completely."
-msgstr ""
-"これにチェックマークが付いていない場合、エージェントは、ファイルを最初に確認"
-"した後にログに追加された行のみを送信します。チェックすると、各ファイルが完全"
-"に報告されます。"
-
-msgid ""
-"If this is not ticked, the agent will report the lines surrounding  an error "
-"message as well, since they might be related."
-msgstr ""
-"これがチェックされていない場合、エージェントはエラーメッセージを囲む行も関連"
-"している可能性があるため、それらを報告します。"
-
-msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
 "check cycle but just every time the configured age has expired. Furthermore "
 "the plugin will be executed asynchronously as a backbround process. This is "
@@ -22463,15 +22435,6 @@ msgid ""
 msgstr ""
 "これが設定されている場合、プラグイン出力はキャッシュされ、キャッシュの経過時"
 "間がこの値を超えた場合にのみ更新されます。"
-
-msgid ""
-"If this is ticked, files matching the pattern are treated as one service and "
-"the agent will read them from oldest to newest. It should also correctly "
-"handle file renames."
-msgstr ""
-"これにチェックマークが付いている場合、パターンに一致するファイルは1つのサービ"
-"スとして扱われ、エージェントはそれらを古いものから新しいものへと読み取りま"
-"す。また、ファイルの名前変更も正しく処理する必要があります。"
 
 msgid ""
 "If this option is activated, checkmk will pad port numbers of network "
@@ -24075,6 +24038,10 @@ msgstr ""
 #, fuzzy
 msgid "InfluxDB instance"
 msgstr "DBインスタンス"
+
+#, fuzzy
+msgid "InfluxDB processing"
+msgstr "RRD処理"
 
 msgid "InfluxDB service rules"
 msgstr ""
@@ -27091,9 +27058,6 @@ msgstr "ログファイル"
 msgid "Logfile Grouping"
 msgstr "ログファイルのグループ化"
 
-msgid "Logfile Names"
-msgstr "ログファイル名"
-
 msgid "Logfile information of logwatch plugin"
 msgstr "logwatchプラグインのログファイル情報"
 
@@ -27117,9 +27081,6 @@ msgstr "すべてのホストでのログファイル%sのログファイルパ�
 #, python-format
 msgid "Logfile patterns of logfile %s on host %s"
 msgstr "ホスト%s上のログファイル%sのログファイルパターン"
-
-msgid "Logfiles"
-msgstr "ログファイル"
 
 #, python-format
 msgid "Logfiles of Host %s: %s"
@@ -28234,9 +28195,6 @@ msgstr "マッチング"
 
 msgid "Matching Criteria"
 msgstr "マッチング基準"
-
-msgid "Matching Pattern"
-msgstr "マッチングパターン"
 
 msgid "Matching is inverted in this rule"
 msgstr "このルールではマッチングが逆になります"
@@ -30213,11 +30171,6 @@ msgstr ""
 "は、実際のセンサー名の先頭と正確に一致する必要があります(大文字と小文字が区別"
 "されます)。"
 
-msgid ""
-"Names/Pattern to identify log files. All files in this list will use the "
-"same line-patterns."
-msgstr ""
-
 msgid "Namespace"
 msgstr "ネームスペース"
 
@@ -30597,9 +30550,6 @@ msgstr ""
 
 msgid "No Conditions"
 msgstr "条件なし"
-
-msgid "No Context"
-msgstr "コンテキストなし"
 
 #, python-format
 msgid "No Forecast graph with the name <tt>%s</tt>"
@@ -31281,18 +31231,6 @@ msgstr ""
 "mode=edit_ruleset&varname=snmp_exclude_sections'> SNMPセクションを含めるか除"
 "外する</a>を使用してセクション<tt> if64adm </tt>をアクティブにします。これに"
 "より、SNMPトラフィックが約5%増加することに注意してください。"
-
-msgid ""
-"Note: This rule still works. However, we encourage to use the generic 'Text "
-"logfiles (Linux, Windows)' rule, since it offers more configurable options. "
-"Keep in mind, that the patterns configured in this rule were always checked "
-"case insensitive, whereas the new rule also adheres upper- and lowercase."
-msgstr ""
-"注:このルールは引き続き機能します。ただし、より多くの構成可能なオプションを提"
-"供するため、一般的な\"テキストログファイル(Linux、Windows)\"ルールを使用する"
-"ことをお勧めします。このルールで構成されたパターンでは常に大文字と小文字が区"
-"別されないようにチェックされていますが、新しいルールでも大文字と小文字が適用"
-"されることに注意してください。"
 
 msgid ""
 "Note: With this command you can archive all events of one host. Needs a rule "
@@ -33240,6 +33178,10 @@ msgstr "オーバーフロー"
 msgid "Overprovisioned"
 msgstr ""
 
+#, fuzzy
+msgid "Override automatic metric selection"
+msgstr "自動サービス検出を実行する"
+
 msgid "Override cache times configured by other rules"
 msgstr "他のルールで構成されたキャッシュ時間を上書きする"
 
@@ -33807,17 +33749,11 @@ msgstr "パターン(正規表現)"
 msgid "Pattern analyzer"
 msgstr "パターンアナライザー"
 
-msgid "Patterns"
-msgstr "パターン"
-
 msgid "Patterns for each node"
 msgstr "各ノードのパターン"
 
 msgid "Patterns for logfiles to monitor (allowing <tt>*</tt> and <tt>?</tt>)"
 msgstr "監視するログファイルのパターン( <tt>*</tt> および<tt>?</tt>を許可)"
-
-msgid "Patterns for matching lines in the specified logfiles"
-msgstr "指定されたログファイルの行を照合するためのパターン"
 
 msgid "Paused"
 msgstr "一時停止"
@@ -36300,9 +36236,6 @@ msgstr "ヒットを読む"
 msgid "Read latency"
 msgstr "読み取り待ち時間"
 
-msgid "Read logs from beginning"
-msgstr "最初からログを読む"
-
 msgid ""
 "Read more about [regexes|regular expression matching in Checkmk] in our user "
 "guide."
@@ -37725,12 +37658,6 @@ msgstr "毎週月曜日の現地時間 00:00 にローテーションします"
 
 msgid "Rotate once a minute (only for testing!)"
 msgstr "1分に1回ローテートします(テストのみ!)"
-
-msgid "Rotated"
-msgstr "ロテイティド"
-
-msgid "Rotated Log"
-msgstr "ローテートしたログ"
 
 msgid "Round"
 msgstr "円形"
@@ -40792,6 +40719,13 @@ msgid ""
 "TCP with 1.6 or newer. Sites that already have this option enabled keep the "
 "communication unencrypted for compatibility reasons. However, it is highly "
 "recommended to migrate to an encrypted communication."
+msgstr ""
+
+msgid ""
+"Since all nodes yield metrics with the same name, Checkmk has to decide "
+"which nodes' metrics to keep. By default, it will select the node that was "
+"crucial for the overall result (the prefered one if in doubt). You can "
+"override this automatism by specifying a node here."
 msgstr ""
 
 msgid "Single"
@@ -44085,9 +44019,6 @@ msgstr "スペースで区切られた正規表現一致のテキストグルー
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr ""
 
-msgid "Text logfiles (Windows) - Deprecated (see help text)"
-msgstr "テキストログファイル(Windows)-非推奨(ヘルプテキストを参照)"
-
 msgid "Text of the first match group from expression match"
 msgstr "式一致からの最初の一致グループのテキスト"
 
@@ -46134,6 +46065,12 @@ msgstr ""
 msgid ""
 "The log level for the communication between the Check_MK Micro Core and "
 "external Graphite/InfluxDB servers"
+msgstr "Check_MK MicroCoreと外部 Graphite/InfluxDBサーバー間の通信のログレベル"
+
+#, fuzzy
+msgid ""
+"The log level for the communication between the Check_MK Micro Core and its "
+"InfluxDB database"
 msgstr "Check_MK MicroCoreと外部 Graphite/InfluxDBサーバー間の通信のログレベル"
 
 msgid ""
@@ -54224,6 +54161,10 @@ msgstr "LDAPS(SSL)を使用する"
 msgid "Use Livestatus Proxy Daemon"
 msgstr "Livestatusプロキシデーモンを使用する"
 
+#, fuzzy
+msgid "Use Metrics of"
+msgstr "メトリクス"
+
 msgid "Use Piggyback"
 msgstr "ピギーバックを使用する"
 
@@ -61269,6 +61210,88 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid ""
+#~ "Define textfiles to be monitored. The full path is necessary. Glob "
+#~ "pattern (* and ?) are supported and will produce multiple services at "
+#~ "once."
+#~ msgstr ""
+#~ "監視するテキストファイルを定義します。フルパスが必要です。グロブパターン(*"
+#~ "および？)がサポートされており、一度に複数のサービスを生成します。"
+
+#~ msgid "Disable Context"
+#~ msgstr "コンテキストを無効にする"
+
+#~ msgid "From Start"
+#~ msgstr "最初から"
+
+#~ msgid ""
+#~ "If this is not ticked, the agent will only send lines that were added to "
+#~ "the log after it first saw the file. If ticked, each file is reported "
+#~ "completely."
+#~ msgstr ""
+#~ "これにチェックマークが付いていない場合、エージェントは、ファイルを最初に確"
+#~ "認した後にログに追加された行のみを送信します。チェックすると、各ファイルが"
+#~ "完全に報告されます。"
+
+#~ msgid ""
+#~ "If this is not ticked, the agent will report the lines surrounding  an "
+#~ "error message as well, since they might be related."
+#~ msgstr ""
+#~ "これがチェックされていない場合、エージェントはエラーメッセージを囲む行も関"
+#~ "連している可能性があるため、それらを報告します。"
+
+#~ msgid ""
+#~ "If this is ticked, files matching the pattern are treated as one service "
+#~ "and the agent will read them from oldest to newest. It should also "
+#~ "correctly handle file renames."
+#~ msgstr ""
+#~ "これにチェックマークが付いている場合、パターンに一致するファイルは1つの"
+#~ "サービスとして扱われ、エージェントはそれらを古いものから新しいものへと読み"
+#~ "取ります。また、ファイルの名前変更も正しく処理する必要があります。"
+
+#~ msgid "Logfile Names"
+#~ msgstr "ログファイル名"
+
+#~ msgid "Logfiles"
+#~ msgstr "ログファイル"
+
+#~ msgid "Matching Pattern"
+#~ msgstr "マッチングパターン"
+
+#~ msgid "No Context"
+#~ msgstr "コンテキストなし"
+
+#~ msgid ""
+#~ "Note: This rule still works. However, we encourage to use the generic "
+#~ "'Text logfiles (Linux, Windows)' rule, since it offers more configurable "
+#~ "options. Keep in mind, that the patterns configured in this rule were "
+#~ "always checked case insensitive, whereas the new rule also adheres upper- "
+#~ "and lowercase."
+#~ msgstr ""
+#~ "注:このルールは引き続き機能します。ただし、より多くの構成可能なオプション"
+#~ "を提供するため、一般的な\"テキストログファイル(Linux、Windows)\"ルールを使"
+#~ "用することをお勧めします。このルールで構成されたパターンでは常に大文字と小"
+#~ "文字が区別されないようにチェックされていますが、新しいルールでも大文字と小"
+#~ "文字が適用されることに注意してください。"
+
+#~ msgid "Patterns"
+#~ msgstr "パターン"
+
+#~ msgid "Patterns for matching lines in the specified logfiles"
+#~ msgstr "指定されたログファイルの行を照合するためのパターン"
+
+#~ msgid "Read logs from beginning"
+#~ msgstr "最初からログを読む"
+
+#~ msgid "Rotated"
+#~ msgstr "ロテイティド"
+
+#~ msgid "Rotated Log"
+#~ msgstr "ローテートしたログ"
+
+#~ msgid "Text logfiles (Windows) - Deprecated (see help text)"
+#~ msgstr "テキストログファイル(Windows)-非推奨(ヘルプテキストを参照)"
 
 #~ msgid ""
 #~ "If you're running local checks on clusters via clustered services rule "

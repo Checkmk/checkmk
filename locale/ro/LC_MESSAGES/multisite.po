@@ -12743,11 +12743,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"Define textfiles to be monitored. The full path is necessary. Glob pattern "
-"(* and ?) are supported and will produce multiple services at once."
-msgstr ""
-
-msgid ""
 "Define which monitoring state maps which input state. This applies for every "
 "single input."
 msgstr ""
@@ -13788,10 +13783,6 @@ msgstr ""
 
 msgid "Disable (drop encrypted data)"
 msgstr ""
-
-#, fuzzy
-msgid "Disable Context"
-msgstr "cu context"
 
 msgid "Disable Notifications"
 msgstr "Dezactiveaza Notificarile"
@@ -19080,9 +19071,6 @@ msgstr ""
 msgid "From 0 to Monitoring in <10min"
 msgstr ""
 
-msgid "From Start"
-msgstr ""
-
 msgid "From left of the page"
 msgstr ""
 
@@ -22319,16 +22307,6 @@ msgid ""
 msgstr ""
 
 msgid ""
-"If this is not ticked, the agent will only send lines that were added to the "
-"log after it first saw the file. If ticked, each file is reported completely."
-msgstr ""
-
-msgid ""
-"If this is not ticked, the agent will report the lines surrounding  an error "
-"message as well, since they might be related."
-msgstr ""
-
-msgid ""
 "If this is option is enabled the actual check plugin will not be run every "
 "check cycle but just every time the configured age has expired. Furthermore "
 "the plugin will be executed asynchronously as a backbround process. This is "
@@ -22338,12 +22316,6 @@ msgstr ""
 msgid ""
 "If this is set, the plugin output will be cached and will only be refreshed "
 "once the age of the cache has exceeded this value."
-msgstr ""
-
-msgid ""
-"If this is ticked, files matching the pattern are treated as one service and "
-"the agent will read them from oldest to newest. It should also correctly "
-"handle file renames."
 msgstr ""
 
 msgid ""
@@ -23584,6 +23556,10 @@ msgstr "Conexiune Noua"
 #, fuzzy
 msgid "InfluxDB instance"
 msgstr "Adaugă instanță NGINX"
+
+#, fuzzy
+msgid "InfluxDB processing"
+msgstr "Conexiuni Active"
 
 # georgem ##############
 #, fuzzy
@@ -26757,10 +26733,6 @@ msgstr ""
 msgid "Logfile Grouping"
 msgstr "Nume nou"
 
-#, fuzzy
-msgid "Logfile Names"
-msgstr "Editeaza regulile de loguri"
-
 msgid "Logfile information of logwatch plugin"
 msgstr ""
 
@@ -26787,10 +26759,6 @@ msgstr " pentru hostul %s"
 #, python-format
 msgid "Logfile patterns of logfile %s on host %s"
 msgstr ""
-
-#, fuzzy
-msgid "Logfiles"
-msgstr "Editeaza regulile de loguri"
 
 #, python-format
 msgid "Logfiles of Host %s: %s"
@@ -27977,9 +27945,6 @@ msgid "Matching"
 msgstr ""
 
 msgid "Matching Criteria"
-msgstr ""
-
-msgid "Matching Pattern"
 msgstr ""
 
 msgid "Matching is inverted in this rule"
@@ -30113,11 +30078,6 @@ msgid ""
 "(case sensitive)."
 msgstr ""
 
-msgid ""
-"Names/Pattern to identify log files. All files in this list will use the "
-"same line-patterns."
-msgstr ""
-
 #, fuzzy
 msgid "Namespace"
 msgstr "spatiu utilizat"
@@ -30538,10 +30498,6 @@ msgstr "TCP port pentru conexiunile la agentul Check_MK"
 #, fuzzy
 msgid "No Conditions"
 msgstr "(fără condiții)"
-
-#, fuzzy
-msgid "No Context"
-msgstr "Adaugă Conținut"
 
 #, python-format
 msgid "No Forecast graph with the name <tt>%s</tt>"
@@ -31198,13 +31154,6 @@ msgid ""
 "mode=edit_ruleset&varname=snmp_exclude_sections'>Include or exclude SNMP "
 "sections</a>. Note that this will lead to an increase in SNMP traffic of "
 "approximately 5%."
-msgstr ""
-
-msgid ""
-"Note: This rule still works. However, we encourage to use the generic 'Text "
-"logfiles (Linux, Windows)' rule, since it offers more configurable options. "
-"Keep in mind, that the patterns configured in this rule were always checked "
-"case insensitive, whereas the new rule also adheres upper- and lowercase."
 msgstr ""
 
 msgid ""
@@ -33265,6 +33214,9 @@ msgstr ""
 msgid "Overprovisioned"
 msgstr ""
 
+msgid "Override automatic metric selection"
+msgstr ""
+
 msgid "Override cache times configured by other rules"
 msgstr ""
 
@@ -33836,17 +33788,10 @@ msgstr ""
 msgid "Pattern analyzer"
 msgstr "Editeaza regulile de loguri"
 
-#, fuzzy
-msgid "Patterns"
-msgstr "Adaugă model/tipar"
-
 msgid "Patterns for each node"
 msgstr ""
 
 msgid "Patterns for logfiles to monitor (allowing <tt>*</tt> and <tt>?</tt>)"
-msgstr ""
-
-msgid "Patterns for matching lines in the specified logfiles"
 msgstr ""
 
 #, fuzzy
@@ -36397,9 +36342,6 @@ msgstr "Perioada de timp Noua"
 msgid "Read latency"
 msgstr ""
 
-msgid "Read logs from beginning"
-msgstr ""
-
 msgid ""
 "Read more about [regexes|regular expression matching in Checkmk] in our user "
 "guide."
@@ -37885,12 +37827,6 @@ msgid "Rotate every monday at 00:00 local time"
 msgstr ""
 
 msgid "Rotate once a minute (only for testing!)"
-msgstr ""
-
-msgid "Rotated"
-msgstr ""
-
-msgid "Rotated Log"
 msgstr ""
 
 msgid "Round"
@@ -41088,6 +41024,13 @@ msgid ""
 "TCP with 1.6 or newer. Sites that already have this option enabled keep the "
 "communication unencrypted for compatibility reasons. However, it is highly "
 "recommended to migrate to an encrypted communication."
+msgstr ""
+
+msgid ""
+"Since all nodes yield metrics with the same name, Checkmk has to decide "
+"which nodes' metrics to keep. By default, it will select the node that was "
+"crucial for the overall result (the prefered one if in doubt). You can "
+"override this automatism by specifying a node here."
 msgstr ""
 
 msgid "Single"
@@ -44364,9 +44307,6 @@ msgstr ""
 msgid "Text logfiles (Linux, Solaris, Windows)"
 msgstr ""
 
-msgid "Text logfiles (Windows) - Deprecated (see help text)"
-msgstr ""
-
 msgid "Text of the first match group from expression match"
 msgstr ""
 
@@ -46071,6 +46011,11 @@ msgstr ""
 msgid ""
 "The log level for the communication between the Check_MK Micro Core and "
 "external Graphite/InfluxDB servers"
+msgstr ""
+
+msgid ""
+"The log level for the communication between the Check_MK Micro Core and its "
+"InfluxDB database"
 msgstr ""
 
 msgid ""
@@ -53278,6 +53223,10 @@ msgstr ""
 msgid "Use Livestatus Proxy Daemon"
 msgstr ""
 
+#, fuzzy
+msgid "Use Metrics of"
+msgstr "serviciu"
+
 msgid "Use Piggyback"
 msgstr ""
 
@@ -59829,6 +59778,26 @@ msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr ""
 
 #, fuzzy
+#~ msgid "Disable Context"
+#~ msgstr "cu context"
+
+#, fuzzy
+#~ msgid "Logfile Names"
+#~ msgstr "Editeaza regulile de loguri"
+
+#, fuzzy
+#~ msgid "Logfiles"
+#~ msgstr "Editeaza regulile de loguri"
+
+#, fuzzy
+#~ msgid "No Context"
+#~ msgstr "Adaugă Conținut"
+
+#, fuzzy
+#~ msgid "Patterns"
+#~ msgstr "Adaugă model/tipar"
+
+#, fuzzy
 #~ msgid "folders"
 #~ msgstr "Folder nou"
 
@@ -59875,10 +59844,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Hint a service"
 #~ msgstr "sesiuni"
-
-#, fuzzy
-#~ msgid "Host Metrics"
-#~ msgstr "serviciu"
 
 #, fuzzy
 #~ msgid "Hostname:"

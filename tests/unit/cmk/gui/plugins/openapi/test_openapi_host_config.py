@@ -255,6 +255,68 @@ def test_openapi_bulk_simple(wsgi_app, with_automation_user, suppress_automation
     )
 
 
+def test_openapi_bulk_management_protocol(wsgi_app, with_automation_user,
+                                          suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/1.0'
+
+    # create example.com test host
+    wsgi_app.call_method(
+        'post',
+        base + "/domain-types/host_config/collections/all",
+        params=
+        '{"host_name": "example.com", "folder": "/", "attributes": {"management_protocol": "none"}}',
+        status=200,
+        content_type='application/json; charset=utf-8',
+    )
+
+    # read management_protocol
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/objects/host_config/example.com",
+        status=200,
+    )
+    assert resp.json['extensions']['attributes']['management_protocol'] == 'none'
+
+    # make sure a value that is not defined in the enum raises an error
+    wsgi_app.call_method(
+        'put',
+        base + "/domain-types/host_config/actions/bulk-update/invoke",
+        params=json.dumps({'entries': [{
+            'host_name': 'example.com',
+            'update_attributes': 'asd',
+        }]}),
+        status=400,
+        content_type='application/json',
+    )
+
+    # change management protocol
+    wsgi_app.call_method(
+        'put',
+        base + "/domain-types/host_config/actions/bulk-update/invoke",
+        params=json.dumps({
+            'entries': [{
+                'host_name': 'example.com',
+                'update_attributes': {
+                    "management_protocol": "snmp"
+                },
+            }]
+        }),
+        status=200,
+        content_type='application/json',
+    )
+
+    # make sure it's actually changed
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/objects/host_config/example.com",
+        status=200,
+    )
+    assert resp.json['extensions']['attributes']['management_protocol'] == "snmp"
+
+
 def test_openapi_host_collection(
     wsgi_app,
     with_automation_user,

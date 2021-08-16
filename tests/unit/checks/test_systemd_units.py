@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
+from typing import NamedTuple
 
 import pytest
 
@@ -12,8 +12,15 @@ from tests.testlib import Check
 
 pytestmark = pytest.mark.checks
 
-UnitEntry = collections.namedtuple(
-    "UnitEntry", ['name', 'type', 'load', 'active', 'sub', 'description', 'state'])
+
+class UnitEntry(NamedTuple):
+    name: str
+    type: str
+    load: str
+    active: str
+    sub: str
+    description: str
+    state: str
 
 
 @pytest.mark.parametrize('services, blacklist, expected', [

@@ -4,13 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
-from typing import MutableMapping, Optional, Sequence, Tuple
+from typing import MutableMapping, NamedTuple, Optional, Sequence, Tuple
 
-Item = collections.namedtuple(
-    'Item',
-    ['index', 'status', 'name', 'value', 'lower_levels', 'upper_levels'],
-)
+
+class Item(NamedTuple):
+    item: str
+    status: Tuple[int, str]
+    name: str
+    value: Optional[float]
+    lower_levels: Tuple[Optional[float], Optional[float]]
+    upper_levels: Tuple[Optional[float], Optional[float]]
 
 
 def _translate_dev_status(status: str) -> Tuple[int, str]:

@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import collections
+from typing import NamedTuple
 
 
 def _convert_to_identifier(value):
@@ -41,7 +41,9 @@ def _convert_to_identifier(value):
 #
 # IO Files
 #
-OracleIOFile = collections.namedtuple("OracleIOFile", "name id")
+class OracleIOFile(NamedTuple):
+    name: str
+    id: str
 
 
 def make_oracle_io_file_list(name_list):
@@ -76,10 +78,15 @@ oracle_io_types = [
     ("wb", "Write Bytes", "bytes/s"),
 ]
 
+
 #
 # Waitclasses
 #
-OracleWaitclass = collections.namedtuple("OracleWaitclass", "name id metric metric_fg")
+class OracleWaitclass(NamedTuple):
+    name: str
+    id: str
+    metric: str
+    metric_fg: str
 
 
 def make_oracle_waitclass(name):
@@ -108,10 +115,14 @@ oracle_waitclasses = make_oracle_waitclass_list([
     "User I/O",
 ])
 
+
 #
 # SGAs
 #
-OracleSGA = collections.namedtuple("OracleSGA", "name id metric")
+class OracleSGA(NamedTuple):
+    name: str
+    id: str
+    metric: str
 
 
 def make_oracle_sga(name, metric):
@@ -134,10 +145,14 @@ oracle_sga_fields = make_oracle_sga_list([
     ("Shared IO Pool Size", "oracle_sga_shared_io_pool"),
 ])
 
+
 #
 # PGAs
 #
-OraclePGA = collections.namedtuple("OraclePGA", "name id metric")
+class OraclePGA(NamedTuple):
+    name: str
+    id: str
+    metric: str
 
 
 def make_oracle_pga(name):

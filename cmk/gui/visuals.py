@@ -77,6 +77,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.logged_in import save_user_file
 from cmk.gui.utils.roles import user_may
 from cmk.gui.utils.urls import (
+    file_name_and_query_vars_from_url,
     make_confirm_link,
     makeactionuri,
     makeuri,
@@ -1162,9 +1163,19 @@ def page_edit_visual(
                     )
 
                 if request.var("save_and_view"):
+                    back_vars: HTTPVariables = []
+                    back_url_from_vars = html.request.var("back")
+                    if back_url_from_vars:
+                        _file_name, query_vars = file_name_and_query_vars_from_url(
+                            back_url_from_vars)
+                        back_vars = [(varname, value[0]) for varname, value in query_vars.items()]
+                    visual_name_var: Tuple[str, str] = (visual_type.ident_attr, visual['name'])
+                    if visual_name_var not in back_vars:
+                        back_vars.append(visual_name_var)
+
                     back_url = makeuri_contextless(
                         request,
-                        [(visual_type.ident_attr, visual['name'])],
+                        back_vars,
                         filename=visual_type.show_url,
                     )
 

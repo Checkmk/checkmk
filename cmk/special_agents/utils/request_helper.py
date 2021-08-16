@@ -10,7 +10,7 @@ import base64
 import json
 import os
 import ssl
-import urllib
+from functools import reduce
 from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
 from typing import Any, Dict, Optional, TypedDict, Union
 from urllib.request import build_opener, HTTPSHandler, Request
@@ -162,7 +162,7 @@ class ApiSession(Session):
         self.ssl_verify = ssl_verify if ssl_verify else False
 
     def request(self, method, url, **kwargs):  # pylint: disable=arguments-differ
-        url = urllib.parse.urljoin(self._base_url, url)
+        url = urljoin(self._base_url, url)
         return super().request(method, url, verify=self.ssl_verify, **kwargs)
 
 
@@ -250,3 +250,21 @@ def parse_api_custom_url(
 
     """
     return f"{protocol}://{url_custom}/{api_path}"
+
+
+def urljoin(*args):
+    """Join two urls without stripping away any parts
+
+    >>> urljoin("http://127.0.0.1:8080", "api/v2")
+    'http://127.0.0.1:8080/api/v2'
+
+    >>> urljoin("http://127.0.0.1:8080/prometheus", "api/v2")
+    'http://127.0.0.1:8080/prometheus/api/v2'
+
+    >>> urljoin("http://127.0.0.1:8080/", "api/v2/")
+    'http://127.0.0.1:8080/api/v2/'
+    """
+    def join_slash(base, part):
+        return base.rstrip('/') + '/' + part.lstrip('/')
+
+    return reduce(join_slash, args) if args else ''

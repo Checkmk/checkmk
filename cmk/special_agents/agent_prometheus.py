@@ -1522,7 +1522,7 @@ class PrometheusAPI:
     def _connected_scrape_targets(self) -> Dict[str, Any]:
         """Query and parse the information concerning the connected Scrape Targets
         """
-        result = self._query_json_endpoint("/api/v1/targets")
+        result = self._query_json_endpoint("targets")
         scrape_targets = self.test(result)
         return scrape_targets
 

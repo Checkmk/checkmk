@@ -4,11 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
 import functools
 import json
 import time
-from typing import Any, List
+from typing import Any, List, NamedTuple
 
 from cmk.base.check_api import (
     check_levels,
@@ -110,8 +109,15 @@ def check_azure_metric(  # pylint: disable=too-many-locals
 
 AZURE_AGENT_SEPARATOR = '|'
 
-Metric = collections.namedtuple(
-    "Metric", ["name", "aggregation", "value", "unit", "timestamp", "timegrain", "filters"])
+
+class Metric(NamedTuple):
+    name: Any
+    aggregation: Any
+    value: float
+    unit: str
+    timestamp: Any
+    timegrain: Any
+    filters: Any
 
 
 def _read(row, types, defaults=None):

@@ -4,8 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
-from typing import Dict, List
+from typing import Dict, List, NamedTuple, Optional
 
 from cmk.base.check_api import OID_END
 
@@ -30,8 +29,11 @@ def huawei_entity_specific_snmp_info(snmp_info):
 
 huawei_mpu_board_name_start = 'mpu board'
 
-HuaweiPhysicalEntityValue = collections.namedtuple("HuaweiPhysicalEntityValue",
-                                                   "physical_index stack_member value")
+
+class HuaweiPhysicalEntityValue(NamedTuple):
+    physical_index: str
+    stack_member: int
+    value: Optional[str]
 
 
 def parse_huawei_physical_entity_values(info, entity_name_start=huawei_mpu_board_name_start):

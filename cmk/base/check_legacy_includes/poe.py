@@ -4,8 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
 import enum
+from typing import NamedTuple, Optional
 
 from cmk.base.check_api import check_levels, get_percent_human_readable
 
@@ -20,7 +20,11 @@ class PoeStatus(enum.IntEnum):
 
 
 # PoE data
-PoeValues = collections.namedtuple('PoeValues', 'poe_max poe_used poe_status poe_status_detail')
+class PoeValues(NamedTuple):
+    poe_max: float
+    poe_used: float
+    poe_status: PoeStatus
+    poe_status_detail: Optional[str]
 
 
 def check_poe_data(params, poe_data):

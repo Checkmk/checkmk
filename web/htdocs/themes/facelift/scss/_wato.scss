@@ -631,6 +631,10 @@ body.main .popup_menu .wato div.floatfolder div.title span,
   margin: 0;
 }
 
+span.tagify__tag-text {
+  white-space: pre;
+}
+
 .wato table.data.ruleset tr.disabled td {
   * {
     color: rgb(153, 153, 153);

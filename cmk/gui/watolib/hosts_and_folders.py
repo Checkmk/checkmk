@@ -44,17 +44,19 @@ from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
+    get_all_storage_readers,
     get_host_storage_loaders,
     get_hosts_file_variables,
     get_storage_format,
     GroupRuleType,
     HostAttributeMapping,
     HostsData,
+    HostsStorageData,
+    HostsStorageFieldsGenerator,
     make_experimental_hosts_storage,
     StandardHostsStorage,
-    UnifiedHostStorage,
 )
-from cmk.utils.type_defs import ContactgroupName, HostName
+from cmk.utils.type_defs import ContactgroupName, HostName, TaggroupIDToTagID
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
@@ -826,8 +828,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
     def _save_hosts_file(self):
         store.makedirs(self.filesystem_path())
         if not self.has_hosts():
-            if os.path.exists(self.hosts_file_path()):
-                os.remove(self.hosts_file_path())
+            for storage in get_all_storage_readers():
+                storage.remove(Path(self.hosts_file_path_without_extension()))
             return
 
         all_hosts: List[str] = []
@@ -836,7 +838,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         # collect value for attributes that are to be present in Nagios
         custom_macros: Dict[str, Dict[str, str]] = {}
         # collect value for attributes that are explicitly set for one host
-        explicit_host_settings: Dict[str, Dict[str, str]] = {}
+        explicit_host_conf: Dict[str, Dict[str, str]] = {}
         cleaned_hosts = {}
         host_tags = {}
         host_labels = {}
@@ -917,24 +919,28 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
                         nagstring = attr.to_nagios(value)
                         if nagstring is not None:
                             if attr.is_explicit():
-                                explicit_host_settings.setdefault(custom_varname, {})
-                                explicit_host_settings[custom_varname][hostname] = nagstring
+                                explicit_host_conf.setdefault(custom_varname, {})
+                                explicit_host_conf[custom_varname][hostname] = nagstring
                             else:
                                 custom_macros.setdefault(custom_varname, {})
                                 custom_macros[custom_varname][hostname] = nagstring
 
-        unified_storage = UnifiedHostStorage()
-        unified_storage.save_locked_hosts()
-        unified_storage.save_host_contact_groups(group_rules_list)
-        unified_storage.save_all_hosts(all_hosts)
-        unified_storage.save_clusters(clusters)
-        unified_storage.save_host_tags(host_tags)
-        unified_storage.save_host_labels(host_labels)
-        unified_storage.save_attributes(attribute_mappings)
-        unified_storage.save_extra_host_conf(custom_macros)
-        unified_storage.save_explicit_host_settings(explicit_host_settings)
-        unified_storage.save_folder_contact_groups(self.path_for_rule_matching(), self.groups())
-        unified_storage.save_cleaned_hosts(cleaned_hosts)
+        data = HostsStorageData(
+            locked_hosts=False,
+            all_hosts=all_hosts,
+            clusters=clusters,
+            attributes={name: values for _a, name, values, _b in attribute_mappings if values},
+            custom_macros=HostsStorageFieldsGenerator.custom_macros(custom_macros),
+            host_tags=host_tags,
+            host_labels=host_labels,
+            contact_groups=HostsStorageFieldsGenerator.contact_groups(
+                host_service_group_rules=group_rules_list,
+                folder_host_service_group_rules=self.groups(),
+                folder_path=self.path_for_rule_matching(),
+            ),
+            explicit_host_conf=explicit_host_conf,
+            host_attributes=cleaned_hosts,
+        )
 
         storage_list: List[ABCHostsStorage] = [StandardHostsStorage()]
         if experimental_storage := make_experimental_hosts_storage(
@@ -944,7 +950,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
         for storage_module in storage_list:
             storage_module.write(
                 Path(self.hosts_file_path_without_extension()),
-                unified_storage.data,
+                data,
                 get_value_formatter(),
             )
 
@@ -2331,14 +2337,14 @@ class CREHost(WithPermissions, WithAttributes):
     def parents(self):
         return self.effective_attribute("parents", [])
 
-    def tag_groups(self) -> dict:
+    def tag_groups(self) -> TaggroupIDToTagID:
         """Compute tags from host attributes
         Each tag attribute may set multiple tags.  can set tags (e.g. the SiteAttribute)"""
 
         if self._cached_host_tags is not None:
             return self._cached_host_tags  # Cached :-)
 
-        tag_groups: Dict[str, str] = {}
+        tag_groups = {}
         effective = self.effective_attributes()
         for attr in host_attribute_registry.attributes():
             value = effective.get(attr.name())

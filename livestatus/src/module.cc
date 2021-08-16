@@ -76,7 +76,7 @@ int g_num_queued_connections = 0;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 std::atomic_int32_t g_livestatus_active_connections{0};
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-size_t g_thread_stack_size = 1024 * 1024; /* stack size of threads */
+size_t g_thread_stack_size = size_t{1024} * 1024; /* stack size of threads */
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 void *g_nagios_handle;

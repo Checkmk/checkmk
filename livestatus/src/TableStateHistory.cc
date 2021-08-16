@@ -545,7 +545,8 @@ void TableStateHistory::answerQuery(Query *query) {
                     // Log UNMONITORED state if this host or service just
                     // appeared within the query timeframe
                     // It gets a grace period of ten minutes (nagios startup)
-                    if (!only_update && entry->_time - _since > 60 * 10) {
+                    if (!only_update &&
+                        entry->_time - _since > time_t{60} * 10) {
                         state->_debug_info = "UNMONITORED ";
                         state->_state = -1;
                     }

@@ -399,7 +399,7 @@ void Query::parseFilterLine(char *line, FilterStack &filters) {
     _all_columns.insert(column);
 }
 
-void Query::parseAuthUserHeader(char *line) {
+void Query::parseAuthUserHeader(const char *line) {
     // TODO(sp): Remove ugly cast.
     _auth_user =
         reinterpret_cast<const contact *>(_table.core()->find_contact(line));
@@ -416,7 +416,7 @@ void Query::parseStatsGroupLine(char *line) {
     parseColumnsLine(line);
 }
 
-void Query::parseColumnsLine(char *line) {
+void Query::parseColumnsLine(const char *line) {
     std::string str = line;
     std::string sep = " \t\n\v\f\r";
     for (auto pos = str.find_first_not_of(sep); pos != std::string::npos;) {
@@ -465,7 +465,7 @@ const std::map<std::string, OutputFormat> formats{
     {"python3", OutputFormat::python3}};
 }  // namespace
 
-void Query::parseOutputFormatLine(char *line) {
+void Query::parseOutputFormatLine(const char *line) {
     auto format_and_rest = mk::nextField(line);
     auto it = formats.find(format_and_rest.first);
     if (it == formats.end()) {
@@ -534,7 +534,7 @@ void Query::parseWaitTriggerLine(char *line) {
     _wait_trigger = Triggers::find(nextStringArgument(&line));
 }
 
-void Query::parseWaitObjectLine(char *line) {
+void Query::parseWaitObjectLine(const char *line) {
     auto primary_key = mk::lstrip(line);
     _wait_object = _table.get(primary_key);
     if (_wait_object.isNull()) {

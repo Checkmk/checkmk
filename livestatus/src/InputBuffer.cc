@@ -20,7 +20,7 @@ using namespace std::chrono_literals;
 namespace {
 constexpr size_t initial_buffer_size = 4096;
 // TODO(sp): Make this configurable?
-constexpr size_t maximum_buffer_size = 500 * 1024 * 1024;
+constexpr size_t maximum_buffer_size = size_t{500} * 1024 * 1024;
 
 bool timeout_reached(const std::chrono::system_clock::time_point &start,
                      const std::chrono::milliseconds &timeout) {
@@ -59,10 +59,9 @@ InputBuffer::InputBuffer(int fd, const bool &termination_flag, Logger *logger,
     , _query_timeout(query_timeout)
     , _idle_timeout(idle_timeout)
     , _readahead_buffer(initial_buffer_size)
-    , _logger(logger) {
-    _read_index = 0;   // points to data not yet processed
-    _write_index = 0;  // points to end of data in buffer
-}
+    , _read_index(0)   // points to data not yet processed
+    , _write_index(0)  // points to end of data in buffer
+    , _logger(logger) {}
 
 // read in data enough for one complete request (and maybe more).
 InputBuffer::Result InputBuffer::readRequest() {

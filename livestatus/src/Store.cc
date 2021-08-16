@@ -142,7 +142,7 @@ Store::ExternalCommand::ExternalCommand(const std::string &str) {
 
 Store::ExternalCommand Store::ExternalCommand::withName(
     const std::string &name) const {
-    return ExternalCommand(_prefix, name, _arguments);
+    return {_prefix, name, _arguments};
 }
 
 std::string Store::ExternalCommand::str() const {

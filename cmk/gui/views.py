@@ -977,11 +977,16 @@ class GUIViewRenderer(ABCViewRenderer):
                 ("back", html.request.requested_url),
                 ("load_name", self.view.name),
             ]
+            single_context_vars: HTTPVariables = list(
+                visuals.get_singlecontext_html_vars(self.view.spec["context"],
+                                                    self.view.spec["single_infos"]).items())
 
             if self.view.spec["owner"] != config.user.id:
                 url_vars.append(("owner", self.view.spec["owner"]))
 
-            url = makeuri_contextless(global_request, url_vars, filename="edit_view.py")
+            url = makeuri_contextless(global_request,
+                                      url_vars + single_context_vars,
+                                      filename="edit_view.py")
 
             yield PageMenuEntry(
                 title=_("Customize view"),

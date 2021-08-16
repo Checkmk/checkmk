@@ -1109,9 +1109,12 @@ def page_edit_visual(
                     )
 
                 if html.request.var("save_and_view"):
+                    single_context_vars: HTTPVariables = list(
+                        get_singlecontext_html_vars(visual["context"],
+                                                    visual["single_infos"]).items())
                     back_url = makeuri_contextless(
                         global_request,
-                        [(visual_type.ident_attr, visual['name'])],
+                        [(visual_type.ident_attr, visual['name'])] + single_context_vars,
                         filename=visual_type.show_url,
                     )
 

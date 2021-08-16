@@ -285,3 +285,4 @@ legacy_checks: _List = []
 logwatch_rules: _List = []
 
 config_storage_format = "standard"  # new in 2.1. Possible also: "raw"
+microcore_config_format = "bin"  # new in 2.1. Possible also: "pb"

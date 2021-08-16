@@ -4115,3 +4115,7 @@ class CEEHostConfig(HostConfig):
 
 def get_storage_format() -> 'store.StorageFormat':
     return store.StorageFormat.from_str(config_storage_format)
+
+
+def get_microcore_config_format() -> str:
+    return cmk.base.config.microcore_config_format

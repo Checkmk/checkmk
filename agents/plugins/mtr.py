@@ -181,13 +181,15 @@ _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.:]+')
 def host_to_filename(host, delim=u'-'):
     # Get rid of gibberish chars, stolen from Django
     """Generates an slightly worse ASCII-only slug."""
-    hostname = host.decode("utf8")
+    if not isinstance(host, (str, bytes)):
+        raise TypeError("not expecting type '%s'" % type(host))
+    hostname = ensure_str(host)
     result = []
     for word in _punct_re.split(hostname.lower()):
         word = ensure_str(normalize('NFKD', word))
         if word:
             result.append(word)
-    return delim.join(result).decode("utf8")
+    return delim.join(result)
 
 
 def check_mtr_pid(pid):

@@ -38,7 +38,7 @@ else
 REDIRECT = \#
 endif
 
-.PHONY: clean format-shell help prepare-node-modules bandit.ini \
+.PHONY: clean format-shell help prepare-node-modules prepare-protobuf-files bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
 	test-docker test-format-python test-format-python-docker test-format-shell \
@@ -149,6 +149,9 @@ test-bandit: bandit.ini
 prepare-node-modules:
 	$(MAKE) -C .. node_modules/.bin/webpack
 
+prepare-protobuf-files:
+	$(MAKE) -C .. protobuf-files
+
 test-integration-docker-debug test-composition-docker-debug: prepare-node-modules
 	$(PIPENV) run scripts/run-dockerized.py debug
 
@@ -213,7 +216,7 @@ test-integration: prepare-node-modules
 test-integration-docker:
 	$(PIPENV) run scripts/run-dockerized.py "test-integration"
 
-test-mypy:
+test-mypy: prepare-protobuf-files
 	PYTHON_FILES=$$($(FIND_PYTHON_FILES) | \
 	`: filter out plugins, they are not real modules` \
 	grep -v $$(realpath '../checks') | \
@@ -236,7 +239,7 @@ test-packaging:
 test-pipenv-deps:
 	$(PIPENV) check
 
-test-pylint:
+test-pylint: prepare-protobuf-files
 	$(PYTEST) -T pylint pylint
 
 test-pylint-docker:
@@ -250,7 +253,7 @@ test-shellcheck:
 		$$(grep -l '^#!/.*sh' $$CMK_DIR/agents/* $$CMK_DIR/agents/plugins/* $$CMK_DIR/agents/special/* 2>/dev/null) \
 		"$$ENTERPRISE_DIR/agents/mk-remote-alert-handler"
 
-test-unit:
+test-unit: prepare-protobuf-files
 	$(PYTEST) \
 		-T unit \
 		--doctest-modules \

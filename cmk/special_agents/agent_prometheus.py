@@ -1941,13 +1941,7 @@ class ApiError(Exception):
 
 
 def _extract_connection_args(config):
-    connection_args = {"protocol": config.get("protocol"), "port": config.get("port", "")}
-    if config["connection"] == "ip_address":
-        connection_args.update({"address": config["host_address"]})
-    elif config["connection"] == "host_name":
-        connection_args.update({"address": config["host_name"]})
-    else:
-        connection_args.update({"url_custom": config["connection"][1]['url_address']})
+    connection_args = {"protocol": config.get("protocol")}
 
     if "auth_basic" in config:
         if config["auth_basic"][0] == "auth_login":
@@ -1957,6 +1951,18 @@ def _extract_connection_args(config):
             auth_info = config["auth_basic"][1]
             connection_args.update({"token": auth_info["token"][1]})
 
+    connect_type, connect_settings = config['connection']
+
+    if connect_type == "url_custom":
+        connection_args.update({"url_custom": connect_settings['url_address']})
+        return connection_args
+
+    address = config['host_address'] if connect_type == "ip_address" else config['host_name']
+
+    if "path-prefix" in connect_settings:
+        address = f"{connect_settings['path-prefix']}{address}"
+
+    connection_args.update({"address": address, "port": connect_settings["port"]})
     return connection_args
 
 

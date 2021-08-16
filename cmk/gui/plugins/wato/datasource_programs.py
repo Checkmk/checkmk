@@ -690,6 +690,18 @@ def _prometheus_authentication():
             ))
 
 
+def _prometheus_connection_elements():
+    return [
+        ("port", Integer(title=_("Port"), default_value=6443)),
+        ("path-prefix",
+         TextInput(title=_("Custom path prefix"),
+                   help=_("Specifies a URL path prefix, which is prepended to API calls "
+                          "to the Prometheus API. If this option is not relevant for "
+                          "your installation, please leave it unchecked."),
+                   allow_empty=False)),
+    ]
+
+
 def _valuespec_generic_metrics_prometheus():
     namespace_element = (
         "prepend_namespaces",
@@ -706,13 +718,15 @@ def _valuespec_generic_metrics_prometheus():
             ],
         ))
 
-    return Dictionary(
+    return Transform(Dictionary(
         elements=[
             ("connection",
              CascadingDropdown(
                  choices=[
-                     ("ip_address", _("IP Address")),
-                     ("host_name", _("Host name")),
+                     ("ip_address", _("IP Address"),
+                      Dictionary(elements=_prometheus_connection_elements(),)),
+                     ("host_name", _("Host name"),
+                      Dictionary(elements=_prometheus_connection_elements(),)),
                      ("url_custom", _("Custom URL"),
                       Dictionary(
                           elements=[("url_address",
@@ -730,10 +744,6 @@ def _valuespec_generic_metrics_prometheus():
                  ],
                  title=_("Prometheus connection option"),
              )),
-            ("port", Integer(
-                title=_('Prometheus web port'),
-                default_value=9090,
-            )),
             _prometheus_authentication(),
             ("protocol",
              DropdownChoice(title=_("Protocol"), choices=[
@@ -1006,7 +1016,16 @@ def _valuespec_generic_metrics_prometheus():
         ],
         title=_("Prometheus"),
         optional_keys=["auth_basic"],
-    )
+    ),
+                     forth=_transform_agent_prometheus)
+
+
+def _transform_agent_prometheus(params):
+    if "port" in params:
+        if params['connection'][0] in ('ip_address', 'host_name'):
+            params['connection'][1]['port'] = params['port']
+        params.pop('port', None)
+    return params
 
 
 def _verify_prometheus_empty(value, varprefix):

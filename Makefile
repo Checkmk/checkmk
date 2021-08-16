@@ -20,7 +20,7 @@ CXX_FLAGS          := -g -O3 -Wall -Wextra
 CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export DOXYGEN     := doxygen
-export IWYU_TOOL   := $(realpath scripts/iwyu_tool)
+export IWYU_TOOL   := python3 $(realpath scripts/iwyu_tool)
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 PIPENV             := scripts/run-pipenv
 

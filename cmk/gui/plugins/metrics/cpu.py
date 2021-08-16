@@ -473,8 +473,8 @@ graph_info["cpu_load"] = {
         ("load15", "line"),
     ],
     "scalars": [
-        "load1:warn",
-        "load1:crit",
+        "load15:warn",
+        "load15:crit",
     ],
     "optional_metrics": [
         "load5",

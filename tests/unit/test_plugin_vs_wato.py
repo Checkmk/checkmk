@@ -234,26 +234,24 @@ def load_wato() -> t.Iterator[WatoProtocol]:
             yield WatoCheck(element)
 
 
-@pytest.mark.non_resilient
 def test_plugin_vs_wato(fix_register: FixRegister) -> None:
+    error_reporter = ErrorReporter()
     for plugin, wato in merge(sorted(load_plugin(fix_register)), sorted(load_wato())):
         if plugin is None and wato is not None:
-            ErrorReporter.report_wato_unused(wato)
+            error_reporter.report_wato_unused(wato)
         elif wato is None and plugin is not None:
-            ErrorReporter.report_wato_missing(plugin)
+            error_reporter.report_wato_missing(plugin)
         else:
             assert plugin is not None and wato is not None, "something is wrong with merge()"
-            ErrorReporter.run_tests(plugin, wato)
+            error_reporter.run_tests(plugin, wato)
 
-    ErrorReporter.raise_last_default_loading_exception()
-    assert not ErrorReporter.failed()
-    ErrorReporter.test_for_vanished_known_problems()
+    error_reporter.raise_last_default_loading_exception()
+    assert not error_reporter.failed()
+    error_reporter.test_for_vanished_known_problems()
 
 
 class ErrorReporter:
-    _last_exception: t.Optional[DefaultLoadingFailed] = None
-    _failed = False
-    _known_wato_unused = {
+    KNOWN_WATO_UNUSED = {
         # type # name
         ('check', 'checkgroup_parameters:ceph_status'),
         ('check', 'checkgroup_parameters:disk_temperature'),
@@ -293,7 +291,7 @@ class ErrorReporter:
         ('inventory', 'inv_parameters:lnx_sysctl'),
         ('inventory', 'inv_retention_intervals'),
     }
-    _known_item_requirements = {
+    KNOWN_ITEM_REQUIREMENTS = {
         # type # plugin # wato
         ('check', 'azure_ad_sync', 'checkgroup_parameters:azure_ad'),
         ('check', 'azure_agent_info', 'checkgroup_parameters:azure_agent_info'),
@@ -315,7 +313,7 @@ class ErrorReporter:
          'checkgroup_parameters:systemd_services_summary'),
         ('check', 'ucd_mem', 'checkgroup_parameters:memory_simple'),
     }
-    _known_wato_missing = {
+    KNOWN_WATO_MISSING = {
         # type # instance # wato
         ('check', '3ware_units', 'raid'),
         ('check', 'brocade_tm', 'brocade_tm'),
@@ -373,7 +371,7 @@ class ErrorReporter:
         ('inventory', 'suseconnect', 'suseconnect'),
         ('inventory', 'winperf_if', 'winperf_if'),
     }
-    _known_error_loading_defaults = {
+    KNOWN_ERROR_LOADING_DEFAULTS = {
         # type # plugin # wato
         ('check', '3par_remotecopy', 'checkgroup_parameters:threepar_remotecopy'),
         ('check', 'ad_replication', 'checkgroup_parameters:ad_replication'),
@@ -574,82 +572,83 @@ class ErrorReporter:
         ('discovery', 'hitachi_hnas_volume_virtual', 'filesystem_groups'),
     }
 
-    @classmethod
-    def failed(cls) -> bool:
-        return cls._failed
+    def __init__(self):
+        self._last_exception: t.Optional[DefaultLoadingFailed] = None
+        self._failed = False
+        self._known_wato_unused = self.KNOWN_WATO_UNUSED.copy()
+        self._known_item_requirements = self.KNOWN_ITEM_REQUIREMENTS.copy()
+        self._known_wato_missing = self.KNOWN_WATO_MISSING.copy()
+        self._known_error_loading_defaults = self.KNOWN_ERROR_LOADING_DEFAULTS.copy()
 
-    @classmethod
-    def report_wato_unused(cls, wato: WatoProtocol) -> None:
+    def failed(self) -> bool:
+        return self._failed
+
+    def report_wato_unused(self, wato: WatoProtocol) -> None:
         element = (wato.type, wato.get_name())
-        if element in cls._known_wato_unused:
-            cls._known_wato_unused.remove(element)
+        if element in self._known_wato_unused:
+            self._known_wato_unused.remove(element)
             return
         print(f"{wato.get_description()} is not used by any plugin")
-        cls._failed |= True
+        self._failed |= True
 
-    @classmethod
-    def report_wato_missing(cls, plugin: PluginProtocol) -> None:
+    def report_wato_missing(self, plugin: PluginProtocol) -> None:
         element = (plugin.type, plugin.get_name(), plugin.get_merge_name())
-        if element in cls._known_wato_missing:
-            cls._known_wato_missing.remove(element)
+        if element in self._known_wato_missing:
+            self._known_wato_missing.remove(element)
             return
         print(f"{plugin.get_description()} wants to use "
               f"wato ruleset '{plugin.get_merge_name()}' but this can not be found")
-        cls._failed |= True
+        self._failed |= True
 
-    @classmethod
-    def run_tests(cls, plugin: PluginProtocol, wato: WatoProtocol) -> None:
+    def run_tests(self, plugin: PluginProtocol, wato: WatoProtocol) -> None:
         # try to load the plugin defaults into wato ruleset
         exception = wato.validate_parameter(plugin.get_default_parameters())
         if exception:
-            cls._report_error_loading_defaults(plugin, wato, exception)
+            self._report_error_loading_defaults(plugin, wato, exception)
 
         # see if both plugin and wato have the same idea about items
         if isinstance(plugin, PluginCheck) and isinstance(wato, WatoCheck):
             if wato.has_item() != plugin.has_item():
-                cls._report_check_item_requirements(plugin, wato)
+                self._report_check_item_requirements(plugin, wato)
 
-    @classmethod
     def _report_check_item_requirements(
-        cls,
+        self,
         plugin: PluginCheck,
         wato: WatoCheck,
     ) -> None:
         element = (plugin.type, plugin.get_name(), wato.get_name())
-        if element in cls._known_item_requirements:
-            cls._known_item_requirements.remove(element)
+        if element in self._known_item_requirements:
+            self._known_item_requirements.remove(element)
             return
         print(
             f"{plugin.get_description()} and {wato.get_description()} have different item requirements:"
         )
         print("    wato   handles item:", wato.has_item())
         print("    plugin handles items:", plugin.has_item())
-        cls._failed |= True
+        self._failed |= True
 
-    @classmethod
     def _report_error_loading_defaults(
-        cls,
+        self,
         plugin: PluginProtocol,
         wato: WatoProtocol,
         exception: Exception,
     ) -> None:
         element = (plugin.type, plugin.get_name(), wato.get_name())
-        if element in cls._known_error_loading_defaults:
-            cls._known_error_loading_defaults.remove(element)
+        if element in self._known_error_loading_defaults:
+            self._known_error_loading_defaults.remove(element)
             return
         print(
             f"Loading the default value of {plugin.get_description()} "
             f"into {wato.get_description()} failed:\n    {exception.__class__.__name__}: {exception}"
         )
-        cls._last_exception = DefaultLoadingFailed(
+        self._last_exception = DefaultLoadingFailed(
             f"Loading the default value of {plugin.type} {plugin.get_name()} "
             f"into wato rulespec {wato.get_name()} failed! "
             "The original exception is reported above.")
-        cls._last_exception.__cause__ = exception
-        cls._failed |= True
+        self._last_exception.__cause__ = exception
+        self._failed |= True
 
-    @classmethod
-    def test_for_vanished_known_problems(cls) -> None:
+    def test_for_vanished_known_problems(self) -> None:
         """
         Generally test_plugin_vs_wato makes sure that the plugin default values
         matches the structure of the wato ruleset.
@@ -663,19 +662,18 @@ class ErrorReporter:
         `_known_*` set.
         """
         # ci does not report the variables, so we print them...
-        print(cls._known_error_loading_defaults)
-        print(cls._known_item_requirements)
-        print(cls._known_wato_missing)
-        print(cls._known_wato_unused)
-        assert len(cls._known_error_loading_defaults) == 0
-        assert len(cls._known_item_requirements) == 0
-        assert len(cls._known_wato_missing) == 0
-        assert len(cls._known_wato_unused) == 0
+        print(self._known_error_loading_defaults)
+        print(self._known_item_requirements)
+        print(self._known_wato_missing)
+        print(self._known_wato_unused)
+        assert len(self._known_error_loading_defaults) == 0
+        assert len(self._known_item_requirements) == 0
+        assert len(self._known_wato_missing) == 0
+        assert len(self._known_wato_unused) == 0
 
-    @classmethod
-    def raise_last_default_loading_exception(cls) -> None:
-        if cls._last_exception is not None:
-            raise cls._last_exception  # pylint: disable-msg=E0702  # https://stackoverflow.com/a/2228811
+    def raise_last_default_loading_exception(self) -> None:
+        if self._last_exception is not None:
+            raise self._last_exception  # pylint: disable-msg=E0702  # https://stackoverflow.com/a/2228811
 
 
 ################################################################################

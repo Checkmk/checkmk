@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
-import collections
-from typing import List, NamedTuple, Optional, Type
+from typing import Any, List, NamedTuple, Optional, Type
+
+from livestatus import SiteId
 
 import cmk.utils.store as store
 from cmk.utils.type_defs import HostName
@@ -22,16 +23,17 @@ from cmk.gui.plugins.wato import ActionResult, get_hosts_from_checkboxes, mode_r
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 
-ParentScanTask = collections.namedtuple("ParentScanTask", [
-    "site_id",
-    "folder_path",
-    "host_name",
-])
-ParentScanResult = collections.namedtuple("ParentScanResult", [
-    "existing_gw_host_name",
-    "ip",
-    "dns_name",
-])
+
+class ParentScanTask(NamedTuple):
+    site_id: SiteId
+    folder_path: Any
+    host_name: str
+
+
+class ParentScanResult(NamedTuple):
+    existing_gw_host_name: HostName
+    ip: str
+    dns_name: HostName
 
 
 class ParentScanSettings(NamedTuple):

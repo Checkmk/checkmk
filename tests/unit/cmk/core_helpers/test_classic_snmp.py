@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
+from typing import NamedTuple, Optional
 
 import pytest
 
@@ -66,10 +66,9 @@ def test_snmp_proto_spec(monkeypatch, is_ipv6, expected):
     assert ClassicSNMPBackend(snmp_config, logger)._snmp_proto_spec() == expected
 
 
-SNMPSettings = collections.namedtuple("SNMPSettings", [
-    "snmp_config",
-    "context_name",
-])
+class SNMPSettings(NamedTuple):
+    snmp_config: SNMPHostConfig
+    context_name: Optional[str]
 
 
 @pytest.mark.parametrize("settings,expected", [

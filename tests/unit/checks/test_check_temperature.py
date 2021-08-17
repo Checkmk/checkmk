@@ -6,8 +6,8 @@
 
 # coding=utf-8
 # yapf: disable
-import collections
 import datetime as dt
+from typing import Any, Mapping, NamedTuple
 
 import freezegun
 import pytest
@@ -175,16 +175,12 @@ def unix_ts(datetime_obj, epoch=dt.datetime(1970, 1, 1)):
     return (datetime_obj - epoch).total_seconds()
 
 
-Entry = collections.namedtuple(
-    'Entry',
-    [
-        'reading',
-        'growth',
-        'seconds_elapsed',
-        'wato_dict',
-        'expected',
-    ]
-)
+class Entry(NamedTuple):
+    reading:float
+    growth:float
+    seconds_elapsed:float
+    wato_dict: Mapping[str,Any]
+    expected:Any
 
 _WATO_DICT = {
     'period': 5,

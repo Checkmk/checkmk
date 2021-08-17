@@ -4,10 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
 import re
 import subprocess
-from typing import List
+from typing import List, NamedTuple
 
 import pytest
 
@@ -71,11 +70,10 @@ def test_cfg_fixture(web, site):  # noqa: F811 # pylint: disable=redefined-outer
         web.activate_changes()
 
 
-CommandOutput = collections.namedtuple('CommandOutput', [
-    'returncode',
-    'stdout',
-    'stderr',
-])
+class CommandOutput(NamedTuple):
+    returncode: int
+    stdout: str
+    stderr: str
 
 
 def on_failure(p: CommandOutput) -> str:

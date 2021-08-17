@@ -53,6 +53,10 @@ class GraphIdentificationTemplate(GraphIdentification):
     def ident(cls) -> str:
         return "template"
 
+    @staticmethod
+    def template_tuning(graph_template: GraphTemplate, **context: str) -> Optional[GraphTemplate]:
+        return graph_template
+
     def create_graph_recipes(self, ident_info, destination=None) -> Sequence[GraphRecipe]:
         graph_identification_info = ident_info
 
@@ -74,8 +78,16 @@ class GraphIdentificationTemplate(GraphIdentification):
                 graph_identification_info,
                 translated_metrics,
         ):
+            graph_template_tuned = self.template_tuning(graph_template,
+                                                        site=site,
+                                                        host_name=host_name,
+                                                        service_description=service_description,
+                                                        destination=destination)
+            if graph_template_tuned is None:
+                continue
+
             graph_recipe = create_graph_recipe_from_template(
-                graph_template,
+                graph_template_tuned,
                 translated_metrics,
                 row,
             )
@@ -85,7 +97,7 @@ class GraphIdentificationTemplate(GraphIdentification):
             # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
             # done, we can remove the line below.
             spec_info["graph_index"] = index
-            spec_info["graph_id"] = graph_template["id"]
+            spec_info["graph_id"] = graph_template_tuned["id"]
             graph_recipe["specification"] = ("template", spec_info)
             graph_recipes.append(graph_recipe)
         return graph_recipes

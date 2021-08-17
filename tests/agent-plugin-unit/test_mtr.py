@@ -4,8 +4,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import sys
-
 import pytest
 from utils import import_module
 
@@ -31,6 +29,4 @@ def mtr_fixture():
     ],
 )
 def test_host_to_filename(mtr, host, expected_result):
-    if sys.version_info[0] >= 3:  # TODO: fix this
-        return
     assert mtr.host_to_filename(host) == expected_result

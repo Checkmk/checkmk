@@ -155,12 +155,12 @@ _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.:]+')
 def host_to_filename(host, delim=u'-'):
     # Get rid of gibberish chars, stolen from Django
     """Generates an slightly worse ASCII-only slug."""
-    hostname = host.decode("utf8")
+    hostname = ensure_str(host)
     result = []
     for word in _punct_re.split(hostname.lower()):
         if word:
-            result.append(ensure_str(word))
-    return delim.join(result).decode("utf8")
+            result.append(word)
+    return ensure_str(delim).join(result)
 
 
 def check_mtr_pid(pid):

@@ -22,7 +22,7 @@ from cmk.utils.aws_constants import AWSEC2InstTypes
 #   ---abc------------------------------------------------------------------
 
 
-class Entity(metaclass=abc.ABCMeta):
+class Entity(abc.ABC):
     def __init__(self, key):
         self.key = key
 
@@ -134,7 +134,7 @@ class Bytes(Str):
 #   .--abc------------------------------------------------------------------
 
 
-class InstanceBuilder(metaclass=abc.ABCMeta):
+class InstanceBuilder(abc.ABC):
     def __init__(self, idx, amount, skip_entities=None):
         self._idx = idx
         self._amount = amount
@@ -155,7 +155,7 @@ class InstanceBuilder(metaclass=abc.ABCMeta):
         return [cls(idx, amount, skip_entities)._create_instance() for idx in range(amount)]
 
 
-class DictInstanceBuilder(metaclass=abc.ABCMeta):
+class DictInstanceBuilder(abc.ABC):
     # This class was created in order to support the fake client for AWS Lambda.
     # The Lambda API responses contain dictionaries like:
     # {

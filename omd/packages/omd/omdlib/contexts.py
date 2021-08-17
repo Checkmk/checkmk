@@ -39,7 +39,7 @@ from omdlib.utils import is_dockerized
 from cmk.utils.exceptions import MKTerminate
 
 
-class AbstractSiteContext(metaclass=abc.ABCMeta):
+class AbstractSiteContext(abc.ABC):
     """Object wrapping site specific information"""
     def __init__(self, sitename: Optional[str]) -> None:
         super().__init__()

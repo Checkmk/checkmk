@@ -3149,7 +3149,7 @@ def _cleanup_global_files(version_info: VersionInfo) -> None:
         groupdel("omd")
 
 
-class PackageManager(metaclass=abc.ABCMeta):
+class PackageManager(abc.ABC):
     @classmethod
     def factory(cls, version_info: VersionInfo) -> Optional['PackageManager']:
         if os.path.exists("/etc/cma"):

@@ -313,7 +313,7 @@ class MissingCheckInfoError(KeyError):
     pass
 
 
-class BaseCheck(metaclass=abc.ABCMeta):
+class BaseCheck(abc.ABC):
     """Abstract base class for Check and ActiveCheck"""
     def __init__(self, name):
         self.name = name

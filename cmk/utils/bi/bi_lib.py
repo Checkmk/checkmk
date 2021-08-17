@@ -174,7 +174,7 @@ class BIServiceSearchMatch(NamedTuple):
     match_groups: tuple
 
 
-class ABCWithSchema(metaclass=abc.ABCMeta):
+class ABCWithSchema(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def schema(cls):
@@ -362,7 +362,7 @@ def replace_macros_in_string(pattern: str, macros: MacroMapping) -> str:
 #   +----------------------------------------------------------------------+
 
 
-class ABCBISearcher(metaclass=abc.ABCMeta):
+class ABCBISearcher(abc.ABC):
     def __init__(self):
         self.hosts = {}
         self._host_regex_match_cache = {}
@@ -400,14 +400,14 @@ class ABCBISearcher(metaclass=abc.ABCMeta):
         ...
 
 
-class ABCBIStatusFetcher(metaclass=abc.ABCMeta):
+class ABCBIStatusFetcher(abc.ABC):
     def __init__(self, sites_callback: SitesCallback):
         self._sites_callback = sites_callback
         self.states: BIStatusInfo = {}
         self.assumed_states: Dict = {}
 
 
-class ABCBICompiledNode(metaclass=abc.ABCMeta):
+class ABCBICompiledNode(abc.ABC):
     def __init__(self):
         super().__init__()
         self.required_hosts = []
@@ -463,7 +463,7 @@ class ABCBICompiledNode(metaclass=abc.ABCMeta):
 #   +----------------------------------------------------------------------+
 
 
-class ABCBIAction(metaclass=abc.ABCMeta):
+class ABCBIAction(abc.ABC):
     def __init__(self, action_config: Dict[str, Any]):
         super().__init__()
 
@@ -520,7 +520,7 @@ bi_action_registry = BIActionRegistry()
 #   +----------------------------------------------------------------------+
 
 
-class ABCBISearch(metaclass=abc.ABCMeta):
+class ABCBISearch(abc.ABC):
     def __init__(self, search_config: Dict[str, Any]):
         super().__init__()
 
@@ -563,7 +563,7 @@ bi_search_registry = BISearchRegistry()
 #   +----------------------------------------------------------------------+
 
 
-class ABCBIAggregationFunction(metaclass=abc.ABCMeta):
+class ABCBIAggregationFunction(abc.ABC):
     def __init__(self, aggr_function_config: Dict[str, Any]):
         super().__init__()
 

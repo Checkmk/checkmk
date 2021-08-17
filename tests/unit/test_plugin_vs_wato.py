@@ -47,7 +47,7 @@ class DefaultLoadingFailed(BaseException):
     pass
 
 
-class Base(t.Generic[T], metaclass=abc.ABCMeta):
+class Base(t.Generic[T], abc.ABC):
     type: str
 
     def __init__(self, element: T):
@@ -120,7 +120,7 @@ class PluginProtocol(BaseProtocol, t.Protocol):
         ...
 
 
-class Plugin(Base[TC], metaclass=abc.ABCMeta):
+class Plugin(Base[TC], abc.ABC):
     def get_description(self) -> str:
         return f"{self.type}-plugin '{self.get_name()}'"
 

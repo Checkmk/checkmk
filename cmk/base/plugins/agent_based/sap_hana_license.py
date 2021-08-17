@@ -4,15 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import namedtuple
-from typing import Any, Dict, Mapping, Union
+from typing import Any, Dict, Mapping, NamedTuple, Optional, Union
 
 from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, render, Result, Service
 from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import sap_hana
 
-SAP_HANA_MAYBE = namedtuple("SAP_HANA_MAYBE", ["bool", "value"])
+
+class SAP_HANA_MAYBE(NamedTuple):
+    bool: Optional[bool]
+    value: Any
 
 
 def parse_sap_hana_license(string_table: StringTable) -> sap_hana.ParsedSection:

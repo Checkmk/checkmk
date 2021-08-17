@@ -4,10 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import namedtuple
-from typing import Any, Dict, Mapping, Optional, Tuple
+from typing import Any, Dict, Mapping, NamedTuple, Optional, Sequence, Union
 
-from ..agent_based_api.v1 import equals, Metric, Result
+from ..agent_based_api.v1 import equals, IgnoreResults, Metric, Result
 from ..agent_based_api.v1 import State as state
 from ..agent_based_api.v1 import type_defs
 from ..agent_based_api.v1.clusterize import make_node_notice_results
@@ -83,13 +82,9 @@ def check_bluecat_operational_state(
         )
 
 
-OKNodeResults = namedtuple(
-    'OKNodeResults',
-    [
-        'name',
-        'results',
-    ],
-)
+class OKNodeResults(NamedTuple):
+    name: str
+    results: Sequence[Union[IgnoreResults, Metric, Result]]
 
 
 def cluster_check_bluecat_operational_state(
@@ -97,7 +92,7 @@ def cluster_check_bluecat_operational_state(
     section: ClusterSection,
 ) -> type_defs.CheckResult:
 
-    results: Dict[str, Tuple] = {}
+    results: Dict[str, Sequence[Union[IgnoreResults, Metric, Result]]] = {}
     ok_node_results = None
     overall_state = state.OK
 

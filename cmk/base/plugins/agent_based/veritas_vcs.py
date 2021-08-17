@@ -5,8 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from collections import namedtuple
-from typing import Any, Generator, Iterable, List, Mapping, MutableMapping, Optional
+from typing import Any, Generator, Iterable, List, Mapping, MutableMapping, NamedTuple, Optional
 
 from .agent_based_api.v1 import register, Result, Service
 from .agent_based_api.v1 import State as state
@@ -112,7 +111,13 @@ CHECK_DEFAULT_PARAMETERS = {
     },
 }
 
-Vcs = namedtuple("Vcs", ["attr", "value", "cluster"])
+
+class Vcs(NamedTuple):
+    attr: str
+    value: str
+    cluster: Optional[str]
+
+
 SubSection = MutableMapping[str, List[Vcs]]
 Section = MutableMapping[str, SubSection]
 ClusterSection = Mapping[str, Section]

@@ -41,6 +41,7 @@ from cmk.utils import store
 from cmk.utils.iterables import first
 from cmk.utils.memoize import MemoizeCache
 from cmk.utils.site import omd_site
+from cmk.utils.store import PickleSerializer
 from cmk.utils.store.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
@@ -55,6 +56,7 @@ from cmk.utils.store.host_storage import (
     HostsStorageFieldsGenerator,
     make_experimental_hosts_storage,
     StandardHostsStorage,
+    StorageFormat,
 )
 from cmk.utils.type_defs import ContactgroupName, HostName, TaggroupIDToTagID
 
@@ -130,6 +132,70 @@ class WithPermissions:
         raise NotImplementedError()
 
 
+class _ABCWATOInfoStorage:
+    def read(self, file_path: Path) -> Optional[Dict[str, Any]]:
+        raise NotImplementedError()
+
+    def write(self, file_path: Path, data: Dict[str, Any]) -> None:
+        raise NotImplementedError()
+
+
+class _StandardWATOInfoStorage(_ABCWATOInfoStorage):
+    def read(self, file_path: Path) -> Dict[str, Any]:
+        return store.load_object_from_file(file_path, default={})
+
+    def write(self, file_path: Path, data: Dict[str, Any]) -> None:
+        store.save_object_to_file(file_path, data)
+
+
+class _PickleWATOInfoStorage(_ABCWATOInfoStorage):
+    def read(self, file_path: Path) -> Optional[Dict[str, Any]]:
+        pickle_path = self._add_suffix(file_path)
+        if not pickle_path.exists() or not self._file_valid(pickle_path, file_path):
+            return None
+        return store.ObjectStore(pickle_path, serializer=PickleSerializer()).read_obj(default={})
+
+    def _file_valid(self, pickle_path: Path, file_path: Path) -> bool:
+        # The experimental file must not be older than the corresponding .wato
+        # The file is also invalid if no matching .wato file exists
+        if not file_path.exists():
+            return False
+
+        return file_path.stat().st_mtime <= pickle_path.stat().st_mtime
+
+    def write(self, file_path: Path, data: Dict[str, Any]) -> None:
+        pickle_store = store.ObjectStore(self._add_suffix(file_path), serializer=PickleSerializer())
+        with pickle_store.locked():
+            pickle_store.write_obj(data)
+
+    def _add_suffix(self, path: Path) -> Path:
+        return path.with_suffix(StorageFormat.PICKLE.extension())
+
+
+class _WATOInfoStorageManager:
+    """Handles read/write operations for the .wato file"""
+
+    def __init__(self):
+        self._write_storages = self._get_write_storages()
+        self._read_storages = list(reversed(self._write_storages))
+
+    def _get_write_storages(self) -> List[_ABCWATOInfoStorage]:
+        storages: List[_ABCWATOInfoStorage] = [_StandardWATOInfoStorage()]
+        if get_storage_format(config.config_storage_format) == StorageFormat.PICKLE:
+            storages.append(_PickleWATOInfoStorage())
+        return storages
+
+    def read(self, store_file: Path) -> Dict[str, Any]:
+        for storage in self._read_storages:
+            if (storage_data := storage.read(store_file)) is not None:
+                return storage_data
+        return {}
+
+    def write(self, store_file: Path, data: Dict[str, Any]) -> None:
+        for storage in self._write_storages:
+            storage.write(store_file, data)
+
+
 class WithUniqueIdentifier(abc.ABC):
     """Provides methods for giving Hosts and Folders unique identifiers."""
 
@@ -167,6 +233,12 @@ class WithUniqueIdentifier(abc.ABC):
             raise MKUserError(None, _("Folder %s not found.") % (identifier,))
         return folders[identifier]
 
+    @classmethod
+    def wato_info_storage_manager(cls):
+        if "wato_info_storage_manager" not in g:
+            g.wato_info_storage_manager = _WATOInfoStorageManager()
+        return g.wato_info_storage_manager
+
     def persist_instance(self) -> None:
         """Save the current state of the instance to a file."""
         if self._id is None:
@@ -177,7 +249,7 @@ class WithUniqueIdentifier(abc.ABC):
         data["attributes"] = update_metadata(data["attributes"])
         data["__id"] = self._id
         store.makedirs(os.path.dirname(self._store_file_name()))
-        store.save_object_to_file(self._store_file_name(), data)
+        self.wato_info_storage_manager().write(Path(self._store_file_name()), data)
 
     def load_instance(self) -> None:
         """Load the data of this instance and return it.
@@ -187,7 +259,8 @@ class WithUniqueIdentifier(abc.ABC):
         Returns:
             The loaded data.
         """
-        data = store.load_object_from_file(self._store_file_name(), default={})
+        data = self.wato_info_storage_manager().read(Path(self._store_file_name()))
+
         data = self._upgrade_keys(data)
         unique_id = data.get("__id")
         if self._id is None:

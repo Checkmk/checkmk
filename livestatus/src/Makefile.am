@@ -105,7 +105,7 @@ liblivestatus_a_SOURCES = \
         BoolColumn.cc \
         Column.cc \
         ColumnFilter.cc \
-        CommentColumn.cc \
+        CommentRenderer.cc \
         CountAggregator.cc \
         CrashReport.cc \
         CustomVarsDictColumn.cc \
@@ -113,7 +113,7 @@ liblivestatus_a_SOURCES = \
         CustomVarsNamesColumn.cc \
         CustomVarsValuesColumn.cc \
         DoubleFilter.cc \
-        DowntimeColumn.cc \
+        DowntimeRenderer.cc \
         DowntimeOrComment.cc \
         DynamicColumn.cc \
         DynamicEventConsoleReplicationColumn.cc \

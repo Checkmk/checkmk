@@ -41,11 +41,6 @@ struct ListColumn : Column {
     using value_type = std::vector<std::string>;
     class Constant;
     class Reference;
-    /// \sa The version with two template arguments is used in, at least,
-    ///    * CommentColumn::getValue()
-    ///    * DowntimeColumn::getValue()
-    ///    * ServiceGroupMembersColumn::getValue()
-    ///    * ServiceListColumn::getValue()
     template <class T, class U = std::string>
     class Callback;
     using Column::Column;

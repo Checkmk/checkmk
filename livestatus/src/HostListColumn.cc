@@ -38,8 +38,6 @@ void HostListRenderer::output(ListRenderer &l,
 }
 
 /// \sa Apart from the lambda, the code is the same in
-///    * CommentColumn::getValue()
-///    * DowntimeColumn::getValue()
 ///    * ServiceGroupMembersColumn::getValue()
 ///    * ServiceListColumn::getValue()
 std::vector<std::string> HostListColumn::getValue(

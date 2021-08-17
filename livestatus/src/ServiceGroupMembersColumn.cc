@@ -75,8 +75,6 @@ std::unique_ptr<Filter> ServiceGroupMembersColumn::createFilter(
 }
 
 /// \sa Apart from the lambda, the code is the same in
-///    * CommentColumn::getValue()
-///    * DowntimeColumn::getValue()
 ///    * ServiceGroupMembersColumn::getValue()
 ///    * ServiceListColumn::getValue()
 std::vector<std::string> ServiceGroupMembersColumn::getValue(

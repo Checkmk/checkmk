@@ -244,7 +244,7 @@ class Collectors:
         return self._checkmk_server_name_collector.get_infos()
 
 
-class ABCCollector(metaclass=abc.ABCMeta):
+class ABCCollector(abc.ABC):
     """Collects information which are used by several elements"""
     def __init__(self):
         self._has_collected = False
@@ -292,7 +292,7 @@ class DiagnosticsElementError(Exception):
     pass
 
 
-class ABCDiagnosticsElement(metaclass=abc.ABCMeta):
+class ABCDiagnosticsElement(abc.ABC):
     @property
     @abc.abstractmethod
     def ident(self) -> str:

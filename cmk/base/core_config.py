@@ -66,7 +66,7 @@ CheckCommandArguments = Iterable[Union[int, float, str, Tuple[str, str, str]]]
 HostsToUpdate = Optional[Set[HostName]]
 
 
-class MonitoringCore(metaclass=abc.ABCMeta):
+class MonitoringCore(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def name(cls) -> str:

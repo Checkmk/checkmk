@@ -20,7 +20,7 @@ class HostLabelValueDict(TypedDict):
 DiscoveredHostLabelsDict = Dict[str, HostLabelValueDict]
 
 
-class ABCDiscoveredLabels(MutableMapping, metaclass=abc.ABCMeta):
+class ABCDiscoveredLabels(MutableMapping, abc.ABC):
     def __init__(self, *args: 'ABCLabel') -> None:
         super().__init__()
         self._labels: Dict[str, Any] = {}

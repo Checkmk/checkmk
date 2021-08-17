@@ -87,7 +87,7 @@ class Automations:
         raise MKTimeout("Action timed out.")
 
 
-class Automation(metaclass=abc.ABCMeta):
+class Automation(abc.ABC):
     cmd: Optional[str] = None
     needs_checks = False
     needs_config = False

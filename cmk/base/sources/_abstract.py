@@ -41,7 +41,7 @@ __all__ = ["Source"]
 HostConfig = config.HostConfig
 
 
-class Source(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
+class Source(Generic[TRawData, THostSections], abc.ABC):
     """Hold the configuration to fetchers and checkers.
 
     At best, this should only hold static data, that is, every

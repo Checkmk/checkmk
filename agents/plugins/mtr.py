@@ -56,31 +56,6 @@ def ensure_str(s):
     return s
 
 
-def which(program):
-    def is_exe(fpath):
-        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
-    fpath, _fname = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-
-    return None
-
-
-# See if we have mtr
-mtr_prog = which('mtr')
-if mtr_prog is None:
-    if debug:
-        sys.stdout.write("Could not find mtr binary\n")
-    sys.exit(0)
-
-
 def read_config():
     default_options = {
         'type': 'icmp',
@@ -205,7 +180,7 @@ def check_mtr_pid(pid):
             return False  # any error
 
 
-def parse_report(host):
+def parse_report(host, status):
     reportfile = report_filepre + host_to_filename(host)
     if not os.path.exists(reportfile):
         if not host in status.keys():
@@ -290,7 +265,7 @@ def parse_report(host):
     os.unlink(reportfile)
 
 
-def output_report(host):
+def output_report(host, status):
     hostdict = status.get(host)
     if not hostdict:
         return
@@ -313,8 +288,8 @@ def output_report(host):
     sys.stdout.write("%s\n" % hoststring)
 
 
-def start_mtr(host):
-    options = [mtr_prog, '--report', '--report-wide']
+def start_mtr(host, mtr_binary, config, status):
+    options = [mtr_binary, '--report', '--report-wide']
     pingtype = config.get(host, "type")
     count = config.getint(host, "count")
     ipv4 = config.getboolean(host, "force_ipv4")
@@ -400,15 +375,42 @@ def start_mtr(host):
     os._exit(os.EX_OK)
 
 
-# Parse config
-sys.stdout.write("<<<mtr:sep(124)>>>\n")
-config = read_config()
-status = read_status()
-for host_name in config.sections():
-    # Parse outstanding report
-    parse_report(host_name)
-    # Output last known values
-    output_report(host_name)
-    # Start new if needed
-    start_mtr(host_name)
-save_status(status)
+def _is_exe(fpath):
+    return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+
+def _which(program):
+
+    fpath, _fname = os.path.split(program)
+    if fpath:
+        if _is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if _is_exe(exe_file):
+                return exe_file
+
+    return None
+
+
+if __name__ == "__main__":
+    # See if we have mtr
+    mtr_bin = _which('mtr')
+    if mtr_bin is None:
+        if debug:
+            sys.stdout.write("Could not find mtr binary\n")
+        sys.exit(0)
+
+    # Parse config
+    sys.stdout.write("<<<mtr:sep(124)>>>\n")
+    conf = read_config()
+    stat = read_status()
+    for host_name in conf.sections():
+        # Parse outstanding report
+        parse_report(host_name, stat)
+        # Output last known values
+        output_report(host_name, stat)
+        # Start new if needed
+        start_mtr(host_name, mtr_bin, conf, stat)
+    save_status(stat)

@@ -5,6 +5,8 @@
 
 #include "CommentColumn.h"
 
+#include "Renderer.h"
+
 void CommentRenderer::output(ListRenderer& l,
                              const CommentData& comment) const {
     switch (verbosity_) {

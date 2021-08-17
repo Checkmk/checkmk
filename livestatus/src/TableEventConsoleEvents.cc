@@ -5,6 +5,8 @@
 
 #include "TableEventConsoleEvents.h"
 
+#include <vector>
+
 #include "Column.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"

@@ -49,8 +49,7 @@ public:
         : deprecated::ListColumn{name, description, offsets}
         , renderer_{renderer} {}
 
-    // CommentColumn::output(), DowntimeColumn::output(),
-    // HostListColumn::output() ServiceListColumn::output() are identical.
+    // Remove once we inherit ListColumn::Callback<T, U>
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds /*timezone_offset*/) const override {
         ListRenderer l(r);

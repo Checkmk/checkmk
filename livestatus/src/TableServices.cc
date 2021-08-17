@@ -523,7 +523,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
         }));
     table->addColumn(std::make_unique<DowntimeColumn<service, DowntimeData>>(
         prefix + "downtimes", "A list of all downtime ids of the service",
-        offsets, DowntimeRenderer{DowntimeRenderer::verbosity::none},
+        offsets,
+        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::none),
         [mc](const service &svc) {
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Service *>(&svc));
@@ -531,7 +532,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<DowntimeColumn<service, DowntimeData>>(
         prefix + "downtimes_with_info",
         "A list of all downtimes of the service with id, author and comment",
-        offsets, DowntimeRenderer{DowntimeRenderer::verbosity::medium},
+        offsets,
+        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::medium),
         [mc](const service &svc) {
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Service *>(&svc));
@@ -539,14 +541,16 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<DowntimeColumn<service, DowntimeData>>(
         prefix + "downtimes_with_extra_info",
         "A list of all downtimes of the service with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        offsets, DowntimeRenderer{DowntimeRenderer::verbosity::full},
+        offsets,
+        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
         [mc](const service &svc) {
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Service *>(&svc));
         }));
     table->addColumn(std::make_unique<CommentColumn<service, CommentData>>(
         prefix + "comments", "A list of all comment ids of the service",
-        offsets, CommentRenderer{CommentRenderer::verbosity::none},
+        offsets,
+        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
         [mc](const service &svc) {
             return mc->comments(
                 reinterpret_cast<const MonitoringCore::Service *>(&svc));
@@ -554,7 +558,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<CommentColumn<service, CommentData>>(
         prefix + "comments_with_info",
         "A list of all comments of the service with id, author and comment",
-        offsets, CommentRenderer{CommentRenderer::verbosity::medium},
+        offsets,
+        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::medium),
         [mc](const service &svc) {
             return mc->comments(
                 reinterpret_cast<const MonitoringCore::Service *>(&svc));
@@ -562,7 +567,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<CommentColumn<service, CommentData>>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the service with id, author, comment, entry type and entry time",
-        offsets, CommentRenderer{CommentRenderer::verbosity::full},
+        offsets,
+        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::full),
         [mc](const service &svc) {
             return mc->comments(
                 reinterpret_cast<const MonitoringCore::Service *>(&svc));

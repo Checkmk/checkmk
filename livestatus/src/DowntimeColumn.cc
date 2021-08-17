@@ -5,6 +5,10 @@
 
 #include "DowntimeColumn.h"
 
+#include <chrono>
+
+#include "Renderer.h"
+
 void DowntimeRenderer::output(ListRenderer& l,
                               const DowntimeData& downtime) const {
     switch (verbosity_) {

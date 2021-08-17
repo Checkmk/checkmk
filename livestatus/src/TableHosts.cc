@@ -519,7 +519,7 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<DowntimeColumn<host, DowntimeData>>(
         prefix + "downtimes",
         "A list of the ids of all scheduled downtimes of this host", offsets,
-        DowntimeRenderer{DowntimeRenderer::verbosity::none},
+        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::none),
         [mc](const host &hst) {
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
@@ -527,7 +527,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<DowntimeColumn<host, DowntimeData>>(
         prefix + "downtimes_with_info",
         "A list of the scheduled downtimes of the host with id, author and comment",
-        offsets, DowntimeRenderer{DowntimeRenderer::verbosity::medium},
+        offsets,
+        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::medium),
         [mc](const host &hst) {
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
@@ -535,14 +536,16 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<DowntimeColumn<host, DowntimeData>>(
         prefix + "downtimes_with_extra_info",
         "A list of the scheduled downtimes of the host with id, author, comment, origin, entry_time, start_time, end_time, fixed, duration, recurring and is_pending",
-        offsets, DowntimeRenderer{DowntimeRenderer::verbosity::full},
+        offsets,
+        std::make_unique<DowntimeRenderer>(DowntimeRenderer::verbosity::full),
         [mc](const host &hst) {
             return mc->downtimes(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
         }));
     table->addColumn(std::make_unique<CommentColumn<host, CommentData>>(
         prefix + "comments", "A list of the ids of all comments of this host",
-        offsets, CommentRenderer{CommentRenderer::verbosity::none},
+        offsets,
+        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::none),
         [mc](const host &hst) {
             return mc->comments(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
@@ -550,7 +553,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<CommentColumn<host, CommentData>>(
         prefix + "comments_with_info",
         "A list of all comments of the host with id, author and comment",
-        offsets, CommentRenderer{CommentRenderer::verbosity::medium},
+        offsets,
+        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::medium),
         [mc](const host &hst) {
             return mc->comments(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));
@@ -558,7 +562,8 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<CommentColumn<host, CommentData>>(
         prefix + "comments_with_extra_info",
         "A list of all comments of the host with id, author, comment, entry type and entry time",
-        offsets, CommentRenderer{CommentRenderer::verbosity::full},
+        offsets,
+        std::make_unique<CommentRenderer>(CommentRenderer::verbosity::full),
         [mc](const host &hst) {
             return mc->comments(
                 reinterpret_cast<const MonitoringCore::Host *>(&hst));

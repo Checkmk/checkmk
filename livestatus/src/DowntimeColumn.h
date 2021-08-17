@@ -10,21 +10,19 @@
 
 // We use `std::transform` but IWYU does not want the header.
 #include <algorithm>  // IWYU pragma: keep
-#include <chrono>
+#include <memory>
 #include <string>
+#include <utility>
 
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
-#include "Renderer.h"
-#include "Row.h"
 #ifdef CMC
 #include "contact_fwd.h"
-#else
-#include "nagios.h"
 #endif
 class ColumnOffsets;
+class ListRenderer;
 
-class DowntimeRenderer {
+class DowntimeRenderer : public ListColumnRenderer<DowntimeData> {
 public:
     enum class verbosity { none, medium, full };
     DowntimeRenderer(verbosity v) : verbosity_{v} {}
@@ -35,28 +33,13 @@ private:
 };
 
 template <class T, class U>
-class DowntimeColumn : public ListColumn::Callback<T, U> {
-public:
+struct DowntimeColumn : ListColumn::Callback<T, U> {
     DowntimeColumn(const std::string &name, const std::string &description,
                    const ColumnOffsets &offsets,
-                   const DowntimeRenderer &renderer,
+                   std::unique_ptr<DowntimeRenderer> renderer,
                    const typename ListColumn::Callback<T, U>::function_type &f)
-        : ListColumn::Callback<T, U>{name, description, offsets, f}
-        , renderer_{renderer} {}
-
-    // CommentColumn::output(), DowntimeColumn::output(),
-    // HostListColumn::output(), ServiceGroupMembersColumn::output(),
-    // ServiceListColumn::output() are identical.
-    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
-                std::chrono::seconds /*timezone_offset*/) const override {
-        ListRenderer l(r);
-        for (const auto &downtime : this->getEntries(row)) {
-            renderer_.output(l, downtime);
-        }
-    }
-
-private:
-    DowntimeRenderer renderer_;
+        : ListColumn::Callback<T, U>{name, description, offsets,
+                                     std::move(renderer), f} {}
 };
 
 template <>

@@ -20,11 +20,11 @@
 
 #include "Column.h"
 #include "Filter.h"
+#include "Renderer.h"
 #include "Row.h"
 #include "contact_fwd.h"
 #include "opids.h"
 class Aggregator;
-class RowRenderer;
 
 namespace detail::column {
 // Specialize this function in the classes deriving ListColumn.
@@ -69,6 +69,19 @@ struct ListColumn : Column {
                                 std::chrono::seconds timezone_offset) const = 0;
 };
 
+template <class U>
+struct ListColumnRenderer {
+    virtual ~ListColumnRenderer() = default;
+    virtual void output(ListRenderer& l, const U& value) const = 0;
+};
+
+template <class U>
+struct SimpleListColumnRenderer : ListColumnRenderer<U> {
+    void output(ListRenderer& l, const U& value) const override {
+        l.output(detail::column::serialize<U>(value));
+    }
+};
+
 // TODO(sp): Is there a way to have a default value in the template parameters?
 // Currently it is hardwired to the empty vector.
 template <class T, class U>
@@ -81,8 +94,16 @@ protected:
 
 public:
     Callback(const std::string& name, const std::string& description,
+             const ColumnOffsets& offsets,
+             std::unique_ptr<ListColumnRenderer<U>> renderer, function_type f)
+        : ListColumn{name, description, offsets}
+        , renderer_{std::move(renderer)}
+        , f_{std::move(f)} {}
+    Callback(const std::string& name, const std::string& description,
              const ColumnOffsets& offsets, function_type f)
-        : ListColumn{name, description, offsets}, f_{std::move(f)} {}
+        : Callback{name, description, offsets,
+                   std::make_unique<SimpleListColumnRenderer<U>>(),
+                   std::move(f)} {}
     ~Callback() override = default;
 
     [[nodiscard]] value_type getValue(
@@ -94,6 +115,14 @@ public:
                        std::back_inserter(values),
                        detail::column::serialize<U>);
         return values;
+    }
+
+    void output(Row row, RowRenderer& r, const contact* auth_user,
+                std::chrono::seconds timezone_offset) const override {
+        ListRenderer l{r};
+        for (const auto& val : getEntries(row, auth_user, timezone_offset)) {
+            renderer_->output(l, val);
+        }
     }
 
     [[nodiscard]] std::vector<U> getEntries(
@@ -143,6 +172,7 @@ public:
 
 private:
     const std::vector<U> Default{};
+    std::unique_ptr<ListColumnRenderer<U>> renderer_;
     function_type f_;
 };
 

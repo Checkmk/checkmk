@@ -10,52 +10,36 @@
 
 // We use `std::transform` but IWYU does not want the header.
 #include <algorithm>  // IWYU pragma: keep
-#include <chrono>
+#include <memory>
 #include <string>
+#include <utility>
 
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
-#include "Renderer.h"
-#include "Row.h"
 #ifdef CMC
 #include "contact_fwd.h"
-#else
-#include "nagios.h"
 #endif
 class ColumnOffsets;
+class ListRenderer;
 
-class CommentRenderer {
+class CommentRenderer : public ListColumnRenderer<CommentData> {
 public:
     enum class verbosity { none, medium, full };
     CommentRenderer(verbosity v) : verbosity_{v} {}
-    void output(ListRenderer &l, const CommentData &comment) const;
+    void output(ListRenderer &l, const CommentData &comment) const override;
 
 private:
     verbosity verbosity_;
 };
 
 template <class T, class U>
-class CommentColumn : public ListColumn::Callback<T, U> {
-public:
+struct CommentColumn : ListColumn::Callback<T, U> {
     CommentColumn(const std::string &name, const std::string &description,
-                  const ColumnOffsets &offsets, const CommentRenderer &renderer,
+                  const ColumnOffsets &offsets,
+                  std::unique_ptr<CommentRenderer> renderer,
                   const typename ListColumn::Callback<T, U>::function_type &f)
-        : ListColumn::Callback<T, U>{name, description, offsets, f}
-        , renderer_{renderer} {}
-
-    // CommentColumn::output(), DowntimeColumn::output(),
-    // HostListColumn::output(), ServiceGroupMembersColumn::output(),
-    // ServiceListColumn::output() are identical.
-    void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
-                std::chrono::seconds /*timezone_offset*/) const override {
-        ListRenderer l(r);
-        for (const auto &downtime : this->getEntries(row)) {
-            renderer_.output(l, downtime);
-        }
-    }
-
-private:
-    CommentRenderer renderer_;
+        : ListColumn::Callback<T, U>{name, description, offsets,
+                                     std::move(renderer), f} {}
 };
 
 template <>

@@ -5,31 +5,27 @@
 
 #include "CommentColumn.h"
 
-#include "Renderer.h"
-
-void CommentRenderer::operator()(Row row, RowRenderer &r) const {
-    ListRenderer l(r);
-    for (const auto &comment : f_(row)) {
-        switch (verbosity_) {
-            case verbosity::none:
-                l.output(comment._id);
-                break;
-            case verbosity::medium: {
-                SublistRenderer s(l);
-                s.output(comment._id);
-                s.output(comment._author);
-                s.output(comment._comment);
-                break;
-            }
-            case verbosity::full: {
-                SublistRenderer s(l);
-                s.output(comment._id);
-                s.output(comment._author);
-                s.output(comment._comment);
-                s.output(comment._entry_type);
-                s.output(comment._entry_time);
-                break;
-            }
+void CommentRenderer::operator()(ListRenderer& l,
+                                 const CommentData& comment) const {
+    switch (verbosity_) {
+        case verbosity::none:
+            l.output(comment._id);
+            break;
+        case verbosity::medium: {
+            SublistRenderer s(l);
+            s.output(comment._id);
+            s.output(comment._author);
+            s.output(comment._comment);
+            break;
+        }
+        case verbosity::full: {
+            SublistRenderer s(l);
+            s.output(comment._id);
+            s.output(comment._author);
+            s.output(comment._comment);
+            s.output(comment._entry_type);
+            s.output(comment._entry_time);
+            break;
         }
     }
 }

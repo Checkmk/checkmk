@@ -11,12 +11,11 @@
 // We use `std::transform` but IWYU does not want the header.
 #include <algorithm>  // IWYU pragma: keep
 #include <chrono>
-#include <functional>
 #include <string>
-#include <vector>
 
 #include "ListLambdaColumn.h"
 #include "MonitoringCore.h"
+#include "Renderer.h"
 #include "Row.h"
 #ifdef CMC
 #include "contact_fwd.h"
@@ -24,19 +23,14 @@
 #include "nagios.h"
 #endif
 class ColumnOffsets;
-class RowRenderer;
 
 class DowntimeRenderer {
-    using function_type = std::function<std::vector<DowntimeData>(Row)>;
-
 public:
     enum class verbosity { none, medium, full };
-    DowntimeRenderer(const function_type &f, verbosity v)
-        : f_{f}, verbosity_{v} {}
-    void operator()(Row row, RowRenderer &r) const;
+    DowntimeRenderer(verbosity v) : verbosity_{v} {}
+    void operator()(ListRenderer &l, const DowntimeData &downtime) const;
 
 private:
-    function_type f_;
     verbosity verbosity_;
 };
 
@@ -44,18 +38,21 @@ template <class T, class U>
 class DowntimeColumn : public ListColumn::Callback<T, U> {
 public:
     DowntimeColumn(const std::string &name, const std::string &description,
-                   const ColumnOffsets &offsets, DowntimeRenderer::verbosity v,
+                   const ColumnOffsets &offsets,
+                   const DowntimeRenderer &renderer,
                    const typename ListColumn::Callback<T, U>::function_type &f)
         : ListColumn::Callback<T, U>{name, description, offsets, f}
-        , renderer_{[this](Row row) { return this->getEntries(row); }, v} {}
+        , renderer_{renderer} {}
 
     void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
                 std::chrono::seconds /*timezone_offset*/) const override {
-        renderer_(row, r);
+        ListRenderer l(r);
+        for (const auto &downtime : this->getEntries(row)) {
+            renderer_(l, downtime);
+        }
     }
 
 private:
-    friend class DowntimeRenderer;
     DowntimeRenderer renderer_;
 };
 

@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <iterator>
 
-#include "Renderer.h"
 #include "Row.h"
 #include "auth.h"
 

@@ -50,8 +50,8 @@ public:
         : deprecated::ListColumn{name, description, offsets}
         , renderer_{renderer} {}
 
-    // CommentColumn::output(), Downtime::output(), HostListColumn::output()
-    // are identical.
+    // CommentColumn::output(), DowntimeColumn::output(),
+    // HostListColumn::output() ServiceListColumn::output() are identical.
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds /*timezone_offset*/) const override {
         ListRenderer l(r);

@@ -9,7 +9,6 @@
 #include <iterator>
 
 #include "MonitoringCore.h"
-#include "Renderer.h"
 #include "Row.h"
 #include "auth.h"
 
@@ -28,51 +27,42 @@
 #include "TimeperiodsCache.h"
 #endif
 
-void ServiceListRenderer::operator()(Row row, RowRenderer &r,
-                                     const contact *auth_user) const {
-    ListRenderer l(r);
-    for (const auto &entry : f_(row, auth_user)) {
-        switch (verbosity_) {
-            case verbosity::none:
-                l.output(std::string(entry.description));
-                break;
-            case verbosity::low: {
-                SublistRenderer s(l);
-                s.output(entry.description);
-                s.output(static_cast<int>(entry.current_state));
-                s.output(static_cast<int>(entry.has_been_checked));
-                break;
-            }
-            case verbosity::medium: {
-                SublistRenderer s(l);
-                s.output(entry.description);
-                s.output(static_cast<int>(entry.current_state));
-                s.output(static_cast<int>(entry.has_been_checked));
-                s.output(entry.plugin_output);
-                break;
-            }
-            case verbosity::full: {
-                SublistRenderer s(l);
-                s.output(entry.description);
-                s.output(static_cast<int>(entry.current_state));
-                s.output(static_cast<int>(entry.has_been_checked));
-                s.output(entry.plugin_output);
-                s.output(static_cast<int>(entry.last_hard_state));
-                s.output(entry.current_attempt);
-                s.output(entry.max_check_attempts);
-                s.output(entry.scheduled_downtime_depth);
-                s.output(static_cast<int>(entry.acknowledged));
-                s.output(static_cast<int>(entry.service_period_active));
-                break;
-            }
+void ServiceListRenderer::operator()(
+    ListRenderer &l, const detail::service_list::Entry &entry) const {
+    switch (verbosity_) {
+        case verbosity::none:
+            l.output(std::string(entry.description));
+            break;
+        case verbosity::low: {
+            SublistRenderer s(l);
+            s.output(entry.description);
+            s.output(static_cast<int>(entry.current_state));
+            s.output(static_cast<int>(entry.has_been_checked));
+            break;
+        }
+        case verbosity::medium: {
+            SublistRenderer s(l);
+            s.output(entry.description);
+            s.output(static_cast<int>(entry.current_state));
+            s.output(static_cast<int>(entry.has_been_checked));
+            s.output(entry.plugin_output);
+            break;
+        }
+        case verbosity::full: {
+            SublistRenderer s(l);
+            s.output(entry.description);
+            s.output(static_cast<int>(entry.current_state));
+            s.output(static_cast<int>(entry.has_been_checked));
+            s.output(entry.plugin_output);
+            s.output(static_cast<int>(entry.last_hard_state));
+            s.output(entry.current_attempt);
+            s.output(entry.max_check_attempts);
+            s.output(entry.scheduled_downtime_depth);
+            s.output(static_cast<int>(entry.acknowledged));
+            s.output(static_cast<int>(entry.service_period_active));
+            break;
         }
     }
-}
-
-void ServiceListColumn::output(Row row, RowRenderer &r,
-                               const contact *auth_user,
-                               std::chrono::seconds /*timezone_offset*/) const {
-    renderer_(row, r, auth_user);
 }
 
 /// \sa Apart from the lambda, the code is the same in

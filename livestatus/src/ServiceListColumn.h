@@ -10,16 +10,15 @@
 
 #include <chrono>
 #include <cstdint>
-#include <functional>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include "ListColumn.h"
+#include "Renderer.h"
 #include "Row.h"
 class ColumnOffsets;
 class MonitoringCore;
-class RowRenderer;
 enum class ServiceState;
 
 #ifdef CMC
@@ -61,18 +60,13 @@ struct Entry {
 }  // namespace detail
 
 class ServiceListRenderer {
-    using function_type =
-        std::function<std::vector<detail::service_list::Entry>(
-            Row, const contact *)>;
-
 public:
     enum class verbosity { none, low, medium, full };
-    ServiceListRenderer(const function_type &f, verbosity v)
-        : f_{f}, verbosity_{v} {}
-    void operator()(Row row, RowRenderer &r, const contact *auth_user) const;
+    ServiceListRenderer(verbosity v) : verbosity_{v} {}
+    void operator()(ListRenderer &l,
+                    const detail::service_list::Entry &entry) const;
 
 private:
-    function_type f_;
     verbosity verbosity_;
 };
 
@@ -81,26 +75,29 @@ class ServiceListColumn : public deprecated::ListColumn {
 
 public:
     ServiceListColumn(const std::string &name, const std::string &description,
-                      const ColumnOffsets &offsets, MonitoringCore *mc,
-                      ServiceListRenderer::verbosity v)
+                      const ColumnOffsets &offsets,
+                      const ServiceListRenderer &renderer, MonitoringCore *mc)
         : deprecated::ListColumn(name, description, offsets)
-        , mc_(mc)
-        , renderer_{[this](Row row, const contact *auth_user) {
-                        return this->getEntries(row, auth_user);
-                    },
-                    v} {}
+        , renderer_{renderer}
+        , mc_(mc) {}
 
+    // CommentColumn::output(), DowntimeColumn::output(),
+    // HostListColumn::output(), ServiceListColumn::output() are identical.
     void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds /*timezone_offset*/) const override;
+                std::chrono::seconds /*timezone_offset*/) const override {
+        ListRenderer l(r);
+        for (const auto &entry : getEntries(row, auth_user)) {
+            renderer_(l, entry);
+        }
+    }
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,
         std::chrono::seconds timezone_offset) const override;
 
 private:
-    MonitoringCore *mc_;
-    friend ServiceListRenderer;
     ServiceListRenderer renderer_;
+    MonitoringCore *mc_;
     std::vector<Entry> getEntries(Row row, const contact *auth_user) const;
 };
 

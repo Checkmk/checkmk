@@ -8,7 +8,6 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <cstdint>
 #include <ctime>
 #include <string>
 #include <vector>
@@ -29,7 +28,7 @@ class HostServiceState {
 public:
     bool _is_host;
     time_t _time;
-    int32_t _lineno;
+    size_t _lineno;
     time_t _from;
     time_t _until;
 

@@ -21,10 +21,7 @@ static constexpr size_t timestamp_prefix_length = 13;
 // TODO(sp) Fix classifyLogMessage() below to always set all fields and remove
 // this set-me-to-zero-to-be-sure-block.
 LogEntry::LogEntry(size_t lineno, std::string line)
-    : _lineno(static_cast<int32_t>(lineno))
-    , _message(std::move(line))
-    , _state(0)
-    , _attempt(0) {
+    : _lineno(lineno), _message(std::move(line)), _state(0), _attempt(0) {
     // pointer to options (everything after ':')
     size_t pos = _message.find(':');
     if (pos != std::string::npos) {

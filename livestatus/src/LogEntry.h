@@ -83,9 +83,7 @@ public:
     };
     static constexpr uint32_t all_classes = 0xffffU;
 
-    // TODO(sp): Wrong type, caused by TableLog accessing it via
-    // OffsetIntColumn, should be size_t
-    int _lineno;  // line number in file
+    size_t _lineno;  // line number in file
     time_t _time;
     Class _class;
     LogEntryKind _kind;

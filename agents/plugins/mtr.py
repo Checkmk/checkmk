@@ -27,7 +27,6 @@ import re
 import subprocess
 import sys
 import time
-from unicodedata import normalize
 
 try:
     from typing import Dict, Any
@@ -158,9 +157,8 @@ def host_to_filename(host, delim=u'-'):
     hostname = host.decode("utf8")
     result = []
     for word in _punct_re.split(hostname.lower()):
-        word = ensure_str(normalize('NFKD', word))
         if word:
-            result.append(word)
+            result.append(ensure_str(word))
     return delim.join(result).decode("utf8")
 
 

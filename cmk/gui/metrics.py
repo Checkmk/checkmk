@@ -359,7 +359,7 @@ class Perfometers:
 MetricRendererStack = List[List[Tuple[Union[int, float], str]]]
 
 
-class MetricometerRenderer(metaclass=abc.ABCMeta):
+class MetricometerRenderer(abc.ABC):
     """Abstract base class for all metricometer renderers"""
     @classmethod
     def type_name(cls) -> str:

@@ -16,7 +16,7 @@ from cmk.core_helpers.cache import TRawDataSection
 THostSections = TypeVar("THostSections", bound="HostSections")
 
 
-class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
+class HostSections(Generic[TRawDataSection], abc.ABC):
     """Host informations from the sources."""
     def __init__(
         self,

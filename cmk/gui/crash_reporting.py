@@ -141,7 +141,7 @@ class GUICrashReport(cmk.utils.crash_reporting.ABCCrashReport):
         },)
 
 
-class ABCCrashReportPage(cmk.gui.pages.Page, metaclass=abc.ABCMeta):
+class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
     def __init__(self):
         super().__init__()
         self._crash_id = request.get_unicode_input_mandatory("crash_id")
@@ -437,7 +437,7 @@ class PageCrash(ABCCrashReportPage):
         return report_renderer_registry.get(crash_type, report_renderer_registry["generic"])()
 
 
-class ABCReportRenderer(metaclass=abc.ABCMeta):
+class ABCReportRenderer(abc.ABC):
     """Render crash type individual GUI elements"""
     @classmethod
     @abc.abstractmethod

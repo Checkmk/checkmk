@@ -33,7 +33,7 @@ AjaxPageResult = Dict[str, Any]
 #
 # TODO: Check out the WatoMode class and find out how to do this. Looks like handle_page() could
 # implement parts of the cmk.gui.wato.page_handler.page_handler() logic.
-class Page(metaclass=abc.ABCMeta):
+class Page(abc.ABC):
     # TODO: In theory a page class could be registered below multiple URLs. For this case it would
     # be better to move the ident out of the class, to the registry. At the moment the URL is stored
     # in self._ident by PageRegistry.register_page().
@@ -53,7 +53,7 @@ class Page(metaclass=abc.ABCMeta):
 
 
 # TODO: Clean up implicit _from_vars() procotocol
-class AjaxPage(Page, metaclass=abc.ABCMeta):
+class AjaxPage(Page, abc.ABC):
     """Generic page handler that wraps page() calls into AJAX respones"""
     def __init__(self):
         super().__init__()

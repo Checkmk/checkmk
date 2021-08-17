@@ -39,7 +39,7 @@ __all__ = ["Fetcher", "verify_ipaddress"]
 TFetcher = TypeVar("TFetcher", bound="Fetcher")
 
 
-class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
+class Fetcher(Generic[TRawData], abc.ABC):
     """Interface to the data fetchers."""
     def __init__(
         self,
@@ -130,14 +130,14 @@ class Fetcher(Generic[TRawData], metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
 
-class Parser(Generic[TRawData, THostSections], metaclass=abc.ABCMeta):
+class Parser(Generic[TRawData, THostSections], abc.ABC):
     """Parse raw data into host sections."""
     @abc.abstractmethod
     def parse(self, raw_data: TRawData, *, selection: SectionNameCollection) -> THostSections:
         raise NotImplementedError
 
 
-class Summarizer(Generic[THostSections], metaclass=abc.ABCMeta):
+class Summarizer(Generic[THostSections], abc.ABC):
     """Class to summarize parsed data into a ServiceCheckResult.
 
     Note:

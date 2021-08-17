@@ -1338,7 +1338,7 @@ class SystemBackupTargetsReadOnly(Targets):
 #   '----------------------------------------------------------------------'
 
 
-class ABCBackupTargetType(metaclass=abc.ABCMeta):
+class ABCBackupTargetType(abc.ABC):
     @property
     @abc.abstractmethod
     def ident(self):

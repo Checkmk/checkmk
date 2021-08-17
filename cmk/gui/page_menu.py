@@ -62,7 +62,7 @@ class Link:
     onclick: Optional[str] = None
 
 
-class ABCPageMenuItem(metaclass=abc.ABCMeta):
+class ABCPageMenuItem(abc.ABC):
     """Base class for all page menu items of the page menu
     There can be different item types, like regular links, search fields, ...
     """

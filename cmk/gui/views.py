@@ -605,7 +605,7 @@ class View:
         return missing_single_infos
 
 
-class ABCViewRenderer(metaclass=abc.ABCMeta):
+class ABCViewRenderer(abc.ABC):
     def __init__(self, view: View) -> None:
         super().__init__()
         self.view = view

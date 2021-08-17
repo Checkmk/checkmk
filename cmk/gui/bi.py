@@ -360,7 +360,7 @@ UNKNOWN = 3
 UNAVAIL = 4
 
 
-class ABCFoldableTreeRenderer(metaclass=abc.ABCMeta):
+class ABCFoldableTreeRenderer(abc.ABC):
     def __init__(self, row, omit_root, expansion_level, only_problems, lazy, wrap_texts=True):
         self._row = row
         self._omit_root = omit_root

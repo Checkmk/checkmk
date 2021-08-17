@@ -12,7 +12,7 @@ from six import ensure_str
 import cmk.utils.plugin_registry
 
 
-class PermissionSection(metaclass=abc.ABCMeta):
+class PermissionSection(abc.ABC):
     @property
     @abc.abstractmethod
     def name(self) -> str:
@@ -49,7 +49,7 @@ class PermissionSectionRegistry(cmk.utils.plugin_registry.Registry[Type[Permissi
 permission_section_registry = PermissionSectionRegistry()
 
 
-class Permission(metaclass=abc.ABCMeta):
+class Permission(abc.ABC):
     _sort_index = 0
 
     def __init__(self, section: Type[PermissionSection], name: str, title: str, description: str,

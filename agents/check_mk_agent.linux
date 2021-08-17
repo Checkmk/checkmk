@@ -1236,8 +1236,9 @@ section_ntp() {
                     return
                 fi
             fi
-            # this is for systems that don't use initd or systemd, we can't check the service status but can check if the service exists in sbin
-            if [ -x /usr/sbin/"${_ntp_daemon}" ]; then
+
+            # For other systems such as Slackware
+            if [ -x "/etc/rc.d/rc.ntpd" ]; then
                 get_ntpq
                 return
             fi

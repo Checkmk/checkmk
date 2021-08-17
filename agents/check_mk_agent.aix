@@ -492,88 +492,6 @@ is_valid_plugin() {
     [ -x "$1" ]
 }
 
-add_failed_python_plugin() {
-    if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
-        FAILED_PYTHON_PLUGINS=("$1")
-    else
-        FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$1")
-    fi
-}
-
-may_get_plugin_interpreter() {
-    # run_cached::sh -c "COMMAND-STRING"
-    # ksh/dash/...: it's not allowed to use function within COMMAND-STRING
-
-    if [ "${1:0:2}" == "./" ]; then
-        agent_plugin="${1:2}"
-    else
-        agent_plugin="$1"
-    fi
-
-    extension="${agent_plugin##*.}"
-    filename="${agent_plugin%.*}"
-
-    # Execute all non python plugins with ./foo
-    if [ "$extension" != "py" ]; then
-        return 0
-    fi
-
-    if [ "${filename#${filename%??}}" != "_2" ]; then
-        if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
-            add_failed_python_plugin "$agent_plugin"
-            return 1
-        fi
-
-        if [ -n "$PYTHON3" ]; then
-            echo "$PYTHON3"
-            return 0
-        fi
-
-        if [ ! -e "${filename}_2.py" ]; then
-            add_failed_python_plugin "$agent_plugin (Missing Python 3 installation)"
-            return 1
-        fi
-
-        # Python2 file but no Python interpreter found.
-        return 1
-    fi
-
-    if [ -x "${filename%??}.py" ] && [ -n "$PYTHON3" ]; then
-        return 1
-    fi
-
-    if [ -n "$PYTHON2" ]; then
-        echo "$PYTHON2"
-        return 0
-    fi
-
-    add_failed_python_plugin "$agent_plugin (missing Python 2 installation)"
-    return 1
-}
-
-run_plugins() {
-    cd "$PLUGINSDIR" || return
-
-    if ${MK_RUN_SYNC_PARTS}; then
-        for skript in ./*; do
-            if [ ! -d "$skript" ] && [ -x "$skript" ]; then
-                if plugin_interpreter=$(may_get_plugin_interpreter "$skript"); then
-                    _log_section_time "$plugin_interpreter ./$skript"
-                fi
-            fi
-        done
-    fi
-
-    # Call some plugins only every X'th second
-    for skript in [1-9]*/*; do
-        if [ -x "$skript" ]; then
-            if plugin_interpreter=$(may_get_plugin_interpreter "$skript"); then
-                run_cached plugins_${skript##*/} ${skript%/*} "$plugin_interpreter $skript"
-            fi
-        fi
-    done
-}
-
 run_cached() {
     NAME=$1
     # Be aware: Maxage was expected to be given in minutes but this was
@@ -670,6 +588,88 @@ run_spooler() {
 #
 # END COMMON AGENT CODE
 #
+
+add_failed_python_plugin() {
+    if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
+        FAILED_PYTHON_PLUGINS=("$1")
+    else
+        FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$1")
+    fi
+}
+
+may_get_plugin_interpreter() {
+    # run_cached::sh -c "COMMAND-STRING"
+    # ksh/dash/...: it's not allowed to use function within COMMAND-STRING
+
+    if [ "${1:0:2}" == "./" ]; then
+        agent_plugin="${1:2}"
+    else
+        agent_plugin="$1"
+    fi
+
+    extension="${agent_plugin##*.}"
+    filename="${agent_plugin%.*}"
+
+    # Execute all non python plugins with ./foo
+    if [ "$extension" != "py" ]; then
+        return 0
+    fi
+
+    if [ "${filename#${filename%??}}" != "_2" ]; then
+        if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
+            add_failed_python_plugin "$agent_plugin"
+            return 1
+        fi
+
+        if [ -n "$PYTHON3" ]; then
+            echo "$PYTHON3"
+            return 0
+        fi
+
+        if [ ! -e "${filename}_2.py" ]; then
+            add_failed_python_plugin "$agent_plugin (Missing Python 3 installation)"
+            return 1
+        fi
+
+        # Python2 file but no Python interpreter found.
+        return 1
+    fi
+
+    if [ -x "${filename%??}.py" ] && [ -n "$PYTHON3" ]; then
+        return 1
+    fi
+
+    if [ -n "$PYTHON2" ]; then
+        echo "$PYTHON2"
+        return 0
+    fi
+
+    add_failed_python_plugin "$agent_plugin (missing Python 2 installation)"
+    return 1
+}
+
+run_plugins() {
+    cd "$PLUGINSDIR" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        for skript in ./*; do
+            if [ ! -d "$skript" ] && [ -x "$skript" ]; then
+                if plugin_interpreter=$(may_get_plugin_interpreter "$skript"); then
+                    _log_section_time "$plugin_interpreter ./$skript"
+                fi
+            fi
+        done
+    fi
+
+    # Call some plugins only every X'th second
+    for skript in [1-9]*/*; do
+        if [ -x "$skript" ]; then
+            if plugin_interpreter=$(may_get_plugin_interpreter "$skript"); then
+                run_cached plugins_${skript##*/} ${skript%/*} "$plugin_interpreter $skript"
+            fi
+        fi
+    done
+}
 
 run_remote_plugins() {
     # caching currently not supported

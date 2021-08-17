@@ -1478,41 +1478,6 @@ run_spooler() {
 # END COMMON AGENT CODE
 #
 
-run_plugins() {
-    cd "$PLUGINSDIR" || return
-
-    if ${MK_RUN_SYNC_PARTS}; then
-        for skript in ./*; do
-            if is_valid_plugin "$skript"; then
-                run_agent_plugin "$skript"
-            fi
-        done
-    fi
-
-    # Call some plugins only every X'th second
-    for skript in [1-9]*/*; do
-        if is_valid_plugin "$skript"; then
-            run_cached "plugins_${skript##*/}" "${skript%/*}" run_agent_plugin "$skript"
-        fi
-    done
-}
-
-run_mrpe() {
-    local descr=$1
-    shift
-    local cmdline=$*
-
-    echo '<<<mrpe>>>'
-
-    PLUGIN=${cmdline%% *}
-    OUTPUT=$(eval _log_section_time "$cmdline")
-
-    echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-    echo
-}
-
-export -f run_mrpe
-
 add_failed_python_plugin() {
     if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
         FAILED_PYTHON_PLUGINS=("$1")
@@ -1561,6 +1526,41 @@ run_agent_plugin() {
 }
 
 export -f run_agent_plugin
+
+run_plugins() {
+    cd "$PLUGINSDIR" || return
+
+    if ${MK_RUN_SYNC_PARTS}; then
+        for skript in ./*; do
+            if is_valid_plugin "$skript"; then
+                run_agent_plugin "$skript"
+            fi
+        done
+    fi
+
+    # Call some plugins only every X'th second
+    for skript in [1-9]*/*; do
+        if is_valid_plugin "$skript"; then
+            run_cached "plugins_${skript##*/}" "${skript%/*}" run_agent_plugin "$skript"
+        fi
+    done
+}
+
+run_mrpe() {
+    local descr=$1
+    shift
+    local cmdline=$*
+
+    echo '<<<mrpe>>>'
+
+    PLUGIN=${cmdline%% *}
+    OUTPUT=$(eval _log_section_time "$cmdline")
+
+    echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
+    echo
+}
+
+export -f run_mrpe
 
 # Implements Real-Time Check feature of the Checkmk agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and

@@ -38837,7 +38837,9 @@ msgid ""
 "sg: Servicegroup\n"
 "ad: Address\n"
 "al: Alias\n"
-"tg: Hosttag"
+"tg: Hosttag\n"
+"hl: Hostlabel\n"
+"sl: Servicelabel"
 msgstr ""
 
 #, fuzzy

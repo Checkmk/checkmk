@@ -104,9 +104,9 @@ public:
     [[nodiscard]] value_type getValue(
         Row row, const contact* auth_user,
         std::chrono::seconds timezone_offset) const override {
-        auto entries = getEntries(row, auth_user, timezone_offset);
+        auto raw_value = getRawValue(row, auth_user, timezone_offset);
         std::vector<std::string> values;
-        std::transform(entries.begin(), entries.end(),
+        std::transform(raw_value.begin(), raw_value.end(),
                        std::back_inserter(values),
                        detail::column::serialize<U>);
         return values;
@@ -115,12 +115,13 @@ public:
     void output(Row row, RowRenderer& r, const contact* auth_user,
                 std::chrono::seconds timezone_offset) const override {
         ListRenderer l{r};
-        for (const auto& val : getEntries(row, auth_user, timezone_offset)) {
+        for (const auto& val : getRawValue(row, auth_user, timezone_offset)) {
             renderer_->output(l, val);
         }
     }
 
-    [[nodiscard]] std::vector<U> getEntries(
+private:
+    [[nodiscard]] std::vector<U> getRawValue(
         Row row, const contact* auth_user,
         std::chrono::seconds /*timezone_offset*/) const {
         const T* data = columnData<T>(row);
@@ -136,8 +137,8 @@ public:
         throw std::runtime_error("unreachable");
     }
 
-    [[nodiscard]] std::vector<U> getEntries(Row row,
-                                            const contact* auth_user) const {
+    [[nodiscard]] std::vector<U> getRawValue(Row row,
+                                             const contact* auth_user) const {
         const T* data = columnData<T>(row);
         if (data == nullptr) {
             return Default;
@@ -151,7 +152,7 @@ public:
         throw std::runtime_error("unreachable");
     }
 
-    [[nodiscard]] std::vector<U> getEntries(Row row) const {
+    [[nodiscard]] std::vector<U> getRawValue(Row row) const {
         const T* data = columnData<T>(row);
         if (data == nullptr) {
             return Default;
@@ -165,7 +166,6 @@ public:
         throw std::runtime_error("unreachable");
     }
 
-private:
     const std::vector<U> Default{};
     std::unique_ptr<ListColumnRenderer<U>> renderer_;
     function_type f_;

@@ -44,7 +44,8 @@ public:
         , renderer_{renderer} {}
 
     // CommentColumn::output(), DowntimeColumn::output(),
-    // HostListColumn::output(), ServiceListColumn::output() are identical.
+    // HostListColumn::output(), ServiceGroupMembersColumn::output(),
+    // ServiceListColumn::output() are identical.
     void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
                 std::chrono::seconds /*timezone_offset*/) const override {
         ListRenderer l(r);

@@ -11,7 +11,6 @@
 #include "ListFilter.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
-#include "Renderer.h"
 #include "Row.h"
 #include "auth.h"
 
@@ -25,33 +24,24 @@
 #include "State.h"
 #endif
 
-void ServiceGroupMembersRenderer::operator()(Row row, RowRenderer &r,
-                                             const contact *auth_user) const {
-    ListRenderer l(r);
-    for (const auto &entry : f_(row, auth_user)) {
-        switch (verbosity_) {
-            case verbosity::none: {
-                SublistRenderer s(l);
-                s.output(entry.host_name);
-                s.output(entry.description);
-                break;
-            }
-            case verbosity::full: {
-                SublistRenderer s(l);
-                s.output(entry.host_name);
-                s.output(entry.description);
-                s.output(static_cast<int>(entry.current_state));
-                s.output(static_cast<bool>(entry.has_been_checked));
-                break;
-            }
+void ServiceGroupMembersRenderer::operator()(
+    ListRenderer &l, const detail::service_group_members::Entry &entry) const {
+    switch (verbosity_) {
+        case verbosity::none: {
+            SublistRenderer s(l);
+            s.output(entry.host_name);
+            s.output(entry.description);
+            break;
+        }
+        case verbosity::full: {
+            SublistRenderer s(l);
+            s.output(entry.host_name);
+            s.output(entry.description);
+            s.output(static_cast<int>(entry.current_state));
+            s.output(static_cast<bool>(entry.has_been_checked));
+            break;
         }
     }
-}
-
-void ServiceGroupMembersColumn::output(
-    Row row, RowRenderer &r, const contact *auth_user,
-    std::chrono::seconds /*timezone_offset*/) const {
-    renderer_(row, r, auth_user);
 }
 
 namespace {

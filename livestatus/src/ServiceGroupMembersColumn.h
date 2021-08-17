@@ -9,7 +9,6 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
-#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
@@ -17,11 +16,11 @@
 
 #include "Filter.h"
 #include "ListColumn.h"
+#include "Renderer.h"
 #include "Row.h"
 #include "opids.h"
 class ColumnOffsets;
 class MonitoringCore;
-class RowRenderer;
 enum class ServiceState;
 
 #ifdef CMC
@@ -48,18 +47,13 @@ struct Entry {
 }  // namespace detail
 
 class ServiceGroupMembersRenderer {
-    using function_type =
-        std::function<std::vector<detail::service_group_members::Entry>(
-            Row, const contact *)>;
-
 public:
     enum class verbosity { none, full };
-    ServiceGroupMembersRenderer(const function_type &f, verbosity v)
-        : f_{f}, verbosity_{v} {}
-    void operator()(Row row, RowRenderer &r, const contact *auth_user) const;
+    ServiceGroupMembersRenderer(verbosity v) : verbosity_{v} {}
+    void operator()(ListRenderer &l,
+                    const detail::service_group_members::Entry &entry) const;
 
 private:
-    function_type f_;
     verbosity verbosity_;
 };
 
@@ -69,17 +63,23 @@ class ServiceGroupMembersColumn : public deprecated::ListColumn {
 public:
     ServiceGroupMembersColumn(const std::string &name,
                               const std::string &description,
-                              const ColumnOffsets &offsets, MonitoringCore *mc,
-                              ServiceGroupMembersRenderer::verbosity v)
+                              const ColumnOffsets &offsets,
+                              const ServiceGroupMembersRenderer &renderer,
+                              MonitoringCore *mc)
         : deprecated::ListColumn(name, description, offsets)
-        , mc_{mc}
-        , renderer_{[this](Row row, const contact *auth_user) {
-                        return this->getEntries(row, auth_user);
-                    },
-                    v} {}
+        , renderer_{renderer}
+        , mc_{mc} {}
 
+    // CommentColumn::output(), DowntimeColumn::output(),
+    // HostListColumn::output(), ServiceGroupMembersColumn::output(),
+    // ServiceListColumn::output() are identical.
     void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds timezone_offset) const override;
+                std::chrono::seconds /*timezone_offset*/) const override {
+        ListRenderer l(r);
+        for (const auto &entry : this->getEntries(row, auth_user)) {
+            renderer_(l, entry);
+        }
+    }
 
     [[nodiscard]] std::unique_ptr<Filter> createFilter(
         Filter::Kind kind, RelationalOperator relOp,
@@ -92,9 +92,8 @@ public:
     static std::string separator() { return ""; }
 
 private:
-    MonitoringCore *mc_;
-    friend class ServiceGroupMembersRenderer;
     ServiceGroupMembersRenderer renderer_;
+    MonitoringCore *mc_;
 
     std::vector<Entry> getEntries(Row row, const contact *auth_user) const;
 };

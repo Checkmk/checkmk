@@ -1,5 +1,3 @@
-include $(REPO_PATH)/defines.make
-
 PYTHON3_MODULES := python3-modules
 # Use some pseudo version here. Don't use OMD_VERSION (would break the package cache)
 PYTHON3_MODULES_VERS := 1.1
@@ -20,7 +18,7 @@ PYTHON3_MODULES_WORK_DIR := $(PACKAGE_WORK_DIR)/$(PYTHON3_MODULES_DIR)
 
 # Used by other OMD packages
 PACKAGE_PYTHON3_MODULES_DESTDIR    := $(PYTHON3_MODULES_INSTALL_DIR)
-PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib/python3.$(PYTHON_VERSION_MINOR)/site-packages
+PACKAGE_PYTHON3_MODULES_PYTHONPATH := $(PACKAGE_PYTHON3_MODULES_DESTDIR)/lib/python3.8/site-packages
 
 $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_INSTALL) $(FREETDS_INTERMEDIATE_INSTALL) $(POSTGRESQL_INTERMEDIATE_INSTALL) $(PYTHON3_MODULES_PATCHING)
 	$(RM) -r $(PYTHON3_MODULES_BUILD_DIR)
@@ -51,7 +49,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_IN
 		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
 		-r requirements-dist.txt
 # For some highly obscure unknown reason some files end up world-writable. Fix that!
-	chmod -R o-w $(PYTHON3_MODULES_INSTALL_DIR)/lib/python3.$(PYTHON_VERSION_MINOR)/site-packages
+	chmod -R o-w $(PYTHON3_MODULES_INSTALL_DIR)/lib/python3.8/site-packages
 # Cleanup some unwanted files (example scripts)
 	find $(PYTHON3_MODULES_INSTALL_DIR)/bin -name \*.py ! -name snmpsimd.py -exec rm {} \;
 # These files break the integration tests on the CI server. Don't know exactly

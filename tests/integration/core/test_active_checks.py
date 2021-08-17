@@ -4,14 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
 import logging
+from typing import NamedTuple
 
 import pytest
 
 from tests.testlib.fixtures import web  # noqa: F401 # pylint: disable=unused-import
 
-DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
+
+class DefaultConfig(NamedTuple):
+    core: str
+
 
 logger = logging.getLogger(__name__)
 

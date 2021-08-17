@@ -4,17 +4,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
 import json as _json
 import time as _time
 import uuid as _uuid
-from typing import Dict, List
+from typing import Dict, List, NamedTuple
 
 import pytest
 
 from tests.testlib import create_linux_test_host, web  # noqa: F401 # pylint: disable=unused-import
 
-DefaultConfig = collections.namedtuple("DefaultConfig", ["core"])
+
+class DefaultConfig(NamedTuple):
+    core: str
 
 
 @pytest.fixture(name="default_cfg", scope="module", params=["nagios", "cmc"])

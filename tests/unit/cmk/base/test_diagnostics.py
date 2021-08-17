@@ -4,10 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import collections
 import json
 import shutil
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 import requests
@@ -564,7 +564,11 @@ def test_diagnostics_element_performance_graphs_error(monkeypatch, tmp_path, _fa
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
-    FakeResponse = collections.namedtuple("FakeResponse", ["status_code", "text", "content"])
+    class FakeResponse(NamedTuple):
+        status_code: int
+        text: str
+        content: str
+
     monkeypatch.setattr(requests, "post",
                         lambda *arg, **kwargs: FakeResponse(status_code, text, content))
 
@@ -601,7 +605,11 @@ def test_diagnostics_element_performance_graphs_content(monkeypatch, tmp_path,
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
 
-    FakeResponse = collections.namedtuple("FakeResponse", ["status_code", "text", "content"])
+    class FakeResponse(NamedTuple):
+        status_code: int
+        text: str
+        content: str
+
     monkeypatch.setattr(requests, "post",
                         lambda *arg, **kwargs: FakeResponse(status_code, text, content))
 

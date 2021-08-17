@@ -28,7 +28,7 @@ class CommentRenderer {
 public:
     enum class verbosity { none, medium, full };
     CommentRenderer(verbosity v) : verbosity_{v} {}
-    void operator()(ListRenderer &l, const CommentData &comment) const;
+    void output(ListRenderer &l, const CommentData &comment) const;
 
 private:
     verbosity verbosity_;
@@ -50,7 +50,7 @@ public:
                 std::chrono::seconds /*timezone_offset*/) const override {
         ListRenderer l(r);
         for (const auto &downtime : this->getEntries(row)) {
-            renderer_(l, downtime);
+            renderer_.output(l, downtime);
         }
     }
 

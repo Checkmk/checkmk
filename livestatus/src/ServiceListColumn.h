@@ -63,8 +63,8 @@ class ServiceListRenderer {
 public:
     enum class verbosity { none, low, medium, full };
     ServiceListRenderer(verbosity v) : verbosity_{v} {}
-    void operator()(ListRenderer &l,
-                    const detail::service_list::Entry &entry) const;
+    void output(ListRenderer &l,
+                const detail::service_list::Entry &entry) const;
 
 private:
     verbosity verbosity_;
@@ -87,7 +87,7 @@ public:
                 std::chrono::seconds /*timezone_offset*/) const override {
         ListRenderer l(r);
         for (const auto &entry : getEntries(row, auth_user)) {
-            renderer_(l, entry);
+            renderer_.output(l, entry);
         }
     }
 

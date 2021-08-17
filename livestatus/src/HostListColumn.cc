@@ -21,8 +21,8 @@
 #include "nagios.h"
 #endif
 
-void HostListRenderer::operator()(ListRenderer &l,
-                                  const column::hostlist::Entry &entry) const {
+void HostListRenderer::output(ListRenderer &l,
+                              const column::hostlist::Entry &entry) const {
     switch (verbosity_) {
         case verbosity::none:
             l.output(entry.host_name);

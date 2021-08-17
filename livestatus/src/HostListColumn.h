@@ -35,8 +35,7 @@ class HostListRenderer {
 public:
     enum class verbosity { none, full };
     HostListRenderer(verbosity v) : verbosity_{v} {}
-    void operator()(ListRenderer &l,
-                    const column::hostlist::Entry &entry) const;
+    void output(ListRenderer &l, const column::hostlist::Entry &entry) const;
 
 private:
     verbosity verbosity_;
@@ -56,7 +55,7 @@ public:
                 std::chrono::seconds /*timezone_offset*/) const override {
         ListRenderer l(r);
         for (const auto &entry : this->getEntries(row, auth_user)) {
-            renderer_(l, entry);
+            renderer_.output(l, entry);
         }
     }
 

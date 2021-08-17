@@ -24,7 +24,7 @@
 #include "State.h"
 #endif
 
-void ServiceGroupMembersRenderer::operator()(
+void ServiceGroupMembersRenderer::output(
     ListRenderer &l, const detail::service_group_members::Entry &entry) const {
     switch (verbosity_) {
         case verbosity::none: {

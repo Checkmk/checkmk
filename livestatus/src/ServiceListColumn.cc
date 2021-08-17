@@ -27,7 +27,7 @@
 #include "TimeperiodsCache.h"
 #endif
 
-void ServiceListRenderer::operator()(
+void ServiceListRenderer::output(
     ListRenderer &l, const detail::service_list::Entry &entry) const {
     switch (verbosity_) {
         case verbosity::none:

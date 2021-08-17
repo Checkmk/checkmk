@@ -5,8 +5,8 @@
 
 #include "DowntimeColumn.h"
 
-void DowntimeRenderer::operator()(ListRenderer& l,
-                                  const DowntimeData& downtime) const {
+void DowntimeRenderer::output(ListRenderer& l,
+                              const DowntimeData& downtime) const {
     switch (verbosity_) {
         case verbosity::none:
             l.output(downtime._id);

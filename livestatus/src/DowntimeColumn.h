@@ -28,7 +28,7 @@ class DowntimeRenderer {
 public:
     enum class verbosity { none, medium, full };
     DowntimeRenderer(verbosity v) : verbosity_{v} {}
-    void operator()(ListRenderer &l, const DowntimeData &downtime) const;
+    void output(ListRenderer &l, const DowntimeData &downtime) const;
 
 private:
     verbosity verbosity_;
@@ -51,7 +51,7 @@ public:
                 std::chrono::seconds /*timezone_offset*/) const override {
         ListRenderer l(r);
         for (const auto &downtime : this->getEntries(row)) {
-            renderer_(l, downtime);
+            renderer_.output(l, downtime);
         }
     }
 

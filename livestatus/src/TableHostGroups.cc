@@ -57,11 +57,11 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "members",
         "A list of all host names that are members of the hostgroup",
-        offsets_members, false));
+        offsets_members, HostListRenderer{HostListRenderer::verbosity::none}));
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "members_with_state",
         "A list of all host names that are members of the hostgroup together with state and has_been_checked",
-        offsets_members, true));
+        offsets_members, HostListRenderer{HostListRenderer::verbosity::full}));
 
     auto *mc = table->core();
     auto get_service_auth = [mc]() { return mc->serviceAuthorization(); };

@@ -43,6 +43,8 @@ public:
         : ListColumn::Callback<T, U>{name, description, offsets, f}
         , renderer_{renderer} {}
 
+    // CommentColumn::output(), DowntimeColumn::output(),
+    // HostListColumn::output() are identical.
     void output(Row row, RowRenderer &r, const contact * /*auth_user*/,
                 std::chrono::seconds /*timezone_offset*/) const override {
         ListRenderer l(r);

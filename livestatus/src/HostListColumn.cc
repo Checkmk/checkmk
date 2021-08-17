@@ -22,17 +22,18 @@
 #include "nagios.h"
 #endif
 
-void HostListColumn::output(Row row, RowRenderer &r, const contact *auth_user,
-                            std::chrono::seconds /*timezone_offset*/) const {
-    ListRenderer l(r);
-    for (const auto &entry : getEntries(row, auth_user)) {
-        if (_show_state) {
+void HostListRenderer::operator()(ListRenderer &l,
+                                  const column::hostlist::Entry &entry) const {
+    switch (verbosity_) {
+        case verbosity::none:
+            l.output(entry.host_name);
+            break;
+        case verbosity::full: {
             SublistRenderer s(l);
             s.output(entry.host_name);
             s.output(static_cast<int>(entry.current_state));
             s.output(static_cast<int>(entry.has_been_checked));
-        } else {
-            l.output(entry.host_name);
+            break;
         }
     }
 }
@@ -52,9 +53,9 @@ std::vector<std::string> HostListColumn::getValue(
     return values;
 };
 
-std::vector<HostListColumn::Entry> HostListColumn::getEntries(
+std::vector<column::hostlist::Entry> HostListColumn::getEntries(
     Row row, const contact *auth_user) const {
-    std::vector<Entry> entries;
+    std::vector<column::hostlist::Entry> entries;
 #ifdef CMC
     if (const auto *p = columnData<std::unordered_set<Host *>>(row)) {
         for (const auto &hst : *p) {

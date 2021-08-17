@@ -14,41 +14,60 @@
 #include <vector>
 
 #include "ListColumn.h"
+#include "Renderer.h"
+#include "Row.h"
 #include "contact_fwd.h"
 class ColumnOffsets;
 enum class HostState;
-class Row;
-class RowRenderer;
+
+namespace column::hostlist {
+struct Entry {
+    Entry(std::string hn, HostState cs, bool hbc)
+        : host_name(std::move(hn)), current_state(cs), has_been_checked(hbc) {}
+
+    std::string host_name;
+    HostState current_state;
+    bool has_been_checked;
+};
+}  // namespace column::hostlist
+
+class HostListRenderer {
+public:
+    enum class verbosity { none, full };
+    HostListRenderer(verbosity v) : verbosity_{v} {}
+    void operator()(ListRenderer &l,
+                    const column::hostlist::Entry &entry) const;
+
+private:
+    verbosity verbosity_;
+};
 
 class HostListColumn : public deprecated::ListColumn {
 public:
     HostListColumn(const std::string &name, const std::string &description,
-                   const ColumnOffsets &offsets, bool show_state)
-        : deprecated::ListColumn(name, description, offsets)
-        , _show_state(show_state) {}
+                   const ColumnOffsets &offsets,
+                   const HostListRenderer &renderer)
+        : deprecated::ListColumn{name, description, offsets}
+        , renderer_{renderer} {}
 
+    // CommentColumn::output(), Downtime::output(), HostListColumn::output()
+    // are identical.
     void output(Row row, RowRenderer &r, const contact *auth_user,
-                std::chrono::seconds /*timezone_offset*/) const override;
+                std::chrono::seconds /*timezone_offset*/) const override {
+        ListRenderer l(r);
+        for (const auto &entry : this->getEntries(row, auth_user)) {
+            renderer_(l, entry);
+        }
+    }
 
     std::vector<std::string> getValue(
         Row row, const contact *auth_user,
         std::chrono::seconds timezone_offset) const override;
 
 private:
-    const bool _show_state;
-
-    struct Entry {
-        Entry(std::string hn, HostState cs, bool hbc)
-            : host_name(std::move(hn))
-            , current_state(cs)
-            , has_been_checked(hbc) {}
-
-        std::string host_name;
-        HostState current_state;
-        bool has_been_checked;
-    };
-
-    std::vector<Entry> getEntries(Row row, const contact *auth_user) const;
+    HostListRenderer renderer_;
+    std::vector<column::hostlist::Entry> getEntries(
+        Row row, const contact *auth_user) const;
 };
 
 #endif  // HostListColumn_h

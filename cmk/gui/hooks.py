@@ -139,7 +139,7 @@ def _scoped_memoize(
     def _decorator(func):
         cached_func = functools.lru_cache(maxsize=maxsize, typed=typed)(func)
         for clear_event in clear_events:
-            register(clear_event, cached_func.cache_clear)  # hooks.register
+            register_builtin(clear_event, cached_func.cache_clear)  # hooks.register_builtin
         return cached_func
 
     return _decorator

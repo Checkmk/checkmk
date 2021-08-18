@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List
+
 import pytest
 
 import cmk.gui.hooks as hooks
@@ -60,6 +62,30 @@ def test_request_memoize_request_integration(logged_in_wsgi_app, mocker):
     logged_in_wsgi_app.get("/NO_SITE/check_mk/my_page.py", status=200)
 
     page_registry.unregister("my_page")
+
+
+def test_request_memoize_unregister():
+    # Make sure request-start hooks are still called, after plugin hooks are
+    # unregistered. In previous versions unregister_plugin_hooks also
+    # unregistered hooks used by memoize.
+
+    @hooks.request_memoize()
+    def blah(a: List[int] = []) -> List[int]:  # pylint: disable=dangerous-default-value
+        a.append(1)
+        return a
+
+    assert blah() == [1]
+    assert blah() == [1]
+
+    hooks.call('request-end')
+
+    assert blah() == [1, 1]
+
+    hooks.unregister_plugin_hooks()
+    hooks.call('request-end')
+
+    assert blah() == [1, 1, 1]
+    assert blah() == [1, 1, 1]
 
 
 def test_hook_registration():

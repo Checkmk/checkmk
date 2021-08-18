@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import copy
+import json
+import os
 import sys
 import traceback
-import json
 from contextlib import contextmanager
 from typing import (
     Any,
@@ -29,22 +29,41 @@ from typing import (
 
 from livestatus import LivestatusTestingError
 
-from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
-import cmk.utils.version as cmk_version
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
 
+import cmk.gui.config as config
+import cmk.gui.forms as forms
+import cmk.gui.i18n
 import cmk.gui.pages
+import cmk.gui.pagetypes as pagetypes
+import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
+from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
+from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKGeneralException, MKUserError
+from cmk.gui.globals import html
+from cmk.gui.globals import request as global_request
+from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
-from cmk.gui.exceptions import (
-    HTTPRedirect,
-    MKGeneralException,
-    MKAuthException,
-    MKUserError,
+from cmk.gui.main_menu import mega_menu_registry
+from cmk.gui.page_menu import (
+    make_javascript_link,
+    make_simple_form_page_menu,
+    make_simple_link,
+    PageMenuDropdown,
+    PageMenuEntry,
+    PageMenuLink,
+    PageMenuTopic,
 )
-from cmk.gui.permissions import declare_permission
 from cmk.gui.pages import page_registry
+from cmk.gui.permissions import declare_permission, permission_registry
+# Needed for legacy (pre 1.6) plugins
+from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
+    Filter, filter_registry, FilterTime, FilterTristate, get_only_sites_from_context,
+    visual_info_registry, visual_type_registry,
+)
+from cmk.gui.table import table_element
 from cmk.gui.type_defs import (
     FilterHTTPVariables,
     FilterName,
@@ -52,66 +71,38 @@ from cmk.gui.type_defs import (
     InfoName,
     SingleInfos,
     Visual,
-    VisualName,
     VisualContext,
+    VisualName,
     VisualTypeName,
 )
-from cmk.gui.valuespec import (
-    CascadingDropdown,
-    Dictionary,
-    DualListChoice,
-    ValueSpec,
-    ListOfMultiple,
-    ABCPageListOfMultipleGetChoice,
-    FixedValue,
-    IconSelector,
-    Checkbox,
-    TextUnicode,
-    TextAscii,
-    TextAreaUnicode,
-    DropdownChoice,
-    Integer,
-    ListOfMultipleChoiceGroup,
-    GroupedListOfMultipleChoices,
-    Transform,
-)
-
-import cmk.gui.config as config
-import cmk.gui.forms as forms
-from cmk.gui.table import table_element
-import cmk.gui.userdb as userdb
-import cmk.gui.pagetypes as pagetypes
-import cmk.gui.i18n
-from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, request as global_request
-from cmk.gui.breadcrumb import make_main_menu_breadcrumb, Breadcrumb, BreadcrumbItem
-from cmk.gui.page_menu import (
-    PageMenuDropdown,
-    PageMenuTopic,
-    PageMenuEntry,
-    PageMenuLink,
-    make_javascript_link,
-    make_simple_link,
-    make_simple_form_page_menu,
-)
-from cmk.gui.main_menu import mega_menu_registry
-
-from cmk.gui.plugins.visuals.utils import (
-    visual_info_registry,
-    visual_type_registry,
-    filter_registry,
-    get_only_sites_from_context,
-)
-
 from cmk.gui.utils import unique_default_name_suggestion
+from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import makeuri, makeuri_contextless, make_confirm_link
-
-# Needed for legacy (pre 1.6) plugins
-from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
-    Filter, FilterTime, FilterTristate,
+from cmk.gui.utils.urls import (
+    file_name_and_query_vars_from_url,
+    make_confirm_link,
+    makeuri,
+    makeuri_contextless,
 )
-from cmk.gui.permissions import permission_registry
+from cmk.gui.valuespec import (
+    ABCPageListOfMultipleGetChoice,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DropdownChoice,
+    DualListChoice,
+    FixedValue,
+    GroupedListOfMultipleChoices,
+    IconSelector,
+    Integer,
+    ListOfMultiple,
+    ListOfMultipleChoiceGroup,
+    TextAreaUnicode,
+    TextAscii,
+    TextUnicode,
+    Transform,
+    ValueSpec,
+)
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.visuals  # pylint: disable=no-name-in-module
@@ -1109,12 +1100,19 @@ def page_edit_visual(
                     )
 
                 if html.request.var("save_and_view"):
-                    single_context_vars: HTTPVariables = list(
-                        get_singlecontext_html_vars(visual["context"],
-                                                    visual["single_infos"]).items())
+                    back_vars: HTTPVariables = []
+                    back_url_from_vars = html.request.var("back")
+                    if back_url_from_vars:
+                        _file_name, query_vars = file_name_and_query_vars_from_url(
+                            back_url_from_vars)
+                        back_vars = [(varname, value[0]) for varname, value in query_vars.items()]
+                    visual_name_var: Tuple[str, str] = (visual_type.ident_attr, visual['name'])
+                    if visual_name_var not in back_vars:
+                        back_vars.append(visual_name_var)
+
                     back_url = makeuri_contextless(
                         global_request,
-                        [(visual_type.ident_attr, visual['name'])] + single_context_vars,
+                        back_vars,
                         filename=visual_type.show_url,
                     )
 

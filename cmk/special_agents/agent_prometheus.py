@@ -1962,7 +1962,7 @@ def _extract_connection_args(config):
     if "path-prefix" in connect_settings:
         address = f"{connect_settings['path-prefix']}{address}"
 
-    connection_args.update({"address": address, "port": connect_settings["port"]})
+    connection_args.update({"address": address, "port": connect_settings.get("port")})
     return connection_args
 
 

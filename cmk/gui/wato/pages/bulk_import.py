@@ -30,6 +30,7 @@ by pasting the contents of a CSV file into a textbox."""
 import os
 import csv
 import time
+import uuid
 from difflib import SequenceMatcher
 
 import cmk.utils.store as store
@@ -97,8 +98,11 @@ class ModeBulkImport(WatoMode):
             if html.request.var("_do_import"):
                 return self._import()
 
-    def _file_path(self):
-        file_id = html.request.var("file_id", "%s-%d" % (config.user.id, int(time.time())))
+    def _file_path(self, file_id=None):
+        if file_id is None:
+            file_id = html.request.var("file_id")
+        if not file_id.isalnum():
+            raise MKUserError("file_id", _("The file_id has to be alphanumeric."))
         return self._upload_tmp_path + "/%s.csv" % file_id
 
     # Upload the CSV file into a temporary directoy to make it available not only
@@ -113,9 +117,9 @@ class ModeBulkImport(WatoMode):
         self._vs_upload().validate_value(upload_info, "_upload")
         _file_name, _mime_type, content = upload_info["file"]
 
-        file_id = "%s-%d" % (config.user.id, int(time.time()))
+        file_id = uuid.uuid4().hex
 
-        store.save_file(self._file_path(), content.encode("utf-8"))
+        store.save_file(self._file_path(file_id=file_id), content.encode("utf-8"))
 
         # make selections available to next page
         html.request.set_var("file_id", file_id)

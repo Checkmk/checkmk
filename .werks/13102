@@ -1,0 +1,15 @@
+Title: ServiceNow: Improve exception handling
+Class: fix
+Compatible: compat
+Component: notifications
+Date: 1629301572
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p10
+
+It was possible that the notification script did not finished with an exit
+code, e.g. in case of a timeout.
+
+Such exceptions will now lead to an error code and a log entry in
+~/var/log/notify.log.

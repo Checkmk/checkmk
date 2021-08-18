@@ -6,13 +6,11 @@
 
 import abc
 import logging
-from typing import cast, Dict, Generic, List, MutableMapping, Optional, TypeVar
+from typing import cast, Dict, Generic, List, MutableMapping, Optional, Tuple, TypeVar
 
 from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.core_helpers.cache import PersistedSections, TRawDataSection
-
-from .type_defs import SectionCacheInfo
 
 THostSections = TypeVar("THostSections", bound="HostSections")
 
@@ -32,7 +30,7 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
         self,
         sections: Optional[MutableMapping[SectionName, TRawDataSection]] = None,
         *,
-        cache_info: Optional[SectionCacheInfo] = None,
+        cache_info: Optional[MutableMapping[SectionName, Tuple[int, int]]] = None,
         # For `piggybacked_raw_data`, List[bytes] is equivalent to AgentRawData.
         piggybacked_raw_data: Optional[Dict[HostName, List[bytes]]] = None,
     ) -> None:

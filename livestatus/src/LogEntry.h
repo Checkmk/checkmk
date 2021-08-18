@@ -88,46 +88,46 @@ public:
     static ServiceState parseServiceState(const std::string &str);
     static HostState parseHostState(const std::string &str);
 
-    [[nodiscard]] size_t lineno() const { return _lineno; }
-    [[nodiscard]] time_t time() const { return _time; }
-    [[nodiscard]] Class log_class() const { return _class; }
-    [[nodiscard]] LogEntryKind kind() const { return _kind; }
-    [[nodiscard]] std::string message() const { return _message; }
-    [[nodiscard]] const char *options() const { return _options; }
-    [[nodiscard]] const char *type() const { return _type; }
-    [[nodiscard]] std::string host_name() const { return _host_name; }
+    [[nodiscard]] size_t lineno() const { return lineno_; }
+    [[nodiscard]] time_t time() const { return time_; }
+    [[nodiscard]] Class log_class() const { return class_; }
+    [[nodiscard]] LogEntryKind kind() const { return kind_; }
+    [[nodiscard]] std::string message() const { return message_; }
+    [[nodiscard]] const char *options() const { return options_; }
+    [[nodiscard]] const char *type() const { return type_; }
+    [[nodiscard]] std::string host_name() const { return host_name_; }
     [[nodiscard]] std::string service_description() const {
-        return _service_description;
+        return service_description_;
     }
-    [[nodiscard]] std::string command_name() const { return _command_name; }
-    [[nodiscard]] std::string contact_name() const { return _contact_name; }
-    [[nodiscard]] int state() const { return _state; }
-    [[nodiscard]] std::string state_type() const { return _state_type; }
-    [[nodiscard]] int attempt() const { return _attempt; }
-    [[nodiscard]] std::string comment() const { return _comment; }
-    [[nodiscard]] std::string plugin_output() const { return _plugin_output; }
+    [[nodiscard]] std::string command_name() const { return command_name_; }
+    [[nodiscard]] std::string contact_name() const { return contact_name_; }
+    [[nodiscard]] int state() const { return state_; }
+    [[nodiscard]] std::string state_type() const { return state_type_; }
+    [[nodiscard]] int attempt() const { return attempt_; }
+    [[nodiscard]] std::string comment() const { return comment_; }
+    [[nodiscard]] std::string plugin_output() const { return plugin_output_; }
     [[nodiscard]] std::string long_plugin_output() const {
-        return _long_plugin_output;
+        return long_plugin_output_;
     }
 
 private:
-    size_t _lineno;
-    time_t _time;
-    Class _class;
-    LogEntryKind _kind;
-    std::string _message;
-    const char *_options;
-    const char *_type;
-    std::string _host_name;
-    std::string _service_description;
-    std::string _command_name;
-    std::string _contact_name;
-    int _state;
-    std::string _state_type;
-    int _attempt;
-    std::string _comment;
-    std::string _plugin_output;
-    std::string _long_plugin_output;
+    size_t lineno_;
+    time_t time_;
+    Class class_;
+    LogEntryKind kind_;
+    std::string message_;
+    const char *options_;
+    const char *type_;
+    std::string host_name_;
+    std::string service_description_;
+    std::string command_name_;
+    std::string contact_name_;
+    int state_;
+    std::string state_type_;
+    int attempt_;
+    std::string comment_;
+    std::string plugin_output_;
+    std::string long_plugin_output_;
 
     enum class Param {
         HostName,

@@ -71,6 +71,8 @@ preamble_1() {
 
             -p)
                 LOG_SECTION_TIME=true
+                # disable caching to get the whole execution time
+                : "${DISABLE_CACHING:=true}"
                 shift
                 ;;
 
@@ -86,13 +88,21 @@ preamble_1() {
     else
         exec </dev/null 2>/dev/null
     fi
+}
 
-    DISABLE_CACHING=false
-    PROFILING_CONFIG="$MK_CONFDIR/profiling.cfg"
-    if $LOG_SECTION_TIME; then
-        # If option '-p' is set disable caching in order to get the whole execution time
-        DISABLE_CACHING=true
-    elif [ -e "$PROFILING_CONFIG" ]; then
+#
+# BEGIN COMMON AGENT CODE
+#
+
+# SC2089: Quotes/backslashes will be treated literally. Use an array.
+# shellcheck disable=SC2089
+MK_DEFINE_LOG_SECTION_TIME='_log_section_time() { "$@"; }'
+finalize_profiling() { :; }
+
+set_up_profiling() {
+
+    PROFILING_CONFIG="${MK_CONFDIR}/profiling.cfg"
+    if [ -e "${PROFILING_CONFIG}" ]; then
         # Config vars:
         #   LOG_SECTION_TIME=true/false
         #   DISABLE_CACHING=true/false
@@ -100,38 +110,43 @@ preamble_1() {
         # If LOG_SECTION_TIME=true via profiling.cfg do NOT disable caching in order
         # to get the real execution time during operation.
         # shellcheck disable=SC1090
-        . "$PROFILING_CONFIG"
+        . "${PROFILING_CONFIG}"
     fi
 
     PROFILING_LOGFILE_DIR="${MK_LOGDIR}/profiling/$(date +%Y%m%d_%H%M%S)"
-    if $LOG_SECTION_TIME; then
-        mkdir -p "$PROFILING_LOGFILE_DIR"
+
+    if ${LOG_SECTION_TIME}; then
+        mkdir -p "${PROFILING_LOGFILE_DIR}"
+        agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
+
+        # SC2016: Expressions don't expand in single quotes, use double quotes for that.
+        # shellcheck disable=SC2016
+        MK_DEFINE_LOG_SECTION_TIME='_log_section_time() {
+            section_func="$@"
+
+            base_name=$(echo "${section_func}" | tr -c "A-Za-z0-9.-" _)
+            profiling_logfile="'"${PROFILING_LOGFILE_DIR}"'/${base_name}.log"
+
+            start="$(perl -MTime::HiRes=time -le "print time()")"
+            { time ${section_func}; } 2>> "${profiling_logfile}"
+            end="$(perl -MTime::HiRes=time -le "print time()")"
+            echo "runtime $(echo "${end} - ${start}" | bc)" >>"${profiling_logfile}"
+        }'
+
+        finalize_profiling() {
+            pro_log_file="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
+            agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
+            echo "runtime $(echo "${agent_end} - ${agent_start}" | bc)" >>"${pro_log_file}"
+        }
     fi
+
+    eval "${MK_DEFINE_LOG_SECTION_TIME}"
+    export MK_DEFINE_LOG_SECTION_TIME
 }
 
-_log_section_time() {
-    local section_func="$*"
-
-    local base_name=$(echo "${section_func}" | tr -c "A-Za-z0-9.-" _)
-    profiling_logfile="${PROFILING_LOGFILE_DIR}/${base_name}.log"
-
-    # TODO In the future
-    # echo "<<<check_mk_agent_profiling>>>"
-    if $LOG_SECTION_TIME; then
-        start="$(perl -MTime::HiRes=time -le 'print time()')"
-        { time $section_func; } 2>>"$profiling_logfile"
-        end="$(perl -MTime::HiRes=time -le 'print time()')"
-        echo "runtime $(echo "$end - $start" | bc)" >>"$profiling_logfile"
-    else
-        $section_func
-    fi
-}
-
-preamble_2() {
-    export PROFILING_LOGFILE_DIR
-    export LOG_SECTION_TIME
-    export -f _log_section_time
-}
+#
+# END COMMON AGENT CODE
+#
 
 read_python_version() {
     if which "$1" >/dev/null 2>&1 && [ "$($1 -c 'import sys; print(sys.version_info[1])')" -ge $2 ]; then
@@ -518,7 +533,7 @@ run_mrpe() {
 
     echo '<<<mrpe>>>'
 
-    OUTPUT=$(eval _log_section_time "$cmdline")
+    OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
 
     echo -n "$descr $? $OUTPUT" | tr \\n \\1
     echo
@@ -578,7 +593,7 @@ run_cached() {
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$USE_CACHEFILE" ] && [ ! -e "$CACHEFILE.new" ]; then
-        echo "set -o noclobber; exec > \"$CACHEFILE.new\" || exit 1; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup /usr/bin/bash >/dev/null 2>&1 &
+        echo "eval ${MK_DEFINE_LOG_SECTION_TIME}; set -o noclobber; exec > \"${CACHEFILE}.new\" || exit 1; ${CMDLINE} && mv \"${CACHEFILE}.new\" \"${CACHEFILE}\" || rm -f \"${CACHEFILE}\" \"${CACHEFILE}.new\"" | nohup /usr/bin/bash >/dev/null 2>&1 &
     fi
 }
 
@@ -745,17 +760,13 @@ main_setup(){
 
     preamble_1 "$@"
 
-    preamble_2
+    set_up_profiling
 
     preamble_3
 
     preamble_4
 
     preamble_5
-
-    if $LOG_SECTION_TIME; then
-        agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
-    fi
 
 }
 
@@ -796,11 +807,7 @@ main_async_parts(){
 main_finalize_sync() {
     _log_section_time section_checkmk_failed_plugins
 
-    if $LOG_SECTION_TIME; then
-        profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
-        agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
-        echo "runtime $(echo "$agent_end - $agent_start" | bc)" >>"$profiling_logfile_check_mk_agent"
-    fi
+    finalize_profiling
 }
 
 #

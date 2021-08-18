@@ -21,7 +21,7 @@ set_variable_defaults() {
     : "${MK_LIBDIR:=/usr/lib/check_mk_agent}"
     : "${MK_CONFDIR:=/etc/check_mk}"
     : "${MK_VARDIR:=/var/lib/check_mk_agent}"
-    # unused: "${MK_LOGDIR:=/var/log/check_mk_agent}"
+    : "${MK_LOGDIR:=/var/log/check_mk_agent}"
 
     # some 'booleans'
     [ "${MK_RUN_SYNC_PARTS}" = "false" ] || MK_RUN_SYNC_PARTS=true
@@ -77,6 +77,64 @@ preamble_1() {
     fi
 }
 
+#
+# BEGIN COMMON AGENT CODE
+#
+
+# SC2089: Quotes/backslashes will be treated literally. Use an array.
+# shellcheck disable=SC2089
+MK_DEFINE_LOG_SECTION_TIME='_log_section_time() { "$@"; }'
+finalize_profiling() { :; }
+
+set_up_profiling() {
+
+    PROFILING_CONFIG="${MK_CONFDIR}/profiling.cfg"
+    if [ -e "${PROFILING_CONFIG}" ]; then
+        # Config vars:
+        #   LOG_SECTION_TIME=true/false
+        #   DISABLE_CACHING=true/false
+
+        # If LOG_SECTION_TIME=true via profiling.cfg do NOT disable caching in order
+        # to get the real execution time during operation.
+        # shellcheck disable=SC1090
+        . "${PROFILING_CONFIG}"
+    fi
+
+    PROFILING_LOGFILE_DIR="${MK_LOGDIR}/profiling/$(date +%Y%m%d_%H%M%S)"
+
+    if ${LOG_SECTION_TIME}; then
+        mkdir -p "${PROFILING_LOGFILE_DIR}"
+        agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
+
+        # SC2016: Expressions don't expand in single quotes, use double quotes for that.
+        # shellcheck disable=SC2016
+        MK_DEFINE_LOG_SECTION_TIME='_log_section_time() {
+            section_func="$@"
+
+            base_name=$(echo "${section_func}" | tr -c "A-Za-z0-9.-" _)
+            profiling_logfile="'"${PROFILING_LOGFILE_DIR}"'/${base_name}.log"
+
+            start="$(perl -MTime::HiRes=time -le "print time()")"
+            { time ${section_func}; } 2>> "${profiling_logfile}"
+            end="$(perl -MTime::HiRes=time -le "print time()")"
+            echo "runtime $(echo "${end} - ${start}" | bc)" >>"${profiling_logfile}"
+        }'
+
+        finalize_profiling() {
+            pro_log_file="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
+            agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
+            echo "runtime $(echo "${agent_end} - ${agent_start}" | bc)" >>"${pro_log_file}"
+        }
+    fi
+
+    eval "${MK_DEFINE_LOG_SECTION_TIME}"
+    export MK_DEFINE_LOG_SECTION_TIME
+}
+
+#
+# END COMMON AGENT CODE
+#
+
 # Prefer (relatively) new /usr/bin/timeout from coreutils against
 # our shipped waitmax. waitmax is statically linked and crashes on
 # some Ubuntu versions recently.
@@ -86,11 +144,6 @@ if type timeout >/dev/null 2>&1; then
     }
 fi
 
-_log_section_time() {  # dummy to be compatible to smarter agents
-    "$@"
-}
-
-export -f _log_section_time
 
 #
 # CHECK SECTIONS
@@ -733,7 +786,7 @@ run_mrpe() {
     echo '<<<mrpe>>>'
 
     PLUGIN=${cmdline%% *}
-    OUTPUT=$(eval "$cmdline")
+    OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
 
     echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
     echo
@@ -834,6 +887,11 @@ run_cached() {
     shift 2
     local CMDLINE="$section$@"
 
+    if ${DISABLE_CACHING:-false}; then
+        ${CMDLINE}
+        return
+    fi
+
     if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache; fi
     CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
 
@@ -877,7 +935,7 @@ run_cached() {
     if [ -z "$USE_CACHEFILE" ] && [ ! -e "$CACHEFILE.new" ]; then
         # When the command fails, the output is thrown away
         # TODO: This won't work: do we even have bash?
-        echo "set -o noclobber; exec > \"$CACHEFILE.new\" || exit 1; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash >/dev/null 2>&1 &
+        echo "set -o noclobber; exec > \"${CACHEFILE}.new\" || exit 1; ${CMDLINE} && mv \"${CACHEFILE}.new\" \"${CACHEFILE}\" || rm -f \"${CACHEFILE}\" \"${CACHEFILE}.new\"" | nohup bash >/dev/null 2>&1 &
     fi
 }
 
@@ -1058,7 +1116,7 @@ main_async_parts() {
 }
 
 main_finalize_sync(){
-    :
+    finalize_profiling
 }
 
 #

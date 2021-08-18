@@ -75,16 +75,16 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         [](const LogEntry &r) { return static_cast<int32_t>(r.log_class()); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "message", "The complete message line including the timestamp",
-        offsets_entry, [](const LogEntry &r) { return r._message; }));
+        offsets_entry, [](const LogEntry &r) { return r.message(); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "type",
         "The type of the message (text before the colon), the message itself for info messages",
         offsets_entry,
-        [](const LogEntry &r) { return r._type == nullptr ? "" : r._type; }));
+        [](const LogEntry &r) { return r.type() == nullptr ? "" : r.type(); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "options", "The part of the message after the ':'", offsets_entry,
         [](const LogEntry &r) {
-            return r._options == nullptr ? "" : r._options;
+            return r.options() == nullptr ? "" : r.options();
         }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "comment", "A comment field used in various message types",
@@ -114,11 +114,11 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         "service_description",
         "The description of the service log entry is about (might be empty)",
         offsets_entry,
-        [](const LogEntry &r) { return r._service_description; }));
+        [](const LogEntry &r) { return r.service_description(); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "host_name",
         "The name of the host the log entry is about (might be empty)",
-        offsets_entry, [](const LogEntry &r) { return r._host_name; }));
+        offsets_entry, [](const LogEntry &r) { return r.host_name(); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "contact_name",
         "The name of the contact the log entry is about (might be empty)",
@@ -216,9 +216,9 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
         // TODO(sp): Remove ugly casts.
         LogRow lr{
             entry,
-            reinterpret_cast<host *>(core()->find_host(entry->_host_name)),
+            reinterpret_cast<host *>(core()->find_host(entry->host_name())),
             reinterpret_cast<service *>(core()->find_service(
-                entry->_host_name, entry->_service_description)),
+                entry->host_name(), entry->service_description())),
             reinterpret_cast<const contact *>(
                 core()->find_contact(entry->_contact_name)),
             &command};

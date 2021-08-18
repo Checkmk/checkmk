@@ -87,19 +87,26 @@ public:
     [[nodiscard]] auto time() const { return _time; }
     [[nodiscard]] auto log_class() const { return _class; }
     [[nodiscard]] auto kind() const { return _kind; }
+    [[nodiscard]] auto message() const { return _message; }
+    [[nodiscard]] auto options() const { return _options; }
+    [[nodiscard]] auto type() const { return _type; }
+    [[nodiscard]] auto host_name() const { return _host_name; }
+    [[nodiscard]] auto service_description() const {
+        return _service_description;
+    }
 
 private:
     size_t _lineno;
     time_t _time;
     Class _class;
     LogEntryKind _kind;
-
-public:
-    std::string _message;  // copy of complete unsplit message
-    const char *_options;  // points into _complete after ':'
-    const char *_type;     // points into _complete or into static data
+    std::string _message;
+    const char *_options;
+    const char *_type;
     std::string _host_name;
     std::string _service_description;
+
+public:
     std::string _command_name;
     std::string _contact_name;
     int _state;

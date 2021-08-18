@@ -165,7 +165,7 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
     uint64_t key = makeKey(entry->time(), entry->lineno());
     if (_entries.find(key) != _entries.end()) {
         // this should never happen. The lineno must be unique!
-        Error(_logger) << "strange duplicate logfile line " << entry->_message;
+        Error(_logger) << "strange duplicate logfile line " << entry->message();
         return false;
     }
     _entries[key] = std::move(entry);

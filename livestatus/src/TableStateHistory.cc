@@ -383,9 +383,9 @@ void TableStateHistory::answerQuery(Query *query) {
         bool is_service = false;
         // TODO(sp): Remove ugly casts.
         auto *entry_host =
-            reinterpret_cast<host *>(core()->find_host(entry->_host_name));
+            reinterpret_cast<host *>(core()->find_host(entry->host_name()));
         auto *entry_service = reinterpret_cast<service *>(core()->find_service(
-            entry->_host_name, entry->_service_description));
+            entry->host_name(), entry->service_description()));
         switch (entry->kind()) {
             case LogEntryKind::none:
             case LogEntryKind::core_starting:
@@ -428,16 +428,16 @@ void TableStateHistory::answerQuery(Query *query) {
                     // Create state object that we also need for filtering right
                     // now
                     state = new HostServiceState();
-                    state->_is_host = entry->_service_description.empty();
+                    state->_is_host = entry->service_description().empty();
                     state->_host = entry_host;
                     state->_service = entry_service;
-                    state->_host_name = entry->_host_name;
-                    state->_service_description = entry->_service_description;
+                    state->_host_name = entry->host_name();
+                    state->_service_description = entry->service_description();
 
                     // No state found. Now check if this host/services is
                     // filtered out.  Note: we currently do not filter out hosts
                     // since they might be needed for service states
-                    if (!entry->_service_description.empty()) {
+                    if (!entry->service_description().empty()) {
                         if (!object_filter->accepts(Row(state),
                                                     query->authUser(),
                                                     query->timezoneOffset())) {
@@ -571,7 +571,7 @@ void TableStateHistory::answerQuery(Query *query) {
             }
             case LogEntryKind::timeperiod_transition: {
                 try {
-                    TimeperiodTransition tpt(entry->_options);
+                    TimeperiodTransition tpt(entry->options());
                     _notification_periods[tpt.name()] = tpt.to();
                     for (auto &it_hst : state_info) {
                         updateHostServiceState(query, entry, it_hst.second,
@@ -580,7 +580,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 } catch (const std::logic_error &e) {
                     Warning(logger())
                         << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
-                        << entry->_message;
+                        << entry->message();
                 }
                 break;
             }
@@ -795,7 +795,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         }
         case LogEntryKind::timeperiod_transition: {
             try {
-                TimeperiodTransition tpt(entry->_options);
+                TimeperiodTransition tpt(entry->options());
                 // if no _host pointer is available the initial status of
                 // _in_notification_period (1) never changes
                 if (hs_state->_host != nullptr &&
@@ -822,7 +822,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
             } catch (const std::logic_error &e) {
                 Warning(logger())
                     << "Error: Invalid syntax of TIMEPERIOD TRANSITION: "
-                    << entry->_message;
+                    << entry->message();
             }
             break;
         }

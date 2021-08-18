@@ -88,25 +88,25 @@ public:
     static ServiceState parseServiceState(const std::string &str);
     static HostState parseHostState(const std::string &str);
 
-    [[nodiscard]] auto lineno() const { return _lineno; }
-    [[nodiscard]] auto time() const { return _time; }
-    [[nodiscard]] auto log_class() const { return _class; }
-    [[nodiscard]] auto kind() const { return _kind; }
-    [[nodiscard]] auto message() const { return _message; }
-    [[nodiscard]] auto options() const { return _options; }
-    [[nodiscard]] auto type() const { return _type; }
-    [[nodiscard]] auto host_name() const { return _host_name; }
-    [[nodiscard]] auto service_description() const {
+    [[nodiscard]] size_t lineno() const { return _lineno; }
+    [[nodiscard]] time_t time() const { return _time; }
+    [[nodiscard]] Class log_class() const { return _class; }
+    [[nodiscard]] LogEntryKind kind() const { return _kind; }
+    [[nodiscard]] std::string message() const { return _message; }
+    [[nodiscard]] const char *options() const { return _options; }
+    [[nodiscard]] const char *type() const { return _type; }
+    [[nodiscard]] std::string host_name() const { return _host_name; }
+    [[nodiscard]] std::string service_description() const {
         return _service_description;
     }
-    [[nodiscard]] auto command_name() const { return _command_name; }
-    [[nodiscard]] auto contact_name() const { return _contact_name; }
-    [[nodiscard]] auto state() const { return _state; }
-    [[nodiscard]] auto state_type() const { return _state_type; }
-    [[nodiscard]] auto attempt() const { return _attempt; }
-    [[nodiscard]] auto comment() const { return _comment; }
-    [[nodiscard]] auto plugin_output() const { return _plugin_output; }
-    [[nodiscard]] auto long_plugin_output() const {
+    [[nodiscard]] std::string command_name() const { return _command_name; }
+    [[nodiscard]] std::string contact_name() const { return _contact_name; }
+    [[nodiscard]] int state() const { return _state; }
+    [[nodiscard]] std::string state_type() const { return _state_type; }
+    [[nodiscard]] int attempt() const { return _attempt; }
+    [[nodiscard]] std::string comment() const { return _comment; }
+    [[nodiscard]] std::string plugin_output() const { return _plugin_output; }
+    [[nodiscard]] std::string long_plugin_output() const {
         return _long_plugin_output;
     }
 

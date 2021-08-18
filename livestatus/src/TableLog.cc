@@ -63,16 +63,16 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<TimeColumn::Callback<LogEntry>>(
         "time", "Time of the log event (UNIX timestamp)", offsets_entry,
         [](const LogEntry &r) {
-            return std::chrono::system_clock::from_time_t(r._time);
+            return std::chrono::system_clock::from_time_t(r.time());
         }));
     addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
         "lineno", "The number of the line in the log file", offsets_entry,
-        [](const LogEntry &r) { return r._lineno; }));
+        [](const LogEntry &r) { return r.lineno(); }));
     addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
         "class",
         "The class of the message as integer (0:info, 1:state, 2:program, 3:notification, 4:passive, 5:command)",
         offsets_entry,
-        [](const LogEntry &r) { return static_cast<int32_t>(r._class); }));
+        [](const LogEntry &r) { return static_cast<int32_t>(r.log_class()); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "message", "The complete message line including the timestamp",
         offsets_entry, [](const LogEntry &r) { return r._message; }));
@@ -208,7 +208,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
     auto it = entries->upper_bound(Logfile::makeKey(until, 999999999));
     while (it != entries->begin()) {
         --it;
-        if (it->second->_time < since) {
+        if (it->second->time() < since) {
             return false;  // time limit exceeded
         }
         auto *entry = it->second.get();
@@ -232,7 +232,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
 
 namespace {
 bool rowWithoutHost(const LogRow *lr) {
-    auto clazz = lr->entry->_class;
+    auto clazz = lr->entry->log_class();
     return clazz == LogEntry::Class::info ||
            clazz == LogEntry::Class::program ||
            clazz == LogEntry::Class::ext_command;

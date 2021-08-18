@@ -140,7 +140,8 @@ long Logfile::freeMessages(unsigned logclasses) {
     // usual post-increment idiom, see Scott Meyers' "Effective STL", item 9
     // ("Choose carefully among erasing options.").
     for (auto it = _entries.begin(); it != _entries.end();) {
-        if (((1U << static_cast<int>(it->second->_class)) & logclasses) != 0U) {
+        if (((1U << static_cast<int>(it->second->log_class())) & logclasses) !=
+            0U) {
             _entries.erase(it++);
             freed++;
         } else {
@@ -155,13 +156,13 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
                              unsigned logclasses) {
     auto entry = std::make_unique<LogEntry>(lineno, std::move(line));
     // ignored invalid lines
-    if (entry->_class == LogEntry::Class::invalid) {
+    if (entry->log_class() == LogEntry::Class::invalid) {
         return false;
     }
-    if (((1U << static_cast<int>(entry->_class)) & logclasses) == 0U) {
+    if (((1U << static_cast<int>(entry->log_class())) & logclasses) == 0U) {
         return false;
     }
-    uint64_t key = makeKey(entry->_time, entry->_lineno);
+    uint64_t key = makeKey(entry->time(), entry->lineno());
     if (_entries.find(key) != _entries.end()) {
         // this should never happen. The lineno must be unique!
         Error(_logger) << "strange duplicate logfile line " << entry->_message;

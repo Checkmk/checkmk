@@ -83,10 +83,18 @@ public:
     };
     static constexpr uint32_t all_classes = 0xffffU;
 
-    size_t _lineno;  // line number in file
+    [[nodiscard]] auto lineno() const { return _lineno; }
+    [[nodiscard]] auto time() const { return _time; }
+    [[nodiscard]] auto log_class() const { return _class; }
+    [[nodiscard]] auto kind() const { return _kind; }
+
+private:
+    size_t _lineno;
     time_t _time;
     Class _class;
     LogEntryKind _kind;
+
+public:
     std::string _message;  // copy of complete unsplit message
     const char *_options;  // points into _complete after ':'
     const char *_type;     // points into _complete or into static data

@@ -335,7 +335,7 @@ void TableStateHistory::answerQuery(Query *query) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too
         if (--_it_entries != _entries->begin()) {
-            if (_it_entries->second->_time >= _since) {
+            if (_it_entries->second->time() >= _since) {
                 _it_entries = _entries->begin();
             }
         }
@@ -352,11 +352,11 @@ void TableStateHistory::answerQuery(Query *query) {
             break;
         }
 
-        if (entry->_time >= _until) {
+        if (entry->time() >= _until) {
             getPreviousLogentry();
             break;
         }
-        if (only_update && entry->_time >= _since) {
+        if (only_update && entry->time() >= _since) {
             // Reached start of query timeframe. From now on let's produce real
             // output. Update _from time of every state entry
             for (auto &it_hst : state_info) {
@@ -367,8 +367,8 @@ void TableStateHistory::answerQuery(Query *query) {
         }
 
         if (in_nagios_initial_states &&
-            !(entry->_kind == LogEntryKind::state_service_initial ||
-              entry->_kind == LogEntryKind::state_host_initial)) {
+            !(entry->kind() == LogEntryKind::state_service_initial ||
+              entry->kind() == LogEntryKind::state_host_initial)) {
             // Set still unknown hosts / services to unmonitored
             for (auto &it_hst : state_info) {
                 HostServiceState *hst = it_hst.second;
@@ -386,7 +386,7 @@ void TableStateHistory::answerQuery(Query *query) {
             reinterpret_cast<host *>(core()->find_host(entry->_host_name));
         auto *entry_service = reinterpret_cast<service *>(core()->find_service(
             entry->_host_name, entry->_service_description));
-        switch (entry->_kind) {
+        switch (entry->kind()) {
             case LogEntryKind::none:
             case LogEntryKind::core_starting:
             case LogEntryKind::core_stopping:
@@ -546,7 +546,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // appeared within the query timeframe
                     // It gets a grace period of ten minutes (nagios startup)
                     if (!only_update &&
-                        entry->_time - _since > time_t{60} * 10) {
+                        entry->time() - _since > time_t{60} * 10) {
                         state->_debug_info = "UNMONITORED ";
                         state->_state = -1;
                     }
@@ -557,9 +557,9 @@ void TableStateHistory::answerQuery(Query *query) {
                 int state_changed =
                     updateHostServiceState(query, entry, state, only_update);
                 // Host downtime or state changes also affect its services
-                if (entry->_kind == LogEntryKind::alert_host ||
-                    entry->_kind == LogEntryKind::state_host ||
-                    entry->_kind == LogEntryKind::downtime_alert_host) {
+                if (entry->kind() == LogEntryKind::alert_host ||
+                    entry->kind() == LogEntryKind::state_host ||
+                    entry->kind() == LogEntryKind::downtime_alert_host) {
                     if (state_changed != 0) {
                         for (auto &svc : state->_services) {
                             updateHostServiceState(query, entry, svc,
@@ -593,7 +593,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 // entry will follow up shortly.
                 for (auto &it_hst : state_info) {
                     if (!it_hst.second->_has_vanished) {
-                        it_hst.second->_last_known_time = entry->_time;
+                        it_hst.second->_last_known_time = entry->time();
                         it_hst.second->_may_no_longer_exist = true;
                     }
                 }
@@ -649,7 +649,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
     int state_changed = 1;
 
     // Revive host / service if it was unmonitored
-    if (entry->_kind != LogEntryKind::timeperiod_transition &&
+    if (entry->kind() != LogEntryKind::timeperiod_transition &&
         hs_state->_has_vanished) {
         hs_state->_time = hs_state->_last_known_time;
         hs_state->_until = hs_state->_last_known_time;
@@ -692,17 +692,17 @@ int TableStateHistory::updateHostServiceState(Query *query,
     }
 
     // Update basic information
-    hs_state->_time = entry->_time;
-    hs_state->_lineno = entry->_lineno;
-    hs_state->_until = entry->_time;
+    hs_state->_time = entry->time();
+    hs_state->_lineno = entry->lineno();
+    hs_state->_until = entry->time();
 
     // A timeperiod entry never brings an absent host or service into
     // existence..
-    if (entry->_kind != LogEntryKind::timeperiod_transition) {
+    if (entry->kind() != LogEntryKind::timeperiod_transition) {
         hs_state->_may_no_longer_exist = false;
     }
 
-    switch (entry->_kind) {
+    switch (entry->kind()) {
         case LogEntryKind::none:
         case LogEntryKind::core_starting:
         case LogEntryKind::core_stopping:
@@ -828,9 +828,9 @@ int TableStateHistory::updateHostServiceState(Query *query,
         }
     }
 
-    if (entry->_kind != LogEntryKind::timeperiod_transition) {
-        bool fix_me = (entry->_kind == LogEntryKind::state_host_initial ||
-                       entry->_kind == LogEntryKind::state_service_initial) &&
+    if (entry->kind() != LogEntryKind::timeperiod_transition) {
+        bool fix_me = (entry->kind() == LogEntryKind::state_host_initial ||
+                       entry->kind() == LogEntryKind::state_service_initial) &&
                       entry->_plugin_output == "(null)";
         hs_state->_log_output = fix_me ? "" : entry->_plugin_output;
         hs_state->_long_log_output = entry->_long_plugin_output;

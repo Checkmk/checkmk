@@ -79,13 +79,10 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "type",
         "The type of the message (text before the colon), the message itself for info messages",
-        offsets_entry,
-        [](const LogEntry &r) { return r.type() == nullptr ? "" : r.type(); }));
+        offsets_entry, [](const LogEntry &r) { return r.type(); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "options", "The part of the message after the ':'", offsets_entry,
-        [](const LogEntry &r) {
-            return r.options() == nullptr ? "" : r.options();
-        }));
+        [](const LogEntry &r) { return r.options(); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "comment", "A comment field used in various message types",
         offsets_entry, [](const LogEntry &r) { return r.comment(); }));

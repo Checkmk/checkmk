@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <ctime>
 #include <string>
+#include <string_view>
 #include <vector>
 
 enum class ServiceState { ok = 0, warning = 1, critical = 2, unknown = 3 };
@@ -93,8 +94,8 @@ public:
     [[nodiscard]] Class log_class() const { return class_; }
     [[nodiscard]] LogEntryKind kind() const { return kind_; }
     [[nodiscard]] std::string message() const { return message_; }
-    [[nodiscard]] const char *options() const { return options_; }
-    [[nodiscard]] const char *type() const { return type_; }
+    [[nodiscard]] std::string options() const { return std::string{options_}; }
+    [[nodiscard]] std::string type() const { return std::string{type_}; }
     [[nodiscard]] std::string host_name() const { return host_name_; }
     [[nodiscard]] std::string service_description() const {
         return service_description_;
@@ -116,8 +117,8 @@ private:
     Class class_;
     LogEntryKind kind_;
     std::string message_;
-    const char *options_;
-    const char *type_;
+    std::string_view options_;  // references message_
+    std::string_view type_;     // references message_
     std::string host_name_;
     std::string service_description_;
     std::string command_name_;

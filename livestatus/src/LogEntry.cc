@@ -6,13 +6,14 @@
 #include "LogEntry.h"
 
 #include <cstdlib>
-#include <cstring>
 #include <functional>
 #include <stdexcept>
 #include <unordered_map>
 #include <utility>
 
 #include "StringUtils.h"
+
+using namespace std::string_view_literals;
 
 // 0123456789012345678901234567890
 // [1234567890] FOO BAR: blah blah
@@ -22,7 +23,6 @@ static constexpr size_t timestamp_prefix_length = 13;
 // this set-me-to-zero-to-be-sure-block.
 LogEntry::LogEntry(size_t lineno, std::string line)
     : lineno_(lineno), message_(std::move(line)), state_(0), attempt_(0) {
-    // pointer to options (everything after ':')
     size_t pos = message_.find(':');
     if (pos != std::string::npos) {
         pos = message_.find_first_not_of(' ', pos + 1);
@@ -30,7 +30,7 @@ LogEntry::LogEntry(size_t lineno, std::string line)
     if (pos == std::string::npos) {
         pos = message_.size();
     }
-    options_ = &message_[pos];
+    options_ = std::string_view{message_}.substr(pos);
 
     try {
         if (message_.size() < timestamp_prefix_length || message_[0] != '[' ||
@@ -42,7 +42,7 @@ LogEntry::LogEntry(size_t lineno, std::string line)
         class_ = Class::invalid;
         kind_ = LogEntryKind::none;
         time_ = 0;
-        type_ = "";
+        type_ = {};
         return;  // ignore invalid lines silently
     }
 
@@ -293,7 +293,7 @@ void LogEntry::classifyLogMessage() {
         if (textStartsWith(def.prefix) &&
             message_.compare(timestamp_prefix_length + def.prefix.size(), 2,
                              ": ") == 0) {
-            type_ = &def.prefix[0];
+            type_ = def.prefix;
             class_ = def.log_class;
             kind_ = def.log_type;
             // TODO(sp) Use boost::tokenizer instead of this index fiddling
@@ -309,7 +309,7 @@ void LogEntry::classifyLogMessage() {
             return;
         }
     }
-    type_ = &message_[timestamp_prefix_length];
+    type_ = std::string_view{message_}.substr(timestamp_prefix_length);
     if (textStartsWith("LOG VERSION: 2.0")) {
         class_ = Class::program;
         kind_ = LogEntryKind::log_version;
@@ -459,15 +459,15 @@ std::string LogEntry::state_info() const {
             return parens(state_type_, to_service_state(state_));
 
         case LogEntryKind::none:
-            if (strcmp(type_, "HOST NOTIFICATION RESULT") == 0 ||
-                strcmp(type_, "SERVICE NOTIFICATION RESULT") == 0 ||
-                strcmp(type_, "HOST NOTIFICATION PROGRESS") == 0 ||
-                strcmp(type_, "SERVICE NOTIFICATION PROGRESS") == 0 ||
-                strcmp(type_, "HOST ALERT HANDLER STOPPED") == 0 ||
-                strcmp(type_, "SERVICE ALERT HANDLER STOPPED") == 0) {
+            if (type_ == "HOST NOTIFICATION RESULT"sv ||
+                type_ == "SERVICE NOTIFICATION RESULT"sv ||
+                type_ == "HOST NOTIFICATION PROGRESS"sv ||
+                type_ == "SERVICE NOTIFICATION PROGRESS"sv ||
+                type_ == "HOST ALERT HANDLER STOPPED"sv ||
+                type_ == "SERVICE ALERT HANDLER STOPPED"sv) {
                 return parens("EXIT_CODE", to_exit_code(state_));
             }
-            if (strcmp(type_, "HOST NOTIFICATION") == 0) {
+            if (type_ == "HOST NOTIFICATION"sv) {
                 if (state_type_ == "UP" ||    //
                     state_type_ == "DOWN" ||  //
                     state_type_ == "UNREACHABLE") {
@@ -478,7 +478,7 @@ std::string LogEntry::state_info() const {
                 }
                 return state_type_;
             }
-            if (strcmp(type_, "SERVICE NOTIFICATION") == 0) {
+            if (type_ == "SERVICE NOTIFICATION"sv) {
                 if (state_type_ == "OK" ||        //
                     state_type_ == "WARNING" ||   //
                     state_type_ == "CRITICAL" ||  //
@@ -490,10 +490,10 @@ std::string LogEntry::state_info() const {
                 }
                 return state_type_;
             }
-            if (strcmp(type_, "PASSIVE HOST CHECK") == 0) {
+            if (type_ == "PASSIVE HOST CHECK"sv) {
                 return parens("PASSIVE", to_host_state(state_));
             }
-            if (strcmp(type_, "PASSIVE SERVICE CHECK") == 0) {
+            if (type_ == "PASSIVE SERVICE CHECK"sv) {
                 return parens("PASSIVE", to_service_state(state_));
             }
             return "";

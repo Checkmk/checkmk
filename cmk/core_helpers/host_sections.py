@@ -76,16 +76,6 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
     ) -> None:
         # This method is on the wrong class.
         #
-        # See comments on callees.
-        self._add_cache_info(persisted_sections)
-        self._add_persisted_sections(self.sections, persisted_sections, logger=logger)
-
-    def _add_cache_info(
-        self,
-        persisted_sections: PersistedSections[TRawDataSection],
-    ) -> None:
-        # This method is on the wrong class.
-        #
         # The HostSections should get the cache_info (provided
         # it is any useful: it is presently redundant with
         # the persisted_sections) in `__init__()` and not
@@ -95,29 +85,18 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
             for section_name, (created_at, valid_until, *_rest) in persisted_sections.items()
             if section_name not in self.sections
         })
-
-    @staticmethod
-    def _add_persisted_sections(
-        sections: MutableMapping[SectionName, TRawDataSection],
-        persisted_sections: PersistedSections[TRawDataSection],
-        *,
-        logger: logging.Logger,
-    ) -> None:
-        # This method is on the wrong class.
-        #
         # A more logical structure would be to update the
         # `Mapping[SectionName, TRawDataSection]` *before* passing it to
-        # HostSections.  This way, we could make `sections` here unmutable
+        # HostSections.  This way, we could make `sections` here immutable
         # and final.
-        """Add information from previous persisted infos."""
         for section_name, entry in persisted_sections.items():
             if len(entry) == 2:
                 continue  # Skip entries of "old" format
 
             # Don't overwrite sections that have been received from the source with this call
-            if section_name in sections:
+            if section_name in self.sections:
                 logger.debug("Skipping persisted section %r, live data available", section_name)
                 continue
 
             logger.debug("Using persisted section %r", section_name)
-            sections[section_name] = entry[-1]
+            self.sections[section_name] = entry[-1]

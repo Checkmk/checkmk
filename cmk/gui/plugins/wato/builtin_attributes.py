@@ -555,9 +555,13 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                          title=_("Netmask"),
                          minvalue=8,
                          maxvalue=30,
+                         default_value=24,
                      ),
                  ],
                  orientation="horizontal",
+                 help=_("Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
+                        "probably ok, while larger subnets (i.e. smaller netmask values) will lead "
+                        "to excessive runtimes."),
              )),
             ("ip_list", _("Explicit List of IP Addresses"),
              ListOfStrings(

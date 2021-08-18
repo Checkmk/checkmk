@@ -419,8 +419,9 @@
             ul {
               display: flex;
               flex-flow: column wrap;
-              max-height: calc(100vh - 132px);
-              padding-bottom: 24px;
+              max-height: calc(100vh - 165px);
+              padding-bottom: $menu-item-spacing;
+              box-sizing: border-box;
             }
 
             li {
@@ -479,10 +480,6 @@
     margin: 0;
     list-style: none;
 
-    &:nth-last-of-type(2) {
-      margin-top: auto; // place the help and user menu at the bottom
-    }
-
     a.popup_trigger {
       position: relative;
       display: block;
@@ -508,5 +505,9 @@
         border-radius: 8px;
       }
     }
+  }
+
+  > li:nth-last-of-type(2) {
+    margin-top: auto; // place the help and user menu at the bottom
   }
 }

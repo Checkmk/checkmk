@@ -10,6 +10,7 @@ by pasting the contents of a CSV file into a textbox."""
 import csv
 import time
 from typing import Dict, Type, List, Optional, Any
+import uuid
 from pathlib import Path
 
 from difflib import SequenceMatcher
@@ -137,9 +138,11 @@ class ModeBulkImport(WatoMode):
                 return self._import(csv_reader)
         return None
 
-    def _file_path(self) -> Path:
-        file_id = html.request.get_unicode_input_mandatory(
-            "file_id", "%s-%d" % (config.user.id, int(time.time())))
+    def _file_path(self, file_id: Optional[str] = None) -> Path:
+        if file_id is None:
+            file_id = html.request.get_unicode_input_mandatory("file_id")
+        if not file_id.isalnum():
+            raise MKUserError("file_id", _("The file_id has to be alphanumeric."))
         return self._upload_tmp_path / ("%s.csv" % file_id)
 
     # Upload the CSV file into a temporary directoy to make it available not only
@@ -153,9 +156,9 @@ class ModeBulkImport(WatoMode):
         upload_info = self._vs_upload().from_html_vars("_upload")
         self._vs_upload().validate_value(upload_info, "_upload")
 
-        file_id = "%s-%d" % (config.user.id, int(time.time()))
+        file_id = uuid.uuid4().hex
 
-        store.save_text_to_file(self._file_path(), upload_info["file"])
+        store.save_text_to_file(self._file_path(file_id=file_id), upload_info["file"])
 
         # make selections available to next page
         html.request.set_var("file_id", file_id)

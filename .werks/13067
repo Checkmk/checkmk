@@ -1,0 +1,12 @@
+Title: Fix path traversal vulnerability
+Class: security
+Compatible: compat
+Component: wato
+Date: 1629095519
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p10
+
+An authenticated user was able to enumerate files ending with ".csv" on the filesystem, accessible to the siteuser.

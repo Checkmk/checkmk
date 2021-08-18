@@ -83,6 +83,11 @@ public:
     };
     static constexpr uint32_t all_classes = 0xffffU;
 
+    LogEntry(size_t lineno, std::string line);
+    [[nodiscard]] std::string state_info() const;
+    static ServiceState parseServiceState(const std::string &str);
+    static HostState parseHostState(const std::string &str);
+
     [[nodiscard]] auto lineno() const { return _lineno; }
     [[nodiscard]] auto time() const { return _time; }
     [[nodiscard]] auto log_class() const { return _class; }
@@ -93,6 +98,16 @@ public:
     [[nodiscard]] auto host_name() const { return _host_name; }
     [[nodiscard]] auto service_description() const {
         return _service_description;
+    }
+    [[nodiscard]] auto command_name() const { return _command_name; }
+    [[nodiscard]] auto contact_name() const { return _contact_name; }
+    [[nodiscard]] auto state() const { return _state; }
+    [[nodiscard]] auto state_type() const { return _state_type; }
+    [[nodiscard]] auto attempt() const { return _attempt; }
+    [[nodiscard]] auto comment() const { return _comment; }
+    [[nodiscard]] auto plugin_output() const { return _plugin_output; }
+    [[nodiscard]] auto long_plugin_output() const {
+        return _long_plugin_output;
     }
 
 private:
@@ -105,8 +120,6 @@ private:
     const char *_type;
     std::string _host_name;
     std::string _service_description;
-
-public:
     std::string _command_name;
     std::string _contact_name;
     int _state;
@@ -116,13 +129,6 @@ public:
     std::string _plugin_output;
     std::string _long_plugin_output;
 
-    // NOTE: line gets modified!
-    LogEntry(size_t lineno, std::string line);
-    [[nodiscard]] std::string state_info() const;
-    static ServiceState parseServiceState(const std::string &str);
-    static HostState parseHostState(const std::string &str);
-
-private:
     enum class Param {
         HostName,
         ServiceDescription,

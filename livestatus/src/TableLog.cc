@@ -88,28 +88,28 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "comment", "A comment field used in various message types",
-        offsets_entry, [](const LogEntry &r) { return r._comment; }));
+        offsets_entry, [](const LogEntry &r) { return r.comment(); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "plugin_output",
         "The output of the check, if any is associated with the message",
-        offsets_entry, [](const LogEntry &r) { return r._plugin_output; }));
+        offsets_entry, [](const LogEntry &r) { return r.plugin_output(); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "long_plugin_output",
         "The complete output of the check, if any is associated with the message",
         offsets_entry,
-        [](const LogEntry &r) { return r._long_plugin_output; }));
+        [](const LogEntry &r) { return r.long_plugin_output(); }));
     addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
         "state", "The state of the host or service in question", offsets_entry,
-        [](const LogEntry &r) { return r._state; }));
+        [](const LogEntry &r) { return r.state(); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "state_type", "The type of the state (varies on different log classes)",
-        offsets_entry, [](const LogEntry &r) { return r._state_type; }));
+        offsets_entry, [](const LogEntry &r) { return r.state_type(); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "state_info", "Additional information about the state", offsets_entry,
         [](const LogEntry &r) { return r.state_info(); }));
     addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
         "attempt", "The number of the check attempt", offsets_entry,
-        [](const LogEntry &r) { return r._attempt; }));
+        [](const LogEntry &r) { return r.attempt(); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "service_description",
         "The description of the service log entry is about (might be empty)",
@@ -122,11 +122,11 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "contact_name",
         "The name of the contact the log entry is about (might be empty)",
-        offsets_entry, [](const LogEntry &r) { return r._contact_name; }));
+        offsets_entry, [](const LogEntry &r) { return r.contact_name(); }));
     addColumn(std::make_unique<StringColumn::Callback<LogEntry>>(
         "command_name",
         "The name of the command of the log entry (e.g. for notifications)",
-        offsets_entry, [](const LogEntry &r) { return r._command_name; }));
+        offsets_entry, [](const LogEntry &r) { return r.command_name(); }));
 
     // join host and service tables
     TableHosts::addColumns(this, "current_host_", offsets.add([](Row r) {
@@ -212,7 +212,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
             return false;  // time limit exceeded
         }
         auto *entry = it->second.get();
-        Command command = core()->find_command(entry->_command_name);
+        Command command = core()->find_command(entry->command_name());
         // TODO(sp): Remove ugly casts.
         LogRow lr{
             entry,
@@ -220,7 +220,7 @@ bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
             reinterpret_cast<service *>(core()->find_service(
                 entry->host_name(), entry->service_description())),
             reinterpret_cast<const contact *>(
-                core()->find_contact(entry->_contact_name)),
+                core()->find_contact(entry->contact_name())),
             &command};
         const LogRow *r = &lr;
         if (!query->processDataset(Row{r})) {

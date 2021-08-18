@@ -100,14 +100,14 @@ TEST(LogEntry, InitialHostState) {
             EXPECT_EQ("INITIAL HOST STATE"s, e.type());
             EXPECT_EQ("huey", e.host_name());
             EXPECT_EQ("", e.service_description());
-            EXPECT_EQ("", e._command_name);
-            EXPECT_EQ("", e._contact_name);
-            EXPECT_EQ(static_cast<int>(state), e._state);
-            EXPECT_EQ(state_type, e._state_type);
-            EXPECT_EQ(7, e._attempt);
-            EXPECT_EQ("Krasser Output", e._plugin_output);
-            EXPECT_EQ("Laaang", e._long_plugin_output);
-            EXPECT_EQ("", e._comment);
+            EXPECT_EQ("", e.command_name());
+            EXPECT_EQ("", e.contact_name());
+            EXPECT_EQ(static_cast<int>(state), e.state());
+            EXPECT_EQ(state_type, e.state_type());
+            EXPECT_EQ(7, e.attempt());
+            EXPECT_EQ("Krasser Output", e.plugin_output());
+            EXPECT_EQ("Laaang", e.long_plugin_output());
+            EXPECT_EQ("", e.comment());
             EXPECT_EQ(parens(state_type, state_name), e.state_info());
         }
     }
@@ -126,14 +126,14 @@ TEST(LogEntry, InitialHostStateWithoutLongOutput) {
     EXPECT_EQ("INITIAL HOST STATE"s, e.type());
     EXPECT_EQ("huey", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(static_cast<int>(HostState::up), e._state);
-    EXPECT_EQ("HARD", e._state_type);
-    EXPECT_EQ(7, e._attempt);
-    EXPECT_EQ("Krasser Output", e._plugin_output);
-    EXPECT_EQ("", e._long_plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(static_cast<int>(HostState::up), e.state());
+    EXPECT_EQ("HARD", e.state_type());
+    EXPECT_EQ(7, e.attempt());
+    EXPECT_EQ("Krasser Output", e.plugin_output());
+    EXPECT_EQ("", e.long_plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("HARD (UP)", e.state_info());
 }
 
@@ -151,14 +151,14 @@ TEST(LogEntry, InitialHostStateWithMultiLine) {
     EXPECT_EQ("INITIAL HOST STATE"s, e.type());
     EXPECT_EQ("huey", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(static_cast<int>(HostState::up), e._state);
-    EXPECT_EQ("HARD", e._state_type);
-    EXPECT_EQ(7, e._attempt);
-    EXPECT_EQ("Krasser Output", e._plugin_output);
-    EXPECT_EQ("Laaanger\nLong\nOutput", e._long_plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(static_cast<int>(HostState::up), e.state());
+    EXPECT_EQ("HARD", e.state_type());
+    EXPECT_EQ(7, e.attempt());
+    EXPECT_EQ("Krasser Output", e.plugin_output());
+    EXPECT_EQ("Laaanger\nLong\nOutput", e.long_plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("HARD (UP)", e.state_info());
 }
 
@@ -185,14 +185,14 @@ TEST(LogEntry, CurrentHostState) {
             EXPECT_EQ("CURRENT HOST STATE"s, e.type());
             EXPECT_EQ("dewey", e.host_name());
             EXPECT_EQ("", e.service_description());
-            EXPECT_EQ("", e._command_name);
-            EXPECT_EQ("", e._contact_name);
-            EXPECT_EQ(static_cast<int>(state), e._state);
-            EXPECT_EQ(state_type, e._state_type);
-            EXPECT_EQ(8, e._attempt);
-            EXPECT_EQ("Voll krasser Output", e._plugin_output);
-            EXPECT_EQ("long", e._long_plugin_output);
-            EXPECT_EQ("", e._comment);
+            EXPECT_EQ("", e.command_name());
+            EXPECT_EQ("", e.contact_name());
+            EXPECT_EQ(static_cast<int>(state), e.state());
+            EXPECT_EQ(state_type, e.state_type());
+            EXPECT_EQ(8, e.attempt());
+            EXPECT_EQ("Voll krasser Output", e.plugin_output());
+            EXPECT_EQ("long", e.long_plugin_output());
+            EXPECT_EQ("", e.comment());
             EXPECT_EQ(parens(state_type, state_name), e.state_info());
         }
     }
@@ -220,14 +220,14 @@ TEST(LogEntry, HostAlert) {
             EXPECT_EQ("HOST ALERT"s, e.type());
             EXPECT_EQ("huey", e.host_name());
             EXPECT_EQ("", e.service_description());
-            EXPECT_EQ("", e._command_name);
-            EXPECT_EQ("", e._contact_name);
-            EXPECT_EQ(static_cast<int>(state), e._state);
-            EXPECT_EQ(state_type, e._state_type);
-            EXPECT_EQ(1234, e._attempt);
-            EXPECT_EQ("Komisch...", e._plugin_output);
-            EXPECT_EQ("Lalalang", e._long_plugin_output);
-            EXPECT_EQ("", e._comment);
+            EXPECT_EQ("", e.command_name());
+            EXPECT_EQ("", e.contact_name());
+            EXPECT_EQ(static_cast<int>(state), e.state());
+            EXPECT_EQ(state_type, e.state_type());
+            EXPECT_EQ(1234, e.attempt());
+            EXPECT_EQ("Komisch...", e.plugin_output());
+            EXPECT_EQ("Lalalang", e.long_plugin_output());
+            EXPECT_EQ("", e.comment());
             EXPECT_EQ(parens(state_type, state_name), e.state_info());
         }
     }
@@ -247,14 +247,14 @@ TEST(LogEntry, HostDowntimeAlert) {
         EXPECT_EQ("HOST DOWNTIME ALERT"s, e.type());
         EXPECT_EQ("huey", e.host_name());
         EXPECT_EQ("", e.service_description());
-        EXPECT_EQ("", e._command_name);
-        EXPECT_EQ("", e._contact_name);
-        EXPECT_EQ(static_cast<int>(HostState::up), e._state);
-        EXPECT_EQ(state_type, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("Komisch...", e._comment);
+        EXPECT_EQ("", e.command_name());
+        EXPECT_EQ("", e.contact_name());
+        EXPECT_EQ(static_cast<int>(HostState::up), e.state());
+        EXPECT_EQ(state_type, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("Komisch...", e.comment());
         EXPECT_EQ(state_type, e.state_info());
     }
 }
@@ -273,14 +273,14 @@ TEST(LogEntry, HostAcknowledgeAlert) {
         EXPECT_EQ("HOST ACKNOWLEDGE ALERT"s, e.type());
         EXPECT_EQ("huey", e.host_name());
         EXPECT_EQ("", e.service_description());
-        EXPECT_EQ("", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(static_cast<int>(HostState::up), e._state);
-        EXPECT_EQ(state_type, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("foo bar", e._comment);
+        EXPECT_EQ("", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(static_cast<int>(HostState::up), e.state());
+        EXPECT_EQ(state_type, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("foo bar", e.comment());
         EXPECT_EQ(state_type, e.state_info());
     }
 }
@@ -299,14 +299,14 @@ TEST(LogEntry, HostFlappingAlert) {
         EXPECT_EQ("HOST FLAPPING ALERT"s, e.type());
         EXPECT_EQ("huey", e.host_name());
         EXPECT_EQ("", e.service_description());
-        EXPECT_EQ("", e._command_name);
-        EXPECT_EQ("", e._contact_name);
-        EXPECT_EQ(static_cast<int>(HostState::up), e._state);
-        EXPECT_EQ(state_type, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("foo bar", e._comment);
+        EXPECT_EQ("", e.command_name());
+        EXPECT_EQ("", e.contact_name());
+        EXPECT_EQ(static_cast<int>(HostState::up), e.state());
+        EXPECT_EQ(state_type, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("foo bar", e.comment());
         EXPECT_EQ(state_type, e.state_info());
     }
 }
@@ -334,14 +334,14 @@ TEST(LogEntry, InitialServiceState) {
             EXPECT_EQ("INITIAL SERVICE STATE"s, e.type());
             EXPECT_EQ("louie", e.host_name());
             EXPECT_EQ("servus 1", e.service_description());
-            EXPECT_EQ("", e._command_name);
-            EXPECT_EQ("", e._contact_name);
-            EXPECT_EQ(static_cast<int>(state), e._state);
-            EXPECT_EQ(state_type, e._state_type);
-            EXPECT_EQ(1, e._attempt);
-            EXPECT_EQ("Langweiliger Output", e._plugin_output);
-            EXPECT_EQ("long", e._long_plugin_output);
-            EXPECT_EQ("", e._comment);
+            EXPECT_EQ("", e.command_name());
+            EXPECT_EQ("", e.contact_name());
+            EXPECT_EQ(static_cast<int>(state), e.state());
+            EXPECT_EQ(state_type, e.state_type());
+            EXPECT_EQ(1, e.attempt());
+            EXPECT_EQ("Langweiliger Output", e.plugin_output());
+            EXPECT_EQ("long", e.long_plugin_output());
+            EXPECT_EQ("", e.comment());
             EXPECT_EQ(parens(state_type, state_name), e.state_info());
         }
     }
@@ -370,14 +370,14 @@ TEST(LogEntry, CurrentServiceState) {
             EXPECT_EQ("CURRENT SERVICE STATE"s, e.type());
             EXPECT_EQ("donald", e.host_name());
             EXPECT_EQ("gruezi 2", e.service_description());
-            EXPECT_EQ("", e._command_name);
-            EXPECT_EQ("", e._contact_name);
-            EXPECT_EQ(static_cast<int>(state), e._state);
-            EXPECT_EQ(state_type, e._state_type);
-            EXPECT_EQ(2, e._attempt);
-            EXPECT_EQ("Irgendein Output", e._plugin_output);
-            EXPECT_EQ("lang", e._long_plugin_output);
-            EXPECT_EQ("", e._comment);
+            EXPECT_EQ("", e.command_name());
+            EXPECT_EQ("", e.contact_name());
+            EXPECT_EQ(static_cast<int>(state), e.state());
+            EXPECT_EQ(state_type, e.state_type());
+            EXPECT_EQ(2, e.attempt());
+            EXPECT_EQ("Irgendein Output", e.plugin_output());
+            EXPECT_EQ("lang", e.long_plugin_output());
+            EXPECT_EQ("", e.comment());
             EXPECT_EQ(parens(state_type, state_name), e.state_info());
         }
     }
@@ -406,14 +406,14 @@ TEST(LogEntry, ServiceAlert) {
             EXPECT_EQ("SERVICE ALERT"s, e.type());
             EXPECT_EQ("huey", e.host_name());
             EXPECT_EQ("hi!", e.service_description());
-            EXPECT_EQ("", e._command_name);
-            EXPECT_EQ("", e._contact_name);
-            EXPECT_EQ(static_cast<int>(state), e._state);
-            EXPECT_EQ(state_type, e._state_type);
-            EXPECT_EQ(1234, e._attempt);
-            EXPECT_EQ("Komisch...", e._plugin_output);
-            EXPECT_EQ("lang", e._long_plugin_output);
-            EXPECT_EQ("", e._comment);
+            EXPECT_EQ("", e.command_name());
+            EXPECT_EQ("", e.contact_name());
+            EXPECT_EQ(static_cast<int>(state), e.state());
+            EXPECT_EQ(state_type, e.state_type());
+            EXPECT_EQ(1234, e.attempt());
+            EXPECT_EQ("Komisch...", e.plugin_output());
+            EXPECT_EQ("lang", e.long_plugin_output());
+            EXPECT_EQ("", e.comment());
             EXPECT_EQ(parens(state_type, state_name), e.state_info());
         }
     }
@@ -433,14 +433,14 @@ TEST(LogEntry, ServiceDowntimeAlert) {
         EXPECT_EQ("SERVICE DOWNTIME ALERT"s, e.type());
         EXPECT_EQ("huey", e.host_name());
         EXPECT_EQ("hi, ho!", e.service_description());
-        EXPECT_EQ("", e._command_name);
-        EXPECT_EQ("", e._contact_name);
-        EXPECT_EQ(static_cast<int>(ServiceState::ok), e._state);
-        EXPECT_EQ(state_type, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("Komisch...", e._comment);
+        EXPECT_EQ("", e.command_name());
+        EXPECT_EQ("", e.contact_name());
+        EXPECT_EQ(static_cast<int>(ServiceState::ok), e.state());
+        EXPECT_EQ(state_type, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("Komisch...", e.comment());
         EXPECT_EQ(state_type, e.state_info());
     }
 }
@@ -459,14 +459,14 @@ TEST(LogEntry, ServiceAcknowledgeAlert) {
         EXPECT_EQ("SERVICE ACKNOWLEDGE ALERT"s, e.type());
         EXPECT_EQ("huey", e.host_name());
         EXPECT_EQ("hi!", e.service_description());
-        EXPECT_EQ("", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(static_cast<int>(ServiceState::ok), e._state);
-        EXPECT_EQ(state_type, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("foo bar", e._comment);
+        EXPECT_EQ("", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(static_cast<int>(ServiceState::ok), e.state());
+        EXPECT_EQ(state_type, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("foo bar", e.comment());
         EXPECT_EQ(state_type, e.state_info());
     }
 }
@@ -485,14 +485,14 @@ TEST(LogEntry, ServiceFlappingAlert) {
         EXPECT_EQ("SERVICE FLAPPING ALERT"s, e.type());
         EXPECT_EQ("huey", e.host_name());
         EXPECT_EQ("hi!", e.service_description());
-        EXPECT_EQ("", e._command_name);
-        EXPECT_EQ("", e._contact_name);
-        EXPECT_EQ(static_cast<int>(ServiceState::ok), e._state);
-        EXPECT_EQ(state_type, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("foo bar", e._comment);
+        EXPECT_EQ("", e.command_name());
+        EXPECT_EQ("", e.contact_name());
+        EXPECT_EQ(static_cast<int>(ServiceState::ok), e.state());
+        EXPECT_EQ(state_type, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("foo bar", e.comment());
         EXPECT_EQ(state_type, e.state_info());
     }
 }
@@ -509,14 +509,14 @@ TEST(LogEntry, TimeperiodTransition) {
     EXPECT_EQ("TIMEPERIOD TRANSITION"s, e.type());
     EXPECT_EQ("", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(0, e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._long_plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(0, e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.long_plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -538,14 +538,14 @@ TEST(LogEntry, HostNotification) {
         EXPECT_EQ("HOST NOTIFICATION"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("", e.service_description());
-        EXPECT_EQ("commando", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(state, e._state);
-        EXPECT_EQ(state_name, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("viel output...", e._plugin_output);
-        EXPECT_EQ("lalala", e._long_plugin_output);
-        EXPECT_EQ("The Hobbit", e._comment);
+        EXPECT_EQ("commando", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(state, e.state());
+        EXPECT_EQ(state_name, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("viel output...", e.plugin_output());
+        EXPECT_EQ("lalala", e.long_plugin_output());
+        EXPECT_EQ("The Hobbit", e.comment());
         EXPECT_EQ(info, e.state_info());
     }
 }
@@ -568,14 +568,14 @@ TEST(LogEntry, ServiceNotification) {
         EXPECT_EQ("SERVICE NOTIFICATION"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("duck", e.service_description());
-        EXPECT_EQ("commando", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(state, e._state);
-        EXPECT_EQ(state_name, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("viel output...", e._plugin_output);
-        EXPECT_EQ("lalala", e._long_plugin_output);
-        EXPECT_EQ("The Hobbit", e._comment);
+        EXPECT_EQ("commando", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(state, e.state());
+        EXPECT_EQ(state_name, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("viel output...", e.plugin_output());
+        EXPECT_EQ("lalala", e.long_plugin_output());
+        EXPECT_EQ("The Hobbit", e.comment());
         EXPECT_EQ(info, e.state_info());
     }
 }
@@ -598,14 +598,14 @@ TEST(LogEntry, HostNotificationResult) {
         EXPECT_EQ("HOST NOTIFICATION RESULT"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("", e.service_description());
-        EXPECT_EQ("commando", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(code, e._state);
-        EXPECT_EQ(code_name, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("viel output...", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("blah blubb", e._comment);
+        EXPECT_EQ("commando", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(code, e.state());
+        EXPECT_EQ(code_name, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("viel output...", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("blah blubb", e.comment());
         EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
@@ -629,14 +629,14 @@ TEST(LogEntry, ServiceNotificationResult) {
         EXPECT_EQ("SERVICE NOTIFICATION RESULT"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("duck", e.service_description());
-        EXPECT_EQ("commando", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(code, e._state);
-        EXPECT_EQ(code_name, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("viel output...", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("blah blubb", e._comment);
+        EXPECT_EQ("commando", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(code, e.state());
+        EXPECT_EQ(code_name, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("viel output...", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("blah blubb", e.comment());
         EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
@@ -659,14 +659,14 @@ TEST(LogEntry, HostNotificationProgress) {
         EXPECT_EQ("HOST NOTIFICATION PROGRESS"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("", e.service_description());
-        EXPECT_EQ("commando", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(code, e._state);
-        EXPECT_EQ(code_name, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("viel output...", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("", e._comment);
+        EXPECT_EQ("commando", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(code, e.state());
+        EXPECT_EQ(code_name, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("viel output...", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("", e.comment());
         EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
@@ -690,14 +690,14 @@ TEST(LogEntry, ServiceNotificationProgress) {
         EXPECT_EQ("SERVICE NOTIFICATION PROGRESS"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("duck", e.service_description());
-        EXPECT_EQ("commando", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(code, e._state);
-        EXPECT_EQ(code_name, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("viel output...", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("", e._comment);
+        EXPECT_EQ("commando", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(code, e.state());
+        EXPECT_EQ(code_name, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("viel output...", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("", e.comment());
         EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
@@ -714,13 +714,13 @@ TEST(LogEntry, HostAlertHandlerStarted) {
     EXPECT_EQ("HOST ALERT HANDLER STARTED"s, e.type());
     EXPECT_EQ("donald", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("commando", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(static_cast<int>(HostState::up), e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("commando", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(static_cast<int>(HostState::up), e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -737,13 +737,13 @@ TEST(LogEntry, ServiceAlertHandlerStarted) {
     EXPECT_EQ("SERVICE ALERT HANDLER STARTED"s, e.type());
     EXPECT_EQ("donald", e.host_name());
     EXPECT_EQ("duck", e.service_description());
-    EXPECT_EQ("commando", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(static_cast<int>(ServiceState::ok), e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("commando", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(static_cast<int>(ServiceState::ok), e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -765,14 +765,14 @@ TEST(LogEntry, HostAlertHandlerStopped) {
         EXPECT_EQ("HOST ALERT HANDLER STOPPED"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("", e.service_description());
-        EXPECT_EQ("commando", e._command_name);
-        EXPECT_EQ("", e._contact_name);
-        EXPECT_EQ(code, e._state);
-        EXPECT_EQ("", e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("es war einmal...", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("", e._comment);
+        EXPECT_EQ("commando", e.command_name());
+        EXPECT_EQ("", e.contact_name());
+        EXPECT_EQ(code, e.state());
+        EXPECT_EQ("", e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("es war einmal...", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("", e.comment());
         EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
@@ -795,14 +795,14 @@ TEST(LogEntry, ServiceAlertHandlerStopped) {
         EXPECT_EQ("SERVICE ALERT HANDLER STOPPED"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("duck", e.service_description());
-        EXPECT_EQ("commando", e._command_name);
-        EXPECT_EQ("", e._contact_name);
-        EXPECT_EQ(code, e._state);
-        EXPECT_EQ("", e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("once upon a time...", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("", e._comment);
+        EXPECT_EQ("commando", e.command_name());
+        EXPECT_EQ("", e.contact_name());
+        EXPECT_EQ(code, e.state());
+        EXPECT_EQ("", e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("once upon a time...", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("", e.comment());
         EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
@@ -825,13 +825,13 @@ TEST(LogEntry, PassiveServiceCheck) {
         EXPECT_EQ("PASSIVE SERVICE CHECK"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("duck", e.service_description());
-        EXPECT_EQ("", e._command_name);
-        EXPECT_EQ("", e._contact_name);
-        EXPECT_EQ(static_cast<int>(state), e._state);
-        EXPECT_EQ("", e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("Isch hab Ruecken!", e._plugin_output);
-        EXPECT_EQ("", e._comment);
+        EXPECT_EQ("", e.command_name());
+        EXPECT_EQ("", e.contact_name());
+        EXPECT_EQ(static_cast<int>(state), e.state());
+        EXPECT_EQ("", e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("Isch hab Ruecken!", e.plugin_output());
+        EXPECT_EQ("", e.comment());
         EXPECT_EQ(parens("PASSIVE", state_name), e.state_info());
     }
 }
@@ -854,13 +854,13 @@ TEST(LogEntry, PassiveHostCheck) {
         EXPECT_EQ("PASSIVE HOST CHECK"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("", e.service_description());
-        EXPECT_EQ("", e._command_name);
-        EXPECT_EQ("", e._contact_name);
-        EXPECT_EQ(static_cast<int>(state), e._state);
-        EXPECT_EQ("", e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("Isch hab Ruecken!", e._plugin_output);
-        EXPECT_EQ("", e._comment);
+        EXPECT_EQ("", e.command_name());
+        EXPECT_EQ("", e.contact_name());
+        EXPECT_EQ(static_cast<int>(state), e.state());
+        EXPECT_EQ("", e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("Isch hab Ruecken!", e.plugin_output());
+        EXPECT_EQ("", e.comment());
         EXPECT_EQ(parens("PASSIVE", state_name), e.state_info());
     }
 }
@@ -877,13 +877,13 @@ TEST(LogEntry, ExternalCommand) {
     EXPECT_EQ("EXTERNAL COMMAND"s, e.type());
     EXPECT_EQ("", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(0, e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(0, e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -899,13 +899,13 @@ TEST(LogEntry, LogVersion) {
     EXPECT_EQ("LOG VERSION: 2.0"s, e.type());
     EXPECT_EQ("", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(0, e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(0, e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -921,13 +921,13 @@ TEST(LogEntry, LogInitialStates) {
     EXPECT_EQ("logging initial states"s, e.type());
     EXPECT_EQ("", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(0, e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(0, e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -943,13 +943,13 @@ TEST(LogEntry, CoreStarting1) {
     EXPECT_EQ("starting..."s, e.type());
     EXPECT_EQ("", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(0, e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(0, e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -965,13 +965,13 @@ TEST(LogEntry, CoreStarting2) {
     EXPECT_EQ("active mode..."s, e.type());
     EXPECT_EQ("", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(0, e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(0, e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -987,13 +987,13 @@ TEST(LogEntry, CoreStopping1) {
     EXPECT_EQ("shutting down..."s, e.type());
     EXPECT_EQ("", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(0, e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(0, e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -1009,13 +1009,13 @@ TEST(LogEntry, CoreStopping2) {
     EXPECT_EQ("Bailing out"s, e.type());
     EXPECT_EQ("", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(0, e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(0, e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -1031,13 +1031,13 @@ TEST(LogEntry, CoreStopping3) {
     EXPECT_EQ("standby mode..."s, e.type());
     EXPECT_EQ("", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(0, e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(0, e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -1053,13 +1053,13 @@ TEST(LogEntry, InvalidTimeStamp) {
     EXPECT_EQ(""s, e.type());
     EXPECT_EQ("", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(0, e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(0, e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -1075,13 +1075,13 @@ TEST(LogEntry, NoColon) {
     EXPECT_EQ("this is total;nonsense"s, e.type());
     EXPECT_EQ("", e.host_name());
     EXPECT_EQ("", e.service_description());
-    EXPECT_EQ("", e._command_name);
-    EXPECT_EQ("", e._contact_name);
-    EXPECT_EQ(0, e._state);
-    EXPECT_EQ("", e._state_type);
-    EXPECT_EQ(0, e._attempt);
-    EXPECT_EQ("", e._plugin_output);
-    EXPECT_EQ("", e._comment);
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(0, e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
 }
 
@@ -1105,14 +1105,14 @@ TEST(LogEntry, HostNotificationSwapped) {
         EXPECT_EQ("HOST NOTIFICATION"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("", e.service_description());
-        EXPECT_EQ("check-mk-notify", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(state, e._state);
-        EXPECT_EQ(state_name, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("viel output...", e._plugin_output);
-        EXPECT_EQ("lalala", e._long_plugin_output);
-        EXPECT_EQ("The Hobbit", e._comment);
+        EXPECT_EQ("check-mk-notify", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(state, e.state());
+        EXPECT_EQ(state_name, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("viel output...", e.plugin_output());
+        EXPECT_EQ("lalala", e.long_plugin_output());
+        EXPECT_EQ("The Hobbit", e.comment());
         EXPECT_EQ(info, e.state_info());
     }
 }
@@ -1137,14 +1137,14 @@ TEST(LogEntry, ServiceNotificationSwapped) {
         EXPECT_EQ("SERVICE NOTIFICATION"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("duck", e.service_description());
-        EXPECT_EQ("check-mk-notify", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(state, e._state);
-        EXPECT_EQ(state_name, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("viel output...", e._plugin_output);
-        EXPECT_EQ("lalala", e._long_plugin_output);
-        EXPECT_EQ("The Hobbit", e._comment);
+        EXPECT_EQ("check-mk-notify", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(state, e.state());
+        EXPECT_EQ(state_name, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("viel output...", e.plugin_output());
+        EXPECT_EQ("lalala", e.long_plugin_output());
+        EXPECT_EQ("The Hobbit", e.comment());
         EXPECT_EQ(info, e.state_info());
     }
 }
@@ -1168,14 +1168,14 @@ TEST(LogEntry, HostNotificationResultSwapped) {
         EXPECT_EQ("HOST NOTIFICATION RESULT"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("", e.service_description());
-        EXPECT_EQ("check-mk-notify", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(code, e._state);
-        EXPECT_EQ(code_name, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("viel output...", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("blah blubb", e._comment);
+        EXPECT_EQ("check-mk-notify", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(code, e.state());
+        EXPECT_EQ(code_name, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("viel output...", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("blah blubb", e.comment());
         EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
@@ -1199,14 +1199,14 @@ TEST(LogEntry, ServiceNotificationResultSwapped) {
         EXPECT_EQ("SERVICE NOTIFICATION RESULT"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("duck", e.service_description());
-        EXPECT_EQ("check-mk-notify", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(code, e._state);
-        EXPECT_EQ(code_name, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("viel output...", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("blah blubb", e._comment);
+        EXPECT_EQ("check-mk-notify", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(code, e.state());
+        EXPECT_EQ(code_name, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("viel output...", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("blah blubb", e.comment());
         EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
@@ -1230,14 +1230,14 @@ TEST(LogEntry, HostNotificationProgressSwapped) {
         EXPECT_EQ("HOST NOTIFICATION PROGRESS"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("", e.service_description());
-        EXPECT_EQ("check-mk-notify", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(code, e._state);
-        EXPECT_EQ(code_name, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("viel output...", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("", e._comment);
+        EXPECT_EQ("check-mk-notify", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(code, e.state());
+        EXPECT_EQ(code_name, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("viel output...", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("", e.comment());
         EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }
@@ -1261,14 +1261,14 @@ TEST(LogEntry, ServiceNotificationProgressSwapped) {
         EXPECT_EQ("SERVICE NOTIFICATION PROGRESS"s, e.type());
         EXPECT_EQ("donald", e.host_name());
         EXPECT_EQ("duck", e.service_description());
-        EXPECT_EQ("check-mk-notify", e._command_name);
-        EXPECT_EQ("King Kong", e._contact_name);
-        EXPECT_EQ(code, e._state);
-        EXPECT_EQ(code_name, e._state_type);
-        EXPECT_EQ(0, e._attempt);
-        EXPECT_EQ("viel output...", e._plugin_output);
-        EXPECT_EQ("", e._long_plugin_output);
-        EXPECT_EQ("", e._comment);
+        EXPECT_EQ("check-mk-notify", e.command_name());
+        EXPECT_EQ("King Kong", e.contact_name());
+        EXPECT_EQ(code, e.state());
+        EXPECT_EQ(code_name, e.state_type());
+        EXPECT_EQ(0, e.attempt());
+        EXPECT_EQ("viel output...", e.plugin_output());
+        EXPECT_EQ("", e.long_plugin_output());
+        EXPECT_EQ("", e.comment());
         EXPECT_EQ(parens("EXIT_CODE", info), e.state_info());
     }
 }

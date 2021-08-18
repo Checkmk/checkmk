@@ -715,22 +715,22 @@ int TableStateHistory::updateHostServiceState(Query *query,
         case LogEntryKind::state_host_initial:
         case LogEntryKind::alert_host: {
             if (hs_state->_is_host) {
-                if (hs_state->_state != entry->_state) {
+                if (hs_state->_state != entry->state()) {
                     if (!only_update) {
                         process(query, hs_state);
                     }
-                    hs_state->_state = entry->_state;
-                    hs_state->_host_down = static_cast<int>(entry->_state > 0);
+                    hs_state->_state = entry->state();
+                    hs_state->_host_down = static_cast<int>(entry->state() > 0);
                     hs_state->_debug_info = "HOST STATE";
                 } else {
                     state_changed = 0;
                 }
             } else if (hs_state->_host_down !=
-                       static_cast<int>(entry->_state > 0)) {
+                       static_cast<int>(entry->state() > 0)) {
                 if (!only_update) {
                     process(query, hs_state);
                 }
-                hs_state->_host_down = static_cast<int>(entry->_state > 0);
+                hs_state->_host_down = static_cast<int>(entry->state() > 0);
                 hs_state->_debug_info = "SVC HOST STATE";
             }
             break;
@@ -738,18 +738,18 @@ int TableStateHistory::updateHostServiceState(Query *query,
         case LogEntryKind::state_service:
         case LogEntryKind::state_service_initial:
         case LogEntryKind::alert_service: {
-            if (hs_state->_state != entry->_state) {
+            if (hs_state->_state != entry->state()) {
                 if (!only_update) {
                     process(query, hs_state);
                 }
                 hs_state->_debug_info = "SVC ALERT";
-                hs_state->_state = entry->_state;
+                hs_state->_state = entry->state();
             }
             break;
         }
         case LogEntryKind::downtime_alert_host: {
             int downtime_active =
-                mk::starts_with(entry->_state_type, "STARTED") ? 1 : 0;
+                mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
 
             if (hs_state->_in_host_downtime != downtime_active) {
                 if (!only_update) {
@@ -768,7 +768,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         }
         case LogEntryKind::downtime_alert_service: {
             int downtime_active =
-                mk::starts_with(entry->_state_type, "STARTED") ? 1 : 0;
+                mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
             if (hs_state->_in_downtime != downtime_active) {
                 if (!only_update) {
                     process(query, hs_state);
@@ -781,7 +781,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         case LogEntryKind::flapping_host:
         case LogEntryKind::flapping_service: {
             int flapping_active =
-                mk::starts_with(entry->_state_type, "STARTED") ? 1 : 0;
+                mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
             if (hs_state->_is_flapping != flapping_active) {
                 if (!only_update) {
                     process(query, hs_state);
@@ -831,9 +831,9 @@ int TableStateHistory::updateHostServiceState(Query *query,
     if (entry->kind() != LogEntryKind::timeperiod_transition) {
         bool fix_me = (entry->kind() == LogEntryKind::state_host_initial ||
                        entry->kind() == LogEntryKind::state_service_initial) &&
-                      entry->_plugin_output == "(null)";
-        hs_state->_log_output = fix_me ? "" : entry->_plugin_output;
-        hs_state->_long_log_output = entry->_long_plugin_output;
+                      entry->plugin_output() == "(null)";
+        hs_state->_log_output = fix_me ? "" : entry->plugin_output();
+        hs_state->_long_log_output = entry->long_plugin_output();
     }
 
     return state_changed;

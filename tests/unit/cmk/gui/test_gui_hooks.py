@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest  # type: ignore[import]
+from typing import List
 
 import cmk.gui.hooks as hooks
 
@@ -26,6 +27,30 @@ def test_scoped_memoize():
     hooks.call('request-start')
 
     assert blah() == [1, 1]
+
+
+def test_scoped_memoize_unregister():
+    # Make sure request-start hooks are still called, after plugin hooks are
+    # unregistered. In previous versions unregister_plugin_hooks also
+    # unregistered hooks used by memoize.
+
+    @hooks.request_memoize()
+    def blah(a: List[int] = []) -> List[int]:  # pylint: disable=dangerous-default-value
+        a.append(1)
+        return a
+
+    assert blah() == [1]
+    assert blah() == [1]
+
+    hooks.call('request-start')
+
+    assert blah() == [1, 1]
+
+    hooks.unregister_plugin_hooks()
+    hooks.call('request-start')
+
+    assert blah() == [1, 1, 1]
+    assert blah() == [1, 1, 1]
 
 
 def test_hook_registration():

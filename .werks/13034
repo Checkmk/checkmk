@@ -1,0 +1,14 @@
+Title: Network scan for folders did not show all criticality tags
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1629350861
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p10
+
+In "Setup > Hosts" the "Network Scan" section of the folder properties contain
+a "Set criticality host tags" dropdown. The values of this dropdown are cached.
+This caching was not correctly cleared in previous versions. Newly added values
+did not show up in the list.

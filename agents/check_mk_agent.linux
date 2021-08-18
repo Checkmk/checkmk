@@ -1499,46 +1499,49 @@ add_failed_python_plugin() {
     fi
 }
 
-run_agent_plugin() {
+get_plugin_interpreter() {
+    # Return the interpreter (or "") for the plugin file (or fail).
+    # We return the interpreter instead of wrapping the call, so we don't
+    # have to export the function (which is not portable).
     agent_plugin="${1#./}"
     extension="${agent_plugin##*.}"
     filename="${agent_plugin%.*}"
 
     # Execute all non python plugins with ./foo
-    if [ "$extension" != "py" ]; then
-        _log_section_time "./$agent_plugin"
-        return
+    if [ "${extension}" != "py" ]; then
+        return 0
     fi
 
-    if [ "${filename:(-2):(2)}" != "_2" ]; then
-        if [ -n "$NO_PYTHON" ] || [ -n "$WRONG_PYTHON_COMMAND" ]; then
-            add_failed_python_plugin "$agent_plugin"
-            return
+    if [ "${filename#${filename%??}}" != "_2" ]; then
+        if [ -n "${NO_PYTHON}" ] || [ -n "${WRONG_PYTHON_COMMAND}" ]; then
+            add_failed_python_plugin "${agent_plugin}"
+            return 1
         fi
-        if [ -n "$PYTHON3" ]; then
-            _log_section_time "$PYTHON3 $agent_plugin"
-            return
+        if [ -n "${PYTHON3}" ]; then
+            echo "${PYTHON3}"
+            return 0
         fi
         if [ ! -e "${filename}_2.py" ]; then
-            add_failed_python_plugin "$agent_plugin (Missing Python 3 installation)"
-            return
+            add_failed_python_plugin "${agent_plugin} (Missing Python 3 installation)"
+            return 1
         fi
-        return
+
+        # no python3 found, but python2 plugin file present
+        return 1
     fi
 
-    if [ -x "${filename%??}.py" ] && [ -n "$PYTHON3" ]; then
-        return
+    if [ -x "${filename%??}.py" ] && [ -n "${PYTHON3}" ]; then
+        return 1
     fi
 
-    if [ -n "$PYTHON2" ]; then
-        _log_section_time "$PYTHON2 $agent_plugin"
-        return
+    if [ -n "${PYTHON2}" ]; then
+        echo "${PYTHON2}"
+        return 0
     fi
 
-    add_failed_python_plugin "$agent_plugin (missing Python 2 installation)"
+    add_failed_python_plugin "${agent_plugin} (missing Python 2 installation)"
+    return 1
 }
-
-export -f run_agent_plugin
 
 run_plugins() {
     cd "$PLUGINSDIR" || return
@@ -1546,7 +1549,9 @@ run_plugins() {
     if ${MK_RUN_SYNC_PARTS}; then
         for skript in ./*; do
             if is_valid_plugin "$skript"; then
-                run_agent_plugin "$skript"
+                if plugin_interpreter=$(get_plugin_interpreter "${skript}"); then
+                    _log_section_time "${plugin_interpreter} $skript"
+                fi
             fi
         done
     fi
@@ -1554,7 +1559,9 @@ run_plugins() {
     # Call some plugins only every X'th second
     for skript in [1-9]*/*; do
         if is_valid_plugin "$skript"; then
-            run_cached "plugins_${skript##*/}" "${skript%/*}" run_agent_plugin "$skript"
+            if plugin_interpreter=$(get_plugin_interpreter "${skript}"); then
+                run_cached "plugins_${skript##*/}" "${skript%/*}" _log_section_time "${plugin_interpreter}" "$skript"
+            fi
         fi
     done
 }
@@ -1630,11 +1637,13 @@ run_real_time_checks() {
                 {
                     echo -n $PROTOCOL
                     date +%s | tr -d '\n'
-                    if [ "$ENCRYPTED_RT" != "no" ]; then
-                        export RTC_SECRET=$RTC_SECRET
-                        run_agent_plugin "$PLUGIN" | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
-                    else
-                        run_agent_plugin "$PLUGIN"
+                    if plugin_interpreter=$(get_plugin_interpreter "${skript}"); then
+                        if [ "$ENCRYPTED_RT" != "no" ]; then
+                            export RTC_SECRET=$RTC_SECRET
+                            _log_section_time "${plugin_interpreter}" "${PLUGIN}" | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
+                        else
+                            _log_section_time "${plugin_interpreter}" "${PLUGIN}"
+                        fi
                     fi
                 } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
             done
@@ -1843,7 +1852,7 @@ main_mixed_parts() {
     run_local_checks
 
     # Plugins
-    # run_plugins -> run_agent_plugin -> _log_section_time CMD
+    # run_plugins -> _log_section_time CMD
     run_plugins
 }
 
@@ -1851,7 +1860,7 @@ main_async_parts() {
     # Start new liveupdate process in background
     # Starting a new live update process will terminate the old one automatically after
     # max. 1 sec.
-    # run_liveupdate -> run_real_time_checks -> run_agent_plugin -> _log_section_time CMD
+    # run_liveupdate -> run_real_time_checks -> _log_section_time CMD
     run_liveupdate
 }
 

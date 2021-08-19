@@ -243,7 +243,9 @@ async def run_cmd(cmd: str, env: Mapping[str, str], cwd: Optional[str], check: b
             proc_fn(line.decode().rstrip())
 
     process = await asyncio.create_subprocess_exec(
-        "sh", "-c", cmd, cwd=cwd,
+        # Use `bash` rather than `sh` in order to provide things like `&>`
+        "bash", "-c", cmd,
+        cwd=cwd,
         limit = 1024 * 512,  # see https://stackoverflow.com/questions/55457370
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -332,6 +334,7 @@ def main() -> None:
     )
     LOG.debug("Python: %s %s", '.'.join(map(str, sys.version_info)), sys.executable)
     LOG.debug("Args: %s", args.__dict__)
+    LOG.debug("CWD: %s", os.getcwd())
     env_vars = {key: value for var in args.env for key, value in (var.split("=", 1),)}
     LOG.debug("Variables provided via command: %s", env_vars)
     for key, value in os.environ.items():

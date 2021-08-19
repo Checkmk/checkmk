@@ -304,7 +304,8 @@ def _collect_host_sections(
 
         source.file_cache_max_age = file_cache_max_age
 
-        host_sections = collected_host_sections.setdefault(
+        host_key = HostKey(hostname, ipaddress, source.source_type)
+        collected_host_sections.setdefault(
             HostKey(hostname, ipaddress, source.source_type),
             source.default_host_sections,
         )
@@ -314,20 +315,19 @@ def _collect_host_sections(
         if source_result.is_ok():
             console.vverbose("  -> Add sections: %s\n" %
                              sorted([str(s) for s in source_result.ok.sections.keys()]))
-            host_sections += source_result.ok
+            collected_host_sections[host_key] += source_result.ok
         else:
             console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
 
     for hostname, ipaddress, _sources in nodes:
         # Store piggyback information received from all sources of this host. This
         # also implies a removal of piggyback files received during previous calls.
-        host_sections = collected_host_sections.setdefault(
-            HostKey(hostname, ipaddress, SourceType.HOST),
-            AgentHostSections(),
-        )
         cmk.utils.piggyback.store_piggyback_raw_data(
             hostname,
-            host_sections.piggybacked_raw_data,
+            collected_host_sections.setdefault(
+                HostKey(hostname, ipaddress, SourceType.HOST),
+                AgentHostSections(),
+            ).piggybacked_raw_data,
         )
 
     return collected_host_sections, results

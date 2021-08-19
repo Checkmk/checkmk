@@ -1,0 +1,13 @@
+Title: Fix missing timeout on first connection
+Knowledge: doc
+Level: 1
+Component: notifications
+Class: fix
+Compatible: compat
+Edition: cee
+State: unknown
+Version: 1.6.0p26
+Date: 1629353736
+
+The first connection to ServiceNow determines if an incident already exists.
+This connection ignored the configured timeout option.

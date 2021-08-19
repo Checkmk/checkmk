@@ -109,13 +109,13 @@ def warning(text: str) -> None:
 
 
 def get_configuration_warnings() -> ConfigurationWarnings:
-    num_warnings = len(g_configuration_warnings)
+    adjusted_warnings = list(set(g_configuration_warnings))
 
-    if num_warnings > 10:
-        warnings = (g_configuration_warnings[:10] +
+    if (num_warnings := len(adjusted_warnings)) > 10:
+        warnings = (adjusted_warnings[:10] +
                     ["%d further warnings have been omitted" % (num_warnings - 10)])
     else:
-        warnings = g_configuration_warnings
+        warnings = adjusted_warnings
 
     return warnings
 

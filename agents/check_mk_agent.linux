@@ -1488,6 +1488,12 @@ section_ntp() {
             fi
         done
         unset -v _ntp_daemon
+
+        # For other systems such as Slackware
+        if [ -x "/etc/rc.d/rc.ntpd" ]; then
+            get_ntpq
+            return
+        fi
     fi
 }
 

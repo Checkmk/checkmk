@@ -1,0 +1,14 @@
+Title: Fix stored XSS in description fields
+Class: security
+Compatible: compat
+Component: multisite
+Date: 1629379731
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p10
+
+Users with the permission to add/edit items in the custmize menu (views, topics,
+etc.) could trigger stored XSS in the overview page.
+
+FEED-6322

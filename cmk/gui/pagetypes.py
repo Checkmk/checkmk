@@ -1121,13 +1121,10 @@ class Overridable(Base):
                     # Title
                     table.cell(_('Title'))
                     html.write_text(instance.render_title())
-                    html.help(_u(instance.description()))
+                    html.help(_u(instance.description()), escape_text=True)
 
                     # Custom columns specific to that page type
                     instance.render_extra_columns(table)
-
-                    # ## for title, renderer in custom_columns:
-                    # ##     table.cell(title, renderer(visual))
 
                     # Owner
                     if instance.is_builtin():
@@ -1137,11 +1134,6 @@ class Overridable(Base):
                     table.cell(_('Owner'), ownertxt)
                     table.cell(_('Public'), _("yes") if instance.is_public() else _("no"))
                     table.cell(_('Hidden'), _("yes") if instance.is_hidden() else _("no"))
-
-                    # FIXME: WTF?!?
-                    # TODO: Haeeh? Another custom columns
-                    # ## if render_custom_columns:
-                    # ##     render_custom_columns(visual_name, visual)
 
             if what != "builtin":
                 html.hidden_field("selection_id", weblib.selection_id())

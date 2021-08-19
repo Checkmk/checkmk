@@ -616,7 +616,7 @@ def page_list(what,
                     html.a(title2, href=show_url)
                 else:
                     html.write_text(title2)
-                html.help(_u(visual['description']))
+                html.help(_u(visual['description']), escape_text=True)
 
                 # Custom cols
                 for title3, renderer in custom_columns:

@@ -200,6 +200,32 @@ class SectionStore(Generic[TRawDataSection]):
         self.store(persisted_sections)
         return persisted_sections
 
+    def add_persisted_sections(
+        self,
+        sections: MutableMapping[SectionName, TRawDataSection],
+        cache_info: MutableMapping[SectionName, Tuple[int, int]],
+        persisted_sections: PersistedSections[TRawDataSection],
+    ) -> None:
+        cache_info.update({
+            section_name: (created_at, valid_until - created_at)
+            for section_name, (created_at, valid_until, *_rest) in persisted_sections.items()
+            if section_name not in sections
+        })
+        for section_name, entry in persisted_sections.items():
+            if len(entry) == 2:
+                continue  # Skip entries of "old" format
+
+            # Don't overwrite sections that have been received from the source with this call
+            if section_name in sections:
+                self._logger.debug(
+                    "Skipping persisted section %r, live data available",
+                    section_name,
+                )
+                continue
+
+            self._logger.debug("Using persisted section %r", section_name)
+            sections[section_name] = entry[-1]
+
 
 TFileCache = TypeVar("TFileCache", bound="FileCache")
 

@@ -411,7 +411,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         # in the fetcher for SNMP.
         selection: SectionNameCollection,
     ) -> SNMPHostSections:
-        host_sections = SNMPHostSections(dict(raw_data))
+        sections = dict(raw_data)
         now = int(time.time())
 
         def lookup_persist(section_name: SectionName) -> Optional[Tuple[int, int]]:
@@ -420,17 +420,19 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
             return None
 
         persisted_sections = self.section_store.update(
-            sections=raw_data,
+            sections=sections,
             lookup_persist=lookup_persist,
             now=now,
             keep_outdated=self.keep_outdated,
         )
 
-        host_sections.add_persisted_sections(
+        cache_info: MutableMapping[SectionName, Tuple[int, int]] = {}
+        self.section_store.add_persisted_sections(
+            sections,
+            cache_info,
             persisted_sections,
-            logger=self._logger,
         )
-        return host_sections
+        return SNMPHostSections(sections, cache_info=cache_info)
 
 
 class SNMPSummarizer(Summarizer[SNMPHostSections]):

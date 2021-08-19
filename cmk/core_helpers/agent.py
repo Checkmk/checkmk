@@ -530,10 +530,10 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
 
         now = int(time.time())
 
-        sections, piggyback_sections = self._parse_host_section(raw_data)
+        raw_sections, piggyback_sections = self._parse_host_section(raw_data)
         section_info = {
             header.name: header
-            for header in sections
+            for header in raw_sections
             if selection is NO_SELECTION or header.name in selection
         }
 
@@ -570,27 +570,25 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                         )).encode(header.encoding)
                 yield from (bytes(line) for line in content)
 
-        host_sections = AgentHostSections(
-            sections={
-                name: content
-                for name, content in decode_sections(sections).items()
-                if selection is NO_SELECTION or name in selection
-            },
-            piggybacked_raw_data={
-                header.hostname: list(
-                    flatten_piggyback_section(
-                        content,
-                        cached_at=now,
-                        cache_for=self.cache_piggybacked_data_for,
-                        selection=selection,
-                    )) for header, content in piggyback_sections.items()
-            },
-            cache_info={
-                header.name: cache_info_tuple
-                for header in section_info.values()
-                if (cache_info_tuple := header.cache_info(now)) is not None
-            },
-        )
+        sections = {
+            name: content
+            for name, content in decode_sections(raw_sections).items()
+            if selection is NO_SELECTION or name in selection
+        }
+        piggybacked_raw_data = {
+            header.hostname: list(
+                flatten_piggyback_section(
+                    content,
+                    cached_at=now,
+                    cache_for=self.cache_piggybacked_data_for,
+                    selection=selection,
+                )) for header, content in piggyback_sections.items()
+        }
+        cache_info = {
+            header.name: cache_info_tuple
+            for header in section_info.values()
+            if (cache_info_tuple := header.cache_info(now)) is not None
+        }
 
         def lookup_persist(section_name: SectionName) -> Optional[Tuple[int, int]]:
             default = SectionMarker.default(section_name)
@@ -599,16 +597,21 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
             return None
 
         persisted_sections = self.section_store.update(
-            sections=host_sections.sections,
+            sections=sections,
             lookup_persist=lookup_persist,
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        host_sections.add_persisted_sections(
+        self.section_store.add_persisted_sections(
+            sections,
+            cache_info,
             persisted_sections,
-            logger=self._logger,
         )
-        return host_sections
+        return AgentHostSections(
+            sections,
+            cache_info=cache_info,
+            piggybacked_raw_data=piggybacked_raw_data,
+        )
 
     def _parse_host_section(
         self,

@@ -5,12 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import logging
-from typing import cast, Dict, Generic, List, MutableMapping, Optional, Tuple, TypeVar
+from typing import cast, Generic, List, MutableMapping, Optional, Tuple, TypeVar
 
 from cmk.utils.type_defs import HostName, SectionName
 
-from cmk.core_helpers.cache import PersistedSections, TRawDataSection
+from cmk.core_helpers.cache import TRawDataSection
 
 THostSections = TypeVar("THostSections", bound="HostSections")
 
@@ -32,7 +31,7 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
         *,
         cache_info: Optional[MutableMapping[SectionName, Tuple[int, int]]] = None,
         # For `piggybacked_raw_data`, List[bytes] is equivalent to AgentRawData.
-        piggybacked_raw_data: Optional[Dict[HostName, List[bytes]]] = None,
+        piggybacked_raw_data: Optional[MutableMapping[HostName, List[bytes]]] = None,
     ) -> None:
         super().__init__()
         self.sections = sections if sections else {}
@@ -65,36 +64,3 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
 
         if host_sections.cache_info:
             self.cache_info.update(host_sections.cache_info)
-
-    def add_persisted_sections(
-        self,
-        persisted_sections: PersistedSections[TRawDataSection],
-        *,
-        logger: logging.Logger,
-    ) -> None:
-        # This method is on the wrong class.
-        #
-        # The HostSections should get the cache_info (provided
-        # it is any useful: it is presently redundant with
-        # the persisted_sections) in `__init__()` and not
-        # modify it just after instantiation.
-        self.cache_info.update({
-            section_name: (created_at, valid_until - created_at)
-            for section_name, (created_at, valid_until, *_rest) in persisted_sections.items()
-            if section_name not in self.sections
-        })
-        # A more logical structure would be to update the
-        # `Mapping[SectionName, TRawDataSection]` *before* passing it to
-        # HostSections.  This way, we could make `sections` here immutable
-        # and final.
-        for section_name, entry in persisted_sections.items():
-            if len(entry) == 2:
-                continue  # Skip entries of "old" format
-
-            # Don't overwrite sections that have been received from the source with this call
-            if section_name in self.sections:
-                logger.debug("Skipping persisted section %r, live data available", section_name)
-                continue
-
-            logger.debug("Using persisted section %r", section_name)
-            self.sections[section_name] = entry[-1]

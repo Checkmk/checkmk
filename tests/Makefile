@@ -266,7 +266,7 @@ test-unit: prepare-protobuf-files
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
-test-unit-resilience:
+test-unit-resilience: prepare-protobuf-files
 	$(PYTEST) \
 		--count=2 \
 		--random-order-bucket=global \
@@ -285,7 +285,7 @@ test-unit-resilience-docker:
 test-agent-plugin-docker:
 	../scripts/run-in-docker.sh make $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
 
-test-unit-coverage-html:
+test-unit-coverage-html: prepare-protobuf-files
 	$(PYTEST) \
 		-T unit \
 		--cov=cmk \

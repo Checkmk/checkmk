@@ -143,6 +143,7 @@ apispec = "==3.3.1"  # direct dependency
 marshmallow = "==3.11.1"  # direct dependency
 marshmallow-oneofschema = "==2.1.0"  # direct dependency
 apispec-oneofschema = "==3.0.0"  # direct dependency
+pydantic = "==1.8.2"  # needed by special agents
 dnspython = "==1.16.0"  # needed by python-active-directory
 python-active-directory = "==1.0.5"
 rrdtool = "==0.1.15"  # Actually we ship the binding which comes with rrdtool itself...

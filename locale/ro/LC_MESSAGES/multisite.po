@@ -34547,6 +34547,12 @@ msgstr ""
 msgid "Please add the hostname here, eg. my_influxdb.com."
 msgstr ""
 
+msgid ""
+"Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
+"probably ok, while larger subnets (i.e. smaller netmask values) will lead to "
+"excessive runtimes."
+msgstr ""
+
 msgid "Please check one metric you want to apply a transformation"
 msgstr ""
 
@@ -35649,9 +35655,6 @@ msgstr "Un titlu pentru view"
 #, fuzzy
 msgid "Prometheus custom services"
 msgstr "Un titlu pentru view"
-
-msgid "Prometheus web port"
-msgstr ""
 
 #, fuzzy
 msgid "Prominent change"
@@ -41727,6 +41730,12 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Specifies a URL path prefix, which is prepended to API calls to the "
+"Prometheus API. If this option is not relevant for your installation, please "
+"leave it unchecked."
+msgstr ""
+
+msgid ""
 "Specifies a URL prefix which is prepended to the path in calls to the API. "
 "This is e.g. useful if you use the ip address or the hostname as base "
 "address but require some additional prefix to make the correct API call. Use "
@@ -45562,6 +45571,9 @@ msgid "The file extension has to be <tt>.pdf</tt>"
 msgstr ""
 
 msgid "The file is empty"
+msgstr ""
+
+msgid "The file_id has to be alphanumeric."
 msgstr ""
 
 msgid ""

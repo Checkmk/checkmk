@@ -35678,6 +35678,12 @@ msgstr "Voeg ten minste één kolom toe aan je uitzicht."
 msgid "Please add the hostname here, eg. my_influxdb.com."
 msgstr ""
 
+msgid ""
+"Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
+"probably ok, while larger subnets (i.e. smaller netmask values) will lead to "
+"excessive runtimes."
+msgstr ""
+
 msgid "Please check one metric you want to apply a transformation"
 msgstr "Gelieve een metriek aan te vinken die u wilt omvormen"
 
@@ -36839,9 +36845,6 @@ msgstr "Prometheus aangepaste service"
 
 msgid "Prometheus custom services"
 msgstr "Prometheus aangepaste diensten"
-
-msgid "Prometheus web port"
-msgstr "Prometheus web poort"
 
 msgid "Prominent change"
 msgstr "Prominente verandering"
@@ -42879,6 +42882,17 @@ msgstr ""
 "installaties (meer informatie kan gevonden worden in de handleiding). Als "
 "deze optie niet relevant is voor uw installatie, laat het dan uitgevinkt."
 
+#, fuzzy
+msgid ""
+"Specifies a URL path prefix, which is prepended to API calls to the "
+"Prometheus API. If this option is not relevant for your installation, please "
+"leave it unchecked."
+msgstr ""
+"Specificeert een URL pad voorvoegsel, dat wordt voorgehangen aan API "
+"aanroepen naar de Kubernetes API. Dit is een nuttige optie voor Rancher "
+"installaties (meer informatie kan gevonden worden in de handleiding). Als "
+"deze optie niet relevant is voor uw installatie, laat het dan uitgevinkt."
+
 msgid ""
 "Specifies a URL prefix which is prepended to the path in calls to the API. "
 "This is e.g. useful if you use the ip address or the hostname as base "
@@ -47270,6 +47284,9 @@ msgstr "De bestandsextensie moet <tt>.pdf</tt> zijn"
 
 msgid "The file is empty"
 msgstr "Het bestand is leeg"
+
+msgid "The file_id has to be alphanumeric."
+msgstr ""
 
 msgid ""
 "The filesystem levels will never fall below these values, when using the "
@@ -64143,6 +64160,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Prometheus web port"
+#~ msgstr "Prometheus web poort"
 
 #~ msgid ""
 #~ "Define textfiles to be monitored. The full path is necessary. Glob "

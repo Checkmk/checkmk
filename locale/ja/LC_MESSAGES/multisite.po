@@ -34473,6 +34473,12 @@ msgstr "ビューに少なくとも1つの列を追加してください。"
 msgid "Please add the hostname here, eg. my_influxdb.com."
 msgstr ""
 
+msgid ""
+"Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
+"probably ok, while larger subnets (i.e. smaller netmask values) will lead to "
+"excessive runtimes."
+msgstr ""
+
 msgid "Please check one metric you want to apply a transformation"
 msgstr "変換を適用する1つの指標を確認してください"
 
@@ -35592,9 +35598,6 @@ msgstr "プロメテウスカスタムサービス"
 
 msgid "Prometheus custom services"
 msgstr "プロメテウスカスタムサービス"
-
-msgid "Prometheus web port"
-msgstr "Prometheus Webポート"
 
 msgid "Prominent change"
 msgstr "顕著な変化"
@@ -41453,6 +41456,17 @@ msgstr ""
 "ニュアルを参照してください)。このオプションがインストールに関係しない場合は、"
 "オフのままにしてください。"
 
+#, fuzzy
+msgid ""
+"Specifies a URL path prefix, which is prepended to API calls to the "
+"Prometheus API. If this option is not relevant for your installation, please "
+"leave it unchecked."
+msgstr ""
+"Kubernetes APIへのAPI呼び出しの前に付加されるURLパスプレフィックスを指定しま"
+"す。これは、Rancherのインストールに便利なオプションです(詳細については、マ"
+"ニュアルを参照してください)。このオプションがインストールに関係しない場合は、"
+"オフのままにしてください。"
+
 msgid ""
 "Specifies a URL prefix which is prepended to the path in calls to the API. "
 "This is e.g. useful if you use the ip address or the hostname as base "
@@ -45564,6 +45578,9 @@ msgstr "ファイル拡張子は<tt> .pdf </tt>である必要があります"
 
 msgid "The file is empty"
 msgstr "ファイルが空です"
+
+msgid "The file_id has to be alphanumeric."
+msgstr ""
 
 msgid ""
 "The filesystem levels will never fall below these values, when using the "
@@ -61213,6 +61230,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Prometheus web port"
+#~ msgstr "Prometheus Webポート"
 
 #~ msgid ""
 #~ "Define textfiles to be monitored. The full path is necessary. Glob "

@@ -419,18 +419,13 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
                 return now, now + interval
             return None
 
-        persisted_sections = self.section_store.update(
-            sections=sections,
-            lookup_persist=lookup_persist,
-            now=now,
-            keep_outdated=self.keep_outdated,
-        )
-
         cache_info: MutableMapping[SectionName, Tuple[int, int]] = {}
-        self.section_store.add_persisted_sections(
+        self.section_store.update_and_mutate(
             sections,
             cache_info,
-            persisted_sections,
+            lookup_persist,
+            now=now,
+            keep_outdated=self.keep_outdated,
         )
         return SNMPHostSections(sections, cache_info=cache_info)
 

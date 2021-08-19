@@ -596,16 +596,12 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                 return now, until
             return None
 
-        persisted_sections = self.section_store.update(
-            sections=sections,
-            lookup_persist=lookup_persist,
-            now=now,
-            keep_outdated=self.keep_outdated,
-        )
-        self.section_store.add_persisted_sections(
+        self.section_store.update_and_mutate(
             sections,
             cache_info,
-            persisted_sections,
+            lookup_persist,
+            now=now,
+            keep_outdated=self.keep_outdated,
         )
         return AgentHostSections(
             sections,

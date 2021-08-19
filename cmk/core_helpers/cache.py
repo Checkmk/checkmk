@@ -175,11 +175,31 @@ class SectionStore(Generic[TRawDataSection]):
         return PersistedSections[TRawDataSection](
             {SectionName(k): v for k, v in raw_sections_data.items()})
 
-    def update(
+    def update_and_mutate(
         self,
-        *,
+        sections: MutableMapping[SectionName, TRawDataSection],
+        cache_info: MutableMapping[SectionName, Tuple[int, int]],
+        lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
+        now: int,
+        keep_outdated: bool,
+    ):
+        persisted_sections = self._update(
+            sections,
+            lookup_persist,
+            now=now,
+            keep_outdated=keep_outdated,
+        )
+        self._add_persisted_sections(
+            sections,
+            cache_info,
+            persisted_sections,
+        )
+
+    def _update(
+        self,
         sections: Mapping[SectionName, TRawDataSection],
         lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
+        *,
         now: int,
         keep_outdated: bool,
     ) -> PersistedSections[TRawDataSection]:
@@ -200,7 +220,7 @@ class SectionStore(Generic[TRawDataSection]):
         self.store(persisted_sections)
         return persisted_sections
 
-    def add_persisted_sections(
+    def _add_persisted_sections(
         self,
         sections: MutableMapping[SectionName, TRawDataSection],
         cache_info: MutableMapping[SectionName, Tuple[int, int]],

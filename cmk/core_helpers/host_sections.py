@@ -4,8 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import abc
-from typing import cast, Generic, List, MutableMapping, Optional, Tuple, TypeVar
+from typing import cast, Generic, List, Mapping, MutableMapping, Optional, Sequence, Tuple, TypeVar
 
 from cmk.utils.type_defs import HostName, SectionName
 
@@ -14,17 +16,9 @@ from cmk.core_helpers.cache import TRawDataSection
 THostSections = TypeVar("THostSections", bound="HostSections")
 
 
+# TODO(ml): make this container properly immutable.
 class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
-    """A wrapper class for the host information read by the data sources
-
-    It contains the following information:
-
-        1. sections:                A dictionary from section_name to a list of rows,
-                                    the section content
-        2. piggybacked_raw_data:    piggy-backed data for other hosts
-        3. cache_info:              Agent cache information
-                                    (dict section name -> (cached_at, cache_interval))
-    """
+    """Host informations from the sources."""
     def __init__(
         self,
         sections: Optional[MutableMapping[SectionName, TRawDataSection]] = None,
@@ -34,9 +28,21 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
         piggybacked_raw_data: Optional[MutableMapping[HostName, List[bytes]]] = None,
     ) -> None:
         super().__init__()
-        self.sections = sections if sections else {}
-        self.cache_info = cache_info if cache_info else {}
-        self.piggybacked_raw_data = piggybacked_raw_data if piggybacked_raw_data else {}
+        self._sections = sections if sections else {}
+        self._cache_info = cache_info if cache_info else {}
+        self._piggybacked_raw_data = piggybacked_raw_data if piggybacked_raw_data else {}
+
+    @property
+    def sections(self) -> Mapping[SectionName, TRawDataSection]:
+        return self._sections
+
+    @property
+    def cache_info(self) -> Mapping[SectionName, Tuple[int, int]]:
+        return self._cache_info
+
+    @property
+    def piggybacked_raw_data(self) -> Mapping[HostName, Sequence[bytes]]:
+        return self._piggybacked_raw_data
 
     def __repr__(self):
         return "%s(sections=%r, cache_info=%r, piggybacked_raw_data=%r)" % (
@@ -46,21 +52,21 @@ class HostSections(Generic[TRawDataSection], metaclass=abc.ABCMeta):
             self.piggybacked_raw_data,
         )
 
-    # TODO: It should be supported that different sources produce equal sections.
-    # this is handled for the self.sections data by simply concatenating the lines
-    # of the sections, but for the self.cache_info this is not done. Why?
-    # TODO: checking._execute_check() is using the oldest cached_at and the largest interval.
-    #       Would this be correct here?
-    def add(self, host_sections: "HostSections") -> None:
-        """Add the content of `host_sections` to this HostSection."""
-        for section_name, section_content in host_sections.sections.items():
-            self.sections.setdefault(
+    def __add__(self, other: HostSections) -> HostSections:
+        for section_name, section_content in other.sections.items():
+            self._sections.setdefault(
                 section_name,
                 cast(TRawDataSection, []),
             ).extend(section_content)
 
-        for hostname, raw_lines in host_sections.piggybacked_raw_data.items():
-            self.piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
+        for hostname, raw_lines in other.piggybacked_raw_data.items():
+            self._piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
 
-        if host_sections.cache_info:
-            self.cache_info.update(host_sections.cache_info)
+        # TODO: It should be supported that different sources produce equal sections.
+        # this is handled for the self.sections data by simply concatenating the lines
+        # of the sections, but for the self.cache_info this is not done. Why?
+        # TODO: checking._execute_check() is using the oldest cached_at and the largest interval.
+        #       Would this be correct here?
+        self._cache_info.update(other.cache_info)
+
+        return self

@@ -112,7 +112,7 @@ preamble_1() {
 _log_section_time() {
     local section_func="$*"
 
-    local base_name=${section_func//[^a-zA-Z0-9._-]/_}
+    local base_name=$(echo "${section_func}" | tr -c "A-Za-z0-9.-" _)
     profiling_logfile="${PROFILING_LOGFILE_DIR}/${base_name}.log"
 
     # TODO In the future

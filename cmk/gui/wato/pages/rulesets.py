@@ -2088,8 +2088,8 @@ class RuleConditionRenderer:
             if isinstance(tag, GroupedTag):
                 if negate:
                     return HTML(
-                        _("Host: %s is <b>not</b> <b>%s</b>") % (tag.group.title, tag.title))
-                return HTML(_("Host: %s is <b>%s</b>") % (tag.group.title, tag.title))
+                        _("Host tag: %s is <b>not</b> <b>%s</b>") % (tag.group.title, tag.title))
+                return HTML(_("Host tag: %s is <b>%s</b>") % (tag.group.title, tag.title))
 
             if negate:
                 return HTML(_("Host does not have tag <b>%s</b>") % tag.title)

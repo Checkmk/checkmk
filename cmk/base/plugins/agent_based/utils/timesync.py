@@ -26,6 +26,14 @@ def tolerance_check(
             yield Result(state=State.OK, summary=f"{label}: N/A (started monitoring)")
         return
 
+    if now - last_sync < 0:
+        yield Result(
+            state=State.CRIT,
+            summary="Cannot reasonably calculate time since last synchronization "
+            "(hosts time is running ahead)",
+        )
+        return
+
     yield from check_levels(
         value=now - last_sync,
         levels_upper=levels_upper,

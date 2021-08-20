@@ -1,0 +1,13 @@
+Title: Change displayed signature keys' digest to fingerprint
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1631518102
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p10
+
+In the previous version, each signature key had its Digest (MD5) displayed
+in WATO. This werk changes this digest to fingerprint in preparation for
+adjustments to agent related REST API endpoints.

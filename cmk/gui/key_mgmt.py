@@ -37,6 +37,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import makeuri_contextless, make_confirm_link
+from cmk.gui.watolib.utils import sign_key_fingerprint
 
 
 class KeypairStore:
@@ -169,8 +170,6 @@ class PageKeyManagement:
         with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
 
             for key_id, key in sorted(self.keys.items()):
-                cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
-
                 table.row()
                 table.cell(_("Actions"), css="buttons")
                 if self._may_edit_config():
@@ -192,7 +191,8 @@ class PageKeyManagement:
                 table.cell(_("Description"), html.render_text(key["alias"]))
                 table.cell(_("Created"), cmk.utils.render.date(key["date"]))
                 table.cell(_("By"), html.render_text(key["owner"]))
-                table.cell(_("Digest (MD5)"), html.render_text(cert.digest("md5").decode("ascii")))
+                table.cell(_("Fingerprint"),
+                           html.render_text(sign_key_fingerprint(key["certificate"])))
 
 
 class PageEditKey:

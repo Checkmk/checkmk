@@ -11,6 +11,7 @@ import base64
 import pickle
 from typing import Any, Union, List, TypedDict, Tuple
 
+from OpenSSL import crypto  # type: ignore[import]
 from six import ensure_binary, ensure_str
 
 from cmk.gui.sites import SiteStatus
@@ -175,3 +176,9 @@ def is_pre_17_remote_site(site_status: SiteStatus) -> bool:
         return False
 
     return parse_check_mk_version(version) < parse_check_mk_version("1.7.0i1")
+
+
+def sign_key_fingerprint(certificate):
+    """Get the fingerprint using the sign key's certificate"""
+    cert = crypto.load_certificate(crypto.FILETYPE_PEM, certificate)
+    return cert.digest("sha256").decode('utf-8')

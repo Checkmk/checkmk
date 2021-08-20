@@ -124,8 +124,8 @@ class Node:
 
 class Cluster:
     @classmethod
-    def from_api_server(cls, api_server: APIServer, name: str) -> Cluster:
-        cluster = cls(name)
+    def from_api_server(cls, api_server: APIServer) -> Cluster:
+        cluster = cls()
         for node_api in api_server.nodes():
             node = Node(node_api.metadata, node_api.resources)
             cluster.add_node(node)
@@ -136,8 +136,7 @@ class Cluster:
 
         return cluster
 
-    def __init__(self, name: str) -> None:
-        self.name = name
+    def __init__(self) -> None:
         self._nodes: Dict[str, Node] = {}
         self._pods: Dict[str, Pod] = {}
 
@@ -200,7 +199,7 @@ def main(args: Optional[List[str]] = None) -> int:
 
             api_client = make_api_client(arguments)
             api_server = APIServer.from_kubernetes(api_client)
-            cluster = Cluster.from_api_server(api_server, "test")
+            cluster = Cluster.from_api_server(api_server)
             cluster.sections()
 
     except urllib3.exceptions.MaxRetryError as e:

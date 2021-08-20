@@ -43,7 +43,15 @@ metric_info["k8s_pods_allocatable"] = {
 metric_info["k8s_pods_capacity"] = {
     "title": _("Capacity"),
     "unit": "count",
-    "color": "c0c0c0",
+    "color": "#c0c0c0",
+}
+
+metric_info["k8s_pods_pending"] = {"title": _("Pending"), "unit": "count", "color": "#d1d4e8"}
+
+metric_info["k8s_pods_running"] = {
+    "title": _("Running"),
+    "unit": "count",
+    "color": "#93a2ee",
 }
 
 metric_info["k8s_cpu_request"] = {
@@ -185,6 +193,16 @@ graph_info["k8s_resources.pods"] = {
         ("k8s_pods_allocatable", "area"),
         ("k8s_pods_request", "area"),
     ],
+}
+
+graph_info["k8s_resources.pod"] = {
+    "title": _("Pod resources"),
+    "metrics": [
+        ("k8s_pods_allocatable", "line"),
+        ("k8s_pods_capacity", "line"),
+        ("k8s_pods_running", "area"),
+        ("k8s_pods_pending", "stack"),
+    ]
 }
 
 graph_info["k8s_resources.cpu"] = {

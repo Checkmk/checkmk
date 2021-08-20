@@ -174,7 +174,6 @@ def main(argv=None):
         if args.debug:
             raise
         logging.debug(traceback.format_exc())
-        sys.stderr.write(traceback.format_exc())
         sys.stderr.write("%s\n" % e)
         return 1
     return 0

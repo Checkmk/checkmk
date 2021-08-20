@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from math import ceil
+from typing import Dict, Set
+
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.check_api import regex
 from cmk.base.check_api import MKCounterWrapped
@@ -177,7 +180,7 @@ class WMITable:
 
 
 def parse_wmi_table(info, key="Name"):
-    parsed = {}
+    parsed: Dict = {}
     info_iter = iter(info)
 
     try:
@@ -193,7 +196,9 @@ def parse_wmi_table(info, key="Name"):
         while True:
             if len(line) == 1 and line[0].startswith("["):
                 # multi-table input
-                tablename = regex(r"\[(.*)\]").search(line[0]).group(1)
+                match = regex(r"\[(.*)\]").search(line[0])
+                assert match is not None
+                tablename = match.group(1)
 
                 # Did subsection get WMI timeout?
                 line = next(info_iter)
@@ -307,7 +312,7 @@ def inventory_wmi_table_instances(tables, required_tables=None, filt=None, level
     if required_tables_missing(tables, required_tables):
         return []
 
-    potential_instances = set()
+    potential_instances: Set = set()
     # inventarize one item per instance that exists in all tables
     for required_table in required_tables:
         table_rows = tables[required_table].row_labels()
@@ -431,14 +436,16 @@ def wmi_calculate_raw_average(table, row, column, factor):
     if base == 0:
         return 0.0
 
-    # This is a total counter which can overflow on long-running systems
-    # (great choice of datatype, microsoft!)
-    # the following forces the counter into a range of 0.0-1.0, but there is no way to know
-    # how often the counter overran, so this bay still be wrong
-    while (base * factor) < measure:
-        base += 1 << 32
+    return scale_counter(measure, factor, base)
 
-    return float(measure) / base
+
+def scale_counter(measure, factor, base):
+    # This is a total counter which can overflow on long-running systems
+    # the following forces the counter into a range of 0.0-1.0, but there is no way to know
+    # how often the counter overran, so this may still be wrong
+    times = (measure / factor - base) / (1 << 32)
+    base += ceil(times) * (1 << 32)
+    return measure / base
 
 
 def wmi_calculate_raw_average_time(table, row, column):

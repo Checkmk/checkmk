@@ -507,8 +507,8 @@ def wmi_calculate_raw_average(table, row, column, factor):
     # (great choice of datatype, microsoft!)
     # the following forces the counter into a range of 0.0-1.0, but there is no way to know
     # how often the counter overran, so this bay still be wrong
-    while (base * factor) < measure:
-        base += 1 << 32
+    times = (float(measure) / factor - base) / (1 << 32)
+    base += math.ceil(times) * (1 << 32)
 
     return float(measure) / base
 

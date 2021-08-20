@@ -1,0 +1,16 @@
+Title: isstore, isclienttype: fix performance problems
+Knowledge: doc
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p26
+Date: 1629470422
+
+If a section contained large numbers the running time of the discovery and
+checking was increased. For big numbers like 18446744073664412644 it could
+take minutes to complete. This is fixed.
+
+SUP-7439

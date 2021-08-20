@@ -4396,11 +4396,22 @@ msgstr "Alarmiere bei zu hoher Gesamtauslastung"
 msgid "Alert on too high power consumption"
 msgstr "Alarmiere bei zu hohem Energieverbrauch"
 
+msgid "Alert rules that don't export a status are ignored with this option."
+msgstr ""
+
 msgid "Alerted"
 msgstr "Alarmiert"
 
 msgid "Alerting depending on the number of used licenses is disabled"
 msgstr "Alarmierung der Anzahl der Benutzen Lizenzen ist deaktiviert"
+
+#, fuzzy
+msgid "Alertmanager"
+msgstr "Alerthandler"
+
+#, fuzzy
+msgid "Alertmanager connection option"
+msgstr "Prometheus-Anschlussmöglichkeit"
 
 msgid "Alerts"
 msgstr "Alarme"
@@ -24184,6 +24195,17 @@ msgid "Ignore acknowledged events"
 msgstr "Quittierte Ereignisse ignorieren"
 
 #, fuzzy
+msgid "Ignore alert rules"
+msgstr "Ignoriere die Schwellwerte"
+
+#, fuzzy
+msgid "Ignore alert rules with no status"
+msgstr "Ignoriere den Admin-Status"
+
+msgid "Ignore all alert rules within certain alert rule groups"
+msgstr ""
+
+#, fuzzy
 msgid "Ignore certificate errors (insecure)"
 msgstr "Ignoriere SSL Zertifikatfehler (unsicher)"
 
@@ -24216,6 +24238,10 @@ msgstr "Ignoriere Port-Typen während der Service-Erkennung"
 
 msgid "Ignore scheduled downtimes"
 msgstr "Ignoriere geplante Wartungszeiten"
+
+#, fuzzy
+msgid "Ignore specific alert rules"
+msgstr "Ignoriere Stile die in Regeln spezifizierten wurden"
 
 msgid "Ignore styles specified in rules"
 msgstr "Ignoriere Stile die in Regeln spezifizierten wurden"
@@ -31071,6 +31097,10 @@ msgstr "Name des Kanals"
 msgid "Name of Checkmk site of update server"
 msgstr "Name der Checkmk-Instanz des Updateservers"
 
+#, fuzzy
+msgid "Name of Piggyback Host"
+msgstr "Verarbeitung von Piggybacked-Host-Daten"
+
 msgid "Name of Queue"
 msgstr "Queuename"
 
@@ -31139,6 +31169,9 @@ msgstr "Queuename"
 
 msgid "Name of service"
 msgstr "Name des Service"
+
+msgid "Name of specific alert rules you want to ignore."
+msgstr ""
 
 msgid "Name of the Application"
 msgstr "Name der Anwendung"
@@ -42915,6 +42948,18 @@ msgstr "Bestimmte Instanzen"
 msgid "Specific version"
 msgstr "Bestimmte Version"
 
+#, fuzzy
+msgid ""
+"Specifies a URL path prefix, which is prepended to API calls to the "
+"Alertmanager API. If this option is not relevant for your installation, "
+"please leave it unchecked."
+msgstr ""
+"Gibt ein URL-Pfadpräfix an, das API-Aufrufen an die Kubernetes-API "
+"vorangestellt wird. Dies ist eine nützliche Option für Rancher-"
+"Installationen (weitere Informationen finden Sie im Handbuch). Wenn diese "
+"Option für Ihre Installation nicht relevant ist, lassen Sie sie bitte "
+"deaktiviert."
+
 msgid ""
 "Specifies a URL path prefix, which is prepended to API calls to the "
 "Kubernetes API. This is a useful option for Rancher installations (more "
@@ -47678,6 +47723,12 @@ msgstr "Die ID für des Sensors."
 
 msgid "The identifier of the thermal sensor."
 msgstr "Indikator für den Wärme-Fühler."
+
+msgid ""
+"The ignore option can target alert rules on different levels including "
+"specific rules as well as entire rule groups. Matching rules will be "
+"filtered out on the alertmanager agent side."
+msgstr ""
 
 #, python-format
 msgid "The info %s does not exist."

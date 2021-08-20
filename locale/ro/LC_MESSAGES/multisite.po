@@ -4189,11 +4189,22 @@ msgstr ""
 msgid "Alert on too high power consumption"
 msgstr "APC consum de Curent"
 
+msgid "Alert rules that don't export a status are ignored with this option."
+msgstr ""
+
 msgid "Alerted"
 msgstr ""
 
 msgid "Alerting depending on the number of used licenses is disabled"
 msgstr ""
+
+#, fuzzy
+msgid "Alertmanager"
+msgstr "Adaugă o regulă de rol"
+
+#, fuzzy
+msgid "Alertmanager connection option"
+msgstr "Conexiune Noua"
 
 msgid "Alerts"
 msgstr ""
@@ -22893,6 +22904,17 @@ msgstr ""
 msgid "Ignore acknowledged events"
 msgstr ""
 
+#, fuzzy
+msgid "Ignore alert rules"
+msgstr "trei nivele"
+
+#, fuzzy
+msgid "Ignore alert rules with no status"
+msgstr " Ignoră această opțiune"
+
+msgid "Ignore all alert rules within certain alert rule groups"
+msgstr ""
+
 msgid "Ignore certificate errors (insecure)"
 msgstr ""
 
@@ -22928,6 +22950,10 @@ msgstr "Starea porturilor pentru inventariere"
 
 msgid "Ignore scheduled downtimes"
 msgstr ""
+
+#, fuzzy
+msgid "Ignore specific alert rules"
+msgstr "(fără Nivel de serviciu)"
 
 msgid "Ignore styles specified in rules"
 msgstr ""
@@ -29853,6 +29879,10 @@ msgid "Name of Checkmk site of update server"
 msgstr " pe siteul de monitorizare: "
 
 #, fuzzy
+msgid "Name of Piggyback Host"
+msgstr "Numele elementului pentru eveniment"
+
+#, fuzzy
 msgid "Name of Queue"
 msgstr "Numele elementului pentru eveniment"
 
@@ -29932,6 +29962,9 @@ msgid "Name of queue"
 msgstr "Numele elementului pentru eveniment"
 
 msgid "Name of service"
+msgstr ""
+
+msgid "Name of specific alert rules you want to ignore."
 msgstr ""
 
 #, fuzzy
@@ -41724,6 +41757,12 @@ msgstr ""
 
 msgid ""
 "Specifies a URL path prefix, which is prepended to API calls to the "
+"Alertmanager API. If this option is not relevant for your installation, "
+"please leave it unchecked."
+msgstr ""
+
+msgid ""
+"Specifies a URL path prefix, which is prepended to API calls to the "
 "Kubernetes API. This is a useful option for Rancher installations (more "
 "information can be found in the manual). If this option is not relevant for "
 "your installation, please leave it unchecked."
@@ -45870,6 +45909,12 @@ msgid "The identifier of the sensor."
 msgstr ""
 
 msgid "The identifier of the thermal sensor."
+msgstr ""
+
+msgid ""
+"The ignore option can target alert rules on different levels including "
+"specific rules as well as entire rule groups. Matching rules will be "
+"filtered out on the alertmanager agent side."
 msgstr ""
 
 #, python-format
@@ -61084,10 +61129,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "NTP time offset"
 #~ msgstr "Nivelurile maxime pentru voltaj"
-
-#, fuzzy
-#~ msgid "Name of the virtual host"
-#~ msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
 #~ msgid "Network interface port states to discover"

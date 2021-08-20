@@ -4252,11 +4252,22 @@ msgstr "全体的な使用率が高すぎる場合のアラート"
 msgid "Alert on too high power consumption"
 msgstr "消費電力が高すぎる場合のアラート"
 
+msgid "Alert rules that don't export a status are ignored with this option."
+msgstr ""
+
 msgid "Alerted"
 msgstr "警告"
 
 msgid "Alerting depending on the number of used licenses is disabled"
 msgstr ""
+
+#, fuzzy
+msgid "Alertmanager"
+msgstr "アラートハンドラー"
+
+#, fuzzy
+msgid "Alertmanager connection option"
+msgstr "Prometheus接続オプション"
 
 msgid "Alerts"
 msgstr "アラート"
@@ -23271,6 +23282,17 @@ msgid "Ignore acknowledged events"
 msgstr "確認済みのイベントを無視する"
 
 #, fuzzy
+msgid "Ignore alert rules"
+msgstr "レベルを無視する"
+
+#, fuzzy
+msgid "Ignore alert rules with no status"
+msgstr "admin状態を無視する"
+
+msgid "Ignore all alert rules within certain alert rule groups"
+msgstr ""
+
+#, fuzzy
 msgid "Ignore certificate errors (insecure)"
 msgstr "証明書エラーを無視する(安全でない)"
 
@@ -23303,6 +23325,10 @@ msgstr "検出中にポートタイプを無視する"
 
 msgid "Ignore scheduled downtimes"
 msgstr "スケジュールされたダウンタイムを無視する"
+
+#, fuzzy
+msgid "Ignore specific alert rules"
+msgstr "ルールで指定されたスタイルを無視する"
 
 msgid "Ignore styles specified in rules"
 msgstr "ルールで指定されたスタイルを無視する"
@@ -29967,6 +29993,10 @@ msgstr "チャンネル名"
 msgid "Name of Checkmk site of update server"
 msgstr "更新サーバーのCheckmkサイトの名前"
 
+#, fuzzy
+msgid "Name of Piggyback Host"
+msgstr "ピギーバックされたホストデータの処理"
+
 msgid "Name of Queue"
 msgstr "キューの名前"
 
@@ -30035,6 +30065,9 @@ msgstr "キューの名前"
 
 msgid "Name of service"
 msgstr "サービス名"
+
+msgid "Name of specific alert rules you want to ignore."
+msgstr ""
 
 msgid "Name of the Application"
 msgstr "アプリケーションの名前"
@@ -41445,6 +41478,17 @@ msgstr "特定のサイト"
 msgid "Specific version"
 msgstr "特定のバージョン"
 
+#, fuzzy
+msgid ""
+"Specifies a URL path prefix, which is prepended to API calls to the "
+"Alertmanager API. If this option is not relevant for your installation, "
+"please leave it unchecked."
+msgstr ""
+"Kubernetes APIへのAPI呼び出しの前に付加されるURLパスプレフィックスを指定しま"
+"す。これは、Rancherのインストールに便利なオプションです(詳細については、マ"
+"ニュアルを参照してください)。このオプションがインストールに関係しない場合は、"
+"オフのままにしてください。"
+
 msgid ""
 "Specifies a URL path prefix, which is prepended to API calls to the "
 "Kubernetes API. This is a useful option for Rancher installations (more "
@@ -45917,6 +45961,12 @@ msgstr "センサーの識別子。"
 
 msgid "The identifier of the thermal sensor."
 msgstr "温度センサーの識別子。"
+
+msgid ""
+"The ignore option can target alert rules on different levels including "
+"specific rules as well as entire rule groups. Matching rules will be "
+"filtered out on the alertmanager agent side."
+msgstr ""
 
 #, python-format
 msgid "The info %s does not exist."

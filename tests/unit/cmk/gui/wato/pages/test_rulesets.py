@@ -95,13 +95,13 @@ class TestRuleConditionRenderer:
             pytest.param(
                 "tag_grp_1",
                 "grp_1_tg_1",
-                HTML("Host: Tag group 1 is <b>Tag 1.1</b>"),
+                HTML("Host tag: Tag group 1 is <b>Tag 1.1</b>"),
                 id="grouped tag",
             ),
             pytest.param(
                 "tag_grp_1",
                 {"$ne": "grp_1_tg_1"},
-                HTML("Host: Tag group 1 is <b>not</b> <b>Tag 1.1</b>"),
+                HTML("Host tag: Tag group 1 is <b>not</b> <b>Tag 1.1</b>"),
                 id="negated grouped tag",
             ),
             pytest.param(
@@ -160,11 +160,12 @@ class TestRuleConditionRenderer:
                 "$ne": "aux_tag_1"
             },
         })) == [
-            HTML("Host: Tag group 1 is <b>Tag 1.1</b> <i>or</i> Host: Tag group 1 is <b>Tag 1.2</b>"
-                ),
             HTML(
-                "Neither Host: Tag group 2 is <b>Tag 2.1</b> <i>nor</i> Host: Tag group 2 is <b>Tag 2.2</b>"
+                "Host tag: Tag group 1 is <b>Tag 1.1</b> <i>or</i> Host tag: Tag group 1 is <b>Tag 1.2</b>"
             ),
-            HTML("Host: Tag group 3 is <b>Tag 3.1</b>"),
+            HTML(
+                "Neither Host tag: Tag group 2 is <b>Tag 2.1</b> <i>nor</i> Host tag: Tag group 2 is <b>Tag 2.2</b>"
+            ),
+            HTML("Host tag: Tag group 3 is <b>Tag 3.1</b>"),
             HTML("Host does not have tag <b>Auxiliary tag 1</b>"),
         ]

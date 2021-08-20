@@ -52,7 +52,7 @@ sphinx-rtd-theme = "*"  # used for the plugin API documentation
 sphinxcontrib-plantuml = "*"  # used for the API and architecture
 sphinxcontrib-spelling = "*"
 3to2 = "*"  # used for converting agent plugins from py3 to 2
-fakeredis = {extras = ["lua"],version = "1.4.5"}  # used for testing code which uses Redis (freeze version due to dependency on redis, which is fixed to some version, lua is needed for faking features like "lock")
+fakeredis = {version = "==1.5.2", extras = ["lua"]}  # used for testing code which uses Redis (freeze version due to some kwargs bug(???, see https://github.com/jamesls/fakeredis/pull/304/files#r680503761, lua is needed for faking features like "lock")
 python-lsp-server = "*"  # Note: There are extras, but the default seems sensible.
 pyls-isort = "*"  # isort plugin for python-lsp-server
 pylsp-mypy = "*"  # mypy plugin for python-lsp-server

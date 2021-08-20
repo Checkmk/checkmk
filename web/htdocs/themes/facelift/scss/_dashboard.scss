@@ -169,7 +169,7 @@ div.dashlet {
     }
 
     a {
-      color: $black;
+      color: $font-color-black;
       text-decoration: none;
 
       &:hover {
@@ -350,7 +350,7 @@ div.dashlet.edit {
     &.on div {
       position: absolute;
       padding: 2px 6px;
-      color: #172127;
+      color: $font-color-light-bg;
       text-align: center;
       background-color: $success;
       border-radius: 12px;
@@ -517,18 +517,18 @@ div#dashboard.grid {
   box-sizing: border-box;
 
   &.max {
-    color: #f00;
+    color: $font-color-red;
     background-color: $dashlet-editor-free;
   }
 
   &.grow {
-    color: $white;
+    color: $font-color-white;
     background-color: $dashlet-editor-free;
   }
 
   &.abs {
-    color: #172127;
-    background-color: #13d389;
+    color: $font-color-light-bg;
+    background-color: $success;
   }
 }
 
@@ -981,7 +981,7 @@ div.stats {
 
       &.count:hover,
       &.text:hover {
-        color: $success;
+        color: $font-color-green;
       }
     }
 

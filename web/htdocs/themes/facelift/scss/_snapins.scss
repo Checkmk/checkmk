@@ -296,7 +296,7 @@ table.tacticaloverview {
       box-shadow: none;
 
       a.link {
-        color: $orange-1;
+        color: $font-color-orange;
       }
     }
 
@@ -642,7 +642,7 @@ div.spacertop {
  */
 #snapin_reports {
   i {
-    color: $black;
+    color: $font-color-black;
   }
 
   input {
@@ -653,7 +653,6 @@ div.spacertop {
 
   div {
     font-size: $font-size-small;
-    color: $footnote-link-color;
   }
 
   div.timerange {

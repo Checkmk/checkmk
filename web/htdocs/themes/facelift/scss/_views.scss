@@ -701,7 +701,7 @@ table.views {
   td,
   th {
     padding: 2px 1ex;
-    color: $white;
+    color: $font-color-white;
     border: 1px solid $grey-3;
   }
 
@@ -710,12 +710,12 @@ table.views {
     padding-top: 3px;
 
     &.legend {
-      color: $white;
+      color: $font-color-white;
       background-color: rgb(142, 174, 184);
     }
 
     &.content {
-      color: $white;
+      color: $font-color-white;
       background-color: rgb(158, 190, 200);
     }
 
@@ -740,10 +740,6 @@ table.views {
 table.data.availability {
   td.number {
     width: 60px;
-  }
-
-  td.unused {
-    color: rgb(136, 136, 136);
   }
 
   tr.summary td {
@@ -774,14 +770,14 @@ div.avlegend.timeline div.state.downtime span {
 table.data tr.data > td.hostdown,
 table.timeline td.hostdown,
 div.avlegend.timeline div.state.hostdown span {
-  color: $white;
+  color: $font-color-white;
   background-color: $hostdown-bg-color;
 }
 
 table.data tr.data td.unmonitored span,
 table.timeline td.unmonitored,
 div.avlegend.timeline div.state.unmonitored span {
-  color: $black;
+  color: $font-color-black;
   background-color: $unmonitored-bg-color;
 }
 
@@ -797,7 +793,7 @@ table.data.availability tr td {
 
 table.timeline td.ooservice,
 div.avlegend.timeline div.state.ooservice span {
-  color: $black;
+  color: $font-color-black;
   background-color: rgb(202, 202, 202);
   background-image: url("images/ooservice.png");
   background-repeat: repeat;
@@ -905,7 +901,6 @@ table.data.oddeven.timelineevents > tbody > tr.hilite {
   margin-bottom: 4px;
   font-size: $font-size-small;
   letter-spacing: $letter-spacing-table;
-  color: $darkgrey;
 }
 
 .timelinerange .timeline {
@@ -974,7 +969,7 @@ td.invtree {
   /* TODO: Reproduce this html element */
   b.treeangle.title {
     font-weight: normal;
-    color: $black;
+    color: $font-color-black;
   }
 
   ul.treeangle {
@@ -1030,12 +1025,12 @@ td.invtree {
 
 td.invtree span.invold,
 span.invold table.data {
-  color: $danger;
+  color: $font-color-red;
 }
 
 td.invtree span.invnew,
 span.invnew table.data {
-  color: $invnew-font-color;
+  color: $font-color-green;
 }
 
 /* Positioning of the link from an inventory dicttable to the matching multisite table */
@@ -1054,12 +1049,12 @@ td.if_state {
 table.data.single tr.data td.invtree table td.if_state,
 table.data tr.data td.if_state {
   &.if_state_up {
-    color: $black;
+    color: $font-color-black;
     background-color: $color-state-success-background;
   }
 
   &.if_state_down {
-    color: $white;
+    color: $font-color-white;
     background-color: $color-state-2-background;
   }
 
@@ -1068,12 +1063,12 @@ table.data tr.data td.if_state {
   }
 
   &.if_available {
-    color: $black;
+    color: $font-color-black;
     background-color: $color-state-success-background;
   }
 
   &.if_not_available {
-    color: $black;
+    color: $font-color-black;
     background-color: $color-state-4-background;
   }
 }
@@ -1114,7 +1109,7 @@ table.data.headerleft.sla {
   }
 
   a {
-    color: $white;
+    color: $font-color-white;
     text-decoration: underline;
   }
 }
@@ -1156,7 +1151,7 @@ div.sla_details {
 }
 
 td.sla > div.foldable > b {
-  color: $black;
+  color: $font-color-black;
 }
 
 table.data tr.sla_horizontal_line > td.sla_horizontal_line {
@@ -1351,7 +1346,6 @@ table.agents tbody > tr {
 }
 
 td.agent_config table.rulesets td {
-  color: $agent-config-td-color;
   vertical-align: top;
 
   table {

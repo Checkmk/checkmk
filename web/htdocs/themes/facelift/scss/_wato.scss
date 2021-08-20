@@ -109,24 +109,11 @@
   margin-right: 10px;
 }
 
-/* TODO: Reproduce these .dns .dnserror and .error elements */
-.wato td.dns {
-  color: rgb(102, 102, 102);
-}
-
-.wato td.dnserror {
-  color: rgb(255, 0, 0);
-}
-
-.wato td.error {
-  color: rgb(255, 0, 0);
-}
-
 .wato div.inherited {
-  color: $wato-inherited-color;
+  color: $font-color-dimmed;
 
   a {
-    color: $wato-inherited-color;
+    color: $font-color-dimmed;
   }
 
   b {
@@ -136,7 +123,7 @@
 }
 
 .wato td.inherited {
-  color: rgb(102, 102, 102);
+  color: $font-color-dimmed;
 }
 
 /* host validation error */
@@ -269,7 +256,7 @@ div#fixall_container {
   }
 
   span.changed {
-    color: $success;
+    color: $font-color-green;
     font-weight: $font-weight-bold;
   }
 
@@ -278,7 +265,7 @@ div#fixall_container {
     padding: 5px 10px;
     margin-left: 10px;
     background-color: $success;
-    color: $black;
+    color: $font-color-black;
   }
 }
 
@@ -399,7 +386,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
       right: 0;
       left: 0;
       overflow: hidden;
-      color: $white;
+      color: $font-color-white;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
@@ -425,7 +412,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
     left: 20px;
     padding: 0;
     overflow: hidden;
-    color: $white;
+    color: $font-color-white;
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -449,7 +436,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
   &.newfolder {
     font-size: 80px;
     line-height: 145px;
-    color: rgb(220, 220, 220);
+    color: $font-color-light-grey;
     text-align: center;
     opacity: 0.4;
   }
@@ -518,7 +505,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     left: 9px;
     width: 20px;
     height: 20px;
-    color: $black;
+    color: $font-color-black;
     text-align: center;
     background-color: rgb(252, 211, 64);
     border: 1px solid $white;
@@ -534,7 +521,7 @@ body.main .popup_menu .wato div.floatfolder div.title span,
     position: absolute;
     top: 12px;
     font-weight: bold;
-    color: $white;
+    color: $font-color-white;
 
     &.conditions {
       left: 40px;
@@ -638,7 +625,7 @@ span.tagify__tag-text {
 
 .wato table.data.ruleset tr.disabled td {
   * {
-    color: rgb(153, 153, 153);
+    color: $font-color-dimmed;
   }
 
   .tagify__tag-text {
@@ -740,7 +727,7 @@ div.filter_buttons {
       font-weight: 500;
       line-height: 1.5;
       letter-spacing: $letter-spacing-table;
-      color: $wato-subtitle-color;
+      color: $font-color-dimmed;
       text-rendering: optimizeLegibility;
     }
   }
@@ -814,7 +801,7 @@ div.filter_buttons {
  * with white color it wasn't visible anyways */
 div.varname {
   font-family: monospace, sans-serif;
-  color: $white;
+  color: $font-color-white;
 }
 
 /* page "global settings*/
@@ -832,7 +819,7 @@ div.varname {
   td.content a.modified > table {
     padding: 2px;
     margin-left: -2px;
-    border: 1px solid $span-dots-color;
+    border: 1px solid $font-color-dimmed;
 
     &.on {
       border: 1px solid $success;
@@ -923,7 +910,7 @@ div.varname {
   }
 
   tr.foreign.not_permitted td {
-    color: rgb(255, 0, 0);
+    color: $font-color-red;
   }
 }
 
@@ -976,7 +963,7 @@ div.varname {
       width: 160px;
       height: 24px;
       padding-top: 10px;
-      color: $black;
+      color: $font-color-black;
       border-radius: $theme-border-radius;
       box-shadow: none;
       box-sizing: border-box;
@@ -1037,7 +1024,7 @@ table.data tr.notification_context table {
 table.data tr.data.dcd_log_entries {
   > td {
     font-family: monospace, sans-serif;
-    color: $white;
+    color: $font-color-white;
     background-color: $black;
   }
 
@@ -1062,7 +1049,7 @@ table.data tr.data.dcd_log_entries {
 
 .wato table.progress {
   width: 50%;
-  color: $black;
+  color: $font-color-black;
   background: $bg-color-secondary;
   border: 1px solid $color-table-border;
   border-radius: $theme-border-radius;
@@ -1085,7 +1072,7 @@ table.data tr.data.dcd_log_entries {
         overflow: auto;
         font-family: monospace;
         font-weight: $font-weight-default;
-        color: $lightgrey;
+        color: $font-color-light-grey;
         text-align: left;
         background: $navigation-bg-color;
         border: 1px solid $color-table-border-dark;
@@ -1211,7 +1198,7 @@ table.data tr.data.dcd_log_entries {
   padding: 2px 5px;
   margin: 2px;
   font-weight: bold;
-  color: $black;
+  color: $font-color-black;
   background-color: rgb(255, 255, 0);
   border-radius: 3px;
   opacity: 0.9;
@@ -1223,18 +1210,11 @@ table.data tr.data.dcd_log_entries {
   width: 99%;
 }
 
-/* TODO: Reproduce these table.logwatch elements */
-table.logwatch {
-  tr.noreason {
-    color: rgb(137, 137, 137);
-  }
-
-  span.match {
-    padding: 0 2px 2px;
-    background-color: $white;
-    border: 1px solid rgb(73, 118, 139);
-    border-radius: 4px;
-  }
+table.logwatch span.match {
+  padding: 0 2px 2px;
+  color: $font-color-light-bg;
+  background-color: $color-state-6-background;
+  border-radius: $theme-border-radius;
 }
 
 /* TODO: Reproduce these .multisite_conn_method elements */
@@ -1252,7 +1232,7 @@ table.multisite_conn_method td {
 table.data td.bi_rule_tree {
   b.treeangle {
     font-weight: normal;
-    color: $black;
+    color: $font-color-black;
   }
 
   ul.treeangle {
@@ -1388,11 +1368,10 @@ table.setting td.reason {
   float: none;
   width: 180px;
   font-style: italic;
-  color: $white;
+  color: $font-color;
 
   i {
-    /* default value */
-    color: rgb(182, 200, 209);
+    color: $font-color-dimmed; /* default value */
   }
 
   a {
@@ -1407,7 +1386,7 @@ table.setting td.reason {
 td.settingvalue.unused,
 td.settingvalue.unused td {
   font-style: italic;
-  color: $td-unused-color;
+  color: $font-color-dimmed;
 }
 
 .wato table.nform div.title a {

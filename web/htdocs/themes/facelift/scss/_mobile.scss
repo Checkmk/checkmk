@@ -25,7 +25,7 @@ body.mobile {
   }
 
   div.command_group a {
-    color: $black;
+    color: $font-color-black;
   }
 
   table.data {
@@ -43,7 +43,7 @@ body.mobile {
     width: 100%;
 
     tr.header {
-      color: $black;
+      color: $font-color-black;
     }
 
     > tbody > tr.data > td {
@@ -52,16 +52,6 @@ body.mobile {
       border: 1px solid rgb(170, 170, 170);
       border-radius: 5px;
     }
-  }
-
-  .ui-body-c .ui-link {
-    color: $grey-4;
-  }
-  .ui-body-c .ui-link:visited {
-    color: $grey-4;
-  }
-  .ui-body-c .ui-link:hover {
-    color: $grey-2;
   }
 
   td.nonstatus {
@@ -101,43 +91,6 @@ body.mobile {
     }
   }
 
-  /* Perfometers */
-  td.perfometer {
-    width: 70px;
-    height: 14px;
-
-    * {
-      padding: 0;
-      font-size: 9px;
-      font-weight: normal;
-      color: $grey-4;
-    }
-
-    div.content {
-      width: 69px;
-      background-color: rgb(255, 255, 0);
-    }
-
-    div.title {
-      top: 2px;
-      width: 70px;
-    }
-
-    div.glass {
-      width: 69px;
-      height: 14px;
-    }
-
-    table {
-      width: 70px;
-      height: 14px;
-    }
-  }
-
-  table.data td.perfometer td.inner {
-    height: 14px;
-  }
-
   .ui-header,
   .ui-footer {
     .ui-title {
@@ -149,9 +102,11 @@ body.mobile {
     &.state0 {
       background-color: $color-state-success-background;
     }
+
     &.state1 {
       background-color: $color-state-1-background;
     }
+
     &.state2 {
       background-color: $color-state-2-background;
     }
@@ -172,7 +127,7 @@ body.mobile {
 
   #loginhead,
   #loginfoot {
-    color: $grey-3;
+    color: $font-color-dimmed;
     text-align: center;
   }
 
@@ -222,7 +177,7 @@ body.mobile {
         display: inline-block;
         width: 40px;
         overflow: hidden;
-        color: $black;
+        color: $font-color-black;
 
         img {
           margin-left: 0;

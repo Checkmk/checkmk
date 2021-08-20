@@ -111,13 +111,13 @@ body {
       max-width: 100%;
       padding: 8px 20px;
       margin: 0 0 5px;
-      color: $white;
+      color: $font-color-white;
       background: $bg-color;
       border-spacing: 0;
 
       td {
         overflow: hidden;
-        color: $white;
+        color: $font-color-white;
         text-overflow: ellipsis;
         -o-text-overflow: ellipsis;
         vertical-align: middle;
@@ -145,28 +145,6 @@ body {
           .popup_menu span,
           .popup_menu & span {
             color: $font-color;
-          }
-
-          div.breadcrumb {
-            white-space: nowrap;
-
-            span,
-            a {
-              &:last-child:after {
-                content: "";
-              }
-              color: #ccc;
-              text-decoration: none;
-            }
-
-            a:hover {
-              color: #fff;
-            }
-
-            :after {
-              text-decoration: none;
-              content: " > ";
-            }
           }
         }
 
@@ -205,7 +183,7 @@ body {
       top: -14px;
       width: 100%;
       font-family: monospace;
-      color: $white;
+      color: $font-color-white;
     }
 
     div#main_page_content {
@@ -269,7 +247,7 @@ body {
 #reload_pause_counter {
   font-size: $font-size-large;
   font-weight: bold;
-  color: $lightgrey;
+  color: $font-color-light-grey;
   text-align: center;
   text-decoration: none;
 
@@ -333,7 +311,7 @@ table.data {
 
     /* Table header links (For sorting) */
     &.sort:hover {
-      color: $font-color-hover;
+      color: $font-color;
       cursor: pointer;
       background-color: $data-th-sort-hover-bg-color;
     }
@@ -377,7 +355,7 @@ table.data {
     }
 
     &.unused {
-      color: rgb(136, 136, 136);
+      color: $font-color-dimmed;
     }
 
     &.nowrap {
@@ -401,7 +379,7 @@ table.data {
       vertical-align: middle;
 
       a:hover {
-        color: $font-color-hover;
+        color: $font-color;
       }
 
       &:not(.state):not(.hstate) {
@@ -740,7 +718,7 @@ input[type="checkbox"] {
   margin-left: 0;
   font-weight: $font-weight-bold;
   letter-spacing: $letter-spacing-table;
-  color: $input-button-color;
+  color: $font-color;
   background-color: $input-button-bg-color;
   box-shadow: none;
 
@@ -1084,7 +1062,7 @@ div.help {
   padding: 8px 16px;
   margin: 8px 0;
   font-weight: normal;
-  color: $black;
+  color: $font-color-black;
   text-align: left;
   text-transform: none; /* Neccessary due to help in H3 */
   background-color: $help-bg-color;
@@ -1129,12 +1107,8 @@ div.help {
 
   tt {
     font-family: courier, monospace;
-    color: rgb(0, 0, 153);
+    color: $font-color-blue-2;
   }
-}
-
-table.data div.help {
-  box-shadow: 0 0 3px $black;
 }
 
 /*--Popupmenu--------------------------------------------------------------.
@@ -1150,7 +1124,7 @@ body.main .popup_menu {
   position: absolute;
   z-index: 50;
   min-width: 300px;
-  color: $white;
+  color: $font-color-white;
   white-space: normal;
   background-color: $bg-color-secondary;
   border: 1px solid $color-table-border;
@@ -1252,7 +1226,7 @@ body.main .popup_menu {
       line-height: 21px;
 
       &:hover {
-        color: $white;
+        color: $font-color-white;
         text-decoration: none;
         background-color: rgb(98, 155, 177);
       }
@@ -1394,13 +1368,13 @@ table.debug_vars {
 
     &.left {
       font-weight: bold;
-      color: $white;
+      color: $font-color-white;
       background-color: rgb(51, 153, 85);
     }
 
     &.right {
       font-weight: bold;
-      color: $black;
+      color: $font-color-black;
       background-color: rgb(136, 255, 204);
     }
   }
@@ -1578,7 +1552,7 @@ table.data.job_table td {
     }
 
     > div {
-      color: $black;
+      color: $font-color-black;
     }
   }
 
@@ -1638,7 +1612,7 @@ table.data.job_table td {
       margin: 1px;
 
       &--active {
-        color: $success;
+        color: $font-color-green;
         background-color: $tag-dropdown-hover-bg-color;
         border: $tag-dropdown-hover-border-color;
       }

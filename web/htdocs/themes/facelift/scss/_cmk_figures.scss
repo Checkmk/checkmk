@@ -147,8 +147,7 @@ div.cmk_figure {
   }
 
   g.axis {
-    // axis edges invisible because designer made them so
-    color: $bg-color-secondary;
+    color: transparent; // graph axis edges are invisible
   }
 
   &.average_scatterplot {
@@ -206,20 +205,12 @@ div.cmk_figure {
           }
         }
 
-        tr.mean td:nth-child(2) {
-          color: $dc-graph-color-1;
-        }
-
-        tr.median td:nth-child(2) {
-          color: $dc-graph-color-2;
-        }
-
         tr.top_matches td:nth-child(2) {
-          color: rgb(255, 40, 40);
+          color: $font-color-red;
         }
 
         tr.bottom_matches td:nth-child(2) {
-          color: rgb(31, 150, 240);
+          color: $font-color-green;
         }
       }
 
@@ -349,7 +340,7 @@ div.dc_table .options {
       }
 
       input:disabled {
-        color: $grey-2;
+        color: $font-color-dimmed;
       }
 
       input:active,

@@ -34,12 +34,12 @@ td.state {
 
 table.data tr.data td.stale,
 table.data td.perfometer.stale div.title {
-  color: rgb(136, 136, 136);
+  color: $font-color-dimmed;
 }
 
 table.data tr.data td.stale.state2,
 table.data tr.data td.stale.hstate1 {
-  color: $lightgrey !important;
+  color: $font-color-light-grey !important;
   text-shadow: 0.8px 0.8px 0.8px rgb(255, 136, 136);
 }
 
@@ -88,7 +88,7 @@ td.fillbackground.state0,
 .hstate0 span {
   &,
   a {
-    color: $black !important;
+    color: $font-color-black !important;
     background-color: $color-state-success-background !important;
   }
 }
@@ -107,7 +107,7 @@ td.fillbackground.state1,
 .state1 span {
   &,
   a {
-    color: $black !important;
+    color: $font-color-black !important;
     background-color: $color-state-1-background !important;
   }
 }
@@ -123,7 +123,7 @@ td.fillbackground.state2,
 .hstate1 span {
   &,
   a {
-    color: $white !important;
+    color: $font-color-white !important;
     background-color: $color-state-2-background !important;
   }
 }
@@ -139,7 +139,7 @@ td.fillbackground.state3,
 .hstate2 span {
   &,
   a {
-    color: $white !important;
+    color: $font-color-white !important;
     background-color: $color-state-3-background !important;
   }
 }
@@ -183,7 +183,7 @@ img.pluginurl {
   padding: 2px;
   font-size: $font-size-small;
   line-height: 12px;
-  color: $white;
+  color: $font-color-white;
   text-align: center;
   cursor: default;
   border-radius: 8px;
@@ -201,7 +201,7 @@ img.pluginurl {
   }
 
   &.disabled {
-    color: $footnote-link-color;
+    color: $font-color-dimmed;
     background-color: $inpage-highlight-color;
   }
 
@@ -275,7 +275,7 @@ table.data tr.data > td.perfometer {
 
 td.perfometer {
   a {
-    color: $black;
+    color: $font-color-black;
     text-decoration: none;
   }
 
@@ -375,7 +375,7 @@ table.data {
 
     &.staletime {
       font-weight: bold;
-      color: $danger;
+      color: $font-color-red;
     }
 
     &.recent {
@@ -386,7 +386,7 @@ table.data {
 
   .state2 *,
   .state3 * {
-    color: $white;
+    color: $font-color-white;
   }
 }
 
@@ -396,7 +396,7 @@ td.badflag span {
 }
 
 td.goodflag {
-  color: $success !important;
+  color: $font-color-green !important;
 }
 
 td.icons {

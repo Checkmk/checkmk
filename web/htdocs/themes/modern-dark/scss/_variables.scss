@@ -10,7 +10,6 @@
 // Colors
 // -----------------------------------------------------------------------------
 $yellow: rgb(255, 215, 3); // yellow
-$lightgrey: rgb(220, 220, 220); // light grey
 
 // Helper variables for this theme that should be used in all color definitions below
 $ux-theme-0: rgb(17, 24, 29);
@@ -34,14 +33,14 @@ $inpage-highlight-color: $ux-theme-5;
 // Fonts
 // -----------------------------------------------------------------------------
 $font-color: $white;
-$font-color-hover: $grey-1;
-$font-color-dimmed: rgba($white, 0.4);
-$font-color-light-bg: $grey-7;
+$font-color-dimmed: rgba($white, 0.5);
+$font-color-light-bg: $grey-6;
+$font-color-light-grey: rgb(220, 220, 220);
 
 // -----------------------------------------------------------------------------
 // Buttons
 // -----------------------------------------------------------------------------
-$button-background-hover: lighten($grey-7, 10%);
+$button-background-hover: lighten($grey-6, 10%);
 
 // -----------------------------------------------------------------------------
 // States
@@ -60,24 +59,22 @@ $color-state-success-background: $success; // green
 // -----------------------------------------------------------------------------
 // Tables
 // -----------------------------------------------------------------------------
-$color-table-border: $grey-7; // grey
-$color-table-background: $grey-6; // light grey
-$color-table-border-dark: $grey-7; // dark grey
+$color-table-border: $grey-6; // grey
+$color-table-background: $grey-5; // light grey
+$color-table-border-dark: $grey-6; // dark grey
 
 // -----------------------------------------------------------------------------
 // Temporary variables for implementing the dark theme
 // These should be put into a more intuitive naming structure afterwards.
 // -----------------------------------------------------------------------------
-$primary-border: 1px solid $grey-7;
+$primary-border: 1px solid $grey-6;
 
-$primary-th-bg-color: $grey-7;
-$primary-td-bg-color: $grey-6;
+$primary-th-bg-color: $grey-6;
+$primary-td-bg-color: $grey-5;
 
 $primary-box-shadow: none;
 
 $dashboard-stats-bg-color: transparent;
-
-$checkbox-checked-color: $white;
 
 $toggle-button-search-img-filter: invert(20%);
 
@@ -85,7 +82,6 @@ $data-container-bg-color: $ux-theme-2;
 
 $input-button-bg-color: $ux-theme-0;
 $input-button-hover-bg-color: $ux-theme-6;
-$input-button-color: $white;
 
 $odd-tr-bg-color: $ux-theme-2;
 $even-tr-bg-color: $ux-theme-4;
@@ -94,12 +90,7 @@ $floatfilter-bg-color: null;
 
 $select2-search-field-color: rgb(63, 75, 93);
 $select2-border-color: $ux-theme-6;
-$select2-rendered-color: $white;
 $select2-search-field-border: none;
-
-$td-unused-color: $grey-2;
-
-$graph-legend-color: $white !important;
 
 $dashlet-body-bg-color: $ux-theme-2;
 
@@ -107,25 +98,16 @@ $td-gap-bg-color: $ux-theme-2;
 
 $td-text-overflow: ellipsis;
 
-$span-dots-color: $grey-1;
-
 $graph-legend-th-border-bottom: 1px solid $grey-1;
-$graph-time-color: $white;
 
-$dashlet-stats-border-top-color: $grey-6;
+$dashlet-stats-border-top-color: $grey-5;
 
 $overview-info-bg: rgb(56, 59, 81);
 
-$wato-a-border: 1px solid $grey-7;
-
-$wato-subtitle-color: $grey-2;
-
-$footnote-link-color: rgba($white, 0.8);
+$wato-a-border: 1px solid $grey-6;
 
 $host-diag-success-bg-color: rgb(50, 80, 50);
 $input-error-bg-color: $red-2;
-
-$wato-inherited-color: $grey-2;
 
 $hot-bg-color: $orange-1;
 
@@ -152,20 +134,15 @@ $dragging-bg-color: $ux-theme-1;
 
 $invtree-th-bg-color: $table-highlight-color;
 $invtree-td-bg-color: $inpage-highlight-color;
-$invnew-font-color: $success;
 
 $unmonitored-bg-color: rgb(134, 134, 134);
 $hostdown-bg-color: rgb(0, 102, 170);
 
 $nform-vlof-border-color: rgb(60, 60, 60);
 
-$duallist-control-a-hover-bg-color: mix($white, $grey-6, 10%);
-
-$snapin-list-color: $white;
+$duallist-control-a-hover-bg-color: mix($white, $grey-5, 10%);
 
 $performance-table-shared-padding: 8px 0;
-$logwatch-text-color: rgb(11, 5, 5);
-$logwatch-text-color-2: $white;
 
 // -----------------------------------------------------------------------------
 // Tags
@@ -195,10 +172,9 @@ $node-vis-history-border-color: $grey-1;
 $node-vis-history-filter: invert(70%);
 $node-vis-growth-root-color: rgb(169, 169, 169);
 $topology-filter-bg-color: $ux-theme-1;
-$topology-filter-border-color: $grey-7;
+$topology-filter-border-color: $grey-6;
 
 $agent-config-inner-title-bg-color: $ux-theme-1;
-$agent-config-td-color: $white;
 
 $pnp4nagios-img-filter: invert(84%);
 
@@ -227,8 +203,6 @@ $barbar-fill-color: rgb(14, 58, 99);
 $barbar-hover-fill-color: rgb(14, 58, 99);
 
 $dc-graph-color-0: $success;
-$dc-graph-color-1: rgb(255, 205, 20);
-$dc-graph-color-2: rgb(255, 125, 20);
 $scatterdot-hilite-color: $yellow;
 
 /* TODO:  move variables defined for the UX project to the correct place */

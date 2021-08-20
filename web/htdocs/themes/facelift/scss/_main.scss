@@ -76,7 +76,7 @@ select::-ms-expand {
 }
 
 input[type="file"] {
-  color: $black;
+  color: $font-color-black;
 }
 
 form {
@@ -87,7 +87,7 @@ form {
   }
 
   label.required::after {
-    color: $success;
+    color: $font-color-green;
     content: " (required)";
   }
 }
@@ -121,7 +121,6 @@ input[type="checkbox"] {
 
   &:checked {
     + label::before {
-      color: $checkbox-checked-color;
       text-align: center;
       content: "\2716";
     }
@@ -142,7 +141,7 @@ input.button,
 table.vs_duallist a.control {
   padding: 2px 6px;
   margin-left: 5px;
-  color: $white;
+  color: $font-color-white;
   cursor: pointer;
   border-radius: $theme-border-radius;
 }
@@ -176,7 +175,7 @@ input.button:not([type="password"]) {
     &,
     &:hover,
     &:active {
-      color: $darkgrey;
+      color: $font-color-dimmed;
       cursor: initial;
       background-color: $input-button-hover-bg-color;
       filter: grayscale(80%);
@@ -230,7 +229,7 @@ input.button.hot {
 
   &.off {
     a {
-      color: rgba($font-color, 0.4) !important;
+      color: $font-color-dimmed !important;
       background-color: $inpage-highlight-color;
     }
   }
@@ -239,10 +238,10 @@ input.button.hot {
 .dots {
   margin-left: 5px;
   overflow: hidden;
-  color: rgba($font-color, 0.4);
+  color: $font-color-dimmed;
 
   &.required::before {
-    color: $success;
+    color: $font-color-green;
     content: "(required) ";
   }
 }
@@ -252,7 +251,7 @@ a.button {
   padding: 0.1ex 1ex;
   margin: 2px;
   font-weight: normal;
-  color: $black;
+  color: $font-color-black;
   text-decoration: none;
   background-color: rgb(204, 204, 170);
   border-color: rgb(221, 221, 221) rgb(136, 136, 136) $grey-4 rgb(221, 221, 221);
@@ -305,7 +304,7 @@ h1 {
   margin-bottom: 5px;
   margin-left: 5px;
   font-size: $font-size-page-title;
-  color: $white;
+  color: $font-color-white;
 }
 
 div.livestatus.message {
@@ -355,7 +354,7 @@ b.treeangle.title {
   cursor: pointer;
 
   table.data & {
-    color: $black;
+    color: $font-color-black;
   }
 }
 
@@ -429,7 +428,7 @@ div.warning {
     margin-left: 0;
     font-size: $font-size-large;
     font-weight: $font-weight-bold;
-    color: $white;
+    color: $font-color-white;
   }
 
   input.button {
@@ -443,7 +442,7 @@ div.really {
   &,
   h3,
   body.main & a {
-    color: $black;
+    color: $font-color-black;
     background-color: $warning;
   }
 
@@ -463,12 +462,12 @@ div.message {
 }
 
 div.error {
-  color: $lightgrey;
+  color: $font-color-light-grey;
   background-color: $color-state-2-background;
 
   a,
   a:link {
-    color: $white;
+    color: $font-color-white;
   }
 
   tt {
@@ -478,12 +477,12 @@ div.error {
 
 .warning,
 body.main div.warning {
-  color: $black;
+  color: $font-color-black;
   background-color: $warning;
 
   a,
   a:link {
-    color: $black;
+    color: $font-color-black;
   }
 }
 
@@ -555,7 +554,7 @@ table.dictionary {
     white-space: nowrap;
 
     span.required {
-      color: $success;
+      color: $font-color-green;
     }
 
     div.popup_menu {
@@ -854,7 +853,7 @@ div.popup {
   width: -moz-max-content;
   width: intrinsic;
   padding: 10px;
-  color: $white;
+  color: $font-color-white;
   background-color: rgb(69, 130, 157);
   border: 1px solid $white;
   border-radius: 5px;
@@ -863,7 +862,7 @@ div.popup {
   span {
     display: block;
     margin-bottom: 5px;
-    color: $white;
+    color: $font-color-white;
   }
 }
 
@@ -1104,7 +1103,7 @@ table.data.werks {
 
     &.werkclasssecurity {
       font-weight: bold;
-      color: $white;
+      color: $font-color-white;
     }
 
     &.werkcompincomp_unack {
@@ -1120,7 +1119,7 @@ table.data.werks {
 table.werks td a,
 table.werks td body.main .popup_menu span,
 body.main .popup_menu table.werks td span {
-  color: $black;
+  color: $font-color-black;
   text-decoration: underline;
 }
 
@@ -1129,7 +1128,7 @@ td.nowiki {
   h3 {
     font-size: $font-size-large;
     font-weight: bold;
-    color: $black;
+    color: $font-color-black;
   }
 
   pre {
@@ -1183,7 +1182,7 @@ table.modifydowntimes > tbody > tr {
 
 .select2-container--default {
   .select2-results {
-    color: $black;
+    color: $font-color-black;
   }
 
   .select2-selection--single {
@@ -1191,7 +1190,7 @@ table.modifydowntimes > tbody > tr {
 
     .select2-selection__rendered {
       line-height: $input-field-height;
-      color: $select2-rendered-color;
+      color: $font-color;
     }
 
     .select2-selection__arrow b {
@@ -1205,7 +1204,7 @@ table.modifydowntimes > tbody > tr {
   }
 
   .select2-results__option {
-    color: $select2-rendered-color;
+    color: $font-color;
     background-color: $inpage-highlight-color;
   }
 
@@ -1214,7 +1213,7 @@ table.modifydowntimes > tbody > tr {
   }
 
   .select2-results__option--highlighted[aria-selected] {
-    color: $success;
+    color: $font-color-green;
     background-color: $inpage-highlight-color;
   }
 
@@ -1257,18 +1256,8 @@ div.graph {
     padding: 4px !important;
   }
 
-  table.legend {
-    td {
-      color: $graph-legend-color;
-    }
-
-    th {
-      border-bottom: $graph-legend-th-border-bottom;
-    }
-  }
-
-  div.time {
-    color: $graph-time-color;
+  table.legend th {
+    border-bottom: $graph-legend-th-border-bottom;
   }
 
   &.brokengraph {
@@ -1281,7 +1270,6 @@ div.graph {
     pre {
       padding: 0 8px 8px;
       margin: 0;
-      color: $graph-time-color;
     }
   }
 }
@@ -1404,10 +1392,6 @@ td.title {
 
 select.vlof_filter {
   width: auto;
-}
-
-div.timerange {
-  color: $darkgrey;
 }
 
 body.main.visible div.foldable .title {

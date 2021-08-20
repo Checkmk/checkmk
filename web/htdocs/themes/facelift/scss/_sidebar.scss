@@ -24,10 +24,6 @@ body.side {
   font-weight: $font-weight-default;
   background: $navigation-bg-color;
 
-  p {
-    color: $darkgrey;
-  }
-
   &.screenshotmode {
     background-image: url("");
   }
@@ -105,7 +101,7 @@ body.side {
   #side_content {
     height: 100%;
     overflow: auto;
-    color: $black;
+    color: $font-color-black;
 
     & > .snapin {
       margin-top: 0;
@@ -179,7 +175,7 @@ body.main .popup_menu #side_header > span {
   cursor: pointer;
 
   &:not(.folded) {
-    color: $success;
+    color: $font-color-green;
   }
 
   img {
@@ -381,7 +377,7 @@ div.snapin {
 
   li {
     padding-left: 0;
-    color: $snapin-list-color;
+    color: $font-color;
 
     &.sidebar {
       margin-left: 0;
@@ -402,18 +398,17 @@ div.snapin {
   /* Style for exceptions displayed in snapins */
   div.snapinexception {
     width: 220px;
-    padding: 3px;
-    background-color: rgb(255, 136, 136);
-    border: 1px solid rgb(255, 0, 0);
+    padding: $spacing-half;
+    background-color: $color-state-2-background;
     border-radius: 4px;
 
     h2 {
       margin-top: 0;
-      color: rgb(255, 0, 0);
+      color: $font-color-light-grey;
     }
 
     p {
-      color: rgb(136, 0, 0);
+      color: $font-color-light-grey;
     }
   }
 
@@ -474,11 +469,6 @@ div.snapin {
       width: 28px;
       height: 28px;
     }
-
-    div.description {
-      margin-top: 6px;
-      color: #5a6782;
-    }
   }
 }
 
@@ -486,23 +476,17 @@ div.snapin div.content div.foldable ul.treeangle a.iconlink {
   padding: 0;
 }
 
-div.snapin table.allhosts td a.link,
-/* TODO: Reproduce these two html elements */
-div.snapin table.allhosts td body.main .popup_menu span.link,
-body.main .popup_menu div.snapin table.allhosts td span.link {
+div.snapin table.allhosts td a.link {
   padding: 2px;
   padding-left: 4px;
 }
 
-div.snapin div.footnotelink a.link,
-/* TODO: Reproduce these two html elements */
-div.snapin div.footnotelink body.main .popup_menu span.link,
-body.main .popup_menu div.snapin div.footnotelink span.link {
+div.snapin div.footnotelink a.link {
   height: 11px;
   padding: 2px 7px;
   font-size: $font-size-small;
   font-weight: $font-weight-bold;
-  color: $footnote-link-color;
+  color: $font-color;
   background: $inpage-highlight-color;
   border: none;
   box-shadow: none;
@@ -512,15 +496,6 @@ body.main .popup_menu div.snapin div.footnotelink span.link {
   }
 }
 
-//div.snapin div.footnotelink a.link::before,
-/* TODO: Reproduce these two html elements */
-/*div.snapin div.footnotelink body.main .popup_menu span.link::before,
-body.main .popup_menu div.snapin div.footnotelink span.link::before {
-  margin-right: 8px;
-  content: "···";
-}*/
-
-/* TODO: Reproduce this html element */
 div#snapinDragIndicator {
   position: relative;
   top: 2px;

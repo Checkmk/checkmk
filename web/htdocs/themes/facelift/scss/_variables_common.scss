@@ -7,7 +7,13 @@
 
 // -----------------------------------------------------------------------------
 // Colors
+// The colors defined here represents the color palette of Checkmk. Use them in
+// variable definitions for fonts, backgrounds, borders etc. Do NOT use them
+// directly to style CSS.
 // -----------------------------------------------------------------------------
+
+// TODO: Extend list below by all currently used color definitions. Drop
+// unnecessary colors.
 $white: rgb(255, 255, 255);
 $black: rgb(0, 0, 0);
 $warning: rgb(255, 254, 68); // alt (more of an orange): rgb(255, 160, 66)
@@ -19,13 +25,9 @@ $grey-1: rgb(250, 250, 250);
 $grey-2: rgb(189, 189, 189);
 $grey-3: rgb(68, 68, 68);
 $grey-4: rgb(51, 51, 51);
-$grey-5: rgb(50, 50, 50);
-$grey-6: rgb(40, 40, 40);
-$grey-7: rgb(33, 33, 33);
+$grey-5: rgb(40, 40, 40);
+$grey-6: rgb(33, 33, 33);
 $darkgrey: rgb(131, 131, 131); // dark grey
-
-// TODO: Extend list below by all currently used color definitions. This way we can see
-// what colors are actually used and decide if we want to drop some of them.
 $green-1: rgb(170, 255, 187);
 $orange-1: rgb(255, 160, 66);
 $red-1: rgb(247, 197, 197);
@@ -33,8 +35,17 @@ $red-2: rgb(130, 50, 50);
 
 // -----------------------------------------------------------------------------
 // Fonts
+// Theme specific font colors are in _variables.scss.
 // -----------------------------------------------------------------------------
 $font-family-default: "Lato", "Roboto", Helvetica, Arial, sans-serif;
+
+$font-color-white: $white;
+$font-color-black: $black;
+$font-color-green: $success; // TODO: use a better color in the light theme?
+$font-color-orange: $orange-1; // TODO: use a better color in the light theme?
+$font-color-red: $danger;
+$font-color-blue-1: rgb(90, 103, 130);
+$font-color-blue-2: rgb(0, 0, 153);
 
 $font-size-page-title: 18px;
 $font-size-large: 14px;

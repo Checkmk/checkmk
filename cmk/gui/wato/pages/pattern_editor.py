@@ -207,7 +207,8 @@ class ModePatternEditor(WatoMode):
                                     title=HTML("<b>Rule #%d</b>" % (abs_rulenr + 1)),
                                     indent=False), table_element("pattern_editor_rule_%d" %
                                                                  abs_rulenr,
-                                                                 sortable=False) as table:
+                                                                 sortable=False,
+                                                                 css="logwatch") as table:
                 abs_rulenr += 1
 
                 # TODO: What's this?
@@ -222,8 +223,6 @@ class ModePatternEditor(WatoMode):
                     match_img = ''
                     if rule_matches:
                         # Applies to the given host/service
-                        reason_class = 'reason'
-
                         matched = re.search(pattern, self._match_txt)
                         if matched:
 
@@ -253,11 +252,10 @@ class ModePatternEditor(WatoMode):
                             match_title = _('This logfile pattern does not match the given string.')
                     else:
                         # rule does not match
-                        reason_class = 'noreason'
                         match_img = 'nmatch'
                         match_title = _('The rule conditions do not match.')
 
-                    table.row(css=reason_class)
+                    table.row()
                     table.cell(_('Match'))
                     html.icon("rule%s" % match_img, match_title)
 

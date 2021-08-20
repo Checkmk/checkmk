@@ -53,7 +53,7 @@ div#top_heading {
       text-decoration: none;
 
       &:hover {
-        color: $success;
+        color: $font-color-green;
       }
     }
 
@@ -127,7 +127,7 @@ div#top_heading {
       &:last-child:after {
         content: "";
       }
-      color: rgba($font-color, 0.8);
+      color: $font-color-dimmed;
       text-decoration: none;
     }
 
@@ -281,7 +281,7 @@ div#top_heading {
           div.topic_title {
             padding: $spacing 0 2px 12px;
             font-weight: normal;
-            color: rgba($font-color, 0.5);
+            color: $font-color-dimmed;
             cursor: default;
           }
 
@@ -295,7 +295,7 @@ div#top_heading {
             }
 
             &.enabled a:hover {
-              color: $success;
+              color: $font-color-green;
             }
 
             &.disabled a {
@@ -726,7 +726,7 @@ div#page_menu_popups div.side_popup {
         div.description {
           display: inline-block;
           margin: 5px 10px 0;
-          color: #5a6782;
+          color: $font-color-blue-1;
         }
 
         &:hover,

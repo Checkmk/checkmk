@@ -138,7 +138,7 @@ _log_section_time() {
         start="$(perl -MTime::HiRes=time -le 'print time()')"
         { time $section_func; } 2>>"$profiling_logfile"
         end="$(perl -MTime::HiRes=time -le 'print time()')"
-        echo -e "runtime $(echo "$end - $start" | bc)\n" >>"$profiling_logfile"
+        echo "runtime $(echo "$end - $start" | bc)" >>"$profiling_logfile"
     else
         $section_func
     fi
@@ -301,20 +301,11 @@ section_checkmk() {
 #
 
 section_labels() {
-    LABELS=""
-    if [ -n "$IS_DOCKERIZED" ] || [ -n "$IS_LXC_CONTAINER" ]; then
-        DEVICE_TYPE="container"
+    echo '<<<labels:sep(0)>>>'
+    if [ -n "${IS_DOCKERIZED}" ] || [ -n "${IS_LXC_CONTAINER}" ]; then
+        echo '{"cmk/device_type":"container"}'
     elif grep "hypervisor" /proc/cpuinfo >/dev/null 2>&1; then
-        DEVICE_TYPE="vm"
-    fi
-
-    if [ -n "$DEVICE_TYPE" ]; then
-        LABELS+="{\"cmk/device_type\":\"$DEVICE_TYPE\"}\n"
-    fi
-
-    if [ -n "$LABELS" ]; then
-        echo '<<<labels:sep(0)>>>'
-        echo -e "$LABELS"
+        echo '{"cmk/device_type":"vm"}'
     fi
 }
 
@@ -510,10 +501,10 @@ section_lnx_if() {
             # If interface down we get "Invalid argument"
             speed=$(cat "/sys/class/net/$eth/speed" 2>/dev/null)
             if [ -n "$speed" ] && [ "$speed" -ge 0 ]; then
-                echo -e "\tSpeed: ${speed}Mb/s\n"
+                echo "Speed: ${speed}Mb/s"
             fi
         fi
-        echo -e "\tAddress: $(cat "/sys/class/net/$eth/address")\n"
+        echo "Address: $(cat "/sys/class/net/$eth/address")"
     done
 }
 
@@ -965,7 +956,7 @@ section_omd_core() {
         for site in *; do
             if [ -S "/omd/sites/$site/tmp/run/live" ]; then
                 echo "[$site]"
-                echo -e "GET status" |
+                echo "GET status" |
                     waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/live"
             fi
         done
@@ -986,7 +977,7 @@ section_omd_core() {
         for site in *; do
             if [ -S "/omd/sites/$site/tmp/run/mkeventd/status" ]; then
                 echo "[\"$site\"]"
-                echo -e "GET status\nOutputFormat: json" |
+                (echo "GET status" && echo "OutputFormat: json") |
                     waitmax 3 "/omd/sites/$site/bin/unixcat" "/omd/sites/$site/tmp/run/mkeventd/status"
             fi
         done
@@ -1852,7 +1843,7 @@ main_finalize_sync() {
     if $LOG_SECTION_TIME; then
         profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
         agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
-        echo -e "runtime $(echo "$agent_end - $agent_start" | bc)\n" >>"$profiling_logfile_check_mk_agent"
+        echo "runtime $(echo "$agent_end - $agent_start" | bc)" >>"$profiling_logfile_check_mk_agent"
     fi
 }
 

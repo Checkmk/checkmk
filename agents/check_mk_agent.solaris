@@ -121,7 +121,7 @@ _log_section_time() {
         start="$(perl -MTime::HiRes=time -le 'print time()')"
         { time $section_func; } 2>>"$profiling_logfile"
         end="$(perl -MTime::HiRes=time -le 'print time()')"
-        echo -e "runtime $(echo "$end - $start" | bc)\n" >>"$profiling_logfile"
+        echo "runtime $(echo "$end - $start" | bc)" >>"$profiling_logfile"
     else
         $section_func
     fi
@@ -799,7 +799,7 @@ main_finalize_sync() {
     if $LOG_SECTION_TIME; then
         profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
         agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
-        echo -e "runtime $(echo "$agent_end - $agent_start" | bc)\n" >>"$profiling_logfile_check_mk_agent"
+        echo "runtime $(echo "$agent_end - $agent_start" | bc)" >>"$profiling_logfile_check_mk_agent"
     fi
 }
 

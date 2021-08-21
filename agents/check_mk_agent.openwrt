@@ -230,7 +230,7 @@ section_lnx_if() {
         for eth in $(sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort); do
             echo "[$eth]"
             ethtool "$eth" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
-            echo -e "\tAddress: $(cat "/sys/class/net/$eth/address")\n"
+            echo "Address: $(cat "/sys/class/net/$eth/address")"
         done
     fi
 }
@@ -656,7 +656,7 @@ section_livestatus_status() {
         for site in *; do
             if [ -S "/omd/sites/$site/tmp/run/live" ]; then
                 echo "[$site]"
-                echo -e "GET status" | waitmax 3 /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/live
+                echo "GET status" | waitmax 3 /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/live
             fi
         done
     fi

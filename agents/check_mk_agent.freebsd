@@ -479,17 +479,17 @@ run_local_checks() {
 
     if ${MK_RUN_SYNC_PARTS}; then
         echo '<<<local:sep(0)>>>'
-        for skript in ./*; do
-            if is_valid_plugin "$skript"; then
-                _log_section_time "./$skript"
+        for script in ./*; do
+            if is_valid_plugin "${script}"; then
+                _log_section_time "${script}"
             fi
         done
     fi
 
     # Call some local checks only every X'th second
-    for skript in [1-9]*/*; do
-        if is_valid_plugin "$skript"; then
-            run_cached "local_${skript##*/}" "${skript%/*}" "_log_section_time './$skript'"
+    for script in [1-9]*/*; do
+        if is_valid_plugin "${script}"; then
+            run_cached "local_${script##*/}" "${script%/*}" "_log_section_time '${script}'"
         fi
     done
 }
@@ -529,17 +529,17 @@ run_plugins() {
     cd "${PLUGINSDIR}" || return
 
     if ${MK_RUN_SYNC_PARTS}; then
-        for skript in *; do
-            if is_valid_plugin "${skript}"; then
-                ./"${skript}"
+        for script in ./*; do
+            if is_valid_plugin "${script}"; then
+                "${script}"
             fi
         done
     fi
 
     # Call some plugins only every X'th minute
-    for skript in [1-9]*/* ; do
-        if is_valid_plugin "${skript}"; then
-            run_cached plugins_"${skript##*/}" "${skript%/*}" "${skript}"
+    for script in [1-9]*/* ; do
+        if is_valid_plugin "${script}"; then
+            run_cached plugins_"${script##*/}" "${script%/*}" "${script}"
         fi
     done
 }

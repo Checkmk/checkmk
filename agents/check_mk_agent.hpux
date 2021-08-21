@@ -126,9 +126,9 @@ run_purely_synchronous_sections() {
 
 run_plugins() {
     if cd $PLUGINSDIR; then
-      for skript in $(ls); do
-        if [ -x "$skript" ]; then
-            ./$skript
+      for script in $(ls); do
+        if [ -x "${script}" ]; then
+            ./${script}
         fi
       done
     fi
@@ -137,9 +137,9 @@ run_plugins() {
 run_local_checks() {
     echo '<<<local:sep(0)>>>'
     if cd $LOCALDIR; then
-      for skript in $(ls); do
-        if [ -x "$skript" ]; then
-            ./$skript
+      for script in $(ls); do
+        if [ -x "${script}" ]; then
+            ./${script}
         fi
       done
     fi

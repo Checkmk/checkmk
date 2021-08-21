@@ -1753,6 +1753,9 @@ msgid ""
 "addresses to exclude them. The matched addresses are excluded."
 msgstr ""
 
+msgid "A list of rule names as defined in Alertmanager."
+msgstr ""
+
 msgid "A list of specific users"
 msgstr "O listă cu utilizatori specifici"
 
@@ -3108,6 +3111,10 @@ msgstr "Adaugă limite"
 msgid "Add macro"
 msgstr "Adaugă bookmark"
 
+#, fuzzy
+msgid "Add mapping"
+msgstr "Adaugă o nouă mapare"
+
 msgid "Add message pattern"
 msgstr "Adaugă model mesaj"
 
@@ -4170,6 +4177,10 @@ msgstr ""
 msgid "Alert handlers will handle state changes."
 msgstr ""
 
+#, fuzzy
+msgid "Alert mangager rule state"
+msgstr "Nume nou"
+
 msgid "Alert on too high CPU utilization"
 msgstr ""
 
@@ -4189,6 +4200,10 @@ msgstr ""
 msgid "Alert on too high power consumption"
 msgstr "APC consum de Curent"
 
+#, fuzzy
+msgid "Alert rule names"
+msgstr "Nume nou"
+
 msgid "Alert rules that don't export a status are ignored with this option."
 msgstr ""
 
@@ -4205,6 +4220,17 @@ msgstr "Adaugă o regulă de rol"
 #, fuzzy
 msgid "Alertmanager connection option"
 msgstr "Conexiune Noua"
+
+#, fuzzy
+msgid "Alertmanager discovery"
+msgstr "Adaugă o regulă de rol"
+
+#, fuzzy
+msgid "Alertmanager rule states"
+msgstr "Adaugă o regulă de rol"
+
+msgid "Alertmanager rule states (Summary)"
+msgstr ""
 
 msgid "Alerts"
 msgstr ""
@@ -6459,6 +6485,10 @@ msgid "Beginner's guide: Creating folders"
 msgstr ""
 
 msgid "Beginner's guide: Host folder structures"
+msgstr ""
+
+msgid ""
+"Below the specified value alert rules will be monitored as asingle service."
 msgstr ""
 
 #, fuzzy
@@ -9987,6 +10017,9 @@ msgid ""
 "lines on the server side, which is 500 KB"
 msgstr ""
 
+msgid "Configure the monitoring state for Alertmanager rules."
+msgstr ""
+
 msgid ""
 "Configure the name of the HTTP request header variable to read from the "
 "incoming HTTP requests"
@@ -10940,6 +10973,10 @@ msgid "Create a service for each instance and backup type"
 msgstr ""
 
 #, fuzzy
+msgid "Create a summary service for all alert rules"
+msgstr "Nivelurile maxime pentru voltaj"
+
+#, fuzzy
 msgid "Create additional Service for IO Stats Bytes"
 msgstr "Nivelurile maxime pentru voltaj"
 
@@ -11042,6 +11079,10 @@ msgid "Create notification with the following parameters"
 msgstr "(nu trimite notificări câtre Event Console)"
 
 #, fuzzy
+msgid "Create one service per alert rule"
+msgstr "Sterge Elementul"
+
+#, fuzzy
 msgid "Create package"
 msgstr "Conexiune Noua"
 
@@ -11080,6 +11121,10 @@ msgstr ""
 
 msgid "Create service labels that get discovered by this rule."
 msgstr ""
+
+#, fuzzy
+msgid "Create services for alert rule groups"
+msgstr "Grup nou"
 
 #, fuzzy
 msgid "Create status and (if configured) health services"
@@ -15140,6 +15185,9 @@ msgid "Don't activate services matching"
 msgstr ""
 
 msgid "Don't change state"
+msgstr ""
+
+msgid "Don't create a group service for the following groups"
 msgstr ""
 
 msgid "Don't escape HTML (Dangerous - please read context help)"
@@ -28922,6 +28970,10 @@ msgid "Minimum allowed age"
 msgstr "Timpul maxim permis pentru uptime"
 
 #, fuzzy
+msgid "Minimum amount of alert rules in a group to create a group service"
+msgstr "Numarum maxim de biti pentru primire"
+
+#, fuzzy
 msgid "Minimum connections per second"
 msgstr "cereri/sec"
 
@@ -29865,6 +29917,10 @@ msgstr "Numele elementului pentru eveniment"
 
 msgid "Name / Description"
 msgstr ""
+
+#, fuzzy
+msgid "Name of Alert rules/Alert rule groups"
+msgstr "Numele elementului pentru eveniment"
 
 #, fuzzy
 msgid "Name of Certificate"
@@ -36886,6 +36942,10 @@ msgstr ""
 msgid "Remaining supply"
 msgstr ""
 
+#, fuzzy
+msgid "Remap alert rule states"
+msgstr " Ignoră această opțiune"
+
 msgid "Remap states"
 msgstr ""
 
@@ -39616,6 +39676,10 @@ msgstr ""
 
 msgid "Service contacts"
 msgstr ""
+
+#, fuzzy
+msgid "Service creation"
+msgstr "foloseste configuratia locala"
 
 msgid "Service creation using PromQL queries"
 msgstr ""
@@ -60619,10 +60683,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Create new LDAP Connection"
 #~ msgstr "Conexiune Noua"
-
-#, fuzzy
-#~ msgid "Create new alert handler rule"
-#~ msgstr "Sterge Elementul"
 
 #, fuzzy
 #~ msgid "Create new contact group"

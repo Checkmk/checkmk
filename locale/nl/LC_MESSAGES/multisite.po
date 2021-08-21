@@ -2046,6 +2046,10 @@ msgstr ""
 "Een lijst van reguliere expressies die worden vergeleken met de gevonden IP-"
 "adressen om ze uit te sluiten. De gematchte adressen worden uitgesloten."
 
+#, fuzzy
+msgid "A list of rule names as defined in Alertmanager."
+msgstr "Deze regel komt overeen met en definieert nieuwe parameters."
+
 msgid "A list of specific users"
 msgstr "Een lijst van specifieke gebruikers"
 
@@ -3349,6 +3353,10 @@ msgstr "Grenzen toevoegen"
 msgid "Add macro"
 msgstr "Macro toevoegen"
 
+#, fuzzy
+msgid "Add mapping"
+msgstr "Nieuwe mapping toevoegen"
+
 msgid "Add message pattern"
 msgstr "Bericht patroon toevoegen"
 
@@ -4398,6 +4406,10 @@ msgstr "Waarschuwings handlers in te zetten"
 msgid "Alert handlers will handle state changes."
 msgstr "Alert handlers zullen toestandsveranderingen afhandelen."
 
+#, fuzzy
+msgid "Alert mangager rule state"
+msgstr "Waarschuwings afhandeling regel"
+
 msgid "Alert on too high CPU utilization"
 msgstr "Waarschuwing bij te hoog CPU-gebruik"
 
@@ -4416,6 +4428,10 @@ msgstr "Waarschuwing voor te hoog algemeen gebruik"
 msgid "Alert on too high power consumption"
 msgstr "Waarschuwing bij te hoog stroomverbruik"
 
+#, fuzzy
+msgid "Alert rule names"
+msgstr "Naam wachtrij"
+
 msgid "Alert rules that don't export a status are ignored with this option."
 msgstr ""
 
@@ -4433,6 +4449,17 @@ msgstr "Waarschuwings afhandelaar"
 #, fuzzy
 msgid "Alertmanager connection option"
 msgstr "Prometheus verbindings optie"
+
+#, fuzzy
+msgid "Alertmanager discovery"
+msgstr "Waarschuwings afhandelaar"
+
+#, fuzzy
+msgid "Alertmanager rule states"
+msgstr "Waarschuwings afhandelaar"
+
+msgid "Alertmanager rule states (Summary)"
+msgstr ""
 
 msgid "Alerts"
 msgstr "Waarschuwingen"
@@ -6750,6 +6777,10 @@ msgstr "Beginnershandleiding: Mappen maken"
 
 msgid "Beginner's guide: Host folder structures"
 msgstr "Beginnershandleiding: Host mapstructuren"
+
+msgid ""
+"Below the specified value alert rules will be monitored as asingle service."
+msgstr ""
 
 msgid "Below this folder"
 msgstr "Onder deze map"
@@ -10603,6 +10634,10 @@ msgstr ""
 "gestuurd. Standaard is de limiet ingesteld op de maximale grootte van het "
 "bestand dat de logregels aan de serverzijde opslaat, namelijk 500 KB"
 
+#, fuzzy
+msgid "Configure the monitoring state for Alertmanager rules."
+msgstr "Configureer de doelmodus voor het systeem."
+
 msgid ""
 "Configure the name of the HTTP request header variable to read from the "
 "incoming HTTP requests"
@@ -11538,6 +11573,10 @@ msgstr "Maak een dienst voor elke instantie"
 msgid "Create a service for each instance and backup type"
 msgstr "Maak een service voor elke instantie en backup type"
 
+#, fuzzy
+msgid "Create a summary service for all alert rules"
+msgstr "Maak een dienst voor elke instantie"
+
 msgid "Create additional Service for IO Stats Bytes"
 msgstr "Maak extra Dienst voor IO Stats Bytes"
 
@@ -11629,6 +11668,10 @@ msgstr "Maak knooppunten op basis van een dienst zoekopdracht"
 msgid "Create notification with the following parameters"
 msgstr "Maak een melding met de volgende parameters"
 
+#, fuzzy
+msgid "Create one service per alert rule"
+msgstr "Nieuwe alert handler regel gemaakt"
+
 msgid "Create package"
 msgstr "Pakket maken"
 
@@ -11669,6 +11712,10 @@ msgstr "Maak service labels voor alle groepen die uit deze regel voortvloeien."
 
 msgid "Create service labels that get discovered by this rule."
 msgstr "Creëer service labels die door deze regel ontdekt worden."
+
+#, fuzzy
+msgid "Create services for alert rule groups"
+msgstr "Aanmaken van service labels voor aangemaakte groepen"
 
 msgid "Create status and (if configured) health services"
 msgstr "Creëer status en (indien geconfigureerd) gezondheidsdiensten"
@@ -15647,6 +15694,9 @@ msgstr "Activeer geen bijpassende diensten"
 
 msgid "Don't change state"
 msgstr "Verander niet van toestand"
+
+msgid "Don't create a group service for the following groups"
+msgstr ""
 
 msgid "Don't escape HTML (Dangerous - please read context help)"
 msgstr "Ontsnap HTML niet (Gevaarlijk - lees de context help)"
@@ -30153,6 +30203,10 @@ msgstr "Minimaal vereiste versie van Checkmk"
 msgid "Minimum allowed age"
 msgstr "Toegestane minimumleeftijd"
 
+#, fuzzy
+msgid "Minimum amount of alert rules in a group to create a group service"
+msgstr "Minimum aantal items om een groep te maken"
+
 msgid "Minimum connections per second"
 msgstr "Minimale verbindingen per seconde"
 
@@ -31064,6 +31118,10 @@ msgstr "Naam - Gebruik de naam van de container"
 
 msgid "Name / Description"
 msgstr "Naam / Beschrijving"
+
+#, fuzzy
+msgid "Name of Alert rules/Alert rule groups"
+msgstr "Naam van de resource groep"
 
 msgid "Name of Certificate"
 msgstr "Naam van het certificaat"
@@ -38029,6 +38087,10 @@ msgstr "Resterende dagen tot de Windows licentie verloopt"
 msgid "Remaining supply"
 msgstr "Overblijvend aanbod"
 
+#, fuzzy
+msgid "Remap alert rule states"
+msgstr "Herprogrammeer staten"
+
 msgid "Remap states"
 msgstr "Herprogrammeer staten"
 
@@ -40706,6 +40768,10 @@ msgstr "Contactinformatie dienst"
 
 msgid "Service contacts"
 msgstr "Dienstcontacten"
+
+#, fuzzy
+msgid "Service creation"
+msgstr "Configuratie van de dienst"
 
 msgid "Service creation using PromQL queries"
 msgstr "Diensten aanmaken met PromQL queries"

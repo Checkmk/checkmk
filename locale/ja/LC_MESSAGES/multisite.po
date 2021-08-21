@@ -1948,6 +1948,10 @@ msgid ""
 "addresses to exclude them. The matched addresses are excluded."
 msgstr ""
 
+#, fuzzy
+msgid "A list of rule names as defined in Alertmanager."
+msgstr "このルールは、新しいパラメーターに一致し、定義します。"
+
 msgid "A list of specific users"
 msgstr "特定のユーザーのリスト"
 
@@ -3220,6 +3224,10 @@ msgstr "制限を追加する"
 msgid "Add macro"
 msgstr "マクロを追加"
 
+#, fuzzy
+msgid "Add mapping"
+msgstr "新しいマッピングを追加する"
+
 msgid "Add message pattern"
 msgstr "メッセージパターンの追加"
 
@@ -4234,6 +4242,10 @@ msgstr "デプロイするアラートハンドラー"
 msgid "Alert handlers will handle state changes."
 msgstr "アラートハンドラーは状態の変化を処理します。"
 
+#, fuzzy
+msgid "Alert mangager rule state"
+msgstr "アラートハンドラールール"
+
 msgid "Alert on too high CPU utilization"
 msgstr "CPU使用率が高すぎる場合のアラート"
 
@@ -4252,6 +4264,10 @@ msgstr "全体的な使用率が高すぎる場合のアラート"
 msgid "Alert on too high power consumption"
 msgstr "消費電力が高すぎる場合のアラート"
 
+#, fuzzy
+msgid "Alert rule names"
+msgstr "キュー名"
+
 msgid "Alert rules that don't export a status are ignored with this option."
 msgstr ""
 
@@ -4268,6 +4284,17 @@ msgstr "アラートハンドラー"
 #, fuzzy
 msgid "Alertmanager connection option"
 msgstr "Prometheus接続オプション"
+
+#, fuzzy
+msgid "Alertmanager discovery"
+msgstr "アラートハンドラー"
+
+#, fuzzy
+msgid "Alertmanager rule states"
+msgstr "アラートハンドラー"
+
+msgid "Alertmanager rule states (Summary)"
+msgstr ""
 
 msgid "Alerts"
 msgstr "アラート"
@@ -6513,6 +6540,10 @@ msgstr "ビギナーズガイド: フォルダの作成"
 
 msgid "Beginner's guide: Host folder structures"
 msgstr "初心者向けガイド: ホストフォルダの構造"
+
+msgid ""
+"Below the specified value alert rules will be monitored as asingle service."
+msgstr ""
 
 msgid "Below this folder"
 msgstr "このフォルダの下"
@@ -10187,6 +10218,10 @@ msgstr ""
 "監視サイトに送信される最大バイト数を構成します。デフォルトでは、制限はサー"
 "バー側のログ行を格納するファイルの最大サイズである500KBに設定されています。"
 
+#, fuzzy
+msgid "Configure the monitoring state for Alertmanager rules."
+msgstr "システムのターゲットモードを構成します。"
+
 msgid ""
 "Configure the name of the HTTP request header variable to read from the "
 "incoming HTTP requests"
@@ -11090,6 +11125,10 @@ msgstr "インスタンスごとにサービスを作成する"
 msgid "Create a service for each instance and backup type"
 msgstr "インスタンスとバックアップの種類ごとにサービスを作成します"
 
+#, fuzzy
+msgid "Create a summary service for all alert rules"
+msgstr "インスタンスごとにサービスを作成する"
+
 msgid "Create additional Service for IO Stats Bytes"
 msgstr "IO統計バイト用の追加サービスを作成する"
 
@@ -11181,6 +11220,10 @@ msgstr "サービス検索に基づいてノードを作成する"
 msgid "Create notification with the following parameters"
 msgstr "次のパラメータを使用して通知を作成します"
 
+#, fuzzy
+msgid "Create one service per alert rule"
+msgstr "新しいアラートハンドラルールを作成しました"
+
 msgid "Create package"
 msgstr "パッケージを作成する"
 
@@ -11219,6 +11262,10 @@ msgstr "このルールの結果であるすべてのグループのサービス
 
 msgid "Create service labels that get discovered by this rule."
 msgstr "このルールによって検出されるサービスラベルを作成します。"
+
+#, fuzzy
+msgid "Create services for alert rule groups"
+msgstr "作成したグループのサービスラベルを生成する"
 
 msgid "Create status and (if configured) health services"
 msgstr "ステータスと(構成されている場合)ヘルスサービスを作成する"
@@ -15118,6 +15165,9 @@ msgstr "一致するサービスをアクティブ化しないでください"
 
 msgid "Don't change state"
 msgstr "状態を変更しないでください"
+
+msgid "Don't create a group service for the following groups"
+msgstr ""
 
 msgid "Don't escape HTML (Dangerous - please read context help)"
 msgstr ""
@@ -29075,6 +29125,10 @@ msgstr "最低限必要なCheckmkバージョン"
 msgid "Minimum allowed age"
 msgstr "最小許容期間"
 
+#, fuzzy
+msgid "Minimum amount of alert rules in a group to create a group service"
+msgstr "グループを作成するためのアイテムの最小数"
+
 msgid "Minimum connections per second"
 msgstr "1秒あたりの最小接続数"
 
@@ -29983,6 +30037,10 @@ msgstr ""
 
 msgid "Name / Description"
 msgstr "名前/説明"
+
+#, fuzzy
+msgid "Name of Alert rules/Alert rule groups"
+msgstr "リソースグループの名前"
 
 msgid "Name of Certificate"
 msgstr "証明書の名前"
@@ -36758,6 +36816,10 @@ msgstr "Windowsライセンスの有効期限が切れるまでの残り日数"
 msgid "Remaining supply"
 msgstr "残りのサプライー"
 
+#, fuzzy
+msgid "Remap alert rule states"
+msgstr "状態の再マップ"
+
 msgid "Remap states"
 msgstr "状態の再マップ"
 
@@ -39376,6 +39438,10 @@ msgstr "サービスの連絡先情報"
 
 msgid "Service contacts"
 msgstr "サービスの連絡先"
+
+#, fuzzy
+msgid "Service creation"
+msgstr "サービス構成"
 
 msgid "Service creation using PromQL queries"
 msgstr "PromQLクエリを使用したサービスの作成"

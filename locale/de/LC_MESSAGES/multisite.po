@@ -2029,6 +2029,10 @@ msgstr ""
 "Eine Liste regulärer Ausdrücke, gegen die gefundene IP-Adressen geprüft "
 "werden. Die matchenden Adressen werden ausgeschlossen."
 
+#, fuzzy
+msgid "A list of rule names as defined in Alertmanager."
+msgstr "Diese Regel trifft zu und definiert neue Parameter."
+
 msgid "A list of specific users"
 msgstr "Eine spezifische Liste von Benutzern."
 
@@ -3330,6 +3334,10 @@ msgstr "Schwellwerte hinzufügen"
 msgid "Add macro"
 msgstr "Makro hinzufügen"
 
+#, fuzzy
+msgid "Add mapping"
+msgstr "Neue Umwandlung hinzufügen"
+
 msgid "Add message pattern"
 msgstr "Muster hinzufügen"
 
@@ -4378,6 +4386,10 @@ msgstr "Alerthandler, die installiert werden sollen"
 msgid "Alert handlers will handle state changes."
 msgstr "Alert Handler behandeln Zustandsänderungen."
 
+#, fuzzy
+msgid "Alert mangager rule state"
+msgstr "Alerthandler-Regel"
+
 msgid "Alert on too high CPU utilization"
 msgstr "Alarmiere bei zu hoher CPU-Auslastung"
 
@@ -4396,6 +4408,10 @@ msgstr "Alarmiere bei zu hoher Gesamtauslastung"
 msgid "Alert on too high power consumption"
 msgstr "Alarmiere bei zu hohem Energieverbrauch"
 
+#, fuzzy
+msgid "Alert rule names"
+msgstr "Name der Warteschlange"
+
 msgid "Alert rules that don't export a status are ignored with this option."
 msgstr ""
 
@@ -4412,6 +4428,17 @@ msgstr "Alerthandler"
 #, fuzzy
 msgid "Alertmanager connection option"
 msgstr "Prometheus-Anschlussmöglichkeit"
+
+#, fuzzy
+msgid "Alertmanager discovery"
+msgstr "Alerthandler"
+
+#, fuzzy
+msgid "Alertmanager rule states"
+msgstr "Alerthandler"
+
+msgid "Alertmanager rule states (Summary)"
+msgstr ""
 
 msgid "Alerts"
 msgstr "Alarme"
@@ -6716,6 +6743,10 @@ msgstr "Anleitung für Anfänger: Ordner anlegen"
 
 msgid "Beginner's guide: Host folder structures"
 msgstr "Anleitung für Anfänger: Hostordner Strukturen"
+
+msgid ""
+"Below the specified value alert rules will be monitored as asingle service."
+msgstr ""
 
 msgid "Below this folder"
 msgstr "Unter diesem Ordner"
@@ -10586,6 +10617,10 @@ msgstr ""
 "übertragen werden. Standartmäßig ist diese Grenze identisch mit der "
 "maximalen Größe der Datei, die Log Zeilen serverseitig speichert (500 KB)."
 
+#, fuzzy
+msgid "Configure the monitoring state for Alertmanager rules."
+msgstr "Den Zielzustand für das System einstellen"
+
 msgid ""
 "Configure the name of the HTTP request header variable to read from the "
 "incoming HTTP requests"
@@ -11530,6 +11565,10 @@ msgstr "Einen Service für jede Instanz anlegen"
 msgid "Create a service for each instance and backup type"
 msgstr "Einen Service für jede Instanz und jeden Backup-Typ erstellen"
 
+#, fuzzy
+msgid "Create a summary service for all alert rules"
+msgstr "Erzeuge Gesamtsumme für alle Lese-/Schreibvorgänge"
+
 msgid "Create additional Service for IO Stats Bytes"
 msgstr "Zusätzlichen Service für IO Stats Bytes erstellen"
 
@@ -11622,6 +11661,10 @@ msgstr "Erzeuge Nodes basierend auf einer Service-Suche"
 msgid "Create notification with the following parameters"
 msgstr "Alarm mit den folgenden Parametern erstellen"
 
+#, fuzzy
+msgid "Create one service per alert rule"
+msgstr "Neue Alerthandlerregel erzeugen"
+
 msgid "Create package"
 msgstr "Paket erzeugen"
 
@@ -11663,6 +11706,10 @@ msgstr ""
 
 msgid "Create service labels that get discovered by this rule."
 msgstr "Erstelle Service-Label, die von dieser Regel erkannt werden."
+
+#, fuzzy
+msgid "Create services for alert rule groups"
+msgstr "Erzeuge Servicelabels für erstellte Gruppen"
 
 msgid "Create status and (if configured) health services"
 msgstr "Erzeuge Status und (falls konfiguriert) Health Services"
@@ -15658,6 +15705,9 @@ msgstr "Zutreffende Services nicht aktivieren"
 
 msgid "Don't change state"
 msgstr "Status nicht ändern"
+
+msgid "Don't create a group service for the following groups"
+msgstr ""
 
 msgid "Don't escape HTML (Dangerous - please read context help)"
 msgstr "HTML nicht escapen (Gefährlich - bitte Kontexthilfe lesen)"
@@ -30171,6 +30221,10 @@ msgstr "Minimal benötigte Checkmk-Version"
 msgid "Minimum allowed age"
 msgstr "Mindestalter"
 
+#, fuzzy
+msgid "Minimum amount of alert rules in a group to create a group service"
+msgstr "Minimale Anzahl von Elementen um eine Gruppe zu erstellen"
+
 msgid "Minimum connections per second"
 msgstr "Minimale Verbindungen pro Sekunde"
 
@@ -31087,6 +31141,10 @@ msgstr "Name des Containers"
 
 msgid "Name / Description"
 msgstr "Name/Beschreibung"
+
+#, fuzzy
+msgid "Name of Alert rules/Alert rule groups"
+msgstr "Name der Ressourcengruppe"
 
 msgid "Name of Certificate"
 msgstr "Name des Zertifikats"
@@ -38075,6 +38133,10 @@ msgstr "Verbleibende Tage bis zum Ablauf der Windows-Lizenz"
 msgid "Remaining supply"
 msgstr "Verbleibendes Belieferung"
 
+#, fuzzy
+msgid "Remap alert rule states"
+msgstr "Zustände umschreiben"
+
 msgid "Remap states"
 msgstr "Zustände umschreiben"
 
@@ -40752,6 +40814,10 @@ msgstr "Service-Kontaktinformation"
 
 msgid "Service contacts"
 msgstr "Service-Kontakte"
+
+#, fuzzy
+msgid "Service creation"
+msgstr "Servicekonfiguration"
 
 msgid "Service creation using PromQL queries"
 msgstr "Serviceerstellung durch PromQL Abfragen"
@@ -66471,9 +66537,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid "Create new LDAP Connection"
 #~ msgstr "Neue LDAP-Verbindung erstellen"
 
-#~ msgid "Create new alert handler rule"
-#~ msgstr "Neue Alerthandlerregel erzeugen"
-
 #~ msgid "Create new contact group"
 #~ msgstr "Erzeuge neue Kontaktgruppe"
 
@@ -73044,9 +73107,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 #~ msgid ""
 #~ "An optional comment that helps you document the purpose of  this rule"
 #~ msgstr "Ein optionaler Kommentar, der die Aufgabe der Regel beschreibt"
-
-#~ msgid "Create a summary for all read, one for write"
-#~ msgstr "Erzeuge Gesamtsumme für alle Lese-/Schreibvorgänge"
 
 #~ msgid ""
 #~ "Depending on the measurement unit (defaults to byte) the absolute levels "

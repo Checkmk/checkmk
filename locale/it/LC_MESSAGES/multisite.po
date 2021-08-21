@@ -2045,6 +2045,10 @@ msgstr ""
 "Una lista di espressioni regolari che vengono confrontate con gli indirizzi "
 "IP trovati per escluderli. Gli indirizzi trovati sono esclusi."
 
+#, fuzzy
+msgid "A list of rule names as defined in Alertmanager."
+msgstr "Questa regola corrisponde e definisce nuovi parametri."
+
 msgid "A list of specific users"
 msgstr "Un elenco di utenti specifici"
 
@@ -3349,6 +3353,10 @@ msgstr "Aggiungere limiti"
 msgid "Add macro"
 msgstr "Aggiungere macro"
 
+#, fuzzy
+msgid "Add mapping"
+msgstr "Aggiungere una nuova mappatura"
+
 msgid "Add message pattern"
 msgstr "Aggiungere il modello di messaggio"
 
@@ -4406,6 +4414,10 @@ msgstr "Gestori di avvisi da distribuire"
 msgid "Alert handlers will handle state changes."
 msgstr "I gestori di allarmi gestiranno i cambiamenti di stato."
 
+#, fuzzy
+msgid "Alert mangager rule state"
+msgstr "Regola del gestore degli avvisi"
+
 msgid "Alert on too high CPU utilization"
 msgstr "Allarme su un utilizzo troppo alto della CPU"
 
@@ -4424,6 +4436,10 @@ msgstr "Allarme su un utilizzo generale troppo alto"
 msgid "Alert on too high power consumption"
 msgstr "Allarme su un consumo di energia troppo elevato"
 
+#, fuzzy
+msgid "Alert rule names"
+msgstr "Nome della coda"
+
 msgid "Alert rules that don't export a status are ignored with this option."
 msgstr ""
 
@@ -4440,6 +4456,17 @@ msgstr "Gestore degli avvisi"
 #, fuzzy
 msgid "Alertmanager connection option"
 msgstr "Opzione di connessione Prometheus"
+
+#, fuzzy
+msgid "Alertmanager discovery"
+msgstr "Gestore degli avvisi"
+
+#, fuzzy
+msgid "Alertmanager rule states"
+msgstr "Gestore degli avvisi"
+
+msgid "Alertmanager rule states (Summary)"
+msgstr ""
 
 msgid "Alerts"
 msgstr "Avvisi"
@@ -6762,6 +6789,10 @@ msgstr "Guida per principianti: Creare cartelle"
 
 msgid "Beginner's guide: Host folder structures"
 msgstr "Guida per principianti: Strutture delle cartelle dell'host"
+
+msgid ""
+"Below the specified value alert rules will be monitored as asingle service."
+msgstr ""
 
 msgid "Below this folder"
 msgstr "Sotto questa cartella"
@@ -10635,6 +10666,10 @@ msgstr ""
 "dimensione massima del file che memorizza le linee di log sul lato server, "
 "che è di 500 KB"
 
+#, fuzzy
+msgid "Configure the monitoring state for Alertmanager rules."
+msgstr "Configurare la modalità di destinazione del sistema."
+
 msgid ""
 "Configure the name of the HTTP request header variable to read from the "
 "incoming HTTP requests"
@@ -11568,6 +11603,10 @@ msgstr "Creare un servizio per ogni istanza"
 msgid "Create a service for each instance and backup type"
 msgstr "Creare un servizio per ogni istanza e tipo di backup"
 
+#, fuzzy
+msgid "Create a summary service for all alert rules"
+msgstr "Creare un servizio per ogni istanza"
+
 msgid "Create additional Service for IO Stats Bytes"
 msgstr "Creare un servizio aggiuntivo per IO Stats Bytes"
 
@@ -11659,6 +11698,10 @@ msgstr "Creare nodi basati su una ricerca di servizi"
 msgid "Create notification with the following parameters"
 msgstr "Crea una notifica con i seguenti parametri"
 
+#, fuzzy
+msgid "Create one service per alert rule"
+msgstr "Creata nuova regola di gestione degli avvisi"
+
 msgid "Create package"
 msgstr "Crea pacchetto"
 
@@ -11699,6 +11742,10 @@ msgstr ""
 
 msgid "Create service labels that get discovered by this rule."
 msgstr "Crea etichette di servizio che vengono scoperte da questa regola."
+
+#, fuzzy
+msgid "Create services for alert rule groups"
+msgstr "Generare etichette di servizio per i gruppi creati"
 
 msgid "Create status and (if configured) health services"
 msgstr "Crea lo stato e (se configurato) i servizi sanitari"
@@ -15691,6 +15738,9 @@ msgstr "Non attivare la corrispondenza dei servizi"
 
 msgid "Don't change state"
 msgstr "Non cambiare stato"
+
+msgid "Don't create a group service for the following groups"
+msgstr ""
 
 msgid "Don't escape HTML (Dangerous - please read context help)"
 msgstr ""
@@ -30221,6 +30271,10 @@ msgstr "Versione minima richiesta di Checkmk"
 msgid "Minimum allowed age"
 msgstr "Età minima consentita"
 
+#, fuzzy
+msgid "Minimum amount of alert rules in a group to create a group service"
+msgstr "Numero minimo di elementi per creare un gruppo"
+
 msgid "Minimum connections per second"
 msgstr "Connessioni minime al secondo"
 
@@ -31138,6 +31192,10 @@ msgstr "Nome - usa il nome del contenitore"
 
 msgid "Name / Description"
 msgstr "Nome / Descrizione"
+
+#, fuzzy
+msgid "Name of Alert rules/Alert rule groups"
+msgstr "Nome del gruppo di risorse"
 
 msgid "Name of Certificate"
 msgstr "Nome del certificato"
@@ -38141,6 +38199,10 @@ msgstr "Giorni rimanenti alla scadenza della licenza di Windows"
 msgid "Remaining supply"
 msgstr "Fornitura rimanente"
 
+#, fuzzy
+msgid "Remap alert rule states"
+msgstr "Stati di rimappatura"
+
 msgid "Remap states"
 msgstr "Stati di rimappatura"
 
@@ -40825,6 +40887,10 @@ msgstr "Informazioni di contatto del servizio"
 
 msgid "Service contacts"
 msgstr "Contatti di servizio"
+
+#, fuzzy
+msgid "Service creation"
+msgstr "Configurazione del servizio"
 
 msgid "Service creation using PromQL queries"
 msgstr "Creazione di servizi tramite query PromQL"

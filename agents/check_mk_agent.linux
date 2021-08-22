@@ -1487,15 +1487,11 @@ run_spooler() {
     )
 }
 
-#
-# END COMMON AGENT CODE
-#
-
 add_failed_python_plugin() {
-    if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
-        FAILED_PYTHON_PLUGINS=("$1")
+    if [ -z "${FAILED_PYTHON_PLUGINS}" ]; then
+        FAILED_PYTHON_PLUGINS=("${1}")
     else
-        FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$1")
+        FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "${1}")
     fi
 }
 
@@ -1503,7 +1499,10 @@ get_plugin_interpreter() {
     # Return the interpreter (or "") for the plugin file (or fail).
     # We return the interpreter instead of wrapping the call, so we don't
     # have to export the function (which is not portable).
+
+    # normalize input
     agent_plugin="${1#./}"
+
     extension="${agent_plugin##*.}"
     filename="${agent_plugin%.*}"
 
@@ -1517,10 +1516,12 @@ get_plugin_interpreter() {
             add_failed_python_plugin "${agent_plugin}"
             return 1
         fi
+
         if [ -n "${PYTHON3}" ]; then
             echo "${PYTHON3}"
             return 0
         fi
+
         if [ ! -e "${filename}_2.py" ]; then
             add_failed_python_plugin "${agent_plugin} (Missing Python 3 installation)"
             return 1
@@ -1544,7 +1545,7 @@ get_plugin_interpreter() {
 }
 
 run_plugins() {
-    cd "$PLUGINSDIR" || return
+    cd "${PLUGINSDIR}" || return
 
     if ${MK_RUN_SYNC_PARTS}; then
         for script in ./*; do
@@ -1565,6 +1566,10 @@ run_plugins() {
         fi
     done
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 run_mrpe() {
     local descr=$1

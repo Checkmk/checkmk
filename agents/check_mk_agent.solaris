@@ -536,7 +536,7 @@ run_remote_plugins() {
 }
 
 is_valid_plugin() {
-    [ -x "$1" ]
+    [ -f "${1}" ] && [ -x "${1}" ]
 }
 
 run_mrpe() {
@@ -562,7 +562,7 @@ run_cached() {
     local CMDLINE="$@"
     local AGE
 
-    if $DISABLE_CACHING; then
+    if ${DISABLE_CACHING:-false}; then
         # shellcheck disable=SC2090
         $CMDLINE
         return
@@ -656,15 +656,11 @@ run_spooler() {
     )
 }
 
-#
-# END COMMON AGENT CODE
-#
-
 add_failed_python_plugin() {
-    if [ -z "$FAILED_PYTHON_PLUGINS" ]; then
-        FAILED_PYTHON_PLUGINS=("$1")
+    if [ -z "${FAILED_PYTHON_PLUGINS}" ]; then
+        FAILED_PYTHON_PLUGINS=("${1}")
     else
-        FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "$1")
+        FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "${1}")
     fi
 }
 
@@ -672,7 +668,10 @@ get_plugin_interpreter() {
     # Return the interpreter (or "") for the plugin file (or fail).
     # We return the interpreter instead of wrapping the call, so we don't
     # have to export the function (which is not portable).
+
+    # normalize input
     agent_plugin="${1#./}"
+
     extension="${agent_plugin##*.}"
     filename="${agent_plugin%.*}"
 
@@ -686,10 +685,12 @@ get_plugin_interpreter() {
             add_failed_python_plugin "${agent_plugin}"
             return 1
         fi
+
         if [ -n "${PYTHON3}" ]; then
             echo "${PYTHON3}"
             return 0
         fi
+
         if [ ! -e "${filename}_2.py" ]; then
             add_failed_python_plugin "${agent_plugin} (Missing Python 3 installation)"
             return 1
@@ -715,12 +716,11 @@ get_plugin_interpreter() {
 run_plugins() {
     cd "${PLUGINSDIR}" || return
 
-    # Plugins
     if ${MK_RUN_SYNC_PARTS}; then
         for script in ./*; do
-            if [ ! -d "${script}" ] && [ -x "${script}" ]; then
+            if is_valid_plugin "${script}"; then
                 if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
-                      _log_section_time "${plugin_interpreter} ${script}"
+                    _log_section_time "${plugin_interpreter} ${script}"
                 fi
             fi
         done
@@ -728,13 +728,17 @@ run_plugins() {
 
     # Call some plugins only every X'th second
     for script in [1-9]*/*; do
-        if [ -x "${script}" ]; then
+        if is_valid_plugin "${script}"; then
             if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
-                run_cached plugins_"${script##*/}" "${script%/*}" "_log_section_time ${plugin_interpreter} '${script}'"
+                run_cached "plugins_${script##*/}" "${script%/*}" _log_section_time "${plugin_interpreter}" "${script}"
             fi
         fi
     done
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 run_purely_synchronous_sections() {
     _log_section_time section_checkmk

@@ -608,10 +608,6 @@ run_spooler() {
     )
 }
 
-#
-# END COMMON AGENT CODE
-#
-
 add_failed_python_plugin() {
     if [ -z "${FAILED_PYTHON_PLUGINS}" ]; then
         FAILED_PYTHON_PLUGINS=("${1}")
@@ -652,7 +648,7 @@ get_plugin_interpreter() {
             return 1
         fi
 
-        # Python2 file but no Python interpreter found.
+        # no python3 found, but python2 plugin file present
         return 1
     fi
 
@@ -691,6 +687,10 @@ run_plugins() {
         fi
     done
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 run_remote_plugins() {
     # caching currently not supported

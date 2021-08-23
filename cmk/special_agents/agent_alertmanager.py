@@ -12,10 +12,11 @@ import json
 import logging
 import sys
 import traceback
-from typing import Any, Dict, List, Optional, OrderedDict, TypedDict
+from typing import Any, Dict, List, Optional, TypedDict
 
 import requests
 
+from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils.prometheus import extract_connection_args, generate_api_session
 
 
@@ -69,53 +70,17 @@ class AlertmanagerAPI:
         return response
 
 
-class Section:
-    """
-    An agent section.
-    """
-    def __init__(self) -> None:
-        self._content: OrderedDict[str, Dict[str, Any]] = OrderedDict()
-
-    def insert(self, check_data: Dict[str, Any]) -> None:
-        for key, value in check_data.items():
-            if key not in self._content:
-                self._content[key] = value
-            else:
-                if isinstance(value, dict):
-                    self._content[key].update(value)
-                else:
-                    raise ValueError('Key %s is already present and cannot be merged' % key)
-
-    def output(self) -> str:
-        return json.dumps(self._content)
-
-
-class PiggybackHost:
-    """
-    An element that bundles a collection of sections.
-    """
-    def __init__(self) -> None:
-        super().__init__()
-        self._sections: OrderedDict[str, Section] = OrderedDict()
-
-    def get(self, section_name: str) -> Section:
-        if section_name not in self._sections:
-            self._sections[section_name] = Section()
-        return self._sections[section_name]
-
-    def output(self) -> List[str]:
-        data = []
-        for name, section in self._sections.items():
-            data.append("<<<%s:sep(0)>>>" % name)
-            data.append(section.output())
-        return data
-
-
-def alertmanager_rules_section(api_client: AlertmanagerAPI, ignore_alerts: IgnoreAlerts) -> str:
-    parsed_data = parse_rule_data(retrieve_rule_data(api_client), ignore_alerts)
-    e = PiggybackHost()
-    e.get("alertmanager").insert(parsed_data)
-    return "\n".join(e.output())
+def alertmanager_rules_section(
+    api_client: AlertmanagerAPI,
+    config: Dict[str, Any],
+) -> None:
+    rule_groups = retrieve_rule_data(api_client)
+    if not rule_groups.get("groups"):
+        return
+    parsed_data = parse_rule_data(rule_groups["groups"], config["ignore_alerts"])
+    with ConditionalPiggybackSection(config["hostname"]):
+        with SectionWriter("alertmanager") as writer:
+            writer.append_json(parsed_data)
 
 
 def retrieve_rule_data(api_client: AlertmanagerAPI) -> Dict[str, Any]:
@@ -126,7 +91,7 @@ def retrieve_rule_data(api_client: AlertmanagerAPI) -> Dict[str, Any]:
         return {}
 
 
-def parse_rule_data(data: Dict[str, Any], ignore_alerts: IgnoreAlerts) -> Groups:
+def parse_rule_data(group_data: List[Dict[str, Any]], ignore_alerts: IgnoreAlerts) -> Groups:
     """Parses data from Alertmanager API endpoint
 
         Args:
@@ -137,7 +102,7 @@ def parse_rule_data(data: Dict[str, Any], ignore_alerts: IgnoreAlerts) -> Groups
             of all alert rules within the group
     """
     groups: Groups = {}
-    for group_entry in data["groups"]:
+    for group_entry in group_data:
         if group_entry["name"] in ignore_alerts["ignore_alert_groups"]:
             continue
         rule_list = []
@@ -167,9 +132,7 @@ def main(argv=None):
         config = ast.literal_eval(sys.stdin.read())
         session = generate_api_session(extract_connection_args(config))
         api_client = AlertmanagerAPI(session)
-        print("<<<<%s>>>>" % config["hostname"])
-        print(alertmanager_rules_section(api_client, config["ignore_alerts"]))
-        print("<<<<>>>>")
+        alertmanager_rules_section(api_client, config)
     except Exception as e:
         if args.debug:
             raise

@@ -89,7 +89,7 @@ def test_agent_alertmanager_parse(
     ignore_alerts: agent_alertmanager.IgnoreAlerts,
     result: agent_alertmanager.Groups,
 ):
-    assert agent_alertmanager.parse_rule_data(data, ignore_alerts) == result
+    assert agent_alertmanager.parse_rule_data(data["groups"], ignore_alerts) == result
 
 
 @pytest.mark.parametrize('rule_name, rule_group, rule_state, ignore_alerts, result', [
@@ -134,4 +134,4 @@ def test_alertmanager_is_rule_ignored(
             }]
         }]
     }
-    assert agent_alertmanager.parse_rule_data(data, ignore_alerts) == result
+    assert agent_alertmanager.parse_rule_data(data["groups"], ignore_alerts) == result

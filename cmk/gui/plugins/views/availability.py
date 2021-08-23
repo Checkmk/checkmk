@@ -11,9 +11,12 @@ import json
 import time
 from typing import Iterator, List, Set, Tuple, TYPE_CHECKING
 
+from livestatus import SiteId
+
 import cmk.utils.render
 import cmk.utils.version as cmk_version
 from cmk.utils.defines import host_state_name, service_state_name
+from cmk.utils.type_defs import HostName, ServiceName
 
 import cmk.gui.availability as availability
 import cmk.gui.bi as bi
@@ -232,9 +235,9 @@ def show_availability_page(view: View, filterheaders: FilterHeader) -> None:
     title += " - "
     av_object: AVObjectSpec = None
     if request.var("av_host"):
-        av_object = (request.get_str_input_mandatory("av_site"),
-                     request.get_str_input_mandatory("av_host"),
-                     request.get_unicode_input_mandatory("av_service"))
+        av_object = (SiteId(request.get_str_input_mandatory("av_site")),
+                     HostName(request.get_str_input_mandatory("av_host")),
+                     ServiceName(request.get_unicode_input_mandatory("av_service")))
         title += av_object[1]
         if av_object[2]:
             title += " - " + av_object[2]

@@ -6,7 +6,7 @@
 
 import argparse
 import sys
-from collections import namedtuple
+from typing import Any, Callable, NamedTuple
 
 import requests
 import urllib3  # type: ignore[import]
@@ -16,7 +16,11 @@ import cmk.utils.password_store
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 cmk.utils.password_store.replace_passwords()
 
-Section = namedtuple('Section', ['name', 'uri', 'handler'])
+
+class Section(NamedTuple):
+    name: str
+    uri: str
+    handler: Callable[[Any], None]
 
 
 def main(argv=None):

@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import namedtuple
+from typing import NamedTuple, Sequence
 
 import pytest
 
@@ -25,19 +25,28 @@ from .checktestlib import (
 
 pytestmark = pytest.mark.checks
 
-Size = namedtuple('Size', 'info,total,used,text')
 
-size1 = Size(
+class SizeBasic(NamedTuple):
+    info: Sequence[str]
+    text: str
+
+
+class SizeWithUsage(NamedTuple):
+    info: Sequence[str]
+    total: int
+    used: int
+    text: str
+
+
+size1 = SizeWithUsage(
     [u'491520', u'460182', u'460182', u'65536'],
     491520 * 65536,
     491520 * 65536 - 460182 * 65536,
     "6.38% used (1.91 of 30.00 GB)",
 )
 
-size2 = Size(
+size2 = SizeBasic(
     [u'201326592', u'170803720', u'170803720', u'32768'],
-    None,  # not in use
-    None,  # not in use
     "15.16% used (931.48 GB of 6.00 TB)",
 )
 
@@ -48,7 +57,7 @@ size2 = Size(
         (  # no info
             [], [], ()),
         (  # single mountpoint with data
-            [[u'/ABCshare', u'ok'] + size1.info], [('/ABCshare', {})], [
+            [[u'/ABCshare', u'ok', *size1.info]], [('/ABCshare', {})], [
                 ('/ABCshare', {}, BasicCheckResult(0, size1.text, None)),
             ]),
         (  # two mountpoints with empty data
@@ -57,22 +66,21 @@ size2 = Size(
             ], [('/AB', {}, BasicCheckResult(0, "Mount seems OK", None)),
                 ('/ABC', {}, BasicCheckResult(0, "Mount seems OK", None))]),
         (  # Mountpoint with spaces and permission denied
-            [[u'/var/dba', u'export', u'Permission',
-              u'denied'], [u'/var/dbaexport', u'ok'] + size2.info], [
-                  ('/var/dbaexport', {}), ('/var/dba export', {})
-              ], [('/var/dba export', {}, BasicCheckResult(2, 'Permission denied', None)),
-                  ('/var/dbaexport', {}, BasicCheckResult(0, size2.text, None))]),
+            [[u'/var/dba', u'export', u'Permission', u'denied'],
+             [u'/var/dbaexport', u'ok', *size2.info]], [
+                 ('/var/dbaexport', {}), ('/var/dba export', {})
+             ], [('/var/dba export', {}, BasicCheckResult(2, 'Permission denied', None)),
+                 ('/var/dbaexport', {}, BasicCheckResult(0, size2.text, None))]),
         (  # with perfdata
-            [[u'/PERFshare', u'ok'] + size1.info], [('/PERFshare', {})], [
-                ('/PERFshare', {
-                    'has_perfdata': True
-                },
-                 BasicCheckResult(0, size1.text, [
-                     PerfValue('fs_used', size1.used, 0.8 * size1.total, 0.9 * size1.total, 0,
-                               size1.total),
-                     PerfValue('fs_size', size1.total),
-                 ]))
-            ]),
+            [[u'/PERFshare', u'ok', *size1.info
+             ]], [('/PERFshare', {})], [('/PERFshare', {
+                 'has_perfdata': True
+             },
+                                         BasicCheckResult(0, size1.text, [
+                                             PerfValue('fs_used', size1.used, 0.8 * size1.total,
+                                                       0.9 * size1.total, 0, size1.total),
+                                             PerfValue('fs_size', size1.total),
+                                         ]))]),
         (  # state == 'hanging'
             [[u'/test', u'hanging', u'hanging', u'0', u'0', u'0', u'0']
             ], [('/test hanging', {})], [('/test hanging', {

@@ -6,8 +6,7 @@
 
 import datetime
 import itertools
-from collections import namedtuple
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 
 import pytest
 
@@ -524,7 +523,15 @@ def test_check_ps_common(inv_item, reference):
         assert test_result == reference
 
 
-cpu_config = namedtuple("cpu_config", "name agent_info cputime cpu_cores exp_load cpu_rescale_max")
+class cpu_config(NamedTuple):
+    name: str
+    agent_info: str
+    cputime: float
+    cpu_cores: int
+    exp_load: float
+    cpu_rescale_max: Optional[bool]
+
+
 cpu_util_data = [
     cpu_config('linux no cpu scale conf 1 core', "(on,105,30,00:00:{:02}/03:59:39,902) test", 30, 1,
                50, None),

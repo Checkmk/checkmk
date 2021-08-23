@@ -8,7 +8,7 @@ import argparse
 import json
 import logging
 import sys
-from collections import namedtuple
+from typing import NamedTuple
 
 import requests
 import urllib3  # type: ignore[import]
@@ -19,7 +19,10 @@ import cmk.utils.password_store
 urllib3.disable_warnings(urllib3.exceptions.SubjectAltNameWarning)
 cmk.utils.password_store.replace_passwords()
 
-Section = namedtuple('Section', ['name', 'uri'])
+
+class Section(NamedTuple):
+    name: str
+    uri: str
 
 
 def main(argv=None):

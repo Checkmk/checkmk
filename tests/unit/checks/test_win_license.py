@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import namedtuple
+from typing import NamedTuple, Optional, Sequence, Tuple, TypedDict
 
 import pytest
 
@@ -103,7 +103,14 @@ def test_parse_win_license(capture, result):
     assert result == check.run_parse(splitter(capture))
 
 
-check_ref = namedtuple('check_ref', ['parameters', 'check_output'])
+class CheckParameters(TypedDict):
+    status: Sequence[str]
+    expiration_time: Tuple[int, int]
+
+
+class check_ref(NamedTuple):
+    parameters: Optional[CheckParameters]
+    check_output: CheckResult
 
 
 @pytest.mark.parametrize(

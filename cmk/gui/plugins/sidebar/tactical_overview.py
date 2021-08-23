@@ -4,8 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import namedtuple
-from typing import Dict, List, Tuple
+from typing import Dict, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
 
 import livestatus
 
@@ -18,8 +17,20 @@ from cmk.gui.plugins.sidebar import CustomizableSidebarSnapin, link, snapin_regi
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, Checkbox, Dictionary, ListOf, TextInput
 
-ViewURLParams = namedtuple("ViewURLParams", ["total", "handled", "unhandled", "stale"])
-OverviewRow = namedtuple("OverviewRow", ["what", "title", "context", "stats", "views"])
+
+class ViewURLParams(NamedTuple):
+    total: Sequence[Tuple[str, str]]
+    handled: Sequence[Tuple[str, str]]
+    unhandled: Sequence[Tuple[str, Union[str, int]]]
+    stale: Optional[Sequence[Tuple[str, str]]]
+
+
+class OverviewRow(NamedTuple):
+    what: str
+    title: str
+    context: Mapping
+    stats: Optional[Sequence[int]]
+    views: ViewURLParams
 
 
 def get_context_url_variables(context):

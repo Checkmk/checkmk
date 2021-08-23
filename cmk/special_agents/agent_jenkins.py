@@ -7,13 +7,17 @@
 import argparse
 import json
 import sys
-from collections import namedtuple
+from typing import NamedTuple, Optional
 
 import requests
 
 from cmk.special_agents.utils import vcrtrace
 
-Section = namedtuple('Section', ['name', 'key', 'uri'])
+
+class Section(NamedTuple):
+    name: str
+    key: Optional[str]
+    uri: str
 
 
 def main(argv=None):

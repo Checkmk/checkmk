@@ -145,7 +145,7 @@ def _render_tag_groups_or_labels(entries, object_type, with_links, label_type, l
                           label_sources.get(tg_id, "unspecified"))
         for tg_id, tag in sorted(entries.items())
     ]
-    return html.render_tags(HTML("").join(elements),
+    return html.render_tags(HTML(" ").join(elements),
                             class_=["tagify", label_type, "display"],
                             readonly="true")
 

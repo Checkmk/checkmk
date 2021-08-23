@@ -660,7 +660,7 @@ class ModeEditRuleset(WatoMode):
 
         hostname = request.get_ascii_input("host")
         if hostname and self._folder.has_host(hostname):
-            self._hostname = hostname
+            self._hostname = HostName(hostname)
 
         # The service argument is only needed for performing match testing of rules
         if not self._service:

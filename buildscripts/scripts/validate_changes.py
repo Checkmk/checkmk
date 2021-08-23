@@ -20,6 +20,7 @@ import argparse
 import logging
 import time
 from pathlib import Path
+from distutils.util import strtobool
 
 LOG = logging.getLogger("validate_changes")
 
@@ -115,7 +116,7 @@ def load_file(filename: Path) -> Tuple[Sequence[Vars], Stages]:
     """Read and parse a YAML file containing 'VARIABLES' and 'STAGES' and return a tuple with
     typed content"""
     try:
-        raw_data = yaml.load(open(filename), Loader=yaml.BaseLoader)
+        raw_data = yaml.load(Path.read_text(filename), Loader=yaml.BaseLoader)
     except FileNotFoundError:
         raise RuntimeError(
             f"Could not find {filename}. Must be a YAML file containing stage declarations.")
@@ -210,7 +211,7 @@ def evaluate_vars(raw_vars: Sequence[Vars], env_vars: Vars) -> Mapping[str, str]
                 " Did you forget to provide them with --env?")
 
         LOG.debug("evaluate %r run command %r", e["NAME"], cmd)
-        cmd_result = run_shell_command(cmd, bool(e.get("REPLACE_NEWLINES")))
+        cmd_result = run_shell_command(cmd, bool(strtobool(e.get("REPLACE_NEWLINES", "false"))))
         LOG.debug("set to %r", cmd_result)
         result[e["NAME"]] = cmd_result
 

@@ -1,0 +1,16 @@
+Title: timesyncd: Crash (Cannot render negative timespan)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1629451553
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.0.0p10
+
+The check would crash when host time and server time
+ran out of sync.
+
+Negative timespans are now detected and result in a {CRIT}
+state and an informational message.

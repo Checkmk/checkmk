@@ -36,6 +36,10 @@ def tolerance_check(
         yield 0, f"{pot_newline}{label}: N/A (started monitoring)"
         return
 
+    if now - last_sync < 0:
+        yield 2, "Cannot reasonably calculate time since last synchronization (hosts time is running ahead)"
+        return
+
     state, text, _metric = check_levels(
         now - last_sync,
         None,

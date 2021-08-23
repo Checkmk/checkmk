@@ -673,7 +673,7 @@ class TestAgentPersistentSectionHandling:
         )
         raw_data = AgentRawData(b"<<<fresh:persist(10)>>>\nhello section")
         parser = AgentParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_interval=0,
             keep_outdated=True,
@@ -766,7 +766,7 @@ class TestAgentPersistentSectionHandling:
             logger=logger,
         )
         parser = AgentParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_interval=42,
             keep_outdated=True,
@@ -951,7 +951,7 @@ class TestSNMPPersistedSectionHandling:
             logger=logger,
         )
         parser = SNMPParser(
-            "testhost",
+            HostName("testhost"),
             section_store,
             check_intervals={SectionName("section"): 42},
             keep_outdated=True,

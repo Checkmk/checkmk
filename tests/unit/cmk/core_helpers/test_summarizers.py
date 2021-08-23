@@ -8,7 +8,7 @@ import pytest
 
 from cmk.utils.exceptions import MKAgentError, MKEmptyAgentData, MKTimeout
 from cmk.utils.piggyback import PiggybackRawDataInfo
-from cmk.utils.type_defs import AgentRawData, ExitSpec
+from cmk.utils.type_defs import AgentRawData, ExitSpec, HostName
 
 import cmk.core_helpers.piggyback
 from cmk.core_helpers.agent import AgentHostSections, AgentSummarizer, AgentSummarizerDefault
@@ -274,7 +274,7 @@ class TestPiggybackSummarizer:
         return AgentHostSections(
             sections={},
             cache_info={},
-            piggybacked_raw_data={"other": [b"line0", b"line1"]},
+            piggybacked_raw_data={HostName("other"): [b"line0", b"line1"]},
         )
 
     @pytest.fixture

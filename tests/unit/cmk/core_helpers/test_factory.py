@@ -8,6 +8,8 @@ import logging
 
 import pytest
 
+from cmk.utils.type_defs import HostAddress, HostName
+
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 
 import cmk.core_helpers.factory as factory
@@ -25,11 +27,11 @@ except ImportError:
 
 
 @pytest.fixture(name="snmp_config")
-def fixture_snmp_config():
+def fixture_snmp_config() -> SNMPHostConfig:
     return SNMPHostConfig(
         is_ipv6_primary=False,
-        hostname="bob",
-        ipaddress="1.2.3.4",
+        hostname=HostName("bob"),
+        ipaddress=HostAddress("1.2.3.4"),
         credentials="public",
         port=42,
         is_bulkwalk_host=False,
@@ -44,27 +46,27 @@ def fixture_snmp_config():
     )
 
 
-def test_factory_snmp_backend_classic(snmp_config):
+def test_factory_snmp_backend_classic(snmp_config: SNMPHostConfig) -> None:
     assert isinstance(factory.backend(snmp_config, logging.getLogger()), ClassicSNMPBackend)
 
 
-def test_factory_snmp_backend_inline(snmp_config):
+def test_factory_snmp_backend_inline(snmp_config: SNMPHostConfig) -> None:
     snmp_config = snmp_config._replace(snmp_backend=SNMPBackendEnum.INLINE)
     if inline:
         assert isinstance(factory.backend(snmp_config, logging.getLogger()),
                           inline.InlineSNMPBackend)
 
 
-def test_factory_snmp_backend_pysnmp(snmp_config):
+def test_factory_snmp_backend_pysnmp(snmp_config: SNMPHostConfig) -> None:
     snmp_config = snmp_config._replace(snmp_backend=SNMPBackendEnum.PYSNMP)
     if pysnmp_backend:
         assert isinstance(factory.backend(snmp_config, logging.getLogger()),
                           pysnmp_backend.PySNMPBackend)
 
 
-def test_factory_snmp_backend_unknown_backend(snmp_config):
+def test_factory_snmp_backend_unknown_backend(snmp_config: SNMPHostConfig) -> None:
     with pytest.raises(NotImplementedError, match="Unknown SNMP backend"):
-        snmp_config = snmp_config._replace(snmp_backend="bla")
+        snmp_config = snmp_config._replace(snmp_backend="bla")  # type: ignore[arg-type]
         if inline:
             assert isinstance(factory.backend(snmp_config, logging.getLogger()),
                               inline.InlineSNMPBackend)

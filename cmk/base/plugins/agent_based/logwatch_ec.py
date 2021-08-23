@@ -23,7 +23,6 @@ from typing import Any, Counter, Dict, Iterable, List, Mapping, Optional, Sequen
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.type_defs import CheckPluginName  # pylint: disable=cmk-module-layer-violation
 
 # from cmk.base.config import logwatch_rules will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
@@ -32,6 +31,10 @@ from .agent_based_api.v1 import Metric, register, Result, Service
 from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import logwatch
+
+from cmk.utils.type_defs import (  # pylint: disable=cmk-module-layer-violation # isort: skip
+    CheckPluginName, HostName,
+)
 
 # import from legacy API until we come up with something better
 from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation # isort: skip
@@ -130,7 +133,7 @@ def _get_effective_service_level(
 ) -> int:
     """Get the service level that applies to the current service."""
 
-    host = host_name()
+    host = HostName(host_name())
     service_description = cmk.base.config.service_description(host, plugin_name, item)
     config_cache = cmk.base.config.get_config_cache()
     service_level = config_cache.service_level_of_service(host, service_description)
@@ -287,7 +290,7 @@ def check_logwatch_ec_common(
         # Determine logwatch patterns specifically for this logfile
         if params.get("logwatch_reclassify"):
             logfile_settings = service_extra_conf(
-                host_name(),
+                HostName(host_name()),
                 logfile,
                 cmk.base.config.logwatch_rules,
             )

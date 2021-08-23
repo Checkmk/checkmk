@@ -171,7 +171,7 @@ def _render_tag_groups_or_labels(
             label_sources.get(tag_group_id_or_label_key, "unspecified"),
         ) for tag_group_id_or_label_key, tag_id_or_label_value in sorted(entries.items())
     ]
-    return html.render_tags(HTML("").join(elements),
+    return html.render_tags(HTML(" ").join(elements),
                             class_=["tagify", label_type, "display"],
                             readonly="true")
 

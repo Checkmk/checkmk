@@ -8,7 +8,7 @@ import argparse
 import logging
 import sys
 import xml.etree.ElementTree as ET
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Mapping, Sequence, Tuple
 
 import requests
 from requests.packages import urllib3  # pylint: disable=import-error
@@ -37,11 +37,13 @@ ElementAttributes = Dict[str, str]
 #   |                  \___|_| |_|\__|_|\__|_|\___||___/                   |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+Entry = Tuple[str, Sequence[str]]
+Entities = List[Tuple[str, str, Sequence[Entry]]]
 
 # Cisco UCS B-Series Blade Servers
-B_SERIES_ENTITIES = [
+B_SERIES_ENTITIES: Entities = [
     # FANS
-    ("ucs_bladecenter_fans", [
+    ("ucs_bladecenter_fans", "UCSB", [
         ("equipmentFan", ["Dn", "Model", "OperState"]),
         ("equipmentFanModuleStats", ["Dn", "AmbientTemp"]),
         ("equipmentNetworkElementFanStats", ["Dn", "SpeedAvg"]),
@@ -49,13 +51,14 @@ B_SERIES_ENTITIES = [
         ("equipmentFanStats", ["Dn", "SpeedAvg"]),
     ]),
     # PSU
-    ("ucs_bladecenter_psu", [
+    ("ucs_bladecenter_psu", "UCSB", [
         ("equipmentPsuInputStats", ["Dn", "Current", "PowerAvg", "Voltage"]),
         ("equipmentPsuStats", ["Dn", "AmbientTemp", "Output12vAvg", "Output3v3Avg"]),
     ]),
     # NETWORK
     (
         "ucs_bladecenter_if",
+        "UCSB",
         [
             # Fibrechannel
             ("fcStats", ["Dn", "BytesRx", "BytesTx", "PacketsRx", "PacketsTx", "Suspect"]),
@@ -91,19 +94,18 @@ B_SERIES_ENTITIES = [
              ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
         ]),
     # Fault Instances
-    ("ucs_bladecenter_faultinst", [
+    ("ucs_bladecenter_faultinst", "UCSB", [
         ("faultInst", ["Dn", "Descr", "Severity"]),
     ]),
     # TopSystem Info
-    ("ucs_bladecenter_topsystem", [
+    ("ucs_bladecenter_topsystem", "UCSB", [
         ("topSystem", ["Address", "CurrentTime", "Ipv6Addr", "Mode", "Name", "SystemUpTime"]),
     ]),
 ]
-B_SERIES_NECESSARY_SECTIONS = ["ucs_bladecenter_faultinst"]
 
 # Cisco UCS C-Series Rack Servers
-C_SERIES_ENTITIES = [
-    ("ucs_c_rack_server_fans", [
+C_SERIES_ENTITIES: Entities = [
+    ("ucs_c_rack_server_fans", "UCSC", [
         ("equipmentFan", [
             "dn",
             "id",
@@ -111,7 +113,7 @@ C_SERIES_ENTITIES = [
             "operability",
         ]),
     ]),
-    ("ucs_c_rack_server_psu", [
+    ("ucs_c_rack_server_psu", "UCSC", [
         ("equipmentPsu", [
             "dn",
             "id",
@@ -120,7 +122,7 @@ C_SERIES_ENTITIES = [
             "voltage",
         ]),
     ]),
-    ("ucs_c_rack_server_power", [
+    ("ucs_c_rack_server_power", "UCSC", [
         ("computeMbPowerStats", [
             "dn",
             "consumedPower",
@@ -128,7 +130,7 @@ C_SERIES_ENTITIES = [
             "inputVoltage",
         ]),
     ]),
-    ("ucs_c_rack_server_temp", [
+    ("ucs_c_rack_server_temp", "UCSC", [
         ("computeRackUnitMbTempStats", [
             "dn",
             "ambientTemp",
@@ -138,7 +140,7 @@ C_SERIES_ENTITIES = [
             "rearTemp",
         ]),
     ]),
-    ("ucs_c_rack_server_environment", [
+    ("ucs_c_rack_server_environment", "UCSC", [
         ("processorEnvStats", [
             "dn",
             "id",
@@ -146,7 +148,7 @@ C_SERIES_ENTITIES = [
             "temperature",
         ]),
     ]),
-    ("ucs_c_rack_server_environment", [
+    ("ucs_c_rack_server_environment", "UCSC", [
         ("memoryUnitEnvStats", [
             "dn",
             "id",
@@ -154,14 +156,14 @@ C_SERIES_ENTITIES = [
             "temperature",
         ]),
     ]),
-    ("ucs_c_rack_server_health", [
+    ("ucs_c_rack_server_health", "UCSC", [
         ("storageControllerHealth", [
             "dn",
             "id",
             "health",
         ]),
     ]),
-    ("ucs_c_rack_server_topsystem", [
+    ("ucs_c_rack_server_topsystem", "UCSC", [
         ("topSystem", [
             "dn",
             "address",
@@ -170,7 +172,7 @@ C_SERIES_ENTITIES = [
             "name",
         ]),
     ]),
-    ("ucs_c_rack_server_util", [
+    ("ucs_c_rack_server_util", "UCSC", [
         ("serverUtilization", [
             "dn",
             "overallUtilization",
@@ -179,7 +181,7 @@ C_SERIES_ENTITIES = [
             "ioUtilization",
         ]),
     ]),
-    ("ucs_c_rack_server_led", [
+    ("ucs_c_rack_server_led", "UCSC", [
         ("equipmentIndicatorLed", [
             "dn",
             "name",
@@ -187,7 +189,7 @@ C_SERIES_ENTITIES = [
             "operState",
         ]),
     ]),
-    ("ucs_c_rack_server_faultinst", [
+    ("ucs_c_rack_server_faultinst", "UCSC", [
         ("faultInst", [
             "severity",
             "cause",
@@ -197,7 +199,7 @@ C_SERIES_ENTITIES = [
         ]),
     ]),
 ]
-C_SERIES_NECESSARY_SECTIONS = ["ucs_c_rack_server_faultinst"]
+SERIES_NECESSARY_SECTIONS = ["ucs_bladecenter_faultinst", "ucs_c_rack_server_faultinst"]
 
 #.
 #   .--connection----------------------------------------------------------.
@@ -249,19 +251,27 @@ class Server:
             attributes.update({'inCookie': self._cookie})
         self._communicate(ET.Element('aaaLogout', attrib=attributes))
 
-    def get_model_info(self):
-        logging.debug("Server.get_model_info: Get model info")
-        bios_unit = self._get_class_data("biosUnit")[0]
-        return bios_unit.attrib.get('model')
+    def _get_bios_unit_name_from_dn(self, xml_object) -> str:
+        dn = self._get_attribute_data(xml_object, "dn")
+        return "/".join(dn.split("/")[0:2])
 
-    def get_data_from_entities(self, entities):
+    def get_model_info(self) -> Mapping[str, str]:
+        logging.debug("Server.get_model_info: Get model info")
+        return {
+            self._get_bios_unit_name_from_dn(bios_unit):
+            self._get_attribute_data(bios_unit, "model").split("-")[0]
+            for bios_unit in self._get_class_data("biosUnit")
+        }
+
+    def get_data_from_entities(self, entities: Entities,
+                               model_info: Mapping[str, str]) -> Dict[str, List[Tuple[Any, Any]]]:
         """
         Returns dict[k: header, v: List[Tuple[class_id, List[Tuple[attribute, attribute data]]]]]
         from entities (B_SERIES_ENTITIES, C_SERIES_ENTITIES).
         """
         logging.debug("Server.get_data_from_entities: Try to get entities")
         data: Dict[str, List[Tuple[Any, Any]]] = {}
-        for header, entries in entities:
+        for header, model, entries in entities:
             for class_id, attributes in entries:
                 logging.debug(
                     "Server.get_data_from_entities: header: '%s', class_id: '%s' - attributes: '%s'",
@@ -276,6 +286,13 @@ class Server:
                     continue  # skip entity
 
                 for xml_object in xml_objects:
+                    # the call _get_class_data returns Model B and C xml_objects
+                    # if a class_id exists for all model types (e.g. faultInst).
+                    # Only xml_object of the correct Model type may be processed.
+                    bios_unit_name = self._get_bios_unit_name_from_dn(xml_object)
+                    if model != model_info.get(bios_unit_name, model):
+                        continue
+
                     xml_data = []
                     for attribute in attributes:
                         attribute_data = self._get_attribute_data(xml_object, attribute)
@@ -429,6 +446,7 @@ def main(args=None):
         logging.debug("Login failed (other exception): '%s'", e)
         return 1
 
+    model_info: Mapping[str, str] = {}
     try:
         model_info = handle.get_model_info()
     except (CommunicationException, IndexError) as e:
@@ -440,17 +458,10 @@ def main(args=None):
         handle.logout()
         return 1
 
-    if "ucsc-c" in model_info.lower():
-        logging.debug("Using UCS C-Series Rack Server entities")
-        entities = C_SERIES_ENTITIES
-        necessary_sections = C_SERIES_NECESSARY_SECTIONS
-    else:
-        logging.debug("Using UCS B-Series Blade Server entities")
-        entities = B_SERIES_ENTITIES
-        necessary_sections = B_SERIES_NECESSARY_SECTIONS
+    entities: Entities = B_SERIES_ENTITIES + C_SERIES_ENTITIES
 
     try:
-        data = handle.get_data_from_entities(entities)
+        data = handle.get_data_from_entities(entities, model_info)
     except CommunicationException as e:
         logging.debug("Failed getting entity data: '%s'", e)
         handle.logout()
@@ -461,7 +472,7 @@ def main(args=None):
         return 1
 
     # some sections should always be in agent output, even if there is no data from the server
-    for section in necessary_sections:
+    for section in SERIES_NECESSARY_SECTIONS:
         if section not in data:
             sys.stdout.write("<<<%s:sep(9)>>>\n" % section)
 

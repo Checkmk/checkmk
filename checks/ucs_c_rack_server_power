@@ -34,7 +34,7 @@ def parse_ucs_c_rack_server_power(info):
                                                         "/board", "").replace("/power-stats", "")
         parsed.setdefault(motherboard, {})
         for ds_key, ds, cast_function in (
-            ('consumedPower', power, int),
+            ('consumedPower', power, float),  # consumedPower is no longer int but float instead!!
             ('inputCurrent', current, float),
             ('inputVoltage', voltage, float),
         ):

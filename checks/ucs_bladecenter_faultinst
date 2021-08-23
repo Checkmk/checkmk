@@ -47,6 +47,6 @@ check_info["ucs_bladecenter_faultinst"] = {
     'parse_function': ucs_bladecenter.generic_parse,
     'inventory_function': inventory_ucs_bladecenter_faultinst,
     'check_function': check_ucs_bladecenter_faultinst,
-    'service_description': 'Fault Instances',
+    'service_description': 'Fault Instances Blade',
     'group': 'ucs_bladecenter_faultinst',
 }

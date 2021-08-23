@@ -545,7 +545,7 @@ class UpdateConfig:
                         continue
                     if PureWindowsPath(regex).is_absolute() and _MATCH_SINGLE_BACKSLASH.search(
                             regex):
-                        self._logger.warn(
+                        self._logger.warning(
                             format_warning(
                                 "WARN: Service condition in rule looks like an absolute windows path that is not correctly escaped.\n"
                                 " Use double backslash as directory separator in regex expressions, e.g.\n"

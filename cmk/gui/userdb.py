@@ -352,8 +352,8 @@ def on_failed_login(username: UserId) -> None:
         else:
             log_details.extend(["existing: No", "locked: N/A", "failed logins until locked: N/A"])
 
-        auth_logger.warn("Login failed for username: %s (%s), client: %s", username,
-                         ", ".join(log_details), request.remote_ip)
+        auth_logger.warning("Login failed for username: %s (%s), client: %s", username,
+                            ", ".join(log_details), request.remote_ip)
 
 
 def on_logout(username: UserId, session_id: str) -> None:

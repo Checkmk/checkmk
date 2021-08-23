@@ -348,7 +348,7 @@ class ABCHostAttribute(metaclass=abc.ABCMeta):
         macro, then the value of that macro should be returned here - otherwise None"""
         return None
 
-    def filter_matches(self, crit: Any, value: Any, hostname: str) -> bool:
+    def filter_matches(self, crit: Any, value: Any, hostname: HostName) -> bool:
         """Checks if the give value matches the search attributes
         that are represented by the current HTML variables."""
         return crit == value

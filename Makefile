@@ -631,6 +631,13 @@ Pipfile.lock: Pipfile
 	    ( SKIP_MAKEFILE_CALL=1 $(PIPENV) sync --pre --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
 
+requirements.txt: Pipfile.lock
+	@( \
+	    echo "Creating $@" ; \
+	    $(PIPENV) lock --dev -r > $@; \
+            sed -i "1s|-i.*|-i https://pypi.python.org/simple/|" $@ \
+	)
+
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not
 # need to depend on %MAKEFILE% because GNU make will always make sure

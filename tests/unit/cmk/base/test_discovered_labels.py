@@ -11,7 +11,7 @@ import pytest
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import DiscoveredHostLabelsStore
-from cmk.utils.type_defs import SectionName
+from cmk.utils.type_defs import HostName, SectionName
 
 import cmk.base.config as config
 from cmk.base.discovered_labels import (
@@ -222,7 +222,7 @@ def discovered_host_labels_dir_fixture(tmp_path, monkeypatch):
 
 
 def test_discovered_host_labels_store_save(discovered_host_labels_dir):
-    store = DiscoveredHostLabelsStore("host")
+    store = DiscoveredHostLabelsStore(HostName("host"))
 
     labels = DiscoveredHostLabels(HostLabel(u"xyz", u"äbc", SectionName("sectionname")))
     label_dict = labels.to_dict()
@@ -256,6 +256,6 @@ def test_discovered_host_labels_path(discovered_host_labels_dir):
     hostname = "test.host.de"
     config.get_config_cache().initialize()
     assert not (discovered_host_labels_dir / hostname).exists()
-    DiscoveredHostLabelsStore(hostname).save(
+    DiscoveredHostLabelsStore(HostName(hostname)).save(
         DiscoveredHostLabels(HostLabel("foo", "1.5")).to_dict())
     assert (discovered_host_labels_dir / (hostname + ".mk")).exists()

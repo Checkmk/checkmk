@@ -375,6 +375,44 @@ def test_openapi_bulk_actions_folders(wsgi_app, with_automation_user, suppress_a
         content_type='application/json',
     )
 
+    # add tag_address_family
+    wsgi_app.call_method(
+        'put',
+        base + "/domain-types/folder_config/actions/bulk-update/invoke",
+        params=json.dumps({
+            "entries": [{
+                "folder": "~new_folder",
+                "update_attributes": {
+                    "tag_address_family": "ip-v4-only"
+                }
+            }],
+        }),
+        status=200,
+        content_type='application/json',
+    )
+
+    # check label was added
+    resp = wsgi_app.get(base + "/objects/folder_config/~new_folder", status=200)
+    assert resp.json["extensions"]["attributes"]["tag_address_family"] == "ip-v4-only"
+
+    # remove tag_address_family
+    wsgi_app.call_method(
+        'put',
+        base + "/domain-types/folder_config/actions/bulk-update/invoke",
+        params=json.dumps({
+            "entries": [{
+                "folder": "~new_folder",
+                "remove_attributes": ["tag_address_family"]
+            }],
+        }),
+        status=200,
+        content_type='application/json',
+    )
+
+    # check label was removed
+    resp = wsgi_app.get(base + "/objects/folder_config/~new_folder", status=200)
+    assert "tag_address_family" not in resp.json["extensions"]["attributes"]
+
 
 def test_openapi_folder_update(wsgi_app, with_automation_user, suppress_automation_calls):
     username, secret = with_automation_user
@@ -435,3 +473,32 @@ def test_openapi_folder_root(wsgi_app, with_automation_user, suppress_automation
         params={'show_hosts': False},
         status=200,
     )
+
+
+def test_openapi_folder_remove_attribute(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    resp = wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
+        params=
+        '{"name": "new_folder", "title": "foo", "parent": "/", "attributes": {"tag_address_family": "ip-v6-only"}}',
+        status=200,
+        content_type='application/json',
+    )
+
+    resp = wsgi_app.follow_link(
+        resp,
+        '.../update',
+        status=200,
+        params=json.dumps({
+            'title': 'foo',
+            'remove_attributes': ['tag_address_family'],
+        }),
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+    assert 'tag_address_family' not in resp.json['extensions']['attributes']
+    # make sure changes are written to disk:
+    resp = wsgi_app.follow_link(resp, 'self', status=200)
+    assert 'tag_address_family' not in resp.json['extensions']['attributes']

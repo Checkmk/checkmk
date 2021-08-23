@@ -222,10 +222,11 @@ def update_host(params):
 
     faulty_attributes = []
     for attribute in remove_attributes:
-        try:
-            host.remove_attribute(attribute)
-        except KeyError:
+        if not host.has_explicit_attribute(attribute):
             faulty_attributes.append(attribute)
+
+    if remove_attributes:
+        host.clean_attributes(remove_attributes)  # silently ignores missing attributes
 
     if faulty_attributes:
         return problem(
@@ -270,14 +271,15 @@ def bulk_update_hosts(params):
 
         faulty_attributes = []
         for attribute in remove_attributes:
-            try:
-                host.remove_attribute(attribute)
-            except KeyError:
+            if not host.has_explicit_attribute(attribute):
                 faulty_attributes.append(attribute)
 
         if faulty_attributes:
             faulty_hosts.append(f"{host_name} ({', '.join(faulty_attributes)})")
             continue
+
+        if remove_attributes:
+            host.clean_attributes(remove_attributes)
 
         hosts.append(host)
 

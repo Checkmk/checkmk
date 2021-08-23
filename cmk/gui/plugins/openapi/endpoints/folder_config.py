@@ -135,7 +135,7 @@ def update(params):
     faulty_attributes = []
     for attribute in remove_attributes:
         try:
-            folder.remove_attribute(attribute)
+            attributes.pop(attribute)
         except KeyError:
             faulty_attributes.append(attribute)
 
@@ -188,7 +188,7 @@ def bulk_update(params):
         faulty_attempt = False
         for attribute in remove_attributes:
             try:
-                folder.remove_attribute(attribute)
+                attributes.pop(attribute)
             except KeyError:
                 faulty_attempt = True
                 break

@@ -44,10 +44,14 @@ class Section(TypedDict, total=False):
     jitter: float
 
 
-def _get_seconds(microseconds):
-    if microseconds.endswith("ms"):
-        return float(microseconds[:-2]) / 1000000
-    return float(microseconds) / 1000000
+def _get_seconds(time_string: str) -> float:
+    if time_string.endswith("us"):
+        return float(time_string[:-2]) / 1000000
+    if time_string.endswith("ms"):
+        return float(time_string[:-2]) / 1000
+    if time_string.endswith("s"):
+        return float(time_string[:-1])
+    return float(time_string) / 1000000
 
 
 def parse_timesyncd(string_table: StringTable) -> Section:

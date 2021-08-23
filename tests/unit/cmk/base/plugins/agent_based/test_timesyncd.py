@@ -44,8 +44,8 @@ def test_discover_timesyncd(
 
 @pytest.mark.parametrize('string_table, params, result', [
     (DATA1, timesyncd.default_check_parameters, [
-        Result(state=state.OK, summary='Offset: 54 microseconds'),
-        Metric('time_offset', 5.3991e-05, levels=(0.2, 0.5)),
+        Result(state=state.OK, summary='Offset: 54 milliseconds'),
+        Metric('time_offset', 0.053991, levels=(0.2, 0.5)),
         Result(
             state=state.CRIT,
             summary=

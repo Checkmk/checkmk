@@ -182,3 +182,9 @@ def sign_key_fingerprint(certificate):
     """Get the fingerprint using the sign key's certificate"""
     cert = crypto.load_certificate(crypto.FILETYPE_PEM, certificate)
     return cert.digest("sha256").decode('utf-8')
+
+
+def find_signature_key(fingerprint: str):
+    for signature_key in config.agent_signature_keys.values():
+        if fingerprint == sign_key_fingerprint(signature_key["certificate"]):
+            return signature_key

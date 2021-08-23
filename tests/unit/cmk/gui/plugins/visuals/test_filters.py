@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import namedtuple
+from typing import Any, Mapping, NamedTuple, Sequence, Tuple
 
 import pytest
 
@@ -105,11 +105,11 @@ def test_filters_filter_with_empty_request(request_context, filter_ident, live):
         assert filt.filter({}) == expected_filter
 
 
-FilterTest = namedtuple("FilterTest", [
-    "ident",
-    "request_vars",
-    "expected_filters",
-])
+class FilterTest(NamedTuple):
+    ident: str
+    request_vars: Sequence[Tuple[str, str]]
+    expected_filters: str
+
 
 filter_tests = [
     FilterTest(
@@ -572,12 +572,11 @@ def test_filters_filter(request_context, test, monkeypatch):
         assert filt.filter(filter_vars) == test.expected_filters
 
 
-FilterTableTest = namedtuple("FilterTableTest", [
-    "ident",
-    "request_vars",
-    "rows",
-    "expected_rows",
-])
+class FilterTableTest(NamedTuple):
+    ident: str
+    request_vars: Sequence[Tuple[str, str]]
+    rows: Sequence[Mapping[str, Any]]
+    expected_rows: Sequence[Mapping[str, Any]]
 
 
 def get_inventory_table_patch(inventory, path):

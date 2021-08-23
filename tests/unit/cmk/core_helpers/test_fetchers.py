@@ -8,9 +8,8 @@ import json
 import os
 import socket
 from abc import ABC, abstractmethod
-from collections import namedtuple
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, List, NamedTuple, Optional, Sequence, Type, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
@@ -27,7 +26,6 @@ from cmk.snmplib.type_defs import (
     SNMPBackendEnum,
     SNMPDetectSpec,
     SNMPHostConfig,
-    SNMPRawData,
     SNMPTable,
 )
 
@@ -48,9 +46,17 @@ from cmk.core_helpers.snmp import (
 from cmk.core_helpers.tcp import TCPFetcher
 from cmk.core_helpers.type_defs import Mode
 
-SensorReading = namedtuple(
-    "SensorReading", "states health name imprecision units"
-    " state_ids type value unavailable")
+
+class SensorReading(NamedTuple):
+    states: Sequence[str]
+    health: int
+    name: str
+    imprecision: Optional[float]
+    units: Union[bytes, str]
+    state_ids: Sequence[int]
+    type: str
+    value: Optional[float]
+    unavailable: int
 
 
 def json_identity(data: Any) -> Any:

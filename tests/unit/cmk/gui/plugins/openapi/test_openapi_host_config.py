@@ -134,8 +134,11 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
         content_type='application/json',
     )
     assert 'alias' not in resp.json['extensions']['attributes']
-    # also try to update with wrong attribute
+    # make sure changes are written to disk:
+    resp = wsgi_app.follow_link(resp, 'self', status=200)
+    assert "alias" not in resp.json['extensions']['attributes']
 
+    # also try to update with wrong attribute
     wsgi_app.follow_link(
         resp,
         '.../update',
@@ -206,6 +209,7 @@ def test_openapi_bulk_hosts(
         content_type='application/json',
     )
 
+    # verify attribute ipaddress is set corretly
     resp = wsgi_app.call_method(
         'get',
         base + "/objects/host_config/foobar",
@@ -213,6 +217,29 @@ def test_openapi_bulk_hosts(
     )
     assert resp.json['extensions']['attributes']['ipaddress'] == "192.168.1.1"
 
+    # remove attribute ipaddress via bulk request
+    wsgi_app.call_method(
+        'put',
+        base + "/domain-types/host_config/actions/bulk-update/invoke",
+        params=json.dumps({
+            "entries": [{
+                "host_name": "foobar",
+                "remove_attributes": ['ipaddress']
+            }],
+        }),
+        status=200,
+        content_type='application/json',
+    )
+
+    # verify attribute ipaddress was removed correctly
+    resp = wsgi_app.call_method(
+        'get',
+        base + "/objects/host_config/foobar",
+        status=200,
+    )
+    assert 'ipaddress' not in resp.json['extensions']['attributes']
+
+    # adding invalid attribute should fail
     _resp = wsgi_app.call_method(
         'put',
         base + "/domain-types/host_config/actions/bulk-update/invoke",

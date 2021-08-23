@@ -6,8 +6,6 @@
 
 import datetime
 import itertools
-
-# yapf: disable
 from collections import namedtuple
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -46,8 +44,7 @@ def generate_inputs() -> List[List[List[str]]]:
 (heute,11180,1144,00:00:00/03:54:10,10884) /omd/sites/heute/lib/cmc/checkhelper
 (twelve,11180,1244,00:00:00/02:37:39,30136) /omd/sites/twelve/lib/cmc/checkhelper"""),
         # solaris (5 entry cmk>=1.5)
-        splitter(
-            """(root,4056,1512,0.0/52-04:56:05,5689) /usr/lib/ssh/sshd
+        splitter("""(root,4056,1512,0.0/52-04:56:05,5689) /usr/lib/ssh/sshd
 (zombie,0,0,-/-,1952) <defunct>
 (zombie,0,0,-/-,3952)
 (zombie,0,0,-/-,4952) """),
@@ -95,7 +92,9 @@ WSOPREKPFS01,85,126562500,csrss.exe,1176,744,8,468750,44486656,569344
 
 PS_DISCOVERY_WATO_RULES = [
     {
-        "default_params": {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
+        "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified"
+        },
         "descr": "smss",
         "match": "~smss.exe"
     },
@@ -160,12 +159,16 @@ PS_DISCOVERY_WATO_RULES = [
         "user": "root"
     },
     {
-        "default_params": {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
+        "default_params": {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified"
+        },
         "descr": "sshd",
         "match": "~.*sshd"
     },
     {
-        'default_params': {"cpu_rescale_max": "cpu_rescale_max_unspecified"},
+        'default_params': {
+            "cpu_rescale_max": "cpu_rescale_max_unspecified"
+        },
         'descr': 'PS counter',
         'user': 'zombie',
     },
@@ -191,100 +194,113 @@ PS_DISCOVERY_WATO_RULES = [
 ]
 
 PS_DISCOVERED_ITEMS = [
-    Service(item="emacs on", parameters={
-        "cpu_average": 15,
-        'cpu_rescale_max': True,
-        "resident_levels_perc": (25.0, 50.0),
-        "process": "emacs",
-        "icon": "emacs.png",
-        "user": "on",
-        "process_info": "html",
-        "virtual_levels": (1024**3, 2 * 1024**3),
-        "resident_levels": (1024**3, 2 * 1024**3),
-        "match_groups": (),
-        'cgroup': (None, False),
-    }),
-    Service(item="firefox is on fire", parameters={
-        "process": "~.*(fire)fox",
-        "process_info": "text",
-        "user": None,
-        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-        'match_groups': ('fire',),
-        'cgroup': (None, False),
-    }),
-    Service(item="Checkhelpers heute", parameters={
-        "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
-        "process_info": "text",
-        "user": None,
-        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-        'match_groups': ('heute',),
-        'cgroup': (None, False),
-    }),
-    Service(item="Checkhelpers Overall", parameters={
-        "process": "~/omd/sites/\\w+/lib/cmc/checkhelper",
-        "process_info": "text",
-        "user": None,
-        'match_groups': (),
-        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-        'cgroup': (None, False),
-    }),
-    Service(item="Checkhelpers twelve", parameters={
-        "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
-        "process_info": "text",
-        "user": None,
-        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-        'match_groups': ('twelve',),
-        'cgroup': (None, False),
-    }),
-    Service(item="sshd", parameters={
-        "process": "~.*sshd",
-        "user": None,
-        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-        "match_groups": (),
-        'cgroup': (None, False),
-    }),
-    Service(item="PS counter", parameters={
-        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-        'process': None,
-        'user': 'zombie',
-        "match_groups": (),
-        'cgroup': (None, False),
-    }),
-    Service(item="svchost", parameters={
-        "cpulevels": (90.0, 98.0),
-        "handle_count": (1000, 2000),
-        "levels": (1, 1, 99999, 99999),
-        "max_age": (3600, 7200),
-        "process": "svchost.exe",
-        "resident_levels": (104857600, 209715200),
-        "resident_levels_perc": (25.0, 50.0),
-        "single_cpulevels": (90.0, 98.0),
-        "user": None,
-        "virtual_levels": (1073741824000, 2147483648000),
-        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-        "match_groups": (),
-        'cgroup': (None, False),
-    }),
-    Service(item="smss", parameters={
-        "process": "~smss.exe",
-        "user": None,
-        'cpu_rescale_max': 'cpu_rescale_max_unspecified',
-        "match_groups": (),
-        'cgroup': (None, False),
-    }),
+    Service(item="emacs on",
+            parameters={
+                "cpu_average": 15,
+                'cpu_rescale_max': True,
+                "resident_levels_perc": (25.0, 50.0),
+                "process": "emacs",
+                "icon": "emacs.png",
+                "user": "on",
+                "process_info": "html",
+                "virtual_levels": (1024**3, 2 * 1024**3),
+                "resident_levels": (1024**3, 2 * 1024**3),
+                "match_groups": (),
+                'cgroup': (None, False),
+            }),
+    Service(item="firefox is on fire",
+            parameters={
+                "process": "~.*(fire)fox",
+                "process_info": "text",
+                "user": None,
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                'match_groups': ('fire',),
+                'cgroup': (None, False),
+            }),
+    Service(item="Checkhelpers heute",
+            parameters={
+                "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
+                "process_info": "text",
+                "user": None,
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                'match_groups': ('heute',),
+                'cgroup': (None, False),
+            }),
+    Service(item="Checkhelpers Overall",
+            parameters={
+                "process": "~/omd/sites/\\w+/lib/cmc/checkhelper",
+                "process_info": "text",
+                "user": None,
+                'match_groups': (),
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                'cgroup': (None, False),
+            }),
+    Service(item="Checkhelpers twelve",
+            parameters={
+                "process": "~/omd/sites/(\\w+)/lib/cmc/checkhelper",
+                "process_info": "text",
+                "user": None,
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                'match_groups': ('twelve',),
+                'cgroup': (None, False),
+            }),
+    Service(item="sshd",
+            parameters={
+                "process": "~.*sshd",
+                "user": None,
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                "match_groups": (),
+                'cgroup': (None, False),
+            }),
+    Service(item="PS counter",
+            parameters={
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                'process': None,
+                'user': 'zombie',
+                "match_groups": (),
+                'cgroup': (None, False),
+            }),
+    Service(item="svchost",
+            parameters={
+                "cpulevels": (90.0, 98.0),
+                "handle_count": (1000, 2000),
+                "levels": (1, 1, 99999, 99999),
+                "max_age": (3600, 7200),
+                "process": "svchost.exe",
+                "resident_levels": (104857600, 209715200),
+                "resident_levels_perc": (25.0, 50.0),
+                "single_cpulevels": (90.0, 98.0),
+                "user": None,
+                "virtual_levels": (1073741824000, 2147483648000),
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                "match_groups": (),
+                'cgroup': (None, False),
+            }),
+    Service(item="smss",
+            parameters={
+                "process": "~smss.exe",
+                "user": None,
+                'cpu_rescale_max': 'cpu_rescale_max_unspecified',
+                "match_groups": (),
+                'cgroup': (None, False),
+            }),
 ]
 
 
 def test_inventory_common():
     info = list(itertools.chain.from_iterable(generate_inputs()))
-    assert sorted({s.item: s for s in ps_utils.discover_ps(  # type: ignore[attr-defined]
-        PS_DISCOVERY_WATO_RULES,  # type: ignore[arg-type]
-        ps_section.parse_ps(info),
-        None,
-        None,
-        None,
-    )}.values(), key=lambda s: s.item or "") == sorted(PS_DISCOVERED_ITEMS, key=lambda s: s.item or
-            "")  # type: ignore[attr-defined]
+    assert sorted(
+        {
+            s.item: s for s in ps_utils.discover_ps(  # type: ignore[attr-defined]
+                PS_DISCOVERY_WATO_RULES,  # type: ignore[arg-type]
+                ps_section.parse_ps(info),
+                None,
+                None,
+                None,
+            )
+        }.values(),
+        key=lambda s: s.item or "") == sorted(
+            PS_DISCOVERED_ITEMS, key=lambda s: s.item or "")  # type: ignore[attr-defined]
 
 
 CheckResult = tuple
@@ -326,8 +342,7 @@ check_results = [
                 "<table><tr><th>name</th><th>user</th><th>virtual size</th>"
                 "<th>resident size</th><th>creation time</th><th>pid</th><th>cpu usage</th></tr>"
                 "<tr><td>emacs</td><td>on</td><td>1050360kB</td><td>303252kB</td>"
-                "<td>Oct 23 2018 08:02:43</td><td>9902</td><td>0.0%</td></tr></table>"
-            ),
+                "<td>Oct 23 2018 08:02:43</td><td>9902</td><td>0.0%</td></tr></table>"),
         ),
     ],
     [
@@ -351,11 +366,9 @@ check_results = [
         Result(state=state.OK, summary="Running for: 7 hours 24 minutes"),
         Result(
             state=state.OK,
-            notice=(
-                "name /usr/lib/firefox/firefox, user on, virtual size 2924232kB,"
-                " resident size 472252kB, creation time Oct 24 2018 04:38:07, pid 7912,"
-                " cpu usage 0.0%\r\n"
-            ),
+            notice=("name /usr/lib/firefox/firefox, user on, virtual size 2924232kB,"
+                    " resident size 472252kB, creation time Oct 24 2018 04:38:07, pid 7912,"
+                    " cpu usage 0.0%\r\n"),
         ),
     ],
     [
@@ -370,11 +383,9 @@ check_results = [
         Result(state=state.OK, summary="Running for: 3 hours 54 minutes"),
         Result(
             state=state.OK,
-            notice=(
-                "name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB,"
-                " resident size 1144kB, creation time Oct 24 2018 08:08:12, pid 10884,"
-                " cpu usage 0.0%\r\n"
-            ),
+            notice=("name /omd/sites/heute/lib/cmc/checkhelper, user heute, virtual size 11180kB,"
+                    " resident size 1144kB, creation time Oct 24 2018 08:08:12, pid 10884,"
+                    " cpu usage 0.0%\r\n"),
         )
     ],
     [
@@ -397,8 +408,7 @@ check_results = [
                 " resident size 1144kB, creation time Oct 24 2018 08:08:12, pid 10884,"
                 " cpu usage 0.0%\r\nname /omd/sites/twelve/lib/cmc/checkhelper, user twelve,"
                 " virtual size 11180kB, resident size 1244kB, creation time Oct 24 2018 09:24:43, "
-                "pid 30136, cpu usage 0.0%\r\n"
-            ),
+                "pid 30136, cpu usage 0.0%\r\n"),
         )
     ],
     [
@@ -413,11 +423,9 @@ check_results = [
         Result(state=state.OK, summary="Running for: 2 hours 37 minutes"),
         Result(
             state=state.OK,
-            notice=(
-                "name /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB,"
-                " resident size 1244kB, creation time Oct 24 2018 09:24:43, pid 30136,"
-                " cpu usage 0.0%\r\n"
-            ),
+            notice=("name /omd/sites/twelve/lib/cmc/checkhelper, user twelve, virtual size 11180kB,"
+                    " resident size 1244kB, creation time Oct 24 2018 09:24:43, pid 30136,"
+                    " cpu usage 0.0%\r\n"),
         ),
     ],
     [
@@ -472,10 +480,8 @@ check_results = [
         Metric("age_youngest", 12.0),
         Result(
             state=state.WARN,
-            summary=(
-                "Oldest running for: 1 hour 11 minutes"
-                " (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)"
-            ),
+            summary=("Oldest running for: 1 hour 11 minutes"
+                     " (warn/crit at 1 hour 0 minutes/2 hours 0 minutes)"),
         ),
         Metric("age_oldest", 4300.0, levels=(3600.0, 7200.0)),
     ],
@@ -494,10 +500,9 @@ check_results = [
 ]
 
 
-@pytest.mark.parametrize(
-    "inv_item, reference",
-    list(zip(PS_DISCOVERED_ITEMS, check_results)),
-    ids=[s.item for s in PS_DISCOVERED_ITEMS])
+@pytest.mark.parametrize("inv_item, reference",
+                         list(zip(PS_DISCOVERED_ITEMS, check_results)),
+                         ids=[s.item for s in PS_DISCOVERED_ITEMS])
 def test_check_ps_common(inv_item, reference):
     parsed: List = []
     for info in generate_inputs():
@@ -507,14 +512,15 @@ def test_check_ps_common(inv_item, reference):
     with on_time(1540375342, "CET"):
         factory_defaults = {"levels": (1, 1, 99999, 99999)}
         factory_defaults.update(inv_item.parameters)
-        test_result = list(ps_utils.check_ps_common(
-            label="Processes",
-            item=inv_item.item,
-            params=factory_defaults,  # type: ignore[arg-type]
-            process_lines=parsed,
-            cpu_cores=1,
-            total_ram_map={"": 1024**3} if "emacs" in inv_item.item else {},
-        ))
+        test_result = list(
+            ps_utils.check_ps_common(
+                label="Processes",
+                item=inv_item.item,
+                params=factory_defaults,  # type: ignore[arg-type]
+                process_lines=parsed,
+                cpu_cores=1,
+                total_ram_map={"": 1024**3} if "emacs" in inv_item.item else {},
+            ))
         assert test_result == reference
 
 
@@ -554,18 +560,22 @@ def test_check_ps_common_cpu(data):
         with on_time(datetime.datetime.utcfromtimestamp(check_time), "CET"):
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
             lines_with_node_name: List[Tuple[Optional[str], ps_utils.PsInfo, List[str]]] = [
-                (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines]
+                (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines
+            ]
 
-            return list(ps_utils.check_ps_common(
-                label="Processes",
-                item=service.item,
-                params=service.parameters,  # type: ignore[arg-type]
-                process_lines=lines_with_node_name,
-                cpu_cores=cpu_cores,
-                total_ram_map={},
-            ))
+            return list(
+                ps_utils.check_ps_common(
+                    label="Processes",
+                    item=service.item,
+                    params=service.parameters,  # type: ignore[arg-type]
+                    process_lines=lines_with_node_name,
+                    cpu_cores=cpu_cores,
+                    total_ram_map={},
+                ))
 
-    rescale_params = {"cpu_rescale_max": data.cpu_rescale_max} if data.cpu_rescale_max is not None else {}
+    rescale_params = {
+        "cpu_rescale_max": data.cpu_rescale_max
+    } if data.cpu_rescale_max is not None else {}
     service = Service(
         item="test",
         parameters={
@@ -607,7 +617,8 @@ def test_check_ps_common_count(levels, reference):
     _cpu_info, parsed_lines = ps_section.parse_ps(
         splitter("(on,105,30,00:00:{:02}/03:59:39,902) single"))
     lines_with_node_name: List[Tuple[Optional[str], ps_utils.PsInfo, List[str]]] = [
-        (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines]
+        (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines
+    ]
 
     params = {
         "process": "~test",
@@ -615,14 +626,15 @@ def test_check_ps_common_count(levels, reference):
         "levels": levels,
     }
 
-    output = list(ps_utils.check_ps_common(
-        label="Processes",
-        item='empty',
-        params=params,  # type: ignore[arg-type]
-        process_lines=lines_with_node_name,
-        cpu_cores=1,
-        total_ram_map={},
-    ))
+    output = list(
+        ps_utils.check_ps_common(
+            label="Processes",
+            item='empty',
+            params=params,  # type: ignore[arg-type]
+            process_lines=lines_with_node_name,
+            cpu_cores=1,
+            total_ram_map={},
+        ))
     assert output == reference
 
 
@@ -680,20 +692,22 @@ def test_subset_patterns():
         ),
     ]
 
-    test_discovered = ps_utils.discover_ps(inv_params, section_ps, None, None, None)  # type: ignore[arg-type]
-    assert {s.item: s for s in test_discovered} == {s.item: s for s in discovered}  # type: ignore[attr-defined]
+    test_discovered = ps_utils.discover_ps(inv_params, section_ps, None, None,
+                                           None)  # type: ignore[arg-type]
+    assert {s.item: s for s in test_discovered} == {s.item: s for s in discovered
+                                                   }  # type: ignore[attr-defined]
 
     for service, count in zip(discovered, [1, 2, 1]):
         assert isinstance(service.item, str)
-        output = list(ps_utils.check_ps_common(
-            label="Processes",
-            item=service.item,
-            params=service.parameters,  # type: ignore[arg-type]
-            process_lines=[
-                (None, psi, cmd_line) for (psi, cmd_line) in section_ps[1]],
-            cpu_cores=1,
-            total_ram_map={},
-        ))
+        output = list(
+            ps_utils.check_ps_common(
+                label="Processes",
+                item=service.item,
+                params=service.parameters,  # type: ignore[arg-type]
+                process_lines=[(None, psi, cmd_line) for (psi, cmd_line) in section_ps[1]],
+                cpu_cores=1,
+                total_ram_map={},
+            ))
         assert output[0] == Result(state=state.OK, summary="Processes: %s" % count)
 
 
@@ -719,16 +733,18 @@ def test_cpu_util_single_process_levels(cpu_cores):
 (on,1523536,83064,00:{:02}:00/26:55,25898) firefox"""
             _cpu_info, parsed_lines = ps_section.parse_ps(splitter(agent_info.format(cputime)))
             lines_with_node_name: List[Tuple[Optional[str], ps_utils.PsInfo, List[str]]] = [
-                (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines]
+                (None, ps_info, cmd_line) for (ps_info, cmd_line) in parsed_lines
+            ]
 
-            return list(ps_utils.check_ps_common(
-                label="Processes",
-                item='firefox',
-                params=params,  # type: ignore[arg-type]
-                process_lines=lines_with_node_name,
-                cpu_cores=cpu_cores,
-                total_ram_map={},
-            ))
+            return list(
+                ps_utils.check_ps_common(
+                    label="Processes",
+                    item='firefox',
+                    params=params,  # type: ignore[arg-type]
+                    process_lines=lines_with_node_name,
+                    cpu_cores=cpu_cores,
+                    total_ram_map={},
+                ))
 
     # CPU utilization is a counter, initialize it
     run_check_ps_common_with_elapsed_time(0, 0)
@@ -755,17 +771,18 @@ def test_cpu_util_single_process_levels(cpu_cores):
         Metric("age_youngest", 417.0),
         Result(state=state.OK, summary='Oldest running for: 26 minutes 58 seconds'),
         Metric("age_oldest", 1618.0),
-        Result(state=state.OK, notice="\r\n".join([
-            'name firefox, user on, virtual size 2275004kB, resident size 434008kB,'
-            ' creation time Jan 01 1970 00:34:02, pid 25576, cpu usage 0.0%',
-            'name firefox, user on, virtual size 1869920kB, resident size 359836kB,'
-            ' creation time Jan 01 1970 00:54:03, pid 25664, cpu usage 0.0%',
-            'name firefox, user on, virtual size 7962644kB, resident size 229660kB,'
-            ' creation time Jan 01 1970 00:34:04, pid 25758, cpu usage 0.0%',
-            'name firefox, user on, virtual size 1523536kB, resident size 83064kB,'
-            ' creation time Jan 01 1970 00:34:05, pid 25898, cpu usage %.1f%%\r\n'
-            % cpu_util,
-        ])),
+        Result(state=state.OK,
+               notice="\r\n".join([
+                   'name firefox, user on, virtual size 2275004kB, resident size 434008kB,'
+                   ' creation time Jan 01 1970 00:34:02, pid 25576, cpu usage 0.0%',
+                   'name firefox, user on, virtual size 1869920kB, resident size 359836kB,'
+                   ' creation time Jan 01 1970 00:54:03, pid 25664, cpu usage 0.0%',
+                   'name firefox, user on, virtual size 7962644kB, resident size 229660kB,'
+                   ' creation time Jan 01 1970 00:34:04, pid 25758, cpu usage 0.0%',
+                   'name firefox, user on, virtual size 1523536kB, resident size 83064kB,'
+                   ' creation time Jan 01 1970 00:34:05, pid 25898, cpu usage %.1f%%\r\n' %
+                   cpu_util,
+               ])),
     ]
 
     if cpu_util > params['single_cpulevels'][1]:

@@ -10,6 +10,7 @@ information about VMs and nodes:
 - disk usage
 - node info
 - mem usage
+- time of snapshots
 - not yet: replication Status VMs & Container, Gesamtstatus + piggybacked
 - not yet: backup summary
 - not yet: snapshot_status
@@ -428,6 +429,16 @@ def agent_proxmox_ve_main(args: Args) -> None:
                     "subscription": {},
                     # for now just get basic task data - we'll read the logs later
                     "tasks": [],
+                    "qemu": [{
+                        "{vmid}": {
+                            "snapshot": [],
+                        }
+                    }],
+                    "lxc": [{
+                        "{vmid}": {
+                            "snapshot": [],
+                        }
+                    }],
                     "version": {},
                 },
             }],
@@ -457,9 +468,19 @@ def agent_proxmox_ve_main(args: Args) -> None:
         "logged_vmids": logged_backup_data,
     }
 
+    snapshot_data = {}
+
+    for node in data["nodes"]:
+        # only lxc and qemu can have snapshots
+        for vm in node.get("lxc", []) + node.get("qemu", []):
+            snapshot_data[str(vm["vmid"])] = {
+                "snaptimes": [x["snaptime"] for x in vm["snapshot"] if "snaptime" in x],
+            }
+
     LOGGER.info("all VMs:          %r", backup_data["vmids"])
     LOGGER.info("expected backups: %r", backup_data["scheduled_vmids"])
     LOGGER.info("actual backups:   %r", sorted(list(logged_backup_data.keys())))
+    LOGGER.info("snaptimes:        %r", snapshot_data)
 
     LOGGER.info("Write agent output..")
     for node in data["nodes"]:
@@ -518,6 +539,8 @@ def agent_proxmox_ve_main(args: Args) -> None:
                     # todo: info about erroneous backups
                     "last_backup": logged_backup_data.get(vmid),
                 })
+            with SectionWriter("proxmox_ve_vm_snapshot_age") as writer:
+                writer.append_json(snapshot_data.get(vmid))
 
 
 class ProxmoxVeSession:
@@ -672,7 +695,7 @@ class ProxmoxVeAPI:
             next_path = list(path) + ([] if element_name is None else [element_name])
             subtree = extract_request_subtree(requested_structure)
             variable = extract_variable(subtree)
-            response = self._session.get_api_element("/".join(next_path))
+            response = self._session.get_api_element("/".join(map(str, next_path)))
 
             if isinstance(response, list):
                 # Handle subtree stubs like [{'name': 'log'}, {'name': 'options'}, ...]

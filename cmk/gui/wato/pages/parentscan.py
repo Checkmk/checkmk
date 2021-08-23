@@ -231,9 +231,9 @@ class ParentScanBackgroundJob(watolib.WatoBackgroundJob):
             return gateway.dns_name
 
         if task.site_id:
-            return "gw-%s-%s" % (task.site_id, gateway.ip.replace(".", "-"))
+            return HostName("gw-%s-%s" % (task.site_id, gateway.ip.replace(".", "-")))
 
-        return "gw-%s" % (gateway.ip.replace(".", "-"))
+        return HostName("gw-%s" % (gateway.ip.replace(".", "-")))
 
     def _determine_gateway_attributes(self, task: ParentScanTask, settings: ParentScanSettings,
                                       gateway: ParentScanResult, gw_folder: CREFolder) -> dict:

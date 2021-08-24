@@ -2452,7 +2452,7 @@ class html(ABCHTMLGenerator):
                     "icon" if icon != "foldable_sidebar" else None,
                     "open" if isopen else "closed",
                 ],
-                src="themes/%s/images/icon_%s.svg" % (self._theme, icon),
+                src=self.detect_icon_path(icon, prefix="icon_"),
                 onclick=onclick)
         else:
             self.img(id_=img_id,

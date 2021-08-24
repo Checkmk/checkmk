@@ -68,7 +68,7 @@ def run_pylint(base_path, check_files):
 
 
 def num_jobs_to_use():
-    # Naive heuristic, but looks OK for our use cases: Normal quad core CPUs
+    # Naive heuristic, but looks OK for our use cases:\ Normal quad core CPUs
     # with HT report 8 CPUs (=> 6 jobs), our server 24-core CPU reports 48 CPUs
     # (=> 11 jobs). Just using 0 (meaning: use all reported CPUs) might just
     # work, too, but it's probably a bit too much.
@@ -78,7 +78,7 @@ def num_jobs_to_use():
     # means that there may be up to 8 pylint running in parallel. Currently
     # these processes consume about 400 MB of rss memory.  To prevent swapping
     # we need to reduce the parallelization of pylint for the moment.
-    if getpass.getuser() == "jenkins":
+    if os.environ.get("USER") == "jenkins":
         return int(multiprocessing.cpu_count() / 8.0) + 3
     return int(multiprocessing.cpu_count() / 8.0) + 5
 

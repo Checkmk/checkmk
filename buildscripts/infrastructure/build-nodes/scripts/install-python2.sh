@@ -15,7 +15,7 @@ else
     cd "${SCRIPT_DIR}"
     while true; do
         if [ -e defines.make ]; then
-            PYTHON_VERSION=$(make --no-print-directory -f defines.make print-PYTHON2_VERSION)
+            PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON2_VERSION)
             break
         elif [ $PWD == / ]; then
             failure "could not determine Python version"

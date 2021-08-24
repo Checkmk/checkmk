@@ -55,7 +55,7 @@ if [ -z "$CLANG_VERSION" ]; then
     cd "${SCRIPT_DIR}"
     while true; do
         if [ -e defines.make ]; then
-            CLANG_VERSION=$(make -f defines.make print-CLANG_VERSION)
+            CLANG_VERSION=$(make --no-print-directory --file=defines.make print-CLANG_VERSION)
             break
         elif [ $PWD == / ]; then
             echo "could not determine Clang version" >&2

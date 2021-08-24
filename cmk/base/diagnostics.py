@@ -45,6 +45,7 @@ from cmk.utils.i18n import _
 from cmk.utils.log import console
 from cmk.utils.site import omd_site
 from cmk.utils.structured_data import StructuredDataStore
+from cmk.utils.type_defs import HostName
 
 import cmk.base.section as section
 
@@ -240,7 +241,7 @@ class Collectors:
     def get_omd_config(self) -> site.OMDConfig:
         return self._omd_config_collector.get_infos()
 
-    def get_checkmk_server_name(self) -> Optional[str]:
+    def get_checkmk_server_name(self) -> Optional[HostName]:
         return self._checkmk_server_name_collector.get_infos()
 
 
@@ -267,12 +268,12 @@ class OMDConfigCollector(ABCCollector):
 
 
 class CheckmkServerNameCollector(ABCCollector):
-    def _collect_infos(self) -> Optional[str]:
+    def _collect_infos(self) -> Optional[HostName]:
         query = ("GET hosts\nColumns: host_name\n"
                  "Filter: host_labels = 'cmk/check_mk_server' 'yes'\n")
         result = livestatus.LocalConnection().query(query)
         try:
-            return result[0][0]
+            return HostName(result[0][0])
         except IndexError:
             return None
 

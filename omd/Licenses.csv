@@ -112,7 +112,7 @@ Perl module: XML-Twig,3.48,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/p
 Perl module: YAML-Tiny,1.67,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/perl-modules/src/YAML-Tiny-1.67.tar.gz,,,,
 pnp4nagios,0.6.26,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/pnp4nagios/pnp4nagios-0.6.26.tar.gz,,,,
 PostgreSQL,10.12,MIT-CMU,https://fedoraproject.org/wiki/Licensing:MIT?rd=Licensing/MIT#CMU_Style,omd/packages/postgresql/postgresql-10.12.tar.gz,,,,
-Python,3.8.7,Python-2.0,https://spdx.org/licenses/Python-2.0.html,omd/packages/Python3/Python-3.8.7.tar.xz,,,,
+Python,3.8.11,Python-2.0,https://spdx.org/licenses/Python-2.0.html,omd/packages/Python3/Python-3.8.11.tar.xz,,,,
 Python for Windows agent (PyWinAg),3.4,Python-2.0,https://spdx.org/licenses/Python-2.0.html,agents/windows/python-3.4.cab
 Python for Windows agent (PyWinAg),3.8,Python-2.0,https://spdx.org/licenses/Python-2.0.html,agents/windows/python-3.8.cab
 Python for Windows agent (PyWinAg),3.8,Python-2.0,https://spdx.org/licenses/Python-2.0.html,agents/wnx/install/resources/modules/python-3.8.cab

@@ -12,6 +12,5 @@ Version: 2.0.0p10
 The agent bakery ruleset "Execute MRPE checks" allows for configuring the
 remote execution of Nagios plugins. Previously, the service description
 field was limited to letters, numbers, dashes, underscores, spaces and
-dots. Now, any printable ASCII character except '~' and '/' is allowed.
-'~' and '/' cannot be used because they would cause problems in cache
-file names.
+dots. Now, any printable ASCII character except '~' is allowed. '~'
+cannot be used because it would cause problems in cache file names.

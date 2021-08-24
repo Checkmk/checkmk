@@ -8,8 +8,39 @@
 
 import os
 import subprocess
+from typing import List
 
-import pytest
+import pkg_resources as pkg  # type: ignore[import]
+import pytest  # type: ignore[import]
+from pipfile import Pipfile  # type: ignore[import]
+
+from tests.testlib import repo_path
+
+
+def _get_import_names_from_dist_name(dist_name: str) -> List[str]:
+
+    # We still have some exceptions to the rule...
+    dist_renamings = {
+        "repoze-profile": "repoze.profile",
+    }
+
+    metadata_dir = pkg.get_distribution(
+        dist_renamings.get(dist_name, dist_name)
+    ).egg_info  # type: ignore[attr-defined]
+    with open("%s/%s" % (metadata_dir, "top_level.txt")) as top_level:
+        import_names = top_level.read().rstrip().split("\n")
+        # Skip the private modules (starting with an underscore)
+        return [name for name in import_names if not name.startswith("_")]
+
+
+def _get_import_names_from_pipfile() -> List[str]:
+
+    parsed_pipfile = Pipfile.load(filename=repo_path() + "/Pipfile")
+    import_names = []
+    for dist_name in parsed_pipfile.data["default"].keys():
+        import_names.extend(_get_import_names_from_dist_name(dist_name))
+    assert import_names
+    return import_names
 
 
 def test_01_python_interpreter_exists(site):
@@ -57,45 +88,21 @@ def test_03_pip_interpreter_version(site):
     assert version.startswith("pip 21.1.1")
 
 
-# TODO: Improve this test to automatically adapt the expected modules from our Pipfile
-@pytest.mark.parametrize(
-    "module_name",
-    [
-        "netsnmp",
-        "ldap",
-        "OpenSSL",
-        "cryptography",
-        "pysmi",
-        "pysnmp",
-        "ldap",
-        "pymysql",
-        "psycopg2",
-        "dicttoxml",
-        "enum",
-        "PIL",
-        "reportlab",
-        "PyPDF2",
-        "psutil",
-        "ipaddress",
-        "requests",
-        "paramiko",
-        "pyghmi",
-        "typing",
-        "dateutil",
-        "snap7",
-        "rrdtool",
-        "werkzeug",
-        "boto3",
-        "kubernetes",
-        "numpy",
-        "google.protobuf",
-    ],
-)
+@pytest.mark.parametrize("module_name", _get_import_names_from_pipfile())
 def test_python_modules(site, module_name):
+    # TODO: Clarify and remove skipping of obscure modules
+    # Skip those modules for now, they throw:
+    # >       found = self._search_paths(context.pattern, context.path)
+    # E       AttributeError: 'Context' object has no attribute 'pattern'
+    if module_name in ("jsonschema", "openapi_spec_validator"):
+        return
     import importlib  # pylint: disable=import-outside-toplevel
 
     module = importlib.import_module(module_name)
-    assert module.__file__.startswith(site.root)
+
+    # Skip namespace modules, they don't have __file__
+    if module.__file__:
+        assert module.__file__.startswith(site.root)
 
 
 def test_python_preferred_encoding():

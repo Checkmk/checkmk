@@ -1041,6 +1041,28 @@ TEST(LogEntry, CoreStopping3) {
     EXPECT_EQ("", e.state_info());
 }
 
+TEST(LogEntry, ShortMessage) {
+    auto line = "[oh no..."s;
+    LogEntry e{42, line};
+    EXPECT_EQ(size_t{42}, e.lineno());
+    EXPECT_EQ(0, e.time());
+    EXPECT_EQ(LogEntry::Class::invalid, e.log_class());
+    EXPECT_EQ(LogEntryKind::none, e.kind());
+    EXPECT_EQ(line, e.message());
+    EXPECT_EQ(""s, e.options());
+    EXPECT_EQ(""s, e.type());
+    EXPECT_EQ("", e.host_name());
+    EXPECT_EQ("", e.service_description());
+    EXPECT_EQ("", e.command_name());
+    EXPECT_EQ("", e.contact_name());
+    EXPECT_EQ(0, e.state());
+    EXPECT_EQ("", e.state_type());
+    EXPECT_EQ(0, e.attempt());
+    EXPECT_EQ("", e.plugin_output());
+    EXPECT_EQ("", e.comment());
+    EXPECT_EQ("", e.state_info());
+}
+
 TEST(LogEntry, InvalidTimeStamp) {
     auto line = "[nonsense!!] this is total;nonsense"s;
     LogEntry e{42, line};

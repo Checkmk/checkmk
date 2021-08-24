@@ -5,9 +5,9 @@
 
 #include "LogEntry.h"
 
-#include <cstdlib>
+#include <charconv>
 #include <functional>
-#include <stdexcept>
+#include <system_error>
 #include <unordered_map>
 #include <utility>
 
@@ -32,19 +32,18 @@ LogEntry::LogEntry(size_t lineno, std::string line)
     }
     options_ = std::string_view{message_}.substr(pos);
 
-    try {
-        if (message_.size() < timestamp_prefix_length || message_[0] != '[' ||
-            message_[11] != ']' || message_[12] != ' ') {
-            throw std::invalid_argument("timestamp delimiter");
-        }
-        time_ = std::stoi(message_.substr(1, 10));
-    } catch (const std::logic_error &e) {
+    time_t timestamp{};
+    if (message_.size() < timestamp_prefix_length ||  //
+        message_[0] != '[' || message_[11] != ']' || message_[12] != ' ' ||
+        std::from_chars(&message_[1], &message_[11], timestamp).ec !=
+            std::errc{}) {
         class_ = Class::invalid;
         kind_ = LogEntryKind::none;
         time_ = 0;
         type_ = {};
         return;  // ignore invalid lines silently
     }
+    time_ = timestamp;  // TODO(sp) Use std::chrono
 
     classifyLogMessage();
 }
@@ -95,13 +94,16 @@ void LogEntry::assign(Param par, const std::string &field) {
             state_ = static_cast<int>(parseServiceState(field));
             return;
         case Param::State:
-            state_ = atoi(field.c_str());
+            state_ = 0;
+            std::from_chars(field.data(), field.data() + field.size(), state_);
             return;
         case Param::StateType:
             state_type_ = field;
             return;
         case Param::Attempt:
-            attempt_ = atoi(field.c_str());
+            attempt_ = 0;
+            std::from_chars(field.data(), field.data() + field.size(),
+                            attempt_);
             return;
         case Param::Comment:
             comment_ = field;

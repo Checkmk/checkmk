@@ -6,12 +6,19 @@
 
 # pylint: disable=protected-access
 
-from typing import Callable, Iterable
+from typing import Any, Callable, Dict, Iterable, List
 
 import pytest
 
 from cmk.utils.check_utils import ActiveCheckResult
-from cmk.utils.type_defs import HostKey, ParsedSectionName, SectionName, SourceType
+from cmk.utils.type_defs import (
+    HostAddress,
+    HostKey,
+    HostName,
+    ParsedSectionName,
+    SectionName,
+    SourceType,
+)
 
 from cmk.core_helpers.type_defs import AgentRawDataSection
 
@@ -120,7 +127,8 @@ NODE_2: AgentRawDataSection = [
         }
     }),
 ])
-def test_get_section_kwargs(required_sections, expected_result):
+def test_get_section_kwargs(required_sections: List[str],
+                            expected_result: Dict[str, Dict[str, str]]) -> None:
 
     node_sections = AgentHostSections(sections={
         SectionName("one"): NODE_1,
@@ -128,7 +136,7 @@ def test_get_section_kwargs(required_sections, expected_result):
         SectionName("three"): NODE_1
     })
 
-    host_key = HostKey("node1", "127.0.0.1", SourceType.HOST)
+    host_key = HostKey(HostName("node1"), HostAddress("127.0.0.1"), SourceType.HOST)
 
     parsed_sections_broker = ParsedSectionsBroker({
         host_key: (
@@ -200,7 +208,8 @@ def test_get_section_kwargs(required_sections, expected_result):
         }
     }),
 ])
-def test_get_section_cluster_kwargs(required_sections, expected_result):
+def test_get_section_cluster_kwargs(required_sections: List[str],
+                                    expected_result: Dict[str, Any]) -> None:
 
     node1_sections = AgentHostSections(sections={
         SectionName("one"): NODE_1,
@@ -214,12 +223,12 @@ def test_get_section_cluster_kwargs(required_sections, expected_result):
     })
 
     parsed_sections_broker = ParsedSectionsBroker({
-        HostKey("node1", "127.0.0.1", SourceType.HOST): (
+        HostKey(HostName("node1"), HostAddress("127.0.0.1"), SourceType.HOST): (
             ParsedSectionsResolver(
                 section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],),
             SectionsParser(host_sections=node1_sections),
         ),
-        HostKey("node2", "127.0.0.1", SourceType.HOST): (
+        HostKey(HostName("node2"), HostAddress("127.0.0.1"), SourceType.HOST): (
             ParsedSectionsResolver(
                 section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],),
             SectionsParser(host_sections=node2_sections),
@@ -229,8 +238,8 @@ def test_get_section_cluster_kwargs(required_sections, expected_result):
     kwargs = get_section_cluster_kwargs(
         parsed_sections_broker,
         [
-            HostKey("node1", "127.0.0.1", SourceType.HOST),
-            HostKey("node2", "127.0.0.1", SourceType.HOST),
+            HostKey(HostName("node1"), HostAddress("127.0.0.1"), SourceType.HOST),
+            HostKey(HostName("node2"), HostAddress("127.0.0.1"), SourceType.HOST),
         ],
         [ParsedSectionName(n) for n in required_sections],
     )
@@ -238,11 +247,11 @@ def test_get_section_cluster_kwargs(required_sections, expected_result):
     assert expected_result == kwargs
 
 
-def test_check_parsing_errors_no_errors():
+def test_check_parsing_errors_no_errors() -> None:
     assert check_parsing_errors(()) == ActiveCheckResult(0, [], (), ())
 
 
-def test_check_parsing_errors_are_ok():
+def test_check_parsing_errors_are_ok() -> None:
     assert check_parsing_errors(
         ("error - message",),
         error_state=0,
@@ -254,7 +263,7 @@ def test_check_parsing_errors_are_ok():
     )
 
 
-def test_check_parsing_errors_with_errors_():
+def test_check_parsing_errors_with_errors_() -> None:
     assert check_parsing_errors(("error - message",)) == ActiveCheckResult(
         1,
         ["error(!)"],

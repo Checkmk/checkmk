@@ -180,7 +180,27 @@ section_checkmk() {
         echo -n 'OnlyFrom: '
         echo $(sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1)
     fi
+
+    #
+    # BEGIN COMMON AGENT CODE
+    #
+
+    if [ -n "${NO_PYTHON}" ]; then
+        echo "FailedPythonReason: No suitable python installation found."
+    elif [ -n "${WRONG_PYTHON_COMMAND}" ]; then
+        echo "FailedPythonReason: Configured python command not found."
+    fi
 }
+
+section_checkmk_failed_plugin() {
+    ${MK_RUN_SYNC_PARTS} || return
+    echo "<<<check_mk>>>"
+    echo "FailedPythonPlugins: ${1}"
+}
+
+#
+# END COMMON AGENT CODE
+#
 
 section_df() {
     # Print out Partitions / Filesystems. (-P gives non-wrapped POSIXed output)
@@ -985,14 +1005,6 @@ run_spooler() {
     )
 }
 
-add_failed_python_plugin() {
-    if [ -z "${FAILED_PYTHON_PLUGINS}" ]; then
-        FAILED_PYTHON_PLUGINS=("${1}")
-    else
-        FAILED_PYTHON_PLUGINS=("${FAILED_PYTHON_PLUGINS[@]}" "${1}")
-    fi
-}
-
 get_plugin_interpreter() {
     # Return the interpreter (or "") for the plugin file (or fail).
     # We return the interpreter instead of wrapping the call, so we don't
@@ -1011,7 +1023,7 @@ get_plugin_interpreter() {
 
     if [ "${filename#${filename%??}}" != "_2" ]; then
         if [ -n "${NO_PYTHON}" ] || [ -n "${WRONG_PYTHON_COMMAND}" ]; then
-            add_failed_python_plugin "${agent_plugin}"
+            section_checkmk_failed_plugin "${agent_plugin}"
             return 1
         fi
 
@@ -1021,7 +1033,7 @@ get_plugin_interpreter() {
         fi
 
         if [ ! -e "${filename}_2.py" ]; then
-            add_failed_python_plugin "${agent_plugin} (Missing Python 3 installation)"
+            section_checkmk_failed_plugin "${agent_plugin} (Missing Python 3 installation)"
             return 1
         fi
 
@@ -1038,7 +1050,7 @@ get_plugin_interpreter() {
         return 0
     fi
 
-    add_failed_python_plugin "${agent_plugin} (missing Python 2 installation)"
+    section_checkmk_failed_plugin "${agent_plugin} (missing Python 2 installation)"
     return 1
 }
 

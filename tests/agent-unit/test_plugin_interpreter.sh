@@ -26,7 +26,8 @@ test_get_plugin_interpreter_no_py_present() {
 
     NO_PYTHON="no python found"
     INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/some_plugin.py")" && fail
-    assertEquals "" "${INTERPRETER}"
+    assertContains "${INTERPRETER}" "<<<check_mk>>>"
+    assertContains "${INTERPRETER}" "FailedPythonPlugins: "
 }
 
 test_get_plugin_interpreter_py2_present() {
@@ -53,7 +54,8 @@ test_get_plugin_interpreter_py3_present() {
     assertEquals "my_py3" "${INTERPRETER}"
 
     INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/some_py2_plugin_2.py")" && fail
-    assertEquals "" "${INTERPRETER}"
+    assertContains "${INTERPRETER}" "<<<check_mk>>>"
+    assertContains "${INTERPRETER}" "FailedPythonPlugins: "
 
     INTERPRETER="$(get_plugin_interpreter "${SHUNIT_TMPDIR}/existing_py3_plugin_2.py")" && fail
     assertEquals "" "${INTERPRETER}"

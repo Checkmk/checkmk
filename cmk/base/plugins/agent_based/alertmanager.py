@@ -28,8 +28,13 @@ class Severity(Enum):
     WARNING = "warning"
     ALERT = "alert"
     CRITICAL = "critical"
+    ERROR = "error"
     NONE = "none"
     NA = None
+
+    @classmethod
+    def _missing_(cls, value):
+        return Severity.NA
 
 
 class Rule(NamedTuple):

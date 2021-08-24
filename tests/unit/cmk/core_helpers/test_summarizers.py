@@ -145,6 +145,49 @@ class TestAgentSummarizerDefault_OnlyFrom:
         )
 
 
+class TestAgentSummarizerDefault_FailedPythonPlugins:
+    @pytest.fixture
+    def summarizer(self):
+        return AgentSummarizerDefault(
+            ExitSpec(),
+            is_cluster=False,
+            agent_min_version=0,
+            agent_target_version=None,
+            only_from=None,
+        )
+
+    @pytest.fixture
+    def mode(self):
+        # Only Mode.CHECKING triggers _check_python_plugins
+        return Mode.CHECKING
+
+    def test_two_plugins_failed(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:"],
+                ["agentos:"],
+                ["FailedPythonPlugins:", "one"],
+                ["FailedPythonPlugins:", "two"],
+                ["FailedPythonReason:", "I'm not in the mood to execute python plugins"],
+            ],
+            mode=mode,
+        ) == (
+            1,
+            "Failed to execute python plugins: one two"
+            " (I'm not in the mood to execute python plugins)",
+        )
+
+    def test_no_plugins_failed(self, summarizer, mode):
+        assert summarizer.summarize_check_mk_section(
+            [
+                ["version:"],
+                ["agentos:"],
+                ["FailedPythonReason:", "I'm not in the mood to execute python plugins"],
+            ],
+            mode=mode,
+        ) == (0, '')
+
+
 class TestAgentSummarizerDefault_Fails:
     @pytest.fixture
     def summarizer(self):

@@ -691,18 +691,15 @@ class AgentSummarizerDefault(AgentSummarizer):
         return status, ", ".join(output)
 
     @staticmethod
-    def _get_agent_info(cmk_section: Optional[AgentRawDataSection],) -> Dict[str, Optional[str]]:
-        agent_info: Dict[str, Optional[str]] = {
-            "version": u"unknown",
-            "agentos": u"unknown",
-        }
-        if not cmk_section:
-            return agent_info
+    def _get_agent_info(string_table: Optional[AgentRawDataSection],) -> Dict[str, Optional[str]]:
+        section: Dict[str, Optional[str]] = {}
 
-        for line in cmk_section:
-            value = " ".join(line[1:]) if len(line) > 1 else None
-            agent_info[line[0][:-1].lower()] = value
-        return agent_info
+        for line in string_table or ():
+            key = line[0][:-1].lower()
+            val = " ".join(line[1:])
+            section[key] = f"{section.get(key) or ''} {val}".strip() if len(line) > 1 else None
+
+        return {"version": u"unknown", "agentos": u"unknown", **section}
 
     def _check_version(
             self, agent_version: Optional[str]) -> Optional[Tuple[ServiceState, ServiceDetails]]:

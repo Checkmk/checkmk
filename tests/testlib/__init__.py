@@ -23,6 +23,8 @@ from tests.testlib.fixtures import ec, web  # noqa: F401 # pylint: disable=unuse
 from tests.testlib.site import Site, SiteFactory  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 
+from cmk.utils.type_defs import HostName
+
 from tests.testlib.web_session import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
     APIError, CMKWebSession,
 )
@@ -321,7 +323,7 @@ class BaseCheck(abc.ABC):
         # we cant use the current_host context, b/c some tests rely on a persistent
         # item state across several calls to run_check
         import cmk.base.plugin_contexts  # pylint: disable=import-outside-toplevel
-        cmk.base.plugin_contexts._hostname = 'non-existent-testhost'
+        cmk.base.plugin_contexts._hostname = HostName('non-existent-testhost')
 
 
 class Check(BaseCheck):

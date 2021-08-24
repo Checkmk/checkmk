@@ -1072,6 +1072,20 @@ def _parameter_valuespec_if():
                     ),
                 ),
                 (
+                    "unicast",
+                    _vs_alternative_levels(
+                        title=_("Unicast packet rates"),
+                        help=_("These levels make the check go warning or critical whenever the "
+                               "<b>percentual packet rate</b> or the <b>absolute packet "
+                               "rate</b> of the monitored interface reaches the given "
+                               "bounds. The percentual packet rate is computed by "
+                               "the formula <b>(unicast / (unicast + non-unicast))*100</b>"),
+                        percent_levels=PERC_PKG_LEVELS,
+                        percent_detail=_(" (in relation to all successful packets)"),
+                        abs_detail=_(" (in packets per second)"),
+                    ),
+                ),
+                (
                     "multicast",
                     _vs_alternative_levels(
                         title=_("Multicast packet rates"),

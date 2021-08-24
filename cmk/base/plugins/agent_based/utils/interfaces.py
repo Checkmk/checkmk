@@ -296,11 +296,11 @@ GeneralPacketLevels = Dict[str, Dict[str, Optional[Tuple[float, float]]]]
 
 def _get_packet_levels(
         params: Mapping[str, Any]) -> Tuple[GeneralPacketLevels, GeneralPacketLevels]:
+    DIRECTIONS = ("in", "out")
+    PACKET_TYPES = ("errors", "multicast", "broadcast", "unicast")
+
     def none_levels() -> Dict[str, Dict[str, Optional[Any]]]:
-        return {
-            name: {direction: None for direction in ("in", "out")
-                  } for name in ("errors", "multicast", "broadcast")
-        }
+        return {name: {direction: None for direction in DIRECTIONS} for name in PACKET_TYPES}
 
     levels_per_type = {
         "perc": none_levels(),
@@ -308,8 +308,8 @@ def _get_packet_levels(
     }
 
     # Second iteration: seperate by perc and abs for easier further processing
-    for name in ("errors", "multicast", "broadcast"):
-        for direction in ("in", "out"):
+    for name in PACKET_TYPES:
+        for direction in DIRECTIONS:
             levels = params.get(name, {})
             level = levels.get(direction) or levels.get("both")
             if level is not None:
@@ -1547,6 +1547,14 @@ def _output_packet_rates(
                 "bcast",
                 success_pacrate,
             ),
+            (
+                urate,
+                abs_packet_levels["unicast"][direction],
+                perc_packet_levels["unicast"][direction],
+                "unicast",
+                "ucast",
+                success_pacrate,
+            ),
         ]:
 
             # Calculate the metric with actual levels, no matter if they
@@ -1571,7 +1579,7 @@ def _output_packet_rates(
             # Further calculation now precedes with average value,
             # if requested.
             infotxt = f"{display_name.title()} {direction}"
-            if average_bmcast is not None and display_name != "errors":
+            if average_bmcast is not None and display_name not in ("errors", "unicast"):
                 value = get_average(
                     value_store,
                     "%s.%s.%s.avg" % (direction, display_name, item),
@@ -1608,7 +1616,6 @@ def _output_packet_rates(
             yield metric
 
         for display_name, metric_name, rate, levels in [
-            ("Unicast", "ucast", urate, None),
             ("Non-unicast", "nucast", nurate, nucast_levels),
             ("Discards", "disc", discrate, disc_levels),
         ]:

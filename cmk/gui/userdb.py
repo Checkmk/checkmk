@@ -1095,6 +1095,7 @@ def _convert_idle_timeout(value: str) -> Union[int, bool, None]:
 #.
 #   .-Custom-Attrs.--------------------------------------------------------.
 #   |   ____          _                          _   _   _                 |
+
 #   |  / ___|   _ ___| |_ ___  _ __ ___         / \ | |_| |_ _ __ ___      |
 #   | | |  | | | / __| __/ _ \| '_ ` _ \ _____ / _ \| __| __| '__/ __|     |
 #   | | |__| |_| \__ \ || (_) | | | | | |_____/ ___ \ |_| |_| |  \__ \_    |
@@ -1396,7 +1397,11 @@ class UserProfileCleanupBackgroundJob(gui_background_job.GUIBackgroundJob):
             return
 
         profile_base_dir = Path(config.config_dir)
-        profiles = set(profile_dir.name for profile_dir in profile_base_dir.iterdir())
+        # Some files like ldap_*_sync_time.mk can be placed in
+        # ~/var/check_mk/web, causing error entries in web.log while trying to
+        # delete a dir
+        profiles = set(
+            profile_dir.name for profile_dir in profile_base_dir.iterdir() if profile_dir.is_dir())
 
         abandoned_profiles = sorted(profiles - users)
         if not abandoned_profiles:

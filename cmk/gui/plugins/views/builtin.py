@@ -96,6 +96,9 @@ multisite_builtin_views.update({
         'description': _('Services not being monitored due to configuration.'),
         'context': {
             'discovery_state': {
+                'discovery_state_ignored': 'on',
+                'discovery_state_unmonitored': 'on',
+                'discovery_state_vanished': 'on',
                 'discovery_state_var0': 'on',
                 'discovery_state_var1': '',
                 'discovery_state_var2': 'on',

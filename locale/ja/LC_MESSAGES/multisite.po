@@ -21377,6 +21377,14 @@ msgstr "ホストステータス"
 msgid "Host tag:"
 msgstr "ホストタグ:"
 
+#, fuzzy, python-format
+msgid "Host tag: %s is <b>%s</b>"
+msgstr "ホスト:%sは<b>%s </ b>"
+
+#, fuzzy, python-format
+msgid "Host tag: %s is <b>not</b> <b>%s</b>"
+msgstr "ホスト: %s は<b>%s</b><b>ではありません</b>"
+
 msgid "Host tags"
 msgstr "ホストタグ"
 
@@ -21419,14 +21427,6 @@ msgstr "ホスト:"
 #, python-format
 msgid "Host: %s"
 msgstr "ホスト: %s"
-
-#, python-format
-msgid "Host: %s is <b>%s</b>"
-msgstr "ホスト:%sは<b>%s </ b>"
-
-#, python-format
-msgid "Host: %s is <b>not</b> <b>%s</b>"
-msgstr "ホスト: %s は<b>%s</b><b>ではありません</b>"
 
 msgid "Hostaddress"
 msgstr "ホストアドレス"
@@ -58631,6 +58631,11 @@ msgstr ""
 
 msgid "You can use <tt>*</tt> and <tt>?</tt> here."
 msgstr "ここでは<tt>*</tt> と <tt>?</tt>を使用できます。"
+
+msgid ""
+"You can use any printable ASCII character except '~' and '/' here, since the "
+"latter two will cause problems in cache file names."
+msgstr ""
 
 msgid ""
 "You can use macros like <tt>$PAGE$</tt> here. For a complete list of all "

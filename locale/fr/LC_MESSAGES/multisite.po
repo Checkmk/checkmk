@@ -22393,6 +22393,14 @@ msgstr "Statut de l'hôte"
 msgid "Host tag:"
 msgstr "Étiquette de l'hôte :"
 
+#, fuzzy, python-format
+msgid "Host tag: %s is <b>%s</b>"
+msgstr "Hôte : %s est <b>%s</b>."
+
+#, fuzzy, python-format
+msgid "Host tag: %s is <b>not</b> <b>%s</b>"
+msgstr "Hôte : %s est <b>non</b> <b>%s</b>."
+
 msgid "Host tags"
 msgstr "Étiquettes d'hôte"
 
@@ -22435,14 +22443,6 @@ msgstr "Hôte :"
 #, python-format
 msgid "Host: %s"
 msgstr "Hôte : %s"
-
-#, python-format
-msgid "Host: %s is <b>%s</b>"
-msgstr "Hôte : %s est <b>%s</b>."
-
-#, python-format
-msgid "Host: %s is <b>not</b> <b>%s</b>"
-msgstr "Hôte : %s est <b>non</b> <b>%s</b>."
 
 msgid "Hostaddress"
 msgstr "Adresse de l'hôte"
@@ -62271,6 +62271,11 @@ msgstr ""
 
 msgid "You can use <tt>*</tt> and <tt>?</tt> here."
 msgstr "Vous pouvez utiliser <tt>*</tt> et <tt>?</tt> ici."
+
+msgid ""
+"You can use any printable ASCII character except '~' and '/' here, since the "
+"latter two will cause problems in cache file names."
+msgstr ""
 
 msgid ""
 "You can use macros like <tt>$PAGE$</tt> here. For a complete list of all "

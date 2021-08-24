@@ -21347,6 +21347,14 @@ msgstr ""
 msgid "Host tag:"
 msgstr ""
 
+#, python-format
+msgid "Host tag: %s is <b>%s</b>"
+msgstr ""
+
+#, python-format
+msgid "Host tag: %s is <b>not</b> <b>%s</b>"
+msgstr ""
+
 msgid "Host tags"
 msgstr ""
 
@@ -21391,14 +21399,6 @@ msgstr ""
 #, fuzzy, python-format
 msgid "Host: %s"
 msgstr "(altul: %s)"
-
-#, python-format
-msgid "Host: %s is <b>%s</b>"
-msgstr ""
-
-#, python-format
-msgid "Host: %s is <b>not</b> <b>%s</b>"
-msgstr ""
 
 #, fuzzy
 msgid "Hostaddress"
@@ -57190,6 +57190,11 @@ msgid ""
 msgstr ""
 
 msgid "You can use <tt>*</tt> and <tt>?</tt> here."
+msgstr ""
+
+msgid ""
+"You can use any printable ASCII character except '~' and '/' here, since the "
+"latter two will cause problems in cache file names."
 msgstr ""
 
 msgid ""

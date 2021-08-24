@@ -84,11 +84,8 @@ def alertmanager_rules_section(
 
 
 def retrieve_rule_data(api_client: AlertmanagerAPI) -> Dict[str, Any]:
-    try:
-        endpoint_result = api_client.query_static_endpoint("/api/v1/rules")
-        return json.loads(endpoint_result.content)["data"]
-    except requests.exceptions.HTTPError:
-        return {}
+    endpoint_result = api_client.query_static_endpoint("/rules")
+    return json.loads(endpoint_result.content)["data"]
 
 
 def parse_rule_data(group_data: List[Dict[str, Any]], ignore_alerts: IgnoreAlerts) -> Groups:

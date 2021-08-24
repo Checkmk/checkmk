@@ -67,7 +67,7 @@ def foldable_container(
                 "icon" if icon != "foldable_sidebar" else None,
                 "open" if isopen else "closed",
             ],
-            src=theme.url(f"images/icon_{icon}.svg"),
+            src=theme.detect_icon_path(icon, "icon_"),
             onclick=onclick)
     else:
         html.img(id_=img_id,

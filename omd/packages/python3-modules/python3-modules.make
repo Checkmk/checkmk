@@ -274,6 +274,7 @@ python3-modules-dump-Pipfile:
 	@echo 'parso = "==0.8.2"'
 	@echo 'python-lsp-jsonrpc = "==1.0.0"'
 	@echo 'ujson = "==4.0.2"'
+	@echo 'pipfile = "*"'
 	@echo ''
 	@echo '[packages]'
 	@echo $(patsubst %.zip,%,$(patsubst %.tar.gz,%,$(PYTHON3_MODULES_LIST))) | tr ' ' '\n' | sed 's/-\([0-9.]*\)$$/ = "==\1"/'

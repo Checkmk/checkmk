@@ -1426,7 +1426,11 @@ class UserProfileCleanupBackgroundJob(gui_background_job.GUIBackgroundJob):
             return
 
         profile_base_dir = cmk.utils.paths.profile_dir
-        profiles = set(profile_dir.name for profile_dir in profile_base_dir.iterdir())
+        # Some files like ldap_*_sync_time.mk can be placed in
+        # ~/var/check_mk/web, causing error entries in web.log while trying to
+        # delete a dir
+        profiles = set(
+            profile_dir.name for profile_dir in profile_base_dir.iterdir() if profile_dir.is_dir())
 
         abandoned_profiles = sorted(profiles - users)
         if not abandoned_profiles:

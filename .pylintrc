@@ -25,7 +25,7 @@ load-plugins=
 jobs=0
 # TODO: Why do we need persistence?
 persistent=yes
-extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql
+extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql,pydantic
 bad-functions=unichr,basestring,unicode,file,cmp,apply,execfile,reduce,reload
 
 signature-mutators=cmk.utils.store.with_lock_dict

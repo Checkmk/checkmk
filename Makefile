@@ -4,6 +4,7 @@
 
 #
 include defines.make
+include buildscripts/infrastructure/pypi_mirror/pypi_mirror.make
 
 NAME               := check_mk
 PREFIX             := /usr
@@ -22,7 +23,7 @@ SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export DOXYGEN     := doxygen
 export IWYU_TOOL   := python3 $(realpath scripts/iwyu_tool.py)
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
-PIPENV             := scripts/run-pipenv
+PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR)/simple scripts/run-pipenv
 BLACK              := scripts/run-black
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
@@ -630,13 +631,6 @@ Pipfile.lock: Pipfile
 	    $(RM) -r .venv; \
 	    ( SKIP_MAKEFILE_CALL=1 $(PIPENV) sync --pre --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
-
-requirements.txt: Pipfile.lock
-	@( \
-	    echo "Creating $@" ; \
-	    $(PIPENV) lock --dev -r > $@; \
-            sed -i "1s|-i.*|-i https://pypi.python.org/simple/|" $@ \
-	)
 
 # This dummy rule is called from subdirectories whenever one of the
 # top-level Makefile's dependencies must be updated.  It does not

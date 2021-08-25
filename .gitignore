@@ -67,7 +67,9 @@ marcv/pyproject.toml
 missing
 mk-livestatus-*.tar.gz
 node_modules/
+pip-mirror-tmp
 RemoteSystemsTempFiles
+requirements.txt
 stamp-h1
 tags
 tests/web/data/*

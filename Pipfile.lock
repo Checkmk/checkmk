@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1241f750f9e3331fbf528d8c98e465a9fc9d61cefc01a39c739fc40b258dacdd"
+            "sha256": "d38a25a10181c687d8ca9f1c6145b2a0b4958e8e0f83349eba3f7bc9b837910c"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -10,7 +10,7 @@
         "sources": [
             {
                 "name": "pypi",
-                "url": "https://pypi.python.org/simple",
+                "url": "${PIPENV_PYPI_MIRROR}",
                 "verify_ssl": true
             }
         ]
@@ -50,11 +50,11 @@
         },
         "attrs": {
             "hashes": [
-                "sha256:26b54ddbbb9ee1d34d5d3668dd37d6cf74990ab23c828c2888dccdceee395594",
-                "sha256:fce7fc47dfc976152e82d53ff92fa0407700c21acd20886a13777a0d20e655dc"
+                "sha256:149e90d6d8ac20db7a955ad60cf0e6881a3f20d37096140088356da6c716b0b1",
+                "sha256:ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb"
             ],
             "index": "pypi",
-            "version": "==20.2.0"
+            "version": "==21.2.0"
         },
         "babel": {
             "hashes": [
@@ -1430,11 +1430,11 @@
         },
         "attrs": {
             "hashes": [
-                "sha256:26b54ddbbb9ee1d34d5d3668dd37d6cf74990ab23c828c2888dccdceee395594",
-                "sha256:fce7fc47dfc976152e82d53ff92fa0407700c21acd20886a13777a0d20e655dc"
+                "sha256:149e90d6d8ac20db7a955ad60cf0e6881a3f20d37096140088356da6c716b0b1",
+                "sha256:ef6aaac3ca6cd92904cdd0d83f629a15f18053ec84e6432106f7a4d04ae4f5fb"
             ],
             "index": "pypi",
-            "version": "==20.2.0"
+            "version": "==21.2.0"
         },
         "babel": {
             "hashes": [
@@ -1647,6 +1647,13 @@
             ],
             "index": "pypi",
             "version": "==1.1.0"
+        },
+        "future": {
+            "hashes": [
+                "sha256:b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d"
+            ],
+            "markers": "python_version >= '2.6' and python_version not in '3.0, 3.1, 3.2'",
+            "version": "==0.18.2"
         },
         "gitdb": {
             "hashes": [
@@ -2112,6 +2119,14 @@
             ],
             "index": "pypi",
             "version": "==2.15.0"
+        },
+        "preprocess": {
+            "hashes": [
+                "sha256:ae799e3ab836efeb4b9958bf0e54b5248a368bcdfd77e2c5467b8c56fe00dea1",
+                "sha256:fb751f3218b7948a23cd821588c296695c0141f75a2e48201afe8e266518abaa"
+            ],
+            "index": "pypi",
+            "version": "==2.0.0"
         },
         "protobuf": {
             "hashes": [

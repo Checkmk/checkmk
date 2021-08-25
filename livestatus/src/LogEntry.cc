@@ -5,10 +5,11 @@
 
 #include "LogEntry.h"
 
+#include <algorithm>
+#include <array>
 #include <charconv>
-#include <functional>
+#include <iterator>
 #include <system_error>
-#include <unordered_map>
 #include <utility>
 
 #include "StringUtils.h"
@@ -352,33 +353,15 @@ bool LogEntry::textContains(const std::string &what) const {
 }
 
 namespace {
-const std::unordered_map<std::string_view, ServiceState> fl_service_state_types{
-    // normal states
-    {"OK"sv, ServiceState::ok},
-    {"WARNING"sv, ServiceState::warning},
-    {"CRITICAL"sv, ServiceState::critical},
-    {"UNKNOWN"sv, ServiceState::unknown},
-    // states from "... ALERT"/"... NOTIFICATION"
-    {"RECOVERY"sv, ServiceState::ok}};
+// TODO(sp) copy-n-paste from FetcherHelperChannel!
+template <class T, size_t N>
+using one_of = std::array<std::pair<std::string_view, T>, N>;
 
-const std::unordered_map<std::string_view, HostState> fl_host_state_types{
-    // normal states
-    {"UP"sv, HostState::up},
-    {"DOWN"sv, HostState::down},
-    {"UNREACHABLE"sv, HostState::unreachable},
-    // states from "... ALERT"/"... NOTIFICATION"
-    {"RECOVERY"sv, HostState::up},
-    // states from "... ALERT HANDLER STOPPED" and "(HOST|SERVICE) NOTIFICATION
-    // (RESULT|PROGRESS)"
-    {"OK"sv, HostState::up},
-    {"WARNING"sv, HostState::down},
-    {"CRITICAL"sv, HostState::unreachable},
-    {"UNKNOWN", static_cast<HostState>(3)}};  // Horrible HACK
-
-template <class T>
-typename T::mapped_type parseState(const T &table,
-                                   typename T::mapped_type default_value,
-                                   std::string_view str) {
+// As complicated and inefficient as it looks, the function below is completely
+// unfolded in code: It basically results in very fast if-then-else cascades,
+// guarded by the lengths, see: https://www.youtube.com/watch?v=INn3xa4pMfg
+template <class T, size_t N>
+T parseState(std::string_view str, const one_of<T, N> &table, T default_value) {
     // Ugly: Depending on where we're called, the actual state type can be in
     // parentheses at the end, e.g. "ALERTHANDLER (OK)".
     if (!str.empty() && str[str.size() - 1] == ')') {
@@ -387,7 +370,8 @@ typename T::mapped_type parseState(const T &table,
             str = str.substr(lparen + 1, str.size() - lparen - 2);
         }
     }
-    auto it = table.find(str);
+    auto it = std::find_if(begin(table), end(table),
+                           [&](const auto &v) { return v.first == str; });
     return it == table.end() ? default_value : it->second;
 }
 
@@ -395,12 +379,34 @@ typename T::mapped_type parseState(const T &table,
 
 // static
 ServiceState LogEntry::parseServiceState(std::string_view str) {
-    return parseState(fl_service_state_types, ServiceState::ok, str);
+    static constexpr one_of<ServiceState, 5> states{
+        {// normal states
+         {"OK"sv, ServiceState::ok},
+         {"WARNING"sv, ServiceState::warning},
+         {"CRITICAL"sv, ServiceState::critical},
+         {"UNKNOWN"sv, ServiceState::unknown},
+         // states from "... ALERT"/"... NOTIFICATION"
+         {"RECOVERY"sv, ServiceState::ok}}};
+    return parseState(str, states, ServiceState::ok);
 }
 
 // static
 HostState LogEntry::parseHostState(std::string_view str) {
-    return parseState(fl_host_state_types, HostState::up, str);
+    static constexpr one_of<HostState, 8> states{
+        {// normal states
+         {"UP"sv, HostState::up},
+         {"DOWN"sv, HostState::down},
+         {"UNREACHABLE"sv, HostState::unreachable},
+         // states from "... ALERT"/"... NOTIFICATION"
+         {"RECOVERY"sv, HostState::up},
+         // states from "... ALERT HANDLER STOPPED" and "(HOST|SERVICE)
+         // NOTIFICATION
+         // (RESULT|PROGRESS)"
+         {"OK"sv, HostState::up},
+         {"WARNING"sv, HostState::down},
+         {"CRITICAL"sv, HostState::unreachable},
+         {"UNKNOWN"sv, static_cast<HostState>(3)}}};  // Horrible HACK
+    return parseState(str, states, HostState::up);
 }
 
 namespace {

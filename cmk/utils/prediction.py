@@ -12,8 +12,6 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, Iterable, Iterator, List, Literal, NewType, Optional, Tuple
 
-from six import ensure_str
-
 import livestatus
 
 import cmk.utils.debug
@@ -257,13 +255,12 @@ def livestatus_lql(host_names: List[HostName],
                    columns: List[str],
                    service_description: Optional[ServiceName] = None) -> str:
     query_filter = u"Columns: %s\n" % u" ".join(columns)
-    query_filter += lq_logic(u"Filter: host_name =", [ensure_str(n) for n in host_names], u"Or")
+    query_filter += lq_logic(u"Filter: host_name =", host_names, u"Or")
     if service_description == "_HOST_" or service_description is None:
         what = 'host'
     else:
         what = 'service'
-        query_filter += lq_logic(u"Filter: service_description =",
-                                 [ensure_str(service_description)], u"Or")
+        query_filter += lq_logic(u"Filter: service_description =", [service_description], u"Or")
     return "GET %ss\n%s" % (what, query_filter)
 
 

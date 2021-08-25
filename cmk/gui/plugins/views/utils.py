@@ -33,8 +33,6 @@ from typing import (
     Union,
 )
 
-from six import ensure_str
-
 import livestatus
 from livestatus import LivestatusColumn, LivestatusRow, OnlySites, SiteId
 
@@ -301,7 +299,7 @@ def row_id(view_spec: ViewSpec, row: Row) -> str:
     key = u''
     for col in data_source_registry[view_spec['datasource']]().id_keys:
         key += u'~%s' % row[col]
-    return ensure_str(hashlib.sha256(key.encode('utf-8')).hexdigest())
+    return hashlib.sha256(key.encode('utf-8')).hexdigest()
 
 
 def group_value(row: Row, group_cells: 'List[Cell]') -> Hashable:
@@ -1177,8 +1175,7 @@ def paint_stalified(row: Row, text: CellContent) -> CellSpec:
 
 
 def paint_host_list(site: SiteId, hosts: List[HostName]) -> CellSpec:
-    return "", ", ".join(
-        cmk.gui.view_utils.get_host_list_links(site, [ensure_str(h) for h in hosts]))
+    return "", ", ".join(cmk.gui.view_utils.get_host_list_links(site, hosts))
 
 
 def format_plugin_output(output: str, row: Row) -> HTML:
@@ -2245,7 +2242,7 @@ def _encode_sorter_url(sorters: List[SorterSpec]) -> str:
             url += '~' + s.join_key
         p.append(url)
 
-    return ensure_str(','.join(p))
+    return ','.join(p)
 
 
 def _parse_url_sorters(sort: Optional[str]) -> List[SorterSpec]:
@@ -2310,7 +2307,7 @@ class EmptyCell(Cell):
 def output_csv_headers(view: ViewSpec) -> None:
     filename = '%s-%s.csv' % (view['name'],
                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(filename)
+    response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
 
 
 def _get_sorter_name_of_painter(

@@ -8,8 +8,6 @@ import abc
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-from six import ensure_str
-
 import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import config, html, theme, user
@@ -30,8 +28,8 @@ from cmk.gui.table import init_rowselect, table_element
 def render_checkbox(view, row, num_tds):
     # value contains the number of columns of this datarow. This is
     # needed for hiliting the correct number of TDs
-    html.input(type_="checkbox", name=ensure_str(row_id(view, row)), value=(num_tds + 1))
-    html.label("", ensure_str(row_id(view, row)))
+    html.input(type_="checkbox", name=row_id(view, row), value=(num_tds + 1))
+    html.label("", row_id(view, row))
 
 
 def render_checkbox_td(view, row, num_tds):

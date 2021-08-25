@@ -20,8 +20,6 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict
 
-from six import ensure_str
-
 import livestatus
 
 import cmk.utils.paths
@@ -30,7 +28,7 @@ import cmk.utils.paths
 @lru_cache
 def omd_version() -> str:
     version_link = Path(cmk.utils.paths.omd_root).joinpath("version")
-    return ensure_str(version_link.resolve().name)
+    return version_link.resolve().name
 
 
 @lru_cache

@@ -18,8 +18,6 @@ from io import StringIO
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from six import ensure_str
-
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -310,7 +308,7 @@ def print_man_page_table() -> None:
     table = []
     for name, path in sorted(all_man_pages().items()):
         try:
-            table.append([name, ensure_str(get_title_from_man_page(Path(path)))])
+            table.append([name, get_title_from_man_page(Path(path))])
         except MKGeneralException as e:
             sys.stderr.write(str("ERROR: %s" % e))
 

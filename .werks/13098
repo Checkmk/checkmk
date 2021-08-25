@@ -8,7 +8,7 @@ Knowledge: doc
 Level: 1
 Version: 2.0.0p10
 
-If you defined config variables in ~/local/share/web/plugins/config to
+If you defined config variables in ~/local/share/check_mk/web/plugins/config to
 overwrite existing ones, the default config variables were loaded.
 
 From now on, the default config only will be loaded for variables that do not

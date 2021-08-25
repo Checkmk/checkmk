@@ -1,0 +1,11 @@
+Title: Fix broken inventory tables
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1629879535
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p10
+
+Inventory tables in views "Inventory of host" and "Inventory history of host" did not expand upon clicking the respective icon. A page reload was needed to see the expanded table. This is fixed to a table expansion upon icon click.

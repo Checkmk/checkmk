@@ -3,6 +3,8 @@ CALL :NORMALIZEPATH "%arte%"
 SET arte=%RETVAL%
 
 if "%arte%" == "" powershell Write-Host "arte not defined" -Foreground Red  && exit /b 1
+del %arte% 2> nul
+mkdir %arte% 2> nul
 del %arte%\check_mk_service.msi 2> nul
 del %arte%\check_mk_agent.msi 2> nul
 del %arte%\check_mk_agent.exe 2> nul

@@ -66,7 +66,7 @@ if "%1" == "SIMULATE_FAIL" powershell Write-Host "Failed Install build" -Foregro
 @py -3 scripts\check_crlf.py 
 @if errorlevel 1 powershell Write-Host "Line Encoding Error`r`n`tPlease check how good repo was checked out" -Foreground Red && exit /b 113
 
-call %cur_dir%\clean_artefacts.cmd 
+call %cur_dir%\scripts\clean_artifacts.cmd 
 
 call scripts\unpack_packs.cmd
 
@@ -127,6 +127,7 @@ copy %build_dir%\install\Release\check_mk_service.msi %arte%\check_mk_agent.msi 
 copy %build_dir%\check_mk_service\x64\Release\check_mk_service64.exe %arte%\check_mk_agent-64.exe /Y || powershell Write-Host "Failed to create 64 bit agent" -Foreground Red && exit /b 35
 copy %build_dir%\check_mk_service\Win32\Release\check_mk_service32.exe %arte%\check_mk_agent.exe /Y || powershell Write-Host "Failed to create 32 bit agent" -Foreground Red && exit /b 34
 copy install\resources\check_mk.user.yml %arte%
+copy install\resources\check_mk.yml %arte%
 powershell Write-Host "File Deployment succeeded" -Foreground Green
 
 

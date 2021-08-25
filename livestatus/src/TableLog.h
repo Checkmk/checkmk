@@ -8,7 +8,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <ctime>
+#include <chrono>
 #include <memory>
 #include <string>
 
@@ -35,7 +35,8 @@ public:
 private:
     LogCache *_log_cache;
     bool answerQueryReverse(const logfile_entries_t *entries, Query *query,
-                            time_t since, time_t until);
+                            std::chrono::system_clock::time_point since,
+                            std::chrono::system_clock::time_point until);
 };
 
 #endif  // TableLog_h

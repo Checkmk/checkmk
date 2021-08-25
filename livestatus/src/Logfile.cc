@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "LogCache.h"
-#include "LogEntry.h"
 #include "Logger.h"
 
 namespace {
@@ -180,6 +179,9 @@ const logfile_entries_t *Logfile::getEntriesFor(size_t max_lines_per_logfile,
 }
 
 // static
-uint64_t Logfile::makeKey(time_t t, size_t lineno) {
-    return (static_cast<uint64_t>(t) << 32) | static_cast<uint64_t>(lineno);
+uint64_t Logfile::makeKey(std::chrono::system_clock::time_point t,
+                          size_t lineno) {
+    return (static_cast<uint64_t>(std::chrono::system_clock::to_time_t(t))
+            << 32) |
+           static_cast<uint64_t>(lineno);
 }

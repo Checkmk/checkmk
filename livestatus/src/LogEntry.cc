@@ -38,11 +38,11 @@ LogEntry::LogEntry(size_t lineno, std::string line)
             std::errc{}) {
         class_ = Class::invalid;
         kind_ = LogEntryKind::none;
-        time_ = 0;
+        time_ = {};
         type_ = {};
         return;  // ignore invalid lines silently
     }
-    time_ = timestamp;  // TODO(sp) Use std::chrono
+    time_ = std::chrono::system_clock::from_time_t(timestamp);
 
     classifyLogMessage();
 }

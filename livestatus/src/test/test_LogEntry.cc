@@ -3,7 +3,8 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include <cstddef>
+#include <chrono>
+#include <ctime>
 #include <string>
 #include <tuple>
 #include <utility>
@@ -54,6 +55,10 @@ std::string parens(const std::string& f, const std::string& arg) {
     return f + " (" + arg + ")";
 }
 
+std::chrono::system_clock::time_point tp(time_t t) {
+    return std::chrono::system_clock::from_time_t(t);
+}
+
 // host_or_svc_state | reason (host_or_svc_state) | ALERTHANDLER (exit_code)
 template <class T>
 info_table notification_state_types(const table<T>& states) {
@@ -88,7 +93,7 @@ TEST(LogEntry, InitialHostState) {
                     .append(";7;Krasser Output;Laaang");
             LogEntry e{42, line};
             EXPECT_EQ(size_t{42}, e.lineno());
-            EXPECT_EQ(1551424305, e.time());
+            EXPECT_EQ(tp(1551424305), e.time());
             EXPECT_EQ(LogEntry::Class::state, e.log_class());
             EXPECT_EQ(LogEntryKind::state_host_initial, e.kind());
             EXPECT_EQ(line, e.message());
@@ -118,7 +123,7 @@ TEST(LogEntry, InitialHostStateWithoutLongOutput) {
         "[1551424305] INITIAL HOST STATE: huey;UP;HARD;7;Krasser Output"s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::state, e.log_class());
     EXPECT_EQ(LogEntryKind::state_host_initial, e.kind());
     EXPECT_EQ(line, e.message());
@@ -142,7 +147,7 @@ TEST(LogEntry, InitialHostStateWithMultiLine) {
         R"([1551424305] INITIAL HOST STATE: huey;UP;HARD;7;Krasser Output;Laaanger\nLong\nOutput)";
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::state, e.log_class());
     EXPECT_EQ(LogEntryKind::state_host_initial, e.kind());
     EXPECT_EQ(line, e.message());
@@ -173,7 +178,7 @@ TEST(LogEntry, CurrentHostState) {
                     .append(";8;Voll krasser Output;long");
             LogEntry e{43, line};
             EXPECT_EQ(size_t{43}, e.lineno());
-            EXPECT_EQ(1551424315, e.time());
+            EXPECT_EQ(tp(1551424315), e.time());
             EXPECT_EQ(LogEntry::Class::state, e.log_class());
             EXPECT_EQ(LogEntryKind::state_host, e.kind());
             EXPECT_EQ(line, e.message());
@@ -208,7 +213,7 @@ TEST(LogEntry, HostAlert) {
                             .append(";1234;Komisch...;Lalalang");
             LogEntry e{123456, line};
             EXPECT_EQ(size_t{123456}, e.lineno());
-            EXPECT_EQ(1551424323, e.time());
+            EXPECT_EQ(tp(1551424323), e.time());
             EXPECT_EQ(LogEntry::Class::alert, e.log_class());
             EXPECT_EQ(LogEntryKind::alert_host, e.kind());
             EXPECT_EQ(line, e.message());
@@ -239,7 +244,7 @@ TEST(LogEntry, HostDowntimeAlert) {
                     ";Komisch...";
         LogEntry e{123456, line};
         EXPECT_EQ(size_t{123456}, e.lineno());
-        EXPECT_EQ(1551424323, e.time());
+        EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
         EXPECT_EQ(LogEntryKind::downtime_alert_host, e.kind());
         EXPECT_EQ(line, e.message());
@@ -265,7 +270,7 @@ TEST(LogEntry, HostAcknowledgeAlert) {
                     ";King Kong;foo bar";
         LogEntry e{123456, line};
         EXPECT_EQ(size_t{123456}, e.lineno());
-        EXPECT_EQ(1551424323, e.time());
+        EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
         EXPECT_EQ(LogEntryKind::acknowledge_alert_host, e.kind());
         EXPECT_EQ(line, e.message());
@@ -291,7 +296,7 @@ TEST(LogEntry, HostFlappingAlert) {
             "[1551424323] HOST FLAPPING ALERT: huey;" + state_type + ";foo bar";
         LogEntry e{123456, line};
         EXPECT_EQ(size_t{123456}, e.lineno());
-        EXPECT_EQ(1551424323, e.time());
+        EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
         EXPECT_EQ(LogEntryKind::flapping_host, e.kind());
         EXPECT_EQ(line, e.message());
@@ -322,7 +327,7 @@ TEST(LogEntry, InitialServiceState) {
                             .append(";1;Langweiliger Output;long");
             LogEntry e{1234567, line};
             EXPECT_EQ(size_t{1234567}, e.lineno());
-            EXPECT_EQ(1551424325, e.time());
+            EXPECT_EQ(tp(1551424325), e.time());
             EXPECT_EQ(LogEntry::Class::state, e.log_class());
             EXPECT_EQ(LogEntryKind::state_service_initial, e.kind());
             EXPECT_EQ(line, e.message());
@@ -358,7 +363,7 @@ TEST(LogEntry, CurrentServiceState) {
                             .append(";2;Irgendein Output;lang");
             LogEntry e{1234567, line};
             EXPECT_EQ(size_t{1234567}, e.lineno());
-            EXPECT_EQ(1551424335, e.time());
+            EXPECT_EQ(tp(1551424335), e.time());
             EXPECT_EQ(LogEntry::Class::state, e.log_class());
             EXPECT_EQ(LogEntryKind::state_service, e.kind());
             EXPECT_EQ(line, e.message());
@@ -394,7 +399,7 @@ TEST(LogEntry, ServiceAlert) {
                     .append(+";1234;Komisch...;lang");
             LogEntry e{123456, line};
             EXPECT_EQ(size_t{123456}, e.lineno());
-            EXPECT_EQ(1551424323, e.time());
+            EXPECT_EQ(tp(1551424323), e.time());
             EXPECT_EQ(LogEntry::Class::alert, e.log_class());
             EXPECT_EQ(LogEntryKind::alert_service, e.kind());
             EXPECT_EQ(line, e.message());
@@ -425,7 +430,7 @@ TEST(LogEntry, ServiceDowntimeAlert) {
                     state_type + ";Komisch...";
         LogEntry e{123456, line};
         EXPECT_EQ(size_t{123456}, e.lineno());
-        EXPECT_EQ(1551424323, e.time());
+        EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
         EXPECT_EQ(LogEntryKind::downtime_alert_service, e.kind());
         EXPECT_EQ(line, e.message());
@@ -451,7 +456,7 @@ TEST(LogEntry, ServiceAcknowledgeAlert) {
                     state_type + ";King Kong;foo bar";
         LogEntry e{123456, line};
         EXPECT_EQ(size_t{123456}, e.lineno());
-        EXPECT_EQ(1551424323, e.time());
+        EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
         EXPECT_EQ(LogEntryKind::acknowledge_alert_service, e.kind());
         EXPECT_EQ(line, e.message());
@@ -477,7 +482,7 @@ TEST(LogEntry, ServiceFlappingAlert) {
                     state_type + ";foo bar";
         LogEntry e{123456, line};
         EXPECT_EQ(size_t{123456}, e.lineno());
-        EXPECT_EQ(1551424323, e.time());
+        EXPECT_EQ(tp(1551424323), e.time());
         EXPECT_EQ(LogEntry::Class::alert, e.log_class());
         EXPECT_EQ(LogEntryKind::flapping_service, e.kind());
         EXPECT_EQ(line, e.message());
@@ -501,7 +506,7 @@ TEST(LogEntry, TimeperiodTransition) {
     auto line = "[1551424323] TIMEPERIOD TRANSITION: denominazione;-1;1"s;
     LogEntry e{123456, line};
     EXPECT_EQ(size_t{123456}, e.lineno());
-    EXPECT_EQ(1551424323, e.time());
+    EXPECT_EQ(tp(1551424323), e.time());
     EXPECT_EQ(LogEntry::Class::state, e.log_class());
     EXPECT_EQ(LogEntryKind::timeperiod_transition, e.kind());
     EXPECT_EQ(line, e.message());
@@ -528,7 +533,7 @@ TEST(LogEntry, HostNotification) {
                     ";commando;viel output...;Tolkien;The Hobbit;lalala"s;
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -558,7 +563,7 @@ TEST(LogEntry, ServiceNotification) {
             state_name + ";commando;viel output...;Tolkien;The Hobbit;lalala"s;
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -588,7 +593,7 @@ TEST(LogEntry, HostNotificationResult) {
                     code_name + ";commando;viel output...;blah blubb";
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -619,7 +624,7 @@ TEST(LogEntry, ServiceNotificationResult) {
             code_name + ";commando;viel output...;blah blubb";
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -650,7 +655,7 @@ TEST(LogEntry, HostNotificationProgress) {
             code_name + ";commando;viel output...";
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -680,7 +685,7 @@ TEST(LogEntry, ServiceNotificationProgress) {
             code_name + ";commando;viel output...";
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -706,7 +711,7 @@ TEST(LogEntry, HostAlertHandlerStarted) {
     auto line = "[1551424305] HOST ALERT HANDLER STARTED: donald;commando"s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::alert_handlers, e.log_class());
     EXPECT_EQ(LogEntryKind::none, e.kind());
     EXPECT_EQ(line, e.message());
@@ -729,7 +734,7 @@ TEST(LogEntry, ServiceAlertHandlerStarted) {
         "[1551424305] SERVICE ALERT HANDLER STARTED: donald;duck;commando"s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::alert_handlers, e.log_class());
     EXPECT_EQ(LogEntryKind::none, e.kind());
     EXPECT_EQ(line, e.message());
@@ -756,7 +761,7 @@ TEST(LogEntry, HostAlertHandlerStopped) {
             code_name + ";es war einmal...";
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::alert_handlers, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -786,7 +791,7 @@ TEST(LogEntry, ServiceAlertHandlerStopped) {
             code_name + ";once upon a time...";
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::alert_handlers, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -815,7 +820,7 @@ TEST(LogEntry, PassiveServiceCheck) {
                     ";Isch hab Ruecken!";
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::passivecheck, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -844,7 +849,7 @@ TEST(LogEntry, PassiveHostCheck) {
                     ";Isch hab Ruecken!";
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::passivecheck, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -869,7 +874,7 @@ TEST(LogEntry, ExternalCommand) {
     auto line = "[1551424305] EXTERNAL COMMAND: commando"s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::ext_command, e.log_class());
     EXPECT_EQ(LogEntryKind::none, e.kind());
     EXPECT_EQ(line, e.message());
@@ -891,7 +896,7 @@ TEST(LogEntry, LogVersion) {
     auto line = "[1551424305] LOG VERSION: 2.0"s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
     EXPECT_EQ(LogEntryKind::log_version, e.kind());
     EXPECT_EQ(line, e.message());
@@ -913,7 +918,7 @@ TEST(LogEntry, LogInitialStates) {
     auto line = "[1551424305] logging initial states"s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
     EXPECT_EQ(LogEntryKind::log_initial_states, e.kind());
     EXPECT_EQ(line, e.message());
@@ -935,7 +940,7 @@ TEST(LogEntry, CoreStarting1) {
     auto line = "[1551424305] starting..."s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
     EXPECT_EQ(LogEntryKind::core_starting, e.kind());
     EXPECT_EQ(line, e.message());
@@ -957,7 +962,7 @@ TEST(LogEntry, CoreStarting2) {
     auto line = "[1551424305] active mode..."s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
     EXPECT_EQ(LogEntryKind::core_starting, e.kind());
     EXPECT_EQ(line, e.message());
@@ -979,7 +984,7 @@ TEST(LogEntry, CoreStopping1) {
     auto line = "[1551424305] shutting down..."s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
     EXPECT_EQ(LogEntryKind::core_stopping, e.kind());
     EXPECT_EQ(line, e.message());
@@ -1001,7 +1006,7 @@ TEST(LogEntry, CoreStopping2) {
     auto line = "[1551424305] Bailing out"s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
     EXPECT_EQ(LogEntryKind::core_stopping, e.kind());
     EXPECT_EQ(line, e.message());
@@ -1023,7 +1028,7 @@ TEST(LogEntry, CoreStopping3) {
     auto line = "[1551424305] standby mode..."s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::program, e.log_class());
     EXPECT_EQ(LogEntryKind::core_stopping, e.kind());
     EXPECT_EQ(line, e.message());
@@ -1045,7 +1050,7 @@ TEST(LogEntry, ShortMessage) {
     auto line = "[oh no..."s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(0, e.time());
+    EXPECT_EQ(tp(0), e.time());
     EXPECT_EQ(LogEntry::Class::invalid, e.log_class());
     EXPECT_EQ(LogEntryKind::none, e.kind());
     EXPECT_EQ(line, e.message());
@@ -1067,7 +1072,7 @@ TEST(LogEntry, InvalidTimeStamp) {
     auto line = "[nonsense!!] this is total;nonsense"s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(0, e.time());
+    EXPECT_EQ(tp(0), e.time());
     EXPECT_EQ(LogEntry::Class::invalid, e.log_class());
     EXPECT_EQ(LogEntryKind::none, e.kind());
     EXPECT_EQ(line, e.message());
@@ -1089,7 +1094,7 @@ TEST(LogEntry, NoColon) {
     auto line = "[1551424305] this is total;nonsense"s;
     LogEntry e{42, line};
     EXPECT_EQ(size_t{42}, e.lineno());
-    EXPECT_EQ(1551424305, e.time());
+    EXPECT_EQ(tp(1551424305), e.time());
     EXPECT_EQ(LogEntry::Class::info, e.log_class());
     EXPECT_EQ(LogEntryKind::none, e.kind());
     EXPECT_EQ(line, e.message());
@@ -1117,7 +1122,7 @@ TEST(LogEntry, HostNotificationSwapped) {
             state_name + ";viel output...;Tolkien;The Hobbit;lalala"s;
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -1149,7 +1154,7 @@ TEST(LogEntry, ServiceNotificationSwapped) {
             state_name + ";viel output...;Tolkien;The Hobbit;lalala"s;
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -1180,7 +1185,7 @@ TEST(LogEntry, HostNotificationResultSwapped) {
             code_name + ";viel output...;blah blubb";
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -1211,7 +1216,7 @@ TEST(LogEntry, ServiceNotificationResultSwapped) {
             code_name + ";viel output...;blah blubb";
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -1242,7 +1247,7 @@ TEST(LogEntry, HostNotificationProgressSwapped) {
             code_name + ";viel output...";
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());
@@ -1273,7 +1278,7 @@ TEST(LogEntry, ServiceNotificationProgressSwapped) {
             code_name + ";viel output...";
         LogEntry e{42, line};
         EXPECT_EQ(size_t{42}, e.lineno());
-        EXPECT_EQ(1551424305, e.time());
+        EXPECT_EQ(tp(1551424305), e.time());
         EXPECT_EQ(LogEntry::Class::hs_notification, e.log_class());
         EXPECT_EQ(LogEntryKind::none, e.kind());
         EXPECT_EQ(line, e.message());

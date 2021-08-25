@@ -51,6 +51,8 @@
 #include "nagios.h"
 #endif
 
+using namespace std::chrono_literals;
+
 namespace {
 constexpr unsigned classmask_statehist =
     (1U << static_cast<int>(LogEntry::Class::alert)) |
@@ -335,7 +337,8 @@ void TableStateHistory::answerQuery(Query *query) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too
         if (--_it_entries != _entries->begin()) {
-            if (_it_entries->second->time() >= _since) {
+            if (_it_entries->second->time() >=
+                std::chrono::system_clock::from_time_t(_since)) {
                 _it_entries = _entries->begin();
             }
         }
@@ -352,11 +355,12 @@ void TableStateHistory::answerQuery(Query *query) {
             break;
         }
 
-        if (entry->time() >= _until) {
+        if (entry->time() >= std::chrono::system_clock::from_time_t(_until)) {
             getPreviousLogentry();
             break;
         }
-        if (only_update && entry->time() >= _since) {
+        if (only_update &&
+            entry->time() >= std::chrono::system_clock::from_time_t(_since)) {
             // Reached start of query timeframe. From now on let's produce real
             // output. Update _from time of every state entry
             for (auto &it_hst : state_info) {
@@ -546,7 +550,9 @@ void TableStateHistory::answerQuery(Query *query) {
                     // appeared within the query timeframe
                     // It gets a grace period of ten minutes (nagios startup)
                     if (!only_update &&
-                        entry->time() - _since > time_t{60} * 10) {
+                        entry->time() -
+                                std::chrono::system_clock::from_time_t(_since) >
+                            10min) {
                         state->_debug_info = "UNMONITORED ";
                         state->_state = -1;
                     }
@@ -593,7 +599,8 @@ void TableStateHistory::answerQuery(Query *query) {
                 // entry will follow up shortly.
                 for (auto &it_hst : state_info) {
                     if (!it_hst.second->_has_vanished) {
-                        it_hst.second->_last_known_time = entry->time();
+                        it_hst.second->_last_known_time =
+                            std::chrono::system_clock::to_time_t(entry->time());
                         it_hst.second->_may_no_longer_exist = true;
                     }
                 }
@@ -692,9 +699,9 @@ int TableStateHistory::updateHostServiceState(Query *query,
     }
 
     // Update basic information
-    hs_state->_time = entry->time();
+    hs_state->_time = std::chrono::system_clock::to_time_t(entry->time());
     hs_state->_lineno = entry->lineno();
-    hs_state->_until = entry->time();
+    hs_state->_until = std::chrono::system_clock::to_time_t(entry->time());
 
     // A timeperiod entry never brings an absent host or service into
     // existence..

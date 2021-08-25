@@ -8,6 +8,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <chrono>
 #include <cstdint>
 #include <ctime>
 #include <string>
@@ -92,7 +93,9 @@ public:
     static HostState parseHostState(std::string_view str);
 
     [[nodiscard]] size_t lineno() const { return lineno_; }
-    [[nodiscard]] time_t time() const { return time_; }
+    [[nodiscard]] std::chrono::system_clock::time_point time() const {
+        return time_;
+    }
     [[nodiscard]] Class log_class() const { return class_; }
     [[nodiscard]] LogEntryKind kind() const { return kind_; }
     [[nodiscard]] std::string message() const { return message_; }
@@ -125,7 +128,7 @@ public:
 
 private:
     size_t lineno_;
-    time_t time_;
+    std::chrono::system_clock::time_point time_;
     Class class_;
     LogEntryKind kind_;
     std::string message_;

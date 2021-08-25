@@ -6,8 +6,8 @@
 #include "TableLog.h"
 
 #include <bitset>
-#include <chrono>
 #include <cstdint>
+#include <ctime>
 #include <map>
 #include <mutex>
 #include <optional>
@@ -62,9 +62,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         offsets.add([](Row r) { return r.rawData<LogRow>()->entry; })};
     addColumn(std::make_unique<TimeColumn::Callback<LogEntry>>(
         "time", "Time of the log event (UNIX timestamp)", offsets_entry,
-        [](const LogEntry &r) {
-            return std::chrono::system_clock::from_time_t(r.time());
-        }));
+        [](const LogEntry &r) { return r.time(); }));
     addColumn(std::make_unique<IntColumn::Callback<LogEntry>>(
         "lineno", "The number of the line in the log file", offsets_entry,
         [](const LogEntry &r) { return r.lineno(); }));
@@ -156,8 +154,10 @@ void TableLog::answerQuery(Query *query) {
     // be a time range in form of one or two filter expressions over time. We
     // use that to limit the number of logfiles we need to scan and to find the
     // optimal entry point into the logfile
-    int since = query->greatestLowerBoundFor("time").value_or(0);
-    int until = query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1;
+    auto since = std::chrono::system_clock::from_time_t(
+        query->greatestLowerBoundFor("time").value_or(0));
+    auto until = std::chrono::system_clock::from_time_t(
+        query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1);
 
     // The second optimization is for log message types. We want to load only
     // those log type that are queried.
@@ -179,11 +179,12 @@ void TableLog::answerQuery(Query *query) {
     // Now find newest log where 'until' is contained. The problem
     // here: For each logfile we only know the time of the *first* entry,
     // not that of the last.
-    while (it != _log_cache->begin() && it->first > until) {
+    while (it != _log_cache->begin() &&
+           std::chrono::system_clock::from_time_t(it->first) > until) {
         // while logfiles are too new go back in history
         --it;
     }
-    if (it->first > until) {
+    if (std::chrono::system_clock::from_time_t(it->first) > until) {
         return;  // all logfiles are too new
     }
 
@@ -201,7 +202,9 @@ void TableLog::answerQuery(Query *query) {
 }
 
 bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
-                                  Query *query, time_t since, time_t until) {
+                                  Query *query,
+                                  std::chrono::system_clock::time_point since,
+                                  std::chrono::system_clock::time_point until) {
     auto it = entries->upper_bound(Logfile::makeKey(until, 999999999));
     while (it != entries->begin()) {
         --it;

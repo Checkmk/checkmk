@@ -10,6 +10,7 @@
 // bug?
 #include "config.h"  // IWYU pragma: keep
 
+#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <ctime>
@@ -42,7 +43,8 @@ public:
                                            unsigned logclasses);
 
     // for TableLog::answerQuery
-    static uint64_t makeKey(time_t t, size_t lineno);
+    static uint64_t makeKey(std::chrono::system_clock::time_point t,
+                            size_t lineno);
 
 private:
     Logger *const _logger;

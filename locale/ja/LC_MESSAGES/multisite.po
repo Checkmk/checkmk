@@ -58633,8 +58633,8 @@ msgid "You can use <tt>*</tt> and <tt>?</tt> here."
 msgstr "ここでは<tt>*</tt> と <tt>?</tt>を使用できます。"
 
 msgid ""
-"You can use any printable ASCII character except '~' and '/' here, since the "
-"latter two will cause problems in cache file names."
+"You can use any printable ASCII character except '~' here, since the latter "
+"will cause problems in cache file names."
 msgstr ""
 
 msgid ""

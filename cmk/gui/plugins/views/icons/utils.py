@@ -37,7 +37,7 @@ class PermissionSectionIconsAndActions(PermissionSection):
         return True
 
 
-class Icon(metaclass=abc.ABCMeta):
+class Icon(abc.ABC):
     _custom_toplevel: Optional[bool] = None
     _custom_sort_index: Optional[int] = None
 

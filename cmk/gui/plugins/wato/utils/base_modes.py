@@ -23,7 +23,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 ActionResult = Optional[FinalizeRequest]
 
 
-class WatoMode(metaclass=abc.ABCMeta):
+class WatoMode(abc.ABC):
     def __init__(self) -> None:
         super().__init__()
         self._from_vars()

@@ -102,7 +102,7 @@ def _build_url(url_params: HTTPVariables) -> str:
     return makeuri(request, new_params, delvars=["q"], filename="view.py")
 
 
-class ABCQuicksearchConductor(metaclass=abc.ABCMeta):
+class ABCQuicksearchConductor(abc.ABC):
     def __init__(self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour) -> None:
         # used_filters:     {u'h': [u'heute'], u's': [u'Check_MK']}
         self._used_filters = used_filters
@@ -764,7 +764,7 @@ class QuicksearchResultRenderer:
 #   '----------------------------------------------------------------------'
 
 
-class ABCMatchPlugin(metaclass=abc.ABCMeta):
+class ABCMatchPlugin(abc.ABC):
     """Base class for all match plugins"""
     def __init__(self, name: str):
         super().__init__()

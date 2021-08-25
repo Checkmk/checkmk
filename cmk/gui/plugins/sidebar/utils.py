@@ -60,7 +60,7 @@ class PermissionSectionSidebarSnapins(PermissionSection):
 
 
 # TODO: Transform methods to class methods
-class SidebarSnapin(metaclass=abc.ABCMeta):
+class SidebarSnapin(abc.ABC):
     """Abstract base class for all sidebar snapins"""
     @classmethod
     @abc.abstractmethod
@@ -117,7 +117,7 @@ class SidebarSnapin(metaclass=abc.ABCMeta):
         return {}
 
 
-class CustomizableSidebarSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
+class CustomizableSidebarSnapin(SidebarSnapin, abc.ABC):
     """Parent for all user configurable sidebar snapins
 
     Subclass this class in case you want to implement a sidebar snapin type that can

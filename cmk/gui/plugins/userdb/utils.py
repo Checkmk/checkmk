@@ -311,7 +311,7 @@ def _get_builtin_roles() -> Roles:
 #   '----------------------------------------------------------------------'
 
 
-class UserConnector(metaclass=abc.ABCMeta):
+class UserConnector(abc.ABC):
     def __init__(self, cfg):
         super().__init__()
         self._config = cfg
@@ -395,7 +395,7 @@ class UserConnector(metaclass=abc.ABCMeta):
 #   '----------------------------------------------------------------------'
 
 
-class UserAttribute(metaclass=abc.ABCMeta):
+class UserAttribute(abc.ABC):
     @classmethod
     @abc.abstractmethod
     def name(cls) -> str:

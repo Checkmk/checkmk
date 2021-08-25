@@ -136,7 +136,7 @@ class ConfigDomainRegistry(cmk.utils.plugin_registry.Registry[Type[ABCConfigDoma
 config_domain_registry = ConfigDomainRegistry()
 
 
-class SampleConfigGenerator(metaclass=abc.ABCMeta):
+class SampleConfigGenerator(abc.ABC):
     @classmethod
     def ident(cls) -> str:
         """Unique key which can be used to identify a generator"""

@@ -27,7 +27,7 @@ from cmk.gui.valuespec import Hostname
 from cmk.gui.watolib.host_attributes import host_attribute_registry
 
 
-class APICallCollection(metaclass=abc.ABCMeta):
+class APICallCollection(abc.ABC):
     @abc.abstractmethod
     def get_api_calls(self):
         raise NotImplementedError("This API collection does not register any API call")

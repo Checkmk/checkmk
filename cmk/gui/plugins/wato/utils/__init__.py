@@ -1117,7 +1117,7 @@ class ConfigHostname(AjaxDropdownChoice):
         return match_list
 
 
-class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
+class ABCEventsMode(WatoMode, abc.ABC):
     @classmethod
     @abc.abstractmethod
     def _rule_match_conditions(cls):
@@ -1746,7 +1746,7 @@ def register_hook(name, func):
     hooks.register_from_plugin(name, func)
 
 
-class NotificationParameter(metaclass=abc.ABCMeta):
+class NotificationParameter(abc.ABC):
     @property
     @abc.abstractmethod
     def ident(self) -> str:

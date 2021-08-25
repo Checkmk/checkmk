@@ -483,7 +483,7 @@ class ACTestEscapeHTMLDisabled(ACTest):
                 "wato.py?mode=edit_configvar&varname=escape_plugin_output")
 
 
-class ABCACApacheTest(ACTest, metaclass=abc.ABCMeta):
+class ABCACApacheTest(ACTest, abc.ABC):
     """Abstract base class for apache related tests"""
     def _get_number_of_idle_processes(self):
         apache_status = self._get_apache_status()

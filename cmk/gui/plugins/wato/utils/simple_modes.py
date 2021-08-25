@@ -52,7 +52,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 
 
-class SimpleModeType(metaclass=abc.ABCMeta):
+class SimpleModeType(abc.ABC):
     @abc.abstractmethod
     def type_name(self) -> str:
         """A GUI globally unique identifier (in singular form) for the managed type of object"""
@@ -113,7 +113,7 @@ class SimpleModeType(metaclass=abc.ABCMeta):
         return None
 
 
-class _SimpleWatoModeBase(WatoMode, metaclass=abc.ABCMeta):
+class _SimpleWatoModeBase(WatoMode, abc.ABC):
     """Base for specific WATO modes of different types
 
     This is essentially a base class for the SimpleListMode/SimpleEditMode
@@ -293,7 +293,7 @@ class SimpleListMode(_SimpleWatoModeBase):
                          _("Delete this %s") % self._mode_type.name_singular(), "delete")
 
 
-class SimpleEditMode(_SimpleWatoModeBase, metaclass=abc.ABCMeta):
+class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
     """Base class for edit modes"""
     @abc.abstractmethod
     def _vs_individual_elements(self):

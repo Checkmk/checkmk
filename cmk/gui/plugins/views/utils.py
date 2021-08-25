@@ -331,7 +331,7 @@ def _create_dict_key(value: Any) -> Hashable:
     return value
 
 
-class PainterOption(metaclass=abc.ABCMeta):
+class PainterOption(abc.ABC):
     @property
     @abc.abstractmethod
     def ident(self) -> str:
@@ -381,7 +381,7 @@ class PainterOptionNumColumns(PainterOption):
         )
 
 
-class Layout(metaclass=abc.ABCMeta):
+class Layout(abc.ABC):
     @property
     @abc.abstractmethod
     def ident(self) -> str:
@@ -450,7 +450,7 @@ class ViewExporterRegistry(cmk.utils.plugin_registry.Registry[Exporter]):
 exporter_registry = ViewExporterRegistry()
 
 
-class CommandGroup(metaclass=abc.ABCMeta):
+class CommandGroup(abc.ABC):
     @property
     @abc.abstractmethod
     def ident(self) -> str:
@@ -490,7 +490,7 @@ def register_command_group(ident: str, title: str, sort_index: int) -> None:
     command_group_registry.register(cls)
 
 
-class Command(metaclass=abc.ABCMeta):
+class Command(abc.ABC):
     @property
     @abc.abstractmethod
     def ident(self) -> str:
@@ -610,7 +610,7 @@ def register_legacy_command(spec: Dict[str, Any]) -> None:
     command_registry.register(cls)
 
 
-class ABCDataSource(metaclass=abc.ABCMeta):
+class ABCDataSource(abc.ABC):
     """Provider of rows for the views (basically tables of data) in the GUI"""
     @property
     @abc.abstractmethod
@@ -752,7 +752,7 @@ class DataSourceRegistry(cmk.utils.plugin_registry.Registry[Type[ABCDataSource]]
 data_source_registry = DataSourceRegistry()
 
 
-class RowTable(metaclass=abc.ABCMeta):
+class RowTable(abc.ABC):
     @abc.abstractmethod
     def query(self, view: 'View', columns: List[ColumnName], headers: str, only_sites: OnlySites,
               limit: Optional[int],
@@ -873,7 +873,7 @@ def query_livestatus(query: LivestatusQuery, only_sites: OnlySites, limit: Optio
 # HTML and PDF.
 # TODO: A lot of painter classes simply display plain livestatus column values. These
 # could be replaced with some simpler generic definition.
-class Painter(metaclass=abc.ABCMeta):
+class Painter(abc.ABC):
     """A painter computes HTML code based on information from a data row and
     creates a CSS class for one display column.
 
@@ -1031,7 +1031,7 @@ def register_painter(ident: str, spec: Dict[str, Any]) -> None:
     painter_registry.register(cls)
 
 
-class Sorter(metaclass=abc.ABCMeta):
+class Sorter(abc.ABC):
     """A sorter is used for allowing the user to sort the queried data
     according to a certain logic."""
     @property

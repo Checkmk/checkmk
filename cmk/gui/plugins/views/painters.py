@@ -1653,7 +1653,7 @@ class PainterServiceCustomVariables(Painter):
         return _paint_custom_vars('service', row)
 
 
-class ABCPainterCustomVariable(Painter, metaclass=abc.ABCMeta):
+class ABCPainterCustomVariable(Painter, abc.ABC):
     def title(self, cell: Cell) -> str:
         return self._dynamic_title(cell.painter_parameters())
 
@@ -4869,7 +4869,7 @@ class PainterHostTags(Painter):
         return "", render_tag_groups(get_tag_groups(row, "host"), "host", with_links=True)
 
 
-class ABCPainterTagsWithTitles(Painter, metaclass=abc.ABCMeta):
+class ABCPainterTagsWithTitles(Painter, abc.ABC):
     @property
     @abc.abstractmethod
     def object_type(self):

@@ -149,7 +149,7 @@ class SorterSitealias(Sorter):
             get_site_config(r1["site"])["alias"] < get_site_config(r2["site"])["alias"])
 
 
-class ABCTagSorter(Sorter, metaclass=abc.ABCMeta):
+class ABCTagSorter(Sorter, abc.ABC):
     @property
     @abc.abstractmethod
     def object_type(self):
@@ -199,7 +199,7 @@ class SorterServiceTags(ABCTagSorter):
         return ["service_tags"]
 
 
-class ABCLabelSorter(Sorter, metaclass=abc.ABCMeta):
+class ABCLabelSorter(Sorter, abc.ABC):
     @property
     @abc.abstractmethod
     def object_type(self):

@@ -36,7 +36,7 @@ from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view_utils import get_labels
 
 
-class VisualInfo(metaclass=abc.ABCMeta):
+class VisualInfo(abc.ABC):
     """Base class for all visual info classes"""
     @property
     @abc.abstractmethod
@@ -101,7 +101,7 @@ class VisualInfoRegistry(cmk.utils.plugin_registry.Registry[Type[VisualInfo]]):
 visual_info_registry = VisualInfoRegistry()
 
 
-class VisualType(metaclass=abc.ABCMeta):
+class VisualType(abc.ABC):
     """Base class for all filters"""
     @property
     @abc.abstractmethod
@@ -226,7 +226,7 @@ class VisualTypeRegistry(cmk.utils.plugin_registry.Registry[Type[VisualType]]):
 visual_type_registry = VisualTypeRegistry()
 
 
-class Filter(metaclass=abc.ABCMeta):
+class Filter(abc.ABC):
     """Base class for all filters"""
     def __init__(self,
                  *,

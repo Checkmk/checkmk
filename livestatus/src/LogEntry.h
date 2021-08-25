@@ -14,6 +14,8 @@
 #include <string_view>
 #include <vector>
 
+#include "StringUtils.h"
+
 enum class ServiceState { ok = 0, warning = 1, critical = 2, unknown = 3 };
 
 inline double badness(ServiceState state) {
@@ -96,19 +98,29 @@ public:
     [[nodiscard]] std::string message() const { return message_; }
     [[nodiscard]] std::string options() const { return std::string{options_}; }
     [[nodiscard]] std::string type() const { return std::string{type_}; }
-    [[nodiscard]] std::string host_name() const { return host_name_; }
-    [[nodiscard]] std::string service_description() const {
-        return service_description_;
+    [[nodiscard]] std::string host_name() const {
+        return std::string{host_name_};
     }
-    [[nodiscard]] std::string command_name() const { return command_name_; }
-    [[nodiscard]] std::string contact_name() const { return contact_name_; }
+    [[nodiscard]] std::string service_description() const {
+        return std::string{service_description_};
+    }
+    [[nodiscard]] std::string command_name() const {
+        return std::string{command_name_};
+    }
+    [[nodiscard]] std::string contact_name() const {
+        return std::string{contact_name_};
+    }
     [[nodiscard]] int state() const { return state_; }
-    [[nodiscard]] std::string state_type() const { return state_type_; }
+    [[nodiscard]] std::string state_type() const {
+        return std::string{state_type_};
+    }
     [[nodiscard]] int attempt() const { return attempt_; }
-    [[nodiscard]] std::string comment() const { return comment_; }
-    [[nodiscard]] std::string plugin_output() const { return plugin_output_; }
+    [[nodiscard]] std::string comment() const { return std::string{comment_}; }
+    [[nodiscard]] std::string plugin_output() const {
+        return std::string{plugin_output_};
+    }
     [[nodiscard]] std::string long_plugin_output() const {
-        return long_plugin_output_;
+        return mk::to_multi_line(std::string{long_plugin_output_});
     }
 
 private:
@@ -117,18 +129,19 @@ private:
     Class class_;
     LogEntryKind kind_;
     std::string message_;
-    std::string_view options_;  // references message_
-    std::string_view type_;     // references message_
-    std::string host_name_;
-    std::string service_description_;
-    std::string command_name_;
-    std::string contact_name_;
+    // NOTE: The string_views below all reference message_.
+    std::string_view options_;
+    std::string_view type_;
+    std::string_view host_name_;
+    std::string_view service_description_;
+    std::string_view command_name_;
+    std::string_view contact_name_;
     int state_;
-    std::string state_type_;
+    std::string_view state_type_;
     int attempt_;
-    std::string comment_;
-    std::string plugin_output_;
-    std::string long_plugin_output_;
+    std::string_view comment_;
+    std::string_view plugin_output_;
+    std::string_view long_plugin_output_;
 
     enum class Param {
         HostName,
@@ -158,7 +171,7 @@ private:
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
     static std::vector<LogDef> log_definitions;
 
-    void assign(Param par, const std::string &field);
+    void assign(Param par, std::string_view field);
     void classifyLogMessage();
     [[nodiscard]] bool textStartsWith(const std::string &what) const;
     [[nodiscard]] bool textContains(const std::string &what) const;

@@ -12,8 +12,6 @@
 #include <system_error>
 #include <utility>
 
-#include "StringUtils.h"
-
 using namespace std::string_view_literals;
 
 // 0123456789012345678901234567890
@@ -49,7 +47,7 @@ LogEntry::LogEntry(size_t lineno, std::string line)
     classifyLogMessage();
 }
 
-void LogEntry::assign(Param par, const std::string &field) {
+void LogEntry::assign(Param par, std::string_view field) {
     switch (par) {
         case Param::HostName:
             host_name_ = field;
@@ -73,7 +71,7 @@ void LogEntry::assign(Param par, const std::string &field) {
             if (state_type_.empty()) {
                 return;  // extremely broken line
             }
-            if (state_type_ == "check-mk-notify") {
+            if (state_type_ == "check-mk-notify"sv) {
                 // Ooops, we encounter one of our own buggy lines...
                 std::swap(state_type_, command_name_);
                 if (state_type_.empty()) {
@@ -113,7 +111,7 @@ void LogEntry::assign(Param par, const std::string &field) {
             plugin_output_ = field;
             return;
         case Param::LongPluginOutput:
-            long_plugin_output_ = mk::to_multi_line(field);
+            long_plugin_output_ = field;
             return;
         case Param::Ignore:
             return;
@@ -292,6 +290,7 @@ std::vector<LogEntry::LogDef> LogEntry::log_definitions{
 
 // A bit verbose, but we avoid unnecessary string copies below.
 void LogEntry::classifyLogMessage() {
+    std::string_view message_sv{message_};
     for (const auto &def : log_definitions) {
         if (textStartsWith(def.prefix) &&
             message_.compare(timestamp_prefix_length + def.prefix.size(), 2,
@@ -305,14 +304,14 @@ void LogEntry::classifyLogMessage() {
                 size_t sep_pos = message_.find(';', pos);
                 size_t end_pos =
                     sep_pos == std::string::npos ? message_.size() : sep_pos;
-                assign(par, message_.substr(pos, end_pos - pos));
+                assign(par, message_sv.substr(pos, end_pos - pos));
                 pos = sep_pos == std::string::npos ? message_.size()
                                                    : (sep_pos + 1);
             }
             return;
         }
     }
-    type_ = std::string_view{message_}.substr(timestamp_prefix_length);
+    type_ = message_sv.substr(timestamp_prefix_length);
     if (textStartsWith("LOG VERSION: 2.0")) {
         class_ = Class::program;
         kind_ = LogEntryKind::log_version;
@@ -410,8 +409,8 @@ HostState LogEntry::parseHostState(std::string_view str) {
 }
 
 namespace {
-std::string parens(const std::string &fun, const std::string &arg) {
-    return fun + " (" + arg + ")";
+std::string parens(std::string_view fun, std::string_view arg) {
+    return std::string{fun} + " (" + std::string{arg} + ")";
 }
 
 // TODO(sp) Centralized these mappings and their inverses...
@@ -476,36 +475,36 @@ std::string LogEntry::state_info() const {
                 type_ == "SERVICE NOTIFICATION PROGRESS"sv ||
                 type_ == "HOST ALERT HANDLER STOPPED"sv ||
                 type_ == "SERVICE ALERT HANDLER STOPPED"sv) {
-                return parens("EXIT_CODE", to_exit_code(state_));
+                return parens("EXIT_CODE"sv, to_exit_code(state_));
             }
             if (type_ == "HOST NOTIFICATION"sv) {
-                if (state_type_ == "UP" ||    //
-                    state_type_ == "DOWN" ||  //
-                    state_type_ == "UNREACHABLE") {
-                    return parens("NOTIFY", state_type_);
+                if (state_type_ == "UP"sv ||    //
+                    state_type_ == "DOWN"sv ||  //
+                    state_type_ == "UNREACHABLE"sv) {
+                    return parens("NOTIFY"sv, state_type_);
                 }
                 if (mk::starts_with(state_type_, "ALERTHANDLER (")) {
-                    return parens("EXIT_CODE", to_exit_code(state_));
+                    return parens("EXIT_CODE"sv, to_exit_code(state_));
                 }
-                return state_type_;
+                return std::string{state_type_};
             }
             if (type_ == "SERVICE NOTIFICATION"sv) {
-                if (state_type_ == "OK" ||        //
-                    state_type_ == "WARNING" ||   //
-                    state_type_ == "CRITICAL" ||  //
-                    state_type_ == "UNKNOWN") {
-                    return parens("NOTIFY", state_type_);
+                if (state_type_ == "OK"sv ||        //
+                    state_type_ == "WARNING"sv ||   //
+                    state_type_ == "CRITICAL"sv ||  //
+                    state_type_ == "UNKNOWN"sv) {
+                    return parens("NOTIFY"sv, state_type_);
                 }
-                if (mk::starts_with(state_type_, "ALERTHANDLER (")) {
-                    return parens("EXIT_CODE", to_exit_code(state_));
+                if (mk::starts_with(state_type_, "ALERTHANDLER ("sv)) {
+                    return parens("EXIT_CODE"sv, to_exit_code(state_));
                 }
-                return state_type_;
+                return std::string{state_type_};
             }
             if (type_ == "PASSIVE HOST CHECK"sv) {
-                return parens("PASSIVE", to_host_state(state_));
+                return parens("PASSIVE"sv, to_host_state(state_));
             }
             if (type_ == "PASSIVE SERVICE CHECK"sv) {
-                return parens("PASSIVE", to_service_state(state_));
+                return parens("PASSIVE"sv, to_service_state(state_));
             }
             return "";
 
@@ -515,7 +514,7 @@ std::string LogEntry::state_info() const {
         case LogEntryKind::flapping_service:
         case LogEntryKind::acknowledge_alert_host:
         case LogEntryKind::acknowledge_alert_service:
-            return state_type_;
+            return std::string{state_type_};
 
         case LogEntryKind::timeperiod_transition:
         case LogEntryKind::core_starting:

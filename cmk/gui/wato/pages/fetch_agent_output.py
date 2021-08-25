@@ -71,7 +71,7 @@ class FetchAgentOutputRequest:
 
 # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
 # would need larger refactoring of the generic html.popup_trigger() mechanism.
-class AgentOutputPage(Page, metaclass=abc.ABCMeta):
+class AgentOutputPage(Page, abc.ABC):
     def __init__(self) -> None:
         super().__init__()
         self._from_vars()
@@ -180,7 +180,7 @@ class PageFetchAgentOutput(AgentOutputPage):
                                             ])
 
 
-class ABCAutomationFetchAgentOutput(AutomationCommand, metaclass=abc.ABCMeta):
+class ABCAutomationFetchAgentOutput(AutomationCommand, abc.ABC):
     def get_request(self) -> FetchAgentOutputRequest:
         user.need_permission("wato.download_agent_output")
 

@@ -43,7 +43,7 @@ from cmk.gui.valuespec import CascadingDropdown, Dictionary, ListChoice, ListOf,
 from cmk.gui.watolib.groups import GroupType, load_contact_group_information
 
 
-class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
+class ModeGroups(WatoMode, abc.ABC):
     @property
     @abc.abstractmethod
     def type_name(self) -> GroupType:
@@ -173,7 +173,7 @@ class ModeGroups(WatoMode, metaclass=abc.ABCMeta):
                 self._show_row_cells(table, name, group)
 
 
-class ABCModeEditGroup(WatoMode, metaclass=abc.ABCMeta):
+class ABCModeEditGroup(WatoMode, abc.ABC):
     @property
     @abc.abstractmethod
     def type_name(self) -> GroupType:

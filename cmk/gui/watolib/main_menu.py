@@ -93,7 +93,7 @@ class MainModuleTopicRegistry(cmk.utils.plugin_registry.Registry[MainModuleTopic
 main_module_topic_registry = MainModuleTopicRegistry()
 
 
-class ABCMainModule(MenuItem, metaclass=abc.ABCMeta):
+class ABCMainModule(MenuItem, abc.ABC):
     def __init__(self):
         # TODO: Cleanup hierarchy
         super().__init__(

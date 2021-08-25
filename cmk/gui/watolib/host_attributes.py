@@ -24,7 +24,7 @@ from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform
 from cmk.gui.watolib.utils import host_attribute_matches
 
 
-class HostAttributeTopic(metaclass=abc.ABCMeta):
+class HostAttributeTopic(abc.ABC):
     @property
     @abc.abstractmethod
     def ident(self) -> str:
@@ -179,7 +179,7 @@ class HostAttributeTopicMetaData(HostAttributeTopic):
         return 60
 
 
-class ABCHostAttribute(metaclass=abc.ABCMeta):
+class ABCHostAttribute(abc.ABC):
     """Base class for all registered host attributes"""
     @classmethod
     def sort_index(cls):
@@ -742,7 +742,7 @@ def collect_attributes(for_what, new, do_validate=True, varprefix=""):
     return host
 
 
-class ABCHostAttributeText(ABCHostAttribute, metaclass=abc.ABCMeta):
+class ABCHostAttributeText(ABCHostAttribute, abc.ABC):
     """A simple text attribute. It is stored in a Python unicode string"""
     @property
     def _allow_empty(self):
@@ -815,7 +815,7 @@ class ABCHostAttributeValueSpec(ABCHostAttribute):
         self.valuespec().validate_value(value, varprefix + self.name())
 
 
-class ABCHostAttributeFixedText(ABCHostAttributeText, metaclass=abc.ABCMeta):
+class ABCHostAttributeFixedText(ABCHostAttributeText, abc.ABC):
     """A simple text attribute that is not editable by the user.
 
     It can be used to store context information from other
@@ -863,7 +863,7 @@ class ABCHostAttributeEnum(ABCHostAttribute):
         return request.var(varprefix + "attr_" + self.name(), self.default_value())
 
 
-class ABCHostAttributeTag(ABCHostAttributeValueSpec, metaclass=abc.ABCMeta):
+class ABCHostAttributeTag(ABCHostAttributeValueSpec, abc.ABC):
     @property
     @abc.abstractmethod
     def is_checkbox_tag(self) -> bool:
@@ -889,7 +889,7 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, metaclass=abc.ABCMeta):
         return self._tag_group.id in ["address_family", "criticality", "networking", "piggyback"]
 
 
-class ABCHostAttributeHostTagList(ABCHostAttributeTag, metaclass=abc.ABCMeta):
+class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
     """A selection dropdown for a host tag"""
     def valuespec(self):
         # Since encode_value=False is set it is not possible to use empty tag
@@ -917,7 +917,7 @@ class ABCHostAttributeHostTagList(ABCHostAttributeTag, metaclass=abc.ABCMeta):
         return True
 
 
-class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, metaclass=abc.ABCMeta):
+class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
     """A checkbox for a host tag group"""
     def valuespec(self):
         choice = self._tag_group.get_tag_choices()[0]

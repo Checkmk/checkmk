@@ -96,7 +96,7 @@ def custom_attr_types() -> Choices:
 
 
 # TODO: Refactor to be valuespec based
-class ModeEditCustomAttr(WatoMode, metaclass=abc.ABCMeta):
+class ModeEditCustomAttr(WatoMode, abc.ABC):
     @property
     def _attrs(self):
         return self._all_attrs[self._type]
@@ -414,7 +414,7 @@ class ModeEditCustomHostAttr(ModeEditCustomAttr):
         return _("Edit host attribute")
 
 
-class ModeCustomAttrs(WatoMode, metaclass=abc.ABCMeta):
+class ModeCustomAttrs(WatoMode, abc.ABC):
     def __init__(self):
         super().__init__()
         # TODO: Inappropriate Intimacy: custom host attributes should not now about

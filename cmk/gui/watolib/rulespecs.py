@@ -42,7 +42,7 @@ from cmk.gui.watolib.search import (
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 
 
-class RulespecBaseGroup(metaclass=abc.ABCMeta):
+class RulespecBaseGroup(abc.ABC):
     """Base class for all rulespec group types"""
     @property
     @abc.abstractmethod
@@ -92,7 +92,7 @@ class RulespecGroup(RulespecBaseGroup):
         return self.title
 
 
-class RulespecSubGroup(RulespecBaseGroup, metaclass=abc.ABCMeta):
+class RulespecSubGroup(RulespecBaseGroup, abc.ABC):
     @property
     @abc.abstractmethod
     def main_group(self) -> Type[RulespecGroup]:
@@ -358,7 +358,7 @@ def _validate_function_args(arg_infos: List[_Tuple[Any, bool, bool]], hint: str)
                 _("Invalid expected callable for %s at idx %d: %r") % (hint, idx, arg))
 
 
-class Rulespec(metaclass=abc.ABCMeta):
+class Rulespec(abc.ABC):
     NO_FACTORY_DEFAULT: list = []
     # means this ruleset is not used if no rule is entered
     FACTORY_DEFAULT_UNUSED: list = []

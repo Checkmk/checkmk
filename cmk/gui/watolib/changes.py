@@ -91,7 +91,7 @@ class ObjectRef:
         )
 
 
-class ABCAppendStore(Generic[_VT], metaclass=abc.ABCMeta):
+class ABCAppendStore(Generic[_VT], abc.ABC):
     """Managing a file with structured data that can be appended in a cheap way
 
     The file holds basic python structures separated by "\0".

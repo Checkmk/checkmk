@@ -10,7 +10,7 @@ from pathlib import Path
 import cmk.utils.store as store
 
 
-class WatoSimpleConfigFile(metaclass=abc.ABCMeta):
+class WatoSimpleConfigFile(abc.ABC):
     """Manage simple .mk config file containing a single dict variable
 
     The file handling logic is inherited from cmk.utils.store.load_from_mk_file()

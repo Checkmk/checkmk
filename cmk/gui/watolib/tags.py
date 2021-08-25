@@ -251,14 +251,14 @@ class TagCleanupMode(Enum):
     REPAIR = "repair"  # Remove tags from rules
 
 
-class ABCOperation(metaclass=abc.ABCMeta):
+class ABCOperation(abc.ABC):
     """Base for all tag cleanup operations"""
     @abc.abstractmethod
     def confirm_title(self) -> str:
         raise NotImplementedError()
 
 
-class ABCTagGroupOperation(ABCOperation, metaclass=abc.ABCMeta):
+class ABCTagGroupOperation(ABCOperation, abc.ABC):
     def __init__(self, tag_group_id: str) -> None:
         super().__init__()
         self.tag_group_id = tag_group_id

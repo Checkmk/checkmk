@@ -150,7 +150,7 @@ def parse_systemd_units(info):
             return parsed
 
         for row in iter_info:
-            if row[0] == '*':
+            if row[0] in {'●', '*'}:
                 row.pop(0)
             line = ' '.join(row)
             for unit_marker in _SYSTEMD_UNITS:

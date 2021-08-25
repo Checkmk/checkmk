@@ -490,7 +490,7 @@ class LDAPUserConnector(UserConnector):
         return self._config.get('create_only_on_login', False)
 
     def _user_id_attr(self):
-        return self._config.get('user_id', self.ldap_attr('user_id'))
+        return self._config.get('user_id', self.ldap_attr('user_id')).lower()
 
     # TODO: Add .lower() here and remove at call sites
     def _member_attr(self):

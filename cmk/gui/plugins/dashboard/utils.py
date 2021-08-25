@@ -137,7 +137,7 @@ def render_title_with_macros_string(
     )
 
 
-class Dashlet(metaclass=abc.ABCMeta):
+class Dashlet(abc.ABC):
     """Base class for all dashboard dashlet implementations"""
 
     # Minimum width and height of dashlets in raster units
@@ -560,7 +560,7 @@ def dashlet_vs_general_settings(dashlet_type: Type[Dashlet], single_infos: List[
     )
 
 
-class IFrameDashlet(Dashlet, metaclass=abc.ABCMeta):
+class IFrameDashlet(Dashlet, abc.ABC):
     """Base class for all dashlet using an iframe"""
     @classmethod
     def is_iframe_dashlet(cls) -> bool:
@@ -636,7 +636,7 @@ class FigureDashletPage(AjaxPage):
         return create_figures_response(response_data)
 
 
-class ABCFigureDashlet(Dashlet, metaclass=abc.ABCMeta):
+class ABCFigureDashlet(Dashlet, abc.ABC):
     """ Base class for cmk_figures based graphs
         Only contains the dashlet spec, the data generation is handled in the
         DataGenerator classes, to split visualization and data

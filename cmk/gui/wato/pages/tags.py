@@ -67,7 +67,7 @@ from cmk.gui.watolib.tags import (
 )
 
 
-class ABCTagMode(WatoMode, metaclass=abc.ABCMeta):
+class ABCTagMode(WatoMode, abc.ABC):
     def __init__(self):
         super().__init__()
         self._tag_config_file = TagConfigFile()
@@ -399,7 +399,7 @@ class ModeTags(ABCTagMode):
         html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
 
 
-class ABCEditTagMode(ABCTagMode, metaclass=abc.ABCMeta):
+class ABCEditTagMode(ABCTagMode, abc.ABC):
     @classmethod
     def permissions(cls):
         return ["hosttags"]

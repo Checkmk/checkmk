@@ -1083,7 +1083,7 @@ class SampleConfigGeneratorECSampleRulepack(SampleConfigGenerator):
 #   '----------------------------------------------------------------------'
 
 
-class ABCEventConsoleMode(WatoMode, metaclass=abc.ABCMeta):
+class ABCEventConsoleMode(WatoMode, abc.ABC):
     def __init__(self):
         self._rule_packs = load_mkeventd_rules()
         super().__init__()

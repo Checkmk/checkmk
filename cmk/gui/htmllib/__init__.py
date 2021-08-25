@@ -94,7 +94,7 @@ DefaultChoice = str
 #   '----------------------------------------------------------------------'
 
 
-class ABCHTMLGenerator(metaclass=abc.ABCMeta):
+class ABCHTMLGenerator(abc.ABC):
     """ Usage Notes:
 
           - Tags can be opened using the open_[tag]() call where [tag] is one of the possible tag names.

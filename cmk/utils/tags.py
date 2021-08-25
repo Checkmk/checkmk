@@ -44,7 +44,7 @@ def _validate_tag_id(tag_id):
             _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
 
 
-class ABCTag(metaclass=abc.ABCMeta):
+class ABCTag(abc.ABC):
     def __init__(self):
         super().__init__()
         # TODO: See below, this was self._initialize()

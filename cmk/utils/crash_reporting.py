@@ -124,7 +124,7 @@ class CrashReportStore:
         return serialized
 
 
-class ABCCrashReport(metaclass=abc.ABCMeta):
+class ABCCrashReport(abc.ABC):
     """Base class for the component specific crash report types"""
     @classmethod
     @abc.abstractmethod

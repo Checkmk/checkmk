@@ -13,7 +13,7 @@ from cmk.gui.plugins.sidebar import link, SidebarSnapin, snapin_registry
 from cmk.gui.utils.urls import makeuri_contextless
 
 
-class HostSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
+class HostSnapin(SidebarSnapin, abc.ABC):
     @abc.abstractmethod
     def _host_mode_ident(self) -> str:
         raise NotImplementedError()

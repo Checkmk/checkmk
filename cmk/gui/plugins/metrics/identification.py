@@ -60,7 +60,7 @@ class GraphIdentificationTypes:
 graph_identification_types = GraphIdentificationTypes()
 
 
-class GraphIdentification(metaclass=abc.ABCMeta):
+class GraphIdentification(abc.ABC):
     """Abstract base class for all graph identification classes"""
     @classmethod
     @abc.abstractmethod

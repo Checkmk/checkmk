@@ -25,7 +25,7 @@ DailyServices = Dict[datetime, Counter]
 SortedDailyServices = List[Tuple[datetime, Counter]]
 
 
-class ABCMonthlyServiceAverages(metaclass=abc.ABCMeta):
+class ABCMonthlyServiceAverages(abc.ABC):
     today = datetime.today()
 
     def __init__(

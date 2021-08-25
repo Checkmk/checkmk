@@ -128,7 +128,7 @@ class WithPermissions:
         raise NotImplementedError()
 
 
-class WithUniqueIdentifier(metaclass=abc.ABCMeta):
+class WithUniqueIdentifier(abc.ABC):
     """Provides methods for giving Hosts and Folders unique identifiers.
 
     """

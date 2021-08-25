@@ -13,7 +13,7 @@ from cmk.gui.plugins.sidebar import bulletlink, SidebarSnapin, snapin_registry
 from cmk.gui.utils.urls import urlencode
 
 
-class GroupSnapin(SidebarSnapin, metaclass=abc.ABCMeta):
+class GroupSnapin(SidebarSnapin, abc.ABC):
     @abc.abstractmethod
     def _group_type_ident(self):
         raise NotImplementedError()

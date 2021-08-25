@@ -104,7 +104,7 @@ class LabelManager:
                                                                self._service_label_rules)
 
 
-class ABCDiscoveredLabelsStore(metaclass=abc.ABCMeta):
+class ABCDiscoveredLabelsStore(abc.ABC):
     """Managing persistance of discovered labels"""
     @property
     @abc.abstractmethod

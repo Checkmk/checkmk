@@ -41,7 +41,7 @@ from cmk.gui.watolib.changes import make_object_audit_log_url
 from cmk.gui.watolib.hosts_and_folders import CREHost
 
 
-class ABCHostMode(WatoMode, metaclass=abc.ABCMeta):
+class ABCHostMode(WatoMode, abc.ABC):
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeFolder

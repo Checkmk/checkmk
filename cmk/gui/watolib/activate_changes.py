@@ -906,7 +906,7 @@ class SnapshotManager:
                                                     self._data_collector)
 
 
-class ABCSnapshotDataCollector(metaclass=abc.ABCMeta):
+class ABCSnapshotDataCollector(abc.ABC):
     """Prepares files to be synchronized to the remote sites"""
     def __init__(self, site_snapshot_settings: Dict[SiteId, SnapshotSettings]) -> None:
         super().__init__()

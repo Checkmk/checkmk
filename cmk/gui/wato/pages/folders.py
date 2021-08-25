@@ -1059,7 +1059,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
         return choices
 
 
-class ABCFolderMode(WatoMode, metaclass=abc.ABCMeta):
+class ABCFolderMode(WatoMode, abc.ABC):
     @classmethod
     def parent_mode(cls) -> Optional[Type[WatoMode]]:
         return ModeFolder

@@ -2129,7 +2129,7 @@ class ListOfMultiple(ValueSpec):
             self._choice_dict[ident].validate_value(val, varprefix + '_' + ident)
 
 
-class ABCPageListOfMultipleGetChoice(AjaxPage, metaclass=abc.ABCMeta):
+class ABCPageListOfMultipleGetChoice(AjaxPage, abc.ABC):
     @abc.abstractmethod
     def _get_choices(self, api_request: Dict[str, str]) -> List[_Tuple[str, ValueSpec]]:
         raise NotImplementedError()

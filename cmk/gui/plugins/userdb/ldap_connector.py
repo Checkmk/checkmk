@@ -1344,7 +1344,7 @@ def _unescape_dn(dn):
 #   '----------------------------------------------------------------------'
 
 
-class LDAPAttributePlugin(metaclass=abc.ABCMeta):
+class LDAPAttributePlugin(abc.ABC):
     """Base class for all LDAP attribute synchronization plugins"""
     @property
     @abc.abstractmethod

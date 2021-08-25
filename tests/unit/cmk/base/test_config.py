@@ -10,7 +10,6 @@ from typing import Any, Dict, Generator, List, Optional, Tuple, Union
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from six import ensure_str
 
 from tests.testlib.base import Scenario
 
@@ -1570,7 +1569,7 @@ def test_host_labels_of_host_discovered_labels(monkeypatch: MonkeyPatch, tmp_pat
     monkeypatch.setattr(cmk.utils.paths, "discovered_host_labels_dir", tmp_path)
     host_file = (tmp_path / test_host).with_suffix(".mk")
     with host_file.open(mode="w", encoding="utf-8") as f:
-        f.write(ensure_str(repr({u"äzzzz": {"value": u"eeeeez", "plugin_name": "ding123"}}) + "\n"))
+        f.write(repr({u"äzzzz": {"value": u"eeeeez", "plugin_name": "ding123"}}) + "\n")
 
     config_cache = ts.apply(monkeypatch)
     assert config_cache.get_host_config(test_host).labels == {u"äzzzz": u"eeeeez"}

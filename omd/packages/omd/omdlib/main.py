@@ -58,7 +58,6 @@ from typing import (
 
 import psutil  # type: ignore[import]
 from passlib.hash import sha256_crypt  # type: ignore[import]
-from six import ensure_str
 
 import omdlib
 import omdlib.backup
@@ -164,7 +163,7 @@ class Log(io.StringIO):
 
     # TODO: Ensure we get Text here
     def write(self, data: str) -> int:
-        text = ensure_str(data)
+        text = data
         self.orig.write(text)
         self.log.write(self.color_replace.sub('', text))
         return len(text)

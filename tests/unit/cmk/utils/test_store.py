@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import List
 
 import pytest
-from six import ensure_binary
 
 from tests.testlib import import_module, wait_until
 
@@ -114,7 +113,7 @@ def test_load_data_from_not_permitted_file(tmp_path, path_type):
 @pytest.mark.parametrize("path_type", [str, Path])
 def test_load_data_from_file_dict(tmp_path, path_type):
     locked_file = tmp_path / "test"
-    locked_file.write_bytes(ensure_binary(repr({"1": 2, "ä": u"ß"})))
+    locked_file.write_bytes(repr({"1": 2, "ä": u"ß"}).encode())
 
     data = store.load_object_from_file(path_type(locked_file), default=None)
     assert isinstance(data, dict)

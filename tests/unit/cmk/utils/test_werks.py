@@ -12,7 +12,6 @@ from collections import defaultdict
 from pathlib import Path
 
 import pytest
-from six import ensure_binary, ensure_str
 
 import tests.testlib as testlib
 
@@ -120,7 +119,7 @@ def _git_tag_exists(tag):
     ).wait() == 0
 
 
-def _werk_exists_in_git_tag(tag, rel_path):
+def _werk_exists_in_git_tag(tag: str, rel_path):
     return rel_path in _werks_in_git_tag(tag)
 
 
@@ -132,12 +131,11 @@ _werk_to_git_tag = defaultdict(list)
 
 
 @cmk.utils.memoize.MemoizeCache
-def _werks_in_git_tag(tag):
-    werks_in_tag = ensure_str(
-        subprocess.check_output(
-            [b"git", b"ls-tree", b"-r", b"--name-only",
-             ensure_binary(tag), b".werks"],
-            cwd=ensure_binary(testlib.cmk_path()))).split("\n")
+def _werks_in_git_tag(tag: str):
+    werks_in_tag = subprocess.check_output(
+        [b"git", b"ls-tree", b"-r", b"--name-only",
+         tag.encode(), b".werks"],
+        cwd=testlib.cmk_path().encode()).decode().split("\n")
 
     # Populate the map of all tags a werk is in
     for werk_file in werks_in_tag:

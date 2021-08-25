@@ -13,7 +13,6 @@ from pathlib import Path
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from six import ensure_str
 
 import cmk.utils.packaging as packaging
 import cmk.utils.paths
@@ -281,7 +280,7 @@ def test_write_file():
 
     info_file = tar.extractfile("info")
     assert info_file is not None
-    info = ast.literal_eval(ensure_str(info_file.read()))
+    info = ast.literal_eval(info_file.read().decode())
     assert info["name"] == "aaa"
 
     info_json_file = tar.extractfile("info.json")

@@ -11,8 +11,6 @@ import tarfile
 from pathlib import Path
 from typing import AbstractSet, BinaryIO, cast, List
 
-from six import ensure_str
-
 import cmk.utils.debug
 import cmk.utils.packaging as packaging
 import cmk.utils.paths
@@ -139,7 +137,7 @@ def show_package(name: PackageName, show_info: bool = False) -> None:
             info = tar.extractfile("info")
             if info is None:
                 raise PackageException("Failed to extract \"info\"")
-            package = parse_package_info(ensure_str(info.read()))
+            package = parse_package_info(info.read().decode())
         else:
             this_package = read_package_info(name)
             if not this_package:

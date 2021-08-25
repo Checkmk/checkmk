@@ -28,8 +28,6 @@ import traceback
 import uuid
 from typing import Any, cast, Dict, FrozenSet, List, Mapping, Optional, Set, Tuple, Union
 
-from six import ensure_str
-
 import livestatus
 
 import cmk.utils.debug
@@ -1351,7 +1349,7 @@ def notify_via_email(plugin_context: PluginContext) -> int:
         body_t = notification_host_body
 
     subject = substitute_context(subject_t, plugin_context)
-    plugin_context["SUBJECT"] = ensure_str(subject)
+    plugin_context["SUBJECT"] = subject
     body = substitute_context(notification_common_body + body_t, plugin_context)
     command = substitute_context(notification_mail_command, plugin_context)
     command_utf8 = command.encode("utf-8")
@@ -1501,7 +1499,7 @@ def call_notification_script(plugin_name: NotificationPluginNameStr,
             if line != '':
                 plugin_log("Output: %s" % line.rstrip())
                 if _log_to_stdout:
-                    out.output(ensure_str(line))
+                    out.output(line)
             else:
                 break
         # the stdout is closed but the return code may not be available just yet - wait for the

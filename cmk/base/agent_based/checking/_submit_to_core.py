@@ -12,8 +12,6 @@ from random import Random
 from types import FrameType
 from typing import IO, Optional, Sequence, Tuple, Union
 
-from six import ensure_binary, ensure_str
-
 import cmk.utils.paths
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
@@ -173,7 +171,7 @@ def _submit_via_command_pipe(host: HostName, service: ServiceName, state: Servic
         # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
         msg = "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" % (time.time(), host, service,
                                                                    state, output)
-        _nagios_command_pipe.write(ensure_binary(msg))
+        _nagios_command_pipe.write(msg.encode())
         # Important: Nagios needs the complete command in one single write() block!
         # Python buffers and sends chunks of 4096 bytes, if we do not flush.
         _nagios_command_pipe.flush()
@@ -185,9 +183,7 @@ def _submit_via_check_result_file(host: HostName, service: ServiceName, state: S
     _open_checkresult_file()
     if _checkresult_file_fd:
         now = time.time()
-        os.write(
-            _checkresult_file_fd,
-            ensure_binary("""host_name=%s
+        os.write(_checkresult_file_fd, ("""host_name=%s
 service_description=%s
 check_type=1
 check_options=0
@@ -198,7 +194,7 @@ finish_time=%.1f
 return_code=%d
 output=%s
 
-""" % (ensure_str(host), ensure_str(service), now, now, state, ensure_str(output))))
+""" % (host, service, now, now, state, output)).encode())
 
 
 def _open_command_pipe() -> None:

@@ -21,8 +21,6 @@ from typing import (
     Tuple,
 )
 
-from six import ensure_str
-
 import cmk.utils.debug
 import cmk.utils.version as cmk_version
 from cmk.utils.check_utils import ActiveCheckResult
@@ -377,12 +375,10 @@ def service_outside_check_period(config_cache: config.ConfigCache, hostname: Hos
         return False
 
     if cmk.base.core.check_timeperiod(period):
-        console.vverbose("Service %s: timeperiod %s is currently active.\n",
-                         ensure_str(description), period)
+        console.vverbose("Service %s: timeperiod %s is currently active.\n", description, period)
         return False
 
-    console.verbose("Skipping service %s: currently not in timeperiod %s.\n",
-                    ensure_str(description), period)
+    console.verbose("Skipping service %s: currently not in timeperiod %s.\n", description, period)
     return True
 
 

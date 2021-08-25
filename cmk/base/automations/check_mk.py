@@ -18,8 +18,6 @@ from itertools import islice
 from pathlib import Path
 from typing import Any, cast, Dict, List, Optional, Sequence, Tuple, Union
 
-from six import ensure_binary
-
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
@@ -1516,7 +1514,7 @@ class AutomationGetAgentOutput(Automation):
                     try:
                         for oid, value in snmp_modes.walk_for_export(walk_oid, backend=backend):
                             raw_oid_value = "%s %s\n" % (oid, value)
-                            lines.append(ensure_binary(raw_oid_value))
+                            lines.append(raw_oid_value.encode())
                     except Exception as e:
                         if cmk.utils.debug.enabled():
                             raise

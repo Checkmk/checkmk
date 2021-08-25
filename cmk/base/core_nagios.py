@@ -14,8 +14,6 @@ from io import StringIO
 from pathlib import Path
 from typing import Any, Dict, IO, Iterable, List, Optional, Set, Tuple, Union
 
-from six import ensure_binary, ensure_str
-
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
@@ -122,7 +120,7 @@ class NagiosConfig:
 
     def write(self, x: str) -> None:
         # TODO: Something seems to be mixed up in our call sites...
-        self._outfile.write(ensure_str(x))
+        self._outfile.write(x)
 
 
 def create_config(outfile: IO[str], hostnames: Optional[List[HostName]]) -> None:
@@ -633,7 +631,7 @@ def _format_nagios_object(object_type: str, object_spec: ObjectSpec) -> str:
 
 
 def _b16encode(b: str) -> str:
-    return ensure_str(base64.b16encode(ensure_binary(b)))
+    return (base64.b16encode(b.encode())).decode()
 
 
 def _simulate_command(cfg: NagiosConfig, command: CoreCommand) -> CoreCommand:

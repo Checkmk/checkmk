@@ -98,8 +98,6 @@ import sys  # noqa: F401 # pylint: disable=unused-import
 import time
 from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple, Union
 
-from six import ensure_str
-
 import cmk.utils as _cmk_utils
 import cmk.utils.debug as _debug
 import cmk.utils.defines as _defines
@@ -751,7 +749,7 @@ def discover(selector: Optional[Callable] = None,
 
 def _get_discovery_iter(name: Any, get_name: Callable[[], str]) -> Iterable[str]:
     if isinstance(name, str):
-        return iter((ensure_str(name),))
+        return iter((name,))
     if name is True:
         return iter((get_name(),))
     try:

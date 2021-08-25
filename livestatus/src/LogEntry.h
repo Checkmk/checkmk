@@ -86,8 +86,8 @@ public:
 
     LogEntry(size_t lineno, std::string line);
     [[nodiscard]] std::string state_info() const;
-    static ServiceState parseServiceState(const std::string &str);
-    static HostState parseHostState(const std::string &str);
+    static ServiceState parseServiceState(std::string_view str);
+    static HostState parseHostState(std::string_view str);
 
     [[nodiscard]] size_t lineno() const { return lineno_; }
     [[nodiscard]] time_t time() const { return time_; }

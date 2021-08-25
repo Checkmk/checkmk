@@ -352,52 +352,55 @@ bool LogEntry::textContains(const std::string &what) const {
 }
 
 namespace {
-// Ugly: Depending on where we're called, the actual state type can be in
-// parentheses at the end, e.g. "ALERTHANDLER (OK)".
-std::string extractStateType(const std::string &str) {
+const std::unordered_map<std::string_view, ServiceState> fl_service_state_types{
+    // normal states
+    {"OK"sv, ServiceState::ok},
+    {"WARNING"sv, ServiceState::warning},
+    {"CRITICAL"sv, ServiceState::critical},
+    {"UNKNOWN"sv, ServiceState::unknown},
+    // states from "... ALERT"/"... NOTIFICATION"
+    {"RECOVERY"sv, ServiceState::ok}};
+
+const std::unordered_map<std::string_view, HostState> fl_host_state_types{
+    // normal states
+    {"UP"sv, HostState::up},
+    {"DOWN"sv, HostState::down},
+    {"UNREACHABLE"sv, HostState::unreachable},
+    // states from "... ALERT"/"... NOTIFICATION"
+    {"RECOVERY"sv, HostState::up},
+    // states from "... ALERT HANDLER STOPPED" and "(HOST|SERVICE) NOTIFICATION
+    // (RESULT|PROGRESS)"
+    {"OK"sv, HostState::up},
+    {"WARNING"sv, HostState::down},
+    {"CRITICAL"sv, HostState::unreachable},
+    {"UNKNOWN", static_cast<HostState>(3)}};  // Horrible HACK
+
+template <class T>
+typename T::mapped_type parseState(const T &table,
+                                   typename T::mapped_type default_value,
+                                   std::string_view str) {
+    // Ugly: Depending on where we're called, the actual state type can be in
+    // parentheses at the end, e.g. "ALERTHANDLER (OK)".
     if (!str.empty() && str[str.size() - 1] == ')') {
         size_t lparen = str.rfind('(');
         if (lparen != std::string::npos) {
-            return str.substr(lparen + 1, str.size() - lparen - 2);
+            str = str.substr(lparen + 1, str.size() - lparen - 2);
         }
     }
-    return str;
+    auto it = table.find(str);
+    return it == table.end() ? default_value : it->second;
 }
 
-const std::unordered_map<std::string, ServiceState> fl_service_state_types{
-    // normal states
-    {"OK", ServiceState::ok},
-    {"WARNING", ServiceState::warning},
-    {"CRITICAL", ServiceState::critical},
-    {"UNKNOWN", ServiceState::unknown},
-    // states from "... ALERT"/"... NOTIFICATION"
-    {"RECOVERY", ServiceState::ok}};
-
-const std::unordered_map<std::string, HostState> fl_host_state_types{
-    // normal states
-    {"UP", HostState::up},
-    {"DOWN", HostState::down},
-    {"UNREACHABLE", HostState::unreachable},
-    // states from "... ALERT"/"... NOTIFICATION"
-    {"RECOVERY", HostState::up},
-    // states from "... ALERT HANDLER STOPPED" and "(HOST|SERVICE) NOTIFICATION
-    // (RESULT|PROGRESS)"
-    {"OK", HostState::up},
-    {"WARNING", HostState::down},
-    {"CRITICAL", HostState::unreachable},
-    {"UNKNOWN", static_cast<HostState>(3)}};  // Horrible HACK
 }  // namespace
 
 // static
-ServiceState LogEntry::parseServiceState(const std::string &str) {
-    auto it = fl_service_state_types.find(extractStateType(str));
-    return it == fl_service_state_types.end() ? ServiceState::ok : it->second;
+ServiceState LogEntry::parseServiceState(std::string_view str) {
+    return parseState(fl_service_state_types, ServiceState::ok, str);
 }
 
 // static
-HostState LogEntry::parseHostState(const std::string &str) {
-    auto it = fl_host_state_types.find(extractStateType(str));
-    return it == fl_host_state_types.end() ? HostState::up : it->second;
+HostState LogEntry::parseHostState(std::string_view str) {
+    return parseState(fl_host_state_types, HostState::up, str);
 }
 
 namespace {

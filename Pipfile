@@ -35,7 +35,7 @@ sphinx = "==3.5.1"  # used for the plugin API documentation
 sphinx-autodoc-typehints = "==1.11.1"  # used for the plugin API documentation
 sphinx-rtd-theme = "==0.5.1"  # used for the plugin API documentation
 3to2 = "==1.1.1"  # used for converting agent plugins from py3 to 2
-fakeredis = {extras = ["lua"],version = "1.4.5"}  # used for testing code which uses Redis (freeze version due to dependency on redis, which is fixed to some version, lua is needed for faking features like "lock")
+fakeredis = {extras = ["lua"], version = "== 1.4.5"}  # used for testing code which uses Redis (freeze version due to some kwargs bug(???, see https://github.com/jamesls/fakeredis/pull/304/files#r680503761, lua is needed for faking features like "lock")
 python-lsp-server = "==1.0.1"  # Note: There are extras, but the default seems sensible.
 mypy-ls = "==0.4.0"  # mypy-plugin for the above
 # Pinned indirect dependencies

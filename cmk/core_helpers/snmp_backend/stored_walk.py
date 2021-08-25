@@ -7,8 +7,6 @@
 
 from typing import List, Optional, Tuple
 
-from six import ensure_binary, ensure_str
-
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
@@ -138,8 +136,7 @@ class StoredWalkSNMPBackend(SNMPBackend):
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
                     # FIXME: This encoding ping-pong os horrible...
-                    value = ensure_str(
-                        agent_simulator.process(AgentRawData(ensure_binary(parts[1]),),),)
+                    value = agent_simulator.process(AgentRawData(parts[1].encode(),),).decode()
                 else:
                     value = ""
                 # Fix for missing starting oids

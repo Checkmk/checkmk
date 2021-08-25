@@ -21,8 +21,6 @@ from typing import (
     Union,
 )
 
-from six import ensure_str
-
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.paths
@@ -434,14 +432,14 @@ def mode_dump_agent(hostname: HostName) -> None:
                 console.error(
                     "ERROR [%s]: %s\n",
                     source.id,
-                    ensure_str(source_output),
+                    source_output,
                 )
                 has_errors = True
             if raw_data.is_ok():
                 assert raw_data.ok is not None
                 output.append(raw_data.ok)
 
-        out.output(ensure_str(b"".join(output), errors="surrogateescape"))
+        out.output(b"".join(output).decode(errors="surrogateescape"))
         if has_errors:
             sys.exit(1)
     except Exception as e:

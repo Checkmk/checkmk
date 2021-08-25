@@ -49,8 +49,6 @@ from typing import (
     Union,
 )
 
-from six import ensure_binary
-
 import cmk.utils.daemon
 import cmk.utils.debug
 import cmk.utils.defines
@@ -1679,13 +1677,13 @@ class EventServer(ECServerThread):
         try:
             with get_logfile(self._config, self.settings.paths.messages_dir.value,
                              self._message_period).open(mode='ab') as f:
-                f.write(
-                    ensure_binary("%s %s %s%s: %s\n" % (
+                f.write((
+                    "%s %s %s%s: %s\n" % (
                         time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),  #
                         event["host"],
                         event["application"],
                         ("[%s]" % event["pid"]) if event["pid"] else "",
-                        event["text"])))
+                        event["text"])).encode())
         except Exception:
             if self.settings.options.debug:
                 raise

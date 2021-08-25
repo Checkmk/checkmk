@@ -9,8 +9,6 @@ import signal
 import subprocess
 from typing import List, Optional
 
-from six import ensure_str
-
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, MKTimeout
 from cmk.utils.log import console
@@ -133,9 +131,9 @@ class ClassicSNMPBackend(SNMPBackend):
 
         if exitstatus:
             console.verbose(tty.red + tty.bold + "ERROR: " + tty.normal +
-                            "SNMP error: %s\n" % ensure_str(error).strip())
+                            "SNMP error: %s\n" % error.strip())
             raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" %
-                              (ipaddress, ensure_str(error).strip(), exitstatus))
+                              (ipaddress, error.strip(), exitstatus))
         return rowinfo
 
     def _get_rowinfo_from_snmp_process(self, snmp_process: subprocess.Popen) -> SNMPRowInfo:

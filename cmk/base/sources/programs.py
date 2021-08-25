@@ -7,8 +7,6 @@
 from pathlib import Path
 from typing import Dict, Optional
 
-from six import ensure_str
-
 import cmk.utils.paths
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.type_defs import HostAddress, HostName, SourceType
@@ -185,7 +183,7 @@ class DSProgramSource(ProgramSource):
                 ))
 
         macros = core_config.get_host_macros_from_attributes(host_config.hostname, attrs)
-        return ensure_str(core_config.replace_macros(cmd, macros))
+        return core_config.replace_macros(cmd, macros)
 
 
 class SpecialAgentSource(ProgramSource):

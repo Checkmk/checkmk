@@ -20,7 +20,6 @@ from types import FrameType
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type
 
 import psutil  # type: ignore[import]
-from six import ensure_binary, ensure_str
 
 import cmk.utils.daemon as daemon
 import cmk.utils.log
@@ -74,7 +73,7 @@ class BackgroundProcessInterface:
 
     def send_progress_update(self, info: str, with_timestamp: bool = False) -> None:
         """ The progress update is written to stdout and will be catched by the threads counterpart """
-        message = ensure_str(info)
+        message = info
         if with_timestamp:
             message = "%s %s" % (render.time_of_day(time.time()), message)
         sys.stdout.write(message + "\n")
@@ -82,22 +81,22 @@ class BackgroundProcessInterface:
     def send_result_message(self, info: str) -> None:
         """ The result message is written to stdout because of log output clarity
         as well as into a distinct file, to separate this info from the rest of the context information"""
-        encoded_info = "%s\n" % ensure_str(info)
+        encoded_info = "%s\n" % info
         sys.stdout.write(encoded_info)
 
         result_message_path = Path(
             self.get_work_dir()) / BackgroundJobDefines.result_message_filename
         with result_message_path.open("ab") as f:
-            f.write(ensure_binary(encoded_info))
+            f.write(encoded_info.encode())
 
     def send_exception(self, info: str) -> None:
         """ Exceptions are written to stdout because of log output clarity
         as well as into a distinct file, to separate this info from the rest of the context information"""
         # Exceptions also get an extra newline, since some error messages tend not output a \n at the end..
-        encoded_info = "%s\n" % ensure_str(info)
+        encoded_info = "%s\n" % info
         sys.stdout.write(encoded_info)
         with (Path(self.get_work_dir()) / BackgroundJobDefines.exceptions_filename).open("ab") as f:
-            f.write(ensure_binary(encoded_info))
+            f.write(encoded_info.encode())
 
 
 #.
@@ -179,7 +178,7 @@ class BackgroundProcess(BackgroundProcessInterface, multiprocessing.Process):
     def _detach_from_parent(self):
         # Detach from parent and cleanup inherited file descriptors
         os.setsid()
-        daemon.set_procname(ensure_binary(BackgroundJobDefines.process_name))
+        daemon.set_procname(BackgroundJobDefines.process_name.encode())
         sys.stdin.close()
         # NOTE
         # When forking off from an mod_wsgi process, these handles are not the standard stdout and

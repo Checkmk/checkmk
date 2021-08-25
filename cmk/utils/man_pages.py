@@ -251,6 +251,7 @@ catalog_titles = {
     "agentless": "Networking checks without agent",
     "generic": "Generic check plugins",
     "unsorted": "Uncategorized",
+    "zertificon": "Zertificon",
 }  # yapf: disable
 
 # TODO: Do we need a more generic place for this?

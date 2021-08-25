@@ -220,7 +220,13 @@ discovery_systemd_units_services_rules = []
 
 
 def discovery_systemd_units_services(parsed):
-    services = parsed.get('service', {})
+
+    # Filter out volatile systemd service units created by the Checkmk agent which appear and
+    # disappear frequently. No matter what the user configures, we do not want to discover them.
+    filtered_services = [
+        service for service in parsed.get('service', {}).values()
+        if not regex("^check-mk-agent@.+").match(service.name)
+    ]
 
     def regex_match(what, name):
         if not what:
@@ -243,7 +249,7 @@ def discovery_systemd_units_services(parsed):
         descriptions = settings.get("descriptions", [])
         names = settings.get("names", [])
         states = settings.get("states", [])
-        for service in services.values():
+        for service in filtered_services:
             if (regex_match(descriptions, service.description) and
                     regex_match(names, service.name) and
                     state_match(states, service.active_status)):

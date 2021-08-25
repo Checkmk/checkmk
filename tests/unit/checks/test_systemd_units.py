@@ -1810,7 +1810,22 @@ SECTION = {
             active_status='failed',
             current_state='failed',
             description='Arbitrary Executable File Formats File System Automount Point',
-            enabled_status='unknown')
+            enabled_status='unknown'),
+        'check-mk-agent@738-127.0.0.1:6556-127.0.0.1:51542': UnitEntry(
+            name='check-mk-agent@738-127.0.0.1:6556-127.0.0.1:51542',
+            unit_type='service',
+            loaded_status='loaded',
+            active_status='active',
+            current_state='running',
+            description='Checkmk agent (127.0.0.1:51542)',
+            enabled_status='static'),
+        'check-mk-enterprise-2021.09.07': UnitEntry(name='check-mk-enterprise-2021.09.07',
+                                                    unit_type='service',
+                                                    loaded_status='loaded',
+                                                    active_status='active',
+                                                    current_state='exited',
+                                                    description='LSB: OMD sites',
+                                                    enabled_status='generated'),
     },
     'device': {
         'dev-disk-by\\x2did-ata\\x2dAPPLE_SSD_SM0256G_S29CNYDG865465': UnitEntry(
@@ -1921,6 +1936,20 @@ SECTION = {
             },
         ],
         [],
+    ),
+    (
+        SECTION,
+        [
+            {
+                "names": ["~.*"]
+            },
+        ],
+        [
+            ('virtualbox', {}),
+            ('bar', {}),
+            ('foo', {}),
+            ('check-mk-enterprise-2021.09.07', {}),
+        ],
     ),
 ])
 def test_discover_systemd_units_services(section, discovery_params, discovered_services):
@@ -2036,7 +2065,7 @@ def test_check_systemd_units_services(item, params, section, check_results):
             },
             SECTION,
             [
-                (0, 'Total: 3'),
+                (0, 'Total: 5'),
                 (0, 'Disabled: 0'),
                 (0, 'Failed: 2'),
                 (2, '2 services failed (bar, foo)'),

@@ -148,17 +148,30 @@ set_up_profiling() {
 # END COMMON AGENT CODE
 #
 
+# Function to replace "if type [somecmd]" idiom
+# 'command -v' tends to be more robust vs 'which' and 'type' based tests
+inpath() {
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 read_python_version() {
-    if which "$1" >/dev/null 2>&1 && [ "$($1 -c 'import sys; print(sys.version_info[1])')" -ge $2 ]; then
-        echo "$1"
-        return 0
+    if inpath "$1"; then
+        version=$($1 -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
+
+        major=${version%%.*}
+        minor=${version##*.}
+
+        if [ "$major" -eq "$2" ] && [ "$minor" -ge "$3" ]; then
+            echo "$1"
+            return 0
+        fi
     fi
     return 1
 }
 
 preamble_3() {
-    PYTHON3=$(read_python_version python3 4)
-    PYTHON2=$(read_python_version python2 6 || read_python_version python 6)
+    PYTHON3=$(read_python_version python3 3 4 || read_python_version python 3 4)
+    PYTHON2=$(read_python_version python2 2 6 || read_python_version python 2 6)
     if [ -f "$MK_CONFDIR/python_path.cfg" ]; then
         # shellcheck source=/dev/null
         . "$MK_CONFDIR/python_path.cfg"

@@ -13,7 +13,6 @@
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
-#include <ctime>
 #include <filesystem>
 #include <map>
 #include <memory>
@@ -33,7 +32,9 @@ public:
     [[nodiscard]] std::filesystem::path path() const { return _path; }
 
     // for tricky protocol between LogCache::logLineHasBeenAdded and this class
-    [[nodiscard]] time_t since() const { return _since; }
+    [[nodiscard]] std::chrono::system_clock::time_point since() const {
+        return _since;
+    }
     [[nodiscard]] unsigned classesRead() const { return _logclasses_read; }
     [[nodiscard]] size_t size() const { return _entries.size(); }
     long freeMessages(unsigned logclasses);
@@ -50,10 +51,10 @@ private:
     Logger *const _logger;
     LogCache *const _log_cache;
     const std::filesystem::path _path;
-    const time_t _since;  // time of first entry
-    const bool _watch;    // true only for current logfile
-    fpos_t _read_pos;     // read until this position
-    size_t _lineno;       // read until this line
+    const std::chrono::system_clock::time_point _since;  // time of first entry
+    const bool _watch;  // true only for current logfile
+    fpos_t _read_pos;   // read until this position
+    size_t _lineno;     // read until this line
     logfile_entries_t _entries;
     unsigned _logclasses_read;  // only these types have been read
 

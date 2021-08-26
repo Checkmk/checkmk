@@ -56,7 +56,7 @@ void LogCache::update() {
 }
 
 void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
-    time_t since = logfile->since();
+    time_t since = std::chrono::system_clock::to_time_t(logfile->since());
     if (since == 0) {
         return;
     }

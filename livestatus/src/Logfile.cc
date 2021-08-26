@@ -17,28 +17,29 @@
 #include "Logger.h"
 
 namespace {
-time_t firstTimestampOf(const std::filesystem::path &path, Logger *logger) {
+std::chrono::system_clock::time_point firstTimestampOf(
+    const std::filesystem::path &path, Logger *logger) {
     std::ifstream is(path, std::ios::binary);
     if (!is) {
         generic_error ge("cannot open logfile " + path.string());
         Informational(logger) << ge;
-        return 0;
+        return {};
     }
 
     char line[12];
     is.read(line, sizeof(line));
     if (!is) {
-        return 0;  // ignoring. might be empty
+        return {};  // ignoring. might be empty
     }
 
     if (line[0] != '[' || line[11] != ']') {
         Informational(logger) << "ignoring logfile '" << path
                               << "': does not begin with '[123456789] '";
-        return 0;
+        return {};
     }
 
     line[11] = 0;
-    return atoi(line + 1);
+    return std::chrono::system_clock::from_time_t(atoi(line + 1));
 }
 }  // namespace
 

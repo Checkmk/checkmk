@@ -59,7 +59,7 @@ This procedure may quite annoying, you have to check next points:
 #### Execution local
 
 ##### Building
-make build PY_VER=3.8 PY_SUBVER=7
+make build PY_VER=3.8 PY_SUBVER=11
 make python_344 PY_VER=3.4 PY_SUBVER=4
 
 ##### Testing
@@ -74,7 +74,7 @@ build_the_module cached
 
 In a turn the script makes two calls:
 build_the_cached artefact_dir credentials url 3.4 4
-build_the_cached artefact_dir credentials url 3.8 7
+build_the_cached artefact_dir credentials url 3.8 11
 
 #### Caching
 

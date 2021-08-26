@@ -47732,6 +47732,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"These levels make the check go warning or critical whenever the "
+"<b>percentual packet rate</b> or the <b>absolute packet rate</b> of the "
+"monitored interface reaches the given bounds. The percentual packet rate is "
+"computed by the formula <b>(unicast / (unicast + non-unicast))*100</b>"
+msgstr ""
+
+msgid ""
 "These levels refer to the total number of instances or hosts that are "
 "registered to the load balancer which is the sum of healthy and unhealthy "
 "instances."
@@ -52322,6 +52329,10 @@ msgstr "Probleme"
 #, fuzzy
 msgid "Unhandled service problems"
 msgstr "Adaugă Excepție"
+
+#, fuzzy
+msgid "Unicast packet rates"
+msgstr "Nivel-urile absolute de licențe neutilizate"
 
 msgid "Unidirectional UDP Traffic"
 msgstr ""

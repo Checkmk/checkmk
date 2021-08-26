@@ -50643,6 +50643,19 @@ msgstr ""
 "taux de paquets percentile est calculé par la formule <b>(multicast / "
 "(unicast + non-unicast))*100</b>."
 
+#, fuzzy
+msgid ""
+"These levels make the check go warning or critical whenever the "
+"<b>percentual packet rate</b> or the <b>absolute packet rate</b> of the "
+"monitored interface reaches the given bounds. The percentual packet rate is "
+"computed by the formula <b>(unicast / (unicast + non-unicast))*100</b>"
+msgstr ""
+"Ces niveaux font passer la vérification en avertissement ou en critique "
+"chaque fois que le <b>débit de paquets percentuel</b> ou le <b>débit de "
+"paquets absolu</b> de l'interface surveillée atteint les limites données. Le "
+"taux de paquets percentile est calculé par la formule <b>(multicast / "
+"(unicast + non-unicast))*100</b>."
+
 msgid ""
 "These levels refer to the total number of instances or hosts that are "
 "registered to the load balancer which is the sum of healthy and unhealthy "
@@ -56522,6 +56535,10 @@ msgstr "Unhandled p."
 
 msgid "Unhandled service problems"
 msgstr "Problèmes de service non gérés"
+
+#, fuzzy
+msgid "Unicast packet rates"
+msgstr "Taux de paquets non-unicast"
 
 msgid "Unidirectional UDP Traffic"
 msgstr "Trafic UDP unidirectionnel"

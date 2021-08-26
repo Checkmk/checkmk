@@ -48067,6 +48067,18 @@ msgstr ""
 "たはクリティカルになります。パーセントパケットレートは、式<b>(マルチキャスト/"
 "(ユニキャスト+非ユニキャスト))* 100 </b>によって計算されます。"
 
+#, fuzzy
+msgid ""
+"These levels make the check go warning or critical whenever the "
+"<b>percentual packet rate</b> or the <b>absolute packet rate</b> of the "
+"monitored interface reaches the given bounds. The percentual packet rate is "
+"computed by the formula <b>(unicast / (unicast + non-unicast))*100</b>"
+msgstr ""
+"これらのレベルにより、監視対象インターフェースの<b>パーセントパケットレート</"
+"b>または<b>絶対パケットレート</b>が指定された範囲に達すると、チェックが警告ま"
+"たはクリティカルになります。パーセントパケットレートは、式<b>(マルチキャスト/"
+"(ユニキャスト+非ユニキャスト))* 100 </b>によって計算されます。"
+
 msgid ""
 "These levels refer to the total number of instances or hosts that are "
 "registered to the load balancer which is the sum of healthy and unhealthy "
@@ -53367,6 +53379,10 @@ msgstr "未処理 p。"
 
 msgid "Unhandled service problems"
 msgstr "未処理のサービスの問題"
+
+#, fuzzy
+msgid "Unicast packet rates"
+msgstr "ユニキャスト以外のパケットレート"
 
 msgid "Unidirectional UDP Traffic"
 msgstr "単方向UDPトラフィック"

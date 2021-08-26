@@ -87,7 +87,7 @@ class LinkSchema(BaseSchema):
         example="The object itself",
     )
     body_params = fields.Dict(
-        description=("A map of values that shall be sent in the request body. If this is present,"
+        description=("A map of values that shall be sent in the request body. If this is present, "
                      "the request has to be sent with a content-type of 'application/json'."),
         required=False,
     )

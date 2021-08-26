@@ -442,7 +442,7 @@ class UpdateFolder(BaseSchema):
     attributes = fields.attributes_field(
         'folder',
         'update',
-        description=("Replace all attributes with the ones given in this field. Already set"
+        description=("Replace all attributes with the ones given in this field. Already set "
                      "attributes, not given here, will be removed."),
         example={'networking': 'wan'},
         required=False,
@@ -1154,7 +1154,7 @@ class IdleOption(BaseSchema):
 class UserContactOption(BaseSchema):
     email = fields.String(
         required=True,
-        description="The mail address of the user. Required if the user is a monitoring"
+        description="The mail address of the user. Required if the user is a monitoring "
         "contact and receives notifications via mail.",
         example="user@example.com",
     )
@@ -1171,7 +1171,7 @@ class UserContactOption(BaseSchema):
 class UserContactUpdateOption(BaseSchema):
     email = fields.String(
         required=False,
-        description="The mail address of the user. Required if the user is a monitoring"
+        description="The mail address of the user. Required if the user is a monitoring "
         "contact and receives notifications via mail.",
         example="user@example.com",
     )

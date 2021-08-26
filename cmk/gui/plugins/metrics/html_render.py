@@ -404,7 +404,7 @@ def render_graph_legend(graph_artwork, graph_render_options):
     for curve in graph_curves(graph_artwork):
         output += '<tr>'
         output += '<td style="%s">%s ' % (font_size_style, render_color_icon(curve["color"]))
-        output += '%s</td>' % curve["title"]
+        output += '%s</td>' % escaping.escape_text(curve["title"])
 
         for scalar, title, inactive in scalars:
             if scalar == "pin" and not show_pin_time(graph_artwork, graph_render_options):

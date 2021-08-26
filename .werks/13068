@@ -1,0 +1,12 @@
+Title: Fix XSS in Graph
+Knowledge: doc
+Level: 1
+Component: wato
+Class: security
+Compatible: compat
+Edition: cre
+State: unknown
+Version: 1.6.0p26
+Date: 1629969680
+
+

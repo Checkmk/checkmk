@@ -64,6 +64,7 @@ import random
 import re
 import signal
 import json
+import json.encoder  # type: ignore[import]
 import abc
 import pprint
 import urlparse
@@ -95,6 +96,10 @@ def _default(self, obj):
 _default.default = json.JSONEncoder().default  # type: ignore
 # replacement:
 json.JSONEncoder.default = _default  # type: ignore
+
+json.encoder._orig_encode_basestring_ascii = json.encoder.encode_basestring_ascii  # type: ignore[attr-defined]
+json.encoder.encode_basestring_ascii = lambda s: json.encoder._orig_encode_basestring_ascii(  # type: ignore[attr-defined]
+    s).replace('/', '\\/')  # type: ignore[attr-defined]
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException

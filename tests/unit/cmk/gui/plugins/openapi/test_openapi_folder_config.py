@@ -376,6 +376,55 @@ def test_openapi_bulk_actions_folders(wsgi_app, with_automation_user, suppress_a
     )
 
 
+def test_openapi_folder_update(wsgi_app, with_automation_user, suppress_automation_calls):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/1.0'
+
+    resp = wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "fooo", "parent": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    # make sure we can update a folder without title argument (SUP-7195)
+    resp = wsgi_app.call_method(
+        'put',
+        base + "/objects/folder_config/~new_folder",
+        params=json.dumps({"update_attributes": {
+            "tag_address_family": "no-ip"
+        }}),
+        status=200,
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+    # title should not change
+    assert resp.json['title'] == 'fooo'
+    # double check
+    resp = wsgi_app.follow_link(resp, 'self')
+    assert resp.json['title'] == 'fooo'
+
+    # actually change the title
+    resp = wsgi_app.call_method(
+        'put',
+        base + "/objects/folder_config/~new_folder",
+        params=json.dumps({
+            "title": "fo",
+        }),
+        status=200,
+        headers={'If-Match': resp.headers['ETag']},
+        content_type='application/json',
+    )
+    # title should be updated
+    assert resp.json['title'] == 'fo'
+    # double check
+    resp = wsgi_app.follow_link(resp, 'self')
+    assert resp.json['title'] == 'fo'
+
+
 def test_openapi_folder_root(wsgi_app, with_automation_user, suppress_automation_calls):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))

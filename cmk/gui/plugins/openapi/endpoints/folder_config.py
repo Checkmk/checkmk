@@ -118,7 +118,10 @@ def update(params):
     constructors.require_etag(etag_of_folder(folder))
 
     post_body = params['body']
-    title = post_body['title']
+    if 'title' in post_body:
+        title = post_body['title']
+    else:
+        title = folder.title()
     replace_attributes = post_body['attributes']
     update_attributes = post_body['update_attributes']
     remove_attributes = post_body['remove_attributes']

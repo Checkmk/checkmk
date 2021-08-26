@@ -66,7 +66,7 @@ IF /I "!ERRORLEVEL!" NEQ "0" (
   powershell Write-Host "Build successful" -Foreground green
 
   :: UPLOADING to the Nexus Cache:
-  powershell Write-Host "Uploading to cache %arti_dir%\python-%version%.cab ... %fname% ..." -Foreground cyan
+  echo Uploading to cache %arti_dir%\python-%version%.cab ... %fname% ...
   copy %arti_dir%\python-%version%.cab %fname%
 
   powershell Write-Host "To be executed: curl -sSf --user creds --upload-file %fname% %url%" -foreground white

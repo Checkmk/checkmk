@@ -947,6 +947,11 @@ def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
     )
 
     yield PageMenuTopic(
+        title=_("Inventory"),
+        entries=list(_dashboard_add_inventory_dashlet_entries(name)),
+    )
+
+    yield PageMenuTopic(
         title=_("Checkmk"),
         entries=list(_dashboard_add_checkmk_dashlet_entries(name)),
     )
@@ -1269,6 +1274,15 @@ def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMe
             "emblem": "statistic",
         },
         item=_dashboard_add_non_view_dashlet_link(name, "service_state_summary"),
+    )
+
+
+def _dashboard_add_inventory_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
+
+    yield PageMenuEntryCEEOnly(
+        title="Host Inventory",
+        icon_name="inventory",
+        item=_dashboard_add_non_view_dashlet_link(name, "inventory"),
     )
 
 

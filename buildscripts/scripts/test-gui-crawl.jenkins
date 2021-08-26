@@ -35,5 +35,15 @@ node (NODE) {
 
     }catch(Exception e) {
         notify.notify_error(e)
+    } finally {
+        stage('archive crawler report') {
+            xunit([JUnit(
+                deleteOutputFiles: true,
+                failIfNotNew: true,
+                pattern: "**/crawl.xml",
+                skipNoTestFiles: false,
+                stopProcessingIfError: true
+            )])
+        }
     }
 }

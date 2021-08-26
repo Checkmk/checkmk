@@ -18,6 +18,7 @@
 #include "IntLambdaColumn.h"
 #include "LogCache.h"
 #include "LogEntry.h"
+#include "Logfile.h"
 #include "MonitoringCore.h"
 #include "Query.h"
 #include "Row.h"
@@ -189,9 +190,8 @@ void TableLog::answerQuery(Query *query) {
     }
 
     while (true) {
-        const auto *entries =
-            it->second->getEntriesFor(core()->maxLinesPerLogFile(), classmask);
-        if (!answerQueryReverse(entries, query, since, until)) {
+        if (!answerQueryReverse(query, it->second.get(), classmask, since,
+                                until)) {
             break;  // end of time range found
         }
         if (it == _log_cache->begin()) {
@@ -201,10 +201,12 @@ void TableLog::answerQuery(Query *query) {
     }
 }
 
-bool TableLog::answerQueryReverse(const logfile_entries_t *entries,
-                                  Query *query,
+bool TableLog::answerQueryReverse(Query *query, Logfile *logfile,
+                                  unsigned long classmask,
                                   std::chrono::system_clock::time_point since,
                                   std::chrono::system_clock::time_point until) {
+    const auto *entries =
+        logfile->getEntriesFor(core()->maxLinesPerLogFile(), classmask);
     auto it = entries->upper_bound(Logfile::makeKey(until, 999999999));
     while (it != entries->begin()) {
         --it;

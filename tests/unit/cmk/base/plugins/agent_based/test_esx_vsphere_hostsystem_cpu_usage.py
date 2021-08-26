@@ -10,9 +10,42 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_cpu_usage import (
-    check_esx_vsphere_hostsystem_cpu,
+    check_esx_vsphere_hostsystem_cpu_usage,
     discover_esx_vsphere_hostsystem_cpu_usage,
+    EsxVsphereHostsystemCpuSection,
+    extract_esx_vsphere_hostsystem_cpu_usage,
 )
+
+
+@pytest.mark.parametrize('section, cpu_section', [
+    (
+        OrderedDict([
+            ('hardware.cpuInfo.hz', ['2199999833']),
+            ('hardware.cpuInfo.numCpuCores', ['20']),
+            ('hardware.cpuInfo.numCpuPackages', ['2']),
+            ('hardware.cpuInfo.numCpuThreads', ['40']),
+            ('summary.quickStats.overallCpuUsage', ['3977']),
+        ]),
+        EsxVsphereHostsystemCpuSection(
+            num_sockets=2,
+            num_cores=20,
+            num_threads=40,
+            used_mhz=3977.,
+            mhz_per_core=2199999833.,
+        ),
+    ),
+    (
+        OrderedDict([
+            ('hardware.cpuInfo.hz', ['2199999833']),
+            ('hardware.cpuInfo.numCpuCores', ['20']),
+            ('hardware.cpuInfo.numCpuPackages', ['2']),
+            ('hardware.cpuInfo.numCpuThreads', ['40']),
+        ]),
+        None,
+    ),
+])
+def test_extract_esx_vsphere_hostsystem_cpu(section, cpu_section):
+    assert extract_esx_vsphere_hostsystem_cpu_usage(section) == cpu_section
 
 
 @pytest.mark.parametrize('section, discovered_service', [
@@ -60,4 +93,4 @@ def test_discover_esx_vsphere_hostsystem_cpu_usage(section, discovered_service):
     ),
 ])
 def test_check_esx_vsphere_hostsystem_cpu(section, check_results):
-    assert list(check_esx_vsphere_hostsystem_cpu({}, section, None)) == check_results
+    assert list(check_esx_vsphere_hostsystem_cpu_usage({}, section, None)) == check_results

@@ -3,17 +3,42 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import time
-from typing import Any, Dict, List, Mapping, Optional
 
-from .agent_based_api.v1 import get_value_store, register, render, Result, Service
-from .agent_based_api.v1 import State as state
+import time
+from typing import Any, List, Mapping, NamedTuple, Optional
+
+from .agent_based_api.v1 import get_value_store, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import cpu_util
+from .utils.esx_vsphere import Section
+
+
+class EsxVsphereHostsystemCpuSection(NamedTuple):
+    num_sockets: int
+    num_cores: int
+    num_threads: int
+    used_mhz: float
+    mhz_per_core: float
+
+
+def extract_esx_vsphere_hostsystem_cpu_usage(
+        section: Section) -> Optional[EsxVsphereHostsystemCpuSection]:
+    try:
+        return EsxVsphereHostsystemCpuSection(*[
+            type_(section[key][0]) for key, type_ in [
+                ('hardware.cpuInfo.numCpuPackages', int),
+                ('hardware.cpuInfo.numCpuCores', int),
+                ('hardware.cpuInfo.numCpuThreads', int),
+                ('summary.quickStats.overallCpuUsage', float),
+                ('hardware.cpuInfo.hz', float),
+            ]
+        ])
+    except (KeyError, ValueError):
+        return None
 
 
 def discover_esx_vsphere_hostsystem_cpu_usage(
-        section_esx_vsphere_hostsystem: Optional[Dict[str, List[str]]],
+        section_esx_vsphere_hostsystem: Optional[Section],
         section_winperf_processor: Optional[List],  # currently no parse function
 ) -> DiscoveryResult:
     if section_winperf_processor or not section_esx_vsphere_hostsystem:
@@ -28,24 +53,20 @@ def discover_esx_vsphere_hostsystem_cpu_usage(
         yield Service()
 
 
-def check_esx_vsphere_hostsystem_cpu(
+def check_esx_vsphere_hostsystem_cpu_usage(
     params: Mapping[str, Any],
-    section_esx_vsphere_hostsystem: Optional[Dict[str, List[str]]],
+    section_esx_vsphere_hostsystem: Optional[Section],
     section_winperf_processor: Optional[List],
 ) -> CheckResult:
     if not section_esx_vsphere_hostsystem:
         return
-    try:
-        num_sockets = int(section_esx_vsphere_hostsystem['hardware.cpuInfo.numCpuPackages'][0])
-        num_cores = int(section_esx_vsphere_hostsystem['hardware.cpuInfo.numCpuCores'][0])
-        num_threads = int(section_esx_vsphere_hostsystem['hardware.cpuInfo.numCpuThreads'][0])
-        used_mhz = float(section_esx_vsphere_hostsystem['summary.quickStats.overallCpuUsage'][0])
-        mhz_per_core = float(section_esx_vsphere_hostsystem['hardware.cpuInfo.hz'][0]) * 1e-6
-    except KeyError:
+
+    cpu_section = extract_esx_vsphere_hostsystem_cpu_usage(section_esx_vsphere_hostsystem)
+    if not cpu_section:
         return
 
-    total_mhz = mhz_per_core * num_cores
-    usage = used_mhz / total_mhz * 100
+    total_mhz = cpu_section.mhz_per_core * 1e-6 * cpu_section.num_cores
+    usage = cpu_section.used_mhz / total_mhz * 100
 
     yield from cpu_util.check_cpu_util(
         util=usage,
@@ -54,23 +75,23 @@ def check_esx_vsphere_hostsystem_cpu(
         this_time=time.time(),
     )
     yield Result(
-        state=state.OK,
+        state=State.OK,
         notice="%s/%s" % (
-            render.frequency(used_mhz * 1e6),
+            render.frequency(cpu_section.used_mhz * 1e6),
             render.frequency(total_mhz * 1e6),
         ),
     )
     yield Result(
-        state=state.OK,
-        notice="Sockets: %d" % num_sockets,
+        state=State.OK,
+        notice="Sockets: %d" % cpu_section.num_sockets,
     )
     yield Result(
-        state=state.OK,
-        notice="Cores/socket: %d" % int(num_cores / num_sockets),
+        state=State.OK,
+        notice="Cores/socket: %d" % int(cpu_section.num_cores / cpu_section.num_sockets),
     )
     yield Result(
-        state=state.OK,
-        notice="Threads: %d" % num_threads,
+        state=State.OK,
+        notice="Threads: %d" % cpu_section.num_threads,
     )
 
 
@@ -79,7 +100,7 @@ register.check_plugin(
     service_name="CPU utilization",
     sections=["esx_vsphere_hostsystem", "winperf_processor"],
     discovery_function=discover_esx_vsphere_hostsystem_cpu_usage,
-    check_function=check_esx_vsphere_hostsystem_cpu,
+    check_function=check_esx_vsphere_hostsystem_cpu_usage,
     check_default_parameters={},
     check_ruleset_name="cpu_utilization_os",
 )

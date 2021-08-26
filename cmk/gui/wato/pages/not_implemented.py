@@ -21,7 +21,7 @@ class ModeNotImplemented(WatoMode):
         return []
 
     def title(self):
-        return _("Sorry")
+        return _("Error")
 
     def page(self):
         html.show_error(_("This module has not yet been implemented."))

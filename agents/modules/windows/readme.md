@@ -4,7 +4,7 @@
 
 ### Source
 
-PYTHON 3.8.7, provided as source tarball by standard Checkmk development process
+PYTHON 3.8.11, provided as source tarball by standard Checkmk development process
 PYTHON 3.4.4, downloaded as msi installer from the python.org
 
 ### Changing or Updating the Python
@@ -25,14 +25,14 @@ PYTHON 3.4.4, downloaded as msi installer from the python.org
 ### IMPORTANT
 
 1. You must always uninstall Python before deleting folders and or building.
-Normally this is done automatically by build scripts. Just do not forget this 
+Normally this is done automatically by build scripts. Just do not forget this
 if you are modifying scripts
 
 2. Patch the registry with the *WindowsServerPatch.reg* if you are using Windows Server.
-Windows Server by default disables MSI installation even on per-user basis. 
+Windows Server by default disables MSI installation even on per-user basis.
 We must set registry value MsiDisable = 0 as in Windows 10
 
-3. You must switch jenkins slave to real user-admin account(use services.msc), otherwise 
+3. You must switch jenkins slave to real user-admin account(use services.msc), otherwise
 installation is not possible. The error is "cannot install" or similar
 
 4. You must increase value in file BUILD_NUM to get a rebuild binary
@@ -41,14 +41,14 @@ installation is not possible. The error is "cannot install" or similar
 
 This procedure may quite annoying, you have to check next points:
 
-1. Check scripts in the folder. 
+1. Check scripts in the folder.
 2. **buildscripts/scripts/lib/windows.groovy** : from windows node to jenkins
 3. **buildscripts/scripts/build-cmk-version.jenkins** : from enkins to packaging
 4. Checkmk root **Makefile**. Packaging self
 5. Add to integration tests new file name:
- 
+
    *grep agents\modules\windows\tests\integration\* for "python-"*
-    
+
    Usually it is conftest.py and Makefile.
 
 6. Check build_the_module.cmd for 3.8, 3.4 and et cetera
@@ -63,7 +63,7 @@ make build PY_VER=3.8 PY_SUBVER=7
 make python_344 PY_VER=3.4 PY_SUBVER=4
 
 ##### Testing
-make integration    
+make integration
 make integration-force
 
 
@@ -78,12 +78,12 @@ build_the_cached artefact_dir credentials url 3.8 7
 
 #### Caching
 
-All builds of the Python are cached. 
+All builds of the Python are cached.
 Name of the cached file
 python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.cab
 
 This mean that you didn't get a new build till you increase valeu in the file *BUILD_NUM*.
-Just a commit is not enough, because some builds can't get data about current git hash. 
+Just a commit is not enough, because some builds can't get data about current git hash.
 In latter case the git_hash is replaced with string "latest".
 
 
@@ -93,16 +93,16 @@ In latter case the git_hash is replaced with string "latest".
 2. Build  and copy results t the *out*.
 3. Uninstall from backuped python-3.8.exe in *uninstall*
 4. Install to the *to_install*
-5. Upgrade pip 
+5. Upgrade pip
 6. Install pipenv
 7. Save whole folder to the *to_save*
 8. Uninstall python from *to_install*
 9. copy ~check_mk/virtual-envs/Windows/3.8/Pipfile~ in *to_save*
-10. Build virtual environemtn *to_save* 
+10. Build virtual environemtn *to_save*
 11. Copy correct *pyvenv.cfg* into *tO-save/.venv*
 12. Copy runtime from runtime to DLL
 13. Clean virtual environemtn *to_save*
-14. Compress *tmp/to_save* into *tmp/python-3.8.cab*. 
+14. Compress *tmp/to_save* into *tmp/python-3.8.cab*.
 15. Copy cab to *artefacts*
 
 #### Steps 3.4.4
@@ -117,7 +117,7 @@ In latter case the git_hash is replaced with string "latest".
 8. Compress *tmp/to_save* into *tmp/python-3.4.cab*.
 9. Copy cab to *artefacts*
 
-IMPORTANT: You need Visual Studio 10 to build 3.4.4. 
+IMPORTANT: You need Visual Studio 10 to build 3.4.4.
 This can be difficult to obtain, you have to ask a person having Visual Studio Professional license to download.
 
 ### TREE

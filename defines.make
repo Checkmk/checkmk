@@ -60,7 +60,7 @@ CLANG_VERSION      := 12
 
 PYTHON2_VERSION	   := 2.7.17
 
-PYTHON_VERSION	   := 3.8.7
+PYTHON_VERSION	   := 3.8.11
 
 PY_ARRAY	   := $(subst ., ,$(PYTHON_VERSION))
 

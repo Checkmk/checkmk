@@ -25,7 +25,7 @@ def test_02_python_interpreter_path(site):
 def test_03_python_interpreter_version(site):
     p = site.execute(["python3", "-V"], stdout=subprocess.PIPE)
     version = p.stdout.read()
-    assert version.startswith("Python 3.8.7")
+    assert version.startswith("Python 3.8.11")
 
 
 def test_03_python_path(site):

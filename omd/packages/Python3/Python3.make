@@ -107,9 +107,9 @@ $(PYTHON3_INTERMEDIATE_INSTALL): $(PYTHON3_BUILD)
 # NOTE: -j1 seems to be necessary when --enable-optimizations is used
 	$(MAKE) -j1 -C $(PYTHON3_BUILD_DIR) DESTDIR=$(PYTHON3_INSTALL_DIR) install
 # Fix python interpreter
-	$(SED) -i '1s|^#!.*/python3\.'"$$PYTHON_VERSION_MINOR"'$$|#!/usr/bin/env python3|' $(addprefix $(PYTHON3_INSTALL_DIR)/bin/,2to3-$(PYTHON_MAJOR_DOT_MINOR) idle$(PYTHON_MAJOR_DOT_MINOR) pip3 pip$(PYTHON_MAJOR_DOT_MINOR) pydoc$(PYTHON_MAJOR_DOT_MINOR))
+	$(SED) -i '1s|^#!.*/python'$(PYTHON_VERSION_MAJOR)'\.'$(PYTHON_VERSION_MINOR)'$$|#!/usr/bin/env python'$(PYTHON_VERSION_MAJOR)'|' $(addprefix $(PYTHON3_INSTALL_DIR)/bin/,2to3-$(PYTHON_MAJOR_DOT_MINOR) idle$(PYTHON_MAJOR_DOT_MINOR) pip3 pip$(PYTHON_MAJOR_DOT_MINOR) pydoc$(PYTHON_MAJOR_DOT_MINOR))
 # Fix pip3 configuration
-	$(SED) -i '/^import re$$/i import os\nos.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "True"\nos.environ["PIP_TARGET"] = os.path.join(os.environ["OMD_ROOT"], "local/lib/python3")' $(addprefix $(PYTHON3_INSTALL_DIR)/bin/,pip3 pip$(PYTHON_MAJOR_DOT_MINOR))
+	$(SED) -i '/^import re$$/i import os\nos.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "True"\nos.environ["PIP_TARGET"] = os.path.join(os.environ["OMD_ROOT"], "local/lib/python$(PYTHON_VERSION_MAJOR)")' $(addprefix $(PYTHON3_INSTALL_DIR)/bin/,pip$(PYTHON_VERSION_MAJOR) pip$(PYTHON_MAJOR_DOT_MINOR))
 	install -m 644 $(PYTHON3_SITECUSTOMIZE_SOURCE) $(PYTHON3_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/
 	install -m 644 $(PYTHON3_SITECUSTOMIZE_COMPILED) $(PYTHON3_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/__pycache__
 	$(TOUCH) $@

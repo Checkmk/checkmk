@@ -43,15 +43,21 @@ namespace {
 
 class LogRow {
 public:
-    LogRow(LogEntry *entry_, host *hst_, service *svc_, const contact *ctc_,
-           const Command *command_)
-        : entry{entry_}, hst{hst_}, svc{svc_}, ctc{ctc_}, command{command_} {};
+    // TODO(sp): Remove ugly casts.
+    LogRow(const LogEntry &entry_, MonitoringCore *mc)
+        : entry{&entry_}
+        , hst{reinterpret_cast<host *>(mc->find_host(entry_.host_name()))}
+        , svc{reinterpret_cast<service *>(mc->find_service(
+              entry_.host_name(), entry_.service_description()))}
+        , ctc{reinterpret_cast<const contact *>(
+              mc->find_contact(entry_.contact_name()))}
+        , command{mc->find_command(entry_.command_name())} {}
 
-    LogEntry *entry;
+    const LogEntry *entry;
     host *hst;
     service *svc;
     const contact *ctc;
-    const Command *command;
+    Command command;
 };
 
 }  // namespace
@@ -136,7 +142,7 @@ TableLog::TableLog(MonitoringCore *mc, LogCache *log_cache)
         return r.rawData<LogRow>()->ctc;
     }));
     TableCommands::addColumns(this, "current_command_", offsets.add([](Row r) {
-        return r.rawData<LogRow>()->command;
+        return &r.rawData<LogRow>()->command;
     }));
 }
 
@@ -210,22 +216,12 @@ bool TableLog::answerQueryReverse(Query *query, Logfile *logfile,
     auto it = entries->upper_bound(Logfile::makeKey(until, 999999999));
     while (it != entries->begin()) {
         --it;
-        if (it->second->time() < since) {
+        const auto &entry = *it->second;
+        if (entry.time() < since) {
             return false;  // time limit exceeded
         }
-        auto *entry = it->second.get();
-        Command command = core()->find_command(entry->command_name());
-        // TODO(sp): Remove ugly casts.
-        LogRow lr{
-            entry,
-            reinterpret_cast<host *>(core()->find_host(entry->host_name())),
-            reinterpret_cast<service *>(core()->find_service(
-                entry->host_name(), entry->service_description())),
-            reinterpret_cast<const contact *>(
-                core()->find_contact(entry->contact_name())),
-            &command};
-        const LogRow *r = &lr;
-        if (!query->processDataset(Row{r})) {
+        LogRow r{entry, core()};
+        if (!query->processDataset(Row{&r})) {
             return false;
         }
     }

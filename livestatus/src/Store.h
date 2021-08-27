@@ -12,7 +12,10 @@
 #include <list>
 #include <map>
 #include <string>
-#ifndef CMC
+#ifdef CMC
+#include <chrono>
+#include <optional>
+#else
 #include <utility>
 #include <vector>
 #endif
@@ -48,8 +51,6 @@ class MonitoringCore;
 class OutputBuffer;
 
 #ifdef CMC
-#include <cstdint>
-
 #include "TableCachedStatehist.h"
 class Core;
 class Object;
@@ -137,7 +138,7 @@ private:
     void addTable(Table &table);
     Table &findTable(OutputBuffer &output, const std::string &name);
 #ifdef CMC
-    uint32_t horizon() const;
+    std::optional<std::chrono::seconds> horizon() const;
 #else
     void logRequest(const std::string &line,
                     const std::list<std::string> &lines) const;

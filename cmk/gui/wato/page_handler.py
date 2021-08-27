@@ -66,8 +66,8 @@ def page_handler() -> None:
 
     if not config.wato_enabled:
         raise MKGeneralException(
-            _("WATO is disabled. Please set <tt>wato_enabled = True</tt>"
-              " in your <tt>multisite.mk</tt> if you want to use WATO."))
+            _("Setup is disabled. Please set <tt>wato_enabled = True</tt>"
+              " in your <tt>multisite.mk</tt> if you want to use Setup."))
 
     # config.current_customer can not be checked with CRE repos
     if cmk_version.is_managed_edition() and not managed.is_provider(

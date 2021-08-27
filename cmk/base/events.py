@@ -466,13 +466,13 @@ def event_match_folder(rule: EventRule, context: EventContext) -> Optional[str]:
                     return None  # Match is on main folder, always OK
                 while mustpath:
                     if not haspath or mustpath[0] != haspath[0]:
-                        return "The rule requires WATO folder '%s', but the host is in '%s'" % (
+                        return "The rule requires folder '%s', but the host is in '%s'" % (
                             mustfolder, hasfolder)
                     mustpath = mustpath[1:]
                     haspath = haspath[1:]
 
         if hasfolder is None:
-            return "The host is not managed via WATO, but the rule requires a WATO folder"
+            return "The host is not managed in Setup, but the rule requires a folder"
     return None
 
 

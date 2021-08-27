@@ -120,7 +120,7 @@ class FilterWatoFolder(Filter):
 
 filter_registry.register(
     FilterWatoFolder(ident="wato_folder",
-                     title=_("WATO Folder"),
+                     title=_("Folder"),
                      sort_index=10,
                      info="host",
                      htmlvars=["wato_folder"],

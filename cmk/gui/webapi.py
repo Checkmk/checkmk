@@ -142,10 +142,10 @@ def _get_api_call():
 
 def _check_permissions(api_call):
     if not user.get_attribute("automation_secret"):
-        raise MKAuthException("The WATO API is only available for automation users")
+        raise MKAuthException("The API is only available for automation users")
 
     if not config.wato_enabled:
-        raise MKUserError(None, _("WATO is disabled on this site."))
+        raise MKUserError(None, _("Setup is disabled on this site."))
 
     for permission in ["wato.use", "wato.api_allowed"] + \
                       api_call.get("required_permissions", []):

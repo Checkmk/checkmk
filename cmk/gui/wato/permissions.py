@@ -465,7 +465,7 @@ permission_registry.register(
         name="analyze_config",
         title=_l("Access analyze configuration"),
         description=_l(
-            "WATO has a module that gives you hints on how to tune your Check_MK installation."),
+            "Setup has a module that gives you hints on how to tune your Checkmk installation."),
         defaults=["admin"],
     ))
 

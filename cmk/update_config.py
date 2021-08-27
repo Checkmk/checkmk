@@ -173,9 +173,9 @@ class UpdateConfig:
         return [
             (self._migrate_dashlets, "Migrate dashlets"),
             (self._update_global_settings, "Update global settings"),
-            (self._rewrite_wato_tag_config, "Rewriting WATO tags"),
-            (self._rewrite_wato_host_and_folder_config, "Rewriting WATO hosts and folders"),
-            (self._rewrite_wato_rulesets, "Rewriting WATO rulesets"),
+            (self._rewrite_wato_tag_config, "Rewriting tags"),
+            (self._rewrite_wato_host_and_folder_config, "Rewriting hosts and folders"),
+            (self._rewrite_wato_rulesets, "Rewriting rulesets"),
             (self._rewrite_autochecks, "Rewriting autochecks"),
             (self._cleanup_version_specific_caches, "Cleanup version specific caches"),
             (self._update_fs_used_name, "Migrating fs_used name"),

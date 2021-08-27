@@ -78,10 +78,10 @@ class PainterWatoFolderAbs(Painter):
         return "wato_folder_abs"
 
     def title(self, cell):
-        return _("WATO folder - complete path")
+        return _("Folder - complete path")
 
     def short_title(self, cell):
-        return _("WATO folder")
+        return _("Folder")
 
     @property
     def columns(self):
@@ -102,10 +102,10 @@ class PainterWatoFolderRel(Painter):
         return "wato_folder_rel"
 
     def title(self, cell):
-        return _("WATO folder - relative path")
+        return _("Folder - relative path")
 
     def short_title(self, cell):
-        return _("WATO folder")
+        return _("Folder")
 
     @property
     def columns(self):
@@ -126,10 +126,10 @@ class PainterWatoFolderPlain(Painter):
         return "wato_folder_plain"
 
     def title(self, cell):
-        return _("WATO folder - just folder name")
+        return _("Folder - just folder name")
 
     def short_title(self, cell):
-        return _("WATO folder")
+        return _("Folder")
 
     @property
     def columns(self):
@@ -162,7 +162,7 @@ class SorterWatoFolderAbs(Sorter):
 
     @property
     def title(self):
-        return _("WATO folder - complete path")
+        return _("Folder - complete path")
 
     @property
     def columns(self):
@@ -180,7 +180,7 @@ class SorterWatoFolderRel(Sorter):
 
     @property
     def title(self):
-        return _("WATO folder - relative path")
+        return _("Folder - relative path")
 
     @property
     def columns(self):
@@ -198,7 +198,7 @@ class SorterWatoFolderPlain(Sorter):
 
     @property
     def title(self):
-        return _("WATO folder - just folder name")
+        return _("Folder - just folder name")
 
     @property
     def columns(self):

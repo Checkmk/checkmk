@@ -3471,7 +3471,7 @@ expected_filters: Dict[str, Dict[str, Any]] = {
         'info': 'host',
         'link_columns': [],
         'sort_index': 10,
-        'title': u'WATO Folder'
+        'title': u'Folder'
     },
 }
 
@@ -3499,6 +3499,7 @@ def test_registered_filters(load_plugins):
 
         bases = [c.__name__ for c in filt.__class__.__bases__] + [filt.__class__.__name__]
         assert spec["filter_class"] in bases
+
 
 expected_infos: Dict[str, Dict[str, Any]] = {
     'aggr': {

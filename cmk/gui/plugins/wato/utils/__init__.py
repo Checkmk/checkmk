@@ -117,7 +117,7 @@ class PermissionSectionWATO(PermissionSection):
 
     @property
     def title(self):
-        return _("WATO - Checkmk's Web Administration Tool")
+        return _("Setup")
 
 
 def PluginCommandLine():

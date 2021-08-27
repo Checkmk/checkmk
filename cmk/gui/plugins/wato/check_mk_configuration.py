@@ -760,8 +760,8 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         )
 
     def _virtual_host_tree_choices(self):
-        return self._wato_host_tag_group_choices() + [("foldertree:", _("WATO folder tree"))] + [
-            ("folder:%d" % l, _("WATO folder level %d") % l) for l in range(1, 7)
+        return self._wato_host_tag_group_choices() + [("foldertree:", _("Folder tree"))] + [
+            ("folder:%d" % l, _("Folder level %d") % l) for l in range(1, 7)
         ]
 
     def _wato_host_tag_group_choices(self):
@@ -1707,8 +1707,8 @@ class ConfigVariableWATOActivationMethod(ConfigVariable):
 
     def valuespec(self):
         return DropdownChoice(
-            title=_("WATO restart mode for Nagios"),
-            help=_("Should WATO restart or reload Nagios when activating changes"),
+            title=_("Restart mode for Nagios"),
+            help=_("Restart or reload Nagios when changes are activated"),
             choices=[
                 ('restart', _("Restart")),
                 ('reload', _("Reload")),

@@ -2305,15 +2305,15 @@ def test_registered_sorters():
         },
         'wato_folder_abs': {
             'columns': ['host_filename'],
-            'title': u'WATO folder - complete path'
+            'title': u'Folder - complete path'
         },
         'wato_folder_plain': {
             'columns': ['host_filename'],
-            'title': u'WATO folder - just folder name'
+            'title': u'Folder - just folder name'
         },
         'wato_folder_rel': {
             'columns': ['host_filename'],
-            'title': u'WATO folder - relative path'
+            'title': u'Folder - relative path'
         },
     }
 

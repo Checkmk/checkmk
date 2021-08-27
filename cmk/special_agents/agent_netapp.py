@@ -175,7 +175,7 @@ def parse_arguments(argv):
     parser.add_argument(
         '--legacy',
         action='store_true',
-        help='Legacy mode with NaServer.py/NaElements.py (not configurable via WATO)',
+        help='Legacy mode with NaServer.py/NaElements.py (not configurable in Setup)',
     )
 
     if not argv:

@@ -85,7 +85,7 @@ def check_elasticsearch_cluster_health(no_item, params, parsed):
         elif info == "status":
             infotext = "Status:"
             if params.get(value):
-                yield params[value], "%s %s (State changed by WATO rule)" % (infotext, value)
+                yield params[value], "%s %s (State changed by rule)" % (infotext, value)
             else:
                 yield 0, "%s %s" % (infotext, value)
         else:

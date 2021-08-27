@@ -603,7 +603,7 @@ def _verify_no_deprecated_variables_used() -> None:
     if checks:
         console.error(
             "Check_MK does not support the configuration variable \"checks\" anymore. "
-            "Please use \"static_checks\" instead (which is configurable via \"Manual checks\" in WATO).\n"
+            "Please use \"static_checks\" instead (which is configurable via \"Enforced services\" in Setup).\n"
         )
         sys.exit(1)
 

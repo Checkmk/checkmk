@@ -327,7 +327,7 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
     def show(self):
         if not watolib.is_wato_slave_site():
             if not config.wato_enabled:
-                html.write_text(_("WATO is disabled."))
+                html.write_text(_("Setup is disabled."))
                 return False
 
         user_folders = compute_foldertree()

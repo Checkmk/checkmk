@@ -252,7 +252,7 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
         )
         long_output_labelling = [
             (u"timeline_long_output",
-             _("Display long output in timeline (<a href=\"%s\">Enable via WATO</a>)") %
+             _("Display long output in timeline (<a href=\"%s\">Enable in Setup</a>)") %
              ruleset_search_url)
         ]
     else:

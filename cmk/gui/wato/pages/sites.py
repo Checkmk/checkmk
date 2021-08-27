@@ -399,8 +399,8 @@ class ModeEditSite(WatoMode):
                      (None, _("No replication with this site")),
                      ("slave", _("Push configuration to this site")),
                  ],
-                 help=_("WATO replication allows you to manage several monitoring sites with a "
-                        "logically centralized WATO. Remote sites receive their configuration "
+                 help=_("Replication allows you to manage several monitoring sites with a "
+                        "logically centralized setup. Remote sites receive their configuration "
                         "from the central sites. <br><br>Note: Remote sites "
                         "do not need any replication configuration. They will be remote-controlled "
                         "by the central sites."),

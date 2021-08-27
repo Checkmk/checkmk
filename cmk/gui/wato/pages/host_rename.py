@@ -484,7 +484,7 @@ def rename_hosts(renamings, job_interface=None):
 
 def render_renaming_actions(action_counts):
     action_titles = {
-        "folder": _("WATO folder"),
+        "folder": _("Folder"),
         "notify_user": _("Users' notification rule"),
         "notify_global": _("Global notification rule"),
         "notify_flexible": _("Flexible notification rule"),

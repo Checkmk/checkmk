@@ -236,7 +236,7 @@ def test_registered_permission_sections():
         ('custom_snapin', (50, u'Custom sidebar elements', True)),
         ('sidesnap', (50, u'Sidebar elements', True)),
         ('notification_plugin', (50, u'Notification plugins', True)),
-        ('wato', (50, u"WATO - Checkmk's Web Administration Tool", False)),
+        ('wato', (50, u"Setup", False)),
         ('background_jobs', (50, u'Background jobs', False)),
         ('bi', (50, u'BI - Checkmk Business Intelligence', False)),
         ('general', (10, u'General Permissions', False)),

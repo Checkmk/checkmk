@@ -87,7 +87,10 @@ public:
     };
     static constexpr uint32_t all_classes = 0xffffU;
 
+    // Constructed by Logfile::processLogLine(). All instances owned by
+    // Logfile::_entries.
     LogEntry(size_t lineno, std::string line);
+
     [[nodiscard]] std::string state_info() const;
     static ServiceState parseServiceState(std::string_view str);
     static HostState parseHostState(std::string_view str);

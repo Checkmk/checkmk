@@ -29,13 +29,36 @@ public:
     // method of the MonitoringCore it gets, because there is a knot between the
     // Store and the NagiosCore classes, so the MonitoringCore is not yet fully
     // constructed. :-P
+
+    // Used to guard the execution of TableLog::answerQuery(),
+    // TableStateHistory::answerQuery() and Store::numCachedLogMessages().
+    // StateHistoryThread::run() uses this, too.
     std::mutex _lock;
+
+    // Used by Store::Store(), which owns the single instance of it in
+    // Store::_log_cached. It passes this instance to TableLog::TableLog() and
+    // TableStateHistory::TableStateHistory(). StateHistoryThread::run()
+    // constructs its own instance.
     explicit LogCache(MonitoringCore *mc);
+
+    // Used by TableLog::answerQuery(), TableStateHistory::answerQuery(), and
+    // Store::numCachedLogMessages(). StateHistoryThread::run() uses this, too.
+    // Always guarded by _lock.
     void update();
 
+    // Used by Store::numCachedLogMessages() after update(), guarded by _lock.
     [[nodiscard]] size_t numCachedLogMessages() const;
+
+    // Used by Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
+
+    // Used by TableLog::answerQuery(), TableStateHistory::answerQuery(), and
+    // Store::numCachedLogMessages(). StateHistoryThread::run() uses this, too.
     [[nodiscard]] bool empty() const { return _logfiles.empty(); }
+
+    // Used by TableLog::answerQuery(), TableStateHistory::answerQuery(),
+    // TableStateHistory::getPreviousLogentry(),
+    // TableStateHistory::getNextLogentry(), and StateHistoryThread::run()
     auto begin() { return _logfiles.begin(); }
     auto end() { return _logfiles.end(); }
 

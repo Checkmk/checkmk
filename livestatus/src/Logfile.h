@@ -27,23 +27,31 @@ using logfile_entries_t = std::map<uint64_t, std::unique_ptr<LogEntry>>;
 
 class Logfile {
 public:
+    // Used by LogCache::update(). All instances are owned by
+    // LogCache::_logfiles.
     Logfile(Logger *logger, LogCache *log_cache, std::filesystem::path path,
             bool watch);
+
+    // Used internally and by StateHistoryThread::run().
     [[nodiscard]] std::filesystem::path path() const { return _path; }
 
-    // for tricky protocol between LogCache::logLineHasBeenAdded and this class
+    // Used by LogCache::addToIndex() for tricky protocol between
+    // LogCache::logLineHasBeenAdded() and this class.
     [[nodiscard]] std::chrono::system_clock::time_point since() const {
         return _since;
     }
+
+    // Used by LogCache::logLineHasBeenAdded().
     [[nodiscard]] unsigned classesRead() const { return _logclasses_read; }
     [[nodiscard]] size_t size() const { return _entries.size(); }
     long freeMessages(unsigned logclasses);
 
-    // for TableStateHistory and TableLog
+    // Used by TableLog::answerQueryReverse() and
+    // TableStateHistory::getEntries().
     const logfile_entries_t *getEntriesFor(size_t max_lines_per_logfile,
                                            unsigned logclasses);
 
-    // for TableLog::answerQuery
+    // Used internally and by TableLog::answerQueryReverse().
     static uint64_t makeKey(std::chrono::system_clock::time_point t,
                             size_t lineno);
 

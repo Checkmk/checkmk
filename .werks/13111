@@ -1,0 +1,11 @@
+Title: Fix painter "Service notification number"
+Level: 1
+Component: multisite
+Compatible: compat
+Edition: cre
+Version: 1.6.0p26
+Date: 1630073799
+Class: fix
+
+The painter always showed 0 if no periodic notifications were enabled, even if
+the notification context showed 1 for the current service notification number.

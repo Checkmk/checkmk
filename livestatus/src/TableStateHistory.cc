@@ -53,13 +53,6 @@
 
 using namespace std::chrono_literals;
 
-namespace {
-constexpr unsigned classmask_statehist =
-    (1U << static_cast<int>(LogEntry::Class::alert)) |
-    (1U << static_cast<int>(LogEntry::Class::program)) |
-    (1U << static_cast<int>(LogEntry::Class::state));
-}  // namespace
-
 #ifndef CMC
 namespace {
 std::string getCustomVariable(const MonitoringCore *mc,
@@ -207,6 +200,14 @@ std::string TableStateHistory::name() const { return "statehist"; }
 
 std::string TableStateHistory::namePrefix() const { return "statehist_"; }
 
+const logfile_entries_t *TableStateHistory::getEntries(Logfile *logfile) {
+    constexpr unsigned classmask =
+        (1U << static_cast<int>(LogEntry::Class::alert)) |
+        (1U << static_cast<int>(LogEntry::Class::program)) |
+        (1U << static_cast<int>(LogEntry::Class::state));
+    return logfile->getEntriesFor(core()->maxLinesPerLogFile(), classmask);
+}
+
 void TableStateHistory::getPreviousLogentry() {
     while (_it_entries == _entries->begin()) {
         // open previous logfile
@@ -214,8 +215,7 @@ void TableStateHistory::getPreviousLogentry() {
             return;
         }
         --_it_logs;
-        _entries = _it_logs->second->getEntriesFor(core()->maxLinesPerLogFile(),
-                                                   classmask_statehist);
+        _entries = getEntries(_it_logs->second.get());
         _it_entries = _entries->end();
     }
     --_it_entries;
@@ -232,8 +232,7 @@ LogEntry *TableStateHistory::getNextLogentry() {
             return nullptr;
         }
         ++_it_logs;
-        _entries = _it_logs->second->getEntriesFor(core()->maxLinesPerLogFile(),
-                                                   classmask_statehist);
+        _entries = getEntries(_it_logs->second.get());
         _it_entries = _entries->begin();
     }
     return _it_entries->second.get();
@@ -331,8 +330,7 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     // Determine initial logentry
-    _entries = _it_logs->second->getEntriesFor(core()->maxLinesPerLogFile(),
-                                               classmask_statehist);
+    _entries = getEntries(_it_logs->second.get());
     if (!_entries->empty() && _it_logs != newest_log) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too

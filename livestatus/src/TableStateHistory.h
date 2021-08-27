@@ -54,6 +54,7 @@ private:
     const logfile_entries_t *_entries;
     logfile_entries_t::const_iterator _it_entries;
 
+    const logfile_entries_t *getEntries(Logfile *logfile);
     void getPreviousLogentry();
     LogEntry *getNextLogentry();
     void process(Query *query, HostServiceState *hs_state);

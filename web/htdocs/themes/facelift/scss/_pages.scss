@@ -182,7 +182,7 @@ body {
       position: relative;
       top: -14px;
       width: 100%;
-      font-family: monospace;
+      font-family: $font-family-monospace;
       color: $font-color-white;
     }
 
@@ -786,7 +786,7 @@ input.tabactive#results {
 
 input.date,
 input.time {
-  font-family: monospace;
+  font-family: $font-family-monospace;
 }
 
 .inputerror {
@@ -1101,11 +1101,11 @@ div.help {
   }
 
   table.help td.tt {
-    font-family: courier, monospace;
+    font-family: $font-family-courier;
   }
 
   tt {
-    font-family: courier, monospace;
+    font-family: $font-family-courier;
     color: $font-color-blue-2;
   }
 }
@@ -1301,7 +1301,7 @@ div.log_output,
 .crash_report pre {
   padding: 8px 16px;
   margin: 16px;
-  font-family: monospace;
+  font-family: $font-family-monospace;
   font-weight: $font-weight-default;
   background: $log-output-color;
   border: 1px solid $color-table-border;
@@ -1314,7 +1314,7 @@ div.log_output {
   vertical-align: top;
 
   pre {
-    font-family: monospace;
+    font-family: $font-family-monospace;
     color: $font-color;
   }
 }
@@ -1362,7 +1362,7 @@ table.debug_vars {
 
   td {
     padding: 2px 6px;
-    font-family: courier, monospace;
+    font-family: $font-family-courier;
     border: 1px solid rgb(0, 85, 0);
 
     &.left {

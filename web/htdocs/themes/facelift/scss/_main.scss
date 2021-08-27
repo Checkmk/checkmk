@@ -47,7 +47,7 @@ select,
 textarea {
   padding: 3px;
   margin-top: 0;
-  font-family: arial, helvetica, sans-serif;
+  font-family: $font-family-default;
   vertical-align: middle;
   background-color: $white;
   border: none;
@@ -803,7 +803,7 @@ table.vs_duallist {
 }
 
 textarea.tt {
-  font-family: monospace;
+  font-family: $font-family-monospace;
 }
 
 div.listofstrings.horizontal {
@@ -1116,9 +1116,7 @@ table.data.werks {
   }
 }
 
-table.werks td a,
-table.werks td body.main .popup_menu span,
-body.main .popup_menu table.werks td span {
+table.werks td a {
   color: $font-color-black;
   text-decoration: underline;
 }
@@ -1128,17 +1126,18 @@ td.nowiki {
   h3 {
     font-size: $font-size-large;
     font-weight: bold;
-    color: $font-color-black;
   }
 
   pre {
     padding: 3px 8px;
 
     &.code {
+      color: $font-color-light-bg;
       background-color: $white;
     }
 
     &.file {
+      color: $font-color-light-bg;
       background-color: rgb(255, 240, 181);
     }
   }
@@ -1146,8 +1145,8 @@ td.nowiki {
   div.filename {
     padding: 3px 8px;
     margin-bottom: -12px;
-    font-family: Hack, courier;
     font-weight: bold;
+    color: $font-color-light-bg;
     background-color: rgb(230, 216, 163);
   }
 

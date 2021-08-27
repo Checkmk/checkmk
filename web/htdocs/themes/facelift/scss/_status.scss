@@ -461,7 +461,7 @@ table.data tr.data td table.customvars td {
 td.matchgroups span {
   padding: 0 3px;
   margin-right: 3px;
-  font-family: monospace;
+  font-family: $font-family-monospace;
   background-color: $white;
   border: 1px solid rgb(238, 238, 238);
   border-radius: 3px;

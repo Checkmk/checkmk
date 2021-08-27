@@ -796,14 +796,6 @@ div.filter_buttons {
   }
 }
 
-/* Page edit_ruleset */
-/* TODO: Check whether this is still needed
- * with white color it wasn't visible anyways */
-div.varname {
-  font-family: monospace, sans-serif;
-  color: $font-color-white;
-}
-
 /* page "global settings*/
 .wato div.globalvars {
   a {
@@ -991,11 +983,6 @@ div.varname {
   max-width: 300px;
 }
 
-/* TODO: Reproduce this html element */
-.wato td#repmsg_local {
-  width: 280px;
-}
-
 table.data tr.notification_context table {
   margin: 5px;
   border: 1px solid $color-table-border;
@@ -1003,7 +990,7 @@ table.data tr.notification_context table {
 
   th,
   td {
-    font-family: monospace;
+    font-family: $font-family-monospace;
   }
 
   th {
@@ -1023,7 +1010,7 @@ table.data tr.notification_context table {
 /* TODO: Reproduce this dcd_log_entries html class */
 table.data tr.data.dcd_log_entries {
   > td {
-    font-family: monospace, sans-serif;
+    font-family: $font-family-monospace;
     color: $font-color-white;
     background-color: $black;
   }
@@ -1063,14 +1050,14 @@ table.data tr.data.dcd_log_entries {
     /* Log window */
     &.log {
       padding: 12px 12px 0;
-      font-family: monospace, sans-serif;
+      font-family: $font-family-monospace;
 
       > div {
         height: 250px;
         padding: 8px 16px;
         margin: 16px;
         overflow: auto;
-        font-family: monospace;
+        font-family: $font-family-monospace;
         font-weight: $font-weight-default;
         color: $font-color-light-grey;
         text-align: left;
@@ -1269,7 +1256,7 @@ table.data td.bi_rule_tree {
   height: 113px;
   padding: 5px;
   overflow-y: scroll;
-  font-family: monospace, sans-serif;
+  font-family: $font-family-monospace;
   vertical-align: top;
   background-color: $bg-color;
   box-shadow: 1px 1px 3px rgb(136, 136, 136) inset;

@@ -38,6 +38,8 @@ $red-2: rgb(130, 50, 50);
 // Theme specific font colors are in _variables.scss.
 // -----------------------------------------------------------------------------
 $font-family-default: "Lato", "Roboto", Helvetica, Arial, sans-serif;
+$font-family-monospace: monospace, sans-serif;
+$font-family-courier: courier, monospace;
 
 $font-color-white: $white;
 $font-color-black: $black;

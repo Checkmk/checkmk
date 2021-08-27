@@ -9,7 +9,7 @@ export class HostStats extends cmk_figures.FigureBase {
     initialize(debug) {
         super.initialize(debug);
 
-        this._div_selection.classed("stats", true);
+        this._div_selection.classed("stats_dashlet", true);
         this._table_div = this._div_selection.append("div").classed("stats_table", true);
         this.svg = this._div_selection.append("svg");
         // NOTE: for IE11 support we set the attribute here and do not use a CSS class

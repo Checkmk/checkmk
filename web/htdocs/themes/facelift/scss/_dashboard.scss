@@ -782,7 +782,7 @@ div.dashlet.nodata {
 
 div.site_overview,
 div.alert_statistics,
-div.stats {
+div.stats_dashlet {
   g.element_box:hover {
     path + path {
       fill-opacity: 0.96;
@@ -897,7 +897,7 @@ div.stats {
   }
 }
 
-div.stats {
+div.stats_dashlet {
   height: 100%;
 
   path.hexagon {

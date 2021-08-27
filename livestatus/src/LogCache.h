@@ -30,9 +30,9 @@ public:
     // Store and the NagiosCore classes, so the MonitoringCore is not yet fully
     // constructed. :-P
 
-    // Used to guard the execution of TableLog::answerQuery(),
-    // TableStateHistory::answerQuery() and Store::numCachedLogMessages().
-    // StateHistoryThread::run() uses this, too.
+    // Used internally and to guard the execution of TableLog::answerQuery() and
+    // TableStateHistory::answerQuery(). StateHistoryThread::run() uses this,
+    // too.
     std::mutex _lock;
 
     // Used by Store::Store(), which owns the single instance of it in
@@ -41,19 +41,19 @@ public:
     // constructs its own instance.
     explicit LogCache(MonitoringCore *mc);
 
-    // Used by TableLog::answerQuery(), TableStateHistory::answerQuery(), and
-    // Store::numCachedLogMessages(). StateHistoryThread::run() uses this, too.
-    // Always guarded by _lock.
+    // Used internally and by TableLog::answerQuery() and
+    // TableStateHistory::answerQuery(). StateHistoryThread::run() uses this,
+    // too. Always guarded by _lock.
     void update();
 
-    // Used by Store::numCachedLogMessages() after update(), guarded by _lock.
-    [[nodiscard]] size_t numCachedLogMessages() const;
+    // Used by Store::numCachedLogMessages(), uses _lock for itself.
+    [[nodiscard]] size_t numCachedLogMessages();
 
     // Used by Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
 
-    // Used by TableLog::answerQuery(), TableStateHistory::answerQuery(), and
-    // Store::numCachedLogMessages(). StateHistoryThread::run() uses this, too.
+    // Used by TableLog::answerQuery() and TableStateHistory::answerQuery().
+    // StateHistoryThread::run() uses this, too.
     [[nodiscard]] bool empty() const { return _logfiles.empty(); }
 
     // Used by TableLog::answerQuery(), TableStateHistory::answerQuery(),

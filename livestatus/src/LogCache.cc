@@ -148,7 +148,9 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
                     << _mc->maxCachedMessages() << ")";
 }
 
-size_t LogCache::numCachedLogMessages() const {
+size_t LogCache::numCachedLogMessages() {
+    std::lock_guard<std::mutex> lg(_lock);
+    update();
     return _num_cached_log_messages;
 }
 

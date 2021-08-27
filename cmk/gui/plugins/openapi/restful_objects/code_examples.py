@@ -192,32 +192,32 @@ PASSWORD="{{ password }}"
 
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
-http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
-    --json
+http --json {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
     {%- if endpoint.does_redirects %}
     --follow \\
     --all \\
     {%- endif %}
+    {%- if endpoint.content_type == 'application/octet-stream' %}
+    --download \\
+    {%- endif %}
     "Authorization: Bearer $USERNAME $PASSWORD" \\
-    "Accept: {{ endpoint.content_type }}" \\
+    "Accept: {{ endpoint.content_type }}" {% if header_params or query_params or request_schema %} \\ {% endif %}
 {%- for header in header_params %}
-    '{{ header.name }}:{{ header.example }}' \\
+    '{{ header.name }}:{{ header.example }}' {% if query_params or request_schema %} \\ {% endif %}
 {%- endfor %}
 {%- if query_params %}
  {%- for param in query_params %}
   {%- if param.example is defined and param.example %}
-    {{ param.name }}=="{{ param.example }}" \\
+    {{ param.name }}=="{{ param.example }}" {% if request_schema %} \\ {% endif %}
   {%- endif %}
  {%- endfor %}
 {%- endif %}
 {%- if request_schema %}
  {%- for key, field in request_schema.declared_fields.items() %}
-    {{ key }}='{{ field | field_value }}' \\
+    {{ key }}{% if field | field_str %}={% else %}:={% endif %}'{{ field | field_value }}' {% if not loop.last %} \\ {% endif %} 
  {%- endfor %}
 {%- endif %}
-{%- if endpoint.content_type == 'application/octet-stream' %}
-    --download \\
-{%- endif %}
+
 
 """
 
@@ -322,8 +322,15 @@ def first_sentence(text: str) -> str:
     return ''.join(re.split(r'(\w\.)', text)[:2])
 
 
+def is_str(field: fields.Field) -> bool:
+    return isinstance(field.metadata['example'], str)
+
+
 def field_value(field: fields.Field) -> str:
-    return field.metadata['example']
+    example = field.metadata['example']
+    if isinstance(example, str):
+        return example
+    return json.dumps(example)
 
 
 def to_dict(schema: Schema) -> Dict[str, str]:
@@ -554,6 +561,7 @@ def _jinja_environment() -> jinja2.Environment:
         fill_out_parameters=fill_out_parameters,
         first_sentence=first_sentence,
         indent=indent,
+        field_str=is_str,
         field_value=field_value,
         to_dict=to_dict,
         to_env=_to_env,

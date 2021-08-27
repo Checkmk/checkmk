@@ -1,0 +1,13 @@
+Title: REST-API: fixing httpie doc examples
+Class: fix
+Compatible: compat
+Component: core
+Date: 1630056436
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p10
+
+In most cases, the httpie examples required the user to do some
+slight adjustments before being able to execute the relevant commands.
+This werk improves these httpie examples.

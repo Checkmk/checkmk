@@ -53,22 +53,20 @@ BRANCH_VERSION     := 2.1.0
 #endif
 
 SHELL              := /bin/bash
-# TODO: Be more strict - Add this:
-#SHELL              := /bin/bash -e -o pipefail
-
 CLANG_VERSION      := 12
-
 PYTHON2_VERSION	   := 2.7.17
 
+# When you update the Python version, you have to update the test expectations
+# in test_03_python_interpreter_version and test_03_pip_interpreter_version.
+# Update omd/Licenses.csv, too.
 PYTHON_VERSION	   := 3.8.11
 
-PY_ARRAY	   := $(subst ., ,$(PYTHON_VERSION))
-
-PYTHON_VERSION_MAJOR:=$(word 1,$(PY_ARRAY))
-PYTHON_VERSION_MINOR:=$(word 2,$(PY_ARRAY))
-PYTHON_VERSION_PATCH:=$(word 3,$(PY_ARRAY))
-
-PYTHON_MAJOR_MINOR := $(PYTHON_VERSION_MAJOR)$(PYTHON_VERSION_MINOR)
+# convenience stuff derived from PYTHON_VERSION
+PY_ARRAY	       := $(subst ., ,$(PYTHON_VERSION))
+PYTHON_VERSION_MAJOR   := $(word 1,$(PY_ARRAY))
+PYTHON_VERSION_MINOR   := $(word 2,$(PY_ARRAY))
+PYTHON_VERSION_PATCH   := $(word 3,$(PY_ARRAY))
+PYTHON_MAJOR_MINOR     := $(PYTHON_VERSION_MAJOR)$(PYTHON_VERSION_MINOR)
 PYTHON_MAJOR_DOT_MINOR := $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)
 
 print-%:

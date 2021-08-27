@@ -391,7 +391,7 @@ class ModeObjectParameters(WatoMode):
             html.a("%d %s" % (len(rules), _("Rules")), href=url)
 
         else:
-            html.i(_("Default Value"))
+            html.span(_("Default value"))
         html.close_td()
 
         # Show the resulting value or factory setting

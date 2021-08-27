@@ -1073,10 +1073,9 @@ div.help {
   &:before {
     display: inline-block;
     height: 100%;
-    margin-right: 12px;
+    margin-right: $spacing;
     font-family: serif;
-    font-size: 16px;
-    font-style: italic;
+    font-size: $font-size-large;
     font-weight: $font-weight-bold;
     content: "i";
   }

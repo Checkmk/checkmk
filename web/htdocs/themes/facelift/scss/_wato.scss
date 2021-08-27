@@ -1367,10 +1367,9 @@ table.setting td.reason {
   display: inline-block;
   float: none;
   width: 180px;
-  font-style: italic;
   color: $font-color;
 
-  i {
+  span {
     color: $font-color-dimmed; /* default value */
   }
 
@@ -1385,7 +1384,6 @@ table.setting td.reason {
 
 td.settingvalue.unused,
 td.settingvalue.unused td {
-  font-style: italic;
   color: $font-color-dimmed;
 }
 

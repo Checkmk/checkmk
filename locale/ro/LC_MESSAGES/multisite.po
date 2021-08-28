@@ -14286,7 +14286,7 @@ msgid "Display legend for timeline"
 msgstr ""
 
 #, python-format
-msgid "Display long output in timeline (<a href=\"%s\">Enable via WATO</a>)"
+msgid "Display long output in timeline (<a href=\"%s\">Enable in Setup</a>)"
 msgstr ""
 
 #, fuzzy
@@ -18586,12 +18586,28 @@ msgid "Folder %s not found."
 msgstr ""
 
 #, fuzzy
+msgid "Folder - complete path"
+msgstr "Proprietatile Folderului"
+
+#, fuzzy
+msgid "Folder - just folder name"
+msgstr "Nume utilizator vSphere"
+
+#, fuzzy
+msgid "Folder - relative path"
+msgstr "Proprietatile Folderului"
+
+#, fuzzy
 msgid "Folder Selection"
 msgstr "Proprietatile Folderului"
 
 msgid ""
 "Folder attributes are locked (You cannot edit the attributes of this folder)"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Folder level %d"
+msgstr "trei nivele"
 
 #, fuzzy
 msgid "Folder path"
@@ -18602,6 +18618,10 @@ msgstr ""
 
 #, fuzzy
 msgid "Folder properties"
+msgstr "Proprietatile Folderului"
+
+#, fuzzy
+msgid "Folder tree"
 msgstr "Proprietatile Folderului"
 
 #, fuzzy, python-format
@@ -24945,6 +24965,9 @@ msgid "Kube-state-metrics"
 msgstr "cereri/sec"
 
 msgid "Kubernetes"
+msgstr ""
+
+msgid "Kubernetes 2.0"
 msgstr ""
 
 msgid "Kubernetes Namespaced pods Filesystem usage"
@@ -33914,6 +33937,10 @@ msgstr "Numele Elementului"
 msgid "Peers"
 msgstr ""
 
+#, fuzzy
+msgid "Pending"
+msgstr "cereri"
+
 msgid "Pending DHCP leases"
 msgstr ""
 
@@ -37350,6 +37377,13 @@ msgstr ""
 msgid "Replication States"
 msgstr ""
 
+msgid ""
+"Replication allows you to manage several monitoring sites with a logically "
+"centralized setup. Remote sites receive their configuration from the central "
+"sites. <br><br>Note: Remote sites do not need any replication configuration. "
+"They will be remote-controlled by the central sites."
+msgstr ""
+
 msgid "Replication completed successfully."
 msgstr ""
 
@@ -37647,6 +37681,13 @@ msgstr ""
 #, fuzzy
 msgid "Restart count"
 msgstr "Reseteaza contoarele"
+
+#, fuzzy
+msgid "Restart mode for Nagios"
+msgstr "Eticheta de grup nou"
+
+msgid "Restart or reload Nagios when changes are activated"
+msgstr ""
 
 msgid "Restore"
 msgstr ""
@@ -40453,9 +40494,25 @@ msgstr ""
 msgid "Setup"
 msgstr ""
 
+msgid ""
+"Setup can repair things for you. It can rename tags in folders, host and "
+"rules. Removed tag groups will be removed from hosts and folders, removed "
+"tags will be replaced with the default value for the tag group (for hosts "
+"and folders). What rules concern, you have to decide how to proceed."
+msgstr ""
+
+#, fuzzy
+msgid "Setup is disabled on this site."
+msgstr "Dezactiveaza Notificarile"
+
 #, fuzzy
 msgid "Setup is disabled."
 msgstr "Notificari"
+
+msgid ""
+"Setup is disabled. Please set <tt>wato_enabled = True</tt> in your "
+"<tt>multisite.mk</tt> if you want to use Setup."
+msgstr ""
 
 msgid "Setup, site management"
 msgstr ""
@@ -40529,9 +40586,6 @@ msgid "Short description for service incidents"
 msgstr ""
 
 msgid "Shortest"
-msgstr ""
-
-msgid "Should WATO restart or reload Nagios when activating changes"
 msgstr ""
 
 msgid "Show"
@@ -54941,60 +54995,6 @@ msgid ""
 "master are being used in the case of a takeover. The same holds for the "
 "event actions in the global settings.<br><br>If you want you can copy the "
 "ruleset of the master into your local slave configuration: "
-msgstr ""
-
-msgid "WATO - Checkmk's Web Administration Tool"
-msgstr ""
-
-msgid "WATO Folder"
-msgstr ""
-
-msgid ""
-"WATO can repair things for you. It can rename tags in folders, host and "
-"rules. Removed tag groups will be removed from hosts and folders, removed "
-"tags will be replaced with the default value for the tag group (for hosts "
-"and folders). What rules concern, you have to decide how to proceed."
-msgstr ""
-
-msgid "WATO folder"
-msgstr ""
-
-msgid "WATO folder - complete path"
-msgstr ""
-
-msgid "WATO folder - just folder name"
-msgstr ""
-
-msgid "WATO folder - relative path"
-msgstr ""
-
-#, python-format
-msgid "WATO folder level %d"
-msgstr ""
-
-msgid "WATO folder tree"
-msgstr ""
-
-#, fuzzy
-msgid "WATO is disabled on this site."
-msgstr "Dezactiveaza Notificarile"
-
-msgid "WATO is disabled."
-msgstr ""
-
-msgid ""
-"WATO is disabled. Please set <tt>wato_enabled = True</tt> in your "
-"<tt>multisite.mk</tt> if you want to use WATO."
-msgstr ""
-
-msgid ""
-"WATO replication allows you to manage several monitoring sites with a "
-"logically centralized WATO. Remote sites receive their configuration from "
-"the central sites. <br><br>Note: Remote sites do not need any replication "
-"configuration. They will be remote-controlled by the central sites."
-msgstr ""
-
-msgid "WATO restart mode for Nagios"
 msgstr ""
 
 msgid "WCU"

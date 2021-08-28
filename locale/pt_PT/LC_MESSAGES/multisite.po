@@ -14798,8 +14798,8 @@ msgstr "Exibir a utilização do inode na saída de verificação..."
 msgid "Display legend for timeline"
 msgstr "Exibir legenda para a linha do tempo"
 
-#, python-format
-msgid "Display long output in timeline (<a href=\"%s\">Enable via WATO</a>)"
+#, fuzzy, python-format
+msgid "Display long output in timeline (<a href=\"%s\">Enable in Setup</a>)"
 msgstr ""
 "Exibir saída longa na linha de tempo (<a href=\"%s\">Enable via WATO</a>)"
 
@@ -19066,6 +19066,18 @@ msgstr "Pasta %s não existe"
 msgid "Folder %s not found."
 msgstr "Pastas %s não encontradas."
 
+#, fuzzy
+msgid "Folder - complete path"
+msgstr "Pasta WATO - caminho completo"
+
+#, fuzzy
+msgid "Folder - just folder name"
+msgstr "Pasta WATO - apenas o nome da pasta"
+
+#, fuzzy
+msgid "Folder - relative path"
+msgstr "Pasta WATO - caminho relativo"
+
 msgid "Folder Selection"
 msgstr "Seleção de Pasta"
 
@@ -19075,6 +19087,10 @@ msgstr ""
 "Os atributos da pasta estão bloqueados (Não é possível editar os atributos "
 "desta pasta)"
 
+#, fuzzy, python-format
+msgid "Folder level %d"
+msgstr "Nível da pasta WATO %d"
+
 msgid "Folder path"
 msgstr "Percurso de pasta"
 
@@ -19083,6 +19099,10 @@ msgstr "Falta o caminho da pasta"
 
 msgid "Folder properties"
 msgstr "Propriedades da pasta"
+
+#, fuzzy
+msgid "Folder tree"
+msgstr "Árvore dobrável"
 
 #, python-format
 msgid "Folder: %s"
@@ -26391,6 +26411,10 @@ msgid "Kube-state-metrics"
 msgstr "Kube-state-metrics"
 
 msgid "Kubernetes"
+msgstr "Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes 2.0"
 msgstr "Kubernetes"
 
 msgid "Kubernetes Namespaced pods Filesystem usage"
@@ -35074,6 +35098,10 @@ msgstr "Nome do Par"
 msgid "Peers"
 msgstr "Pares"
 
+#, fuzzy
+msgid "Pending"
+msgstr "pendente"
+
 msgid "Pending DHCP leases"
 msgstr "Locações pendentes de DHCP"
 
@@ -38522,6 +38550,19 @@ msgstr "Utilização do disco de réplicas"
 msgid "Replication States"
 msgstr "Estados de Replicação"
 
+#, fuzzy
+msgid ""
+"Replication allows you to manage several monitoring sites with a logically "
+"centralized setup. Remote sites receive their configuration from the central "
+"sites. <br><br>Note: Remote sites do not need any replication configuration. "
+"They will be remote-controlled by the central sites."
+msgstr ""
+"A replicação WATO permite gerir vários locais de monitorização com uma WATO "
+"logicamente centralizada. Os locais remotos recebem a sua configuração a "
+"partir dos locais centrais. <br>>br>Note: Os sites remotos não necessitam de "
+"qualquer configuração de replicação. Eles serão controlados remotamente "
+"pelos locais centrais."
+
 msgid "Replication completed successfully."
 msgstr "Replicação concluída com sucesso."
 
@@ -38805,6 +38846,14 @@ msgstr "Reinicie"
 
 msgid "Restart count"
 msgstr "Reiniciar a contagem"
+
+#, fuzzy
+msgid "Restart mode for Nagios"
+msgstr "Modo de reinício WATO para Nagios"
+
+#, fuzzy
+msgid "Restart or reload Nagios when changes are activated"
+msgstr "Caso a WATO reinicie ou recarregue o Nagios ao activar as alterações"
 
 msgid "Restore"
 msgstr "Restaurar"
@@ -41603,8 +41652,33 @@ msgstr ""
 msgid "Setup"
 msgstr "Configuração"
 
+#, fuzzy
+msgid ""
+"Setup can repair things for you. It can rename tags in folders, host and "
+"rules. Removed tag groups will be removed from hosts and folders, removed "
+"tags will be replaced with the default value for the tag group (for hosts "
+"and folders). What rules concern, you have to decide how to proceed."
+msgstr ""
+"A WATO pode reparar as coisas por si. Ele pode renomear tags em pastas, host "
+"e regras. Grupos de tags removidos serão removidos de hosts e pastas, tags "
+"removidas serão substituídas pelo valor padrão para o grupo de tags (para "
+"hosts e pastas). O que as regras dizem respeito, você tem que decidir como "
+"proceder."
+
+#, fuzzy
+msgid "Setup is disabled on this site."
+msgstr "A WATO está desactivada neste site."
+
 msgid "Setup is disabled."
 msgstr "A configuração está desativada."
+
+#, fuzzy
+msgid ""
+"Setup is disabled. Please set <tt>wato_enabled = True</tt> in your "
+"<tt>multisite.mk</tt> if you want to use Setup."
+msgstr ""
+"A WATO está desactivada. Por favor defina <tt>wato_enabled = True</tt> no "
+"seu <tt>multisite.mk</tt> se você quiser usar WATO."
 
 msgid "Setup, site management"
 msgstr "Configuração, gerenciamento do site"
@@ -41680,9 +41754,6 @@ msgstr "Breve descrição dos incidentes de serviço"
 
 msgid "Shortest"
 msgstr "O mais curto"
-
-msgid "Should WATO restart or reload Nagios when activating changes"
-msgstr "Caso a WATO reinicie ou recarregue o Nagios ao activar as alterações"
 
 msgid "Show"
 msgstr "Mostrar"
@@ -58419,71 +58490,6 @@ msgstr ""
 "quiser, você pode copiar o conjunto de regras do mestre para a sua "
 "configuração escrava local: "
 
-msgid "WATO - Checkmk's Web Administration Tool"
-msgstr "WATO - Ferramenta de Administração Web da Checkmk"
-
-msgid "WATO Folder"
-msgstr "Pasta WATO"
-
-msgid ""
-"WATO can repair things for you. It can rename tags in folders, host and "
-"rules. Removed tag groups will be removed from hosts and folders, removed "
-"tags will be replaced with the default value for the tag group (for hosts "
-"and folders). What rules concern, you have to decide how to proceed."
-msgstr ""
-"A WATO pode reparar as coisas por si. Ele pode renomear tags em pastas, host "
-"e regras. Grupos de tags removidos serão removidos de hosts e pastas, tags "
-"removidas serão substituídas pelo valor padrão para o grupo de tags (para "
-"hosts e pastas). O que as regras dizem respeito, você tem que decidir como "
-"proceder."
-
-msgid "WATO folder"
-msgstr "pasta WATO"
-
-msgid "WATO folder - complete path"
-msgstr "Pasta WATO - caminho completo"
-
-msgid "WATO folder - just folder name"
-msgstr "Pasta WATO - apenas o nome da pasta"
-
-msgid "WATO folder - relative path"
-msgstr "Pasta WATO - caminho relativo"
-
-#, python-format
-msgid "WATO folder level %d"
-msgstr "Nível da pasta WATO %d"
-
-msgid "WATO folder tree"
-msgstr "Árvore de pastas WATO"
-
-msgid "WATO is disabled on this site."
-msgstr "A WATO está desactivada neste site."
-
-msgid "WATO is disabled."
-msgstr "A WATO está desactivada."
-
-msgid ""
-"WATO is disabled. Please set <tt>wato_enabled = True</tt> in your "
-"<tt>multisite.mk</tt> if you want to use WATO."
-msgstr ""
-"A WATO está desactivada. Por favor defina <tt>wato_enabled = True</tt> no "
-"seu <tt>multisite.mk</tt> se você quiser usar WATO."
-
-msgid ""
-"WATO replication allows you to manage several monitoring sites with a "
-"logically centralized WATO. Remote sites receive their configuration from "
-"the central sites. <br><br>Note: Remote sites do not need any replication "
-"configuration. They will be remote-controlled by the central sites."
-msgstr ""
-"A replicação WATO permite gerir vários locais de monitorização com uma WATO "
-"logicamente centralizada. Os locais remotos recebem a sua configuração a "
-"partir dos locais centrais. <br>>br>Note: Os sites remotos não necessitam de "
-"qualquer configuração de replicação. Eles serão controlados remotamente "
-"pelos locais centrais."
-
-msgid "WATO restart mode for Nagios"
-msgstr "Modo de reinício WATO para Nagios"
-
 msgid "WCU"
 msgstr "WCU"
 
@@ -64247,6 +64253,21 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "WATO - Checkmk's Web Administration Tool"
+#~ msgstr "WATO - Ferramenta de Administração Web da Checkmk"
+
+#~ msgid "WATO Folder"
+#~ msgstr "Pasta WATO"
+
+#~ msgid "WATO folder"
+#~ msgstr "pasta WATO"
+
+#~ msgid "WATO folder tree"
+#~ msgstr "Árvore de pastas WATO"
+
+#~ msgid "WATO is disabled."
+#~ msgstr "A WATO está desactivada."
 
 #~ msgid "Prometheus web port"
 #~ msgstr "porta web Prometheus"

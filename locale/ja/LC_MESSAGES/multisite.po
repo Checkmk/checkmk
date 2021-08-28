@@ -14272,8 +14272,8 @@ msgstr "チェック出力にiノードの使用状況を表示します。"
 msgid "Display legend for timeline"
 msgstr "タイムラインの凡例を表示する"
 
-#, python-format
-msgid "Display long output in timeline (<a href=\"%s\">Enable via WATO</a>)"
+#, fuzzy, python-format
+msgid "Display long output in timeline (<a href=\"%s\">Enable in Setup</a>)"
 msgstr ""
 "長い出力をタイムラインに表示します(<a href=\"%s\"> WATO経由で有効にする</a>)"
 
@@ -18482,12 +18482,28 @@ msgstr "フォルダ %sは存在しません"
 msgid "Folder %s not found."
 msgstr "フォルダ%sが見つかりません。"
 
+#, fuzzy
+msgid "Folder - complete path"
+msgstr "WATOフォルダー-完全なパス"
+
+#, fuzzy
+msgid "Folder - just folder name"
+msgstr "WATOフォルダー - フォルダー名のみ"
+
+#, fuzzy
+msgid "Folder - relative path"
+msgstr "WATOフォルダー - 相対パス"
+
 msgid "Folder Selection"
 msgstr "フォルダの選択"
 
 msgid ""
 "Folder attributes are locked (You cannot edit the attributes of this folder)"
 msgstr "フォルダの属性はロックされています(このフォルダの属性は編集できません)"
+
+#, fuzzy, python-format
+msgid "Folder level %d"
+msgstr "WATOフォルダレベル %d"
 
 msgid "Folder path"
 msgstr "フォルダパス"
@@ -18497,6 +18513,10 @@ msgstr "フォルダパスがありません"
 
 msgid "Folder properties"
 msgstr "フォルダのプロパティ"
+
+#, fuzzy
+msgid "Folder tree"
+msgstr "フォルダツリー"
 
 #, python-format
 msgid "Folder: %s"
@@ -25389,6 +25409,10 @@ msgid "Kube-state-metrics"
 msgstr "Kube-state-metrics"
 
 msgid "Kubernetes"
+msgstr "Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes 2.0"
 msgstr "Kubernetes"
 
 msgid "Kubernetes Namespaced pods Filesystem usage"
@@ -33873,6 +33897,10 @@ msgstr "ピア名"
 msgid "Peers"
 msgstr "ピア"
 
+#, fuzzy
+msgid "Pending"
+msgstr "保留中"
+
 msgid "Pending DHCP leases"
 msgstr "保留中のDHCPリース"
 
@@ -37211,6 +37239,18 @@ msgstr "レプリケーションスロットディスクの使用量"
 msgid "Replication States"
 msgstr "レプリケーションの状態"
 
+#, fuzzy
+msgid ""
+"Replication allows you to manage several monitoring sites with a logically "
+"centralized setup. Remote sites receive their configuration from the central "
+"sites. <br><br>Note: Remote sites do not need any replication configuration. "
+"They will be remote-controlled by the central sites."
+msgstr ""
+"WATOレプリケーションを使用すると、論理的に集中化されたWATOを使用して複数の監"
+"視サイトを管理できます。リモートサイトは、中央サイトから構成を受け取ります。"
+"<br> <br>注:リモートサイトにはレプリケーション構成は必要ありません。それらは"
+"中央サイトによってリモート制御されます。"
+
 msgid "Replication completed successfully."
 msgstr "レプリケーションが正常に完了しました。"
 
@@ -37488,6 +37528,16 @@ msgstr "再起動"
 
 msgid "Restart count"
 msgstr "再起動カウント"
+
+#, fuzzy
+msgid "Restart mode for Nagios"
+msgstr "NagiosのWATOリスタートモード"
+
+#, fuzzy
+msgid "Restart or reload Nagios when changes are activated"
+msgstr ""
+"変更をアクティブ化するときに、WATOがNagiosを再起動またはリロードする必要があ"
+"ります"
 
 msgid "Restore"
 msgstr "戻す"
@@ -40190,8 +40240,33 @@ msgstr ""
 msgid "Setup"
 msgstr "セットアップ"
 
+#, fuzzy
+msgid ""
+"Setup can repair things for you. It can rename tags in folders, host and "
+"rules. Removed tag groups will be removed from hosts and folders, removed "
+"tags will be replaced with the default value for the tag group (for hosts "
+"and folders). What rules concern, you have to decide how to proceed."
+msgstr ""
+"WATOはあなたのために物事を修理することができます。フォルダ、ホスト、ルールの"
+"タグの名前を変更できます。削除されたタググループはホストとフォルダーから削除"
+"され、削除されたタグはタググループのデフォルト値(ホストとフォルダーの場合)に"
+"置き換えられます。どのルールが関係するか、あなたはどのように進めるかを決定し"
+"なければなりません。"
+
+#, fuzzy
+msgid "Setup is disabled on this site."
+msgstr "このサイトではWATOが無効になっています。"
+
 msgid "Setup is disabled."
 msgstr "セットアップは無効になっています。"
+
+#, fuzzy
+msgid ""
+"Setup is disabled. Please set <tt>wato_enabled = True</tt> in your "
+"<tt>multisite.mk</tt> if you want to use Setup."
+msgstr ""
+"WATOは無効になっています。WATOを使用する場合は、<tt>multisite.mk</tt>で"
+"<tt>wato_enabled = True</tt>を設定してください。"
 
 msgid "Setup, site management"
 msgstr "セットアップ、サイト管理"
@@ -40267,11 +40342,6 @@ msgstr "サービスインシデントの簡単な説明"
 
 msgid "Shortest"
 msgstr "最短"
-
-msgid "Should WATO restart or reload Nagios when activating changes"
-msgstr ""
-"変更をアクティブ化するときに、WATOがNagiosを再起動またはリロードする必要があ"
-"ります"
 
 msgid "Show"
 msgstr "見せる"
@@ -55919,70 +55989,6 @@ msgstr ""
 "ついても同じことが言えます。<br><br>必要に応じて、マスターのルールセットを"
 "ローカルスレーブ構成にコピーできます。 "
 
-msgid "WATO - Checkmk's Web Administration Tool"
-msgstr "WATO-CheckmkのWeb管理ツール"
-
-msgid "WATO Folder"
-msgstr "和藤フォルダー"
-
-msgid ""
-"WATO can repair things for you. It can rename tags in folders, host and "
-"rules. Removed tag groups will be removed from hosts and folders, removed "
-"tags will be replaced with the default value for the tag group (for hosts "
-"and folders). What rules concern, you have to decide how to proceed."
-msgstr ""
-"WATOはあなたのために物事を修理することができます。フォルダ、ホスト、ルールの"
-"タグの名前を変更できます。削除されたタググループはホストとフォルダーから削除"
-"され、削除されたタグはタググループのデフォルト値(ホストとフォルダーの場合)に"
-"置き換えられます。どのルールが関係するか、あなたはどのように進めるかを決定し"
-"なければなりません。"
-
-msgid "WATO folder"
-msgstr "WATOフォルダ"
-
-msgid "WATO folder - complete path"
-msgstr "WATOフォルダー-完全なパス"
-
-msgid "WATO folder - just folder name"
-msgstr "WATOフォルダー - フォルダー名のみ"
-
-msgid "WATO folder - relative path"
-msgstr "WATOフォルダー - 相対パス"
-
-#, python-format
-msgid "WATO folder level %d"
-msgstr "WATOフォルダレベル %d"
-
-msgid "WATO folder tree"
-msgstr "WATOフォルダツリー"
-
-msgid "WATO is disabled on this site."
-msgstr "このサイトではWATOが無効になっています。"
-
-msgid "WATO is disabled."
-msgstr "WATOは無効になっています。"
-
-msgid ""
-"WATO is disabled. Please set <tt>wato_enabled = True</tt> in your "
-"<tt>multisite.mk</tt> if you want to use WATO."
-msgstr ""
-"WATOは無効になっています。WATOを使用する場合は、<tt>multisite.mk</tt>で"
-"<tt>wato_enabled = True</tt>を設定してください。"
-
-msgid ""
-"WATO replication allows you to manage several monitoring sites with a "
-"logically centralized WATO. Remote sites receive their configuration from "
-"the central sites. <br><br>Note: Remote sites do not need any replication "
-"configuration. They will be remote-controlled by the central sites."
-msgstr ""
-"WATOレプリケーションを使用すると、論理的に集中化されたWATOを使用して複数の監"
-"視サイトを管理できます。リモートサイトは、中央サイトから構成を受け取ります。"
-"<br> <br>注:リモートサイトにはレプリケーション構成は必要ありません。それらは"
-"中央サイトによってリモート制御されます。"
-
-msgid "WATO restart mode for Nagios"
-msgstr "NagiosのWATOリスタートモード"
-
 msgid "WCU"
 msgstr "WCU"
 
@@ -61367,6 +61373,21 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "WATO - Checkmk's Web Administration Tool"
+#~ msgstr "WATO-CheckmkのWeb管理ツール"
+
+#~ msgid "WATO Folder"
+#~ msgstr "和藤フォルダー"
+
+#~ msgid "WATO folder"
+#~ msgstr "WATOフォルダ"
+
+#~ msgid "WATO folder tree"
+#~ msgstr "WATOフォルダツリー"
+
+#~ msgid "WATO is disabled."
+#~ msgstr "WATOは無効になっています。"
 
 #~ msgid "Prometheus web port"
 #~ msgstr "Prometheus Webポート"

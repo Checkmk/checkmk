@@ -14782,8 +14782,8 @@ msgstr "Toon inode gebruik in controle uitvoer..."
 msgid "Display legend for timeline"
 msgstr "Toon legende voor tijdlijn"
 
-#, python-format
-msgid "Display long output in timeline (<a href=\"%s\">Enable via WATO</a>)"
+#, fuzzy, python-format
+msgid "Display long output in timeline (<a href=\"%s\">Enable in Setup</a>)"
 msgstr ""
 "Lange uitvoer weergeven in tijdlijn (<a href=\"%s\">Inschakelen via WATO</a>)"
 
@@ -19055,6 +19055,18 @@ msgstr "Map %s bestaat niet"
 msgid "Folder %s not found."
 msgstr "Map %s niet gevonden."
 
+#, fuzzy
+msgid "Folder - complete path"
+msgstr "WATO map - volledig pad"
+
+#, fuzzy
+msgid "Folder - just folder name"
+msgstr "WATO map - alleen mapnaam"
+
+#, fuzzy
+msgid "Folder - relative path"
+msgstr "WATO map - relatief pad"
+
 msgid "Folder Selection"
 msgstr "Map Selectie"
 
@@ -19064,6 +19076,10 @@ msgstr ""
 "De mapattributen zijn vergrendeld (U kunt de attributen van deze map niet "
 "bewerken)"
 
+#, fuzzy, python-format
+msgid "Folder level %d"
+msgstr "WATO map niveau %d"
+
 msgid "Folder path"
 msgstr "Map pad"
 
@@ -19072,6 +19088,10 @@ msgstr "Map pad ontbreekt"
 
 msgid "Folder properties"
 msgstr "Map eigenschappen"
+
+#, fuzzy
+msgid "Folder tree"
+msgstr "Opvouwbare boom"
 
 #, python-format
 msgid "Folder: %s"
@@ -26391,6 +26411,10 @@ msgid "Kube-state-metrics"
 msgstr "Kube-state-metrics"
 
 msgid "Kubernetes"
+msgstr "Kubernetes"
+
+#, fuzzy
+msgid "Kubernetes 2.0"
 msgstr "Kubernetes"
 
 msgid "Kubernetes Namespaced pods Filesystem usage"
@@ -35048,6 +35072,10 @@ msgstr "Naam collega"
 msgid "Peers"
 msgstr "Peers"
 
+#, fuzzy
+msgid "Pending"
+msgstr "in afwachting van"
+
 msgid "Pending DHCP leases"
 msgstr "In afwachting van DHCP leases"
 
@@ -38487,6 +38515,19 @@ msgstr "Replicatie Slot Schijf Gebruik"
 msgid "Replication States"
 msgstr "Replicatie Staten"
 
+#, fuzzy
+msgid ""
+"Replication allows you to manage several monitoring sites with a logically "
+"centralized setup. Remote sites receive their configuration from the central "
+"sites. <br><br>Note: Remote sites do not need any replication configuration. "
+"They will be remote-controlled by the central sites."
+msgstr ""
+"Met WATO-replicatie kunt u verschillende bewakingssites beheren met een "
+"logisch gecentraliseerde WATO. Remote sites ontvangen hun configuratie van "
+"de centrale sites. <br><br>Note: Externe sites hebben geen "
+"replicatieconfiguratie nodig. Zij worden op afstand bestuurd door de "
+"centrale sites."
+
 msgid "Replication completed successfully."
 msgstr "Replicatie succesvol afgerond."
 
@@ -38770,6 +38811,15 @@ msgstr "Herstart"
 
 msgid "Restart count"
 msgstr "Herstart telling"
+
+#, fuzzy
+msgid "Restart mode for Nagios"
+msgstr "WATO herstartmodus voor Nagios"
+
+#, fuzzy
+msgid "Restart or reload Nagios when changes are activated"
+msgstr ""
+"Moet WATO Nagios herstarten of herladen bij het activeren van wijzigingen"
 
 msgid "Restore"
 msgstr "Herstel"
@@ -41568,8 +41618,33 @@ msgstr ""
 msgid "Setup"
 msgstr "Setup"
 
+#, fuzzy
+msgid ""
+"Setup can repair things for you. It can rename tags in folders, host and "
+"rules. Removed tag groups will be removed from hosts and folders, removed "
+"tags will be replaced with the default value for the tag group (for hosts "
+"and folders). What rules concern, you have to decide how to proceed."
+msgstr ""
+"WATO kan dingen voor u herstellen. Het kan tags hernoemen in mappen, hosts "
+"en regels. Verwijderde tag-groepen worden verwijderd uit hosts en mappen, "
+"verwijderde tags worden vervangen door de standaardwaarde voor de tag-groep "
+"(voor hosts en mappen). Wat regels betreft, moet je zelf beslissen hoe je te "
+"werk gaat."
+
+#, fuzzy
+msgid "Setup is disabled on this site."
+msgstr "WATO is uitgeschakeld op deze site."
+
 msgid "Setup is disabled."
 msgstr "Setup is uitgeschakeld."
+
+#, fuzzy
+msgid ""
+"Setup is disabled. Please set <tt>wato_enabled = True</tt> in your "
+"<tt>multisite.mk</tt> if you want to use Setup."
+msgstr ""
+"WATO is uitgeschakeld. Stel <tt>wato_enabled = True</tt> in uw <tt>multisite."
+"mk</tt> in als u WATO wilt gebruiken."
 
 msgid "Setup, site management"
 msgstr "Setup, site beheer"
@@ -41646,10 +41721,6 @@ msgstr "Korte beschrijving van dienstincidenten"
 
 msgid "Shortest"
 msgstr "Kortste"
-
-msgid "Should WATO restart or reload Nagios when activating changes"
-msgstr ""
-"Moet WATO Nagios herstarten of herladen bij het activeren van wijzigingen"
 
 msgid "Show"
 msgstr "Toon"
@@ -58459,71 +58530,6 @@ msgstr ""
 "<br><br>Als u wilt, kunt u de regelset van de master kopiëren naar uw lokale "
 "slave configuratie: "
 
-msgid "WATO - Checkmk's Web Administration Tool"
-msgstr "WATO - Checkmk's web beheertool"
-
-msgid "WATO Folder"
-msgstr "WATO-Map"
-
-msgid ""
-"WATO can repair things for you. It can rename tags in folders, host and "
-"rules. Removed tag groups will be removed from hosts and folders, removed "
-"tags will be replaced with the default value for the tag group (for hosts "
-"and folders). What rules concern, you have to decide how to proceed."
-msgstr ""
-"WATO kan dingen voor u herstellen. Het kan tags hernoemen in mappen, hosts "
-"en regels. Verwijderde tag-groepen worden verwijderd uit hosts en mappen, "
-"verwijderde tags worden vervangen door de standaardwaarde voor de tag-groep "
-"(voor hosts en mappen). Wat regels betreft, moet je zelf beslissen hoe je te "
-"werk gaat."
-
-msgid "WATO folder"
-msgstr "WATO map"
-
-msgid "WATO folder - complete path"
-msgstr "WATO map - volledig pad"
-
-msgid "WATO folder - just folder name"
-msgstr "WATO map - alleen mapnaam"
-
-msgid "WATO folder - relative path"
-msgstr "WATO map - relatief pad"
-
-#, python-format
-msgid "WATO folder level %d"
-msgstr "WATO map niveau %d"
-
-msgid "WATO folder tree"
-msgstr "WATO mapstructuur"
-
-msgid "WATO is disabled on this site."
-msgstr "WATO is uitgeschakeld op deze site."
-
-msgid "WATO is disabled."
-msgstr "WATO is uitgeschakeld."
-
-msgid ""
-"WATO is disabled. Please set <tt>wato_enabled = True</tt> in your "
-"<tt>multisite.mk</tt> if you want to use WATO."
-msgstr ""
-"WATO is uitgeschakeld. Stel <tt>wato_enabled = True</tt> in uw <tt>multisite."
-"mk</tt> in als u WATO wilt gebruiken."
-
-msgid ""
-"WATO replication allows you to manage several monitoring sites with a "
-"logically centralized WATO. Remote sites receive their configuration from "
-"the central sites. <br><br>Note: Remote sites do not need any replication "
-"configuration. They will be remote-controlled by the central sites."
-msgstr ""
-"Met WATO-replicatie kunt u verschillende bewakingssites beheren met een "
-"logisch gecentraliseerde WATO. Remote sites ontvangen hun configuratie van "
-"de centrale sites. <br><br>Note: Externe sites hebben geen "
-"replicatieconfiguratie nodig. Zij worden op afstand bestuurd door de "
-"centrale sites."
-
-msgid "WATO restart mode for Nagios"
-msgstr "WATO herstartmodus voor Nagios"
-
 msgid "WCU"
 msgstr "WCU"
 
@@ -64298,6 +64304,21 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "WATO - Checkmk's Web Administration Tool"
+#~ msgstr "WATO - Checkmk's web beheertool"
+
+#~ msgid "WATO Folder"
+#~ msgstr "WATO-Map"
+
+#~ msgid "WATO folder"
+#~ msgstr "WATO map"
+
+#~ msgid "WATO folder tree"
+#~ msgstr "WATO mapstructuur"
+
+#~ msgid "WATO is disabled."
+#~ msgstr "WATO is uitgeschakeld."
 
 #~ msgid "Prometheus web port"
 #~ msgstr "Prometheus web poort"

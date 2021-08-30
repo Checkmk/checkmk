@@ -30,7 +30,7 @@ SHELL_FILES := \
 # until we have a feasible solution or we drop the support for 2.6 completly.
 PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8
 
-.PHONY: clean format-shell help prepare-node-modules prepare-protobuf-files bandit.ini \
+.PHONY: clean format-shell help prepare-node-modules prepare-protobuf-files prepare-playwright  bandit.ini \
 	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
 	test-bandit test-composition test-composition-docker test-composition-docker-debug \
 	test-docker test-format-python test-format-python-docker test-format-shell \
@@ -144,6 +144,10 @@ prepare-node-modules:
 prepare-protobuf-files:
 	$(MAKE) -C .. protobuf-files
 
+prepare-playwright:
+	../scripts/run-pipenv run playwright install-deps chromium
+	../scripts/run-pipenv run playwright install chromium
+
 test-integration-docker-debug test-composition-docker-debug: prepare-node-modules
 	$(PIPENV) run scripts/run-dockerized.py debug
 
@@ -196,7 +200,7 @@ test-format-css:
 test-format-css-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-css
 
-test-gui-crawl: prepare-node-modules
+test-gui-crawl: prepare-node-modules prepare-playwright
 	$(PYTEST) -T gui_crawl $(realpath gui_crawl/test_gui_crawl.py)
 
 test-gui-crawl-docker:

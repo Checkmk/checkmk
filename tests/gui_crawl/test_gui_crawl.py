@@ -12,12 +12,14 @@ from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
 from queue import Empty, Queue
-from typing import Dict, List, Optional, TypedDict
+from typing import Iterable, MutableMapping, MutableSequence, Optional, Tuple, TypedDict
 from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 
+import playwright.async_api
 import pytest
 from bs4 import BeautifulSoup  # type: ignore[import]
-from lxml import etree  # type: ignore[import]
+from lxml import etree
+from playwright.async_api import async_playwright
 
 from tests.testlib.site import get_site_factory, Site
 from tests.testlib.version import CMKVersion
@@ -82,7 +84,7 @@ class SkipReference(PageEvent):
 
 
 @dataclass
-class PageStatistic(PageEvent):
+class PageDone(PageEvent):
     duration: float
 
 
@@ -103,12 +105,13 @@ class PageValidator:
         self.base_url = base_url
         self.event_queue = event_queue
 
-    def validate(self, url: Url, text: str) -> None:
+    def validate(self, url: Url, text: str, logs: Iterable[str]) -> None:
         soup = BeautifulSoup(text, "lxml")
         self.check_content(url, soup)
         self.check_links(url, soup)
         self.check_frames(url, soup)
         self.check_iframes(url, soup)
+        self.check_logs(url, logs)
 
     def check_content(self, url: Url, soup: BeautifulSoup) -> None:
         ignore_texts = [
@@ -159,6 +162,14 @@ class PageValidator:
             else:
                 self.event_queue.put(ReferenceFound(url))
 
+    def check_logs(self, url: Url, logs: Iterable[str]):
+        accepted_logs = [
+            "Missing object for SimpleBar initiation.",
+        ]
+        for log in logs:
+            if not any(accepted_log in log for accepted_log in accepted_logs):
+                self.event_queue.put(PageError(url, f"console: {log}"))
+
     def verify_is_valid_url(self, url: str) -> None:
         parsed = urlsplit(url)
         if parsed.scheme != "http":
@@ -206,21 +217,17 @@ class PageValidator:
 
 
 class PageVisitor:
-    def __init__(self, site: Site) -> None:
-        self.site = site
+    TASK_LIMIT = 100
 
-        self.web_session = CMKWebSession(site)
-        # disable content parsing on each request for performance reasons
-        self.web_session._handle_http_response = lambda *args, **kwargs: None  # type: ignore
-        self.web_session.login()
-        self.web_session.enforce_non_localized_gui()
+    def __init__(self, site: Site, web_session: CMKWebSession) -> None:
+        self.site = site
+        self.web_session = web_session
 
     async def visit_url(self, url: Url, event_queue: Queue) -> None:
         start = time.time()
         content_type = await self.get_content_type(url)
         if content_type.startswith("text/html"):
-            text = await self.get_text(url)
-            await self.validate(url, text, event_queue)
+            await self.validate(url, event_queue)
         elif any((content_type.startswith(ignored_start)
                   for ignored_start in ["text/plain", "text/csv"])):
             event_queue.put(SkipReference(url, reason="content-type", message=content_type))
@@ -247,7 +254,7 @@ class PageVisitor:
         else:
             event_queue.put(PageError(url, f"Unknown content type {content_type}"))
 
-        event_queue.put(PageStatistic(url=url, duration=time.time() - start))
+        event_queue.put(PageDone(url=url, duration=time.time() - start))
 
     async def get_content_type(self, url: Url) -> str:
         def blocking():
@@ -257,21 +264,75 @@ class PageVisitor:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, blocking)
 
-    async def get_text(self, url: Url) -> str:
+    async def get_text_and_logs(self, url: Url) -> Tuple[str, Iterable[str]]:
         def blocking():
             response = self.web_session.get(url.url_without_host())
             return response.text
 
         loop = asyncio.get_running_loop()
-        return await loop.run_in_executor(None, blocking)
+        return await loop.run_in_executor(None, blocking), []
 
-    async def validate(self, url: Url, text: str, event_queue: Queue) -> None:
+    async def validate(self, url: Url, event_queue: Queue) -> None:
+        text, logs = await self.get_text_and_logs(url)
+
         def blocking():
             validator = PageValidator(event_queue, self.site.id, self.site.internal_url)
-            validator.validate(url, text)
+            validator.validate(url, text, logs)
 
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, blocking)
+
+
+class BrowserPageVisitor(PageVisitor):
+    TASK_LIMIT = 10
+
+    def __init__(self, site: Site, web_session: CMKWebSession,
+                 browser_context: playwright.async_api.BrowserContext) -> None:
+        super().__init__(site, web_session)
+        self.browser_context = browser_context
+
+    async def get_text_and_logs(self, url: Url) -> Tuple[str, Iterable[str]]:
+        logs = []
+
+        async def handle_console_messages(msg):
+            location = f"{msg.location['url']}:{msg.location['lineNumber']}:{msg.location['columnNumber']}"
+            logs.append(f"{msg.type}: {msg.text} ({location})")
+
+        page = await self.browser_context.new_page()
+        page.on("console", handle_console_messages)
+        await page.goto(url.url, timeout=0)
+        text = await page.content()
+        await page.close()
+        return text, logs
+
+
+async def create_web_session(site: Site) -> CMKWebSession:
+    def blocking():
+        web_session = CMKWebSession(site)
+        # disable content parsing on each request for performance reasons
+        web_session._handle_http_response = lambda *args, **kwargs: None  # type: ignore
+        web_session.login()
+        web_session.enforce_non_localized_gui()
+        return web_session
+
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, blocking)
+
+
+async def create_browser_context(site: Site) -> playwright.async_api.BrowserContext:
+    playwright = await async_playwright().start()
+    browser = await playwright.chromium.launch()
+    context = await browser.new_context()
+
+    page = await context.new_page()
+    await page.goto(site.internal_url)
+    await page.fill("input[name=\"_username\"]", "cmkadmin")
+    await page.fill("input[name=\"_password\"]", "cmk")
+    async with page.expect_navigation():
+        await page.click("text=Login")
+    await page.close()
+
+    return context
 
 
 class Progress:
@@ -288,7 +349,7 @@ class Progress:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
-        logger.info("%d done in %.3f secs", self.done, self.duration)
+        logger.info("%d done in %.3f secs", self.done_total, self.duration)
 
     @property
     def duration(self) -> float:
@@ -314,15 +375,14 @@ class CrawlSkipInfo(TypedDict):
 class CrawlResult(TypedDict, total=False):
     duration: float
     skipped: CrawlSkipInfo
-    errors: List[CrawlError]
+    errors: MutableSequence[CrawlError]
 
 
 class Crawler:
     def __init__(self, site: Site):
         self.duration = 0.0
-        self.results: Dict[str, CrawlResult] = {}
+        self.results: MutableMapping[str, CrawlResult] = {}
         self.site = site
-        self.num_workers = 10
 
     def report_file(self) -> str:
         return os.environ.get("CRAWL_REPORT", "") or self.site.result_dir() + "/crawl.xml"
@@ -389,36 +449,48 @@ class Crawler:
     async def crawl(self) -> None:
         with Progress() as progress:
             event_queue = IterableQueue()
-            visitor = PageVisitor(self.site)
+            web_session = await create_web_session(self.site)
+            if os.environ.get("USE_BROWSER", "1") == "1":
+                browser_context = await create_browser_context(self.site)
+                visitor: PageVisitor = BrowserPageVisitor(self.site, web_session, browser_context)
+            else:
+                visitor = PageVisitor(self.site, web_session)
+
+            todo: Queue[Url] = Queue()
             tasks = {
                 asyncio.create_task(visitor.visit_url(Url(self.site.internal_url), event_queue))
             }
-            while tasks or not event_queue.empty():
+            while tasks or not event_queue.empty() or not todo.empty():
                 done, tasks = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+                for task in done:
+                    task.result()
                 for event in event_queue:
                     if isinstance(event, ReferenceFound):
                         if event.url.url not in self.results:
                             self.results[event.url.url] = CrawlResult()
-                            tasks.add(asyncio.create_task(visitor.visit_url(event.url,
-                                                                            event_queue)))
+                            todo.put(event.url)
                     elif isinstance(event, PageError):
-                        self.results[event.url.url].setdefault("errors", []).append({
-                            "referer_url": event.url.referer_url,
-                            "message": event.message
-                        })
+                        self.results.setdefault(event.url.url,
+                                                CrawlResult()).setdefault("errors", []).append({
+                                                    "referer_url": event.url.referer_url,
+                                                    "message": event.message
+                                                })
                     elif isinstance(event, SkipReference):
                         self.results.setdefault(event.url.url, CrawlResult())["skipped"] = {
                             "reason": event.reason,
                             "message": event.message,
                         }
-                    elif isinstance(event, PageStatistic):
+                    elif isinstance(event, PageDone):
                         self.results.setdefault(event.url.url,
                                                 CrawlResult())["duration"] = event.duration
+                        progress.done(1)
                     else:
                         raise RuntimeError(f"unkown event: {type(event)}")
 
-                progress.done(len(done))
-                self.duration = progress.duration
+                    self.duration = progress.duration
+
+                while not todo.empty() and len(tasks) < visitor.TASK_LIMIT:
+                    tasks.add(asyncio.create_task(visitor.visit_url(todo.get(), event_queue)))
 
 
 @pytest.fixture

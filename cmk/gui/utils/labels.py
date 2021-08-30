@@ -88,7 +88,8 @@ def encode_labels_for_http(labels: Labels) -> str:
 
 def label_help_text() -> str:
     return _(
-        "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:windows</tt>.")
+        "Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>cmk/os_family:linux</tt>."
+    )
 
 
 class LabelsCache:

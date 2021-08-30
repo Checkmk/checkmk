@@ -306,11 +306,7 @@ void TableStateHistory::answerQuery(Query *query) {
     }
     _until = std::chrono::system_clock::from_time_t(
         query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1);
-
-    // NOTE: The GLB and LUB are inclusive, and both have a resolution of 1s, so
-    // we have to subtract 1s to get the duration.
-    _query_timeframe = _until - _since - 1s;
-    if (_query_timeframe <= 0s) {
+    if (_until - _since <= 1s) {
         return;
     }
 
@@ -846,11 +842,12 @@ int TableStateHistory::updateHostServiceState(Query *query,
 
 void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
     hs_state->_duration = hs_state->_until - hs_state->_from;
+    // NOTE: We have a closed interval with a resolution of 1s, so we have to
+    // subtract 1s to get the duration. Silly representation...
+    auto query_timeframe =
+        std::chrono::duration<double>{_until - _since - 1s}.count();
     hs_state->_duration_part =
-        static_cast<double>(hs_state->_duration) /
-        std::chrono::duration_cast<std::chrono::duration<double>>(
-            _query_timeframe)
-            .count();
+        static_cast<double>(hs_state->_duration) / query_timeframe;
 
     hs_state->_duration_unmonitored = 0;
     hs_state->_duration_part_unmonitored = 0;

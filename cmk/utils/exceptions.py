@@ -21,6 +21,14 @@ class MKException(Exception):
     pass
 
 
+class MKFetcherError(MKException):
+    """An exception common to the fetchers."""
+
+
+class MKSNMPError(MKFetcherError):
+    pass
+
+
 class MKGeneralException(MKException):
     pass
 
@@ -47,10 +55,6 @@ class MKBailOut(MKException):
 # It is used during keepalive mode. It is also used by the automations
 # which have a timeout set.
 class MKTimeout(MKException):
-    pass
-
-
-class MKSNMPError(MKException):
     pass
 
 

@@ -422,7 +422,7 @@ class ModeEditRole(RoleManagement, WatoMode):
                 deflt = {True: "yes", False: "no"}.get(pvalue, "default")
 
                 html.dropdown("perm_" + perm.name, choices, deflt=deflt, style="width: 130px;")
-                html.help(perm.description)
+                html.help(perm.description, escape_text=True)
 
         forms.end()
         html.hidden_fields()

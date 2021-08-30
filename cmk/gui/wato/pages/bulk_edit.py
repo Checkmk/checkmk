@@ -10,8 +10,6 @@ values."""
 from hashlib import sha256
 from typing import Optional, Type
 
-from six import ensure_binary
-
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
 from cmk.gui.breadcrumb import Breadcrumb
@@ -74,7 +72,7 @@ class ModeBulkEdit(WatoMode):
     def page(self) -> None:
         host_names = get_hostnames_from_checkboxes()
         hosts = {host_name: watolib.Folder.current().host(host_name) for host_name in host_names}
-        current_host_hash = sha256(ensure_binary(repr(hosts))).hexdigest()
+        current_host_hash = sha256(repr(hosts).encode()).hexdigest()
 
         # When bulk edit has been made with some hosts, then other hosts have been selected
         # and then another bulk edit has made, the attributes need to be reset before

@@ -401,7 +401,7 @@ def notify_mail(user_id, msg):
     # FIXME: Maybe use the configured mail command for Check_MK-Notify one day
     # TODO: mail does not accept umlauts: "contains invalid character '\303'" in mail
     #       addresses. handle this correctly.
-    command = ["mail", "-s", ensure_str(subject), ensure_str(user_spec["email"])]
+    command = ["mail", "-s", subject, ensure_str(user_spec["email"])]
 
     # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
     # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is

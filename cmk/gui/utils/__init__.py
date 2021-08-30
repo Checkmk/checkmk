@@ -16,8 +16,6 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
-from six import ensure_str
-
 import cmk.utils.paths
 
 from cmk.gui.exceptions import MKUserError
@@ -127,7 +125,7 @@ def get_random_string(size: int, from_ascii: int = 48, to_ascii: int = 90) -> st
         while len(secret) < size:
             c = urandom.read(1)
             if ord(c) >= from_ascii and ord(c) <= to_ascii:
-                secret += ensure_str(c)
+                secret += c.decode()
     return secret
 
 
@@ -135,7 +133,7 @@ def gen_id() -> str:
     """Generates a unique id"""
     try:
         with Path("/proc/sys/kernel/random/uuid").open("r", encoding="utf-8") as f:
-            return ensure_str(f.read().strip())
+            return f.read().strip()
     except IOError:
         # On platforms where the above file does not exist we try to
         # use the python uuid module which seems to be a good fallback

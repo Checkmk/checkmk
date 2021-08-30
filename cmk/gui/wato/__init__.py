@@ -85,8 +85,6 @@ from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
-from six import ensure_str
-
 import cmk.utils.paths
 import cmk.utils.render as render
 import cmk.utils.store as store

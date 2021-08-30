@@ -11,8 +11,6 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
-from six import ensure_binary, ensure_str
-
 import livestatus
 from livestatus import SiteId
 
@@ -210,7 +208,7 @@ def query_ec_directly(query):
             if not chunk:
                 break
 
-        return ast.literal_eval(ensure_str(response_text))
+        return ast.literal_eval(response_text.decode())
     except SyntaxError:
         raise MKGeneralException(
             _("Invalid response from event daemon: " "<pre>%s</pre>") % response_text
@@ -399,7 +397,7 @@ def check_timeperiod(tpname):
     try:
         livesock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         livesock.connect(cmk.utils.paths.livestatus_unix_socket)
-        livesock.send(ensure_binary("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname))
+        livesock.send(("GET timeperiods\nFilter: name = %s\nColumns: in\n" % tpname).encode())
         livesock.shutdown(socket.SHUT_WR)
         answer = livesock.recv(100).strip()
         if answer == b"":

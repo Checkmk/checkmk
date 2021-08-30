@@ -18,8 +18,6 @@ from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Type
 
-from six import ensure_str
-
 from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.plugin_registry
@@ -1345,7 +1343,7 @@ class _CheckTypeHostSelection(DualListChoice):
     def get_elements(self):
         checks = get_check_information()
         return [
-            (str(cn), (str(cn) + " - " + ensure_str(c["title"]))[:60])
+            (str(cn), (str(cn) + " - " + c["title"])[:60])
             for (cn, c) in checks.items()
             # filter out plugins implemented *explicitly* for management boards
             if not cn.is_management_name()
@@ -1359,7 +1357,7 @@ class _CheckTypeMgmtSelection(DualListChoice):
     def get_elements(self):
         checks = get_check_information()
         return [
-            (str(cn.create_basic_name()), (str(cn) + " - " + ensure_str(c["title"]))[:60])
+            (str(cn.create_basic_name()), (str(cn) + " - " + c["title"])[:60])
             for (cn, c) in checks.items()
         ]
 

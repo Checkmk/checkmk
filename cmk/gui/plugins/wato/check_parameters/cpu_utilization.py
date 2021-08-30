@@ -115,6 +115,26 @@ def _cpu_util_elements():
              ],
              help=_("Here you can set levels on the CPU utilization on single cores"),
          )),
+        ("core_util_graph",
+         DropdownChoice(
+             title=_("Graphs for individual cores"),
+             help=_("This adds another graph to the performance CPU utilization "
+                    "details page, showing utilization of individual cores. "
+                    "Please note that this graph may be impractical on "
+                    "device with very many cores. "
+                    "This is currently only supported on linux and windows agents "
+                    "as well as devices monitored through the host-resource mib"),
+             choices=[
+                 (True, _("Enable")),
+                 (False, _("Disable")),
+             ],
+             default_value=True,
+         )),
+    ]
+
+
+def _cpu_util_unix_elements():
+    return [
         ("iowait",
          Tuple(
              title=_("Levels on IO wait (UNIX only)"),
@@ -136,21 +156,6 @@ def _cpu_util_elements():
              ],
              help=_("Here you can set levels on the steal CPU utilization."),
          )),
-        ("core_util_graph",
-         DropdownChoice(
-             title=_("Graphs for individual cores"),
-             help=_("This adds another graph to the performance CPU utilization "
-                    "details page, showing utilization of individual cores. "
-                    "Please note that this graph may be impractical on "
-                    "device with very many cores. "
-                    "This is currently only supported on linux and windows agents "
-                    "as well as devices monitored through the host-resource mib"),
-             choices=[
-                 (True, _("Enable")),
-                 (False, _("Disable")),
-             ],
-             default_value=True,
-         )),
     ]
 
 
@@ -162,7 +167,7 @@ def _cpu_util_common_elements():
                "percentage is computed with respect to the total number of CPUs. "
                "Note that not all parameters you can configure here are applicable "
                "to all checks."),
-        elements=_cpu_util_elements(),
+        elements=_cpu_util_elements() + _cpu_util_unix_elements(),
     )
 
 

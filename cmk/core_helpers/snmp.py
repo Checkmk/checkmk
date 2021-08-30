@@ -12,7 +12,9 @@ import time
 from pathlib import Path
 from typing import (
     Any,
+    Collection,
     Final,
+    FrozenSet,
     Iterable,
     Iterator,
     Mapping,
@@ -20,7 +22,6 @@ from typing import (
     NamedTuple,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Union,
 )
@@ -193,16 +194,16 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self._backend = factory.backend(self.snmp_config, self._logger)
 
     @property
-    def disabled_sections(self) -> Set[SectionName]:
-        return {name for name, meta in self.sections.items() if meta.disabled}
+    def disabled_sections(self) -> FrozenSet[SectionName]:
+        return frozenset(name for name, meta in self.sections.items() if meta.disabled)
 
     @property
-    def checking_sections(self) -> Set[SectionName]:
-        return {name for name, meta in self.sections.items() if meta.checking}
+    def checking_sections(self) -> FrozenSet[SectionName]:
+        return frozenset(name for name, meta in self.sections.items() if meta.checking)
 
     @property
-    def inventory_sections(self) -> Set[SectionName]:
-        return {name for name, data in self.plugin_store.items() if data.inventory}
+    def inventory_sections(self) -> FrozenSet[SectionName]:
+        return frozenset(name for name, data in self.plugin_store.items() if data.inventory)
 
     @property
     def section_store_path(self) -> Path:
@@ -260,7 +261,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
     def close(self) -> None:
         pass
 
-    def _detect(self, *, select_from: Set[SectionName]) -> Set[SectionName]:
+    def _detect(self, *, select_from: Collection[SectionName]) -> FrozenSet[SectionName]:
         """Detect the applicable sections for the device in question"""
         return gather_available_raw_section_names(
             sections=[(name, self.plugin_store[name].detect_spec) for name in select_from],
@@ -277,31 +278,33 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         """
         return mode is Mode.CHECKING
 
-    def _get_selection(self, mode: Mode) -> Set[SectionName]:
+    def _get_selection(self, mode: Mode) -> FrozenSet[SectionName]:
         """Determine the sections fetched unconditionally (without detection)"""
         if mode is Mode.CHECKING:
-            return {name for name in self.checking_sections if not self.sections[name].redetect
-                   } - self.disabled_sections
+            return frozenset(
+                {name for name in self.checking_sections if not self.sections[name].redetect} -
+                self.disabled_sections)
 
         if mode is Mode.FORCE_SECTIONS:
             return self.checking_sections
 
-        return set()
+        return frozenset()
 
-    def _get_detected_sections(self, mode: Mode) -> Set[SectionName]:
+    def _get_detected_sections(self, mode: Mode) -> FrozenSet[SectionName]:
         """Determine the sections fetched after successful detection"""
         if mode is Mode.CHECKING:
-            return ({name for name in self.checking_sections if self.sections[name].redetect} |
-                    (self.inventory_sections if self.do_status_data_inventory else set())
-                   ) - self.disabled_sections
+            return frozenset(
+                {name for name in self.checking_sections if self.sections[name].redetect} |
+                (self.inventory_sections if self.do_status_data_inventory else frozenset()) -
+                self.disabled_sections)
 
         if mode is Mode.INVENTORY:
             return self.inventory_sections - self.disabled_sections
 
         if mode is Mode.DISCOVERY:
-            return set(self.plugin_store) - self.disabled_sections
+            return frozenset(self.plugin_store) - self.disabled_sections
 
-        return set()
+        return frozenset()
 
     def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
         """Select the sections we need to fetch and do that

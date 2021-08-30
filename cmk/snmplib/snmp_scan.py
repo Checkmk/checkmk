@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
-from typing import Collection, Iterable, Set, Tuple
+from typing import Collection, FrozenSet, Iterable, Set, Tuple
 
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, OnError
@@ -27,9 +27,9 @@ def gather_available_raw_section_names(
     on_error: OnError = OnError.RAISE,
     missing_sys_description: bool,
     backend: SNMPBackend,
-) -> Set[SectionName]:
+) -> FrozenSet[SectionName]:
     if not sections:
-        return set()
+        return frozenset()
 
     try:
         return _snmp_scan(
@@ -44,7 +44,7 @@ def gather_available_raw_section_names(
         if on_error is OnError.WARN:
             console.error("SNMP scan failed: %s\n" % e)
 
-    return set()
+    return frozenset()
 
 
 OID_SYS_DESCR = ".1.3.6.1.2.1.1.1.0"
@@ -57,7 +57,7 @@ def _snmp_scan(
     on_error: OnError,
     missing_sys_description: bool,
     backend: SNMPBackend,
-) -> Set[SectionName]:
+) -> FrozenSet[SectionName]:
     snmp_cache.initialize_single_oid_cache(backend.config)
     console.vverbose("  SNMP scan:\n")
 
@@ -76,19 +76,12 @@ def _snmp_scan(
     return found_sections
 
 
-def _prefetch_description_object(
-    *,
-    backend: SNMPBackend,
-) -> None:
-    for oid, name in [
+def _prefetch_description_object(*, backend: SNMPBackend) -> None:
+    for oid, name in (
         (OID_SYS_DESCR, "system description"),
         (OID_SYS_OBJ, "system object"),
-    ]:
-        value = snmp_modes.get_single_oid(
-            oid,
-            backend=backend,
-        )
-        if value is None:
+    ):
+        if snmp_modes.get_single_oid(oid, backend=backend) is None:
             raise MKSNMPError(
                 "Cannot fetch %s OID %s. Please check your SNMP "
                 "configuration. Possible reason might be: Wrong credentials, "
@@ -112,7 +105,7 @@ def _find_sections(
     *,
     on_error: OnError,
     backend: SNMPBackend,
-) -> Set[SectionName]:
+) -> FrozenSet[SectionName]:
     found_sections: Set[SectionName] = set()
     for name, specs in sections:
         oid_value_getter = functools.partial(
@@ -135,7 +128,7 @@ def _find_sections(
                 raise
             if on_error is OnError.WARN:
                 console.warning("   Exception in SNMP scan function of %s" % name)
-    return found_sections
+    return frozenset(found_sections)
 
 
 def _output_snmp_check_plugins(

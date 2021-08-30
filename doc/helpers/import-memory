@@ -10,7 +10,6 @@ be emitted in various formats for futher processing.
 """
 
 import argparse
-import collections
 import contextlib
 import distutils.sysconfig as sysconfig
 import gc
@@ -21,16 +20,20 @@ import os
 import subprocess
 import sys
 from types import FrameType
-from typing import Any, Dict, Iterator, List, Optional, Union
+from typing import Any, Dict, Iterator, List, NamedTuple, Optional, Union
 
 # Some constants to help parse /proc/*/smaps
 KiB = 1024
 MiB = KiB * KiB
 
+
 # Struct to keep the values. We're only interested in the
 # private memory, as this is the only one the program has any
 # control over. We can't possibly reduce any other type of memory.
-Memory = collections.namedtuple('Memory', ['private', 'pss', 'rss'])
+class Memory(NamedTuple):
+    private: int
+    pss: int
+    rss: int
 
 
 def _get_python_stdlib() -> Iterator[str]:

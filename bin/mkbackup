@@ -547,22 +547,23 @@ class MKTarFile(TarFile):
 #   Beispielbefehle:
 #     mkbackup show nfs backup-id-20
 
-Arg = NamedTuple("Arg", [
-    ("id", str),
-    ("description", str),
-])
 
-Opt = NamedTuple("Opt", [
-    ("description", str),
-])
+class Arg(NamedTuple):
+    id: str
+    description: str
 
-Mode = NamedTuple("Mode", [
-    ("description", str),
-    ("args", List[Arg]),
-    ("opts", Dict[str, Opt]),
-    ("root_opts", Dict[str, Opt]),
-    ("runner", Callable[[List[str], Dict[str, str]], None]),
-])
+
+class Opt(NamedTuple):
+    description: str
+
+
+class Mode(NamedTuple):
+    description: str
+    args: List[Arg]
+    opts: Dict[str, Opt]
+    root_opts: Dict[str, Opt]
+    runner: Callable[[List[str], Dict[str, str]], None]
+
 
 modes = {
     "backup": Mode(

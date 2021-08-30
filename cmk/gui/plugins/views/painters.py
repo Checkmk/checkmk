@@ -1012,7 +1012,9 @@ class PainterSvcNotificationNumber(Painter):
         return ['service_current_notification_number']
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ("", str(row["service_current_notification_number"]))
+        # Keep in sync with HACK in cmk/base/events.py
+        current: str = str(row["service_current_notification_number"])
+        return ("", "1" if current == "0" else current)
 
 
 @painter_registry.register

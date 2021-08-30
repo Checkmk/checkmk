@@ -11,19 +11,19 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
-#include <cstdint>
 #include <cstdio>
 #include <filesystem>
 #include <map>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "LogEntry.h"  // IWYU pragma: keep
 class LogCache;
 class Logger;
 
-// key is time_t . lineno
-using logfile_entries_t = std::map<uint64_t, std::unique_ptr<LogEntry>>;
+using logfile_key = std::pair<std::chrono::system_clock::time_point, size_t>;
+using logfile_entries_t = std::map<logfile_key, std::unique_ptr<LogEntry>>;
 
 class Logfile {
 public:
@@ -51,9 +51,11 @@ public:
     const logfile_entries_t *getEntriesFor(size_t max_lines_per_logfile,
                                            unsigned logclasses);
 
-    // Used internally and by TableLog::answerQueryReverse().
-    static uint64_t makeKey(std::chrono::system_clock::time_point t,
-                            size_t lineno);
+    // Used internally and by TableLog::answerQueryReverse(). Should be nuked.
+    static logfile_key makeKey(std::chrono::system_clock::time_point t,
+                               size_t lineno) {
+        return {t, lineno};
+    }
 
 private:
     Logger *const _logger;

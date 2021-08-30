@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <cstdlib>
 #include <sstream>
-#include <utility>
 #include <vector>
 
 #include "LogCache.h"
@@ -162,7 +161,7 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
     if (((1U << static_cast<int>(entry->log_class())) & logclasses) == 0U) {
         return false;
     }
-    uint64_t key = makeKey(entry->time(), entry->lineno());
+    auto key = makeKey(entry->time(), entry->lineno());
     if (_entries.find(key) != _entries.end()) {
         // this should never happen. The lineno must be unique!
         Error(_logger) << "strange duplicate logfile line " << entry->message();
@@ -177,12 +176,4 @@ const logfile_entries_t *Logfile::getEntriesFor(size_t max_lines_per_logfile,
     // make sure all messages are present
     load(max_lines_per_logfile, logclasses);
     return &_entries;
-}
-
-// static
-uint64_t Logfile::makeKey(std::chrono::system_clock::time_point t,
-                          size_t lineno) {
-    return (static_cast<uint64_t>(std::chrono::system_clock::to_time_t(t))
-            << 32) |
-           static_cast<uint64_t>(lineno);
 }

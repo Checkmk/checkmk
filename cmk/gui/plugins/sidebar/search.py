@@ -97,6 +97,10 @@ class TooManyRowsError(MKException):
     pass
 
 
+class IncorrectLabelInputError(MKUserError):
+    pass
+
+
 def _build_url(url_params: HTTPVariables) -> str:
     new_params = url_params[:]
     return makeuri(request, new_params, delvars=["q"], filename="view.py")
@@ -669,8 +673,9 @@ class QuicksearchSnapin(SidebarSnapin):
         return _(
             "Interactive search field for direct access to monitoring instances (hosts, services, "
             "host- and servicegroups).<br>You can use the following filters: <i>h:</i> Host,<br> "
-            "<i>s:</i> Service, <i>hg:</i> Hostgroup, <i>sg:</i> Servicegroup,<br><i>ad:</i> "
-            "Address, <i>al:</i> Alias, <i>tg:</i> Hosttag")
+            "<i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> Service group,<br><i>ad:</i> "
+            "Address, <i>al:</i> Alias, <i>tg:</i> Host tag, <i>hl:</i> Host label, <i>sl:</i> "
+            "Service label")
 
     def show(self):
         id_ = "mk_side_search_field"
@@ -706,6 +711,9 @@ class QuicksearchSnapin(SidebarSnapin):
 
         except TooManyRowsError as e:
             html.show_warning(str(e))
+
+        except IncorrectLabelInputError:
+            pass
 
         except MKException as e:
             html.show_error("%s" % e)
@@ -1158,10 +1166,10 @@ class ABCLabelMatchPlugin(ABCLivestatusMatchPlugin):
     @staticmethod
     def _input_to_key_value(inpt: str) -> Tuple[str, str]:
         if ":" not in inpt:
-            raise MKUserError(None, label_help_text())
+            raise IncorrectLabelInputError(None, label_help_text())
         key, value = inpt.split(":", maxsplit=1)
         if not key or not value:
-            raise MKUserError(None, label_help_text())
+            raise IncorrectLabelInputError(None, label_help_text())
         return key, value
 
     def _user_inputs_to_labels(self, user_inputs: Iterable[str]) -> Labels:
@@ -1290,6 +1298,10 @@ class MenuSearchResultsRenderer:
     def render(self, query: str) -> str:
         try:
             results = self._generate_results(query)
+        # Don't render the IncorrectLapelInputError in Mega Menu to make the handling of
+        # incorrect inputs consistent with other search querys
+        except IncorrectLabelInputError:
+            return ""
         except MKException as error:
             return self._render_error(error)
         return self._render_results(results)
@@ -1426,13 +1438,13 @@ class MonitoringSearch(ABCMegaMenuSearch):
                     "You can use the following filters:\n"
                     "h: Host\n"
                     "s: Service\n"
-                    "hg: Hostgroup\n"
-                    "sg: Servicegroup\n"
+                    "hg: Host group\n"
+                    "sg: Service group\n"
                     "ad: Address\n"
                     "al: Alias\n"
-                    "tg: Hosttag\n"
-                    "hl: Hostlabel\n"
-                    "sl: Servicelabel")
+                    "tg: Host tag\n"
+                    "hl: Host label (e.g. hl: cmk/os_family:linux)\n"
+                    "sl: Service label (e.g. sl: cmk/os_family:linux)")
         html.input(id_=f"mk_side_search_field_{self.name}",
                    type_="text",
                    name="search",

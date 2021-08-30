@@ -11,8 +11,6 @@ from typing import Iterator, List, Optional
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
-from six import ensure_str
-
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
 import cmk.gui.watolib as watolib
@@ -359,8 +357,8 @@ class ModeObjectParameters(WatoMode):
                 ('rule_folder', rule.folder.path()),
                 ('rule_id', rule.id),
                 ('host', self._hostname),
-                ('item', ensure_str(watolib.mk_repr(svc_desc_or_item)) if svc_desc_or_item else ''),
-                ('service', ensure_str(watolib.mk_repr(svc_desc)) if svc_desc else ''),
+                ('item', watolib.mk_repr(svc_desc_or_item).decode() if svc_desc_or_item else ''),
+                ('service', watolib.mk_repr(svc_desc).decode() if svc_desc else ''),
             ])
 
         varname = rulespec.name
@@ -370,8 +368,8 @@ class ModeObjectParameters(WatoMode):
             ('mode', 'edit_ruleset'),
             ('varname', varname),
             ('host', self._hostname),
-            ('item', ensure_str(watolib.mk_repr(svc_desc_or_item))),
-            ('service', ensure_str(watolib.mk_repr(svc_desc))),
+            ('item', watolib.mk_repr(svc_desc_or_item).decode()),
+            ('service', watolib.mk_repr(svc_desc).decode()),
         ])
 
         forms.section(html.render_a(rulespec.title, url))

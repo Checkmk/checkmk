@@ -11,8 +11,6 @@ Use a slack webhook to send notification messages
 """
 from typing import Dict
 
-from six import ensure_str
-
 import cmk.notification_plugins.utils as utils
 
 COLORS = {
@@ -33,10 +31,9 @@ def slack_msg(context: Dict) -> Dict:
         color = COLORS.get(context["SERVICESTATE"])
         title = "Service {NOTIFICATIONTYPE} notification".format(**context)
         text = "Host: {host_link} (IP: {HOSTADDRESS})\nService: {service_link}\nState: {SERVICESTATE}".format(
-            host_link=utils.format_link(ensure_str('<%s|%s>'), utils.host_url_from_context(context),
+            host_link=utils.format_link('<%s|%s>', utils.host_url_from_context(context),
                                         context['HOSTNAME']),
-            service_link=utils.format_link(ensure_str('<%s|%s>'),
-                                           utils.service_url_from_context(context),
+            service_link=utils.format_link('<%s|%s>', utils.service_url_from_context(context),
                                            context['SERVICEDESC']),
             **context)
         output = context["SERVICEOUTPUT"]
@@ -44,7 +41,7 @@ def slack_msg(context: Dict) -> Dict:
         color = COLORS.get(context["HOSTSTATE"])
         title = "Host {NOTIFICATIONTYPE} notification".format(**context)
         text = "Host: {host_link} (IP: {HOSTADDRESS})\nState: {HOSTSTATE}".format(
-            host_link=utils.format_link(ensure_str('<%s|%s>'), utils.host_url_from_context(context),
+            host_link=utils.format_link('<%s|%s>', utils.host_url_from_context(context),
                                         context['HOSTNAME']),
             **context)
         output = context["HOSTOUTPUT"]

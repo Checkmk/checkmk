@@ -17,8 +17,6 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from six import ensure_binary
-
 import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -132,7 +130,7 @@ def _do_create_snapshot(data):
             with open(path_subtar, "rb") as subtar:
                 subtar_hash = sha256(subtar.read()).hexdigest()
 
-            subtar_signed = sha256(ensure_binary(subtar_hash) + _snapshot_secret()).hexdigest()
+            subtar_signed = sha256(subtar_hash.encode() + _snapshot_secret()).hexdigest()
             subtar_info[filename_subtar] = (subtar_hash, subtar_signed)
 
             # Append tar.gz subtar to snapshot
@@ -158,7 +156,7 @@ def _do_create_snapshot(data):
         tar_in_progress = tarfile.open(filename_work, "a")
         tarinfo = get_basic_tarinfo("checksums")
         tarinfo.size = len(info)
-        tar_in_progress.addfile(tarinfo, io.BytesIO(ensure_binary(info)))
+        tar_in_progress.addfile(tarinfo, io.BytesIO(info.encode()))
         tar_in_progress.close()
 
         shutil.move(filename_work, filename_target)
@@ -313,7 +311,7 @@ def get_snapshot_status(snapshot, validate_checksums=False, check_correct_core=T
 
             subtar = access_snapshot(handler)
             subtar_hash = sha256(subtar).hexdigest()
-            subtar_signed = sha256(ensure_binary(subtar_hash) + _snapshot_secret()).hexdigest()
+            subtar_signed = sha256(subtar_hash.encode() + _snapshot_secret()).hexdigest()
 
             status['files'][filename]['checksum'] = (checksum == subtar_hash and
                                                      signed == subtar_signed)
@@ -422,7 +420,7 @@ def _snapshot_secret() -> bytes:
         try:
             s = os.urandom(256)
         except NotImplementedError:
-            s = ensure_binary(str(sha256(ensure_binary(str(time.time())))))
+            s = str(sha256(str(time.time()).encode())).encode()
         open(path, 'wb').write(s)
         return s
 

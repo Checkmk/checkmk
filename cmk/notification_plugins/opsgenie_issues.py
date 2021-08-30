@@ -15,7 +15,6 @@ from opsgenie_sdk.api.alert.create_alert_payload import CreateAlertPayload  # ty
 from opsgenie_sdk.api_client import ApiClient  # type: ignore
 from opsgenie_sdk.configuration import Configuration  # type: ignore
 from opsgenie_sdk.rest import ApiException  # type: ignore
-from six import ensure_str
 
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import retrieve_from_passwordstore
@@ -196,6 +195,5 @@ $LONGSERVICEOUTPUT$
     if context['NOTIFICATIONTYPE'] == 'ACKNOWLEDGEMENT':
         return connector.handle_alert_ack(ack_author, ack_comment, alias, alert_source)
 
-    sys.stdout.write(
-        ensure_str('Notification type %s not supported\n' % (context['NOTIFICATIONTYPE'])))
+    sys.stdout.write('Notification type %s not supported\n' % (context['NOTIFICATIONTYPE']))
     return 0

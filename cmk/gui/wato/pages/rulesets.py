@@ -15,8 +15,6 @@ from typing import cast, Dict, Iterable, List, Optional, overload
 from typing import Tuple as _Tuple
 from typing import Type, Union
 
-from six import ensure_str
-
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.regex import escape_regex_chars
 from cmk.utils.tags import GroupedTag
@@ -778,8 +776,8 @@ class ModeEditRuleset(WatoMode):
         back_url = self.mode_url(
             varname=self._name,
             host=self._hostname or "",
-            item=ensure_str(watolib.mk_repr(self._item)),
-            service=ensure_str(watolib.mk_repr(self._service)),
+            item=watolib.mk_repr(self._item).decode(),
+            service=watolib.mk_repr(self._service).decode(),
         )
 
         if not transactions.check_transaction():
@@ -911,8 +909,8 @@ class ModeEditRuleset(WatoMode):
             ("varname", self._name),
             ("rule_id", rule.id),
             ("host", self._hostname),
-            ("item", ensure_str(watolib.mk_repr(self._item))),
-            ("service", ensure_str(watolib.mk_repr(self._service))),
+            ("item", watolib.mk_repr(self._item).decode()),
+            ("service", watolib.mk_repr(self._service).decode()),
             ("rule_folder", folder.path()),
         ])
         html.icon_button(edit_url, _("Edit this rule"), "edit")
@@ -923,8 +921,8 @@ class ModeEditRuleset(WatoMode):
             ("varname", self._name),
             ("rule_id", rule.id),
             ("host", self._hostname),
-            ("item", ensure_str(watolib.mk_repr(self._item))),
-            ("service", ensure_str(watolib.mk_repr(self._service))),
+            ("item", watolib.mk_repr(self._item).decode()),
+            ("service", watolib.mk_repr(self._service).decode()),
             ("rule_folder", folder.path()),
         ])
         html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
@@ -1009,9 +1007,9 @@ class ModeEditRuleset(WatoMode):
         if self._hostname:
             vars_.append(("host", self._hostname))
         if self._item:
-            vars_.append(("item", ensure_str(watolib.mk_repr(self._item))))
+            vars_.append(("item", watolib.mk_repr(self._item).decode()))
         if self._service:
-            vars_.append(("service", ensure_str(watolib.mk_repr(self._service))))
+            vars_.append(("service", watolib.mk_repr(self._service).decode()))
 
         return make_action_link(vars_)
 
@@ -1085,8 +1083,8 @@ class ModeEditRuleset(WatoMode):
             html.open_td()
             html.button("_new_host_rule", _("Create %s specific rule for: ") % ty)
             html.hidden_field("host", self._hostname)
-            html.hidden_field("item", ensure_str(watolib.mk_repr(self._item)))
-            html.hidden_field("service", ensure_str(watolib.mk_repr(self._service)))
+            html.hidden_field("item", watolib.mk_repr(self._item).decode())
+            html.hidden_field("service", watolib.mk_repr(self._service).decode())
             html.close_td()
             html.open_td(style="vertical-align:middle")
             html.write_text(label)

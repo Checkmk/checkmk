@@ -8,8 +8,6 @@
 import re
 from typing import Iterable, List, Optional, Type
 
-from six import ensure_str
-
 from cmk.utils.type_defs import CheckPluginNameStr, HostName, Item, ServiceName
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
@@ -277,7 +275,7 @@ class ModePatternEditor(WatoMode):
                     ("mode", "edit_rule"),
                     ("varname", "logwatch_rules"),
                     ("rulenr", rulenr),
-                    ("item", ensure_str(watolib.mk_repr(self._item))),
+                    ("item", watolib.mk_repr(self._item).decode()),
                     ("rule_folder", folder.path()),
                     ("rule_id", rule.id),
                 ])

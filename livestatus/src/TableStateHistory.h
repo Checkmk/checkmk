@@ -43,9 +43,12 @@ protected:
 private:
     LogCache *_log_cache;
 
-    int _query_timeframe;
+    // NOTE: Both time points are *inclusive*.
     std::chrono::system_clock::time_point _since;
     std::chrono::system_clock::time_point _until;
+
+    // TODO(sp) Derived from _since and _until, do we really need this cache?
+    std::chrono::duration<double> _query_timeframe;
 
     // Notification periods information, name: active(1)/inactive(0)
     std::map<std::string, int> _notification_periods;

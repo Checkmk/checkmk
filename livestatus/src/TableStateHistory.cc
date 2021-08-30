@@ -9,6 +9,7 @@
 #include <ctime>
 #include <mutex>
 #include <optional>
+#include <ratio>
 #include <set>
 #include <stdexcept>
 #include <utility>
@@ -306,10 +307,10 @@ void TableStateHistory::answerQuery(Query *query) {
     _until = std::chrono::system_clock::from_time_t(
         query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1);
 
-    _query_timeframe = std::chrono::system_clock::to_time_t(_until) -
-                       std::chrono::system_clock::to_time_t(_since) - 1;
-    if (_query_timeframe == 0) {
-        query->invalidRequest("Query timeframe is 0 seconds");
+    // NOTE: The GLB and LUB are inclusive, and both have a resolution of 1s, so
+    // we have to subtract 1s to get the duration.
+    _query_timeframe = _until - _since - 1s;
+    if (_query_timeframe <= 0s) {
         return;
     }
 
@@ -845,8 +846,11 @@ int TableStateHistory::updateHostServiceState(Query *query,
 
 void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
     hs_state->_duration = hs_state->_until - hs_state->_from;
-    hs_state->_duration_part = static_cast<double>(hs_state->_duration) /
-                               static_cast<double>(_query_timeframe);
+    hs_state->_duration_part =
+        static_cast<double>(hs_state->_duration) /
+        std::chrono::duration_cast<std::chrono::duration<double>>(
+            _query_timeframe)
+            .count();
 
     hs_state->_duration_unmonitored = 0;
     hs_state->_duration_part_unmonitored = 0;

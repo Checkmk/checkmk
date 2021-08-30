@@ -5,7 +5,6 @@
 
 #include "TableStateHistory.h"
 
-#include <chrono>
 #include <cstdint>
 #include <ctime>
 #include <mutex>
@@ -298,7 +297,7 @@ void TableStateHistory::answerQuery(Query *query) {
     // use that to limit the number of logfiles we need to scan and to find the
     // optimal entry point into the logfile
     if (auto glb = query->greatestLowerBoundFor("time")) {
-        _since = *glb;
+        _since = std::chrono::system_clock::from_time_t(*glb);
     } else {
         query->invalidRequest(
             "Start of timeframe required. e.g. Filter: time > 1234567890");
@@ -306,7 +305,8 @@ void TableStateHistory::answerQuery(Query *query) {
     }
     _until = query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1;
 
-    _query_timeframe = _until - _since - 1;
+    _query_timeframe =
+        _until - std::chrono::system_clock::to_time_t(_since) - 1;
     if (_query_timeframe == 0) {
         query->invalidRequest("Query timeframe is 0 seconds");
         return;
@@ -318,7 +318,8 @@ void TableStateHistory::answerQuery(Query *query) {
     auto newest_log = _it_logs;
 
     // Now find the log where 'since' starts.
-    while (_it_logs != _log_cache->begin() && _it_logs->first >= _since) {
+    while (_it_logs != _log_cache->begin() &&
+           _it_logs->first >= std::chrono::system_clock::to_time_t(_since)) {
         --_it_logs;  // go back in history
     }
 
@@ -335,8 +336,7 @@ void TableStateHistory::answerQuery(Query *query) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too
         if (--_it_entries != _entries->begin()) {
-            if (_it_entries->second->time() >=
-                std::chrono::system_clock::from_time_t(_since)) {
+            if (_it_entries->second->time() >= _since) {
                 _it_entries = _entries->begin();
             }
         }
@@ -357,13 +357,14 @@ void TableStateHistory::answerQuery(Query *query) {
             getPreviousLogentry();
             break;
         }
-        if (only_update &&
-            entry->time() >= std::chrono::system_clock::from_time_t(_since)) {
+        if (only_update && entry->time() >= _since) {
             // Reached start of query timeframe. From now on let's produce real
             // output. Update _from time of every state entry
             for (auto &it_hst : state_info) {
-                it_hst.second->_from = _since;
-                it_hst.second->_until = _since;
+                it_hst.second->_from =
+                    std::chrono::system_clock::to_time_t(_since);
+                it_hst.second->_until =
+                    std::chrono::system_clock::to_time_t(_since);
             }
             only_update = false;
         }
@@ -465,7 +466,7 @@ void TableStateHistory::answerQuery(Query *query) {
 
                     // Store this state object for tracking state transitions
                     state_info.emplace(key, state);
-                    state->_from = _since;
+                    state->_from = std::chrono::system_clock::to_time_t(_since);
 
                     // Get notification period of host/service
                     // If this host/service is no longer availabe in nagios ->
@@ -547,10 +548,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // Log UNMONITORED state if this host or service just
                     // appeared within the query timeframe
                     // It gets a grace period of ten minutes (nagios startup)
-                    if (!only_update &&
-                        entry->time() -
-                                std::chrono::system_clock::from_time_t(_since) >
-                            10min) {
+                    if (!only_update && entry->time() - _since > 10min) {
                         state->_debug_info = "UNMONITORED ";
                         state->_state = -1;
                     }

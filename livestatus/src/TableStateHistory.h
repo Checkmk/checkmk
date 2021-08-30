@@ -8,6 +8,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <chrono>
 #include <map>
 #include <memory>
 #include <string>
@@ -43,7 +44,7 @@ private:
     LogCache *_log_cache;
 
     int _query_timeframe;
-    int _since;
+    std::chrono::system_clock::time_point _since;
     int _until;
 
     // Notification periods information, name: active(1)/inactive(0)

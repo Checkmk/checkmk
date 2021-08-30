@@ -303,10 +303,11 @@ void TableStateHistory::answerQuery(Query *query) {
             "Start of timeframe required. e.g. Filter: time > 1234567890");
         return;
     }
-    _until = query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1;
+    _until = std::chrono::system_clock::from_time_t(
+        query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1);
 
-    _query_timeframe =
-        _until - std::chrono::system_clock::to_time_t(_since) - 1;
+    _query_timeframe = std::chrono::system_clock::to_time_t(_until) -
+                       std::chrono::system_clock::to_time_t(_since) - 1;
     if (_query_timeframe == 0) {
         query->invalidRequest("Query timeframe is 0 seconds");
         return;
@@ -324,7 +325,7 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     // Check if 'until' is within these logfiles
-    if (_it_logs->first > _until) {
+    if (_it_logs->first > std::chrono::system_clock::to_time_t(_until)) {
         // All logfiles are too new, invalid timeframe
         // -> No data available. Return empty result.
         return;
@@ -353,7 +354,7 @@ void TableStateHistory::answerQuery(Query *query) {
             break;
         }
 
-        if (entry->time() >= std::chrono::system_clock::from_time_t(_until)) {
+        if (entry->time() >= _until) {
             getPreviousLogentry();
             break;
         }
@@ -627,7 +628,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 hst->_long_log_output = "";
             }
 
-            hst->_time = _until - 1;
+            hst->_time = std::chrono::system_clock::to_time_t(_until) - 1;
             hst->_until = hst->_time;
 
             process(query, hst);

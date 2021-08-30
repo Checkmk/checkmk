@@ -45,7 +45,7 @@ private:
 
     int _query_timeframe;
     std::chrono::system_clock::time_point _since;
-    int _until;
+    std::chrono::system_clock::time_point _until;
 
     // Notification periods information, name: active(1)/inactive(0)
     std::map<std::string, int> _notification_periods;

@@ -223,7 +223,7 @@ def _expand_rel(rel):
 class WebTestAppForCMK(webtest.TestApp):
     """A webtest.TestApp class with helper functions for automation user APIs"""
     def __init__(self, *args, **kw):
-        super(WebTestAppForCMK, self).__init__(*args, **kw)
+        super().__init__(*args, **kw)
         self.username = None
         self.password = None
 

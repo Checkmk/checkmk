@@ -98,7 +98,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
         kwargs["stoppable"] = True
         self.finish_hello_event = multiprocessing.Event()
 
-        super(DummyBackgroundJob, self).__init__(self.job_prefix, **kwargs)
+        super().__init__(self.job_prefix, **kwargs)
 
     def execute_hello(self, job_interface):
         sys.stdout.write("Hallo :-)\n")

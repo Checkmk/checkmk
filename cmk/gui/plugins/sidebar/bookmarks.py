@@ -70,7 +70,7 @@ class BookmarkList(pagetypes.Overridable):
                 "topic": v[3],
             }
 
-        parameters = super(BookmarkList, cls).parameters(mode)
+        parameters = super().parameters(mode)
 
         parameters += [(
             _("Bookmarks"),

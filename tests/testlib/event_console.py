@@ -13,7 +13,7 @@ from tests.testlib.web_session import CMKWebSession
 
 class CMKEventConsole:
     def __init__(self, site):
-        super(CMKEventConsole, self).__init__()
+        super().__init__()
         self.site = site
         self.status = CMKEventConsoleStatus("%s/tmp/run/mkeventd/status" % site.root)
         self.web_session = CMKWebSession(site)

@@ -49,7 +49,7 @@ class Url:
 
 class Worker(threading.Thread):
     def __init__(self, num, crawler):
-        super(Worker, self).__init__()
+        super().__init__()
         self.name = "worker-%d" % num
         self.crawler = crawler
         self.daemon = True

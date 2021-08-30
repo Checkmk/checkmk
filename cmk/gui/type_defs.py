@@ -91,7 +91,7 @@ class PainterSpec(
         elif isinstance(value[1], tuple):
             value = (value[0], VisualLinkSpec(*value[1])) + value[2:]
 
-        return super(PainterSpec, cls).__new__(cls, *value)
+        return super().__new__(cls, *value)
 
     def __repr__(self):
         return str((self.painter_name, tuple(self.link_spec) if self.link_spec else None) +

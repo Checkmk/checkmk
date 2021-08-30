@@ -124,7 +124,7 @@ class CMKFixFileMixin:
         if msg.abspath is None:
             # NOTE: I'm too lazy to define a Protocol for this mixin which is
             # already on death row, so let's use a reflection hack...
-            getattr(super(CMKFixFileMixin, self), "handle_message")(msg)
+            getattr(super(), "handle_message")(msg)
             return
 
         new_path, new_line = self._orig_location_from_compiled_file(msg)
@@ -139,7 +139,7 @@ class CMKFixFileMixin:
 
         # NOTE: I'm too lazy to define a Protocol for this mixin which is
         # already on death row, so let's use a reflection hack...
-        getattr(super(CMKFixFileMixin, self), "handle_message")(msg)
+        getattr(super(), "handle_message")(msg)
 
     def _change_path_to_repo_path(self, msg):
         return os.path.relpath(msg.abspath, cmk_path())
@@ -165,7 +165,7 @@ class CMKOutputScanTimesMixin:
     reporter class inherit from this class to use it."""
     def on_set_current_module(self, modname, filepath):
         # HACK: See note above.
-        getattr(super(CMKOutputScanTimesMixin, self), "on_set_current_module")(modname, filepath)
+        getattr(super(), "on_set_current_module")(modname, filepath)
         if hasattr(self, "_current_start_time"):
             print("% 8.3fs %s" % (time.time() - getattr(self, "_current_start_time"),
                                   getattr(self, "_current_filepath")))
@@ -178,7 +178,7 @@ class CMKOutputScanTimesMixin:
 
     def on_close(self, stats, previous_stats):
         # HACK: See note above.
-        getattr(super(CMKOutputScanTimesMixin, self), "on_close")(stats, previous_stats)
+        getattr(super(), "on_close")(stats, previous_stats)
         if hasattr(self, "_current_start_time"):
             print("% 8.3fs %s" % (time.time() - getattr(self, "_current_start_time"),
                                   getattr(self, "_current_filepath")))

@@ -36,7 +36,7 @@ class Entity(abc.ABC):
 
 class List(Entity):
     def __init__(self, key, elements, from_choice=None):
-        super(List, self).__init__(key)
+        super().__init__(key)
         self._elements = elements
         self._from_choice = from_choice
 
@@ -53,7 +53,7 @@ class List(Entity):
 
 class Dict(Entity):
     def __init__(self, key, values, enumerate_keys: Optional[Entity] = None):
-        super(Dict, self).__init__(key)
+        super().__init__(key)
         self._values = values
         self._enumerate_keys = enumerate_keys
 
@@ -104,7 +104,7 @@ class Enum(Entity):
 
 class Choice(Entity):
     def __init__(self, key, choices):
-        super(Choice, self).__init__(key)
+        super().__init__(key)
         self.choices = choices
 
     def create(self, idx, amount):
@@ -113,12 +113,12 @@ class Choice(Entity):
 
 class BoolChoice(Choice):
     def __init__(self, key):
-        super(BoolChoice, self).__init__(key, [True, False])
+        super().__init__(key, [True, False])
 
 
 class Bytes(Str):
     def create(self, idx, amount):
-        return bytes(super(Bytes, self).create(idx, amount), 'utf-8')
+        return bytes(super().create(idx, amount), 'utf-8')
 
 
 #.

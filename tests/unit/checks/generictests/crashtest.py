@@ -116,7 +116,7 @@ class CrashDataset(WritableDataset):
         init_dict['info'] = local_vars.get('info')
         self.vars = local_vars
         self.crash_id = crash_report_fn.split("/")[-1].replace(".gz", "").replace(".tar", "")
-        super(CrashDataset, self).__init__(init_dict)
+        super().__init__(init_dict)
 
     def _find_checkname_from_traceback(self, traceback):
         for line in traceback[::-1]:
@@ -139,7 +139,7 @@ class CrashReportList(list):
             lines = [line.strip().split() for line in file_.readlines()]
 
         self.state_info = [[l[0], l[1], l[2], " ".join(l[3:])] for l in lines if l]
-        super(CrashReportList, self).__init__(self.load())
+        super().__init__(self.load())
 
     def load(self):
         try:

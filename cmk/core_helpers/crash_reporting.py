@@ -56,7 +56,7 @@ class CMKFetcherCrashReport(crash_reporting.ABCCrashReport):
         serial: Optional[str],
         host: Optional[HostName],
     ) -> crash_reporting.ABCCrashReport:
-        return super(CMKFetcherCrashReport, cls).from_exception(details={
+        return super().from_exception(details={
             "argv": sys.argv,
             "env": dict(os.environ),
             "serial": serial,

@@ -35,7 +35,7 @@ def _get_automation_secret(site):
 
 class CMKWebSession:
     def __init__(self, site):
-        super(CMKWebSession, self).__init__()
+        super().__init__()
         self.transids = []
         # Resources are only fetched and verified once per session
         self.verified_resources = set()

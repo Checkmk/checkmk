@@ -572,6 +572,9 @@ format-python:
 format-shell:
 	$(MAKE)	-C tests format-shell
 
+what-gerrit-makes:
+	$(MAKE)	-C tests what-gerrit-makes
+
 format-js:
 	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "{enterprise/,}web/htdocs/js/**/*.js"
 

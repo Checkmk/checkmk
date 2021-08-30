@@ -76,7 +76,7 @@ def num_jobs_to_use():
     # means that there may be up to 8 pylint running in parallel. Currently
     # these processes consume about 400 MB of rss memory.  To prevent swapping
     # we need to reduce the parallelization of pylint for the moment.
-    if getpass.getuser() == "jenkins":
+    if os.environ.get("USER") == "jenkins":
         return int(multiprocessing.cpu_count() / 8.0) + 3
     return int(multiprocessing.cpu_count() / 8.0) + 5
 

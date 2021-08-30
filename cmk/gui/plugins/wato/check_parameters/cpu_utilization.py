@@ -13,14 +13,9 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer, Percentage, Transform, Tuple
 
-cpu_util_common_dict = Dictionary(
-    help=_("This rule configures levels for the CPU utilization (not load) for "
-           "Linux/UNIX, Windows and VMWare ESX host systems, as well as devices "
-           "implementing the Host Resources MIB. The utilization "
-           "percentage is computed with respect to the total number of CPUs. "
-           "Note that not all parameters you can configure here are applicable "
-           "to all checks."),
-    elements=[
+
+def _cpu_util_elements():
+    return [
         ("core_util_time_total",
          Tuple(
              title=_("Levels over an extended time period on total CPU utilization"),
@@ -156,8 +151,19 @@ cpu_util_common_dict = Dictionary(
              ],
              default_value=True,
          )),
-    ],
-)
+    ]
+
+
+def _cpu_util_common_elements():
+    return Dictionary(
+        help=_("This rule configures levels for the CPU utilization (not load) for "
+               "Linux/UNIX, Windows and VMWare ESX host systems, as well as devices "
+               "implementing the Host Resources MIB. The utilization "
+               "percentage is computed with respect to the total number of CPUs. "
+               "Note that not all parameters you can configure here are applicable "
+               "to all checks."),
+        elements=_cpu_util_elements(),
+    )
 
 
 def transform_legacy_cpu_utilization_os(params):
@@ -168,7 +174,7 @@ def transform_legacy_cpu_utilization_os(params):
 
 def _parameter_valuespec_cpu_utilization_os():
     return Transform(
-        cpu_util_common_dict,
+        _cpu_util_common_elements(),
         forth=transform_legacy_cpu_utilization_os,
     )
 
@@ -191,7 +197,7 @@ def transform_cpu_iowait(params):
 
 def _parameter_valuespec_cpu_iowait():
     return Transform(
-        cpu_util_common_dict,
+        _cpu_util_common_elements(),
         forth=transform_cpu_iowait,
     )
 
@@ -222,7 +228,7 @@ def _parameter_valuespec_cpu_utilization():
                  Percentage(title=_("Warning at a utilization of")),
                  Percentage(title=_("Critical at a utilization of"))
              ],
-                   title=_("Alert on too high CPU utilization"),
+                   title=_("Alert on excessive CPU utilization"),
                    help=_("The CPU utilization sums up the percentages of CPU time that is used "
                           "for user processes and kernel routines over all available cores within "
                           "the last check interval. The possible range is from 0% to 100%"),

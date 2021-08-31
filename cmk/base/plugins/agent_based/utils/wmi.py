@@ -330,3 +330,19 @@ def _prepare_wmi_table(
     if old_timed_out:
         current_table.add_row(['Timeout'])
     return missing_wmi_status, current_table
+
+
+def required_tables_missing(
+    tables: Iterable[str],
+    required_tables: Iterable[str],
+) -> bool:
+    return not set(required_tables).issubset(set(tables))
+
+
+def get_wmi_time(table: WMITable, row: Union[str, int]) -> float:
+    timestamp = table.timestamp or table.get(row, "Timestamp_PerfTime")
+    frequency = table.frequency or table.get(row, "Frequency_PerfTime")
+    assert timestamp is not None
+    if not frequency:
+        frequency = 1
+    return float(timestamp) / float(frequency)

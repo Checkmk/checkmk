@@ -14,8 +14,14 @@ from cmk.base.check_api import (
     get_rate,
     MKCounterWrapped,
 )
+from cmk.base.plugins.agent_based.utils.wmi import get_wmi_time
 from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table as parse_wmi_table_migrated
-from cmk.base.plugins.agent_based.utils.wmi import StringTable, WMISection, WMITable
+from cmk.base.plugins.agent_based.utils.wmi import (
+    required_tables_missing,
+    StringTable,
+    WMISection,
+    WMITable,
+)
 
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
@@ -100,13 +106,6 @@ def wmi_filter_global_only(
 #   '----------------------------------------------------------------------'
 
 
-def required_tables_missing(
-    tables: Iterable[str],
-    required_tables: Iterable[str],
-) -> bool:
-    return not set(required_tables).issubset(set(tables))
-
-
 def inventory_wmi_table_instances(
     tables: WMISection,
     required_tables: Optional[Iterable[str]] = None,
@@ -166,16 +165,6 @@ def inventory_wmi_table_total(
 #   |                     \____|_| |_|\___|\___|_|\_\                      |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-# determine time at which a sample was taken
-def get_wmi_time(table: WMITable, row: Union[str, int]) -> float:
-    timestamp = table.timestamp or table.get(row, "Timestamp_PerfTime")
-    frequency = table.frequency or table.get(row, "Frequency_PerfTime")
-    assert timestamp is not None
-    if not frequency:
-        frequency = 1
-    return float(timestamp) / float(frequency)
 
 
 # to make wato rules simpler, levels are allowed to be passed as tuples if the level

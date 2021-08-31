@@ -35,8 +35,6 @@ _SIZE_PREFIXES_SI = ['', 'k', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
 _SIZE_PREFIXES_IEC = _SIZE_PREFIXES_SI[:]
 _SIZE_PREFIXES_IEC[1] = 'K'
 
-_PERCENT_MAX_DIGITS = 12  # arbitrarily chosen, and borderline ridiculous.
-
 
 def date(epoch: Optional[float]) -> str:
     """Render seconds since epoch as date

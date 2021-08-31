@@ -3098,6 +3098,15 @@ def main_cleanup(version_info: VersionInfo, site: SiteContext, global_opts: 'Glo
         bail_out("Command is not supported on this platform")
 
     for version in omd_versions():
+        if version == default_version():
+            sys.stdout.write(
+                "%s%-20s%s Keeping this version, since it is the default.\n" % (
+                    tty.bold,
+                    version,
+                    tty.normal,
+                ),)
+            continue
+
         site_ids = [s for s in all_sites() if SiteContext(s).version == version]
         if site_ids:
             sys.stdout.write("%s%-20s%s In use (by %s). Keeping this version.\n" %

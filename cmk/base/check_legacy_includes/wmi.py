@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from math import ceil
-from typing import Set
+from typing import Optional, Set, Union
 
 from cmk.base.check_api import (
     check_levels,
@@ -15,7 +15,7 @@ from cmk.base.check_api import (
     MKCounterWrapped,
 )
 from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table as parse_wmi_table_migrated
-from cmk.base.plugins.agent_based.utils.wmi import WMITable
+from cmk.base.plugins.agent_based.utils.wmi import StringTable, WMISection, WMITable
 
 # This set of functions are used for checks that handle "generic" windows
 # performance counters as reported via wmi
@@ -42,13 +42,21 @@ class WMITableLegacy(WMITable):
     """
     Needed since WMITable.get raises IgnoreResultsError
     """
-    def get(self, row, column, silently_skip_timed_out=False):
+    def get(
+        self,
+        row: Union[str, int],
+        column: Union[str, int],
+        silently_skip_timed_out=False,
+    ) -> Optional[str]:
         if not silently_skip_timed_out and self.timed_out:
             raise MKCounterWrapped('WMI query timed out')
         return self._get_row_col_value(row, column)
 
 
-def parse_wmi_table(info, key="Name"):
+def parse_wmi_table(
+    info: StringTable,
+    key: str = "Name",
+) -> WMISection:
     return parse_wmi_table_migrated(
         info,
         key=key,

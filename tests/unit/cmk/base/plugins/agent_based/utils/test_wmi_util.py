@@ -6,7 +6,8 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table, WMITable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table, WMISection, WMITable
 
 
 class TestWMITable:
@@ -1081,5 +1082,8 @@ class TestWMITable:
         ),
     ],
 )
-def test_parse_wmi_table(string_table, section) -> None:
+def test_parse_wmi_table(
+    string_table: StringTable,
+    section: WMISection,
+) -> None:
     assert parse_wmi_table(string_table) == section

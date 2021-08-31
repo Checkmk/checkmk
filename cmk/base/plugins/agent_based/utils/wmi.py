@@ -180,22 +180,28 @@ class WMITable:
                 raise KeyError(str(e) + " missing, valid keys: " + ", ".join(self.__headers))
         return self.__rows[row_index][col_index]
 
+    @property
     def row_labels(self) -> Iterable[Optional[str]]:
         return list(self.__row_lookup)
 
+    @property
     def row_count(self) -> int:
         return len(self.__rows)
 
+    @property
     def name(self) -> str:
         return self.__name
 
+    @property
     def timestamp(self) -> Optional[int]:
         return self.__timestamp
 
+    @property
     def frequency(self) -> Optional[int]:
         return self.__frequency
 
-    def _normalize_key(self, key: str) -> str:
+    @staticmethod
+    def _normalize_key(key: str) -> str:
         # Different API versions may return different headers/keys
         # for equal objects, eg. "skype.sip_stack":
         # - "SIP - Incoming Responses Dropped /Sec"

@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from math import ceil
-from typing import Optional, Set, Union
+from typing import Callable, Iterable, Optional, Set, Union
 
 from cmk.base.check_api import (
     check_levels,
@@ -75,7 +75,10 @@ def parse_wmi_table(
 #   '----------------------------------------------------------------------'
 
 
-def wmi_filter_global_only(tables, row):
+def wmi_filter_global_only(
+    tables: WMISection,
+    row: Union[str, int],
+) -> bool:
     for table in tables.values():
         try:
             value = table.get(row, "Name", silently_skip_timed_out=True)
@@ -97,11 +100,19 @@ def wmi_filter_global_only(tables, row):
 #   '----------------------------------------------------------------------'
 
 
-def required_tables_missing(tables, required_tables):
+def required_tables_missing(
+    tables: Iterable[str],
+    required_tables: Iterable[str],
+) -> bool:
     return not set(required_tables).issubset(set(tables))
 
 
-def inventory_wmi_table_instances(tables, required_tables=None, filt=None, levels=None):
+def inventory_wmi_table_instances(
+    tables: WMISection,
+    required_tables: Optional[Iterable[str]] = None,
+    filt: Optional[Callable[[WMISection, Union[str, int]], bool]] = None,
+    levels=None,
+):
     if required_tables is None:
         required_tables = tables
 
@@ -111,7 +122,7 @@ def inventory_wmi_table_instances(tables, required_tables=None, filt=None, level
     potential_instances: Set = set()
     # inventarize one item per instance that exists in all tables
     for required_table in required_tables:
-        table_rows = tables[required_table].row_labels()
+        table_rows = tables[required_table].row_labels
         if potential_instances:
             potential_instances &= set(table_rows)
         else:
@@ -123,7 +134,12 @@ def inventory_wmi_table_instances(tables, required_tables=None, filt=None, level
     return [(row, levels) for row in potential_instances if filt is None or filt(tables, row)]
 
 
-def inventory_wmi_table_total(tables, required_tables=None, filt=None, levels=None):
+def inventory_wmi_table_total(
+    tables: WMISection,
+    required_tables: Optional[Iterable[str]] = None,
+    filt: Optional[Callable[[WMISection, None], bool]] = None,
+    levels=None,
+):
     if required_tables is None:
         required_tables = tables
 
@@ -134,7 +150,7 @@ def inventory_wmi_table_total(tables, required_tables=None, filt=None, levels=No
         return []
 
     total_present = all(
-        None in tables[required_table].row_labels() for required_table in required_tables)
+        None in tables[required_table].row_labels for required_table in required_tables)
 
     if not total_present:
         return []
@@ -153,9 +169,10 @@ def inventory_wmi_table_total(tables, required_tables=None, filt=None, levels=No
 
 
 # determine time at which a sample was taken
-def get_wmi_time(table, row):
-    timestamp = table.timestamp() or table.get(row, "Timestamp_PerfTime")
-    frequency = table.frequency() or table.get(row, "Frequency_PerfTime")
+def get_wmi_time(table: WMITable, row: Union[str, int]) -> float:
+    timestamp = table.timestamp or table.get(row, "Timestamp_PerfTime")
+    frequency = table.frequency or table.get(row, "Frequency_PerfTime")
+    assert timestamp is not None
     if not frequency:
         frequency = 1
     return float(timestamp) / float(frequency)
@@ -173,7 +190,14 @@ def get_levels_quadruple(params):
     return upper + lower
 
 
-def wmi_yield_raw_persec(table, row, column, infoname, perfvar, levels=None):
+def wmi_yield_raw_persec(
+    table: WMITable,
+    row: Union[str, int],
+    column: Union[str, int],
+    infoname: Optional[str],
+    perfvar: Optional[str],
+    levels=None,
+):
     if table is None:
         # This case may be when a check was discovered with a table which subsequently
         # disappeared again. We expect to get None in this case and return some "nothing happened"
@@ -183,11 +207,12 @@ def wmi_yield_raw_persec(table, row, column, infoname, perfvar, levels=None):
         row = 0
 
     try:
-        value = int(table.get(row, column))
+        value = table.get(row, column)
+        assert value
     except KeyError:
         return 3, "Item not present anymore", []
 
-    value_per_sec = get_rate("%s_%s" % (column, table.name()), get_wmi_time(table, row), value)
+    value_per_sec = get_rate("%s_%s" % (column, table.name), get_wmi_time(table, row), int(value))
 
     return check_levels(
         value_per_sec,
@@ -197,17 +222,26 @@ def wmi_yield_raw_persec(table, row, column, infoname, perfvar, levels=None):
     )
 
 
-def wmi_yield_raw_counter(table, row, column, infoname, perfvar, levels=None, unit=""):
+def wmi_yield_raw_counter(
+    table: WMITable,
+    row: Union[str, int],
+    column: Union[str, int],
+    infoname: Optional[str],
+    perfvar: Optional[str],
+    levels=None,
+    unit: str = "",
+):
     if row == "":
         row = 0
 
     try:
-        value = int(table.get(row, column))
+        value = table.get(row, column)
+        assert value
     except KeyError:
         return 3, "counter %r not present anymore" % ((row, column),), []
 
     return check_levels(
-        value,
+        int(value),
         perfvar,
         get_levels_quadruple(levels),
         infoname=infoname,
@@ -216,26 +250,38 @@ def wmi_yield_raw_counter(table, row, column, infoname, perfvar, levels=None, un
     )
 
 
-def wmi_calculate_raw_average(table, row, column, factor):
+def wmi_calculate_raw_average(
+    table: WMITable,
+    row: Union[str, int],
+    column: str,
+    factor: float,
+) -> float:
     if row == "":
         row = 0
 
-    measure = int(table.get(row, column)) * factor
-    base = int(table.get(row, column + "_Base"))
+    measure = table.get(row, column)
+    base = table.get(row, column + "_Base")
+    assert measure
+    assert base
+    base_int = int(base)
 
-    if base < 0:
+    if base_int < 0:
         # this is confusing as hell. why does wmi return this value as a 4 byte signed int
         # when it clearly needs to be unsigned? And how does WMI Explorer know to cast this
         # to unsigned?
-        base += 1 << 32
+        base_int += 1 << 32
 
-    if base == 0:
+    if base_int == 0:
         return 0.0
 
-    return scale_counter(measure, factor, base)
+    return scale_counter(int(measure) * factor, factor, base_int)
 
 
-def scale_counter(measure, factor, base):
+def scale_counter(
+    measure: float,
+    factor: float,
+    base: float,
+) -> float:
     # This is a total counter which can overflow on long-running systems
     # the following forces the counter into a range of 0.0-1.0, but there is no way to know
     # how often the counter overran, so this may still be wrong
@@ -244,21 +290,35 @@ def scale_counter(measure, factor, base):
     return measure / base
 
 
-def wmi_calculate_raw_average_time(table, row, column):
-    measure = int(table.get(row, column))
-    base = int(table.get(row, column + "_Base"))
+def wmi_calculate_raw_average_time(
+    table: WMITable,
+    row: Union[str, int],
+    column: str,
+) -> float:
+    measure = table.get(row, column)
+    base = table.get(row, column + "_Base")
+    assert measure
+    assert base
 
     sample_time = get_wmi_time(table, row)
 
-    measure_per_sec = get_rate("%s_%s" % (column, table.name()), sample_time, measure)
-    base_per_sec = get_rate("%s_%s_Base" % (column, table.name()), sample_time, base)
+    measure_per_sec = get_rate("%s_%s" % (column, table.name), sample_time, int(measure))
+    base_per_sec = get_rate("%s_%s_Base" % (column, table.name), sample_time, int(base))
 
     if base_per_sec == 0:
         return 0
     return measure_per_sec / base_per_sec  # fixed: true-division
 
 
-def wmi_yield_raw_average(table, row, column, infoname, perfvar, levels=None, perfscale=1.0):
+def wmi_yield_raw_average(
+    table: WMITable,
+    row: Union[str, int],
+    column: str,
+    infoname: Optional[str],
+    perfvar: Optional[str],
+    levels=None,
+    perfscale: float = 1.0,
+):
     try:
         average = wmi_calculate_raw_average(table, row, column, 1) * perfscale
     except KeyError:
@@ -273,10 +333,21 @@ def wmi_yield_raw_average(table, row, column, infoname, perfvar, levels=None, pe
     )
 
 
-def wmi_yield_raw_average_timer(table, row, column, infoname, perfvar, levels=None):
+def wmi_yield_raw_average_timer(
+    table: WMITable,
+    row: Union[str, int],
+    column: str,
+    infoname: Optional[str],
+    perfvar: Optional[str],
+    levels=None,
+):
+    assert table.frequency
     try:
-        average = wmi_calculate_raw_average_time(table, row,
-                                                 column) / table.frequency()  # fixed: true-division
+        average = wmi_calculate_raw_average_time(
+            table,
+            row,
+            column,
+        ) / table.frequency  # fixed: true-division
     except KeyError:
         return 3, "item not present anymore", []
 
@@ -288,7 +359,14 @@ def wmi_yield_raw_average_timer(table, row, column, infoname, perfvar, levels=No
     )
 
 
-def wmi_yield_raw_fraction(table, row, column, infoname, perfvar, levels=None):
+def wmi_yield_raw_fraction(
+    table: WMITable,
+    row: Union[str, int],
+    column: str,
+    infoname: Optional[str],
+    perfvar: Optional[str],
+    levels=None,
+):
     try:
         average = wmi_calculate_raw_average(table, row, column, 100)
     except KeyError:

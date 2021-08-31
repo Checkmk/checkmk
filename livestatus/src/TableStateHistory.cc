@@ -82,7 +82,10 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
         [](const HostServiceState &r) { return r._until; }));
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration", "Duration of state (until - from)", offsets,
-        [](const HostServiceState &r) { return r._duration; }));
+        [](const HostServiceState &r) {
+            return std::chrono::duration_cast<std::chrono::seconds>(r._duration)
+                .count();
+        }));
     addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
         "duration_part", "Duration part in regard to the query timeframe",
         offsets, [](const HostServiceState &r) { return r._duration_part; }));
@@ -138,7 +141,11 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
 
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration_ok", "OK duration of state ( until - from )", offsets,
-        [](const HostServiceState &r) { return r._duration_ok; }));
+        [](const HostServiceState &r) {
+            return std::chrono::duration_cast<std::chrono::seconds>(
+                       r._duration_ok)
+                .count();
+        }));
     addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
         "duration_part_ok", "OK duration part in regard to the query timeframe",
         offsets,
@@ -146,7 +153,11 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
 
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration_warning", "WARNING duration of state (until - from)", offsets,
-        [](const HostServiceState &r) { return r._duration_warning; }));
+        [](const HostServiceState &r) {
+            return std::chrono::duration_cast<std::chrono::seconds>(
+                       r._duration_warning)
+                .count();
+        }));
     addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
         "duration_part_warning",
         "WARNING duration part in regard to the query timeframe", offsets,
@@ -154,8 +165,11 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
 
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration_critical", "CRITICAL duration of state (until - from)",
-        offsets,
-        [](const HostServiceState &r) { return r._duration_critical; }));
+        offsets, [](const HostServiceState &r) {
+            return std::chrono::duration_cast<std::chrono::seconds>(
+                       r._duration_critical)
+                .count();
+        }));
     addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
         "duration_part_critical",
         "CRITICAL duration part in regard to the query timeframe", offsets,
@@ -163,7 +177,11 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
 
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration_unknown", "UNKNOWN duration of state (until - from)", offsets,
-        [](const HostServiceState &r) { return r._duration_unknown; }));
+        [](const HostServiceState &r) {
+            return std::chrono::duration_cast<std::chrono::seconds>(
+                       r._duration_unknown)
+                .count();
+        }));
     addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
         "duration_part_unknown",
         "UNKNOWN duration part in regard to the query timeframe", offsets,
@@ -171,8 +189,11 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
 
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration_unmonitored", "UNMONITORED duration of state (until - from)",
-        offsets,
-        [](const HostServiceState &r) { return r._duration_unmonitored; }));
+        offsets, [](const HostServiceState &r) {
+            return std::chrono::duration_cast<std::chrono::seconds>(
+                       r._duration_unmonitored)
+                .count();
+        }));
     addColumn(std::make_unique<DoubleColumn::Callback<HostServiceState>>(
         "duration_part_unmonitored",
         "UNMONITORED duration part in regard to the query timeframe", offsets,
@@ -831,29 +852,28 @@ int TableStateHistory::updateHostServiceState(Query *query,
 }
 
 void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
-    hs_state->_duration =
-        std::chrono::system_clock::to_time_t(hs_state->_until) -
-        std::chrono::system_clock::to_time_t(hs_state->_from);
-    // NOTE: We have a closed interval with a resolution of 1s, so we have to
-    // subtract 1s to get the duration. Silly representation...
-    auto query_timeframe =
+    hs_state->_duration = hs_state->_until - hs_state->_from;
+    auto duration_secs =
+        std::chrono::duration<double>(hs_state->_duration).count();
+    // NOTE: We have a closed interval with a resolution of 1s, so we have
+    // to subtract 1s to get the duration. Silly representation...
+    auto query_timeframe_secs =
         std::chrono::duration<double>{_until - _since - 1s}.count();
-    hs_state->_duration_part =
-        static_cast<double>(hs_state->_duration) / query_timeframe;
+    hs_state->_duration_part = duration_secs / query_timeframe_secs;
 
-    hs_state->_duration_unmonitored = 0;
+    hs_state->_duration_unmonitored = 0s;
     hs_state->_duration_part_unmonitored = 0;
 
-    hs_state->_duration_ok = 0;
+    hs_state->_duration_ok = 0s;
     hs_state->_duration_part_ok = 0;
 
-    hs_state->_duration_warning = 0;
+    hs_state->_duration_warning = 0s;
     hs_state->_duration_part_warning = 0;
 
-    hs_state->_duration_critical = 0;
+    hs_state->_duration_critical = 0s;
     hs_state->_duration_part_critical = 0;
 
-    hs_state->_duration_unknown = 0;
+    hs_state->_duration_unknown = 0s;
     hs_state->_duration_part_unknown = 0;
 
     switch (hs_state->_state) {

@@ -63,6 +63,9 @@ node (NODE) {
                             sh('cp ../../../defines.make scripts')  // we need it *within* the context :-P
                             def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
                             withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+
+                                sh('echo  "${PASSWORD}" | docker login "${DOCKER_REGISTRY}" -u "${USERNAME}" --password-stdin')
+
                                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                                     def DOCKERFILE = "$DISTRO/Dockerfile";
                                     def IMAGE_ALIAS_NAME = sh(script: "grep 'ARG IMAGE_' ${DOCKERFILE} | awk '{print \$2}'", returnStdout: true).replaceAll("[\r\n]+", "");

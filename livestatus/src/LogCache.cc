@@ -56,7 +56,7 @@ void LogCache::update() {
 }
 
 void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
-    time_t since = std::chrono::system_clock::to_time_t(logfile->since());
+    key_type since = std::chrono::system_clock::to_time_t(logfile->since());
     if (since == 0) {
         return;
     }
@@ -92,7 +92,7 @@ void LogCache::logLineHasBeenAdded(Logfile *logfile, unsigned logclasses) {
     }
 
     // [1] Delete old logfiles: Begin deleting with the oldest logfile available
-    logfiles_t::iterator it;
+    LogCache::iterator it;
     for (it = _logfiles.begin(); it != _logfiles.end(); ++it) {
         if (it->second.get() == logfile) {
             break;  // Do not touch the logfile the Query is currently accessing

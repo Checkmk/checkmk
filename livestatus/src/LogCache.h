@@ -17,12 +17,16 @@ class Logfile;
 class Logger;
 class MonitoringCore;
 
-using logfiles_t = std::map<time_t, std::unique_ptr<Logfile>>;
-
 // TODO(sp) Split this class into 2 parts: One is really only a cache for the
 // logfiles to monitor, the other part is about the lines in them.
 class LogCache {
 public:
+    using key_type = time_t;
+    using mapped_type = std::unique_ptr<Logfile>;
+    using map_type = std::map<key_type, mapped_type>;
+    using iterator = map_type::iterator;
+    using const_iterator = map_type::const_iterator;
+
     // TODO(sp) Using this class requires a very tricky and fragile protocol:
     // You have to get the lock and call update() before you use any of the
     // other methods. Furthermore, the constructor is not allowed to call any
@@ -66,10 +70,10 @@ private:
     MonitoringCore *const _mc;
     size_t _num_cached_log_messages;
     size_t _num_at_last_check;
-    logfiles_t _logfiles;
+    LogCache::map_type _logfiles;
     std::chrono::system_clock::time_point _last_index_update;
 
-    void addToIndex(std::unique_ptr<Logfile> logfile);
+    void addToIndex(mapped_type logfile);
     [[nodiscard]] Logger *logger() const;
 };
 

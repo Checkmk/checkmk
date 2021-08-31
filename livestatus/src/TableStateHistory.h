@@ -61,7 +61,7 @@ private:
     std::map<std::string, int> _notification_periods;
 
     // Helper functions to traverse through logfiles
-    logfiles_t::const_iterator _it_logs;
+    LogCache::const_iterator _it_logs;
     const Logfile::map_type *_entries;
     Logfile::const_iterator _it_entries;
 

@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from dataclasses import dataclass
+from enum import Enum
 from typing import NamedTuple, Optional
 
 
@@ -14,9 +15,16 @@ class Load(NamedTuple):
     load15: float
 
 
+class ProcessorType(Enum):
+    unspecified = 0
+    physical = 1
+    logical = 2
+
+
 @dataclass
 class Section:
     load: Load
     num_cpus: int
     num_threads: int
     max_threads: Optional[int] = None
+    type: ProcessorType = ProcessorType.unspecified

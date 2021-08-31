@@ -4,10 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from enum import Enum
 from typing import Any
 
 from cmk.base.check_api import check_levels
+from cmk.base.plugins.agent_based.utils.cpu import ProcessorType
+from cmk.base.plugins.agent_based.utils.cpu_load import _processor_type_info
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 
@@ -17,18 +18,16 @@ from cmk.base.check_api import check_levels
 # also Disk wait is account for the load).
 
 
-class ProcessorType(Enum):
-    unspecified = 0
-    physical = 1
-    logical = 2
-
-
-def _format_cores_info(num_cpus, processor_type, load_per_core):
-    if processor_type == ProcessorType.unspecified:
-        cores_info = "cores"
-    else:
-        cores_info = "%s cores" % processor_type.name
-    return " at %d %s (%.2f per core)" % (num_cpus, cores_info, load_per_core)
+def _format_cores_info(
+    num_cpus: int,
+    processor_type: ProcessorType,
+    load_per_core: float,
+) -> str:
+    return " at %d %s (%.2f per core)" % (
+        num_cpus,
+        f"{_processor_type_info(processor_type)}cores",
+        load_per_core,
+    )
 
 
 # load is a triple of three floats: average load of

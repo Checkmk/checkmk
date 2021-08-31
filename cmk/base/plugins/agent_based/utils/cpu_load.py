@@ -8,7 +8,17 @@ from typing import Any, Mapping
 
 from ..agent_based_api.v1 import check_levels, check_levels_predictive, Metric, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult
-from .cpu import Section
+from .cpu import ProcessorType, Section
+
+
+def _processor_type_info(proc_type: ProcessorType) -> str:
+    """
+    >>> _processor_type_info(ProcessorType.unspecified)
+    ''
+    >>> _processor_type_info(ProcessorType.logical)
+    'logical '
+    """
+    return "" if proc_type is ProcessorType.unspecified else f"{proc_type.name} "
 
 
 def check_cpu_load(params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -41,7 +51,9 @@ def check_cpu_load(params: Mapping[str, Any], section: Section) -> CheckResult:
     # provide additional info text
     yield Result(
         state=State.OK,
-        summary=f"15 min load per core: {(section.load.load15/num_cpus):.2f} ({num_cpus} cores)")
+        summary=f"15 min load per core: {(section.load.load15/num_cpus):.2f} "
+        f"({num_cpus} {_processor_type_info(section.type)}cores)",
+    )
 
     for level_name, level_value in section.load._asdict().items():
         if level_name == 'load15':

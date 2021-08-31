@@ -17,10 +17,10 @@ def parse_cpu(string_table: StringTable) -> Optional[Section]:
 
         >>> string_table = ['0.26 0.47 0.52 2/459 19531 4'.split()]
         >>> print(parse_cpu(string_table))
-        Section(load=Load(load1=0.26, load5=0.47, load15=0.52), num_cpus=4, num_threads=459, max_threads=None)
+        Section(load=Load(load1=0.26, load5=0.47, load15=0.52), num_cpus=4, num_threads=459, max_threads=None, type=<ProcessorType.unspecified: 0>)
         >>> string_table = ['0.26 0.47 0.52 2/459 19531 4'.split(), ['124069']]
         >>> print(parse_cpu(string_table))
-        Section(load=Load(load1=0.26, load5=0.47, load15=0.52), num_cpus=4, num_threads=459, max_threads=124069)
+        Section(load=Load(load1=0.26, load5=0.47, load15=0.52), num_cpus=4, num_threads=459, max_threads=124069, type=<ProcessorType.unspecified: 0>)
 
     """
     if not string_table or len(string_table[0]) < 5:

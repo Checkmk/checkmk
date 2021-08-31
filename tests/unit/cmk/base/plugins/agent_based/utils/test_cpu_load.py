@@ -9,7 +9,7 @@ from unittest.mock import Mock
 from cmk.base.check_utils import CheckPluginName, Service
 from cmk.base.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.utils.cpu import Load, Section
+from cmk.base.plugins.agent_based.utils.cpu import Load, ProcessorType, Section
 from cmk.base.plugins.agent_based.utils.cpu_load import check_cpu_load
 
 
@@ -21,11 +21,12 @@ def test_cpu_loads_fixed_levels() -> None:
                 load=Load(0.5, 1.0, 1.5),
                 num_cpus=4,
                 num_threads=123,
+                type=ProcessorType.physical,
             ),
         )) == [
             Result(state=State.OK, summary='15 min load: 1.50'),
             Metric('load15', 1.5, levels=(8.0, 16.0)),  # levels multiplied by num_cpus
-            Result(state=State.OK, summary='15 min load per core: 0.38 (4 cores)'),
+            Result(state=State.OK, summary='15 min load per core: 0.38 (4 physical cores)'),
             Metric('load1', 0.5, boundaries=(0, 4.0)),
             Metric('load5', 1.0, boundaries=(0, 4.0)),
         ]

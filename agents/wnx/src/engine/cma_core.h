@@ -621,6 +621,8 @@ public:
 
     std::wstring cmdLine() const noexcept { return cmd_line_; }
 
+    const wtools::InternalUser& getUser() const { return iu_; }
+
 protected:
     void fillInternalUser();
     void resetData() {

@@ -360,33 +360,48 @@ TEST(PluginTest, PluginInfoCheck) {
     EXPECT_EQ(e.group_, "g");
 }
 }  // namespace cfg
+
+namespace {
+void AssignGroupUser(PluginEntry& pe, std::string_view group,
+                     std::string_view user) {
+    cfg::PluginInfo e;
+    e.extend(group, user);
+    pe.applyConfigUnit(e, false);
+}
+}  // namespace
+
+TEST(PluginTest, ApplyGroupUser_Integration) {
+    auto group_name =
+        wtools::ToUtf8(wtools::SidToName(L"S-1-5-32-545", SidTypeGroup));
+    cma::PluginEntry pe("c:\\a\\x.cmd");
+    auto get_usr = [ptr_pe = &pe]() -> auto { return ptr_pe->getUser().first; };
+    auto get_pwd = [ptr_pe = &pe]() -> auto {
+        return ptr_pe->getUser().second;
+    };
+    ASSERT_TRUE(get_usr().empty());
+    ASSERT_TRUE(get_pwd().empty());
+
+    AssignGroupUser(pe, {}, {});
+    ASSERT_TRUE(get_usr().empty());
+    ASSERT_TRUE(get_pwd().empty());
+
+    AssignGroupUser(pe, group_name, {});
+    ASSERT_TRUE(!get_usr().empty());
+    ASSERT_TRUE(!get_pwd().empty());
+
+    AssignGroupUser(pe, {}, {});
+    ASSERT_TRUE(get_usr().empty());
+    ASSERT_TRUE(get_pwd().empty());
+
+    AssignGroupUser(pe, group_name, "u p");
+    EXPECT_EQ(wtools::ToUtf8(get_usr()), "cmk_TST_"s + group_name);
+    EXPECT_TRUE(!get_pwd().empty());
+
+    AssignGroupUser(pe, {}, "u p");
+    EXPECT_EQ(get_usr(), L"u");
+    EXPECT_EQ(get_pwd(), L"p");
+}
 TEST(PluginTest, ApplyConfig) {
-    {
-        auto group_name = wtools::SidToName(L"S-1-5-32-545", SidTypeGroup);
-        cma::PluginEntry pe("c:\\a\\x.cmd");
-        ASSERT_TRUE(pe.iu_.first.empty());
-        ASSERT_TRUE(pe.iu_.second.empty());
-        pe.fillInternalUser();
-        ASSERT_TRUE(pe.iu_.first.empty());
-        ASSERT_TRUE(pe.iu_.second.empty());
-        pe.group_ = wtools::ToUtf8(group_name);
-        pe.fillInternalUser();
-        ASSERT_TRUE(!pe.iu_.first.empty());
-        ASSERT_TRUE(!pe.iu_.second.empty());
-        pe.group_.clear();
-        pe.fillInternalUser();
-        ASSERT_TRUE(pe.iu_.first.empty());
-        ASSERT_TRUE(pe.iu_.second.empty());
-        pe.group_ = wtools::ToUtf8(group_name);
-        pe.user_ = "u p";
-        pe.fillInternalUser();
-        EXPECT_EQ(pe.iu_.first, L"cmk_TST_"s + group_name);
-        EXPECT_TRUE(!pe.iu_.second.empty());
-        pe.group_.clear();
-        pe.fillInternalUser();
-        EXPECT_EQ(pe.iu_.first, L"u");
-        EXPECT_EQ(pe.iu_.second, L"p");
-    }
     cma::PluginEntry pe("c:\\a\\x.cmd");
     EXPECT_EQ(pe.failures(), 0);
     pe.failures_ = 2;
@@ -679,22 +694,18 @@ TEST(PluginTest, FilesAndFoldersIntegration) {
     using namespace wtools;
     cma::OnStartTest();
     {
-        EXPECT_EQ(groups::localGroup.foldersCount(), 1);
-        EXPECT_EQ(groups::plugins.foldersCount(), 2);
         PathVector pv;
         for (auto& folder : groups::plugins.folders()) {
             pv.emplace_back(folder);
         }
         auto files = cma::GatherAllFiles(pv);
         if (files.size() < 10) {
-            auto f = groups::plugins.folders();
-            XLOG::l(XLOG::kStdio | XLOG::kInfo)(
-                "\n\nTEST IS SKIPPED> YOU HAVE NO PLUGINS {} {} {} {}\n\n\n ",
-                wtools::ToUtf8(f[0]), wtools::ToUtf8(f[1]),
-                wtools::ToUtf8(f[2]), wtools::ToUtf8(f[3]));
+            GTEST_SKIP() << "TEST IS SKIPPED> YOU HAVE NO PLUGINS";
             return;
         }
 
+        EXPECT_EQ(groups::localGroup.foldersCount(), 1);
+        EXPECT_EQ(groups::plugins.foldersCount(), 2);
         EXPECT_TRUE(files.size() > 20);
 
         auto execute = GetInternalArray(groups::kGlobal, vars::kExecute);

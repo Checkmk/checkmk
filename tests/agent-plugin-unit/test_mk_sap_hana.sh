@@ -315,7 +315,7 @@ test_mk_sap_hana_skip_sql_queries() {
         return 43
     }
 
-    actual=$(query_instance "sid" "inst" "inst_user" "" "" "")
+    actual=$(query_instance "sid" "inst" "inst_user" "" "" "" 2> /dev/null)
     # SQL DB not available so we only want non-sql sections to be executed
     expected_sections=("sap_hana_replication_status" "sap_hana_connect:sep(59)")
 

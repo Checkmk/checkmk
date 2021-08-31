@@ -21,7 +21,7 @@ else
     exit -1
 fi
 
-rm ${RESOLVE_ERROR_FILE}
+rm -f ${RESOLVE_ERROR_FILE}
 
 # >>> This is a workaround for images being deleted on Nexus.
 #     It should be replaced with a solution which allows to keep images forever without having

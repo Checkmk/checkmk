@@ -6,25 +6,19 @@
 
 import json
 from contextlib import suppress
-from typing import List, Mapping, NamedTuple, Optional, Sequence, Set, Tuple
+from typing import List, Mapping, Optional, Sequence, Set, Tuple
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import register
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.df import DfBlock
-
-
-class DfInode(NamedTuple):
-    device: Optional[str]
-    total: int
-    avail: int
-    mountpoint: str
-    uuid: Optional[str]
-
+from cmk.base.plugins.agent_based.utils.df import (
+    BlocksSubsection,
+    DfBlock,
+    DfInode,
+    InodesSubsection,
+)
 
 LsblkMap = Mapping[str, str]
-BlocksSubsection = Sequence[DfBlock]
 MpToDevice = Mapping[str, str]
-InodesSubsection = Sequence[DfInode]
 
 
 def _padded_line(line: List[str]) -> List[str]:

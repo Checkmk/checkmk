@@ -9,6 +9,7 @@ import pytest
 import cmk.base.plugins.agent_based.mssql_datafiles_transactionlogs as msdt
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
+from cmk.base.plugins.agent_based.df_section import parse_df
 
 SECTION_MSSQL = msdt.parse_mssql_datafiles(
     [[
@@ -35,12 +36,21 @@ SECTION_MSSQL = msdt.parse_mssql_datafiles(
      ]])
 
 
-@pytest.mark.parametrize('section_mssql', [
-    (SECTION_MSSQL),
+@pytest.mark.parametrize('section_mssql, section_df', [
+    (
+        SECTION_MSSQL,
+        parse_df([
+            ['Z:\\\\', 'NTFS', '31463268', '16510812', '14952456', '53%', 'Z:\\\\'],
+        ]),
+    ),
+    (
+        SECTION_MSSQL,
+        None,
+    ),
 ])
-def test_discovery_mssql_transactionlogs(section_mssql):
+def test_discovery_mssql_transactionlogs(section_mssql, section_df):
     assert sorted(
-        msdt.discover_mssql_transactionlogs([{}], section_mssql),
+        msdt.discover_mssql_transactionlogs([{}], section_mssql, section_df),
         key=lambda s: s.item or "",  # type: ignore[attr-defined]
     ) == [
         Service(item='MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log'),
@@ -55,35 +65,121 @@ def test_discovery_mssql_transactionlogs(section_mssql):
     ]
 
 
-@pytest.mark.parametrize('item, section_mssql, check_results', [
-    (
-        'MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log',
-        SECTION_MSSQL,
-        [
-            Result(
-                state=state.OK,
-                summary='Used: 16.0 MiB',
-            ),
-            Metric('data_size', 16777216.0, boundaries=(0, 2199023255552.0)),
-            Result(
-                state=state.OK,
-                summary='Allocated used: 16.0 MiB',
-            ),
-            Result(
-                state=state.OK,
-                summary='Allocated: 256 MiB',
-            ),
-            Metric('allocated_size', 268435456.0, boundaries=(0, 2199023255552.0)),
-            Result(
-                state=state.OK,
-                summary="Maximum size: 2.00 TiB",
-            ),
-        ],
-    ),
-])
-def test_check_mssql_transactionlogs(item, section_mssql, check_results):
-    assert list(msdt.check_mssql_common(
+@pytest.mark.parametrize(
+    'item, section_mssql, section_df, check_results',
+    [
+        (
+            'MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log',
+            SECTION_MSSQL,
+            None,
+            [
+                Result(
+                    state=state.OK,
+                    summary='Used: 16.0 MiB',
+                ),
+                Metric('data_size', 16777216.0, boundaries=(0, 2199023255552.0)),
+                Result(
+                    state=state.OK,
+                    summary='Allocated used: 16.0 MiB',
+                ),
+                Result(
+                    state=state.OK,
+                    summary='Allocated: 256 MiB',
+                ),
+                Metric('allocated_size', 268435456.0, boundaries=(0, 2199023255552.0)),
+                Result(
+                    state=state.OK,
+                    summary=
+                    "Maximum size: 2.00 TiB",  # no filesystem information -> revert to configured max size
+                ),
+            ],
+        ),
+        (
+            'MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log',
+            SECTION_MSSQL,
+            parse_df([
+                ['Z:\\\\', 'NTFS', '31463268', '16510812', '14952456000000', '53%', 'Z:\\\\'],
+            ]),
+            [
+                Result(
+                    state=state.OK,
+                    summary='Used: 16.0 MiB',
+                ),
+                Metric('data_size', 16777216.0, boundaries=(0, 2199023255552.0)),
+                Result(
+                    state=state.OK,
+                    summary='Allocated used: 16.0 MiB',
+                ),
+                Result(
+                    state=state.OK,
+                    summary='Allocated: 256 MiB',
+                ),
+                Metric('allocated_size', 268435456.0, boundaries=(0, 2199023255552.0)),
+                Result(
+                    state=state.OK,
+                    summary="Maximum size: 2.00 TiB",  # huge filesystem but not unlimited
+                ),
+            ],
+        ),
+        (
+            'MSSQL46.master.mastlog',
+            SECTION_MSSQL,
+            parse_df([
+                ['Z:\\\\', 'NTFS', '31463268', '16510812', '14952456000000', '53%', 'Z:\\\\'],
+            ]),
+            [
+                Result(
+                    state=state.OK,
+                    summary='Used: 0 B',
+                ),
+                Metric('data_size', 0.0, boundaries=(0, 1.5311314944e+16)),
+                Result(
+                    state=state.OK,
+                    summary='Allocated used: 0 B',
+                ),
+                Result(
+                    state=state.OK,
+                    summary='Allocated: 1.00 MiB',
+                ),
+                Metric('allocated_size', 1048576.0, boundaries=(0, 1.5311314944e+16)),
+                Result(
+                    state=state.OK,
+                    summary="Maximum size: 13.6 PiB",  # huge filesystem and unlimited
+                ),
+            ],
+        ),
+        (
+            'MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log',
+            SECTION_MSSQL,
+            parse_df([
+                ['Z:\\\\', 'NTFS', '1', '1', '1', '53%', 'Z:\\\\'],
+            ]),
+            [
+                Result(
+                    state=state.OK,
+                    summary='Used: 16.0 MiB',
+                ),
+                Metric('data_size', 16777216.0, boundaries=(0, 1024.0)),
+                Result(
+                    state=state.OK,
+                    summary='Allocated used: 16.0 MiB',
+                ),
+                Result(
+                    state=state.OK,
+                    summary='Allocated: 256 MiB',
+                ),
+                Metric('allocated_size', 268435456.0, boundaries=(0, 1024.0)),
+                Result(
+                    state=state.OK,
+                    summary="Maximum size: 1.00 KiB",  # filesystem smaller than log size limit
+                ),
+            ],
+        ),
+    ])
+def test_check_mssql_transactionlogs(item, section_mssql, section_df, check_results):
+    assert list(msdt.check_mssql_transactionlogs(
         item,
         {},
         section_mssql,
+        section_df,
     )) == check_results

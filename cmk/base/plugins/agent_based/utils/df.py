@@ -35,8 +35,18 @@ class DfBlock(NamedTuple):
     uuid: Optional[str]
 
 
+class DfInode(NamedTuple):
+    device: Optional[str]
+    total: int
+    avail: int
+    mountpoint: str
+    uuid: Optional[str]
+
+
 FSBlock = Tuple[str, Optional[float], Optional[float], float]
 FSBlocks = Sequence[FSBlock]
+BlocksSubsection = Sequence[DfBlock]
+InodesSubsection = Sequence[DfInode]
 
 FILESYSTEM_DEFAULT_LEVELS = {
     "levels": (80.0, 90.0),  # warn/crit in percent

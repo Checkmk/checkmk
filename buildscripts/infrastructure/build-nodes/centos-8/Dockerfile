@@ -121,7 +121,7 @@ RUN yum -y makecache \
 # See also: omd/omd.spec.in
 RUN if test -f /usr/lib/rpm/redhat/redhat-annobin-cc1; then \
         rm -f /usr/lib/rpm/redhat/redhat-annobin-cc1 \
-        && touch /usr/lib/rpm/redhat/redhat-annobin-cc1 \
+        && touch /usr/lib/rpm/redhat/redhat-annobin-cc1; \
     fi
 
 # Install our standard tool chain for building

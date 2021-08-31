@@ -30,9 +30,6 @@ node (NODE) {
         VERS_TAG = versioning.get_docker_tag(scm)
         BRANCH = versioning.get_branch(scm)
         BRANCH_VERSION = versioning.get_branch_version()
-        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME')]) {
-            sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin')
-        }
     }
 
     // Since this is the job that builds our build containers, we can not
@@ -63,16 +60,12 @@ node (NODE) {
                             sh('cp ../../../defines.make scripts')  // we need it *within* the context :-P
                             def DOCKER_REGISTRY_NOHTTP = str_mod.strip_protocol_from_url(DOCKER_REGISTRY)
                             withCredentials([usernamePassword(credentialsId: 'nexus', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-
-                                sh('echo  "${PASSWORD}" | docker login "${DOCKER_REGISTRY}" -u "${USERNAME}" --password-stdin')
-
                                 docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
                                     def DOCKERFILE = "$DISTRO/Dockerfile";
                                     def IMAGE_ALIAS_NAME = sh(script: "grep 'ARG IMAGE_' ${DOCKERFILE} | awk '{print \$2}'", returnStdout: true).replaceAll("[\r\n]+", "");
                                     def RESOLVED_IMAGE_ID = sh(script: "../../docker_image_aliases/resolve.sh ${IMAGE_ALIAS_NAME}", returnStdout: true).replaceAll("[\r\n]+", "");
                                     println("Using IMAGE_ALIAS_NAME: ${IMAGE_ALIAS_NAME}=${RESOLVED_IMAGE_ID}");
                                     def DOCKER_ARGS = (
-                                        " --pull" +
                                         " --build-arg $IMAGE_ALIAS_NAME=$RESOLVED_IMAGE_ID" + 
                                         " --build-arg DOCKER_REGISTRY='$DOCKER_REGISTRY_NOHTTP'" + 
                                         " --build-arg NEXUS_ARCHIVES_URL='$NEXUS_ARCHIVES_URL'" +

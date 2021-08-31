@@ -43,6 +43,15 @@ protected:
 private:
     LogCache *_log_cache;
 
+    // ATTENTION! All those fields below are pure evil! They are set in
+    // answerQuery(), just to transport the values down the call hierarchy. The
+    // really, really bad part: answerQuery() is used in a multi-threaded way
+    // from the Livestatus threads, but we DO NOT have a lock/mutex to protect
+    // those fields! We rely on using LogCache's mutex to protect *us*, which is
+    // completely the wrong way round and highly fragile. Furthermore: All this
+    // madness is not necessary, we should just pass down all the information
+    // needed per query.
+
     // NOTE: Both time points are *inclusive*, i.e. we have a closed interval,
     // which is quite awkward: Half-open intervals are the way to go!
     std::chrono::system_clock::time_point _since;

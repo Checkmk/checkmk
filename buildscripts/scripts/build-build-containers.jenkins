@@ -30,6 +30,9 @@ node (NODE) {
         VERS_TAG = versioning.get_docker_tag(scm)
         BRANCH = versioning.get_branch(scm)
         BRANCH_VERSION = versioning.get_branch_version()
+        withCredentials([usernamePassword(credentialsId: 'nexus', passwordVariable: 'DOCKER_PASSPHRASE', usernameVariable: 'DOCKER_USERNAME')]) {
+            sh('echo  "${DOCKER_PASSPHRASE}" | docker login "${DOCKER_REGISTRY}" -u "${DOCKER_USERNAME}" --password-stdin')
+        }
     }
 
     // Since this is the job that builds our build containers, we can not

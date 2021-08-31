@@ -200,7 +200,7 @@ std::string TableStateHistory::name() const { return "statehist"; }
 
 std::string TableStateHistory::namePrefix() const { return "statehist_"; }
 
-const logfile_entries_t *TableStateHistory::getEntries(Logfile *logfile) {
+const Logfile::map_type *TableStateHistory::getEntries(Logfile *logfile) {
     constexpr unsigned classmask =
         (1U << static_cast<int>(LogEntry::Class::alert)) |
         (1U << static_cast<int>(LogEntry::Class::program)) |

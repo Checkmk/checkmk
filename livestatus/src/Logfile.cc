@@ -171,7 +171,7 @@ bool Logfile::processLogLine(size_t lineno, std::string line,
     return true;
 }
 
-const logfile_entries_t *Logfile::getEntriesFor(size_t max_lines_per_logfile,
+const Logfile::map_type *Logfile::getEntriesFor(size_t max_lines_per_logfile,
                                                 unsigned logclasses) {
     // make sure all messages are present
     load(max_lines_per_logfile, logclasses);

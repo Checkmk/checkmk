@@ -22,11 +22,12 @@
 class LogCache;
 class Logger;
 
-using logfile_key = std::pair<std::chrono::system_clock::time_point, size_t>;
-using logfile_entries_t = std::map<logfile_key, std::unique_ptr<LogEntry>>;
-
 class Logfile {
 public:
+    using key_type = std::pair<std::chrono::system_clock::time_point, size_t>;
+    using map_type = std::map<key_type, std::unique_ptr<LogEntry>>;
+    using const_iterator = map_type::const_iterator;
+
     // Used by LogCache::update(). All instances are owned by
     // LogCache::_logfiles.
     Logfile(Logger *logger, LogCache *log_cache, std::filesystem::path path,
@@ -48,12 +49,12 @@ public:
 
     // Used by TableLog::answerQueryReverse() and
     // TableStateHistory::getEntries().
-    const logfile_entries_t *getEntriesFor(size_t max_lines_per_logfile,
+    const Logfile::map_type *getEntriesFor(size_t max_lines_per_logfile,
                                            unsigned logclasses);
 
     // Used internally and by TableLog::answerQueryReverse(). Should be nuked.
-    static logfile_key makeKey(std::chrono::system_clock::time_point t,
-                               size_t lineno) {
+    static Logfile::key_type makeKey(std::chrono::system_clock::time_point t,
+                                     size_t lineno) {
         return {t, lineno};
     }
 
@@ -65,7 +66,7 @@ private:
     const bool _watch;  // true only for current logfile
     fpos_t _read_pos;   // read until this position
     size_t _lineno;     // read until this line
-    logfile_entries_t _entries;
+    Logfile::map_type _entries;
     unsigned _logclasses_read;  // only these types have been read
 
     void load(size_t max_lines_per_logfile, unsigned logclasses);

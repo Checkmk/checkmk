@@ -10,37 +10,37 @@ import cmk.base.plugins.agent_based.mssql_datafiles_transactionlogs as msdt
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 
-
-@pytest.fixture(name="section", scope="module")
-def _get_section():
-    return msdt.parse_mssql_datafiles(
-        [[
-            'MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log',
-            'Z:\\mypath\\CorreLog_Report_T_log.ldf', '2097152', '256', '16', '0'
-        ],
-         [
-             'MSSQL46', 'DASH_CONFIG_T', 'DASH_CONFIG_T_log', 'Z:\\mypath\\DASH_CONFIG_T_log.ldf',
-             '2097152', '256', '1', '0'
-         ], ['MSSQL46', 'master', 'mastlog', 'Z:\\mypath\\mastlog.ldf', '0', '1', '0', '1'],
-         ['MSSQL46', 'model', 'modellog', 'Z:\\mypath\\modellog.ldf', '0', '34', '32', '1'],
-         ['MSSQL46', 'msdb', 'MSDBLog', 'Z:\\mypath\\MSDBLog.ldf', '2097152', '17', '3', '0'],
-         [
-             'MSSQL46', 'NOC_ALARM_T', 'NOC_ALARM_T_log', 'Z:\\mypath\\NOC_ALARM_T_log.ldf',
-             '2097152', '256', '8', '0'
-         ],
-         [
-             'MSSQL46', 'NOC_CONFIG_T', 'NOC_CONFIG_T_log', 'Z:\\mypath\\NOC_CONFIG_T_log.ldf',
-             '2097152', '768', '31', '0'
-         ], ['MSSQL46', 'tempdb', 'templog', 'Z:\\mypath\\templog.ldf', '0', '160', '55', '1'],
-         [
-             'MSSQL46', 'test_autoclose', 'test_autoclose_log',
-             'Z:\\mypath\\test_autoclose_log.ldf', '2097152', '32', '1', '0'
-         ]])
+SECTION_MSSQL = msdt.parse_mssql_datafiles(
+    [[
+        'MSSQL46', 'CorreLog_Report_T', 'CorreLog_Report_T_log',
+        'Z:\\mypath\\CorreLog_Report_T_log.ldf', '2097152', '256', '16', '0'
+    ],
+     [
+         'MSSQL46', 'DASH_CONFIG_T', 'DASH_CONFIG_T_log', 'Z:\\mypath\\DASH_CONFIG_T_log.ldf',
+         '2097152', '256', '1', '0'
+     ], ['MSSQL46', 'master', 'mastlog', 'Z:\\mypath\\mastlog.ldf', '0', '1', '0', '1'],
+     ['MSSQL46', 'model', 'modellog', 'Z:\\mypath\\modellog.ldf', '0', '34', '32', '1'],
+     ['MSSQL46', 'msdb', 'MSDBLog', 'Z:\\mypath\\MSDBLog.ldf', '2097152', '17', '3', '0'],
+     [
+         'MSSQL46', 'NOC_ALARM_T', 'NOC_ALARM_T_log', 'Z:\\mypath\\NOC_ALARM_T_log.ldf', '2097152',
+         '256', '8', '0'
+     ],
+     [
+         'MSSQL46', 'NOC_CONFIG_T', 'NOC_CONFIG_T_log', 'Z:\\mypath\\NOC_CONFIG_T_log.ldf',
+         '2097152', '768', '31', '0'
+     ], ['MSSQL46', 'tempdb', 'templog', 'Z:\\mypath\\templog.ldf', '0', '160', '55', '1'],
+     [
+         'MSSQL46', 'test_autoclose', 'test_autoclose_log', 'Z:\\mypath\\test_autoclose_log.ldf',
+         '2097152', '32', '1', '0'
+     ]])
 
 
-def test_discovery_mssql_transactionlogs(section):
+@pytest.mark.parametrize('section_mssql', [
+    (SECTION_MSSQL),
+])
+def test_discovery_mssql_transactionlogs(section_mssql):
     assert sorted(
-        msdt.discover_mssql_transactionlogs([{}], section),
+        msdt.discover_mssql_transactionlogs([{}], section_mssql),
         key=lambda s: s.item or "",  # type: ignore[attr-defined]
     ) == [
         Service(item='MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log'),
@@ -55,13 +55,11 @@ def test_discovery_mssql_transactionlogs(section):
     ]
 
 
-def test_check_mssql_transactionlogs(section):
-    assert list(
-        msdt.check_mssql_common(
-            'MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log',
-            {},
-            section,
-        ),) == [
+@pytest.mark.parametrize('item, section_mssql, check_results', [
+    (
+        'MSSQL46.CorreLog_Report_T.CorreLog_Report_T_log',
+        SECTION_MSSQL,
+        [
             Result(
                 state=state.OK,
                 summary='Used: 16.0 MiB',
@@ -80,4 +78,12 @@ def test_check_mssql_transactionlogs(section):
                 state=state.OK,
                 summary="Maximum size: 2.00 TiB",
             ),
-        ]
+        ],
+    ),
+])
+def test_check_mssql_transactionlogs(item, section_mssql, check_results):
+    assert list(msdt.check_mssql_common(
+        item,
+        {},
+        section_mssql,
+    )) == check_results

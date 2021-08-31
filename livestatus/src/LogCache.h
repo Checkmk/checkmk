@@ -9,7 +9,7 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
-#include <ctime>
+#include <cstddef>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -21,7 +21,7 @@ class MonitoringCore;
 // logfiles to monitor, the other part is about the lines in them.
 class LogCache {
 public:
-    using key_type = time_t;
+    using key_type = std::chrono::system_clock::time_point;
     using mapped_type = std::unique_ptr<Logfile>;
     using map_type = std::map<key_type, mapped_type>;
     using iterator = map_type::iterator;

@@ -55,9 +55,9 @@ void LogCache::update() {
     }
 }
 
-void LogCache::addToIndex(std::unique_ptr<Logfile> logfile) {
-    key_type since = std::chrono::system_clock::to_time_t(logfile->since());
-    if (since == 0) {
+void LogCache::addToIndex(mapped_type logfile) {
+    key_type since = logfile->since();
+    if (since == key_type{}) {  // TODO(sp) We simulate std::optional somehow...
         return;
     }
     // make sure that no entry with that 'since' is existing yet.  Under normal

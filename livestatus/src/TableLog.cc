@@ -186,12 +186,11 @@ void TableLog::answerQuery(Query *query) {
     // Now find newest log where 'until' is contained. The problem
     // here: For each logfile we only know the time of the *first* entry,
     // not that of the last.
-    while (it != _log_cache->begin() &&
-           std::chrono::system_clock::from_time_t(it->first) > until) {
+    while (it != _log_cache->begin() && it->first > until) {
         // while logfiles are too new go back in history
         --it;
     }
-    if (std::chrono::system_clock::from_time_t(it->first) > until) {
+    if (it->first > until) {
         return;  // all logfiles are too new
     }
 

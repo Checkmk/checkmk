@@ -316,13 +316,12 @@ void TableStateHistory::answerQuery(Query *query) {
     auto newest_log = _it_logs;
 
     // Now find the log where 'since' starts.
-    while (_it_logs != _log_cache->begin() &&
-           _it_logs->first >= std::chrono::system_clock::to_time_t(_since)) {
+    while (_it_logs != _log_cache->begin() && _it_logs->first >= _since) {
         --_it_logs;  // go back in history
     }
 
     // Check if 'until' is within these logfiles
-    if (_it_logs->first > std::chrono::system_clock::to_time_t(_until)) {
+    if (_it_logs->first > _until) {
         // All logfiles are too new, invalid timeframe
         // -> No data available. Return empty result.
         return;

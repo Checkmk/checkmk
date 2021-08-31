@@ -70,22 +70,16 @@ TableStateHistory::TableStateHistory(MonitoringCore *mc, LogCache *log_cache)
     ColumnOffsets offsets{};
     addColumn(std::make_unique<TimeColumn::Callback<HostServiceState>>(
         "time", "Time of the log event (seconds since 1/1/1970)", offsets,
-        [](const HostServiceState &r) {
-            return std::chrono::system_clock::from_time_t(r._time);
-        }));
+        [](const HostServiceState &r) { return r._time; }));
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "lineno", "The number of the line in the log file", offsets,
         [](const HostServiceState &r) { return r._lineno; }));
     addColumn(std::make_unique<TimeColumn::Callback<HostServiceState>>(
         "from", "Start time of state (seconds since 1/1/1970)", offsets,
-        [](const HostServiceState &r) {
-            return std::chrono::system_clock::from_time_t(r._from);
-        }));
+        [](const HostServiceState &r) { return r._from; }));
     addColumn(std::make_unique<TimeColumn::Callback<HostServiceState>>(
         "until", "End time of state (seconds since 1/1/1970)", offsets,
-        [](const HostServiceState &r) {
-            return std::chrono::system_clock::from_time_t(r._until);
-        }));
+        [](const HostServiceState &r) { return r._until; }));
     addColumn(std::make_unique<IntColumn::Callback<HostServiceState>>(
         "duration", "Duration of state (until - from)", offsets,
         [](const HostServiceState &r) { return r._duration; }));
@@ -358,10 +352,8 @@ void TableStateHistory::answerQuery(Query *query) {
             // Reached start of query timeframe. From now on let's produce real
             // output. Update _from time of every state entry
             for (auto &it_hst : state_info) {
-                it_hst.second->_from =
-                    std::chrono::system_clock::to_time_t(_since);
-                it_hst.second->_until =
-                    std::chrono::system_clock::to_time_t(_since);
+                it_hst.second->_from = _since;
+                it_hst.second->_until = _since;
             }
             only_update = false;
         }
@@ -463,7 +455,7 @@ void TableStateHistory::answerQuery(Query *query) {
 
                     // Store this state object for tracking state transitions
                     state_info.emplace(key, state);
-                    state->_from = std::chrono::system_clock::to_time_t(_since);
+                    state->_from = _since;
 
                     // Get notification period of host/service
                     // If this host/service is no longer availabe in nagios ->
@@ -592,8 +584,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 // entry will follow up shortly.
                 for (auto &it_hst : state_info) {
                     if (!it_hst.second->_has_vanished) {
-                        it_hst.second->_last_known_time =
-                            std::chrono::system_clock::to_time_t(entry->time());
+                        it_hst.second->_last_known_time = entry->time();
                         it_hst.second->_may_no_longer_exist = true;
                     }
                 }
@@ -624,7 +615,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 hst->_long_log_output = "";
             }
 
-            hst->_time = std::chrono::system_clock::to_time_t(_until) - 1;
+            hst->_time = _until - 1s;
             hst->_until = hst->_time;
 
             process(query, hst);
@@ -692,9 +683,9 @@ int TableStateHistory::updateHostServiceState(Query *query,
     }
 
     // Update basic information
-    hs_state->_time = std::chrono::system_clock::to_time_t(entry->time());
+    hs_state->_time = entry->time();
     hs_state->_lineno = entry->lineno();
-    hs_state->_until = std::chrono::system_clock::to_time_t(entry->time());
+    hs_state->_until = entry->time();
 
     // A timeperiod entry never brings an absent host or service into
     // existence..
@@ -840,7 +831,9 @@ int TableStateHistory::updateHostServiceState(Query *query,
 }
 
 void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
-    hs_state->_duration = hs_state->_until - hs_state->_from;
+    hs_state->_duration =
+        std::chrono::system_clock::to_time_t(hs_state->_until) -
+        std::chrono::system_clock::to_time_t(hs_state->_from);
     // NOTE: We have a closed interval with a resolution of 1s, so we have to
     // subtract 1s to get the duration. Silly representation...
     auto query_timeframe =

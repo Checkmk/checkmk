@@ -8,6 +8,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 
+#include <chrono>
 #include <ctime>
 #include <string>
 #include <vector>
@@ -27,10 +28,10 @@ using HostServiceKey = void *;
 class HostServiceState {
 public:
     bool _is_host;
-    time_t _time;
+    std::chrono::system_clock::time_point _time;
     size_t _lineno;
-    time_t _from;
-    time_t _until;
+    std::chrono::system_clock::time_point _from;
+    std::chrono::system_clock::time_point _until;
 
     time_t _duration;
     double _duration_part;
@@ -65,7 +66,7 @@ public:
     // Absent state handling
     bool _may_no_longer_exist;
     bool _has_vanished;
-    time_t _last_known_time;
+    std::chrono::system_clock::time_point _last_known_time;
 
     std::string _debug_info;
     std::string _log_output;

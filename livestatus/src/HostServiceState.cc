@@ -7,10 +7,7 @@
 
 HostServiceState::HostServiceState()
     : _is_host(false)
-    , _time(0)
     , _lineno(0)
-    , _from(0)
-    , _until(0)
     , _duration(0)
     , _duration_part(0)
     , _duration_unmonitored(0)
@@ -32,7 +29,6 @@ HostServiceState::HostServiceState()
     , _is_flapping(0)
     , _may_no_longer_exist(false)
     , _has_vanished(false)
-    , _last_known_time(0)
     , _host(nullptr)
     , _service(nullptr) {}
 

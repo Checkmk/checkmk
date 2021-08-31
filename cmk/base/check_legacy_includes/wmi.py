@@ -7,7 +7,6 @@
 from math import ceil
 from typing import Dict, Set
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
 from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,

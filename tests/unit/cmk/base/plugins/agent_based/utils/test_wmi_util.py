@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.base.check_legacy_includes.wmi import parse_wmi_table, WMITable
+from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table, WMITable
 
 
 class TestWMITable:

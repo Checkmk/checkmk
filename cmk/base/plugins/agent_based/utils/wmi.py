@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict
+from typing import Dict, Type
 
 from ..agent_based_api.v1 import regex
 
@@ -177,7 +177,12 @@ class WMITable:
         return key.replace(" ", "").lower()
 
 
-def parse_wmi_table(info, key="Name"):
+def parse_wmi_table(
+    info,
+    key="Name",
+    # Needed in check_legacy_includes/wmi.py
+    table_type: Type[WMITable] = WMITable,
+):
     parsed: Dict = {}
     info_iter = iter(info)
 
@@ -211,6 +216,7 @@ def parse_wmi_table(info, key="Name"):
                 key,
                 timestamp,
                 frequency,
+                table_type,
             )
 
             # read table content
@@ -225,7 +231,16 @@ def parse_wmi_table(info, key="Name"):
     return parsed
 
 
-def _prepare_wmi_table(parsed, tablename, line, key, timestamp, frequency):
+def _prepare_wmi_table(
+    parsed,
+    tablename,
+    line,
+    key,
+    timestamp,
+    frequency,
+    # Needed in check_legacy_includes/wmi.py
+    table_type: Type[WMITable],
+):
     # Possibilities:
     # #1 Agent provides extra column for WMIStatus; since 1.5.0p14
     # <<<SEC>>>
@@ -267,7 +282,7 @@ def _prepare_wmi_table(parsed, tablename, line, key, timestamp, frequency):
 
     current_table = parsed.setdefault(
         tablename,
-        WMITable(
+        table_type(
             tablename,
             header,
             key,

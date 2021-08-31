@@ -14,7 +14,7 @@ from cmk.gui.plugins.wato import (
 from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer, Percentage, Transform, Tuple
 
 
-def _cpu_util_elements():
+def cpu_util_elements():
     return [
         ("core_util_time_total",
          Tuple(
@@ -162,12 +162,12 @@ def _cpu_util_unix_elements():
 def _cpu_util_common_elements():
     return Dictionary(
         help=_("This rule configures levels for the CPU utilization (not load) for "
-               "Linux/UNIX, Windows and VMWare ESX host systems, as well as devices "
+               "Linux/UNIX and Windows, as well as devices "
                "implementing the Host Resources MIB. The utilization "
                "percentage is computed with respect to the total number of CPUs. "
                "Note that not all parameters you can configure here are applicable "
                "to all checks."),
-        elements=_cpu_util_elements() + _cpu_util_unix_elements(),
+        elements=cpu_util_elements() + _cpu_util_unix_elements(),
     )
 
 

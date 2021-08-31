@@ -10,3 +10,6 @@ description:
 discovery:
  One service is created for each ESX Host System.
 
+cluster:
+ This check measures the averaged CPU utilization for a cluster of ESX Host systems.
+ You can configure multiple WARN/CRIT levels depending on the number of nodes in this cluster.

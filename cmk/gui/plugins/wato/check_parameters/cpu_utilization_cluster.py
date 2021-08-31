@@ -12,6 +12,8 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.valuespec import Integer, ListOf, Percentage, Tuple
 
+# NOTE: The rulesets in this file were deprecated in version 2.1.0i1
+
 
 # TODO: Why is this only a manual check rulespec?
 def _parameter_valuespec_cpu_utilization_cluster():
@@ -42,4 +44,5 @@ rulespec_registry.register(
         group=RulespecGroupEnforcedServicesNetworking,
         parameter_valuespec=_parameter_valuespec_cpu_utilization_cluster,
         title=lambda: _("CPU Utilization of Clusters"),
+        is_deprecated=True,
     ))

@@ -24,15 +24,13 @@ class EsxVsphereHostsystemCpuSection(NamedTuple):
 def extract_esx_vsphere_hostsystem_cpu_usage(
         section: Section) -> Optional[EsxVsphereHostsystemCpuSection]:
     try:
-        return EsxVsphereHostsystemCpuSection(*[
-            type_(section[key][0]) for key, type_ in [
-                ('hardware.cpuInfo.numCpuPackages', int),
-                ('hardware.cpuInfo.numCpuCores', int),
-                ('hardware.cpuInfo.numCpuThreads', int),
-                ('summary.quickStats.overallCpuUsage', float),
-                ('hardware.cpuInfo.hz', float),
-            ]
-        ])
+        return EsxVsphereHostsystemCpuSection(
+            num_sockets=int(section['hardware.cpuInfo.numCpuPackages'][0]),
+            num_cores=int(section['hardware.cpuInfo.numCpuCores'][0]),
+            num_threads=int(section['hardware.cpuInfo.numCpuThreads'][0]),
+            used_mhz=float(section['summary.quickStats.overallCpuUsage'][0]),
+            mhz_per_core=float(section['hardware.cpuInfo.hz'][0]),
+        )
     except (KeyError, ValueError):
         return None
 
@@ -53,23 +51,14 @@ def discover_esx_vsphere_hostsystem_cpu_usage(
         yield Service()
 
 
-def check_esx_vsphere_hostsystem_cpu_usage(
+def _check_esx_vsphere_hostsystem_cpu_usage_common(
     params: Mapping[str, Any],
-    section_esx_vsphere_hostsystem: Optional[Section],
-    section_winperf_processor: Optional[List],
+    cpu_section: EsxVsphereHostsystemCpuSection,
+    total_mhz: float,
 ) -> CheckResult:
-    if not section_esx_vsphere_hostsystem:
-        return
-
-    cpu_section = extract_esx_vsphere_hostsystem_cpu_usage(section_esx_vsphere_hostsystem)
-    if not cpu_section:
-        return
-
-    total_mhz = cpu_section.mhz_per_core * 1e-6 * cpu_section.num_cores
-    usage = cpu_section.used_mhz / total_mhz * 100
 
     yield from cpu_util.check_cpu_util(
-        util=usage,
+        util=cpu_section.used_mhz / total_mhz * 100,
         params=params,
         value_store=get_value_store(),
         this_time=time.time(),
@@ -95,12 +84,80 @@ def check_esx_vsphere_hostsystem_cpu_usage(
     )
 
 
+def check_esx_vsphere_hostsystem_cpu_usage(
+    params: Mapping[str, Any],
+    section_esx_vsphere_hostsystem: Optional[Section],
+    section_winperf_processor: Optional[List],
+) -> CheckResult:
+    if not section_esx_vsphere_hostsystem:
+        return
+
+    cpu_section = extract_esx_vsphere_hostsystem_cpu_usage(section_esx_vsphere_hostsystem)
+    if not cpu_section:
+        return
+
+    yield from _check_esx_vsphere_hostsystem_cpu_usage_common(
+        params,
+        cpu_section,
+        cpu_section.mhz_per_core * 1e-6 * cpu_section.num_cores,
+    )
+
+
+def _applicable_thresholds(
+    params: Mapping[str, Any],
+    num_nodes: int,
+) -> Mapping[str, Any]:
+    for nodes, thresholds in sorted(params.get('cluster', []), reverse=True):
+        if num_nodes >= nodes:
+            return thresholds
+
+    return params
+
+
+def cluster_check_esx_vsphere_hostsystem_cpu_usage(
+    params: Mapping[str, Any],
+    section_esx_vsphere_hostsystem: Mapping[str, Optional[Section]],
+    section_winperf_processor: Mapping[str, Optional[List]],
+) -> CheckResult:
+
+    aggregated_section = None
+    total_mhz = 0.
+    for _node, section in section_esx_vsphere_hostsystem.items():
+        if section and (cpu_section := extract_esx_vsphere_hostsystem_cpu_usage(section)):
+            total_mhz += (cpu_section.mhz_per_core * 1e-6 * cpu_section.num_cores)
+            aggregated_section = [
+                sum(s) for s in zip(
+                    aggregated_section or [0, 0, 0, 0, 0., 0.],
+                    cpu_section,
+                )
+            ]
+
+    if not aggregated_section:
+        return
+
+    num_nodes = len(section_esx_vsphere_hostsystem)
+    yield Result(state=State.OK, summary=f'{num_nodes} nodes')
+
+    yield from _check_esx_vsphere_hostsystem_cpu_usage_common(
+        _applicable_thresholds(params, num_nodes),
+        EsxVsphereHostsystemCpuSection(
+            num_sockets=int(aggregated_section[0]),
+            num_cores=int(aggregated_section[1]),
+            num_threads=int(aggregated_section[2]),
+            used_mhz=float(aggregated_section[3]),
+            mhz_per_core=float(aggregated_section[4]),
+        ),
+        total_mhz,
+    )
+
+
 register.check_plugin(
     name="esx_vsphere_hostsystem_cpu_usage",
     service_name="CPU utilization",
     sections=["esx_vsphere_hostsystem", "winperf_processor"],
     discovery_function=discover_esx_vsphere_hostsystem_cpu_usage,
     check_function=check_esx_vsphere_hostsystem_cpu_usage,
+    cluster_check_function=cluster_check_esx_vsphere_hostsystem_cpu_usage,
     check_default_parameters={},
-    check_ruleset_name="cpu_utilization_os",
+    check_ruleset_name="cpu_utilization_esx_vsphere_hostsystem",
 )

@@ -8,6 +8,11 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 . "${SCRIPT_DIR}/build_lib.sh"
 
+failure() {
+    echo "$(basename $0):" "$@" >&2
+    exit 1
+}
+
 # read optional command line argument
 if [ "$#" -eq 1 ]; then
     PYTHON_VERSION=$1
@@ -17,7 +22,7 @@ else
         if [ -e defines.make ]; then
             PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON_VERSION)
             break
-        elif [ $PWD == / ]; then
+        elif [ "$PWD" == / ]; then
             failure "could not determine Python version"
         else
             cd ..

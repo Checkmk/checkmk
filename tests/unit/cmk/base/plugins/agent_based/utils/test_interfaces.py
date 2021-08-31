@@ -1402,7 +1402,193 @@ def test_check_single_interface_group_w_nodes(
     ) == _add_group_info_to_results(
         result,
         'Members: [vboxnet0 (up), wlp2s0 (up) on node node1] [vboxnet0 (up), wlp2s0 (up) on node '
-        'node2]')
+        'node2]',
+    )
+
+
+def test_check_single_interface_packet_levels():
+    assert list(
+        interfaces.check_single_interface(
+            "1",
+            {
+                "errors": {
+                    "both": ("abs", (10, 20)),
+                },
+                "nucasts": (0, 5),
+                "unicast": {
+                    "in": ("perc", (10.0, 20.0)),
+                    "out": ("perc", (10.0, 20.0)),
+                },
+                "multicast": {
+                    "in": ("abs", (11, 23)),
+                    "out": ("perc", (10.0, 20.0)),
+                },
+                "broadcast": {
+                    "both": ("perc", (0.0, 2.0)),
+                },
+                "discards": (50.0, 300.0),
+            },
+            _create_interfaces(
+                0,
+                in_ucast=10,
+                in_mcast=20,
+                in_bcast=30,
+                in_discards=40,
+                in_errors=50,
+                out_ucast=60,
+                out_mcast=70,
+                out_bcast=80,
+                out_discards=90,
+                out_errors=100,
+            )[0],
+            input_is_rate=True,
+        )) == [
+            Result(
+                state=State.OK,
+                summary="[lo]",
+            ),
+            Result(
+                state=State.OK,
+                summary="(up)",
+                details="Operational state: up",
+            ),
+            Result(
+                state=State.OK,
+                summary="MAC: 00:00:00:00:00:00",
+            ),
+            Result(
+                state=State.OK,
+                summary="Speed: unknown",
+            ),
+            Metric(
+                "outqlen",
+                0.0,
+            ),
+            Result(
+                state=State.OK,
+                summary="In: 266 MB/s",
+            ),
+            Metric(
+                "in",
+                266045395.0,
+                boundaries=(0.0, None),
+            ),
+            Result(
+                state=State.OK,
+                summary="Out: 266 MB/s",
+            ),
+            Metric(
+                "out",
+                266045395.0,
+                boundaries=(0.0, None),
+            ),
+            Result(state=State.CRIT,
+                   summary="Errors in: 50 packets/s (warn/crit at 10 packets/s/20 packets/s)"),
+            Metric(
+                "inerr",
+                50.0,
+                levels=(10.0, 20.0),
+            ),
+            Result(
+                state=State.WARN,
+                summary="Multicast in: 20 packets/s (warn/crit at 11 packets/s/23 packets/s)",
+            ),
+            Metric(
+                "inmcast",
+                20.0,
+                levels=(11.0, 23.0),
+            ),
+            Result(
+                state=State.CRIT,
+                summary="Broadcast in: 50% (warn/crit at 0%/2%)",
+            ),
+            Metric(
+                "inbcast",
+                30.0,
+                levels=(0.0, 1.2),
+            ),
+            Result(
+                state=State.WARN,
+                summary="Unicast in: 16.667% (warn/crit at 10%/20%)",
+            ),
+            Metric(
+                "inucast",
+                10.0,
+                levels=(6.0, 12.0),
+            ),
+            Result(
+                state=State.CRIT,
+                summary="Non-unicast in: 50 packets/s (warn/crit at 0 packets/s/5 packets/s)",
+            ),
+            Metric(
+                "innucast",
+                50.0,
+                levels=(0.0, 5.0),
+            ),
+            Result(
+                state=State.OK,
+                notice="Discards in: 40 packets/s",
+            ),
+            Metric(
+                "indisc",
+                40.0,
+                levels=(50.0, 300.0),
+            ),
+            Result(
+                state=State.CRIT,
+                summary="Errors out: 100 packets/s (warn/crit at 10 packets/s/20 packets/s)",
+            ),
+            Metric(
+                "outerr",
+                100.0,
+                levels=(10.0, 20.0),
+            ),
+            Result(
+                state=State.CRIT,
+                summary="Multicast out: 33.333% (warn/crit at 10%/20%)",
+            ),
+            Metric(
+                "outmcast",
+                70.0,
+                levels=(21.0, 42.0),
+            ),
+            Result(
+                state=State.CRIT,
+                summary="Broadcast out: 38.095% (warn/crit at 0%/2%)",
+            ),
+            Metric(
+                "outbcast",
+                80.0,
+                levels=(0.0, 4.2),
+            ),
+            Result(
+                state=State.CRIT,
+                summary="Unicast out: 28.571% (warn/crit at 10%/20%)",
+            ),
+            Metric(
+                "outucast",
+                60.0,
+                levels=(21.0, 42.0),
+            ),
+            Result(
+                state=State.CRIT,
+                summary="Non-unicast out: 150 packets/s (warn/crit at 0 packets/s/5 packets/s)",
+            ),
+            Metric(
+                "outnucast",
+                150.0,
+                levels=(0.0, 5.0),
+            ),
+            Result(
+                state=State.WARN,
+                summary="Discards out: 90 packets/s (warn/crit at 50 packets/s/300 packets/s)",
+            ),
+            Metric(
+                "outdisc",
+                90.0,
+                levels=(50.0, 300.0),
+            ),
+        ]
 
 
 @pytest.mark.parametrize('item, params, result', ITEM_PARAMS_RESULTS)

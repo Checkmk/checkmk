@@ -10,8 +10,6 @@ import sys
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 
-from six import ensure_str
-
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
@@ -127,7 +125,7 @@ def _convert_rows_for_stored_walk(rows: SNMPRowInfo) -> SNMPRowInfoForStoredWalk
         if should_be_encoded(value):
             new_rows.append((oid, hex_encode_value(value)))
         else:
-            new_rows.append((oid, ensure_str(value)))
+            new_rows.append((oid, value.decode()))
     return new_rows
 
 

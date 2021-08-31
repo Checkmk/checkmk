@@ -13,8 +13,6 @@ from typing import Any, Dict, List, Optional, Set
 from typing import Tuple as _Tuple
 from typing import Union
 
-from six import ensure_str
-
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tags
@@ -558,7 +556,7 @@ def _format_php(data, lvl=1):
             )
         s += "    " * (lvl - 1) + ")"
     elif isinstance(data, str):
-        s += "'%s'" % ensure_str(data).replace("'", "\\'")
+        s += "'%s'" % data.replace("'", "\\'")
     elif isinstance(data, bool):
         s += data and "true" or "false"
     elif data is None:

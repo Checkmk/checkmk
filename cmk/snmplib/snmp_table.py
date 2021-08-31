@@ -8,8 +8,6 @@
 from pathlib import Path
 from typing import Callable, Iterable, Iterator, List, MutableMapping, Optional, Set, Tuple
 
-from six import ensure_binary
-
 import cmk.utils.debug
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
@@ -175,9 +173,9 @@ def _make_index_rows(
     index_rows = []
     for o, _unused_value in max_column:
         if index_format is SpecialColumn.END:
-            val = ensure_binary(_extract_end_oid(fetchoid, o))
+            val = _extract_end_oid(fetchoid, o).encode()
         elif index_format is SpecialColumn.STRING:
-            val = ensure_binary(o)
+            val = o.encode()
         elif index_format is SpecialColumn.BIN:
             val = _oid_to_bin(o)
         elif index_format is SpecialColumn.END_BIN:

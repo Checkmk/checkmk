@@ -18,8 +18,6 @@ from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-imp
 
 
 def inventory_wmi_cpuload(tables):
-    if required_tables_missing(tables, ["computer_system", "system_perf"]):
-        return []
     return [(None, None)]
 
 
@@ -30,29 +28,17 @@ def check_wmi_cpuload(item, params, parsed):
     # so unless to cpu is (almost) fully utilized, this will be 0.
 
     try:
-        load = int(parsed["system_perf"].get(0, "ProcessorQueueLength"))
-        this_time = get_wmi_time(parsed["system_perf"], 0)
-        load5min = get_average("load_5min", this_time, load, 5)
-        load15min = get_average("load_15min", this_time, load, 15)
-        computer_system = parsed["computer_system"]
+        load5min = get_average("load_5min", parsed.timestamp, parsed.load, 5)
+        load15min = get_average("load_15min", parsed.timestamp, parsed.load, 15)
     except KeyError as e:
         return 3, "Missing information from agent: %s" % e
 
-    try:
-        cores = int(computer_system.get(0, "NumberOfLogicalProcessors"))
-        processor_type = ProcessorType.logical
-    except (ValueError, KeyError, MKGeneralException):
-        # NumberOfLogicalProcessors can be an empty string, not sure why
-        cores = int(computer_system.get(0, "NumberOfProcessors"))
-        processor_type = ProcessorType.physical
-
-    return check_cpu_load_generic(params, (load, load5min, load15min),
-                                  num_cpus=cores,
-                                  processor_type=processor_type)
+    return check_cpu_load_generic(params, (parsed.load, load5min, load15min),
+                                  num_cpus=parsed.n_cores,
+                                  processor_type=parsed.processor_type)
 
 
 check_info['wmi_cpuload'] = {
-    'parse_function': parse_wmi_table,
     'inventory_function': inventory_wmi_cpuload,
     'check_function': check_wmi_cpuload,
     'has_perfdata': True,

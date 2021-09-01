@@ -25,7 +25,6 @@ builtin_dashboards["problems"] = {
             "title": _("Host statistics"),
             "type": 'hoststats',
             "position": (1, 1),
-            "refresh": 60,
             "show_title": True,
             'context': {
                 'wato_folder': {
@@ -38,7 +37,6 @@ builtin_dashboards["problems"] = {
             "title": _("Service statistics"),
             "type": 'servicestats',
             "position": (31, 1),
-            "refresh": 60,
             "show_title": True,
             'context': {
                 'wato_folder': {

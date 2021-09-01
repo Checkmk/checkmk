@@ -13,7 +13,7 @@ import select
 import socket
 import sys
 import time
-from typing import Any, Callable, Dict, Iterable, List, Optional, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional
 from urllib.parse import quote
 
 import livestatus
@@ -758,8 +758,7 @@ def add_context_to_environment(plugin_context: EventContext, prefix: str) -> Non
 # would be added as:
 #   PARAMETER_LVL1_1_VALUE = 42
 #   PARAMETER_LVL1_2_VALUE = 13
-def add_to_event_context(plugin_context: EventContext, prefix: str, param: Union[List,
-                                                                                 Dict]) -> None:
+def add_to_event_context(plugin_context: EventContext, prefix: str, param: object) -> None:
     if isinstance(param, list):
         plugin_context[prefix + "S"] = " ".join(param)
         for nr, value in enumerate(param):

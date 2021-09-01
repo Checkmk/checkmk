@@ -400,7 +400,7 @@ class NetAppResponse:
         self.content = None
         self.reason = None
 
-        self.raw_response_text = response.text.encode("utf-8")
+        self.raw_response_text = response.text
 
         # Check for invalid authorization
         if response.status_code == 401:

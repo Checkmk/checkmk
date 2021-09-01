@@ -4,13 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional
+from typing import Optional, Sequence, Union
 
 import pytest
+from pytest import MonkeyPatch
 
+from cmk.base.plugins.agent_based import wmi_cpuload
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.cpu import ProcessorType
-from cmk.base.plugins.agent_based.wmi_cpuload import parse_wmi_cpuload, Section
+from cmk.base.plugins.agent_based.wmi_cpuload import check_wmi_cpuload, parse_wmi_cpuload, Section
 
 
 @pytest.mark.parametrize(
@@ -465,3 +468,94 @@ def test_parse_wmi_cpuload(
     section: Optional[Section],
 ) -> None:
     assert parse_wmi_cpuload(string_table) == section
+
+
+@pytest.mark.parametrize(
+    "section, check_results",
+    [
+        pytest.param(
+            Section(
+                load=12,
+                timestamp=145649941.123,
+                processor_type=ProcessorType.logical,
+                n_cores=2,
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="15 min load: 3.16",
+                ),
+                Metric(
+                    "load15",
+                    3.157896497656376,
+                ),
+                Result(
+                    state=State.OK,
+                    summary="15 min load per core: 1.58 (2 logical cores)",
+                ),
+                Metric(
+                    "load1",
+                    12.0,
+                    boundaries=(0.0, 2.0),
+                ),
+                Metric(
+                    "load5",
+                    5.2138605028359475,
+                    boundaries=(0.0, 2.0),
+                ),
+            ],
+            id="OK counter",
+        ),
+        pytest.param(
+            Section(
+                load=12,
+                timestamp=1.123,
+                processor_type=ProcessorType.logical,
+                n_cores=2,
+            ),
+            [
+                Result(
+                    state=State.OK,
+                    summary="15 min load: 12.00",
+                ),
+                Metric(
+                    "load15",
+                    12.0,
+                ),
+                Result(
+                    state=State.OK,
+                    summary="15 min load per core: 6.00 (2 logical cores)",
+                ),
+                Metric(
+                    "load1",
+                    12.0,
+                    boundaries=(0.0, 2.0),
+                ),
+                Metric(
+                    "load5",
+                    12.0,
+                    boundaries=(0.0, 2.0),
+                ),
+            ],
+            id="counter reset",
+        ),
+    ],
+)
+def test_check_wmi_cpuload_ok_counter(
+    monkeypatch: MonkeyPatch,
+    section: Section,
+    check_results: Sequence[Union[Result, Metric]],
+) -> None:
+    monkeypatch.setattr(
+        wmi_cpuload,
+        "get_value_store",
+        lambda: {
+            "last_timestamp": 145649841.123,
+            "load_5min": (1.123, 145649841.123, 3.45),
+            "load_15min": (1.123, 145649841.123, 2.45),
+        },
+    )
+    assert list(check_wmi_cpuload(
+        {},
+        section,
+    )) == check_results

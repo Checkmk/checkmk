@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import NamedTuple, Optional
+from typing import Any, MutableMapping, NamedTuple, Optional
 
 from .agent_based_api.v1 import get_average, get_value_store, register, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
@@ -72,24 +72,52 @@ def discover_wmi_cpuload(section: Section) -> DiscoveryResult:
     yield Service()
 
 
+def _handle_time_counter_resets(
+    value_store: MutableMapping[str, Any],
+    current_timestamp: float,
+) -> None:
+    # Section.timestamp is an internal Windows counter which can be reset for various reasons. For
+    # example, a change in the number of cores of a Windows VM can trigger such a reset (SUP-7347).
+    # In case we detect a reset, we restart the averaging.
+    last_timestamp = get_value_store().get(
+        "last_timestamp",
+        None,
+    )
+    if last_timestamp is not None and current_timestamp < last_timestamp:
+        value_store.pop(
+            "load_5min",
+            None,
+        )
+        value_store.pop(
+            "load_15min",
+            None,
+        )
+    value_store["last_timestamp"] = current_timestamp
+
+
 def check_wmi_cpuload(
     params: CPULoadParams,
     section: Section,
 ) -> CheckResult:
+    value_store = get_value_store()
+    _handle_time_counter_resets(
+        value_store,
+        section.timestamp,
+    )
     yield from check_cpu_load(
         params,
         CPUSection(
             Load(
                 section.load,
                 get_average(
-                    get_value_store(),
+                    value_store,
                     "load_5min",
                     section.timestamp,
                     section.load,
                     5,
                 ),
                 get_average(
-                    get_value_store(),
+                    value_store,
                     "load_15min",
                     section.timestamp,
                     section.load,

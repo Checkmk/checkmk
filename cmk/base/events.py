@@ -761,21 +761,18 @@ def add_context_to_environment(plugin_context: EventContext, prefix: str) -> Non
 def add_to_event_context(plugin_context: EventContext, prefix: str, param: object) -> None:
     if isinstance(param, list):
         plugin_context[prefix + "S"] = " ".join(param)
-        for nr, value in enumerate(param):
-            add_to_event_context(plugin_context, "%s_%d" % (prefix, nr + 1), value)
+        for nr, value in enumerate(param, start=1):
+            add_to_event_context(plugin_context, f"{prefix}_{nr}", value)
     elif isinstance(param, dict):
         for key, value in param.items():
-            varname = "%s_%s" % (prefix, key.upper())
-
+            varname = f"{prefix}_{key.upper()}"
             if varname == "PARAMETER_PROXY_URL":
                 # Compatibility for 1.5 pushover explicitly configured proxy URL format
                 if isinstance(value, str):
                     value = ("url", value)
-
                 value = config.get_http_proxy(value)
                 if value is None:
                     continue
-
             add_to_event_context(plugin_context, varname, value)
     elif isinstance(param, str):
         plugin_context[prefix] = param

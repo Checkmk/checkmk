@@ -1358,24 +1358,8 @@ def notify_via_email(plugin_context: PluginContext) -> int:
     command = substitute_context(notification_mail_command, plugin_context)
     command_utf8 = command.encode("utf-8")
 
-    # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
-    # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
-    # available. If e.g. mail detects a non-Ascii character in the mail body and
-    # the specified encoding is not available, it will silently not send the mail!
-    # Our resultion in future: use /usr/sbin/sendmail directly.
-    # Our resultion in the present: look with locale -a for an existing UTF encoding
-    # and use that.
     old_lang = os.getenv("LANG", "")
-    for encoding in os.popen("locale -a 2>/dev/null"):
-        el = encoding.lower()
-        if "utf8" in el or "utf-8" in el or "utf.8" in el:
-            encoding = encoding.strip()
-            os.putenv("LANG", encoding)
-            logger.debug("Setting locale for mail to %s.", encoding)
-            break
-    else:
-        logger.info("No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.")
-
+    _ensure_utf8()
     # Important: we must not output anything on stdout or stderr. Data of stdout
     # goes back into the socket to the CMC in keepalive mode and garbles the
     # handshake signal.
@@ -1401,6 +1385,45 @@ def notify_via_email(plugin_context: PluginContext) -> int:
         return 2
 
     return 0
+
+
+def _ensure_utf8() -> None:
+    # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
+    # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
+    # available. If e.g. mail detects a non-Ascii character in the mail body and
+    # the specified encoding is not available, it will silently not send the mail!
+    # Our resultion in future: use /usr/sbin/sendmail directly.
+    # Our resultion in the present: look with locale -a for an existing UTF encoding
+    # and use that.
+    proc: subprocess.Popen = subprocess.Popen(
+        ["locale", "-a"],
+        close_fds=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    locales_list: List[str] = []
+    std_out: bytes = proc.communicate()[0]
+    exit_code: int = proc.returncode
+    not_found_msg: str = "No UTF-8 encoding found in your locale -a! "\
+                         "Please install appropriate locales."
+    if exit_code != 0:
+        logger.info("Command 'locale -a' could not be executed "\
+                    "Exit code of command was: %r", exit_code)
+        logger.info(not_found_msg)
+        return
+
+    locales_list = std_out.decode('utf-8', 'ignore').split("\n")
+    for encoding in locales_list:
+        el: str = encoding.lower()
+        if "utf8" in el or "utf-8" in el or "utf.8" in el:
+            encoding = encoding.strip()
+            os.putenv("LANG", encoding)
+            logger.debug("Setting locale for mail to %s.", encoding)
+            break
+    else:
+        logger.info(not_found_msg)
+
+    return
 
 
 #.

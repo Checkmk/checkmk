@@ -324,7 +324,6 @@ class ErrorReporter:
         ('check', 'drbd_stats', 'drbd.stats'),
         ('check', 'entersekt_soaperrors', 'entersekt_soaperrors'),
         ('check', 'esx_vsphere_hostsystem_cpu_util_cluster', 'cpu_utilization_cluster'),
-        ('check', 'esx_vsphere_hostsystem_mem_usage_cluster', 'mem_cluster'),
         ('check', 'h3c_lanswitch_cpu', 'h3c_lanswitch_cpu'),
         ('check', 'h3c_lanswitch_sensors', 'h3c_lanswitch_sensors'),
         ('check', 'hpux_snmp_cs_cpu', 'hpux_snmp_cs.cpu'),

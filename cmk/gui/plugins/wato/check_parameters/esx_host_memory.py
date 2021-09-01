@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Dictionary, Percentage, Transform, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, ListOf, Percentage, Transform, Tuple
 
 
 def _transform_memory_usage_params(params):
@@ -20,20 +20,45 @@ def _transform_memory_usage_params(params):
     return params
 
 
+def _esx_host_memory_elements():
+    return [
+        (
+            'levels_upper',
+            Tuple(
+                title=_("Specify levels in percentage of total RAM"),
+                elements=[
+                    Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
+                    Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
+                ],
+            ),
+        ),
+    ]
+
+
 def _parameter_valuespec_esx_host_memory():
     return Transform(
-        Dictionary(elements=[
+        Dictionary(elements=_esx_host_memory_elements() + [
             (
-                'levels_upper',
-                Tuple(
-                    title=_("Specify levels in percentage of total RAM"),
-                    elements=[
-                        Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
-                        Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
-                    ],
+                'cluster',
+                ListOf(
+                    Tuple(
+                        orientation='horizontal',
+                        elements=[
+                            Integer(
+                                title=_("Nodes"),
+                                help=
+                                _("Apply these levels to clusters that have at least the following number of nodes:"
+                                 ),
+                                minvalue=1,
+                            ),
+                            Dictionary(elements=_esx_host_memory_elements()),
+                        ]),
+                    title=_('Node specific memory utilization'),
+                    help=_('Configure thresholds that apply to clusters based on how many nodes '
+                           'they have.'),
                 ),
             ),
-        ]),
+        ],),
         forth=_transform_memory_usage_params,
     )
 

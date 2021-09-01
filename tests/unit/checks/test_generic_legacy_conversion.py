@@ -1567,7 +1567,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'esx_vsphere_counters.ramdisk',
         'esx_vsphere_counters.swap',
         'esx_vsphere_datastores',
-        'esx_vsphere_hostsystem.mem_usage_cluster',
         'esx_vsphere_hostsystem.cpu_util_cluster',
         'esx_vsphere_hostsystem.state',
         'esx_vsphere_hostsystem.maintenance',

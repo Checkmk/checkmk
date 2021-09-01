@@ -10,3 +10,5 @@ description:
 discovery:
  One service is created for each ESX Host System.
 
+cluster:
+ This check measures the total physical RAM usage for a cluster of hosts.

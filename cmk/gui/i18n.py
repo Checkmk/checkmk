@@ -187,6 +187,8 @@ def _u(text: str) -> str:
         if current_language is None:
             return text
         return ldict.get(current_language, text)
+    if _translation:
+        return _translation.translation.gettext(text)
     return text
 
 

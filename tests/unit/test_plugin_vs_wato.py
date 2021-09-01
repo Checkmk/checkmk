@@ -436,7 +436,6 @@ class ErrorReporter:
         ('check', 'enviromux_sems_voltage', 'checkgroup_parameters:voltage'),
         ('check', 'enviromux_voltage', 'checkgroup_parameters:voltage'),
         ('check', 'epson_beamer_lamp', 'checkgroup_parameters:lamp_operation_time'),
-        ('check', 'esx_vsphere_hostsystem_mem_usage', 'checkgroup_parameters:esx_host_memory'),
         ('check', 'esx_vsphere_licenses', 'checkgroup_parameters:esx_licenses'),
         ('check', 'esx_vsphere_objects_count', 'checkgroup_parameters:esx_vsphere_objects_count'),
         ('check', 'esx_vsphere_sensors', 'checkgroup_parameters:hostsystem_sensors'),

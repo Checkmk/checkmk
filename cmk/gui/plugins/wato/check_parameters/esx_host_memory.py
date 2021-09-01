@@ -10,16 +10,31 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersOperatingSystem,
 )
-from cmk.gui.valuespec import Percentage, Tuple
+from cmk.gui.valuespec import Dictionary, Percentage, Transform, Tuple
+
+
+def _transform_memory_usage_params(params):
+    # Introduced in v2.1.0i1
+    if 'levels_upper' not in params:
+        return {'levels_upper': params}
+    return params
 
 
 def _parameter_valuespec_esx_host_memory():
-    return Tuple(
-        title=_("Specify levels in percentage of total RAM"),
-        elements=[
-            Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
-            Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
-        ],
+    return Transform(
+        Dictionary(elements=[
+            (
+                'levels_upper',
+                Tuple(
+                    title=_("Specify levels in percentage of total RAM"),
+                    elements=[
+                        Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
+                        Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
+                    ],
+                ),
+            ),
+        ]),
+        forth=_transform_memory_usage_params,
     )
 
 

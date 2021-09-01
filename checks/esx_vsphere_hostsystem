@@ -138,51 +138,6 @@ check_info['esx_vsphere_hostsystem.cpu_util_cluster'] = {
     "has_perfdata": True,
 }
 #.
-#   .--Memory--------------------------------------------------------------.
-#   |               __  __                                                 |
-#   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |
-#   |              | |\/| |/ _ \ '_ ` _ \ / _ \| '__| | | |                |
-#   |              | |  | |  __/ | | | | | (_) | |  | |_| |                |
-#   |              |_|  |_|\___|_| |_| |_|\___/|_|   \__, |                |
-#   |                                                |___/                 |
-#   +----------------------------------------------------------------------+
-
-esx_host_mem_default_levels = (80.0, 90.0)
-
-
-def inventory_esx_vsphere_hostsystem_mem(parsed):
-    if 'summary.quickStats.overallMemoryUsage' in parsed and 'hardware.memorySize' in parsed:
-        return [(None, 'esx_host_mem_default_levels')]
-
-
-def check_esx_vsphere_hostsystem_mem(item, params, parsed):
-
-    if "summary.quickStats.overallMemoryUsage" not in parsed:
-        return
-
-    memory_usage = savefloat(parsed['summary.quickStats.overallMemoryUsage'][0]) * 1024 * 1024
-    memory_size = savefloat(parsed['hardware.memorySize'][0])
-
-    state, text, perf = check_memory_element(
-        "Usage",
-        memory_usage,
-        memory_size,
-        ('perc_used', params),
-        metric_name="mem_used",
-    )
-    perf.append(("mem_total", memory_size))
-    return state, text, perf
-
-
-check_info['esx_vsphere_hostsystem.mem_usage'] = {
-    "inventory_function": inventory_esx_vsphere_hostsystem_mem,
-    "check_function": check_esx_vsphere_hostsystem_mem,
-    "service_description": "Memory",
-    "group": "esx_host_memory",
-    "has_perfdata": True
-}
-
-#.
 #   .--State---------------------------------------------------------------.
 #   |                       ____  _        _                               |
 #   |                      / ___|| |_ __ _| |_ ___                         |

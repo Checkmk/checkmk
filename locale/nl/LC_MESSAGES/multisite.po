@@ -4410,6 +4410,10 @@ msgstr "Alert handlers zullen toestandsveranderingen afhandelen."
 msgid "Alert mangager rule state"
 msgstr "Waarschuwings afhandeling regel"
 
+#, fuzzy
+msgid "Alert on excessive CPU utilization"
+msgstr "Waarschuwing bij te hoog CPU-gebruik"
+
 msgid "Alert on too high CPU utilization"
 msgstr "Waarschuwing bij te hoog CPU-gebruik"
 

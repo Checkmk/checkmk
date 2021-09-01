@@ -4181,6 +4181,10 @@ msgstr ""
 msgid "Alert mangager rule state"
 msgstr "Nume nou"
 
+#, fuzzy
+msgid "Alert on excessive CPU utilization"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "Alert on too high CPU utilization"
 msgstr ""
 
@@ -62512,10 +62516,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Levels for used Logfiles"
 #~ msgstr "Nivel-urile absolute de licențe neutilizate"
-
-#, fuzzy
-#~ msgid "Levels on CPU utilization"
-#~ msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 #~ msgid "Logfile pattern rules"

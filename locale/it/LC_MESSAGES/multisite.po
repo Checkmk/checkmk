@@ -4418,6 +4418,10 @@ msgstr "I gestori di allarmi gestiranno i cambiamenti di stato."
 msgid "Alert mangager rule state"
 msgstr "Regola del gestore degli avvisi"
 
+#, fuzzy
+msgid "Alert on excessive CPU utilization"
+msgstr "Allarme su un utilizzo troppo alto della CPU"
+
 msgid "Alert on too high CPU utilization"
 msgstr "Allarme su un utilizzo troppo alto della CPU"
 

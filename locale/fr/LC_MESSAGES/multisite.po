@@ -4459,6 +4459,10 @@ msgstr "Les gestionnaires d'alertes gèrent les changements d'état."
 msgid "Alert mangager rule state"
 msgstr "Règle de traitement des alertes"
 
+#, fuzzy
+msgid "Alert on excessive CPU utilization"
+msgstr "Alerte en cas d'utilisation trop élevée du CPU"
+
 msgid "Alert on too high CPU utilization"
 msgstr "Alerte en cas d'utilisation trop élevée du CPU"
 

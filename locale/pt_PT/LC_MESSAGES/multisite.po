@@ -4409,6 +4409,10 @@ msgstr "Os manipuladores de alertas tratarão das mudanças de estado."
 msgid "Alert mangager rule state"
 msgstr "Regra do manipulador de alertas"
 
+#, fuzzy
+msgid "Alert on excessive CPU utilization"
+msgstr "Alerta sobre utilização demasiado elevada da CPU"
+
 msgid "Alert on too high CPU utilization"
 msgstr "Alerta sobre utilização demasiado elevada da CPU"
 

@@ -4390,6 +4390,10 @@ msgstr "Alert Handler behandeln Zustandsänderungen."
 msgid "Alert mangager rule state"
 msgstr "Alerthandler-Regel"
 
+#, fuzzy
+msgid "Alert on excessive CPU utilization"
+msgstr "Alarmiere bei zu hoher CPU-Auslastung"
+
 msgid "Alert on too high CPU utilization"
 msgstr "Alarmiere bei zu hoher CPU-Auslastung"
 

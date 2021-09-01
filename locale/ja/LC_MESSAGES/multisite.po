@@ -4246,6 +4246,10 @@ msgstr "アラートハンドラーは状態の変化を処理します。"
 msgid "Alert mangager rule state"
 msgstr "アラートハンドラールール"
 
+#, fuzzy
+msgid "Alert on excessive CPU utilization"
+msgstr "CPU使用率が高すぎる場合のアラート"
+
 msgid "Alert on too high CPU utilization"
 msgstr "CPU使用率が高すぎる場合のアラート"
 

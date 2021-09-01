@@ -779,7 +779,7 @@ def add_to_event_context(plugin_context: EventContext, prefix: str, param: objec
             add_to_event_context(plugin_context, varname, value)
     elif isinstance(param, str):
         plugin_context[prefix] = param
-    elif isinstance(param, (int, float)):
+    elif isinstance(param, (int, float)):  # NOTE: bool is a subclass of int!
         plugin_context[prefix] = str(param)
     elif param is None:
         plugin_context[prefix] = ""

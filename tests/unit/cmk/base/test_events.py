@@ -42,88 +42,120 @@ def test_add_to_event_context_prefix_is_prepended() -> None:
     assert context == {"FOO": "bar", "BAZ": "boo", "AAA_BBB": "CCC"}
 
 
-@pytest.mark.parametrize("param, expected", [
-    pytest.param(
-        {'param': 'value'},
-        {'PARAMETER_PARAM': 'value'},
-        id="add_str_to_context",
-    ),
-    pytest.param(
-        {'param': 42},
-        {'PARAMETER_PARAM': '42'},
-        id="add_int_to_context",
-    ),
-    pytest.param(
-        {'param': 42.5},
-        {'PARAMETER_PARAM': '42.5'},
-        id="add_float_to_context",
-    ),
-    pytest.param(
-        {'param': True},
-        {'PARAMETER_PARAM': 'True'},
-        id="add_bool_to_context",
-    ),
-    pytest.param(
-        {'dict': {
-            'key': 'value'
-        }},
-        {'PARAMETER_DICT_KEY': 'value'},
-        id="add_from_simple_dict",
-    ),
-    pytest.param(
-        ("foo", "bar", "baz"),
-        {'PARAMETER': 'foo\tbar\tbaz'},
-        id="add_from_simple_tuple",
-    ),
-    pytest.param(
-        {
-            'smtp': {
-                'smarthosts': ['127.0.0.1', '127.0.0.2', '127.0.0.3'],
-                'port': 25,
-                'auth': {
-                    'method': 'plaintext',
-                    'user': 'user',
-                    'password': 'password'
+@pytest.mark.parametrize(
+    "param, expected",
+    [
+        # basic types ----------------------------------------------------------
+        pytest.param(
+            "blah",
+            {'PARAMETER': 'blah'},
+            id="string",
+        ),
+        pytest.param(
+            12345,
+            {'PARAMETER': '12345'},
+            id="int",
+        ),
+        pytest.param(
+            1234.5,
+            {'PARAMETER': '1234.5'},
+            id="float",
+        ),
+        pytest.param(
+            None,
+            {'PARAMETER': ''},
+            id="None",
+        ),
+        pytest.param(
+            True,
+            {'PARAMETER': 'True'},
+            id="True",
+        ),
+        pytest.param(
+            False,
+            {'PARAMETER': 'False'},
+            id="False",
+        ),
+        # lists ----------------------------------------------------------------
+        pytest.param(
+            [],
+            {'PARAMETERS': ''},
+            id="empty list",
+        ),
+        pytest.param(
+            ["blah"],
+            {
+                'PARAMETERS': 'blah',
+                'PARAMETER_1': 'blah',
+            },
+            id="singleton list with string",
+        ),
+        pytest.param(
+            ['foo', 'bar', 'baz'],
+            {
+                'PARAMETERS': 'foo bar baz',
+                'PARAMETER_1': 'foo',
+                'PARAMETER_2': 'bar',
+                'PARAMETER_3': 'baz',
+            },
+            id="general list with strings",
+        ),
+        # tuples ---------------------------------------------------------------
+        pytest.param(
+            (),
+            {'PARAMETER': ''},
+            id="empty tuple",
+        ),
+        pytest.param(
+            ("blah",),
+            {'PARAMETER': 'blah'},
+            id="singleton tuple with string",
+        ),
+        pytest.param(
+            ('foo', 'bar', 'baz'),
+            {'PARAMETER': 'foo\tbar\tbaz'},
+            id="general tuple with strings",
+        ),
+        # dicts ----------------------------------------------------------------
+        pytest.param(
+            {},
+            {},
+            id="empty dict",
+        ),
+        pytest.param(
+            {'key': 'value'},
+            {'PARAMETER_KEY': 'value'},
+            id="dict with a single string/string entry",
+        ),
+        pytest.param(
+            {
+                'key': 42,
+                'foo': True,
+                'ernie': 'Bert',
+                'bar': {
+                    'baz': {
+                        'blubb': 2.5,
+                        'smarthosts': ['127.0.0.1', '127.0.0.2', '127.0.0.3'],
+                        'nephews': ('Huey', 'Dewey', 'Louie'),
+                    },
+                    'ding': 'dong',
                 },
-                'encryption': 'starttls'
-            }
-        },
-        {
-            'PARAMETER_SMTP_SMARTHOSTSS': '127.0.0.1 127.0.0.2 127.0.0.3',
-            'PARAMETER_SMTP_SMARTHOSTS_1': '127.0.0.1',
-            'PARAMETER_SMTP_SMARTHOSTS_2': '127.0.0.2',
-            'PARAMETER_SMTP_SMARTHOSTS_3': '127.0.0.3',
-            'PARAMETER_SMTP_PORT': '25',
-            'PARAMETER_SMTP_AUTH_METHOD': 'plaintext',
-            'PARAMETER_SMTP_AUTH_USER': 'user',
-            'PARAMETER_SMTP_AUTH_PASSWORD': 'password',
-            'PARAMETER_SMTP_ENCRYPTION': 'starttls'
-        },
-        id="add_from_dict",
-    ),
-    pytest.param(
-        {'elements': ['omdsite', 'hosttags', 'address', 'abstime']},
-        {
-            'PARAMETER_ELEMENTSS': 'omdsite hosttags address abstime',
-            'PARAMETER_ELEMENTS_1': 'omdsite',
-            'PARAMETER_ELEMENTS_2': 'hosttags',
-            'PARAMETER_ELEMENTS_3': 'address',
-            'PARAMETER_ELEMENTS_4': 'abstime',
-        },
-        id="add_from_list",
-    ),
-    pytest.param(
-        {
-            'key': ("one", "two"),
-            'key1': ("one", "two", "three"),
-        },
-        {
-            'PARAMETER_KEY': 'one\ttwo',
-            'PARAMETER_KEY1': 'one\ttwo\tthree',
-        },
-        id="add_from_tuple",
-    ),
-])
+            },
+            {
+                'PARAMETER_KEY': '42',
+                'PARAMETER_FOO': 'True',
+                'PARAMETER_ERNIE': 'Bert',
+                'PARAMETER_BAR_BAZ_BLUBB': '2.5',
+                'PARAMETER_BAR_BAZ_SMARTHOSTSS': '127.0.0.1 127.0.0.2 127.0.0.3',
+                'PARAMETER_BAR_BAZ_SMARTHOSTS_1': '127.0.0.1',
+                'PARAMETER_BAR_BAZ_SMARTHOSTS_2': '127.0.0.2',
+                'PARAMETER_BAR_BAZ_SMARTHOSTS_3': '127.0.0.3',
+                'PARAMETER_BAR_BAZ_NEPHEWS': 'Huey\tDewey\tLouie',
+                'PARAMETER_BAR_DING': 'dong',
+            },
+            id="dict with multiple string/mixed entries",
+        ),
+    ])
 def test_add_to_event_context(param: object, expected: EventContext) -> None:
     context: EventContext = {}
     add_to_event_context(context, "PARAMETER", param)

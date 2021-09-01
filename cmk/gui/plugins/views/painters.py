@@ -4,26 +4,54 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Optional, Dict, Any, Tuple, List, Union, Iterable
 import abc
-from fnmatch import fnmatch
+import io
 import os
 import time
-import io
+from fnmatch import fnmatch
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
-import cmk.utils.paths
-from cmk.utils.render import approx_age
 import cmk.utils.man_pages as man_pages
-from cmk.utils.defines import short_service_state_name, short_host_state_name
+import cmk.utils.paths
+from cmk.utils.defines import short_host_state_name, short_service_state_name
+from cmk.utils.render import approx_age
 from cmk.utils.type_defs import Timestamp
 
-import cmk.gui.escaping as escaping
 import cmk.gui.config as config
+import cmk.gui.escaping as escaping
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites
+from cmk.gui.globals import g, html, request
 from cmk.gui.htmllib import HTML
 from cmk.gui.i18n import _
-from cmk.gui.globals import g, html, request
+from cmk.gui.plugins.views import (
+    Cell,
+    format_plugin_output,
+    get_label_sources,
+    get_labels,
+    get_perfdata_nth_value,
+    get_tag_groups,
+    is_stale,
+    paint_age,
+    paint_host_list,
+    paint_nagiosflag,
+    paint_stalified,
+    Painter,
+    painter_option_registry,
+    painter_registry,
+    PainterOption,
+    render_cache_info,
+    render_labels,
+    render_link_to_view,
+    render_tag_groups,
+    replace_action_url_macros,
+    transform_action_url,
+    VisualLinkSpec,
+)
+from cmk.gui.plugins.views.graphs import cmk_time_graph_params, paint_time_graph_cmk
+from cmk.gui.plugins.views.icons import get_icons, iconpainter_columns
+from cmk.gui.type_defs import ColumnName, Row, SorterName
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     DateFormat,
     Dictionary,
@@ -37,45 +65,7 @@ from cmk.gui.valuespec import (
     Timerange,
     Transform,
 )
-from cmk.gui.type_defs import SorterName, ColumnName, Row
 from cmk.gui.view_utils import CellContent, CellSpec, CSSClass
-
-from cmk.gui.plugins.views.icons import (
-    get_icons,
-    iconpainter_columns,
-)
-
-from cmk.gui.plugins.views import (
-    painter_registry,
-    Painter,
-    painter_option_registry,
-    PainterOption,
-    transform_action_url,
-    is_stale,
-    paint_stalified,
-    paint_host_list,
-    format_plugin_output,
-    render_link_to_view,
-    VisualLinkSpec,
-    get_perfdata_nth_value,
-    paint_age,
-    paint_nagiosflag,
-    replace_action_url_macros,
-    render_cache_info,
-    render_tag_groups,
-    get_tag_groups,
-    render_labels,
-    get_labels,
-    get_label_sources,
-    Cell,
-)
-
-from cmk.gui.plugins.views.graphs import (
-    paint_time_graph_cmk,
-    cmk_time_graph_params,
-)
-
-from cmk.gui.utils.urls import makeuri_contextless
 
 #   .--Painter Options-----------------------------------------------------.
 #   |                   ____       _       _                               |
@@ -5013,49 +5003,46 @@ class PainterHostDockerNode(Painter):
         return ["host_labels", "host_label_sources"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        source_hosts = [
-            k[21:] for k in get_labels(row, "host") if k.startswith("cmk/piggyback_source_")
-        ]
-
-        if not source_hosts:
+        """ We use the information stored in output of docker_container_status
+        here. It's the most trusted source of the current node the container is
+        running on. """
+        if row.get("host_labels", {}).get("cmk/docker_object") != 'container':
             return "", ""
 
-        # We need the labels of the piggyback hosts to know which of them is
-        # the docker node. We can not do livestatus queries per host/row here.
-        # For this reason we perform a single query for all hosts of the users
-        # sites which is then cached to prevent additional queries.
-        host_labels = _get_host_labels()
+        docker_nodes = _get_docker_container_status_outputs()
+        output = docker_nodes.get(row["host_name"])
+        # Output with node: "Container running on node mynode2"
+        # Output without node: "Container running"
+        if output is None or not "node" in output:
+            return "", ""
 
-        docker_nodes = [
-            h for h in source_hosts if host_labels.get(h, {}).get("cmk/docker_object") == "node"
-        ]
-
-        content = []
-        for host_name in docker_nodes:
-            url = makeuri_contextless(
-                request,
-                [
-                    ("view_name", "host"),
-                    ("host", host_name),
-                ],
-                filename="view.py",
-            )
-            content.append(html.render_a(host_name, href=url))
-        return "", HTML(", ").join(content)
+        node = output.split()[-1]
+        url = makeuri_contextless(
+            request,
+            [
+                ("view_name", "host"),
+                ("host", node),
+            ],
+            filename="view.py",
+        )
+        content: HTML = html.render_a(node, href=url)
+        return "", content
 
 
-def _get_host_labels():
-    """Returns a map of all known hosts with their host labels
+def _get_docker_container_status_outputs() -> Dict[str, str]:
+    """Returns a map of all known hosts with their docker nodes
 
     It is important to cache this query per request and also try to use the
     liveproxyd query cached.
     """
-    if 'host_labels' in g:
-        return g.host_labels
-    query = "GET hosts\nColumns: name labels\nCache: reload\n"
-    host_labels = {row[0]: row[1] for row in sites.live().query(query)}
-    g.host_labels = host_labels
-    return host_labels
+    if 'docker_nodes' in g:
+        return g.docker_nodes
+    query: str = "GET services\n"\
+                 "Columns: host_name service_plugin_output\n"\
+                 "Filter: check_command = check_mk-docker_container_status\n"
+    docker_nodes: Dict[str, str] = {row[0]: row[1] for row in sites.live().query(query)}
+    g.docker_nodes = docker_nodes
+    return docker_nodes
 
 
 class AbstractPainterSpecificMetric(Painter):

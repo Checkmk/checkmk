@@ -6,9 +6,11 @@
 
 from typing import NamedTuple, Optional
 
-from .agent_based_api.v1 import register
-from .agent_based_api.v1.type_defs import StringTable
-from .utils.cpu import ProcessorType
+from .agent_based_api.v1 import get_average, get_value_store, register, Service
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.cpu import Load, ProcessorType
+from .utils.cpu import Section as CPUSection
+from .utils.cpu_load import check_cpu_load, CPULoadParams
 from .utils.wmi import get_wmi_time, parse_wmi_table, required_tables_missing, WMIQueryTimeoutError
 
 
@@ -63,4 +65,49 @@ def parse_wmi_cpuload(string_table: StringTable) -> Optional[Section]:
 register.agent_section(
     name="wmi_cpuload",
     parse_function=parse_wmi_cpuload,
+)
+
+
+def discover_wmi_cpuload(section: Section) -> DiscoveryResult:
+    yield Service()
+
+
+def check_wmi_cpuload(
+    params: CPULoadParams,
+    section: Section,
+) -> CheckResult:
+    yield from check_cpu_load(
+        params,
+        CPUSection(
+            Load(
+                section.load,
+                get_average(
+                    get_value_store(),
+                    "load_5min",
+                    section.timestamp,
+                    section.load,
+                    5,
+                ),
+                get_average(
+                    get_value_store(),
+                    "load_15min",
+                    section.timestamp,
+                    section.load,
+                    15,
+                ),
+            ),
+            section.n_cores,
+            0,
+            type=section.processor_type,
+        ),
+    )
+
+
+register.check_plugin(
+    name="wmi_cpuload",
+    discovery_function=discover_wmi_cpuload,
+    check_function=check_wmi_cpuload,
+    service_name="Processor Queue",
+    check_default_parameters={},
+    check_ruleset_name="cpu_load",
 )

@@ -4,11 +4,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+from typing import Any, Dict, Tuple, TypedDict, Union
 
 from ..agent_based_api.v1 import check_levels, check_levels_predictive, Metric, Result, State
 from ..agent_based_api.v1.type_defs import CheckResult
 from .cpu import ProcessorType, Section
+
+
+class CPULoadParams(TypedDict, total=False):
+    levels: Union[None, Tuple[float, float], Dict[str, Any]]
 
 
 def _processor_type_info(proc_type: ProcessorType) -> str:
@@ -21,7 +25,7 @@ def _processor_type_info(proc_type: ProcessorType) -> str:
     return "" if proc_type is ProcessorType.unspecified else f"{proc_type.name} "
 
 
-def check_cpu_load(params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_cpu_load(params: CPULoadParams, section: Section) -> CheckResult:
     levels = params.get("levels")
     num_cpus = section.num_cpus
     label = "15 min load"

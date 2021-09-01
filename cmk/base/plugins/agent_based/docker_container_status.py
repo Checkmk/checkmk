@@ -197,6 +197,8 @@ def check_docker_container_status(section: Dict[str, Any]) -> CheckResult:
     status = section.get("Status", "unknown")
     cur_state = {"running": state.OK, "unknown": state.UNKNOWN}.get(status, state.CRIT)
 
+    # Please adjust PainterHostDockerNode if info is changed here
+    # 5019 node = output.split()[-1]
     info = "Container %s" % status
     node_name = section.get("NodeName")
     if node_name:

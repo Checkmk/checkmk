@@ -5051,49 +5051,46 @@ class PainterHostDockerNode(Painter):
         return ["host_labels", "host_label_sources"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        source_hosts = [
-            k[21:] for k in get_labels(row, "host") if k.startswith("cmk/piggyback_source_")
-        ]
-
-        if not source_hosts:
+        """ We use the information stored in output of docker_container_status
+        here. It's the most trusted source of the current node the container is
+        running on. """
+        if row.get("host_labels", {}).get("cmk/docker_object") != 'container':
             return "", ""
 
-        # We need the labels of the piggyback hosts to know which of them is
-        # the docker node. We can not do livestatus queries per host/row here.
-        # For this reason we perform a single query for all hosts of the users
-        # sites which is then cached to prevent additional queries.
-        host_labels = _get_host_labels()
+        docker_nodes = _get_docker_container_status_outputs()
+        output = docker_nodes.get(row["host_name"])
+        # Output with node: "Container running on node mynode2"
+        # Output without node: "Container running"
+        if output is None or not "node" in output:
+            return "", ""
 
-        docker_nodes = [
-            h for h in source_hosts if host_labels.get(h, {}).get("cmk/docker_object") == "node"
-        ]
-
-        content = []
-        for host_name in docker_nodes:
-            url = makeuri_contextless(
-                request,
-                [
-                    ("view_name", "host"),
-                    ("host", host_name),
-                ],
-                filename="view.py",
-            )
-            content.append(html.render_a(host_name, href=url))
-        return "", HTML(", ").join(content)
+        node = output.split()[-1]
+        url = makeuri_contextless(
+            request,
+            [
+                ("view_name", "host"),
+                ("host", node),
+            ],
+            filename="view.py",
+        )
+        content: HTML = html.render_a(node, href=url)
+        return "", content
 
 
-def _get_host_labels():
-    """Returns a map of all known hosts with their host labels
+def _get_docker_container_status_outputs() -> Dict[str, str]:
+    """Returns a map of all known hosts with their docker nodes
 
     It is important to cache this query per request and also try to use the
     liveproxyd query cached.
     """
-    if 'host_labels' in g:
-        return g.host_labels
-    query = "GET hosts\nColumns: name labels\nCache: reload\n"
-    host_labels = {row[0]: row[1] for row in sites.live().query(query)}
-    g.host_labels = host_labels
-    return host_labels
+    if 'docker_nodes' in g:
+        return g.docker_nodes
+    query: str = "GET services\n"\
+                 "Columns: host_name service_plugin_output\n"\
+                 "Filter: check_command = check_mk-docker_container_status\n"
+    docker_nodes: Dict[str, str] = {row[0]: row[1] for row in sites.live().query(query)}
+    g.docker_nodes = docker_nodes
+    return docker_nodes
 
 
 class AbstractPainterSpecificMetric(Painter):

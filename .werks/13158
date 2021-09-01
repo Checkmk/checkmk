@@ -1,0 +1,13 @@
+Title: REST API: fixing folder show endpoints when folder has network scan option configured
+Class: fix
+Compatible: compat
+Component: core
+Date: 1630492987
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p10
+
+In the previous version, the REST API returned a 500 error when the user attempted
+to query a folder which has the network scan attribute configured. This werk fixes
+this behaviour and correctly displays any time related entries.

@@ -262,6 +262,7 @@ class DateConverter(Converter):
     # meaning is "the last second/minute of this day", so we replace it with that.
 
     def from_checkmk(self, data):
+        data = tuple(data)
         if data == (24, 0):
             data = (23, 59, 59)
         return datetime.time(*data)
@@ -443,8 +444,8 @@ class NetworkScan(BaseSchema):
 
 
 class NetworkScanResult(BaseSchema):
-    start = _fields.DateTime(description='When the scan started')
-    end = _fields.DateTime(
+    start = fields.Timestamp(description='When the scan started')
+    end = fields.Timestamp(
         description='When the scan finished. Will be Null if not yet run.',
         allow_none=True,
     )

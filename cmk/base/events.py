@@ -787,7 +787,7 @@ def add_to_event_context(plugin_context: EventContext, prefix: str, param: objec
         plugin_context[prefix] = "yes"
     elif param is False:
         plugin_context[prefix] = ""
-    elif isinstance(param, (tuple, list)):
+    elif isinstance(param, tuple):
         plugin_context[prefix] = "\t".join(param)
     else:
         plugin_context[prefix] = repr(param)  # Should never happen

@@ -777,24 +777,20 @@ def add_to_event_context(plugin_context: EventContext, prefix: str, param: objec
                     continue
 
             add_to_event_context(plugin_context, varname, value)
+    elif isinstance(param, str):
+        plugin_context[prefix] = param
+    elif isinstance(param, (int, float)):
+        plugin_context[prefix] = str(param)
+    elif param is None:
+        plugin_context[prefix] = ""
+    elif param is True:
+        plugin_context[prefix] = "yes"
+    elif param is False:
+        plugin_context[prefix] = ""
+    elif isinstance(param, (tuple, list)):
+        plugin_context[prefix] = "\t".join(param)
     else:
-        plugin_context[prefix] = plugin_param_to_string(param)
-
-
-def plugin_param_to_string(value: Any) -> str:
-    if isinstance(value, str):
-        return value
-    if isinstance(value, (int, float)):
-        return str(value)
-    if value is None:
-        return ""
-    if value is True:
-        return "yes"
-    if value is False:
-        return ""
-    if isinstance(value, (tuple, list)):
-        return "\t".join(value)
-    return repr(value)  # Should never happen
+        plugin_context[prefix] = repr(param)  # Should never happen
 
 
 # int() function that return 0 for strings the

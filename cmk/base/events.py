@@ -760,10 +760,11 @@ def add_context_to_environment(plugin_context: EventContext, prefix: str) -> Non
 #   PARAMETER_LVL1_2_VALUE = 13
 def add_to_event_context(plugin_context: EventContext, prefix: str, param: object) -> None:
     if isinstance(param, list):
-        plugin_context[prefix + "S"] = " ".join(param)
+        if all(isinstance(p, str) for p in param):
+            plugin_context[prefix + "S"] = " ".join(param)
         for nr, value in enumerate(param, start=1):
             add_to_event_context(plugin_context, f"{prefix}_{nr}", value)
-    elif isinstance(param, dict):
+    elif isinstance(param, dict):  # NOTE: We only handle Dict[str, Any].
         for key, value in param.items():
             varname = f"{prefix}_{key.upper()}"
             if varname == "PARAMETER_PROXY_URL":
@@ -781,7 +782,10 @@ def add_to_event_context(plugin_context: EventContext, prefix: str, param: objec
     elif param is None:
         plugin_context[prefix] = ""
     elif isinstance(param, tuple):
-        plugin_context[prefix] = "\t".join(param)
+        if all(isinstance(p, str) for p in param):
+            plugin_context[prefix] = "\t".join(param)
+        for nr, value in enumerate(param, start=1):
+            add_to_event_context(plugin_context, f"{prefix}_{nr}", value)
     else:
         plugin_context[prefix] = repr(param)  # Should never happen
 

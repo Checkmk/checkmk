@@ -100,6 +100,18 @@ def test_add_to_event_context_prefix_is_prepended() -> None:
             },
             id="general list with strings",
         ),
+        pytest.param(
+            [42, {
+                'caller': 'admin',
+                'urgency': 'low'
+            }],
+            {
+                'PARAMETER_1': '42',
+                'PARAMETER_2_CALLER': 'admin',
+                'PARAMETER_2_URGENCY': 'low',
+            },
+            id="list with non-string elements",
+        ),
         # tuples ---------------------------------------------------------------
         pytest.param(
             (),
@@ -108,13 +120,33 @@ def test_add_to_event_context_prefix_is_prepended() -> None:
         ),
         pytest.param(
             ("blah",),
-            {'PARAMETER': 'blah'},
+            {
+                'PARAMETER': 'blah',
+                'PARAMETER_1': 'blah',
+            },
             id="singleton tuple with string",
         ),
         pytest.param(
             ('foo', 'bar', 'baz'),
-            {'PARAMETER': 'foo\tbar\tbaz'},
+            {
+                'PARAMETER': 'foo\tbar\tbaz',
+                'PARAMETER_1': 'foo',
+                'PARAMETER_2': 'bar',
+                'PARAMETER_3': 'baz',
+            },
             id="general tuple with strings",
+        ),
+        pytest.param(
+            (42, {
+                'caller': 'admin',
+                'urgency': 'low'
+            }),
+            {
+                'PARAMETER_1': '42',
+                'PARAMETER_2_CALLER': 'admin',
+                'PARAMETER_2_URGENCY': 'low',
+            },
+            id="tuple with non-string elements",
         ),
         # dicts ----------------------------------------------------------------
         pytest.param(
@@ -151,6 +183,9 @@ def test_add_to_event_context_prefix_is_prepended() -> None:
                 'PARAMETER_BAR_BAZ_SMARTHOSTS_2': '127.0.0.2',
                 'PARAMETER_BAR_BAZ_SMARTHOSTS_3': '127.0.0.3',
                 'PARAMETER_BAR_BAZ_NEPHEWS': 'Huey\tDewey\tLouie',
+                'PARAMETER_BAR_BAZ_NEPHEWS_1': 'Huey',
+                'PARAMETER_BAR_BAZ_NEPHEWS_2': 'Dewey',
+                'PARAMETER_BAR_BAZ_NEPHEWS_3': 'Louie',
                 'PARAMETER_BAR_DING': 'dong',
             },
             id="dict with multiple string/mixed entries",

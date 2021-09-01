@@ -107,7 +107,6 @@ pytz = "==2020.1"  # needed by Flask-Babel
 Babel = "==2.8.0"  # needed by Flask-Babel
 Flask-Babel = "==1.0.0"  # needed by GUI for i18n support (lazy gettext)
 openapi-spec-validator = "==0.2.9"  # direct dependency
-swagger_ui_bundle = "==0.0.6"  # direct dependency
 psutil = "==5.6.7"  # needed for omdlib
 passlib = "==1.7.2"  # needed for omdlib
 defusedxml = "==0.6.0"  # needed by jira

@@ -1491,13 +1491,16 @@ def call_notification_script(plugin_name: NotificationPluginNameStr,
                              close_fds=True)
 
         stdout = p.stdout
+        output_lines: List[str] = []
         assert stdout is not None
         while True:
             # read and output stdout linewise to ensure we don't force python to produce
             # one - potentially huge - memory buffer
             line = stdout.readline()
             if line != '':
-                plugin_log("Output: %s" % line.rstrip())
+                output: str = line.rstrip()
+                plugin_log("Output: %s" % output)
+                output_lines.append(output)
                 if _log_to_stdout:
                     out.output(line)
             else:
@@ -1515,6 +1518,14 @@ def call_notification_script(plugin_name: NotificationPluginNameStr,
 
     if exitcode != 0:
         plugin_log("Plugin exited with code %d" % exitcode)
+
+    _log_to_history(
+        notification_result_message(
+            NotificationPluginName(plugin_name),
+            NotificationContext(plugin_context),
+            NotificationResultCode(exitcode),
+            output_lines,
+        ))
 
     return exitcode
 

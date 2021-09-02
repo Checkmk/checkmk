@@ -53,7 +53,7 @@ def _parameter_valuespec_esx_host_memory():
                             ),
                             Dictionary(elements=_esx_host_memory_elements()),
                         ]),
-                    title=_('Node specific memory utilization'),
+                    title=_('Clusters: node specific memory utilization'),
                     help=_('Configure thresholds that apply to clusters based on how many nodes '
                            'they have.'),
                 ),

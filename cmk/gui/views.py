@@ -538,7 +538,7 @@ class View:
              + service views
         """
         host_name = self.context["host"]["host"]
-        breadcrumb = make_host_breadcrumb(host_name)
+        breadcrumb = make_host_breadcrumb(HostName(host_name))
 
         if self.name == "host":
             # In case we are on the host homepage, we have the final breadcrumb
@@ -557,7 +557,8 @@ class View:
                 ))
             return breadcrumb
 
-        breadcrumb = make_service_breadcrumb(host_name, self.context["service"]["service"])
+        breadcrumb = make_service_breadcrumb(HostName(host_name),
+                                             ServiceName(self.context["service"]["service"]))
 
         if self.name == "service":
             # In case we are on the service home page, we have the final breadcrumb
@@ -3320,7 +3321,7 @@ def query_action_data(what: IconObjectType, host: HostName, site: SiteId,
 @cmk.gui.pages.register("ajax_popup_action_menu")
 def ajax_popup_action_menu() -> None:
     site = request.get_ascii_input_mandatory('site')
-    host = request.get_ascii_input_mandatory('host')
+    host = HostName(request.get_ascii_input_mandatory('host'))
     svcdesc = request.get_str_input('service')
     what: IconObjectType = 'service' if svcdesc else 'host'
 

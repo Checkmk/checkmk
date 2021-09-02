@@ -15,7 +15,7 @@ from cmk.gui.valuespec import Dictionary, Integer, ListOf, Percentage, Transform
 
 def _transform_memory_usage_params(params):
     # Introduced in v2.1.0i1
-    if 'levels_upper' not in params:
+    if isinstance(params, tuple):
         return {'levels_upper': params}
     return params
 

@@ -34,7 +34,6 @@
 #include "DynamicColumn.h"
 #include "DynamicFileColumn.h"
 #include "DynamicRRDColumn.h"
-#include "HostGroupsColumn.h"
 #include "HostListColumn.h"
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
@@ -779,10 +778,20 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
                     interval_length);
         }));
 
-    table->addColumn(std::make_unique<HostGroupsColumn>(
-        prefix + "groups", "A list of all host groups this host is in",
-        offsets.add([](Row r) { return &r.rawData<host>()->hostgroups_ptr; }),
-        mc));
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
+        prefix + "groups", "A list of all host groups this host is in", offsets,
+        [mc](const host &hst, const contact *auth_user) {
+            std::vector<std::string> group_names;
+            for (objectlist *list = hst.hostgroups_ptr; list != nullptr;
+                 list = list->next) {
+                auto *hg = static_cast<hostgroup *>(list->object_ptr);
+                if (is_authorized_for_host_group(mc->groupAuthorization(), hg,
+                                                 auth_user)) {
+                    group_names.emplace_back(hg->group_name);
+                }
+            }
+            return group_names;
+        }));
     table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "contact_groups",
         "A list of all contact groups this host is in", offsets,

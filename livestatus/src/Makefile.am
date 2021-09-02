@@ -122,7 +122,6 @@ liblivestatus_a_SOURCES = \
         EventConsoleConnection.cc \
         FileSystemHelper.cc \
         Filter.cc \
-        HostGroupsColumn.cc \
         HostListColumn.cc \
         HostListState.cc \
         HostServiceState.cc \

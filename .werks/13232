@@ -1,0 +1,12 @@
+Title: Fix error in views if display option 't' is used
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1630596331
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p10
+
+If views where called with display option 't', the automatic reload of the
+page caused the error "Error:document.getElementById(...) is null".

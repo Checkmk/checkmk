@@ -194,9 +194,11 @@ def main(sys_argv=None):
             else:
                 status.update(attrs)
 
+        sys.stdout.write('<<<check_mk>>>\n')
+        sys.stdout.write('Version: %s\n' % g_version)
+        sys.stdout.write('AgentOS: %s\n' % g_device)
+
         sys.stdout.write('<<<fritz>>>\n')
-        sys.stdout.write('VersionOS %s\n' % g_version)
-        sys.stdout.write('VersionDevice %s\n' % g_device)
         for pair in status.items():
             sys.stdout.write('%s %s\n' % pair)
 

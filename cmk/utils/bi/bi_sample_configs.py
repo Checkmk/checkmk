@@ -22,6 +22,7 @@ bi_sample_config = {
                 'paths': []
             },
             'id': 'default_aggregation',
+            'comment': '',
             'node': {
                 'action': {
                     'params': {
@@ -48,6 +49,7 @@ bi_sample_config = {
         }],
         'contact_groups': [],
         'id': 'default',
+        'comment': '',
         'public': True,
         'rules': [{
             'aggregation_function': {
@@ -59,6 +61,7 @@ bi_sample_config = {
                 'disabled': False
             },
             'id': 'applications',
+            'comment': '',
             'node_visualization': {
                 'style_config': {},
                 'type': 'none'
@@ -93,6 +96,7 @@ bi_sample_config = {
                 'disabled': False
             },
             'id': 'checkmk',
+            'comment': '',
             'node_visualization': {
                 'style_config': {},
                 'type': 'none'
@@ -180,6 +184,7 @@ bi_sample_config = {
                 'disabled': False
             },
             'id': 'filesystems',
+            'comment': '',
             'node_visualization': {
                 'style_config': {},
                 'type': 'none'
@@ -269,6 +274,7 @@ bi_sample_config = {
                 'disabled': False
             },
             'id': 'general',
+            'comment': '',
             'node_visualization': {
                 'style_config': {},
                 'type': 'none'
@@ -322,6 +328,7 @@ bi_sample_config = {
                 'disabled': False
             },
             'id': 'hardware',
+            'comment': '',
             'node_visualization': {
                 'style_config': {},
                 'type': 'none'
@@ -356,6 +363,7 @@ bi_sample_config = {
                 'disabled': False
             },
             'id': 'host',
+            'comment': '',
             'node_visualization': {
                 'style_config': {},
                 'type': 'none'
@@ -469,6 +477,7 @@ bi_sample_config = {
                 'disabled': False
             },
             'id': 'logfiles',
+            'comment': '',
             'node_visualization': {
                 'style_config': {},
                 'type': 'none'
@@ -503,6 +512,7 @@ bi_sample_config = {
                 'disabled': False
             },
             'id': 'multipathing',
+            'comment': '',
             'node_visualization': {
                 'style_config': {},
                 'type': 'none'
@@ -537,6 +547,7 @@ bi_sample_config = {
                 'disabled': False
             },
             'id': 'networking',
+            'comment': '',
             'node_visualization': {
                 'style_config': {},
                 'type': 'none'
@@ -571,6 +582,7 @@ bi_sample_config = {
                 'disabled': False
             },
             'id': 'other',
+            'comment': '',
             'node_visualization': {
                 'style_config': {},
                 'type': 'none'
@@ -604,6 +616,7 @@ bi_sample_config = {
                 'disabled': False
             },
             'id': 'performance',
+            'comment': '',
             'node_visualization': {
                 'style_config': {},
                 'type': 'none'

@@ -19,7 +19,7 @@ from cmk.utils.bi.bi_actions import (
     BIStateOfServiceAction,
 )
 from cmk.utils.bi.bi_aggregation import BIAggregation, BIAggregationSchema
-from cmk.utils.bi.bi_lib import ReqBoolean, ReqList, ReqNested, ReqString
+from cmk.utils.bi.bi_lib import ReqBoolean, ReqList, ReqNested, ReqString, String
 from cmk.utils.bi.bi_node_generator import BINodeGenerator
 from cmk.utils.bi.bi_rule import BIRule, BIRuleSchema
 from cmk.utils.bi.bi_rule_interface import bi_rule_id_registry
@@ -51,6 +51,7 @@ class BIAggregationPack:
         super().__init__()
         self.id = pack_config["id"]
         self.title = pack_config["title"]
+        self.comment = pack_config.get("comment", "")
         self.contact_groups = pack_config["contact_groups"]
         self.public = pack_config["public"]
 
@@ -67,6 +68,7 @@ class BIAggregationPack:
         return {
             "id": self.id,
             "title": self.title,
+            "comment": self.comment,
             "contact_groups": self.contact_groups,
             "public": self.public,
             "rules": [rule.serialize() for rule in self.rules.values()],
@@ -371,6 +373,11 @@ class BIAggregationPacks:
 class BIAggregationPackSchema(Schema):
     id = ReqString(default="", example="bi_pack1")
     title = ReqString(default="", example="BI Title")
+    comment = String(
+        description="An optional comment that may be used to explain the purpose of this object.",
+        allow_none=True,
+        example="Rule comment",
+    )
     contact_groups = ReqList(fields.String(),
                              default=[],
                              example=["contactgroup_a", "contactgroup_b"])
@@ -384,6 +391,7 @@ class BIAggregationPackSchema(Schema):
         return {
             "id": obj.id,
             "title": obj.title,
+            "comment": obj.comment,
             "contact_groups": obj.contact_groups,
             "public": obj.public,
             "rules": obj.get_rules().values(),

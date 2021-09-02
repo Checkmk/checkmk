@@ -44,6 +44,7 @@ class BIAggregation:
             aggr_config = self.schema()().dump({})
         self.id = aggr_config["id"]
 
+        self.comment = aggr_config.get("comment", "")
         self.customer = aggr_config.get("customer")
         self.pack_id = pack_id
         self.node = BINodeGenerator(aggr_config["node"])
@@ -59,6 +60,7 @@ class BIAggregation:
     def serialize(self):
         return {
             "id": self.id,
+            "comment": self.comment,
             "customer": self.customer,
             "groups": self.groups.serialize(),
             "node": self.node.serialize(),
@@ -119,6 +121,11 @@ class BIAggregationSchema(Schema):
         default="",
         example="aggr1",
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+    )
+    comment = String(
+        description="An optional comment that may be used to explain the purpose of this object.",
+        allow_none=True,
+        example="Rule comment",
     )
     customer = String(
         description="CME Edition only: The customer id for this aggregation.",

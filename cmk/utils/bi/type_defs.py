@@ -28,6 +28,7 @@ AggrConfigDict = TypedDict(
     "AggrConfigDict",
     {
         'id': Any,
+        'comment': str,
         'customer': Any,
         'groups': GroupConfigDict,
         'node': NodeDict,

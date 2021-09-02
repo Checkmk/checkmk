@@ -96,7 +96,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     Optional,
-    TextAreaUnicode,
+    RuleComment,
     TextInput,
     Transform,
     ValueSpec,
@@ -335,6 +335,7 @@ class ModeBIEditPack(ABCBIMode):
             title=_("BI Pack Properties"),
             optional_keys=False,
             render="form",
+            show_more_keys=["comment"],
             elements=
             [("id", id_element),
              ("title",
@@ -343,7 +344,7 @@ class ModeBIEditPack(ABCBIMode):
                   help=_("A descriptive title for this rule pack"),
                   allow_empty=False,
                   size=64,
-              )),
+              )), ("comment", RuleComment()),
              ("contact_groups",
               ListOf(
                   ContactGroupSelection(),
@@ -1153,13 +1154,7 @@ class ModeBIEditRule(ABCBIMode):
                  allow_empty=False,
                  size=80,
              )),
-            ("comment",
-             TextAreaUnicode(
-                 title=_("Comment"),
-                 help=_("An arbitrary comment of this rule for you."),
-                 cols=80,
-                 rows=4,
-             )),
+            ("comment", RuleComment()),
             ("docu_url",
              TextInput(
                  title=_("Documentation URL"),
@@ -1270,6 +1265,7 @@ class ModeBIEditRule(ABCBIMode):
             BIRuleForm(title=_("Rule Properties"),
                        optional_keys=False,
                        render="form",
+                       show_more_keys=["comment"],
                        elements=elements,
                        headers=[
                            (_("Rule Properties"), [
@@ -1559,8 +1555,10 @@ class BIModeEditAggregation(ABCBIMode):
             title=_("Aggregation Properties"),
             optional_keys=False,
             render="form",
+            show_more_keys=["comment"],
             elements=cme_elements + [
                 ("id", id_valuespec),
+                ("comment", RuleComment()),
                 ("groups", cls._get_vs_aggregation_groups()),
                 ("node", bi_valuespecs.get_bi_aggregation_node_choices()),
                 ("computation_options", cls._get_vs_computation_options()),

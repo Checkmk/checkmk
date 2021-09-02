@@ -6,27 +6,28 @@
 
 # pylint: disable=protected-access
 
-import re
 from typing import Dict, List
 
 import pytest
+from _pytest.monkeypatch import MonkeyPatch
 
 # No stub file
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, HostName, LegacyCheckParameters
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import check_table, config
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.check_utils import Service
+from cmk.base.check_table import HostCheckTable
+from cmk.base.check_utils import Service, ServiceID
 
 
 # TODO: This misses a lot of cases
 # - different get_check_table arguments
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
-    "hostname,expected_result",
+    "hostname_str,expected_result",
     [
         ("empty-host", {}),
         # Skip the autochecks automatically for ping hosts
@@ -115,7 +116,9 @@ from cmk.base.check_utils import Service
             ),
         }),
     ])
-def test_get_check_table(monkeypatch, hostname, expected_result):
+def test_get_check_table(monkeypatch: MonkeyPatch, hostname_str: str,
+                         expected_result: HostCheckTable) -> None:
+    hostname = HostName(hostname_str)
     autochecks = {
         "ping-host": [Service(
             CheckPluginName("smart_temp"),
@@ -196,11 +199,13 @@ def test_get_check_table(monkeypatch, hostname, expected_result):
 
 
 @pytest.mark.usefixtures("fix_register")
-@pytest.mark.parametrize("hostname, expected_result", [
+@pytest.mark.parametrize("hostname_str, expected_result", [
     ("mgmt-board-ipmi", [(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X")]),
     ("ipmi-host", [(CheckPluginName("ipmi_sensors"), "TEMP Y")]),
 ])
-def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
+def test_get_check_table_of_mgmt_boards(monkeypatch: MonkeyPatch, hostname_str: str,
+                                        expected_result: List[ServiceID]) -> None:
+    hostname = HostName(hostname_str)
     autochecks = {
         "mgmt-board-ipmi": [
             Service(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X",
@@ -242,14 +247,16 @@ def test_get_check_table_of_mgmt_boards(monkeypatch, hostname, expected_result):
 # verify static check outcome, including timespecific params
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
-    "hostname,expected_result",
+    "hostname_str,expected_result",
     [
         ("df_host", [(CheckPluginName("df"), "/snap/core/9066")]),
         # old format, without TimespecificParamList
         ("df_host_1", [(CheckPluginName("df"), "/snap/core/9067")]),
         ("df_host_2", [(CheckPluginName("df"), "/snap/core/9068")]),
     ])
-def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result):
+def test_get_check_table_of_static_check(monkeypatch: MonkeyPatch, hostname_str: str,
+                                         expected_result: List[ServiceID]) -> None:
+    hostname = HostName(hostname_str)
     static_checks = {
         "df_host": [
             Service(CheckPluginName('df'), '/snap/core/9066', u'Filesystem /snap/core/9066', [{
@@ -351,8 +358,9 @@ def test_get_check_table_of_static_check(monkeypatch, hostname, expected_result)
         'levels': (4, 5, 6, 7),
     },
 ])
-def test_check_table__get_static_check_entries(monkeypatch, check_group_parameters):
-    hostname = "hostname"
+def test_check_table__get_static_check_entries(
+        monkeypatch: MonkeyPatch, check_group_parameters: LegacyCheckParameters) -> None:
+    hostname = HostName("hostname")
     static_parameters = {
         'levels': (1, 2, 3, 4),
     }

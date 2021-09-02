@@ -255,7 +255,11 @@ def livestatus_lql(host_names: List[HostName],
                    columns: List[str],
                    service_description: Optional[ServiceName] = None) -> str:
     query_filter = u"Columns: %s\n" % u" ".join(columns)
-    query_filter += lq_logic(u"Filter: host_name =", host_names, u"Or")
+    query_filter += lq_logic(
+        u"Filter: host_name =",
+        [str(hostname) for hostname in host_names],
+        u"Or",
+    )
     if service_description == "_HOST_" or service_description is None:
         what = 'host'
     else:

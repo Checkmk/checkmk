@@ -4,7 +4,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Dict
+
 from cmk.gui.plugins.metrics import check_metrics, KB, m, MB  # GB,; TB,
+from cmk.gui.plugins.metrics.utils import CheckMetricEntry
 
 # .
 #   .--Checks--------------------------------------------------------------.
@@ -18,6 +21,7 @@ from cmk.gui.plugins.metrics import check_metrics, KB, m, MB  # GB,; TB,
 #   |  How various checks' performance data translate into the known       |
 #   |  metrics                                                             |
 #   '----------------------------------------------------------------------'
+
 check_metrics["check_mk_active-icmp"] = {
     "rta": {"scale": m},
     "rtmax": {"scale": m},
@@ -151,7 +155,7 @@ check_metrics["check_mk-ibm_svc_nodestats_diskio"] = {
     "read": {"name": "disk_read_throughput"},
     "write": {"name": "disk_write_throughput"},
 }
-memory_simple_translation = {
+memory_simple_translation: Dict[str, CheckMetricEntry] = {
     "memory_used": {
         "name": "mem_used",
         "deprecated": "2.0.0i1",
@@ -161,7 +165,7 @@ check_metrics["check_mk-hp_procurve_mem"] = memory_simple_translation
 check_metrics["check_mk-datapower_mem"] = memory_simple_translation
 check_metrics["check_mk-ucd_mem"] = memory_simple_translation
 check_metrics["check_mk-netscaler_mem"] = memory_simple_translation
-ram_used_swap_translation = {
+ram_used_swap_translation: Dict[str, CheckMetricEntry] = {
     "ramused": {
         "name": "mem_used",
         "scale": MB,
@@ -372,7 +376,7 @@ check_metrics["check_mk-mem_vmalloc"] = {
     "used": {"name": "mem_lnx_vmalloc_used"},
     "chunk": {"name": "mem_lnx_vmalloc_chunk"},
 }
-tcp_conn_stats_translation = {
+tcp_conn_stats_translation: Dict[str, CheckMetricEntry] = {
     "SYN_SENT": {"name": "tcp_syn_sent"},
     "SYN_RECV": {"name": "tcp_syn_recv"},
     "ESTABLISHED": {"name": "tcp_established"},
@@ -405,7 +409,7 @@ df_basic_perfvarnames = [
     "dedup_rate",
     "file_count",
 ]
-df_translation = {
+df_translation: Dict[str, CheckMetricEntry] = {
     "~(?!%s).*$"
     % "|".join(df_basic_perfvarnames): {"name": "fs_used", "scale": MB, "deprecated": "2.0.0i1"},
     "fs_used": {"scale": MB},
@@ -497,7 +501,7 @@ check_metrics["check_mk-netapp_api_volumes"] = {
     "iscsi_write_latency": {"scale": m},
     "iscsi_other_latency": {"scale": m},
 }
-disk_utilization_translation = {
+disk_utilization_translation: Dict[str, CheckMetricEntry] = {
     "disk_utilization": {"scale": 100.0},
 }
 check_metrics["check_mk-diskstat"] = disk_utilization_translation
@@ -512,7 +516,7 @@ check_metrics["check_mk-arbor_peakflow_sp_disk_usage"] = disk_utilization_transl
 check_metrics["check_mk-arbor_peakflow_tms_disk_usage"] = disk_utilization_translation
 check_metrics["check_mk-arbor_pravail_disk_usage"] = disk_utilization_translation
 # in=0;;;0; inucast=0;;;; innucast=0;;;; indisc=0;;;; inerr=0;0.01;0.1;; out=0;;;0; outucast=0;;;; outnucast=0;;;; outdisc=0;;;; outerr=0;0.01;0.1;; outqlen=0;;;0;
-if_translation = {
+if_translation: Dict[str, CheckMetricEntry] = {
     "in": {"name": "if_in_bps", "scale": 8},
     "out": {"name": "if_out_bps", "scale": 8},
     "total": {"name": "if_total_bps", "scale": 8},
@@ -686,7 +690,7 @@ check_metrics["check_mk-apc_symmetra_elphase"] = {
     "OutputLoad": {"name": "output_load"},
     "batcurr": {"name": "battery_current"},
 }
-cpu_util_unix_translate = {
+cpu_util_unix_translate: Dict[str, CheckMetricEntry] = {
     "wait": {"name": "io_wait"},
     "guest": {"name": "cpu_util_guest"},
     "steal": {"name": "cpu_util_steal"},
@@ -732,7 +736,7 @@ check_metrics["check_mk-ibm_svc_systemstats_cache"] = {
     "write_cache_pc": {"name": "write_cache_usage"},
     "total_cache_pc": {"name": "total_cache_usage"},
 }
-mem_vsphere_hostsystem = {
+mem_vsphere_hostsystem: Dict[str, CheckMetricEntry] = {
     "usage": {"name": "mem_used", "deprecated": "2.0.0i1"},
     "mem_total": {"auto_graph": False},
 }
@@ -745,7 +749,7 @@ check_metrics["check_mk-ibm_svc_host"] = {
     "offline": {"name": "hosts_offline"},
     "other": {"name": "hosts_other"},
 }
-juniper_mem = {
+juniper_mem: Dict[str, CheckMetricEntry] = {
     "usage": {"name": "mem_used", "deprecated": "2.0.0i1"},
 }
 check_metrics["check_mk-juniper_screenos_mem"] = juniper_mem
@@ -977,7 +981,7 @@ check_metrics["check_mk-veeam_client"] = {
 check_metrics["check_mk-cups_queues"] = {
     "jobs": {"name": "printer_queue"},
 }
-mq_translation = {
+mq_translation: Dict[str, CheckMetricEntry] = {
     "queue": {"name": "messages_in_queue"},
 }
 check_metrics["check_mk-mq_queues"] = mq_translation
@@ -1047,7 +1051,7 @@ check_metrics["check_mk-job"] = {
     "writes": {"name": "disk_write_throughput"},
     "real_time": {"name": "job_duration"},
 }
-ps_translation = {
+ps_translation: Dict[str, CheckMetricEntry] = {
     "count": {"name": "processes"},
     "vsz": {
         "name": "process_virtual_size",
@@ -1111,7 +1115,7 @@ check_metrics["check_mk-mssql_counters_transactions"] = {
     "write_transactions/sec": {"name": "write_transactions_per_second"},
     "tracked_transactions/sec": {"name": "tracked_transactions_per_second"},
 }
-cisco_mem_translation = {
+cisco_mem_translation: Dict[str, CheckMetricEntry] = {
     "mem_used": {"name": "mem_used_percent", "deprecated": "2.0.0i1"},
 }
 check_metrics["check_mk-cisco_cpu_memory"] = cisco_mem_translation

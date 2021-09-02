@@ -127,7 +127,7 @@ def test_transform_dashlet_status_display(entry, result):
             id="no single_infos",
         ),
         pytest.param(
-            {"host": "heute"},
+            {"host": {"host": "heute"}},
             ["host"],
             "Best graph",
             {},
@@ -138,7 +138,7 @@ def test_transform_dashlet_status_display(entry, result):
             id="host single_infos",
         ),
         pytest.param(
-            {"service": "CPU utilization"},
+            {"service": {"service": "CPU utilization"}},
             ["service"],
             "Best graph",
             {},
@@ -150,8 +150,8 @@ def test_transform_dashlet_status_display(entry, result):
         ),
         pytest.param(
             {
-                "host": "vm-123",
-                "service": "CPU utilization",
+                "host": {"host": "vm-123"},
+                "service": {"service": "CPU utilization"},
             },
             ["host", "service"],
             "Best graph",
@@ -165,8 +165,8 @@ def test_transform_dashlet_status_display(entry, result):
         ),
         pytest.param(
             {
-                "host": "vm-123",
-                "service": "CPU utilization",
+                "host": {"host": "vm-123"},
+                "service": {"service": "CPU utilization"},
             },
             ["host", "service"],
             "Best graph $HOST_ALIAS$",
@@ -184,8 +184,8 @@ def test_transform_dashlet_status_display(entry, result):
         ),
         pytest.param(
             {
-                "host": "vm-123",
-                "service": "CPU utilization",
+                "host": {"host": "vm-123"},
+                "service": {"service": "CPU utilization"},
             },
             ["host", "service"],
             "Best graph $HOST_ALIAS$",

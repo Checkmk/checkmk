@@ -211,9 +211,38 @@ class SearchResult:
 SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
 
 # Metric & graph specific
+
+
+class _UnitInfoRequired(TypedDict):
+    title: str
+    symbol: str
+    render: Callable[[Any], str]
+    js_render: str
+
+
+class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
+    id: str
+    stepping: str
+    color: str
+    graph_unit: Callable[[List[Union[int, float]]], Tuple[str, List[str]]]
+    description: str
+    valuespec: Any  # TODO: better typing
+
+
+class TranslatedMetric(TypedDict):
+    orig_name: List[str]
+    value: float
+    scalar: Dict[str, float]
+    scale: List[float]
+    auto_graph: bool
+    title: str
+    unit: UnitInfo
+    color: str
+
+
 GraphIdentifier = Tuple[str, Any]
 RenderingExpression = Tuple[Any, ...]
-TranslatedMetrics = Dict[str, Dict[str, Any]]
+TranslatedMetrics = Dict[str, TranslatedMetric]
 PerfometerSpec = Dict[str, Any]
 PerfdataTuple = Tuple[
     str, float, str, Optional[float], Optional[float], Optional[float], Optional[float]

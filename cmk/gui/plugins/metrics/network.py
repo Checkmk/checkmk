@@ -1405,7 +1405,7 @@ metric_info["read_b_op"] = {
     "title": _("Read size per operation"),
     "unit": "bytes/op",
     "color": "#4080c0",
-    "render": cmk.utils.render.fmt_bytes,
+    "render": lambda value: cmk.utils.render.fmt_bytes(int(value)),
 }
 
 metric_info["read_retrans"] = {
@@ -1442,7 +1442,7 @@ metric_info["write_b_op"] = {
     "title": _("Writes size per operation"),
     "unit": "bytes/op",
     "color": "#4080c0",
-    "render": cmk.utils.render.fmt_bytes,
+    "render": lambda value: cmk.utils.render.fmt_bytes(int(value)),
 }
 
 metric_info["write_avg_rtt_ms"] = {

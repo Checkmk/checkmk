@@ -4,6 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import List, Tuple
+
 import cmk.utils.render
 
 from cmk.gui.i18n import _
@@ -120,7 +122,7 @@ unit_info["bytes/s"] = {
 }
 
 
-def physical_precision_list(values, precision, unit_symbol):
+def physical_precision_list(values, precision, unit_symbol) -> Tuple[str, List[str]]:
     if not values:
         reference = 0
     else:
@@ -144,7 +146,7 @@ unit_info["bits/s"] = {
 }
 
 
-def bytes_human_readable_list(values, *args, **kwargs):
+def bytes_human_readable_list(values, *args, **kwargs) -> Tuple[str, List[str]]:
     if not values:
         reference = 0
     else:

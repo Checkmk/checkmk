@@ -154,9 +154,14 @@ def test_create_graph_recipe_from_template():
 def test_metric_unit_color(expression, perf_string, check_command, result_color):
     metrics.fixup_unit_info()
     translated_metrics = metrics.translate_perf_data(perf_string, check_command)
+    translated_metric = translated_metrics.get(expression)
+    assert translated_metric is not None
+    unit = translated_metric.get("unit")
+    assert unit is not None
+    unit_id = unit.get("id")
     reference = {
         "color": result_color,
-        "unit": translated_metrics.get(expression, {}).get("unit", {}).get("id", ""),
+        "unit": unit_id,
     }
     assert gt.metric_unit_color(expression, translated_metrics, ["test"]) == reference
 

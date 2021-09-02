@@ -21,8 +21,10 @@ from typing import (
     List,
     Mapping,
     Optional,
+    overload,
     Set,
     Tuple,
+    TypedDict,
     TypeVar,
     Union,
 )
@@ -51,7 +53,9 @@ from cmk.gui.type_defs import (
     PerfometerSpec,
     RenderableRecipe,
     Row,
+    TranslatedMetric,
     TranslatedMetrics,
+    UnitInfo,
 )
 from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import (
@@ -66,6 +70,47 @@ TransformedAtom = TypeVar("TransformedAtom")
 StackElement = Union[Atom, TransformedAtom]
 GraphTemplate = Dict[str, Any]
 GraphRecipe = Dict[str, Any]
+
+
+class CheckMetricEntry(TypedDict, total=False):
+    scale: float
+    name: str
+    auto_graph: bool
+    deprecated: str
+
+
+class MetricInfo(TypedDict, total=False):
+    # title, unit and color should be required, but metric_info.get(xxx, {}) is
+    # used and is not compatible with requied keys
+    title: str
+    unit: str
+    color: str
+    help: str
+    render: Callable[[Union[float, int]], str]
+
+
+class MetricInfoExtended(TypedDict, total=False):
+    # this is identical to MetricInfo except unit, but one can not override the
+    # type of a field so we have to copy everything from MetricInfo
+    title: str
+    unit: UnitInfo
+    color: str
+    help: str
+    render: Callable[[Union[float, int]], str]
+
+
+class NormalizedPerfData(TypedDict):
+    orig_name: List[str]
+    value: float
+    scalar: Dict[str, float]
+    scale: List[float]
+    auto_graph: bool
+
+
+class TranslationInfo(TypedDict):
+    name: str
+    scale: float
+    auto_graph: bool
 
 
 class AutomaticDict(OrderedDict):
@@ -83,9 +128,9 @@ class AutomaticDict(OrderedDict):
 
 
 # TODO: Refactor to plugin_registry structures
-unit_info: Dict[str, Any] = {}
-metric_info: Dict[str, Dict[str, Any]] = {}
-check_metrics: Dict[str, Dict[str, Any]] = {}
+unit_info: Dict[str, UnitInfo] = {}
+metric_info: Dict[str, MetricInfo] = {}
+check_metrics: Dict[str, Dict[str, CheckMetricEntry]] = {}
 perfometer_info: List[Union[LegacyPerfometer, PerfometerSpec]] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
@@ -307,7 +352,7 @@ def _split_perf_data(perf_data_string: str) -> List[str]:
     return shlex.split(perf_data_string)
 
 
-def perfvar_translation(perfvar_name, check_command):
+def perfvar_translation(perfvar_name: str, check_command: str) -> TranslationInfo:
     """Get translation info for one performance var."""
     cm = check_metrics.get(check_command, {})
     translation_entry = cm.get(perfvar_name, {})  # Default: no translation necessary
@@ -327,7 +372,7 @@ def perfvar_translation(perfvar_name, check_command):
     }
 
 
-def scalar_bounds(perfvar_bounds, scale):
+def scalar_bounds(perfvar_bounds, scale) -> Dict[str, float]:
     """rescale "warn, crit, min, max" PERFVAR_BOUNDS values
 
     Return "None" entries if no performance data and hence no scalars are available
@@ -340,10 +385,10 @@ def scalar_bounds(perfvar_bounds, scale):
     return scalars
 
 
-def normalize_perf_data(perf_data, check_command):
+def normalize_perf_data(perf_data, check_command) -> Tuple[str, NormalizedPerfData]:
     translation_entry = perfvar_translation(perf_data[0], check_command)
 
-    new_entry = {
+    new_entry: NormalizedPerfData = {
         "orig_name": [perf_data[0]],
         "value": perf_data[1] * translation_entry["scale"],
         "scalar": scalar_bounds(perf_data[3:], translation_entry["scale"]),
@@ -355,11 +400,11 @@ def normalize_perf_data(perf_data, check_command):
     return translation_entry["name"], new_entry
 
 
-def get_metric_info(metric_name: str, color_index: int) -> Tuple[Dict[str, str], int]:
+def get_metric_info(metric_name: str, color_index: int) -> Tuple[MetricInfoExtended, int]:
 
     if metric_name not in metric_info:
         color_index += 1
-        mi = {
+        mi: MetricInfo = {
             "title": metric_name.title(),
             "unit": "",
             "color": get_palette_color_by_index(color_index),
@@ -367,10 +412,12 @@ def get_metric_info(metric_name: str, color_index: int) -> Tuple[Dict[str, str],
     else:
         mi = metric_info[metric_name].copy()
 
-    mi["unit"] = unit_info[mi["unit"]]
-    mi["color"] = parse_color_into_hexrgb(mi["color"])
+    mie: MetricInfoExtended = {}
+    mie.update(mi)  # type: ignore # https://github.com/python/mypy/issues/6462
+    mie["unit"] = unit_info[mi["unit"]]
+    mie["color"] = parse_color_into_hexrgb(mi["color"])
 
-    return mi, color_index
+    return mie, color_index
 
 
 def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetrics:
@@ -381,14 +428,25 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
     Result for this example:
     { "temp" : {"value" : 48.1, "scalar": {"warn" : 70, "crit" : 80}, "unit" : { ... } }}
     """
-    translated_metrics: Dict[str, Dict[str, Any]] = {}
+    translated_metrics: TranslatedMetrics = {}
     color_index = 0
     for entry in perf_data:
+        metric_name: str
 
-        metric_name, new_entry = normalize_perf_data(entry, check_command)
-
+        metric_name, normalized = normalize_perf_data(entry, check_command)
         mi, color_index = get_metric_info(metric_name, color_index)
-        new_entry.update(mi)
+        # https://github.com/python/mypy/issues/6462
+        # new_entry = normalized
+        new_entry: TranslatedMetric = {
+            "orig_name": normalized["orig_name"],
+            "value": normalized["value"],
+            "scalar": normalized["scalar"],
+            "scale": normalized["scale"],
+            "auto_graph": normalized["auto_graph"],
+            "title": mi["title"],
+            "unit": mi["unit"],
+            "color": mi["color"],
+        }
 
         if metric_name in translated_metrics:
             translated_metrics[metric_name]["orig_name"].extend(new_entry["orig_name"])
@@ -477,6 +535,22 @@ def split_expression(expression: str) -> Tuple[str, Optional[str], Optional[str]
     return expression, explicit_unit_name, explicit_color
 
 
+@overload
+def evaluate(
+    expression: str,
+    translated_metrics: TranslatedMetrics,
+) -> Tuple[float, UnitInfo, str]:
+    ...
+
+
+@overload
+def evaluate(
+    expression: Union[int, float],
+    translated_metrics: TranslatedMetrics,
+) -> Tuple[Optional[float], UnitInfo, str]:
+    ...
+
+
 # Evaluates an expression, returns a triple of value, unit and color.
 # e.g. "fs_used:max"    -> 12.455, "b", "#00ffc6",
 # e.g. "fs_used(%)"     -> 17.5,   "%", "#00ffc6",
@@ -490,7 +564,7 @@ def split_expression(expression: str) -> Tuple[str, Optional[str], Optional[str]
 def evaluate(
     expression: Union[str, int, float],
     translated_metrics: TranslatedMetrics,
-) -> Tuple[float, Dict[str, Any], str]:
+) -> Tuple[Optional[float], UnitInfo, str]:
     if isinstance(expression, (float, int)):
         return _evaluate_literal(expression, translated_metrics)
 
@@ -510,7 +584,7 @@ def evaluate(
 def _evaluate_rpn(
     expression: str,
     translated_metrics: TranslatedMetrics,
-) -> Tuple[float, Dict[str, Any], str]:
+) -> Tuple[float, UnitInfo, str]:
     # stack of (value, unit, color)
     return stack_resolver(
         expression.split(","),
@@ -610,7 +684,7 @@ def _operator_minmax(a, b, func):
 def _evaluate_literal(
     expression: Union[int, float, str],
     translated_metrics: TranslatedMetrics,
-) -> Tuple[float, Dict[str, Any], str]:
+) -> Tuple[Optional[float], UnitInfo, str]:
     if isinstance(expression, int):
         return float(expression), unit_info["count"], "#000000"
 
@@ -635,7 +709,7 @@ def _evaluate_literal(
         value = translated_metrics[varname]["value"]
         color = translated_metrics[varname]["color"]
 
-    if percent:
+    if percent and value is not None:
         maxvalue = translated_metrics[varname]["scalar"]["max"]
         if maxvalue != 0:
             value = 100.0 * float(value) / maxvalue
@@ -679,7 +753,7 @@ def get_graph_range(graph_template, translated_metrics):
 def replace_expressions(text, translated_metrics):
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
 
-    def eval_to_string(match):
+    def eval_to_string(match) -> str:
         expression = match.group()[2:-1]
         value, unit, _color = evaluate(expression, translated_metrics)
         if value is not None:

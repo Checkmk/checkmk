@@ -29,6 +29,8 @@ from typing import (
     Union,
 )
 
+from livestatus import LivestatusColumn, LivestatusResponse
+
 import cmk.utils.plugin_registry
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
 from cmk.utils.site import omd_site
@@ -53,7 +55,7 @@ from cmk.gui.plugins.metrics.valuespecs import transform_graph_render_options
 from cmk.gui.plugins.views.painters import host_state_short, service_state_short
 from cmk.gui.plugins.views.utils import get_all_views, get_permitted_views, transform_painter_spec
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, VisualContext
+from cmk.gui.type_defs import HTTPVariables, Row, SingleInfos, TranslatedMetric, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
@@ -103,12 +105,12 @@ def macro_mapping_from_context(
     macro_mapping = {"$DEFAULT_TITLE$": default_title}
     macro_mapping.update(
         {
-            macro: str(context[key])
+            macro: context[key][key]
             for macro, key in (
                 ("$HOST_NAME$", "host"),
                 ("$SERVICE_DESCRIPTION$", "service"),
             )
-            if key in context and key in single_infos
+            if key in context and key in context[key] and key in single_infos
         }
     )
 
@@ -1101,7 +1103,9 @@ def service_table_query(properties, context, column_generator):
     return _table_query(properties, context, column_generator, "services", ["host", "service"])
 
 
-def _table_query(properties, context, column_generator, table: str, infos: List[str]):
+def _table_query(
+    properties, context, column_generator, table: str, infos: List[str]
+) -> Tuple[List[str], LivestatusResponse]:
     filter_headers, only_sites = visuals.get_filter_headers(table, infos, context)
     columns = column_generator(properties, context)
 
@@ -1151,7 +1155,12 @@ def create_service_view_url(context):
     )
 
 
-def create_data_for_single_metric(properties, context, column_generator):
+def create_data_for_single_metric(
+    properties,
+    context: VisualContext,
+    column_generator: Callable[[Any, VisualContext], List[str]],
+) -> Tuple[List[Dict[str, Any]], List[Tuple[str, TranslatedMetric, Dict[str, LivestatusColumn]]]]:
+    # TODO: should return live value and historic values as two different elements, for better typing support.
     columns, data_rows = service_table_query(properties, context, column_generator)
 
     data = []

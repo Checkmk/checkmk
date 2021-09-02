@@ -69,6 +69,11 @@ export function enable_menu_entry(id, enabled) {
 }
 
 export function enable_menu_entries(css_class, enabled) {
+    const page_menu = document.getElementById("page_menu_bar");
+    if (!page_menu) {
+        return;
+    }
+
     let from, to;
     if (enabled) {
         from = "disabled";
@@ -78,10 +83,7 @@ export function enable_menu_entries(css_class, enabled) {
         to = "disabled";
     }
 
-    const elements = document
-        .getElementById("page_menu_bar")
-        .querySelectorAll(".entry." + css_class);
-    for (const element of elements) {
+    for (const element of page_menu.querySelectorAll(".entry." + css_class)) {
         utils.change_class(element, from, to);
     }
 }

@@ -204,3 +204,6 @@ def main(sys_argv=None):
         if opt_debug:
             raise
         sys.stderr.write('Unhandled error: %s' % traceback.format_exc())
+
+    sys.stdout.write('<<<check_mk>>>\n')
+    sys.stdout.write('AgentOS: FRITZ!OS\n')

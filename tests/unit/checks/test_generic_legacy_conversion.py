@@ -1498,7 +1498,6 @@ def test_no_new_or_vanished_legacy_checks(fix_plugin_legacy):
         'emc_isilon_diskstatus',
         'emc_isilon_fans',
         'emc_isilon_ifs',
-        'emc_isilon_iops',
         'emc_isilon_power',
         'emc_isilon_quota',
         'emc_isilon_temp',

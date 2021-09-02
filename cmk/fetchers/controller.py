@@ -13,7 +13,7 @@ import sys
 import traceback
 from pathlib import Path
 from types import FrameType
-from typing import Any, Dict, Iterator, List, NamedTuple, Optional
+from typing import Any, Final, Dict, Iterable, Iterator, List, NamedTuple, Optional
 
 import cmk.utils.cleanup
 import cmk.utils.paths as paths
@@ -76,29 +76,29 @@ class GlobalConfig(NamedTuple):
         }
 
 
-def _disable_timeout() -> None:
-    """ Disable alarming and remove any running alarms"""
+class Timeout:
+    def __init__(self, timeout: int, *, message: str) -> None:
+        self.timeout: Final = timeout
+        self.message: Final = message
+        self._signaled = False
 
-    signal.signal(signal.SIGALRM, signal.SIG_IGN)
-    signal.alarm(0)
+    @property
+    def signaled(self) -> bool:
+        return self._signaled
 
+    def _handler(self, signum: int, frame: Optional[FrameType]) -> None:
+        self._signaled = True
+        raise MKTimeout(self.message)
 
-def _enable_timeout(host_name: HostName, timeout: int) -> None:
-    """ Raises MKTimeout exception after timeout seconds"""
-    def _handler(signum: int, frame: Optional[FrameType]) -> None:
-        raise MKTimeout(f"Fetcher for host \"{host_name}\" timed out after {timeout} seconds")
+    def __enter__(self) -> 'Timeout':
+        self._signaled = False
+        signal.signal(signal.SIGALRM, self._handler)
+        signal.alarm(self.timeout)
+        return self
 
-    signal.signal(signal.SIGALRM, _handler)
-    signal.alarm(timeout)
-
-
-@contextlib.contextmanager
-def timeout_control(host_name: HostName, timeout: int) -> Iterator[None]:
-    _enable_timeout(host_name, timeout)
-    try:
-        yield
-    finally:
-        _disable_timeout()
+    def __exit__(self, *_args) -> None:
+        signal.signal(signal.SIGALRM, signal.SIG_IGN)
+        signal.alarm(0)
 
 
 class Command(NamedTuple):
@@ -238,7 +238,10 @@ def _run_fetchers_from_file(
 
     """
     messages: List[protocol.FetcherMessage] = []
-    with timeout_control(host_name, timeout):
+    with Timeout(
+            timeout,
+            message=f"Fetcher for host \"{host_name}\" timed out after {timeout} seconds",
+    ) as timeout_manager:
         fetchers = tuple(_parse_config(serial, host_name))
         try:
             # fill as many messages as possible before timeout exception raised
@@ -254,6 +257,9 @@ def _run_fetchers_from_file(
                 ) for fetcher in fetchers[len(messages):]
             ])
 
+    if timeout_manager.signaled:
+        messages = _replace_netsnmp_obfuscated_timeout(messages, timeout_manager.message)
+
     logger.debug("Produced %d messages", len(messages))
     write_bytes(bytes(protocol.CMCMessage.result_answer(*messages)))
     for msg in filter(
@@ -268,6 +274,19 @@ def _run_fetchers_from_file(
                 msg.raw_data.error,
                 msg.raw_data.error.__traceback__,
             )))
+
+
+def _replace_netsnmp_obfuscated_timeout(messages: Iterable[protocol.FetcherMessage],
+                                        timeout_msg: str) -> List[protocol.FetcherMessage]:
+    return [
+        protocol.FetcherMessage.timeout(
+            FetcherType.SNMP,
+            MKTimeout(timeout_msg),
+            Snapshot.null(),
+        ) if (msg.header.fetcher_type is FetcherType.SNMP and
+              msg.header.payload_type is protocol.PayloadType.ERROR and
+              isinstance(msg.raw_data.error, SystemError)) else msg for msg in messages
+    ]
 
 
 def make_local_config_path(serial: ConfigSerial, host_name: HostName) -> Path:

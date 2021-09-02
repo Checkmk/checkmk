@@ -111,7 +111,6 @@ def check_mem_used(params: Mapping, section: memory.SectionMemUsed) -> CheckResu
         totalused_descr,
         totalused.bytes,
         memtotal.bytes,
-        ("ignore", (None, None)),
         label_total="RAM" if totalused_descr != "RAM" else "",
     )
     assert isinstance(result, Result)
@@ -168,7 +167,6 @@ def check_mem_used(params: Mapping, section: memory.SectionMemUsed) -> CheckResu
             "RAM",
             ramused.bytes,  # <- caches subtracted
             memtotal.bytes,
-            ("ignore", (None, None)),
         )
         if swaptotal is not None and swaptotal.bytes:
             assert swapused is not None
@@ -176,7 +174,6 @@ def check_mem_used(params: Mapping, section: memory.SectionMemUsed) -> CheckResu
                 "Swap",
                 swapused.bytes,
                 swaptotal.bytes,
-                ("ignore", (None, None)),
             )
         if pagetables:
             yield Result(state=State.OK, summary="Pagetables: %s" % pagetables.render())

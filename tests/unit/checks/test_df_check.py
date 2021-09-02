@@ -548,6 +548,23 @@ def make_test_df_params():
             info_df_lnx,
             [],
         ),
+        (
+            "btrfs /dev/sda1",
+            {"show_volume_name": True},
+            info_df_btrfs,
+            [
+                (0, "[/dev/sda1]"),
+                (
+                    0,
+                    "21.13% used (4.23 of 20.00 GB)",
+                    [
+                        ("fs_used", 4327.29296875, 16383.2, 18431.1, 0, 20479.0),
+                        ("fs_size", 20479.0, None, None, None, None),
+                        ("fs_used_percent", 21.130391956394355),
+                    ],
+                ),
+            ],
+        ),
     ],
 )
 def test_df_check_with_parse(item, params, info, expected_result):

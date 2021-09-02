@@ -223,6 +223,17 @@ fs_reserved_elements: List[_Tuple[str, ValueSpec]] = [
     ),
 ]
 
+fs_volume_name: List[_Tuple[str, ValueSpec]] = [
+    (
+        "show_volume_name",
+        Checkbox(
+            title=_("Show volume name in service output"),
+            label="Enable",
+            default_value=False,
+        ),
+    ),
+]
+
 fs_inodes_elements = [
     (
         "inodes_levels",
@@ -466,6 +477,7 @@ filesystem_elements: List[_Tuple[str, ValueSpec]] = (
     fs_levels_elements
     + fs_levels_elements_hack
     + fs_reserved_elements
+    + fs_volume_name
     + fs_inodes_elements
     + fs_magic_elements
     + size_trend_elements

@@ -231,7 +231,11 @@ def check_df(item, params, parsed):
         for df_inode in df_inodes
     ]
 
-    return df_check_filesystem_list_coroutine(item, params, raw_df_blocks, raw_df_inodes)
+    if params.get("show_volume_name"):
+        volume_name = [d.device for d in df_blocks if d.mountpoint == item][0]
+        yield 0, f"[{volume_name}]"
+
+    yield from df_check_filesystem_list_coroutine(item, params, raw_df_blocks, raw_df_inodes)
 
 
 check_info["df"] = {

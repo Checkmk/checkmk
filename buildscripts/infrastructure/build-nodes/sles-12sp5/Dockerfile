@@ -2,6 +2,9 @@ ARG IMAGE_SLES_12SP5
 # hadolint ignore=DL3006
 FROM ${IMAGE_SLES_12SP5}
 
+SHELL ["/bin/bash", "-c"]
+ENV PATH="/opt/bin:${PATH}"
+
 ARG ARTIFACT_STORAGE
 
 RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles12sp5 sles12sp5 \
@@ -31,7 +34,6 @@ RUN zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
     bind-utils \
-    chrpath \
     curl \
     flex \
     freeradius-client-devel \
@@ -42,9 +44,6 @@ RUN zypper ref -s \
     git \
     glib2-devel \
     groff \
-    gtk-doc \
-    iputils \
-    joe \
     krb5-devel \
     libXpm-devel \
     libbz2-devel \
@@ -86,9 +85,13 @@ RUN zypper ref -s \
     tk-devel \
     unzip \
     valgrind \
-    vim \
     wget \
     which \
+    chrpath \
+    joe \
+    gtk-doc \
+    iputils \
+    vim \
     && zypper clean -a
 
 # Install our standard tool chain for building

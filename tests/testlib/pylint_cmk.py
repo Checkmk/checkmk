@@ -7,12 +7,12 @@
 # pylint: disable=redefined-outer-name
 # Library for pylint checks of Checkmk
 
-import getpass
 import glob
 import multiprocessing
 import os
 import subprocess
 import time
+from pathlib import Path
 
 from tests.testlib import cmk_path, is_enterprise_repo, repo_path
 
@@ -38,7 +38,7 @@ def add_file(f, path):
     f.write("# ORIG-FILE: " + relpath + "\n")
     f.write("#\n")
     f.write("\n")
-    f.write(open(path).read())
+    f.write(Path(path).read_text())
 
 
 def run_pylint(base_path, check_files):
@@ -105,7 +105,8 @@ def is_python_file(path, shebang_name=None):
         return False
 
     # Only add python files
-    shebang = open(path, "r").readline().rstrip()
+    with open(path, "r") as f:
+        shebang = f.readline().rstrip()
     if shebang.startswith("#!") and shebang.endswith(shebang_name):
         return True
 
@@ -145,7 +146,8 @@ class CMKFixFileMixin:
         return os.path.relpath(msg.abspath, cmk_path())
 
     def _orig_location_from_compiled_file(self, msg):
-        lines = open(msg.abspath).readlines()
+        with open(msg.abspath) as fmsg:
+            lines = fmsg.readlines()
         line_nr = msg.line
         orig_file, went_back = None, -3
         while line_nr > 0:

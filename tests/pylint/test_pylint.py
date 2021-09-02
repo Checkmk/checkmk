@@ -12,6 +12,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -55,7 +56,7 @@ def test_pylint(pylint_test_dir, capsys):
 
 def _get_files_to_check(pylint_test_dir):
     # Add the compiled files for things that are no modules yet
-    open(pylint_test_dir + "/__init__.py", "w")
+    Path(pylint_test_dir + "/__init__.py").touch()
     _compile_check_and_inventory_plugins(pylint_test_dir)
 
     # Not checking compiled check, inventory, bakery plugins with Python 3

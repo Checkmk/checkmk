@@ -155,4 +155,19 @@ def patch_git_after_checkout(EDITION, CMK_VERS) {
     set_version(CMK_VERS)
 }
 
+def delete_non_cre_files() {
+    non_cre_paths = [
+        "enterprise",
+        "managed",
+        "check_mk_enterprise",
+        "check_mk_managed",
+        "cee",
+        "cme",
+        "cee.py",
+        "cme.py"
+    ]
+    find_pattern = non_cre_paths.collect({p -> "-name ${p}"}).join(" -or ")
+    sh "bash -c \"find . \\( ${find_pattern} \\) -prune -print -exec rm -r {} \\;\""
+}
+
 return this

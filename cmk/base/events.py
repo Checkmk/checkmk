@@ -758,12 +758,14 @@ def add_context_to_environment(plugin_context: EventContext, prefix: str) -> Non
 # would be added as:
 #   PARAMETER_LVL1_1_VALUE = 42
 #   PARAMETER_LVL1_2_VALUE = 13
-def add_to_event_context(plugin_context: EventContext, prefix: str, param: object) -> None:
-    if isinstance(param, list):
+def add_to_event_context(context: EventContext, prefix: str, param: object) -> None:
+    if isinstance(param, (list, tuple)):
         if all(isinstance(p, str) for p in param):
-            plugin_context[prefix + "S"] = " ".join(param)
+            # TODO: Why on earth do we have these arbitrary differences? Can we unify this?
+            suffix, separator = ("S", " ") if isinstance(param, list) else ("", "\t")
+            add_to_event_context(context, prefix + suffix, separator.join(param))
         for nr, value in enumerate(param, start=1):
-            add_to_event_context(plugin_context, f"{prefix}_{nr}", value)
+            add_to_event_context(context, f"{prefix}_{nr}", value)
     elif isinstance(param, dict):  # NOTE: We only handle Dict[str, Any].
         for key, value in param.items():
             varname = f"{prefix}_{key.upper()}"
@@ -774,20 +776,13 @@ def add_to_event_context(plugin_context: EventContext, prefix: str, param: objec
                 value = config.get_http_proxy(value)
                 if value is None:
                     continue
-            add_to_event_context(plugin_context, varname, value)
-    elif isinstance(param, str):
-        plugin_context[prefix] = param
-    elif isinstance(param, (int, float)):  # NOTE: bool is a subclass of int!
-        plugin_context[prefix] = str(param)
+            add_to_event_context(context, varname, value)
+    elif isinstance(param, (str, int, float)):  # NOTE: bool is a subclass of int!
+        context[prefix] = str(param)
     elif param is None:
-        plugin_context[prefix] = ""
-    elif isinstance(param, tuple):
-        if all(isinstance(p, str) for p in param):
-            plugin_context[prefix] = "\t".join(param)
-        for nr, value in enumerate(param, start=1):
-            add_to_event_context(plugin_context, f"{prefix}_{nr}", value)
+        context[prefix] = ""
     else:
-        plugin_context[prefix] = repr(param)  # Should never happen
+        context[prefix] = repr(param)  # Should never happen
 
 
 # int() function that return 0 for strings the

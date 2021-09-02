@@ -1175,7 +1175,11 @@ def paint_stalified(row: Row, text: CellContent) -> CellSpec:
 
 
 def paint_host_list(site: SiteId, hosts: List[HostName]) -> CellSpec:
-    return "", ", ".join(cmk.gui.view_utils.get_host_list_links(site, hosts))
+    return "", ", ".join(
+        cmk.gui.view_utils.get_host_list_links(
+            site,
+            [str(host) for host in hosts],
+        ))
 
 
 def format_plugin_output(output: str, row: Row) -> HTML:

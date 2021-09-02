@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
@@ -207,16 +206,17 @@ class ModeAuditLog(WatoMode):
             config.user.need_permission("wato.clear_auditlog")
             config.user.need_permission("wato.edit")
             return self._clear_audit_log_after_confirm()
+
+        if html.request.var("_action") == "csv":
+            config.user.need_permission("wato.auditlog")
+            return self._export_audit_log(self._parse_audit_log())
+
         return None
 
     def page(self):
         self._options.update(self._get_audit_log_options_from_request())
 
         audit = self._parse_audit_log()
-
-        if html.request.var("_action") == "csv":
-            config.user.need_permission("wato.auditlog")
-            return self._export_audit_log(audit)
 
         if not audit:
             html.show_message(_("Found no matching entry."))

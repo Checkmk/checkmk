@@ -101,10 +101,7 @@ def check_mtr(item, params, parsed):
 
     for idx in range(0, hc):
         state, text, perfdata = get_hop_info(hops, idx + 1, apply_levels=(idx + 1 == hc))
-        if state is None:
-            # This is perfdata from a hop, we do not yield it yet (looks ugly..)
-            hop_perfdata.extend(perfdata)
-        else:
+        if state is not None:
             # Last hop with state, text and perfdata. Yield everything we have
             yield 0, "Number of Hops: %d" % hc, hop_perfdata
             yield state, text + "\r\n%s" % format_hopnames(hopnames), perfdata

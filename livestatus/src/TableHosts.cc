@@ -38,7 +38,7 @@
 #include "IntLambdaColumn.h"
 #include "ListLambdaColumn.h"
 #include "Logger.h"
-#include "LogwatchListColumn.h"
+#include "LogwatchList.h"
 #include "MacroExpander.h"
 #include "Metric.h"
 #include "MonitoringCore.h"
@@ -757,10 +757,17 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         "The file content of the structured status of the Check_MK HW/SW-Inventory",
         offsets, [mc]() { return mc->structuredStatusPath(); },
         [](const host &r) { return std::filesystem::path{r.name}; }));
-    table->addColumn(std::make_unique<LogwatchListColumn>(
+    table->addColumn(std::make_unique<ListColumn::Callback<host>>(
         prefix + "mk_logwatch_files",
         "This list of logfiles with problems fetched via mk_logwatch", offsets,
-        mc));
+        [mc](const host &hst, const Column &col) {
+            auto dir =
+                mc->mkLogwatchPath().empty() || std::string{hst.name}.empty()
+                    ? std::filesystem::path()
+                    : std::filesystem::path(mc->mkLogwatchPath()) /
+                          pnp_cleanup(hst.name);
+            return getLogwatchList(dir, col);
+        }));
 
     table->addDynamicColumn(std::make_unique<DynamicFileColumn<host>>(
         prefix + "mk_logwatch_file",

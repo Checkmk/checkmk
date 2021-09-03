@@ -83,9 +83,10 @@ template <class T, class U>
 class ListColumn::Callback : public ListColumn {
     using f0_t = std::function<std::vector<U>(const T&)>;
     using f1_t = std::function<std::vector<U>(const T&, const contact*)>;
+    using f2_t = std::function<std::vector<U>(const T&, const Column&)>;
 
 protected:
-    using function_type = std::variant<f0_t, f1_t>;
+    using function_type = std::variant<f0_t, f1_t, f2_t>;
 
 public:
     Callback(const std::string& name, const std::string& description,
@@ -133,6 +134,9 @@ private:
         }
         if (std::holds_alternative<f1_t>(f_)) {
             return std::get<f1_t>(f_)(*data, auth_user);
+        }
+        if (std::holds_alternative<f2_t>(f_)) {
+            return std::get<f2_t>(f_)(*data, *this);
         }
         throw std::runtime_error("unreachable");
     }

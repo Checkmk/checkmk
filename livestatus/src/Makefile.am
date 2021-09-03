@@ -135,7 +135,7 @@ liblivestatus_a_SOURCES = \
         LogEntry.cc \
         Logfile.cc \
         Logger.cc \
-        LogwatchListColumn.cc \
+        LogwatchList.cc \
         MacroExpander.cc \
         Metric.cc \
         NagiosCore.cc \

@@ -9,7 +9,7 @@ description:
  are configured. In this case if the value is
  above or below these levels, the service state
  will be critical.
- If parameters are configured in WATO then they will be prefered.
+ If parameters are configured in WATO then they will be preferred.
 
 item:
  A descriptive name of the sensor, followed by " - ", followed by

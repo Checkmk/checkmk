@@ -57,7 +57,7 @@ def _parameter_valuespec_job():
         ("outcome_on_cluster",
          DropdownChoice(
              title="%s - %s" % (
-                 _("Clusters: Prefered check result of local checks"),
+                 _("Clusters: Preferred check result of local checks"),
                  _deprecation_message(),
              ),
              choices=[],

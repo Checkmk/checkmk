@@ -84,7 +84,7 @@ def get_cluster_check_function(
             label="active",
             selector=State.worst,
             levels_additional_nodes_count=(1, _INF),
-            unprefered_node_state=State.WARN,
+            unpreferred_node_state=State.WARN,
         )
 
     if mode == "worst":
@@ -96,7 +96,7 @@ def get_cluster_check_function(
             label="worst",
             selector=State.worst,
             levels_additional_nodes_count=(_INF, _INF),
-            unprefered_node_state=State.OK,
+            unpreferred_node_state=State.OK,
         )
 
     if mode == "best":
@@ -108,7 +108,7 @@ def get_cluster_check_function(
             label="best",
             selector=State.best,
             levels_additional_nodes_count=(_INF, _INF),
-            unprefered_node_state=State.OK,
+            unpreferred_node_state=State.OK,
         )
 
     raise ValueError(mode)
@@ -122,7 +122,7 @@ def _cluster_check(
     label: str,
     selector: Selector,
     levels_additional_nodes_count: Tuple[float, float],
-    unprefered_node_state: State,
+    unpreferred_node_state: State,
     **cluster_kwargs: Any,
 ) -> CheckResult:
 
@@ -130,8 +130,8 @@ def _cluster_check(
         node_results=executor(check_function, cluster_kwargs),
         label=label,
         selector=selector,
-        prefered=clusterization_parameters.get('primary_node'),
-        unprefered_node_state=unprefered_node_state,
+        preferred=clusterization_parameters.get('primary_node'),
+        unpreferred_node_state=unpreferred_node_state,
     )
     if summarizer.is_empty():
         return summarizer.raise_for_ignores()
@@ -157,18 +157,18 @@ class Summarizer:
         node_results: NodeResults,
         label: str,
         selector: Selector,
-        prefered: Optional[str],
-        unprefered_node_state: State,
+        preferred: Optional[str],
+        unpreferred_node_state: State,
     ) -> None:
         self._node_results = node_results
         self._label = label.title()
         self._selector = selector
-        self._prefered = prefered
-        self._unprefered_node_state = unprefered_node_state
+        self._preferred = preferred
+        self._unpreferred_node_state = unpreferred_node_state
 
         selected_nodes = self._get_selected_nodes(node_results.results, selector)
         # fallback: arbitrary, but comprehensible choice.
-        self._pivoting = prefered if prefered in selected_nodes else sorted(selected_nodes)[0]
+        self._pivoting = preferred if preferred in selected_nodes else sorted(selected_nodes)[0]
 
     @staticmethod
     def _get_selected_nodes(
@@ -194,13 +194,13 @@ class Summarizer:
             raise IgnoreResultsError(", ".join(msgs))
 
     def primary_results(self) -> Iterable[Result]:
-        if self._prefered is None or self._prefered == self._pivoting:
+        if self._preferred is None or self._preferred == self._pivoting:
             yield Result(state=State.OK, summary=f"{self._label}: [{self._pivoting}]")
         else:
             yield Result(
-                state=self._unprefered_node_state,
+                state=self._unpreferred_node_state,
                 summary=f"{self._label}: [{self._pivoting}]",
-                details=f"{self._label}: [{self._pivoting}], Prefered node is [{self._prefered}]",
+                details=f"{self._label}: [{self._pivoting}], Preferred node is [{self._preferred}]",
             )
         yield from self._node_results.results[self._pivoting]
 

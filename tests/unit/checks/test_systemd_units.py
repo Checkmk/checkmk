@@ -682,3 +682,167 @@ def test_discover_systemd_units_services_summary(section, discovered_services):
 def test_check_systemd_units_services(item, params, section, check_results):
     check = Check('systemd_units.services')
     assert list(check.run_check(item, params, section)) == check_results
+
+
+@pytest.mark.parametrize(
+    'params, section, check_results',
+    [
+
+        # "Normal" test case
+        (
+            {
+                'else': 2,
+                'states': {
+                    'active': 0,
+                    'failed': 2,
+                    'inactive': 0
+                },
+                'states_default': 2,
+            },
+            SECTION,
+            [
+                (0, 'Total: 3'),
+                (0, 'Disabled: 0'),
+                (0, 'Failed: 2'),
+                (2, '2 services failed (bar, foo)'),
+            ],
+        ),
+        # Ignored (see 'blacklist')
+        (
+            {
+                'ignored': 'virtual',
+            },
+            {
+                'service': {
+                    'virtualbox': UnitEntry(name='virtualbox',
+                                            type='service',
+                                            load='loaded',
+                                            active='active',
+                                            sub='exited',
+                                            description='LSB: VirtualBox Linux kernel module',
+                                            state='unknown'),
+                },
+            },
+            [
+                (0, 'Total: 1'),
+                (0, 'Disabled: 0'),
+                (0, 'Failed: 0'),
+                (0, '\nIgnored: 1'),
+            ],
+        ),
+        # Activating
+        (
+            {},
+            {
+                'service': {
+                    'virtualbox': UnitEntry(name='virtualbox',
+                                            type='service',
+                                            load='loaded',
+                                            active='activating',
+                                            sub='exited',
+                                            description='LSB: VirtualBox Linux kernel module',
+                                            state='unknown'),
+                },
+            },
+            [
+                (0, 'Total: 1'),
+                (0, 'Disabled: 0'),
+                (0, 'Failed: 0'),
+                (0, "Service 'virtualbox' activating for: 0.00 s", []),
+            ],
+        ),
+        # Activating + reloading
+        (
+            {},
+            {
+                'service': {
+                    'virtualbox': UnitEntry(name='virtualbox',
+                                            type='service',
+                                            load='loaded',
+                                            active='activating',
+                                            sub='exited',
+                                            description='LSB: VirtualBox Linux kernel module',
+                                            state='reloading'),
+                },
+            },
+            [
+                (0, 'Total: 1'),
+                (0, 'Disabled: 0'),
+                (0, 'Failed: 0'),
+                (0, "Service 'virtualbox' activating for: 0.00 s", []),
+            ],
+        ),
+        # Reloading
+        (
+            {},
+            {
+                'service': {
+                    'virtualbox': UnitEntry(name='virtualbox',
+                                            type='service',
+                                            load='loaded',
+                                            active='active',
+                                            sub='exited',
+                                            description='LSB: VirtualBox Linux kernel module',
+                                            state='reloading'),
+                },
+            },
+            [
+                (0, 'Total: 1'),
+                (0, 'Disabled: 0'),
+                (0, 'Failed: 0'),
+                (0, "Service 'virtualbox' reloading for: 0.00 s", []),
+            ],
+        ),
+        # Indirect
+        (
+            {},
+            {
+                'service': {
+                    'virtualbox': UnitEntry(name='virtualbox',
+                                            type='service',
+                                            load='loaded',
+                                            active='active',
+                                            sub='exited',
+                                            description='LSB: VirtualBox Linux kernel module',
+                                            state='indirect'),
+                },
+            },
+            [
+                (0, 'Total: 1'),
+                (0, 'Disabled: 1'),
+                (0, 'Failed: 0'),
+            ],
+        ),
+        # Custom systemd state
+        (
+            {
+                'else': 2,
+                'states': {
+                    'active': 0,
+                    'failed': 2,
+                    'inactive': 0
+                },
+                'states_default': 2,
+            },
+            {
+                'service': {
+                    'virtualbox': UnitEntry(name='virtualbox',
+                                            type='service',
+                                            load='loaded',
+                                            active='somesystemdstate',
+                                            sub='exited',
+                                            description='LSB: VirtualBox Linux kernel module',
+                                            state='unknown'),
+                },
+            },
+            [
+                (0, 'Total: 1'),
+                (0, 'Disabled: 0'),
+                (0, 'Failed: 0'),
+                (2, '1 service somesystemdstate (virtualbox)'),
+            ],
+        ),
+    ])
+def test_check_systemd_units_services_summary(params, section, check_results):
+    check = Check('systemd_units.services_summary')
+    assert list(check.run_check('', params, section)) == check_results

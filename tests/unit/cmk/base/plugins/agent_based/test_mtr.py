@@ -4,9 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.mtr import Hop, parse_mtr
+from typing import Sequence, Union
 
-SECTION = {
+import pytest
+
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.mtr import (
+    check_mtr,
+    CheckParams,
+    discover_mtr,
+    Hop,
+    parse_mtr,
+    Section,
+)
+
+SECTION: Section = {
     "ipv6.google.com": [],
     "mathias-kettner.de": [
         Hop(
@@ -192,3 +204,405 @@ def test_parse_mtr() -> None:
             "28.1", "128.1", "28.1"
         ],
     ]) == SECTION
+
+
+def test_discover_mtr() -> None:
+    assert list(discover_mtr(SECTION)) == [
+        Service(item="ipv6.google.com"),
+        Service(item="mathias-kettner.de"),
+        Service(item="www.google.com"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "item, params, check_result",
+    [
+        pytest.param(
+            "mathias-kettner.de",
+            {
+                "pl": (10, 25),
+                "rta": (150, 250),
+                "rtstddev": (150, 250),
+            },
+            [
+                Result(
+                    state=State.OK,
+                    summary="Number of Hops: 6",
+                    details=
+                    "Hop 1: 1.2.3.4\nHop 2: 232.142.105.70\nHop 3: 146.26.170.63\nHop 4: 195.164.42.167\nHop 5: 145.111.28.11\nHop 6: 98.216.107.58",
+                ),
+                Metric(
+                    "hops",
+                    6.0,
+                ),
+                Metric(
+                    "hop_1_rta",
+                    0.0022,
+                ),
+                Metric(
+                    "hop_1_rtmin",
+                    0.0012,
+                ),
+                Metric(
+                    "hop_1_rtmax",
+                    0.007,
+                ),
+                Metric(
+                    "hop_1_rtstddev",
+                    0.0016,
+                ),
+                Metric(
+                    "hop_1_response_time",
+                    0.0013,
+                ),
+                Metric(
+                    "hop_1_pl",
+                    0.0,
+                ),
+                Metric(
+                    "hop_2_rta",
+                    0.0027,
+                ),
+                Metric(
+                    "hop_2_rtmin",
+                    0.0015,
+                ),
+                Metric(
+                    "hop_2_rtmax",
+                    0.0044,
+                ),
+                Metric(
+                    "hop_2_rtstddev",
+                    0.0011,
+                ),
+                Metric(
+                    "hop_2_response_time",
+                    0.0018,
+                ),
+                Metric(
+                    "hop_2_pl",
+                    0.0,
+                ),
+                Metric(
+                    "hop_3_rta",
+                    0.016800000000000002,
+                ),
+                Metric(
+                    "hop_3_rtmin",
+                    0.0145,
+                ),
+                Metric(
+                    "hop_3_rtmax",
+                    0.019899999999999998,
+                ),
+                Metric(
+                    "hop_3_rtstddev",
+                    0.0012,
+                ),
+                Metric(
+                    "hop_3_response_time",
+                    0.017,
+                ),
+                Metric(
+                    "hop_3_pl",
+                    0.0,
+                ),
+                Metric(
+                    "hop_4_rta",
+                    0.0184,
+                ),
+                Metric(
+                    "hop_4_rtmin",
+                    0.0155,
+                ),
+                Metric(
+                    "hop_4_rtmax",
+                    0.0254,
+                ),
+                Metric(
+                    "hop_4_rtstddev",
+                    0.0027,
+                ),
+                Metric(
+                    "hop_4_response_time",
+                    0.0172,
+                ),
+                Metric(
+                    "hop_4_pl",
+                    0.0,
+                ),
+                Metric(
+                    "hop_5_rta",
+                    0.019600000000000003,
+                ),
+                Metric(
+                    "hop_5_rtmin",
+                    0.0162,
+                ),
+                Metric(
+                    "hop_5_rtmax",
+                    0.0298,
+                ),
+                Metric(
+                    "hop_5_rtstddev",
+                    0.0040999999999999995,
+                ),
+                Metric(
+                    "hop_5_response_time",
+                    0.0212,
+                ),
+                Metric(
+                    "hop_5_pl",
+                    0.0,
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Packet loss: 0%",
+                ),
+                Metric(
+                    "hop_6_pl",
+                    0.0,
+                    levels=(10.0, 25.0),
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Round trip average: 53 milliseconds",
+                ),
+                Metric(
+                    "hop_6_rta",
+                    0.0533,
+                    levels=(0.15, 0.25),
+                ),
+                Result(
+                    state=State.OK,
+                    summary="Standard deviation: 28 milliseconds",
+                ),
+                Metric(
+                    "hop_6_rtstddev",
+                    0.0281,
+                    levels=(0.15, 0.25),
+                ),
+                Metric(
+                    "hop_6_rtmin",
+                    0.0281,
+                ),
+                Metric(
+                    "hop_6_rtmax",
+                    0.1281,
+                ),
+                Metric(
+                    "hop_6_response_time",
+                    0.0554,
+                ),
+            ],
+            id="normal case",
+        ),
+        pytest.param(
+            "mathias-kettner.de",
+            {
+                "pl": (0, 1),
+                "rta": (0, 1),
+                "rtstddev": (0, 1),
+            },
+            [
+                Result(
+                    state=State.OK,
+                    summary="Number of Hops: 6",
+                    details=
+                    "Hop 1: 1.2.3.4\nHop 2: 232.142.105.70\nHop 3: 146.26.170.63\nHop 4: 195.164.42.167\nHop 5: 145.111.28.11\nHop 6: 98.216.107.58",
+                ),
+                Metric(
+                    "hops",
+                    6.0,
+                ),
+                Metric(
+                    "hop_1_rta",
+                    0.0022,
+                ),
+                Metric(
+                    "hop_1_rtmin",
+                    0.0012,
+                ),
+                Metric(
+                    "hop_1_rtmax",
+                    0.007,
+                ),
+                Metric(
+                    "hop_1_rtstddev",
+                    0.0016,
+                ),
+                Metric(
+                    "hop_1_response_time",
+                    0.0013,
+                ),
+                Metric(
+                    "hop_1_pl",
+                    0.0,
+                ),
+                Metric(
+                    "hop_2_rta",
+                    0.0027,
+                ),
+                Metric(
+                    "hop_2_rtmin",
+                    0.0015,
+                ),
+                Metric(
+                    "hop_2_rtmax",
+                    0.0044,
+                ),
+                Metric(
+                    "hop_2_rtstddev",
+                    0.0011,
+                ),
+                Metric(
+                    "hop_2_response_time",
+                    0.0018,
+                ),
+                Metric(
+                    "hop_2_pl",
+                    0.0,
+                ),
+                Metric(
+                    "hop_3_rta",
+                    0.016800000000000002,
+                ),
+                Metric(
+                    "hop_3_rtmin",
+                    0.0145,
+                ),
+                Metric(
+                    "hop_3_rtmax",
+                    0.019899999999999998,
+                ),
+                Metric(
+                    "hop_3_rtstddev",
+                    0.0012,
+                ),
+                Metric(
+                    "hop_3_response_time",
+                    0.017,
+                ),
+                Metric(
+                    "hop_3_pl",
+                    0.0,
+                ),
+                Metric(
+                    "hop_4_rta",
+                    0.0184,
+                ),
+                Metric(
+                    "hop_4_rtmin",
+                    0.0155,
+                ),
+                Metric(
+                    "hop_4_rtmax",
+                    0.0254,
+                ),
+                Metric(
+                    "hop_4_rtstddev",
+                    0.0027,
+                ),
+                Metric(
+                    "hop_4_response_time",
+                    0.0172,
+                ),
+                Metric(
+                    "hop_4_pl",
+                    0.0,
+                ),
+                Metric(
+                    "hop_5_rta",
+                    0.019600000000000003,
+                ),
+                Metric(
+                    "hop_5_rtmin",
+                    0.0162,
+                ),
+                Metric(
+                    "hop_5_rtmax",
+                    0.0298,
+                ),
+                Metric(
+                    "hop_5_rtstddev",
+                    0.0040999999999999995,
+                ),
+                Metric(
+                    "hop_5_response_time",
+                    0.0212,
+                ),
+                Metric(
+                    "hop_5_pl",
+                    0.0,
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="Packet loss: 0% (warn/crit at 0%/1.00%)",
+                ),
+                Metric(
+                    "hop_6_pl",
+                    0.0,
+                    levels=(0.0, 1.0),
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary=
+                    "Round trip average: 53 milliseconds (warn/crit at 0 seconds/1 millisecond)",
+                ),
+                Metric(
+                    "hop_6_rta",
+                    0.0533,
+                    levels=(0.0, 0.001),
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary=
+                    "Standard deviation: 28 milliseconds (warn/crit at 0 seconds/1 millisecond)",
+                ),
+                Metric(
+                    "hop_6_rtstddev",
+                    0.0281,
+                    levels=(0.0, 0.001),
+                ),
+                Metric(
+                    "hop_6_rtmin",
+                    0.0281,
+                ),
+                Metric(
+                    "hop_6_rtmax",
+                    0.1281,
+                ),
+                Metric(
+                    "hop_6_response_time",
+                    0.0554,
+                ),
+            ],
+            id="normal case with low levels",
+        ),
+        pytest.param(
+            "ipv6.google.com",
+            {
+                "pl": (10, 25),
+                "rta": (150, 250),
+                "rtstddev": (150, 250),
+            },
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Insufficient data: No hop information available",
+                ),
+            ],
+            id="no hops",
+        ),
+    ],
+)
+def test_check_mtr(
+    item: str,
+    params: CheckParams,
+    check_result: Sequence[Union[Result, Metric]],
+) -> None:
+    assert list(check_mtr(
+        item,
+        params,
+        SECTION,
+    )) == check_result

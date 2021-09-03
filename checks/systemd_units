@@ -241,7 +241,7 @@ def _check_temporary_state(services, params, service_state):
                            human_readable_func=get_age_human_readable,
                            infoname="Service '%s' %s for" % (service.name, service_state))
 
-        set_item_state(service_state, current_state)
+    set_item_state(service_state, current_state)
 
 
 def _check_non_ok_services(systemd_services, params, output_string):

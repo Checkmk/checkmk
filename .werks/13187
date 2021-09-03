@@ -1,0 +1,15 @@
+Title: systemd_units_services_summary: incorrect activating/reloading period shown in service
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1630672562
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p10
+
+The check systemd_units_services_summary shows the time period a systemd
+service has been activating and reloading. The time period was not reset after
+the service changed state to something other than "activating" and "reloading",
+leading to a cumulative activating and reloading time period. This has been
+fixed.

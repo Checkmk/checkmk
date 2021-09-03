@@ -23,8 +23,8 @@ load-plugins=
     tests.testlib.pylint_checker_cmk_module_layers,
     pylint.extensions.bad_builtin
 jobs=0
-# TODO: Why do we need persistence?
-persistent=yes
+# pickle collected data for later comparisons. Not used in our CI and makes runs faster
+persistent=no
 extension-pkg-whitelist=rrdtool,_ldap,netifaces,pymssql,pydantic
 bad-functions=unichr,basestring,unicode,file,cmp,apply,execfile,reduce,reload
 
@@ -34,11 +34,6 @@ signature-mutators=cmk.utils.store.with_lock_dict
 disable=
     # Use local suppressions or (even better) refactor the code.
     import-outside-toplevel,
-    #---------------------------------------------------------------------------
-    # Enabling this would be very desirable, but currently highly broken, see
-    # https://github.com/PyCQA/pylint/issues/3507. The pylint people seem to
-    # ignore mypy stuff as much as they can, it seems... :-/
-    isinstance-second-argument-not-valid-type,
     #---------------------------------------------------------------------------
     # We should really enable this, there could be some real exceptions waiting
     # to be thrown. But some work is needed first to sprinkle abc annotations
@@ -162,14 +157,13 @@ disable=
     # it globally.
     invalid-all-format,
     # TODO pylint 2.10.2 introduced checks. Check and remove them gradually
+    # too many occurances, requires a lot of mechanical change.
     redundant-u-string-prefix,
     unspecified-encoding,
-    superfluous-parens,
-    super-init-not-called,
+    # this provide some micro speedups if fixed
     use-dict-literal,
     use-list-literal,
     use-sequence-for-iteration,
-    format-string-without-interpolation,
 
 
 

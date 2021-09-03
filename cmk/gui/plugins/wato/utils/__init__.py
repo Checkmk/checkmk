@@ -2296,7 +2296,7 @@ def get_hostnames_from_checkboxes(filterfunc: _Optional[Callable] = None,
 
     selected_host_names: List[str] = []
     for host_name, host in sorted(watolib.Folder.current().hosts().items()):
-        if ((not search_text or _search_text_matches(host, search_text)) and
+        if (not search_text or _search_text_matches(host, search_text) and
             ('_c_' + host_name) in selected):
             if filterfunc is None or filterfunc(host):
                 selected_host_names.append(host_name)

@@ -136,8 +136,9 @@ def _unpack(config):
             # Set cacert option.
             config = ((config[0], None),) + config[1:]
         return config + ("server-status",)
-    return ((config['protocol'], config.get('cafile', None)), config['address'], config['port'],
-            config.get("instance", ""), config.get('page', 'server-status'))
+    return (config['protocol'], config.get('cafile',
+                                           None)), config['address'], config['port'], config.get(
+                                               "instance", ""), config.get('page', 'server-status')
 
 
 def get_ssl_no_verify_context():

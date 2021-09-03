@@ -1164,7 +1164,7 @@ class StateFormatter:
 
 
 class ServiceStateFormatter(StateFormatter):
-    def __init__(self, message_template: str = "{}") -> None:
+    def __init__(self, message_template: str = "{}") -> None:  # pylint: disable=super-init-not-called
         self.css = "svcstate state{}"
         # TODO: see comment in StateFormatter.state_names
         self._state_names = service_state_short  # type: ignore

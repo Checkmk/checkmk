@@ -82,7 +82,7 @@ def check_sylo(item, params, info):
         return status, msg, [('in', '%f' % in_rate), ('out', '%f' % out_rate),
                              ('used', '%f' % used_mb, warn_mb, crit_mb, 0, size_mb)]
 
-    return (3, "Invalid hint file contents: " % info)
+    return (3, "Invalid hint file contents: %s" % info)
 
 
 check_info["sylo"] = {

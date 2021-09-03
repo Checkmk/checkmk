@@ -17,63 +17,63 @@ pytestmark = pytest.mark.checks
 
 class UnitEntry(NamedTuple):
     name: str
-    type: str
-    load: str
-    active: str
-    sub: str
+    unit_type: str
+    loaded_status: str
+    active_status: str
+    current_state: str
     description: str
-    state: str
+    enabled_status: str
 
 
 @pytest.mark.parametrize('services, blacklist, expected', [
     ([
         UnitEntry(name=u'gpu-manager',
-                  type='service',
-                  load=u'loaded',
-                  active=u'inactive',
-                  sub=u'dead',
+                  unit_type='service',
+                  loaded_status=u'loaded',
+                  active_status=u'inactive',
+                  current_state=u'dead',
                   description=u'Detect the available GPUs and deal with any system changes',
-                  state=u'unknown'),
+                  enabled_status=u'unknown'),
         UnitEntry(name=u'rsyslog',
-                  type='service',
-                  load=u'loaded',
-                  active=u'active',
-                  sub=u'running',
+                  unit_type='service',
+                  loaded_status=u'loaded',
+                  active_status=u'active',
+                  current_state=u'running',
                   description=u'System Logging Service',
-                  state=u'enabled'),
+                  enabled_status=u'enabled'),
         UnitEntry(name=u'alsa-state',
-                  type='service',
-                  load=u'loaded',
-                  active=u'inactive',
-                  sub=u'dead',
+                  unit_type='service',
+                  loaded_status=u'loaded',
+                  active_status=u'inactive',
+                  current_state=u'dead',
                   description=u'Manage Sound Card State (restore and store)',
-                  state=u'disabled'),
+                  enabled_status=u'disabled'),
     ], [], {
         "included": [
             UnitEntry(name=u'gpu-manager',
-                      type='service',
-                      load=u'loaded',
-                      active=u'inactive',
-                      sub=u'dead',
+                      unit_type='service',
+                      loaded_status=u'loaded',
+                      active_status=u'inactive',
+                      current_state=u'dead',
                       description=u'Detect the available GPUs and deal with any system changes',
-                      state=u'unknown'),
+                      enabled_status=u'unknown'),
             UnitEntry(name=u'rsyslog',
-                      type='service',
-                      load=u'loaded',
-                      active=u'active',
-                      sub=u'running',
+                      unit_type='service',
+                      loaded_status=u'loaded',
+                      active_status=u'active',
+                      current_state=u'running',
                       description=u'System Logging Service',
-                      state=u'enabled')
+                      enabled_status=u'enabled')
         ],
         "excluded": [],
         "disabled": [
             UnitEntry(name=u'alsa-state',
-                      type='service',
-                      load=u'loaded',
-                      active=u'inactive',
-                      sub=u'dead',
+                      unit_type='service',
+                      loaded_status=u'loaded',
+                      active_status=u'inactive',
+                      current_state=u'dead',
                       description=u'Manage Sound Card State (restore and store)',
-                      state=u'disabled')
+                      enabled_status=u'disabled')
         ],
         "static": [],
         "activating": [],
@@ -82,55 +82,55 @@ class UnitEntry(NamedTuple):
     (
         [
             UnitEntry(name=u'gpu-manager',
-                      type='service',
-                      load=u'loaded',
-                      active=u'inactive',
-                      sub=u'dead',
+                      unit_type='service',
+                      loaded_status=u'loaded',
+                      active_status=u'inactive',
+                      current_state=u'dead',
                       description=u'Detect the available GPUs and deal with any system changes',
-                      state=u'unknown'),
+                      enabled_status=u'unknown'),
             UnitEntry(name=u'rsyslog',
-                      type='service',
-                      load=u'loaded',
-                      active=u'active',
-                      sub=u'running',
+                      unit_type='service',
+                      loaded_status=u'loaded',
+                      active_status=u'active',
+                      current_state=u'running',
                       description=u'System Logging Service',
-                      state=u'enabled'),
+                      enabled_status=u'enabled'),
             UnitEntry(name=u'alsa-state',
-                      type='service',
-                      load=u'loaded',
-                      active=u'inactive',
-                      sub=u'dead',
+                      unit_type='service',
+                      loaded_status=u'loaded',
+                      active_status=u'inactive',
+                      current_state=u'dead',
                       description=u'Manage Sound Card State (restore and store)',
-                      state=u'indirect')
+                      enabled_status=u'indirect')
         ],
         [u'gpu'],
         {
             "included": [
                 UnitEntry(name=u'rsyslog',
-                          type='service',
-                          load=u'loaded',
-                          active=u'active',
-                          sub=u'running',
+                          unit_type='service',
+                          loaded_status=u'loaded',
+                          active_status=u'active',
+                          current_state=u'running',
                           description=u'System Logging Service',
-                          state=u'enabled'),
+                          enabled_status=u'enabled'),
             ],
             "excluded": [
                 UnitEntry(name=u'gpu-manager',
-                          type='service',
-                          load=u'loaded',
-                          active=u'inactive',
-                          sub=u'dead',
+                          unit_type='service',
+                          loaded_status=u'loaded',
+                          active_status=u'inactive',
+                          current_state=u'dead',
                           description=u'Detect the available GPUs and deal with any system changes',
-                          state=u'unknown'),
+                          enabled_status=u'unknown'),
             ],
             "disabled": [
                 UnitEntry(name=u'alsa-state',
-                          type='service',
-                          load=u'loaded',
-                          active=u'inactive',
-                          sub=u'dead',
+                          unit_type='service',
+                          loaded_status=u'loaded',
+                          active_status=u'inactive',
+                          current_state=u'dead',
                           description=u'Manage Sound Card State (restore and store)',
-                          state=u'indirect')
+                          enabled_status=u'indirect')
             ],
             "static": [],
             "activating": [],
@@ -168,12 +168,12 @@ def test_services_split(services, blacklist, expected):
             {
                 'service': {
                     'virtualbox': UnitEntry(name='virtualbox',
-                                            type='service',
-                                            load='loaded',
-                                            active='active',
-                                            sub='exited',
+                                            unit_type='service',
+                                            loaded_status='loaded',
+                                            active_status='active',
+                                            current_state='exited',
                                             description='LSB: VirtualBox Linux kernel module',
-                                            state='unknown')
+                                            enabled_status='unknown')
                 },
             },
         ),
@@ -194,12 +194,12 @@ def test_services_split(services, blacklist, expected):
                 'device': {
                     'dev-disk-by\\x2did-ata\\x2dAPPLE_SSD_SM0256G_S29CNYDG865465': UnitEntry(
                         name='dev-disk-by\\x2did-ata\\x2dAPPLE_SSD_SM0256G_S29CNYDG865465',
-                        type='device',
-                        load='loaded',
-                        active='active',
-                        sub='plugged',
+                        unit_type='device',
+                        loaded_status='loaded',
+                        active_status='active',
+                        current_state='plugged',
                         description='APPLE_SSD_SM0256G',
-                        state='unknown')
+                        enabled_status='unknown')
                 },
             },
         ),
@@ -220,12 +220,12 @@ def test_services_split(services, blacklist, expected):
             {
                 'path': {
                     'cups': UnitEntry(name='cups',
-                                      type='path',
-                                      load='loaded',
-                                      active='active',
-                                      sub='running',
+                                      unit_type='path',
+                                      loaded_status='loaded',
+                                      active_status='active',
+                                      current_state='running',
                                       description='CUPS Scheduler',
-                                      state='unknown')
+                                      enabled_status='unknown')
                 },
             },
         ),
@@ -248,12 +248,12 @@ def test_services_split(services, blacklist, expected):
             {
                 'scope': {
                     'init': UnitEntry(name='init',
-                                      type='scope',
-                                      load='loaded',
-                                      active='active',
-                                      sub='running',
+                                      unit_type='scope',
+                                      loaded_status='loaded',
+                                      active_status='active',
+                                      current_state='running',
                                       description='System and Service Manager',
-                                      state='unknown')
+                                      enabled_status='unknown')
                 },
             },
         ),
@@ -273,12 +273,12 @@ def test_services_split(services, blacklist, expected):
             {
                 'slice': {
                     'system-getty': UnitEntry(name='system-getty',
-                                              type='slice',
-                                              load='loaded',
-                                              active='active',
-                                              sub='active',
+                                              unit_type='slice',
+                                              loaded_status='loaded',
+                                              active_status='active',
+                                              current_state='active',
                                               description='system-getty.slice',
-                                              state='unknown')
+                                              enabled_status='unknown')
                 },
             },
         ),
@@ -299,12 +299,12 @@ def test_services_split(services, blacklist, expected):
             {
                 'socket': {
                     'systemd-journald': UnitEntry(name='systemd-journald',
-                                                  type='socket',
-                                                  load='loaded',
-                                                  active='active',
-                                                  sub='running',
+                                                  unit_type='socket',
+                                                  loaded_status='loaded',
+                                                  active_status='active',
+                                                  current_state='running',
                                                   description='Journal Socket',
-                                                  state='unknown')
+                                                  enabled_status='unknown')
                 },
             },
         ),
@@ -324,12 +324,12 @@ def test_services_split(services, blacklist, expected):
             {
                 'swap': {
                     'swapfile': UnitEntry(name='swapfile',
-                                          type='swap',
-                                          load='loaded',
-                                          active='failed',
-                                          sub='failed',
+                                          unit_type='swap',
+                                          loaded_status='loaded',
+                                          active_status='failed',
+                                          current_state='failed',
                                           description='/swapfile',
-                                          state='unknown')
+                                          enabled_status='unknown')
                 },
             },
         ),
@@ -355,12 +355,12 @@ def test_services_split(services, blacklist, expected):
                 'timer': {
                     'apt-daily-upgrade': UnitEntry(
                         name='apt-daily-upgrade',
-                        type='timer',
-                        load='loaded',
-                        active='active',
-                        sub='waiting',
+                        unit_type='timer',
+                        loaded_status='loaded',
+                        active_status='active',
+                        current_state='waiting',
                         description='Daily apt upgrade and clean activities',
-                        state='unknown')
+                        enabled_status='unknown')
                 },
             },
         ),
@@ -388,12 +388,12 @@ def test_services_split(services, blacklist, expected):
                 'automount': {
                     'proc-sys-fs-.service.binfmt_misc': UnitEntry(
                         name='proc-sys-fs-.service.binfmt_misc',
-                        type='automount',
-                        load='loaded',
-                        active='active',
-                        sub='running',
+                        unit_type='automount',
+                        loaded_status='loaded',
+                        active_status='active',
+                        current_state='running',
                         description='Arbitrary Executable File Formats File System Automount Point',
-                        state='unknown')
+                        enabled_status='unknown')
                 },
             },
         ),
@@ -429,20 +429,20 @@ def test_services_split(services, blacklist, expected):
             {
                 'service': {
                     'bar': UnitEntry(name='bar',
-                                     type='service',
-                                     load='loaded',
-                                     active='failed',
-                                     sub='failed',
+                                     unit_type='service',
+                                     loaded_status='loaded',
+                                     active_status='failed',
+                                     current_state='failed',
                                      description='a bar service',
-                                     state='unknown'),
+                                     enabled_status='unknown'),
                     'foo': UnitEntry(
                         name='foo',
-                        type='service',
-                        load='loaded',
-                        active='failed',
-                        sub='failed',
+                        unit_type='service',
+                        loaded_status='loaded',
+                        active_status='failed',
+                        current_state='failed',
                         description='Arbitrary Executable File Formats File System Automount Point',
-                        state='unknown')
+                        enabled_status='unknown')
                 },
             },
         ),
@@ -455,101 +455,101 @@ def test_parse_systemd_units(string_table, section):
 SECTION = {
     'service': {
         'virtualbox': UnitEntry(name='virtualbox',
-                                type='service',
-                                load='loaded',
-                                active='active',
-                                sub='exited',
+                                unit_type='service',
+                                loaded_status='loaded',
+                                active_status='active',
+                                current_state='exited',
                                 description='LSB: VirtualBox Linux kernel module',
-                                state='unknown'),
+                                enabled_status='unknown'),
         'bar': UnitEntry(name='bar',
-                         type='service',
-                         load='loaded',
-                         active='failed',
-                         sub='failed',
+                         unit_type='service',
+                         loaded_status='loaded',
+                         active_status='failed',
+                         current_state='failed',
                          description='a bar service',
-                         state='unknown'),
+                         enabled_status='unknown'),
         'foo': UnitEntry(
             name='foo',
-            type='service',
-            load='loaded',
-            active='failed',
-            sub='failed',
+            unit_type='service',
+            loaded_status='loaded',
+            active_status='failed',
+            current_state='failed',
             description='Arbitrary Executable File Formats File System Automount Point',
-            state='unknown')
+            enabled_status='unknown')
     },
     'device': {
         'dev-disk-by\\x2did-ata\\x2dAPPLE_SSD_SM0256G_S29CNYDG865465': UnitEntry(
             name='dev-disk-by\\x2did-ata\\x2dAPPLE_SSD_SM0256G_S29CNYDG865465',
-            type='device',
-            load='loaded',
-            active='active',
-            sub='plugged',
+            unit_type='device',
+            loaded_status='loaded',
+            active_status='active',
+            current_state='plugged',
             description='APPLE_SSD_SM0256G',
-            state='unknown')
+            enabled_status='unknown')
     },
     'path': {
         'cups': UnitEntry(name='cups',
-                          type='path',
-                          load='loaded',
-                          active='active',
-                          sub='running',
+                          unit_type='path',
+                          loaded_status='loaded',
+                          active_status='active',
+                          current_state='running',
                           description='CUPS Scheduler',
-                          state='unknown')
+                          enabled_status='unknown')
     },
     'scope': {
         'init': UnitEntry(name='init',
-                          type='scope',
-                          load='loaded',
-                          active='active',
-                          sub='running',
+                          unit_type='scope',
+                          loaded_status='loaded',
+                          active_status='active',
+                          current_state='running',
                           description='System and Service Manager',
-                          state='unknown')
+                          enabled_status='unknown')
     },
     'slice': {
         'system-getty': UnitEntry(name='system-getty',
-                                  type='slice',
-                                  load='loaded',
-                                  active='active',
-                                  sub='active',
+                                  unit_type='slice',
+                                  loaded_status='loaded',
+                                  active_status='active',
+                                  current_state='active',
                                   description='system-getty.slice',
-                                  state='unknown')
+                                  enabled_status='unknown')
     },
     'socket': {
         'systemd-journald': UnitEntry(name='systemd-journald',
-                                      type='socket',
-                                      load='loaded',
-                                      active='active',
-                                      sub='running',
+                                      unit_type='socket',
+                                      loaded_status='loaded',
+                                      active_status='active',
+                                      current_state='running',
                                       description='Journal Socket',
-                                      state='unknown')
+                                      enabled_status='unknown')
     },
     'swap': {
         'swapfile': UnitEntry(name='swapfile',
-                              type='swap',
-                              load='loaded',
-                              active='failed',
-                              sub='failed',
+                              unit_type='swap',
+                              loaded_status='loaded',
+                              active_status='failed',
+                              current_state='failed',
                               description='/swapfile',
-                              state='unknown')
+                              enabled_status='unknown')
     },
     'timer': {
         'apt-daily-upgrade': UnitEntry(name='apt-daily-upgrade',
-                                       type='timer',
-                                       load='loaded',
-                                       active='active',
-                                       sub='waiting',
+                                       unit_type='timer',
+                                       loaded_status='loaded',
+                                       active_status='active',
+                                       current_state='waiting',
                                        description='Daily apt upgrade and clean activities',
-                                       state='unknown')
+                                       enabled_status='unknown')
     },
     'automount': {
         'proc-sys-fs-.service.binfmt_misc': UnitEntry(
             name='proc-sys-fs-.service.binfmt_misc',
-            type='automount',
-            load='loaded',
-            active='active',
-            sub='running',
+            unit_type='automount',
+            loaded_status='loaded',
+            active_status='active',
+            current_state='running',
             description='Arbitrary Executable File Formats File System Automount Point',
-            state='unknown')
+            enabled_status='unknown')
     },
 }
 
@@ -715,12 +715,12 @@ def test_check_systemd_units_services(item, params, section, check_results):
             {
                 'service': {
                     'virtualbox': UnitEntry(name='virtualbox',
-                                            type='service',
-                                            load='loaded',
-                                            active='active',
-                                            sub='exited',
+                                            unit_type='service',
+                                            loaded_status='loaded',
+                                            active_status='active',
+                                            current_state='exited',
                                             description='LSB: VirtualBox Linux kernel module',
-                                            state='unknown'),
+                                            enabled_status='unknown'),
                 },
             },
             [
@@ -736,12 +736,12 @@ def test_check_systemd_units_services(item, params, section, check_results):
             {
                 'service': {
                     'virtualbox': UnitEntry(name='virtualbox',
-                                            type='service',
-                                            load='loaded',
-                                            active='activating',
-                                            sub='exited',
+                                            unit_type='service',
+                                            loaded_status='loaded',
+                                            active_status='activating',
+                                            current_state='exited',
                                             description='LSB: VirtualBox Linux kernel module',
-                                            state='unknown'),
+                                            enabled_status='unknown'),
                 },
             },
             [
@@ -757,12 +757,12 @@ def test_check_systemd_units_services(item, params, section, check_results):
             {
                 'service': {
                     'virtualbox': UnitEntry(name='virtualbox',
-                                            type='service',
-                                            load='loaded',
-                                            active='activating',
-                                            sub='exited',
+                                            unit_type='service',
+                                            loaded_status='loaded',
+                                            active_status='activating',
+                                            current_state='exited',
                                             description='LSB: VirtualBox Linux kernel module',
-                                            state='reloading'),
+                                            enabled_status='reloading'),
                 },
             },
             [
@@ -778,12 +778,12 @@ def test_check_systemd_units_services(item, params, section, check_results):
             {
                 'service': {
                     'virtualbox': UnitEntry(name='virtualbox',
-                                            type='service',
-                                            load='loaded',
-                                            active='active',
-                                            sub='exited',
+                                            unit_type='service',
+                                            loaded_status='loaded',
+                                            active_status='active',
+                                            current_state='exited',
                                             description='LSB: VirtualBox Linux kernel module',
-                                            state='reloading'),
+                                            enabled_status='reloading'),
                 },
             },
             [
@@ -799,12 +799,12 @@ def test_check_systemd_units_services(item, params, section, check_results):
             {
                 'service': {
                     'virtualbox': UnitEntry(name='virtualbox',
-                                            type='service',
-                                            load='loaded',
-                                            active='active',
-                                            sub='exited',
+                                            unit_type='service',
+                                            loaded_status='loaded',
+                                            active_status='active',
+                                            current_state='exited',
                                             description='LSB: VirtualBox Linux kernel module',
-                                            state='indirect'),
+                                            enabled_status='indirect'),
                 },
             },
             [
@@ -827,12 +827,12 @@ def test_check_systemd_units_services(item, params, section, check_results):
             {
                 'service': {
                     'virtualbox': UnitEntry(name='virtualbox',
-                                            type='service',
-                                            load='loaded',
-                                            active='somesystemdstate',
-                                            sub='exited',
+                                            unit_type='service',
+                                            loaded_status='loaded',
+                                            active_status='somesystemdstate',
+                                            current_state='exited',
                                             description='LSB: VirtualBox Linux kernel module',
-                                            state='unknown'),
+                                            enabled_status='unknown'),
                 },
             },
             [

@@ -81,6 +81,8 @@
 #             received from its bus interfaces. These are used to manage sets of system
 #             processes that are created externally.
 
+import typing
+
 _SYSTEMD_UNITS = [
     '.service ',
     '.socket ',
@@ -112,12 +114,22 @@ _SYSTEMD_UNIT_FILE_STATES = [
 ]
 
 
+class UnitEntry(typing.NamedTuple):
+    name: str
+    unit_type: str
+    loaded_status: str
+    active_status: str
+    current_state: str
+    description: str
+    enabled_status: str
+
+
 def parse_systemd_units(info):
     if not info:
         return {}
 
     iter_info = iter(info)
-    target_states = {}
+    enabled_status_collection = {}
 
     line = next(iter_info)
 
@@ -126,7 +138,7 @@ def parse_systemd_units(info):
             if line[0].startswith('['):
                 break
             if len(line) >= 2 and line[1] in _SYSTEMD_UNIT_FILE_STATES:
-                target_states[line[0]] = line[1]
+                enabled_status_collection[line[0]] = line[1]
 
     parsed = {}
     if line[0] == '[all]':
@@ -136,9 +148,6 @@ def parse_systemd_units(info):
         # no services listed
         except StopIteration:
             return parsed
-
-        UnitEntry = collections.namedtuple(
-            "UnitEntry", ['name', 'type', 'load', 'active', 'sub', 'description', 'state'])
 
         for row in iter_info:
             if row[0] == '*':
@@ -154,10 +163,21 @@ def parse_systemd_units(info):
                         temp = name[:pos + 1]
                     else:
                         temp = name
-                    state = target_states.get("%s.%s" % (temp, unit_type), "unknown")
-                    load, active, sub, descr = remains.split(' ', 3)
-                    unit = UnitEntry(name, unit_type, load, active, sub, descr, state)
-                    parsed.setdefault(unit.type, {})[unit.name] = unit
+                    enabled_status = enabled_status_collection.get(
+                        "%s.%s" % (temp, unit_type),
+                        "unknown",
+                    )
+                    loaded_status, active_status, current_state, descr = remains.split(' ', 3)
+                    unit = UnitEntry(
+                        name,
+                        unit_type,
+                        loaded_status,
+                        active_status,
+                        current_state,
+                        descr,
+                        enabled_status,
+                    )
+                    parsed.setdefault(unit.unit_type, {})[unit.name] = unit
                     break
     return parsed
 
@@ -225,7 +245,8 @@ def discovery_systemd_units_services(parsed):
         states = settings.get("states", [])
         for service in services.values():
             if (regex_match(descriptions, service.description) and
-                    regex_match(names, service.name) and state_match(states, service.active)):
+                    regex_match(names, service.name) and
+                    state_match(states, service.active_status)):
                 yield service.name, {}
 
 
@@ -236,8 +257,8 @@ def check_systemd_units_services(item, params, parsed):
         yield params["else"], "Service not found"
         return
 
-    state = params["states"].get(service.active, params["states_default"])
-    yield state, "Status: %s" % service.active
+    state = params["states"].get(service.active_status, params["states_default"])
+    yield state, "Status: %s" % service.active_status
     yield 0, service.description
 
 
@@ -269,10 +290,10 @@ def _services_split(services, blacklist):
         if any(expr.match(service.name) for expr in compiled_patterns):
             services_organised["excluded"].append(service)
             continue
-        if service.active == "activating":
+        if service.active_status == "activating":
             services_organised["activating"].append(service)
-        elif service.state in ("reloading", "disabled", "static", "indirect"):
-            service_type = "disabled" if service.state == "indirect" else service.state
+        elif service.enabled_status in ("reloading", "disabled", "static", "indirect"):
+            service_type = "disabled" if service.enabled_status == "indirect" else service.enabled_status
             services_organised[service_type].append(service)
         else:
             services_organised["included"].append(service)
@@ -300,7 +321,7 @@ def _check_temporary_state(services, params, service_state):
 def _check_non_ok_services(systemd_services, params, output_string):
     servicenames_by_status = {}
     for service in systemd_services:
-        servicenames_by_status.setdefault(service.active, []).append(service.name)
+        servicenames_by_status.setdefault(service.active_status, []).append(service.name)
 
     for status, service_names in sorted(servicenames_by_status.items()):
         state = params["states"].get(status, params["states_default"])
@@ -323,7 +344,7 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
 
     yield 0, "Disabled: %d" % len(services_organised["disabled"])
     # some of the failed ones might be ignored, so this is OK:
-    yield 0, "Failed: %d" % sum(s.active == "failed" for s in services)
+    yield 0, "Failed: %d" % sum(s.active_status == "failed" for s in services)
 
     long_output = []
 

@@ -22,6 +22,68 @@ def inventory_mtr(parsed):
         yield host, {}
 
 
+def _metrics_nonlast_hops(hops):
+    for idx, hop in enumerate(
+            hops,
+            start=1,
+    ):
+        yield ('hop_%d_rta' % idx, hop.rta)
+        yield ('hop_%d_rtmin' % idx, hop.rtmin)
+        yield ('hop_%d_rtmax' % idx, hop.rtmax)
+        yield ('hop_%d_rtstddev' % idx, hop.rtstddev)
+        yield ('hop_%d_response_time' % idx, hop.response_time)
+        yield ('hop_%d_pl' % idx, hop.pl)
+
+
+def _results_last_hop(
+    params,
+    last_hop,
+    last_idx,
+):
+    states = []
+    texts = []
+    perfdata = []
+
+    state, text, pdata = check_levels(
+        last_hop.pl,
+        'hop_%d_pl' % last_idx,
+        params["pl"],
+        human_readable_func=get_percent_human_readable,
+        infoname="Packet loss",
+    )
+    states.append(state)
+    texts.append(text)
+    perfdata.extend(pdata)
+
+    state, text, pdata = check_levels(
+        last_hop.rta,
+        'hop_%d_rta' % last_idx,
+        (params["rta"][0] / 1000, params["rta"][1] / 1000),
+        human_readable_func=get_age_human_readable,
+        infoname="Round trip average",
+    )
+    states.append(state)
+    texts.append(text)
+    perfdata.extend(pdata)
+
+    state, text, pdata = check_levels(
+        last_hop.rtstddev,
+        'hop_%d_rtstddev' % last_idx,
+        (params["rtstddev"][0] / 1000, params["rtstddev"][1] / 1000),
+        human_readable_func=get_age_human_readable,
+        infoname="Standard deviation",
+    )
+    states.append(state)
+    texts.append(text)
+    perfdata.extend(pdata)
+
+    perfdata.append(('hop_%d_rtmin' % last_idx, last_hop.rtmin))
+    perfdata.append(('hop_%d_rtmax' % last_idx, last_hop.rtmax))
+    perfdata.append(('hop_%d_response_time' % last_idx, last_hop.response_time))
+
+    return max(states), ", ".join(texts), perfdata
+
+
 def check_mtr(item, params, parsed):
     if (hops := parsed.get(item)) is None:
         return
@@ -30,69 +92,23 @@ def check_mtr(item, params, parsed):
         yield 3, "Insufficient data: No hop information available"
         return
 
-    hopnames = []
-    perfdata = []
+    yield 0, "Number of Hops: %d" % len(hops), [('hops', len(hops))]
 
-    def get_hop_info(hops, idx, apply_levels=False):
-        if apply_levels:
-            pl_warn, pl_crit = params["pl"]
-            rta_warn, rta_crit = params["rta"]
-            rtstddev_warn, rtstddev_crit = params["rtstddev"]
-        else:
-            pl_warn, pl_crit = None, None
-            rta_warn, rta_crit = None, None
-            rtstddev_warn, rtstddev_crit = None, None
+    perfdata_nonlast = [*_metrics_nonlast_hops(hops[:-1])]
+    state_last, text_last, perfdata_last = _results_last_hop(
+        params,
+        hops[-1],
+        len(hops),
+    )
 
-        hop = hops[idx - 1]
-        hopnames.append(hop.name)
-        perfdata.append(('hop_%d_rta' % idx, hop.rta, rta_warn and rta_warn / 1000.0, rta_crit and
-                         rta_crit / 1000.0))
-        perfdata.append(('hop_%d_rtmin' % idx, hop.rtmin))
-        perfdata.append(('hop_%d_rtmax' % idx, hop.rtmax))
-        perfdata.append(('hop_%d_rtstddev' % idx, hop.rtstddev, rtstddev_warn and
-                         rtstddev_warn / 1000.0, rtstddev_crit and rtstddev_crit / 1000.0))
-        perfdata.append(('hop_%d_response_time' % idx, hop.response_time))
-        perfdata.append(('hop_%d_pl' % idx, hop.pl, pl_warn, pl_crit))
-
-        if apply_levels:  # the params only apply to the last host
-            hop_text_entries = []
-            hop_states = []
-            for what, unit, value, warn, crit in [
-                ("Packet loss", "%", hop.pl, pl_warn, pl_crit),
-                ("Round trip average", "ms", hop.rta * 1000, rta_warn, rta_crit),
-                ("Standard deviation", "ms", hop.rtstddev * 1000, rtstddev_warn, rtstddev_crit),
-            ]:
-                what_state = 0
-                hop_text = ""
-                if value >= crit:
-                    what_state = 2
-                elif value >= warn:
-                    what_state = 1
-                hop_text = "%s %s%s%s" % (what, value, unit,
-                                          what_state and state_markers[what_state] or "")
-                if what_state:
-                    hop_text += " (warn/crit at %d%s/%d%s)" % (warn, unit, crit, unit)
-                hop_text_entries.append(hop_text)
-                hop_states.append(what_state)
-
-            return max(hop_states), ", ".join(hop_text_entries), perfdata
-        return None, None, perfdata
-
-    hc = len(hops)
-    hop_perfdata = [('hops', hc)]
-
-    def format_hopnames(hopnames):
-        result = "Hops in last check:\n"
-        for idx, name in enumerate(hopnames):
-            result += "Hop %d: %s\n" % (idx + 1, name)
-        return result
-
-    for idx in range(0, hc):
-        state, text, perfdata = get_hop_info(hops, idx + 1, apply_levels=(idx + 1 == hc))
-        if state is not None:
-            # Last hop with state, text and perfdata. Yield everything we have
-            yield 0, "Number of Hops: %d" % hc, hop_perfdata
-            yield state, text + "\r\n%s" % format_hopnames(hopnames), perfdata
+    yield (
+        state_last,
+        text_last + "\n" + "\n".join("Hop %d: %s" % (
+            idx + 1,
+            hop.name,
+        ) for idx, hop in enumerate(hops)),
+        perfdata_nonlast + perfdata_last,
+    )
 
 
 check_info['mtr'] = {

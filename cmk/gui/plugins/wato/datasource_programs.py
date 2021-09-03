@@ -4819,6 +4819,25 @@ def _valuespec_special_agents_datadog() -> Dictionary:
                     ),
                     elements=[
                         (
+                            "max_age",
+                            Age(
+                                title=_("Maximum age of fetched events"),
+                                help=_(
+                                    "During each run, the agent will fetch events which are at "
+                                    "maximum this old. The agent memorizes events already fetched "
+                                    "during the last run, s.t. no event will be sent to the event "
+                                    "console multiple times. Setting this value lower than the "
+                                    "check interval of the host will result in missing events. "
+                                    "Also note that the Datadog API allows for creating new events "
+                                    "which lie in the past. Such events will be missed by the "
+                                    "agent if their age exceeds the value specified here."
+                                ),
+                                minvalue=10,
+                                maxvalue=5 * 3600,
+                                default_value=600,
+                            ),
+                        ),
+                        (
                             "tags",
                             ListOfStrings(
                                 title=_("Restrict by tags"),

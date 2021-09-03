@@ -40,6 +40,7 @@ pytestmark = pytest.mark.checks
                     ],
                 },
                 "events": {
+                    "max_age": 456,
                     "tags": [
                         "t3",
                         "t4",
@@ -64,6 +65,8 @@ pytestmark = pytest.mark.checks
                 "--monitor_monitor_tags",
                 "mt1",
                 "mt2",
+                "--event_max_age",
+                "456",
                 "--event_tags",
                 "t3",
                 "t4",
@@ -97,6 +100,7 @@ pytestmark = pytest.mark.checks
                 },
                 "monitors": {},
                 "events": {
+                    "max_age": 600,
                     "syslog_facility": 1,
                     "syslog_priority": 1,
                     "service_level": 0,
@@ -110,6 +114,8 @@ pytestmark = pytest.mark.checks
                 "api.datadoghq.eu",
                 "--monitor_tags",
                 "--monitor_monitor_tags",
+                "--event_max_age",
+                "600",
                 "--event_tags",
                 "--event_tags_show",
                 "--event_syslog_facility",

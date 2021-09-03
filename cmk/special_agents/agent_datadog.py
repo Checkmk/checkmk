@@ -10,12 +10,12 @@ is fetched from the Datadog API, https://docs.datadoghq.com/api/, version 1. End
 * Events: events
 """
 
+import json
 import logging
 import re
 import time
-from contextlib import suppress
 from pathlib import Path
-from typing import Any, Dict, Iterable, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, FrozenSet, Iterable, Mapping, Optional, Sequence, Tuple, Union
 
 import requests
 
@@ -91,6 +91,13 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         metavar="TAG1 TAG2 ...",
         help="Restrict fetched monitors to monitor tags",
         default=[],
+    )
+    parser.add_argument(
+        "--event_max_age",
+        type=int,
+        metavar="AGE",
+        help="Restrict maximum age of fetched events (in seconds)",
+        default=600,
     )
     parser.add_argument(
         "--event_tags",
@@ -228,11 +235,24 @@ class EventsQuerier:
         self,
         datadog_api: DatadogAPI,
         host_name: str,
+        max_age: int,
     ) -> None:
         self._datadog_api = datadog_api
-        self._path_state_file = Path(paths.tmp_dir) / "agents" / "agent_datadog" / host_name
+        self._path_last_event_ids = (
+            Path(paths.tmp_dir) / "agents" / "agent_datadog" / (host_name + ".json")
+        )
+        self._max_age = max_age
 
     def query_events(
+        self,
+        tags: Tags,
+    ) -> Iterable[DatadogAPIResponse]:
+        last_event_ids = self._read_last_event_ids()
+        queried_events = list(self._execute_query(tags))
+        self._store_last_event_ids(event["id"] for event in queried_events)
+        yield from (event for event in queried_events if event["id"] not in last_event_ids)
+
+    def _execute_query(
         self,
         tags: Tags,
     ) -> Iterable[DatadogAPIResponse]:
@@ -256,17 +276,9 @@ class EventsQuerier:
 
             break
 
-        self._store_events_timestamp(end)
-
     def _events_query_time_range(self) -> Tuple[int, int]:
-        end = int(time.time())
-        # we go back one hour at maximum, this happens if the state file cannot be read or if the
-        # last agent run was more than one hour ago
-        start = max(
-            self._read_last_events_timestamp() or 0,
-            end - 3600,
-        )
-        return start, end
+        now = int(time.time())
+        return now - self._max_age, now
 
     def _query_events_page_in_time_window(
         self,
@@ -293,16 +305,24 @@ class EventsQuerier:
             params,
         )["events"]
 
-    def _store_events_timestamp(
+    def _store_last_event_ids(
         self,
-        timestamp: int,
+        ids: Iterable[int],
     ) -> None:
-        store.save_text_to_file(self._path_state_file, str(timestamp))
+        store.save_text_to_file(
+            self._path_last_event_ids,
+            json.dumps(list(ids)),
+        )
 
-    def _read_last_events_timestamp(self) -> Optional[int]:
-        with suppress(Exception):
-            return int(store.load_text_from_file(self._path_state_file, default=""))
-        return None
+    def _read_last_event_ids(self) -> FrozenSet[int]:
+        return frozenset(
+            json.loads(
+                store.load_text_from_file(
+                    self._path_last_event_ids,
+                    default="[]",
+                )
+            )
+        )
 
 
 def _to_syslog_message(
@@ -373,6 +393,7 @@ def _events_section(datadog_api: DatadogAPI, args: Args) -> None:
         EventsQuerier(
             datadog_api,
             args.hostname,
+            args.event_max_age,
         ).query_events(args.event_tags)
     )
     _forward_events_to_ec(

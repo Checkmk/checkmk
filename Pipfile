@@ -18,7 +18,7 @@ isort = "*"  # used as a plugin for editors
 lxml = "*"  # used via beautifulsoup4 as a parser and in the agent_netapp special agent
 mock = "*"  # used in checktestlib in unit tests
 mockldap = "*"  # used in test_userdb_ldap_connector unit test
-pylint = "*"  # used by test/Makefile's test-pylint target
+pylint = "==2.9.6"  # used by test/Makefile's test-pylint target. See CMK-8521 why pinned to 2.9.6.
 mypy = "*"  # used by test/static/Makefile's test-mypy target
 types-six = "*"  # used for type checking
 types-requests = "*"  # used for type checking

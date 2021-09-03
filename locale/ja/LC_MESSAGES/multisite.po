@@ -5279,6 +5279,11 @@ msgstr ""
 "シングルコアのレベルを、瞬間的な使用率ではなく、平均化されたものに適用しま"
 "す。"
 
+msgid ""
+"Apply these levels to clusters that have at least the following number of "
+"nodes:"
+msgstr ""
+
 msgid "Apply this rule only on the following sites"
 msgstr "このルールは、次のサイトにのみ適用してください"
 
@@ -6156,6 +6161,10 @@ msgstr "平均 ブロックされたリクエストの割合"
 
 msgid "Avg. request rate"
 msgstr "平均。リクエストレート"
+
+#, fuzzy
+msgid "Awaiting info"
+msgstr "上記の場合の警告"
 
 msgid "Azure AD Connect"
 msgstr "Azure AD Connect"
@@ -8172,6 +8181,9 @@ msgstr "カード名"
 
 msgid "Casa module: CPU temperature"
 msgstr "Casaモジュール: CPU温度"
+
+msgid "Case"
+msgstr ""
 
 msgid "Case insensitive"
 msgstr "大文字小文字を区別しません"
@@ -10251,6 +10263,11 @@ msgstr ""
 "ここでユーザーまたはグループのキーを指定して、通知を受信するようにユーザーま"
 "たはグループを構成します。キーはプッシュオーバーのウェブサイトから入手できま"
 "す。"
+
+msgid ""
+"Configure thresholds that apply to clusters based on how many nodes they "
+"have."
+msgstr ""
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr "ここでServiceNow URLを構成します(例 https://myservicenow.com)。"
@@ -15576,6 +15593,10 @@ msgstr "ESXマルチパスカウント"
 msgid "ESX VM memory usage"
 msgstr "ESX VMのメモリ使用量"
 
+#, fuzzy
+msgid "ESX Vsphere host system CPU utilization"
+msgstr "ソフォスのCPU使用率"
+
 msgid "ESX host and virtual machine states"
 msgstr "ESXホストと仮想マシンの状態"
 
@@ -20295,17 +20316,18 @@ msgstr ""
 "ここでは、単一プロセスのCPU使用率のレベルを定義できます。パフォーマンス上の理"
 "由から、CPU平均化は単一プロセスのレベルには適用されません。"
 
+#, fuzzy, python-format
 msgid ""
-"Here you can define the state of the incident in case of a downtime of the "
-"affected host or service."
-msgstr ""
-
-msgid ""
-"Here you can define the state of the incident in case of a recovery of the "
+"Here you can define the state of the %s in case of a recovery of the "
 "affected host or service problem."
 msgstr ""
 "ここでは、影響を受けたホストまたはサービスの問題が回復した場合のインシデント"
 "の状態を定義できます。"
+
+msgid ""
+"Here you can define the state of the incident in case of a downtime of the "
+"affected host or service."
+msgstr ""
 
 msgid ""
 "Here you can define the state of the incident in case of an acknowledgement "
@@ -20375,6 +20397,10 @@ msgstr ""
 "す。"
 
 msgid "Here you can define which protocol to use, default is https."
+msgstr "ここで、使用するプロトコルを定義できます。デフォルトはhttpsです。"
+
+#, fuzzy
+msgid "Here you can define with which priority the case should be created."
 msgstr "ここで、使用するプロトコルを定義できます。デフォルトはhttpsです。"
 
 msgid ""
@@ -23958,6 +23984,10 @@ msgstr "インバウンドおよびアウトバウンドメッセージ"
 
 msgid "Inbound messages"
 msgstr "インバウンドメッセージ"
+
+#, fuzzy
+msgid "Incident"
+msgstr "無効なID"
 
 msgid "Include Pattern"
 msgstr "パターンを含める"
@@ -27941,6 +27971,10 @@ msgstr "バルクウォークを使用した管理ボードSNMP(SNMP v2cを適�
 msgid "Management board config"
 msgstr "管理ボードの構成"
 
+#, fuzzy
+msgid "Management type"
+msgstr "要素タイプ"
+
 msgid "Manager"
 msgstr "マネージャー"
 
@@ -29380,6 +29414,10 @@ msgstr "クリティカル状態につながるモデム状態"
 
 msgid "Modems"
 msgstr "モデム"
+
+#, fuzzy
+msgid "Moderate"
+msgstr "モード"
 
 msgid "Modifications"
 msgstr "変更"
@@ -31035,6 +31073,14 @@ msgstr "ノードまたはバケット名"
 
 msgid "Node port"
 msgstr "ノードポート"
+
+#, fuzzy
+msgid "Node specific CPU utilization"
+msgstr "ソフォスのCPU使用率"
+
+#, fuzzy
+msgid "Node specific memory utilization"
+msgstr "Sophosのメモリ使用率"
 
 msgid "Node state"
 msgstr "ノードの状態"
@@ -37491,6 +37537,14 @@ msgstr "常駐メモリ使用量"
 msgid "Resident size"
 msgstr "レジデントのサイズ"
 
+#, fuzzy
+msgid "Resolution notes for host cases"
+msgstr "ホストアラートの説明"
+
+#, fuzzy
+msgid "Resolution notes for service cases"
+msgstr "サービスアラートの説明"
+
 msgid "Resolved"
 msgstr "解決済み"
 
@@ -40228,11 +40282,12 @@ msgstr "確認応答の場合のインシデント状態の設定"
 msgid "Settings for incident state in case of downtime"
 msgstr "ダウンタイムの場合のインシデント状態の設定"
 
-msgid "Settings for incident state in case of recovery"
-msgstr "復旧時のインシデント状態の設定"
-
 msgid "Settings for messages not processed"
 msgstr "未処理のメッセージの設定"
+
+#, fuzzy, python-format
+msgid "Settings for state of %s in case of recovery"
+msgstr "復旧時のインシデント状態の設定"
 
 msgid ""
 "Settings levels on the used bandwidth is optional. If you do set levels you "
@@ -40338,10 +40393,12 @@ msgstr "短い - DockerコンテナIDの最初の12文字を使用します"
 msgid "Short Time Intervals"
 msgstr "短い時間間隔"
 
-msgid "Short description for host incidents"
+#, fuzzy, python-format
+msgid "Short description for host %s"
 msgstr "ホストインシデントの簡単な説明"
 
-msgid "Short description for service incidents"
+#, fuzzy, python-format
+msgid "Short description for service %s"
 msgstr "サービスインシデントの簡単な説明"
 
 msgid "Shortest"
@@ -42594,6 +42651,14 @@ msgstr "次のエクステントのサイズがデフォルトの場合、状態
 msgid "State machine in invalid state"
 msgstr "無効な状態のステートマシン"
 
+#, fuzzy, python-format
+msgid "State of %s if recovery is set"
+msgstr "リカバリが設定されている場合のインシデント状態"
+
+#, fuzzy, python-format
+msgid "State of %s if recovery is set (as integer)"
+msgstr "リカバリが設定されている場合のインシデントの状態(整数として)"
+
 msgid "State of NTP peer"
 msgstr "NTPピアの状態"
 
@@ -42605,6 +42670,10 @@ msgstr "ホストの状態"
 
 msgid "State of a service"
 msgstr "サービスの状態"
+
+#, fuzzy
+msgid "State of case if recovery is set (predefined)"
+msgstr "リカバリが設定されている場合のインシデントの状態(事前定義)"
 
 msgid "State of event changed by user"
 msgstr "ユーザーによって変更されたイベントの状態"
@@ -42639,15 +42708,6 @@ msgstr "ダウンタイムが設定されている場合のインシデントの
 
 msgid "State of incident if downtime is set (predefined)"
 msgstr "ダウンタイムが設定されている場合(事前定義)のインシデントの状態"
-
-msgid "State of incident if recovery is set"
-msgstr "リカバリが設定されている場合のインシデント状態"
-
-msgid "State of incident if recovery is set (as integer)"
-msgstr "リカバリが設定されている場合のインシデントの状態(整数として)"
-
-msgid "State of incident if recovery is set (predefined)"
-msgstr "リカバリが設定されている場合のインシデントの状態(事前定義)"
 
 msgid "State of remaining services"
 msgstr "残りのサービスの状態"
@@ -44239,6 +44299,12 @@ msgstr "ホスト通知のフィールド<tt>説明</tt>に設定する必要の
 msgid ""
 "Text that should be set in field <tt>Description</tt> for service "
 "notifications."
+msgstr "サービス通知のフィールド<tt>説明</ tt>に設定する必要のあるテキスト"
+
+#, fuzzy
+msgid ""
+"Text that should be set in field <tt>Resolution notes</tt> on recovery "
+"service notifications."
 msgstr "サービス通知のフィールド<tt>説明</ tt>に設定する必要のあるテキスト"
 
 msgid ""
@@ -50284,10 +50350,16 @@ msgstr "このルールは、一括通知を構成します。"
 
 msgid ""
 "This rule configures levels for the CPU utilization (not load) for Linux/"
-"UNIX, Windows and VMWare ESX host systems, as well as devices implementing "
-"the Host Resources MIB. The utilization percentage is computed with respect "
-"to the total number of CPUs. Note that not all parameters you can configure "
-"here are applicable to all checks."
+"UNIX and Windows, as well as devices implementing the Host Resources MIB. "
+"The utilization percentage is computed with respect to the total number of "
+"CPUs. Note that not all parameters you can configure here are applicable to "
+"all checks."
+msgstr ""
+
+msgid ""
+"This rule configures levels for the CPU utilization (not load) for VMWare "
+"ESX host systems. The utilization percentage is computed with respect to the "
+"total number of CPUs. "
 msgstr ""
 
 msgid ""
@@ -57462,6 +57534,11 @@ msgid "Windows, Linux, Solaris, AIX agents matching: %s"
 msgstr "一致するWindows、Linux、Solaris、AIXエージェント: %s"
 
 msgid ""
+"With ServiceNow you can create different types of management issues, "
+"currently supported are indicents and cases."
+msgstr ""
+
+msgid ""
 "With the help of labels you can flexibly group your hosts in order to refer "
 "to them later at other places in Check_MK, e.g. in rule chains. A label "
 "always consists of a combination of key and value in the format \"key:value"
@@ -59693,6 +59770,13 @@ msgstr "cAdvisor"
 msgid "cartridge specification"
 msgstr "カートリッジ仕様"
 
+msgid "case"
+msgstr ""
+
+#, fuzzy
+msgid "cases"
+msgstr "フェーズ"
+
 msgid "change the state"
 msgstr "状態を変更します"
 
@@ -60326,6 +60410,14 @@ msgstr "非活性"
 
 msgid "inactive hosts"
 msgstr "非アクティブなホスト"
+
+#, fuzzy
+msgid "incident"
+msgstr "残存インシデント"
+
+#, fuzzy
+msgid "incidents"
+msgstr "残存インシデント"
 
 msgid "incidents left"
 msgstr "残存インシデント"

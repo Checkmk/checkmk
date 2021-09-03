@@ -5489,6 +5489,11 @@ msgstr ""
 "Pas de niveaus voor enkele kernen toe op het gemiddelde in plaats van het "
 "momentane gebruik."
 
+msgid ""
+"Apply these levels to clusters that have at least the following number of "
+"nodes:"
+msgstr ""
+
 msgid "Apply this rule only on the following sites"
 msgstr "Pas deze regel alleen toe op de volgende sites"
 
@@ -6393,6 +6398,10 @@ msgstr "Gem. aantal geblokkeerde verzoeken"
 
 msgid "Avg. request rate"
 msgstr "Gemiddeld aantal verzoeken"
+
+#, fuzzy
+msgid "Awaiting info"
+msgstr "waarschuwing indien boven"
 
 msgid "Azure AD Connect"
 msgstr "Azure AD Connect"
@@ -8511,6 +8520,9 @@ msgstr "Naam kaart"
 
 msgid "Casa module: CPU temperature"
 msgstr "Casa module: CPU temperatuur"
+
+msgid "Case"
+msgstr ""
 
 msgid "Case insensitive"
 msgstr "Hoofdletterongevoelig"
@@ -10672,6 +10684,11 @@ msgstr ""
 "Configureer de gebruiker of groep die de meldingen moet ontvangen door hier "
 "de gebruikers- of groepssleutel op te geven. De sleutel kan worden verkregen "
 "op de Pushover website."
+
+msgid ""
+"Configure thresholds that apply to clusters based on how many nodes they "
+"have."
+msgstr ""
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
 msgstr "Configureer hier uw ServiceNow URL (bijv. https://myservicenow.com)."
@@ -16111,6 +16128,10 @@ msgstr "ESX Multipad Graaf"
 msgid "ESX VM memory usage"
 msgstr "ESX VM geheugengebruik"
 
+#, fuzzy
+msgid "ESX Vsphere host system CPU utilization"
+msgstr "Sophos CPU gebruik"
+
 msgid "ESX host and virtual machine states"
 msgstr "ESX host en virtuele machine toestanden"
 
@@ -20965,19 +20986,20 @@ msgstr ""
 "processen. Om prestatieredenen zal CPU Averaging niet worden toegepast op de "
 "niveaus van afzonderlijke processen."
 
+#, fuzzy, python-format
+msgid ""
+"Here you can define the state of the %s in case of a recovery of the "
+"affected host or service problem."
+msgstr ""
+"Hier kunt u de status van het incident definiëren in geval van een herstel "
+"van de getroffen host of een dienstprobleem."
+
 msgid ""
 "Here you can define the state of the incident in case of a downtime of the "
 "affected host or service."
 msgstr ""
 "Hier kunt u de status van het incident definiëren in geval van een downtime "
 "van de getroffen host of dienst."
-
-msgid ""
-"Here you can define the state of the incident in case of a recovery of the "
-"affected host or service problem."
-msgstr ""
-"Hier kunt u de status van het incident definiëren in geval van een herstel "
-"van de getroffen host of een dienstprobleem."
 
 msgid ""
 "Here you can define the state of the incident in case of an acknowledgement "
@@ -21052,6 +21074,11 @@ msgstr ""
 "'Elasticsearch Query'."
 
 msgid "Here you can define which protocol to use, default is https."
+msgstr ""
+"Hier kunt u bepalen welk protocol gebruikt moet worden, standaard is https."
+
+#, fuzzy
+msgid "Here you can define with which priority the case should be created."
 msgstr ""
 "Hier kunt u bepalen welk protocol gebruikt moet worden, standaard is https."
 
@@ -24895,6 +24922,10 @@ msgstr "Inkomende en uitgaande berichten"
 
 msgid "Inbound messages"
 msgstr "Inkomende berichten"
+
+#, fuzzy
+msgid "Incident"
+msgstr "Ongeldige ident"
 
 msgid "Include Pattern"
 msgstr "Patroon opnemen"
@@ -29001,6 +29032,10 @@ msgstr "Beheerbord SNMP met bulk walk (dwingt SNMP v2c af)"
 msgid "Management board config"
 msgstr "Configuratie raad van bestuur"
 
+#, fuzzy
+msgid "Management type"
+msgstr "Type element"
+
 msgid "Manager"
 msgstr "Manager"
 
@@ -30459,6 +30494,10 @@ msgstr "Modem staten die leiden tot een kritieke toestand"
 
 msgid "Modems"
 msgstr "Modems"
+
+#, fuzzy
+msgid "Moderate"
+msgstr "P3 - Matig"
 
 msgid "Modifications"
 msgstr "Wijzigingen"
@@ -32122,6 +32161,14 @@ msgstr "Naam knooppunt of emmer"
 
 msgid "Node port"
 msgstr "Knooppuntpoort"
+
+#, fuzzy
+msgid "Node specific CPU utilization"
+msgstr "Sophos CPU gebruik"
+
+#, fuzzy
+msgid "Node specific memory utilization"
+msgstr "Sophos Geheugengebruik"
 
 msgid "Node state"
 msgstr "Toestand knooppunt"
@@ -38773,6 +38820,14 @@ msgstr "Gebruik van resident geheugen"
 msgid "Resident size"
 msgstr "Grootte van de bewoner"
 
+#, fuzzy
+msgid "Resolution notes for host cases"
+msgstr "Beschrijving voor waarschuwingen van de gastheer"
+
+#, fuzzy
+msgid "Resolution notes for service cases"
+msgstr "Beschrijving voor dienstwaarschuwingen"
+
 msgid "Resolved"
 msgstr "Opgelost"
 
@@ -41606,11 +41661,12 @@ msgstr "Instellingen voor incidentstatus in geval van bevestiging"
 msgid "Settings for incident state in case of downtime"
 msgstr "Instellingen voor incidentstatus in geval van downtime"
 
-msgid "Settings for incident state in case of recovery"
-msgstr "Instellingen voor incidentstatus in geval van herstel"
-
 msgid "Settings for messages not processed"
 msgstr "Instellingen voor niet verwerkte berichten"
+
+#, fuzzy, python-format
+msgid "Settings for state of %s in case of recovery"
+msgstr "Instellingen voor incidentstatus in geval van herstel"
 
 msgid ""
 "Settings levels on the used bandwidth is optional. If you do set levels you "
@@ -41717,10 +41773,12 @@ msgstr "Kort - Gebruik de eerste 12 karakters van de docker container ID"
 msgid "Short Time Intervals"
 msgstr "Korte tijdsintervallen"
 
-msgid "Short description for host incidents"
+#, fuzzy, python-format
+msgid "Short description for host %s"
 msgstr "Korte beschrijving voor incidenten met de gastheer"
 
-msgid "Short description for service incidents"
+#, fuzzy, python-format
+msgid "Short description for service %s"
 msgstr "Korte beschrijving van dienstincidenten"
 
 msgid "Shortest"
@@ -44085,6 +44143,14 @@ msgstr ""
 msgid "State machine in invalid state"
 msgstr "Staatsmachine in ongeldige toestand"
 
+#, fuzzy, python-format
+msgid "State of %s if recovery is set"
+msgstr "Staat van het incident indien herstel is ingesteld"
+
+#, fuzzy, python-format
+msgid "State of %s if recovery is set (as integer)"
+msgstr "Staat van het incident indien herstel is ingesteld (als geheel getal)"
+
 msgid "State of NTP peer"
 msgstr "Toestand van NTP peer"
 
@@ -44096,6 +44162,10 @@ msgstr "Staat van een host"
 
 msgid "State of a service"
 msgstr "Staat van een dienst"
+
+#, fuzzy
+msgid "State of case if recovery is set (predefined)"
+msgstr "Staat van het incident indien herstel is ingesteld (voorgedefinieerd)"
 
 msgid "State of event changed by user"
 msgstr "Toestand van gebeurtenis gewijzigd door gebruiker"
@@ -44133,15 +44203,6 @@ msgstr "Staat van het incident indien downtime is ingesteld (als geheel getal)"
 
 msgid "State of incident if downtime is set (predefined)"
 msgstr "Staat van incident indien downtime is ingesteld (voorgedefinieerd)"
-
-msgid "State of incident if recovery is set"
-msgstr "Staat van het incident indien herstel is ingesteld"
-
-msgid "State of incident if recovery is set (as integer)"
-msgstr "Staat van het incident indien herstel is ingesteld (als geheel getal)"
-
-msgid "State of incident if recovery is set (predefined)"
-msgstr "Staat van het incident indien herstel is ingesteld (voorgedefinieerd)"
 
 msgid "State of remaining services"
 msgstr "Staat van resterende diensten"
@@ -45756,6 +45817,14 @@ msgstr ""
 msgid ""
 "Text that should be set in field <tt>Description</tt> for service "
 "notifications."
+msgstr ""
+"Tekst die moet worden ingesteld in het veld <tt>Beschrijving</tt> voor "
+"servicemeldingen."
+
+#, fuzzy
+msgid ""
+"Text that should be set in field <tt>Resolution notes</tt> on recovery "
+"service notifications."
 msgstr ""
 "Tekst die moet worden ingesteld in het veld <tt>Beschrijving</tt> voor "
 "servicemeldingen."
@@ -52522,12 +52591,25 @@ msgstr ""
 msgid "This rule configures bulk notifications."
 msgstr "Deze regel configureert bulkmeldingen."
 
+#, fuzzy
 msgid ""
 "This rule configures levels for the CPU utilization (not load) for Linux/"
-"UNIX, Windows and VMWare ESX host systems, as well as devices implementing "
-"the Host Resources MIB. The utilization percentage is computed with respect "
-"to the total number of CPUs. Note that not all parameters you can configure "
-"here are applicable to all checks."
+"UNIX and Windows, as well as devices implementing the Host Resources MIB. "
+"The utilization percentage is computed with respect to the total number of "
+"CPUs. Note that not all parameters you can configure here are applicable to "
+"all checks."
+msgstr ""
+"Deze regel configureert niveaus voor het CPU-gebruik (niet belasting) voor "
+"Linux/UNIX, Windows en VMWare ESX hostsystemen, alsook voor apparaten die de "
+"Host Resources MIB implementeren. Het bezettingspercentage wordt berekend "
+"ten opzichte van het totale aantal CPU's. Merk op dat niet alle parameters "
+"die u hier kunt configureren van toepassing zijn op alle controles."
+
+#, fuzzy
+msgid ""
+"This rule configures levels for the CPU utilization (not load) for VMWare "
+"ESX host systems. The utilization percentage is computed with respect to the "
+"total number of CPUs. "
 msgstr ""
 "Deze regel configureert niveaus voor het CPU-gebruik (niet belasting) voor "
 "Linux/UNIX, Windows en VMWare ESX hostsystemen, alsook voor apparaten die de "
@@ -60163,6 +60245,11 @@ msgid "Windows, Linux, Solaris, AIX agents matching: %s"
 msgstr "Windows, Linux, Solaris, AIX agenten overeenkomend met: %s"
 
 msgid ""
+"With ServiceNow you can create different types of management issues, "
+"currently supported are indicents and cases."
+msgstr ""
+
+msgid ""
 "With the help of labels you can flexibly group your hosts in order to refer "
 "to them later at other places in Check_MK, e.g. in rule chains. A label "
 "always consists of a combination of key and value in the format \"key:value"
@@ -62615,6 +62702,13 @@ msgstr "cAdvisor"
 msgid "cartridge specification"
 msgstr "cartridge specificatie"
 
+msgid "case"
+msgstr ""
+
+#, fuzzy
+msgid "cases"
+msgstr "Fasen"
+
 msgid "change the state"
 msgstr "de toestand veranderen"
 
@@ -63251,6 +63345,14 @@ msgstr "inactief"
 
 msgid "inactive hosts"
 msgstr "inactieve hosts"
+
+#, fuzzy
+msgid "incident"
+msgstr "incidenten links"
+
+#, fuzzy
+msgid "incidents"
+msgstr "incidenten links"
 
 msgid "incidents left"
 msgstr "incidenten links"

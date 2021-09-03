@@ -5193,6 +5193,11 @@ msgid ""
 "instantaneous utilizations."
 msgstr ""
 
+msgid ""
+"Apply these levels to clusters that have at least the following number of "
+"nodes:"
+msgstr ""
+
 msgid "Apply this rule only on the following sites"
 msgstr ""
 
@@ -6072,6 +6077,10 @@ msgstr ""
 #, fuzzy
 msgid "Avg. request rate"
 msgstr "cereri/sec"
+
+#, fuzzy
+msgid "Awaiting info"
+msgstr "% / gamă"
 
 #, fuzzy
 msgid "Azure AD Connect"
@@ -8007,6 +8016,9 @@ msgid "Card Name"
 msgstr ""
 
 msgid "Casa module: CPU temperature"
+msgstr ""
+
+msgid "Case"
 msgstr ""
 
 msgid "Case insensitive"
@@ -10044,6 +10056,11 @@ msgstr ""
 msgid ""
 "Configure the user or group to receive the notifications by providing the "
 "user or group key here. The key can be obtained from the Pushover website."
+msgstr ""
+
+msgid ""
+"Configure thresholds that apply to clusters based on how many nodes they "
+"have."
 msgstr ""
 
 msgid "Configure your ServiceNow URL here (eg. https://myservicenow.com)."
@@ -15604,6 +15621,10 @@ msgstr ""
 msgid "ESX VM memory usage"
 msgstr "Nivelurile maxime pentru voltaj"
 
+#, fuzzy
+msgid "ESX Vsphere host system CPU utilization"
+msgstr "Dezactiveaza Notificarile"
+
 msgid "ESX host and virtual machine states"
 msgstr ""
 
@@ -20332,14 +20353,15 @@ msgid ""
 "single processes."
 msgstr ""
 
+#, python-format
 msgid ""
-"Here you can define the state of the incident in case of a downtime of the "
-"affected host or service."
+"Here you can define the state of the %s in case of a recovery of the "
+"affected host or service problem."
 msgstr ""
 
 msgid ""
-"Here you can define the state of the incident in case of a recovery of the "
-"affected host or service problem."
+"Here you can define the state of the incident in case of a downtime of the "
+"affected host or service."
 msgstr ""
 
 msgid ""
@@ -20390,6 +20412,9 @@ msgid ""
 msgstr ""
 
 msgid "Here you can define which protocol to use, default is https."
+msgstr ""
+
+msgid "Here you can define with which priority the case should be created."
 msgstr ""
 
 msgid ""
@@ -23466,6 +23491,9 @@ msgid "Inbound and Outbound Messages"
 msgstr ""
 
 msgid "Inbound messages"
+msgstr ""
+
+msgid "Incident"
 msgstr ""
 
 msgid "Include Pattern"
@@ -27668,6 +27696,10 @@ msgid "Management board config"
 msgstr ""
 
 #, fuzzy
+msgid "Management type"
+msgstr "Adaugă element"
+
+#, fuzzy
 msgid "Manager"
 msgstr "Statusul Serverului"
 
@@ -29231,6 +29263,10 @@ msgstr ""
 
 msgid "Modems"
 msgstr ""
+
+#, fuzzy
+msgid "Moderate"
+msgstr "Numele Elementului"
 
 msgid "Modifications"
 msgstr ""
@@ -30992,6 +31028,14 @@ msgstr "foloseste numele portului"
 #, fuzzy
 msgid "Node port"
 msgstr "catre port:"
+
+#, fuzzy
+msgid "Node specific CPU utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Node specific memory utilization"
+msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Node state"
@@ -37640,6 +37684,14 @@ msgstr "Nivelurile maxime pentru voltaj"
 msgid "Resident size"
 msgstr ""
 
+#, fuzzy
+msgid "Resolution notes for host cases"
+msgstr "Un titlu descriptiv despre această acțiune."
+
+#, fuzzy
+msgid "Resolution notes for service cases"
+msgstr "Nivel-urile absolute de licențe neutilizate"
+
 msgid "Resolved"
 msgstr ""
 
@@ -40484,11 +40536,12 @@ msgstr ""
 msgid "Settings for incident state in case of downtime"
 msgstr ""
 
-msgid "Settings for incident state in case of recovery"
-msgstr ""
-
 msgid "Settings for messages not processed"
 msgstr ""
+
+#, fuzzy, python-format
+msgid "Settings for state of %s in case of recovery"
+msgstr "Întreruperi adhoc"
 
 msgid ""
 "Settings levels on the used bandwidth is optional. If you do set levels you "
@@ -40583,11 +40636,13 @@ msgstr ""
 msgid "Short Time Intervals"
 msgstr ""
 
-msgid "Short description for host incidents"
-msgstr ""
+#, fuzzy, python-format
+msgid "Short description for host %s"
+msgstr "Un titlu descriptiv despre această acțiune."
 
-msgid "Short description for service incidents"
-msgstr ""
+#, fuzzy, python-format
+msgid "Short description for service %s"
+msgstr "Un titlu descriptiv despre această acțiune."
 
 msgid "Shortest"
 msgstr ""
@@ -42753,6 +42808,14 @@ msgstr ""
 msgid "State machine in invalid state"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "State of %s if recovery is set"
+msgstr "Întreruperi adhoc"
+
+#, fuzzy, python-format
+msgid "State of %s if recovery is set (as integer)"
+msgstr "Întreruperi adhoc"
+
 msgid "State of NTP peer"
 msgstr ""
 
@@ -42764,6 +42827,10 @@ msgstr ""
 
 msgid "State of a service"
 msgstr ""
+
+#, fuzzy
+msgid "State of case if recovery is set (predefined)"
+msgstr "Întreruperi adhoc"
 
 msgid "State of event changed by user"
 msgstr ""
@@ -42804,18 +42871,6 @@ msgstr "Întreruperi adhoc"
 
 #, fuzzy
 msgid "State of incident if downtime is set (predefined)"
-msgstr "Întreruperi adhoc"
-
-#, fuzzy
-msgid "State of incident if recovery is set"
-msgstr "Întreruperi adhoc"
-
-#, fuzzy
-msgid "State of incident if recovery is set (as integer)"
-msgstr "Întreruperi adhoc"
-
-#, fuzzy
-msgid "State of incident if recovery is set (predefined)"
 msgstr "Întreruperi adhoc"
 
 msgid "State of remaining services"
@@ -44498,6 +44553,11 @@ msgstr ""
 msgid ""
 "Text that should be set in field <tt>Description</tt> for service "
 "notifications."
+msgstr ""
+
+msgid ""
+"Text that should be set in field <tt>Resolution notes</tt> on recovery "
+"service notifications."
 msgstr ""
 
 msgid ""
@@ -49475,10 +49535,16 @@ msgstr ""
 
 msgid ""
 "This rule configures levels for the CPU utilization (not load) for Linux/"
-"UNIX, Windows and VMWare ESX host systems, as well as devices implementing "
-"the Host Resources MIB. The utilization percentage is computed with respect "
-"to the total number of CPUs. Note that not all parameters you can configure "
-"here are applicable to all checks."
+"UNIX and Windows, as well as devices implementing the Host Resources MIB. "
+"The utilization percentage is computed with respect to the total number of "
+"CPUs. Note that not all parameters you can configure here are applicable to "
+"all checks."
+msgstr ""
+
+msgid ""
+"This rule configures levels for the CPU utilization (not load) for VMWare "
+"ESX host systems. The utilization percentage is computed with respect to the "
+"total number of CPUs. "
 msgstr ""
 
 msgid ""
@@ -56230,6 +56296,11 @@ msgid "Windows, Linux, Solaris, AIX agents matching: %s"
 msgstr ""
 
 msgid ""
+"With ServiceNow you can create different types of management issues, "
+"currently supported are indicents and cases."
+msgstr ""
+
+msgid ""
 "With the help of labels you can flexibly group your hosts in order to refer "
 "to them later at other places in Check_MK, e.g. in rule chains. A label "
 "always consists of a combination of key and value in the format \"key:value"
@@ -58146,6 +58217,12 @@ msgstr ""
 msgid "cartridge specification"
 msgstr ""
 
+msgid "case"
+msgstr ""
+
+msgid "cases"
+msgstr ""
+
 msgid "change the state"
 msgstr ""
 
@@ -58820,6 +58897,13 @@ msgstr "Verificări active"
 
 msgid "inactive hosts"
 msgstr ""
+
+msgid "incident"
+msgstr ""
+
+#, fuzzy
+msgid "incidents"
+msgstr "Acces la Agenți"
 
 msgid "incidents left"
 msgstr ""

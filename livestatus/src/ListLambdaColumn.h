@@ -82,8 +82,8 @@ struct SimpleListColumnRenderer : ListColumnRenderer<U> {
 template <class T, class U>
 class ListColumn::Callback : public ListColumn {
     using f0_t = std::function<std::vector<U>(const T&)>;
-    using f1_t = std::function<std::vector<U>(const T&, const contact*)>;
-    using f2_t = std::function<std::vector<U>(const T&, const Column&)>;
+    using f1_t = std::function<std::vector<U>(const T&, const Column&)>;
+    using f2_t = std::function<std::vector<U>(const T&, const contact*)>;
 
 protected:
     using function_type = std::variant<f0_t, f1_t, f2_t>;
@@ -133,10 +133,10 @@ private:
             return std::get<f0_t>(f_)(*data);
         }
         if (std::holds_alternative<f1_t>(f_)) {
-            return std::get<f1_t>(f_)(*data, auth_user);
+            return std::get<f1_t>(f_)(*data, *this);
         }
         if (std::holds_alternative<f2_t>(f_)) {
-            return std::get<f2_t>(f_)(*data, *this);
+            return std::get<f2_t>(f_)(*data, auth_user);
         }
         throw std::runtime_error("unreachable");
     }
@@ -151,7 +151,10 @@ private:
             return std::get<f0_t>(f_)(*data);
         }
         if (std::holds_alternative<f1_t>(f_)) {
-            return std::get<f1_t>(f_)(*data, auth_user);
+            return std::get<f1_t>(f_)(*data, *this);
+        }
+        if (std::holds_alternative<f2_t>(f_)) {
+            return std::get<f2_t>(f_)(*data, auth_user);
         }
         throw std::runtime_error("unreachable");
     }
@@ -165,6 +168,9 @@ private:
             return std::get<f0_t>(f_)(*data);
         }
         if (std::holds_alternative<f1_t>(f_)) {
+            return std::get<f1_t>(f_)(*data, *this);
+        }
+        if (std::holds_alternative<f2_t>(f_)) {
             throw std::runtime_error("wrong lambda/overload");
         }
         throw std::runtime_error("unreachable");

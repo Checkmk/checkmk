@@ -15,6 +15,7 @@
 
 #include "ListColumn.h"
 #include "contact_fwd.h"
+class Column;
 class ColumnOffsets;
 class MonitoringCore;
 class Row;
@@ -32,8 +33,11 @@ public:
 private:
     MonitoringCore *_mc;
 
-    [[nodiscard]] std::filesystem::path getDirectory(Row row) const;
+    [[nodiscard]] std::filesystem::path getDirectory(
+        const std::string &host_name) const;
     [[nodiscard]] std::string getHostName(Row row) const;
+    [[nodiscard]] static std::vector<std::string> getValueImpl(
+        const std::filesystem::path &dir, const Column &col);
 };
 
 #endif  // LogwatchListColumn_h

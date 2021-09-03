@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <iterator>
 
+#include "Column.h"
 #include "Logger.h"
 #include "MonitoringCore.h"
 #include "Row.h"
@@ -22,7 +23,11 @@
 std::vector<std::string> LogwatchListColumn::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds /*timezone_offset*/) const {
-    auto dir = getDirectory(row);
+    return getValueImpl(getDirectory(getHostName(row)), *this);
+}
+
+std::vector<std::string> LogwatchListColumn::getValueImpl(
+    const std::filesystem::path &dir, const Column &col) {
     if (dir.empty()) {
         return {};
     }
@@ -37,14 +42,14 @@ std::vector<std::string> LogwatchListColumn::getValue(
             return filenames;
         }
     } catch (const std::filesystem::filesystem_error &e) {
-        Warning(logger()) << name() << ": " << e.what();
+        Warning(col.logger()) << col.name() << ": " << e.what();
     }
     return {};
 }
 
-std::filesystem::path LogwatchListColumn::getDirectory(Row row) const {
+std::filesystem::path LogwatchListColumn::getDirectory(
+    const std::string &host_name) const {
     auto logwatch_path = _mc->mkLogwatchPath();
-    auto host_name = getHostName(row);
     return logwatch_path.empty() || host_name.empty()
                ? std::filesystem::path()
                : std::filesystem::path(logwatch_path) / pnp_cleanup(host_name);

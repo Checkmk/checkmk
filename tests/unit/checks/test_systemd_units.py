@@ -141,3 +141,310 @@ def test_services_split(services, blacklist, expected):
     services_split = check.context['_services_split']
     actual = services_split(services, blacklist)
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    'string_table, section',
+    [
+        (
+            [
+                ['[list-unit-files]'],
+                ['[all]'],
+                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
+                [
+                    'virtualbox.service',
+                    'loaded',
+                    'active',
+                    'exited',
+                    'LSB:',
+                    'VirtualBox',
+                    'Linux',
+                    'kernel',
+                    'module',
+                ],
+            ],
+            {
+                'service': {
+                    'virtualbox': UnitEntry(name='virtualbox',
+                                            type='service',
+                                            load='loaded',
+                                            active='active',
+                                            sub='exited',
+                                            description='LSB: VirtualBox Linux kernel module',
+                                            state='unknown')
+                },
+            },
+        ),
+        (
+            [
+                ['[list-unit-files]'],
+                ['[all]'],
+                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
+                [
+                    'dev-disk-by\\x2did-ata\\x2dAPPLE_SSD_SM0256G_S29CNYDG865465.device',
+                    'loaded',
+                    'active',
+                    'plugged',
+                    'APPLE_SSD_SM0256G',
+                ],
+            ],
+            {
+                'device': {
+                    'dev-disk-by\\x2did-ata\\x2dAPPLE_SSD_SM0256G_S29CNYDG865465': UnitEntry(
+                        name='dev-disk-by\\x2did-ata\\x2dAPPLE_SSD_SM0256G_S29CNYDG865465',
+                        type='device',
+                        load='loaded',
+                        active='active',
+                        sub='plugged',
+                        description='APPLE_SSD_SM0256G',
+                        state='unknown')
+                },
+            },
+        ),
+        (
+            [
+                ['[list-unit-files]'],
+                ['[all]'],
+                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
+                [
+                    'cups.path',
+                    'loaded',
+                    'active',
+                    'running',
+                    'CUPS',
+                    'Scheduler',
+                ],
+            ],
+            {
+                'path': {
+                    'cups': UnitEntry(name='cups',
+                                      type='path',
+                                      load='loaded',
+                                      active='active',
+                                      sub='running',
+                                      description='CUPS Scheduler',
+                                      state='unknown')
+                },
+            },
+        ),
+        (
+            [
+                ['[list-unit-files]'],
+                ['[all]'],
+                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
+                [
+                    'init.scope',
+                    'loaded',
+                    'active',
+                    'running',
+                    'System',
+                    'and',
+                    'Service',
+                    'Manager',
+                ],
+            ],
+            {
+                'scope': {
+                    'init': UnitEntry(name='init',
+                                      type='scope',
+                                      load='loaded',
+                                      active='active',
+                                      sub='running',
+                                      description='System and Service Manager',
+                                      state='unknown')
+                },
+            },
+        ),
+        (
+            [
+                ['[list-unit-files]'],
+                ['[all]'],
+                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
+                [
+                    'system-getty.slice',
+                    'loaded',
+                    'active',
+                    'active',
+                    'system-getty.slice',
+                ],
+            ],
+            {
+                'slice': {
+                    'system-getty': UnitEntry(name='system-getty',
+                                              type='slice',
+                                              load='loaded',
+                                              active='active',
+                                              sub='active',
+                                              description='system-getty.slice',
+                                              state='unknown')
+                },
+            },
+        ),
+        (
+            [
+                ['[list-unit-files]'],
+                ['[all]'],
+                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
+                [
+                    'systemd-journald.socket',
+                    'loaded',
+                    'active',
+                    'running',
+                    'Journal',
+                    'Socket',
+                ],
+            ],
+            {
+                'socket': {
+                    'systemd-journald': UnitEntry(name='systemd-journald',
+                                                  type='socket',
+                                                  load='loaded',
+                                                  active='active',
+                                                  sub='running',
+                                                  description='Journal Socket',
+                                                  state='unknown')
+                },
+            },
+        ),
+        (
+            [
+                ['[list-unit-files]'],
+                ['[all]'],
+                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
+                [
+                    'swapfile.swap',
+                    'loaded',
+                    'failed',
+                    'failed',
+                    '/swapfile',
+                ],
+            ],
+            {
+                'swap': {
+                    'swapfile': UnitEntry(name='swapfile',
+                                          type='swap',
+                                          load='loaded',
+                                          active='failed',
+                                          sub='failed',
+                                          description='/swapfile',
+                                          state='unknown')
+                },
+            },
+        ),
+        (
+            [
+                ['[list-unit-files]'],
+                ['[all]'],
+                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
+                [
+                    'apt-daily-upgrade.timer',
+                    'loaded',
+                    'active',
+                    'waiting',
+                    'Daily',
+                    'apt',
+                    'upgrade',
+                    'and',
+                    'clean',
+                    'activities',
+                ],
+            ],
+            {
+                'timer': {
+                    'apt-daily-upgrade': UnitEntry(
+                        name='apt-daily-upgrade',
+                        type='timer',
+                        load='loaded',
+                        active='active',
+                        sub='waiting',
+                        description='Daily apt upgrade and clean activities',
+                        state='unknown')
+                },
+            },
+        ),
+        (
+            [
+                ['[list-unit-files]'],
+                ['[all]'],
+                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
+                [
+                    'proc-sys-fs-.service.binfmt_misc.automount',  # <- nasty ".service."!
+                    'loaded',
+                    'active',
+                    'running',
+                    'Arbitrary',
+                    'Executable',
+                    'File',
+                    'Formats',
+                    'File',
+                    'System',
+                    'Automount',
+                    'Point',
+                ],
+            ],
+            {
+                'automount': {
+                    'proc-sys-fs-.service.binfmt_misc': UnitEntry(
+                        name='proc-sys-fs-.service.binfmt_misc',
+                        type='automount',
+                        load='loaded',
+                        active='active',
+                        sub='running',
+                        description='Arbitrary Executable File Formats File System Automount Point',
+                        state='unknown')
+                },
+            },
+        ),
+        (
+            [
+                ['[list-unit-files]'],
+                ['[all]'],
+                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
+                [
+                    'foo.service',
+                    'loaded',
+                    'failed',
+                    'failed',
+                    'Arbitrary',
+                    'Executable',
+                    'File',
+                    'Formats',
+                    'File',
+                    'System',
+                    'Automount',
+                    'Point',
+                ],
+                [
+                    'bar.service',
+                    'loaded',
+                    'failed',
+                    'failed',
+                    'a',
+                    'bar',
+                    'service',
+                ],
+            ],
+            {
+                'service': {
+                    'bar': UnitEntry(name='bar',
+                                     type='service',
+                                     load='loaded',
+                                     active='failed',
+                                     sub='failed',
+                                     description='a bar service',
+                                     state='unknown'),
+                    'foo': UnitEntry(
+                        name='foo',
+                        type='service',
+                        load='loaded',
+                        active='failed',
+                        sub='failed',
+                        description='Arbitrary Executable File Formats File System Automount Point',
+                        state='unknown')
+                },
+            },
+        ),
+    ])
+def test_parse_systemd_units(string_table, section):
+    check = Check('systemd_units')
+    assert check.run_parse(string_table) == section

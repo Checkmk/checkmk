@@ -17,37 +17,6 @@ factory_settings["mtr_default_levels"] = {
 }
 
 
-def parse_mtr(info):
-    hosts = {}
-    for line in info:
-        if line[0].startswith("**ERROR**"):
-            continue
-
-        ret = {'hops': {}}
-        if not len(line) > 0:
-            return ret
-        hostname = line[0]
-        ret['hostname'] = hostname
-        ret['last_check'] = line[1]
-        ret['hopcount'] = int(float(line[2]))
-        rest = line[3:]
-
-        if ret['hopcount'] > 0:
-            for hopnum in range(0, ret['hopcount']):
-                ret['hops'][hopnum + 1] = {
-                    'hopname': rest[0 + 8 * hopnum],
-                    'pl': rest[1 + 8 * hopnum].replace("%", "").rstrip(),
-                    'snt': rest[2 + 8 * hopnum],
-                    'response_time': rest[3 + 8 * hopnum],
-                    'rta': rest[4 + 8 * hopnum],
-                    'rtmin': rest[5 + 8 * hopnum],
-                    'rtmax': rest[6 + 8 * hopnum],
-                    'rtstddev': rest[7 + 8 * hopnum],
-                }
-        hosts[hostname] = ret
-    return hosts
-
-
 def inventory_mtr(parsed):
     for host in parsed:
         yield host, {}
@@ -64,11 +33,10 @@ def _transform_mtr_params(p):
 
 
 def check_mtr(item, params, parsed):
-    hostinfo = parsed.get(item)
-    if not hostinfo:
+    if (hops := parsed.get(item)) is None:
         return
 
-    if hostinfo["hopcount"] == 0:
+    if not hops:
         yield 3, "Insufficient data: No hop information available"
         return
 
@@ -76,7 +44,6 @@ def check_mtr(item, params, parsed):
 
     hopnames = []
     perfdata = []
-    hops = hostinfo['hops']
 
     def get_hop_info(hops, idx, apply_levels=False):
         if apply_levels:
@@ -88,32 +55,24 @@ def check_mtr(item, params, parsed):
             rta_warn, rta_crit = None, None
             rtstddev_warn, rtstddev_crit = None, None
 
-        hop = hops[idx]
-        hopnames.append(hop["hopname"])
-        rta = float(hop['rta'])
-        rtmin = float(hop['rtmin'])
-        rtmax = float(hop['rtmax'])
-        rtstddev = float(hop['rtstddev'])
-        response_time = float(hop['response_time'])
-        pl = float(hop['pl'])
-        #        snt    = float(hop['snt'])
-        #        perfdata.append( ( 'hop_%d_snt' % idx, snt, "", "", "", "" ) )  # packets sent
-        perfdata.append(('hop_%d_rta' % idx, rta / 1000.0, rta_warn and
-                         rta_warn / 1000.0, rta_crit and rta_crit / 1000.0))
-        perfdata.append(('hop_%d_rtmin' % idx, rtmin / 1000.0))
-        perfdata.append(('hop_%d_rtmax' % idx, rtmax / 1000.0))
-        perfdata.append(('hop_%d_rtstddev' % idx, rtstddev / 1000.0, rtstddev_warn and
+        hop = hops[idx - 1]
+        hopnames.append(hop.name)
+        perfdata.append(('hop_%d_rta' % idx, hop.rta, rta_warn and rta_warn / 1000.0, rta_crit and
+                         rta_crit / 1000.0))
+        perfdata.append(('hop_%d_rtmin' % idx, hop.rtmin))
+        perfdata.append(('hop_%d_rtmax' % idx, hop.rtmax))
+        perfdata.append(('hop_%d_rtstddev' % idx, hop.rtstddev, rtstddev_warn and
                          rtstddev_warn / 1000.0, rtstddev_crit and rtstddev_crit / 1000.0))
-        perfdata.append(('hop_%d_response_time' % idx, response_time / 1000.0))
-        perfdata.append(('hop_%d_pl' % idx, pl, pl_warn, pl_crit))
+        perfdata.append(('hop_%d_response_time' % idx, hop.response_time))
+        perfdata.append(('hop_%d_pl' % idx, hop.pl, pl_warn, pl_crit))
 
         if apply_levels:  # the params only apply to the last host
             hop_text_entries = []
             hop_states = []
             for what, unit, value, warn, crit in [
-                ("Packet loss", "%", pl, pl_warn, pl_crit),
-                ("Round trip average", "ms", rta, rta_warn, rta_crit),
-                ("Standard deviation", "ms", rtstddev, rtstddev_warn, rtstddev_crit),
+                ("Packet loss", "%", hop.pl, pl_warn, pl_crit),
+                ("Round trip average", "ms", hop.rta * 1000, rta_warn, rta_crit),
+                ("Standard deviation", "ms", hop.rtstddev * 1000, rtstddev_warn, rtstddev_crit),
             ]:
                 what_state = 0
                 hop_text = ""
@@ -131,7 +90,7 @@ def check_mtr(item, params, parsed):
             return max(hop_states), ", ".join(hop_text_entries), perfdata
         return None, None, perfdata
 
-    hc = int(hostinfo['hopcount'])
+    hc = len(hops)
     hop_perfdata = [('hops', hc)]
 
     def format_hopnames(hopnames):
@@ -152,7 +111,6 @@ def check_mtr(item, params, parsed):
 
 
 check_info['mtr'] = {
-    "parse_function": parse_mtr,
     "check_function": check_mtr,
     "inventory_function": inventory_mtr,
     "service_description": "Mtr to %s",

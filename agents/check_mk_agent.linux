@@ -260,31 +260,31 @@ if inpath timeout; then
     export -f waitmax
 fi
 
-preamble_7() {
-    if [ -f "$MK_CONFDIR/encryption.cfg" ]; then
-        # shellcheck source=/dev/null
-        . "$MK_CONFDIR/encryption.cfg"
-    fi
+set_up_encryption() {
+    # shellcheck source=/dev/null
+    [ -f "${MK_CONFDIR}/encryption.cfg" ] && . "${MK_CONFDIR}/encryption.cfg"
 
+    if [ "${ENCRYPTED}" == "yes" ]; then
+        OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
+        # Depending on the Checkmk version, a key of proper length (256 bits) is provided.
+        # However, always use key derivation here (suitable for passwords of all lengths).
+        if [ "${OPENSSL_VERSION}" -ge 10101 ]; then
+            printf "03"
+            exec > >(openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "${PASSPHRASE}")
+        elif [ "${OPENSSL_VERSION}" -ge 10000 ]; then
+            printf "02"
+            exec > >(openssl enc -aes-256-cbc -md sha256 -k "${PASSPHRASE}" -nosalt)
+        else
+            printf "00"
+            exec > >(openssl enc -aes-256-cbc -md md5 -k "${PASSPHRASE}" -nosalt)
+        fi
+    fi
+}
+
+preamble_7() {
     if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then
         # shellcheck source=/dev/null
         . "$MK_CONFDIR/exclude_sections.cfg"
-    fi
-
-    if [ "$ENCRYPTED" == "yes" ]; then
-        OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
-        if [ "$OPENSSL_VERSION" -ge 10101 ]; then
-            echo -n "03"
-            # Depending on the Checkmk version, a key of proper length (256 bits) is provided. However, we
-            # always use key derivation here, as this is suitable for passwords of all lengths.
-            exec > >(openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "$PASSPHRASE")
-        elif [ "$OPENSSL_VERSION" -ge 10000 ]; then
-            echo -n "02"
-            exec > >(openssl enc -aes-256-cbc -md sha256 -k "$PASSPHRASE" -nosalt)
-        else
-            echo -n "00"
-            exec > >(openssl enc -aes-256-cbc -md md5 -k "$PASSPHRASE" -nosalt)
-        fi
     fi
 
     RTC_PLUGINS=""
@@ -1825,6 +1825,7 @@ main_setup() {
     set_up_profiling
     preamble_5
     preamble_6
+    set_up_encryption
     preamble_7
 
 }

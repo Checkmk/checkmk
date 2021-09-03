@@ -208,6 +208,9 @@ preamble_3() {
     fi
 }
 
+# encryption not available for aix
+alias optionally_encrypt=cat
+
 # Shell version of the waitmax utility, that limits the runtime of
 # commands. This version does not conserve the original exit code
 # of the command. It is successfull if the command terminated
@@ -822,13 +825,17 @@ main() {
 
         main_setup "$@"
 
-        ${MK_RUN_SYNC_PARTS} && main_sync_parts
+        (
 
-        (${MK_RUN_ASYNC_PARTS} || ${MK_RUN_SYNC_PARTS}) && main_mixed_parts
+            ${MK_RUN_SYNC_PARTS} && main_sync_parts
 
-        ${MK_RUN_ASYNC_PARTS} && main_async_parts
+            (${MK_RUN_ASYNC_PARTS} || ${MK_RUN_SYNC_PARTS}) && main_mixed_parts
 
-        ${MK_RUN_SYNC_PARTS} && main_finalize_sync
+            ${MK_RUN_ASYNC_PARTS} && main_async_parts
+
+            ${MK_RUN_SYNC_PARTS} && main_finalize_sync
+
+        ) | optionally_encrypt
 
         [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
 

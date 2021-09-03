@@ -275,16 +275,16 @@ set_up_encryption() {
         # Depending on the Checkmk version, a key of proper length (256 bits) is provided.
         # However, always use key derivation here (suitable for passwords of all lengths).
         if [ "${OPENSSL_VERSION}" -ge 10101 ]; then
-            printf "03"
-            exec > >(openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "${PASSPHRASE}")
+            optionally_encrypt() { printf "03%s" "$(openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "${PASSPHRASE}")"; }
         elif [ "${OPENSSL_VERSION}" -ge 10000 ]; then
-            printf "02"
-            exec > >(openssl enc -aes-256-cbc -md sha256 -k "${PASSPHRASE}" -nosalt)
+            optionally_encrypt() { printf "02%s" "$(openssl enc -aes-256-cbc -md sha256 -k "${PASSPHRASE}" -nosalt)"; }
         else
-            printf "00"
-            exec > >(openssl enc -aes-256-cbc -md md5 -k "${PASSPHRASE}" -nosalt)
+            optionally_encrypt() { printf "00%s" "$(openssl enc -aes-256-cbc -md md5 -k "${PASSPHRASE}" -nosalt)"; }
         fi
+    else
+        alias optionally_encrypt=cat
     fi
+
 }
 
 preamble_7() {
@@ -1894,13 +1894,17 @@ main() {
 
         main_setup "$@"
 
-        ${MK_RUN_SYNC_PARTS} && main_sync_parts
+        (
 
-        (${MK_RUN_ASYNC_PARTS} || ${MK_RUN_SYNC_PARTS}) && main_mixed_parts
+            ${MK_RUN_SYNC_PARTS} && main_sync_parts
 
-        ${MK_RUN_ASYNC_PARTS} && main_async_parts
+            (${MK_RUN_ASYNC_PARTS} || ${MK_RUN_SYNC_PARTS}) && main_mixed_parts
 
-        ${MK_RUN_SYNC_PARTS} && main_finalize_sync
+            ${MK_RUN_ASYNC_PARTS} && main_async_parts
+
+            ${MK_RUN_SYNC_PARTS} && main_finalize_sync
+
+        ) | optionally_encrypt
 
         [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
 

@@ -83,6 +83,10 @@ public:
 
 private:
     const detail::RRDDataMaker data_maker_;
+    detail::RRDDataMaker::Data getRawValue(Row row) const {
+        return columnData<T>(row) == nullptr ? detail::RRDDataMaker::Data{}
+                                             : data_maker_(*columnData<T>(row));
+    }
 };
 
 template <class T>
@@ -92,9 +96,7 @@ void RRDColumn<T>::output(Row row, RowRenderer &r,
     // We output meta data as first elements in the list. Note: In Python or
     // JSON we could output nested lists. In CSV mode this is not possible and
     // we rather stay compatible with CSV mode.
-    const auto data = columnData<T>(row) == nullptr
-                          ? detail::RRDDataMaker::Data{}
-                          : data_maker_(*columnData<T>(row));
+    const auto data = getRawValue(row);
     ListRenderer l(r);
     l.output(data.start);
     l.output(data.end);
@@ -108,9 +110,7 @@ template <class T>
 std::vector<std::string> RRDColumn<T>::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds timezone_offset) const {
-    const auto data = (columnData<T>(row) == nullptr)
-                          ? ::detail::RRDDataMaker::Data{}
-                          : data_maker_(*columnData<T>(row));
+    const auto data = getRawValue(row);
     std::vector<std::string> strings;
     strings.push_back(std::to_string(
         std::chrono::system_clock::to_time_t(data.start + timezone_offset)));

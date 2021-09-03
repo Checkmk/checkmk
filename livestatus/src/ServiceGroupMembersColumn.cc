@@ -80,7 +80,7 @@ std::unique_ptr<Filter> ServiceGroupMembersColumn::createFilter(
 std::vector<std::string> ServiceGroupMembersColumn::getValue(
     Row row, const contact *auth_user,
     std::chrono::seconds /*timezone_offset*/) const {
-    auto entries = getEntries(row, auth_user);
+    auto entries = getRawValue(row, auth_user);
     std::vector<std::string> values;
     std::transform(entries.begin(), entries.end(), std::back_inserter(values),
                    [](const auto &entry) {
@@ -90,7 +90,8 @@ std::vector<std::string> ServiceGroupMembersColumn::getValue(
 }
 
 std::vector<ServiceGroupMembersColumn::Entry>
-ServiceGroupMembersColumn::getEntries(Row row, const contact *auth_user) const {
+ServiceGroupMembersColumn::getRawValue(Row row,
+                                       const contact *auth_user) const {
     std::vector<Entry> entries;
 #ifdef CMC
     if (const auto *p = columnData<ObjectGroup<Service>::values_type>(row)) {

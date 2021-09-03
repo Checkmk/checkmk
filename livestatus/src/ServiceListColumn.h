@@ -85,7 +85,7 @@ public:
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds /*timezone_offset*/) const override {
         ListRenderer l(r);
-        for (const auto &entry : getEntries(row, auth_user)) {
+        for (const auto &entry : getRawValue(row, auth_user)) {
             renderer_.output(l, entry);
         }
     }
@@ -97,7 +97,7 @@ public:
 private:
     ServiceListRenderer renderer_;
     MonitoringCore *mc_;
-    std::vector<Entry> getEntries(Row row, const contact *auth_user) const;
+    std::vector<Entry> getRawValue(Row row, const contact *auth_user) const;
 };
 
 #endif  // ServiceListColumn_h

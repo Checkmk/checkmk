@@ -44,13 +44,13 @@ std::vector<std::string> HostListColumn::getValue(
     Row row, const contact *auth_user,
     std::chrono::seconds /*timezone_offset*/) const {
     std::vector<std::string> values;
-    auto entries = getEntries(row, auth_user);
+    auto entries = getRawValue(row, auth_user);
     std::transform(entries.begin(), entries.end(), std::back_inserter(values),
                    [](const auto &entry) { return entry.host_name; });
     return values;
 };
 
-std::vector<column::hostlist::Entry> HostListColumn::getEntries(
+std::vector<column::hostlist::Entry> HostListColumn::getRawValue(
     Row row, const contact *auth_user) const {
     std::vector<column::hostlist::Entry> entries;
 #ifdef CMC

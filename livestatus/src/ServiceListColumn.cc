@@ -71,7 +71,7 @@ void ServiceListRenderer::output(
 std::vector<std::string> ServiceListColumn::getValue(
     Row row, const contact *auth_user,
     std::chrono::seconds /*timezone_offset*/) const {
-    auto entries = getEntries(row, auth_user);
+    auto entries = getRawValue(row, auth_user);
     std::vector<std::string> values;
     std::transform(entries.begin(), entries.end(), std::back_inserter(values),
                    [](const auto &entry) { return entry.description; });
@@ -95,7 +95,7 @@ bool inCustomTimeperiod(MonitoringCore *mc, service *svc) {
 }  // namespace
 #endif
 
-std::vector<ServiceListColumn::Entry> ServiceListColumn::getEntries(
+std::vector<ServiceListColumn::Entry> ServiceListColumn::getRawValue(
     Row row, const contact *auth_user) const {
     std::vector<Entry> entries;
 #ifdef CMC

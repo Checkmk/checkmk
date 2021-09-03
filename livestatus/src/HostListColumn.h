@@ -53,7 +53,7 @@ public:
     void output(Row row, RowRenderer &r, const contact *auth_user,
                 std::chrono::seconds /*timezone_offset*/) const override {
         ListRenderer l(r);
-        for (const auto &entry : this->getEntries(row, auth_user)) {
+        for (const auto &entry : this->getRawValue(row, auth_user)) {
             renderer_.output(l, entry);
         }
     }
@@ -64,7 +64,7 @@ public:
 
 private:
     HostListRenderer renderer_;
-    std::vector<column::hostlist::Entry> getEntries(
+    std::vector<column::hostlist::Entry> getRawValue(
         Row row, const contact *auth_user) const;
 };
 

@@ -132,7 +132,7 @@ for domain, p in domains.items():
                 dir_files = []  # type: List[str]
                 ftp_conn.retrlines('LIST %s%s' % (base_dir, subdir), callback=dir_files.append)
                 for ln in dir_files:
-                    size += get_size(ftp_conn, '%s%s' % (base_dir, subdir), ln)
+                    size += get_size(ftp_conn, '%s%s' % (base_dir, subdir), ln)  # pylint: disable=cell-var-from-loop
             else:
                 size += int(l.split()[-5])
             return size

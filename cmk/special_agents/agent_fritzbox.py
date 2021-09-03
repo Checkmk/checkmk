@@ -95,7 +95,7 @@ def get_upnp_info(control, namespace, action, base_urls, opt_debug):
                 # during an agent execution
                 base_urls.reverse()
                 continue
-        except Exception as e:
+        except Exception:
             if opt_debug:
                 sys.stdout.write('----------------------------\n')
                 sys.stdout.write(traceback.format_exc())

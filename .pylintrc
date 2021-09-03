@@ -143,7 +143,7 @@ disable=
     # TODO: Evaluate
     raise-missing-from,
     #---------------------------------------------------------------------------
-    # To be evaluated
+    # imports are handled by isort
     wrong-import-order,
     #---------------------------------------------------------------------------
     # pylint 2.7.[012] has totally screwed this up... :-/
@@ -161,6 +161,17 @@ disable=
     # the file for some reason and the code is OK. Last defense line: disable
     # it globally.
     invalid-all-format,
+    # TODO pylint 2.10.2 introduced checks. Check and remove them gradually
+    redundant-u-string-prefix,
+    unspecified-encoding,
+    superfluous-parens,
+    super-init-not-called,
+    use-dict-literal,
+    use-list-literal,
+    use-sequence-for-iteration,
+    format-string-without-interpolation,
+
+
 
 enable=
     #---------------------------------------------------------------------------

@@ -58,7 +58,7 @@ def main():
 
     try:
         response = requests.get(address, headers=headers, params=params)
-    except requests.RequestException as e:
+    except requests.RequestException:
         bail_out(
             'Request to the API failed. Please check your connection settings. '
             'A guide to setup the API can be found on the Aerohive homepage.', args.debug)

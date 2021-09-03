@@ -201,7 +201,7 @@ class BackupTarFile(tarfile.TarFile):
             answer = ""
             while not answer.endswith("\n"):
                 answer += self._sock.recv(1024).decode("utf-8")
-        except IOError as e:
+        except IOError:
             self._sock = None
             if self._verbose:
                 sys.stdout.write("skipping rrdcached command (broken pipe)\n")

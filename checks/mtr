@@ -22,16 +22,6 @@ def inventory_mtr(parsed):
         yield host, {}
 
 
-def _transform_mtr_params(p):
-    if "avg" in p:
-        p["rta"] = p.pop("avg")
-    if "stddev" in p:
-        p["rtstddev"] = p.pop("stddev")
-    if "loss" in p:
-        p["pl"] = p.pop("loss")
-    return p
-
-
 def check_mtr(item, params, parsed):
     if (hops := parsed.get(item)) is None:
         return
@@ -39,8 +29,6 @@ def check_mtr(item, params, parsed):
     if not hops:
         yield 3, "Insufficient data: No hop information available"
         return
-
-    params = _transform_mtr_params(params)
 
     hopnames = []
     perfdata = []

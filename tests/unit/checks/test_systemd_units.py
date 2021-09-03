@@ -613,3 +613,72 @@ def test_discover_systemd_units_services(section, discovery_params, discovered_s
 def test_discover_systemd_units_services_summary(section, discovered_services):
     check = Check('systemd_units.services_summary')
     assert list(check.run_discovery(section)) == discovered_services
+
+
+@pytest.mark.parametrize('item, params, section, check_results', [
+    (
+        'virtualbox',
+        {
+            'else': 2,
+            'states': {
+                'active': 0,
+                'failed': 2,
+                'inactive': 0
+            },
+            'states_default': 2,
+        },
+        SECTION,
+        [
+            (0, 'Status: active'),
+            (0, 'LSB: VirtualBox Linux kernel module'),
+        ],
+    ),
+    (
+        'foo',
+        {
+            'else': 2,
+            'states': {
+                'active': 0,
+                'failed': 2,
+                'inactive': 0
+            },
+            'states_default': 2,
+        },
+        SECTION,
+        [
+            (2, 'Status: failed'),
+            (0, 'Arbitrary Executable File Formats File System Automount Point'),
+        ],
+    ),
+    (
+        'something',
+        {
+            'else': 2,
+            'states': {
+                'active': 0,
+                'failed': 2,
+                'inactive': 0
+            },
+            'states_default': 2,
+        },
+        SECTION,
+        [(2, 'Service not found')],
+    ),
+    (
+        'something',
+        {
+            'else': 2,
+            'states': {
+                'active': 0,
+                'failed': 2,
+                'inactive': 0
+            },
+            'states_default': 2,
+        },
+        {},
+        [(2, 'Service not found')],
+    ),
+])
+def test_check_systemd_units_services(item, params, section, check_results):
+    check = Check('systemd_units.services')
+    assert list(check.run_check(item, params, section)) == check_results

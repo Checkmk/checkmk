@@ -24,10 +24,10 @@ private:
     verbosity verbosity_;
 };
 
-namespace detail::column {
+namespace column::detail {
 template <>
 inline std::string serialize(const DowntimeData &data) {
     return std::to_string(data._id);
 }
-}  // namespace detail::column
+}  // namespace column::detail
 #endif  // DowntimeRenderer_h

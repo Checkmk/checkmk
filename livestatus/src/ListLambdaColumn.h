@@ -26,7 +26,7 @@
 #include "opids.h"
 class Aggregator;
 
-namespace detail::column {
+namespace column::detail {
 // Specialize this function in the classes deriving ListColumn.
 template <class U>
 std::string serialize(const U&);
@@ -35,7 +35,7 @@ template <>
 inline std::string serialize(const std::string& s) {
     return s;
 }
-}  // namespace detail::column
+}  // namespace column::detail
 
 struct ListColumn : Column {
     using value_type = std::vector<std::string>;
@@ -73,7 +73,7 @@ struct ListColumnRenderer {
 template <class U>
 struct SimpleListColumnRenderer : ListColumnRenderer<U> {
     void output(ListRenderer& l, const U& value) const override {
-        l.output(detail::column::serialize<U>(value));
+        l.output(column::detail::serialize<U>(value));
     }
 };
 
@@ -109,7 +109,7 @@ public:
         std::vector<std::string> values;
         std::transform(raw_value.begin(), raw_value.end(),
                        std::back_inserter(values),
-                       detail::column::serialize<U>);
+                       column::detail::serialize<U>);
         return values;
     }
 

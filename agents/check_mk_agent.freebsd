@@ -180,6 +180,49 @@ section_checkmk_failed_plugin() {
 # END COMMON AGENT CODE
 #
 
+#
+# BEGIN COMMON AGENT CODE
+#
+
+section_fileinfo() {
+    # fileinfo check: put patterns for files into /etc/check_mk/fileinfo.cfg
+    perl -e '
+    use File::Glob "bsd_glob";
+    my @patterns = ();
+    foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
+        open my $handle, "<", $_ or next;
+        while (<$handle>) {
+            chomp;
+            next if /^\s*(#|$)/;
+            my $pattern = $_;
+            $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
+            push @patterns, $pattern;
+        }
+        warn "error while reading $_: $!\n" if $!;
+        close $handle;
+    }
+    exit if ! @patterns;
+
+    print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
+
+    foreach (@patterns) {
+        foreach (bsd_glob("$_")) {
+            if (! -f) {
+                print "$_|missing\n" if ! -d;
+            } elsif (my @infos = stat) {
+                print "$_|ok|$infos[7]|$infos[9]\n";
+            } else {
+                print "$_|stat failed: $!\n";
+            }
+        }
+    }
+    ' -- "${MK_CONFDIR}"
+}
+
+#
+# END COMMON AGENT CODE
+#
+
 run_purely_synchronous_sections() {
 
     section_checkmk
@@ -412,40 +455,6 @@ run_purely_synchronous_sections() {
 
         [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
     fi
-
-
-    # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
-    perl -e '
-    use File::Glob "bsd_glob";
-    my @patterns = ();
-    foreach (bsd_glob("$ARGV[0]/fileinfo.cfg"), bsd_glob("$ARGV[0]/fileinfo.d/*")) {
-        open my $handle, "<", $_ or next;
-        while (<$handle>) {
-            chomp;
-            next if /^\s*(#|$)/;
-            my $pattern = $_;
-            $pattern =~ s/\$DATE:(.*?)\$/substr(`date +"$1"`, 0, -1)/eg;
-            push @patterns, $pattern;
-        }
-        warn "error while reading $_: $!\n" if $!;
-        close $handle;
-    }
-    exit if ! @patterns;
-
-    print "<<<fileinfo:sep(124)>>>\n", time, "\n[[[header]]]\nname|status|size|time\n[[[content]]]\n";
-
-    foreach (@patterns) {
-        foreach (bsd_glob("$_")) {
-            if (! -f) {
-                print "$_|missing\n" if ! -d;
-            } elsif (my @infos = stat) {
-                print "$_|ok|$infos[7]|$infos[9]\n";
-            } else {
-                print "$_|stat failed: $!\n";
-            }
-        }
-    }
-    ' -- "$MK_CONFDIR"
 }
 
 # Runs a command asynchronous by use of a cache file
@@ -652,6 +661,8 @@ main_setup() {
 
 main_sync_parts() {
     run_purely_synchronous_sections
+
+    section_fileinfo
 
     run_spooler
 }

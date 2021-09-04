@@ -1186,7 +1186,12 @@ section_haproxy() {
     done
 }
 
+#
+# BEGIN COMMON AGENT CODE
+#
+
 section_fileinfo() {
+    # fileinfo check: put patterns for files into /etc/check_mk/fileinfo.cfg
     perl -e '
     use File::Glob "bsd_glob";
     my @patterns = ();
@@ -1217,8 +1222,12 @@ section_fileinfo() {
             }
         }
     }
-    ' -- "$MK_CONFDIR"
+    ' -- "${MK_CONFDIR}"
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 # ntpq helper function
 

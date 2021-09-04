@@ -694,8 +694,12 @@ section_veritas_vcs() {
     fi
 }
 
+#
+# BEGIN COMMON AGENT CODE
+#
+
 section_fileinfo() {
-    # Fileinfo-Check: put patterns for files into /etc/check_mk/fileinfo.cfg
+    # fileinfo check: put patterns for files into /etc/check_mk/fileinfo.cfg
     perl -e '
     use File::Glob "bsd_glob";
     my @patterns = ();
@@ -726,8 +730,12 @@ section_fileinfo() {
             }
         }
     }
-    ' -- "$MK_CONFDIR"
+    ' -- "${MK_CONFDIR}"
 }
+
+#
+# END COMMON AGENT CODE
+#
 
 section_livestatus_status() {
     # Get stats about OMD monitoring cores running on this machine.

@@ -3,11 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-DEBUG=false
-
 #
 # BEGIN COMMON AGENT CODE
 #
+
+usage() {
+    cat <<HERE
+Usage: ${0} [OPTION...]
+
+The Checkmk agent to monitor *nix style systems.
+
+Options:
+  -h, --help                 show this message and exit
+  -d, --debug                emit debugging messages
+  -p, --profile              create files containing the execution times
+HERE
+}
 
 inpath() {
     # replace "if type [somecmd]" idiom
@@ -28,6 +39,35 @@ is_valid_plugin() {
         *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
         *) [ -f "${1}" ] && [ -x "${1}" ] ;;
     esac
+}
+
+set_up_process_commandline_arguments() {
+    while [ -n "${1}" ]; do
+        case "${1}" in
+            -d | --debug)
+                set -xv
+                # restore stderr
+                exec 2>&9
+                shift
+                ;;
+
+            -p | --profile)
+                LOG_SECTION_TIME=true
+                # disable caching to get the whole execution time
+                DISABLE_CACHING=true
+                shift
+                ;;
+
+            -h | --help)
+                usage
+                exit 1
+                ;;
+
+            *)
+                shift
+                ;;
+        esac
+    done
 }
 
 #
@@ -83,41 +123,6 @@ set_up_remote() {
     REMOTE="${REMOTE_HOST:-"${REMOTE_ADDR:-"${SSH_CLIENT%% *}"}"}"
 
     export REMOTE
-}
-
-preamble_2_arguments() {
-    while test -n "$1"; do
-        case "$1" in
-            -d)
-                DEBUG=true
-                shift
-                ;;
-
-            -p)
-                LOG_SECTION_TIME=true
-                # disable caching to get the whole execution time
-                DISABLE_CACHING=true
-                shift
-                ;;
-
-            *)
-                shift
-                ;;
-        esac
-    done
-}
-
-preamble_3() {
-    # close standard input (for security reasons) and stderr when not
-    # explicitly in debug mode.
-    # When the nodes agent is executed by a e.g. docker node in a container,
-    # then don't close stdin, because the agent is piped through it in this
-    # case.
-    if $DEBUG; then
-        set -xv
-    else
-        exec </dev/null 2>/dev/null
-    fi
 }
 
 #
@@ -1824,12 +1829,15 @@ run_partially_asynchronous_sections() {
 
 main_setup() {
 
+    # close stdin and tempotarily disable stderr
+    exec </dev/null 9>&2 2>/dev/null
+
+    set_up_process_commandline_arguments "$@"
+
     set_variable_defaults
 
     preamble_1
     set_up_remote
-    preamble_2_arguments "$@"
-    preamble_3
     set_up_profiling
     preamble_5
     preamble_6

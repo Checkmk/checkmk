@@ -7,6 +7,19 @@
 # BEGIN COMMON AGENT CODE
 #
 
+usage() {
+    cat <<HERE
+Usage: ${0} [OPTION...]
+
+The Checkmk agent to monitor *nix style systems.
+
+Options:
+  -h, --help                 show this message and exit
+  -d, --debug                emit debugging messages
+  -p, --profile              create files containing the execution times
+HERE
+}
+
 inpath() {
     # replace "if type [somecmd]" idiom
     # 'command -v' tends to be more robust vs 'which' and 'type' based tests
@@ -26,6 +39,35 @@ is_valid_plugin() {
         *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
         *) [ -f "${1}" ] && [ -x "${1}" ] ;;
     esac
+}
+
+set_up_process_commandline_arguments() {
+    while [ -n "${1}" ]; do
+        case "${1}" in
+            -d | --debug)
+                set -xv
+                # restore stderr
+                exec 2>&9
+                shift
+                ;;
+
+            -p | --profile)
+                LOG_SECTION_TIME=true
+                # disable caching to get the whole execution time
+                DISABLE_CACHING=true
+                shift
+                ;;
+
+            -h | --help)
+                usage
+                exit 1
+                ;;
+
+            *)
+                shift
+                ;;
+        esac
+    done
 }
 
 #
@@ -83,13 +125,6 @@ preamble_1() {
     # All files in SPOOLDIR will simply appended to the agent
     # output if they are not outdated (see below)
     SPOOLDIR=$MK_VARDIR/spool
-
-    # close standard input (for security reasons) and stderr
-    if [ "$1" = -d ]; then
-        set -xv
-    else
-        exec </dev/null 2>/dev/null
-    fi
 }
 
 # encryption not implemented
@@ -1199,9 +1234,13 @@ run_partially_asnchronous_sections() {
 
 main_setup() {
 
+    exec </dev/null 9>&2 2>/dev/null
+
+    set_up_process_commandline_arguments "$@"
+
     set_variable_defaults
 
-    preamble_1 "$@"
+    preamble_1
 
 }
 

@@ -7,6 +7,19 @@
 # BEGIN COMMON AGENT CODE
 #
 
+usage() {
+    cat <<HERE
+Usage: ${0} [OPTION...]
+
+The Checkmk agent to monitor *nix style systems.
+
+Options:
+  -h, --help                 show this message and exit
+  -d, --debug                emit debugging messages
+  -p, --profile              create files containing the execution times
+HERE
+}
+
 inpath() {
     # replace "if type [somecmd]" idiom
     # 'command -v' tends to be more robust vs 'which' and 'type' based tests
@@ -26,6 +39,35 @@ is_valid_plugin() {
         *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
         *) [ -f "${1}" ] && [ -x "${1}" ] ;;
     esac
+}
+
+set_up_process_commandline_arguments() {
+    while [ -n "${1}" ]; do
+        case "${1}" in
+            -d | --debug)
+                set -xv
+                # restore stderr
+                exec 2>&9
+                shift
+                ;;
+
+            -p | --profile)
+                LOG_SECTION_TIME=true
+                # disable caching to get the whole execution time
+                DISABLE_CACHING=true
+                shift
+                ;;
+
+            -h | --help)
+                usage
+                exit 1
+                ;;
+
+            *)
+                shift
+                ;;
+        esac
+    done
 }
 
 #
@@ -87,34 +129,6 @@ preamble_1() {  # TODO: split these up more meaningful
 
     #Avoid problems with wrong decimal separators in other language verions of aix
     export LC_NUMERIC="en_US"
-
-    DEBUG=false
-    while test -n "${1}"; do
-        case "${1}" in
-            -d)
-                DEBUG=true
-                shift
-                ;;
-
-            -p)
-                LOG_SECTION_TIME=true
-                # disable caching to get the whole execution time
-                : "${DISABLE_CACHING:=true}"
-                shift
-                ;;
-
-            *)
-                shift
-                ;;
-        esac
-    done
-
-    # close standard input (for security reasons) and stderr
-    if ${DEBUG}; then
-        set -xv
-    else
-        exec </dev/null 2>/dev/null
-    fi
 }
 
 #
@@ -776,7 +790,9 @@ run_partially_asynchronous_sections() {
 }
 
 main_setup() {
-    preamble_1 "$@"
+    exec </dev/null 9>&2 2>/dev/null
+    set_up_process_commandline_arguments "$@" 
+    preamble_1
     preamble_2
     preamble_3
 

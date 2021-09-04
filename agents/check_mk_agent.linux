@@ -59,6 +59,7 @@ preamble_1() { # TODO: split these up more meaningful
 
     # The package name gets patched for baked agents to either
     # "check-mk-agent" or the name set by the "name of agent packages" rule
+    # TODO: rename (used for systemd as well), deal with when fixing CMK-8339
     XINETD_SERVICE_NAME=check_mk
 
     # All executables in PLUGINSDIR will simply be executed and their
@@ -311,16 +312,12 @@ section_checkmk() {
     echo "PluginsDirectory: $PLUGINSDIR"
     echo "LocalDirectory: $LOCALDIR"
 
-    # If we are called via xinetd, try to find only_from configuration
-    if [ -n "$REMOTE_HOST" ]; then
-        echo -n 'OnlyFrom: '
-        sed -n '/^service[[:space:]]*'$XINETD_SERVICE_NAME'/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/\1/p' /etc/xinetd.d/* | head -n1
-        echo
-    # If we are called via systemd, try to find only_from configuration aswell
-    elif inpath systemctl; then
-        echo -n 'OnlyFrom: '
-        sed -n '/^# systemd socket definition file/,/^IPAddressAllow/s/IPAddressAllow=//p' /etc/systemd/system/check-mk-agent*
-        echo
+    # try to find only_from configuration
+    if [ -n "$REMOTE_HOST" ]; then # xinetd
+        sed -n "/^service[[:space:]]*${XINETD_SERVICE_NAME}/,/}/s/^[[:space:]]*only_from[[:space:]]*=[[:space:]]*\(.*\)/OnlyFrom: \1/p" /etc/xinetd.d/* | head -n1
+    elif inpath systemctl; then # systemd
+        systemctl show --property IPAddressAllow "${XINETD_SERVICE_NAME}.socket" |
+            sed 's/IPAddressAllow=/OnlyFrom: /'
     fi
 
     #

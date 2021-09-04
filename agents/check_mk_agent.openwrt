@@ -13,6 +13,15 @@ get_file_mtime() {
         perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
 }
 
+is_valid_plugin() {
+    # test if a file is executable and does not have certain
+    # extensions (remnants from distro upgrades).
+    case "${1:?No plugin defined}" in
+        *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
+        *) [ -f "${1}" ] && [ -x "${1}" ] ;;
+    esac
+}
+
 #
 # END COMMON AGENT CODE
 #
@@ -872,10 +881,6 @@ run_liveupdate() {
             run_real_time_checks >/dev/null &
         fi
     fi
-}
-
-is_valid_plugin() {
-    [ -f "$1" ] && [ -x "$1" ] && true || false
 }
 
 run_plugins() {

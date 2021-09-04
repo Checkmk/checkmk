@@ -16,6 +16,15 @@ get_file_mtime() {
         perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print $mtime."\n";' "${1}"
 }
 
+is_valid_plugin() {
+    # test if a file is executable and does not have certain
+    # extensions (remnants from distro upgrades).
+    case "${1:?No plugin defined}" in
+        *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
+        *) [ -f "${1}" ] && [ -x "${1}" ] ;;
+    esac
+}
+
 #
 # END COMMON AGENT CODE
 #
@@ -1363,15 +1372,6 @@ run_runas_executor() {
                 fi
             done
     fi
-}
-
-# This function ensures that a file is executable and does not have certain
-# extensions (remnants from distro upgrades).
-is_valid_plugin() {
-    case "${1:?No plugin defined}" in
-        *.dpkg-new | *.dpkg-old | *.dpkg-temp) return 1 ;;
-        *) test -f "$1" -a -x "$1" ;;
-    esac
 }
 
 # Runs a command asynchronous by use of a cache file. Usage:

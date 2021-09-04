@@ -9435,6 +9435,14 @@ msgid "Clusters: Prefered check result of local checks"
 msgstr ""
 
 #, fuzzy
+msgid "Clusters: node specific CPU utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
+msgid "Clusters: node specific memory utilization"
+msgstr "Dezactiveaza Notificarile"
+
+#, fuzzy
 msgid "Clusterwide"
 msgstr "Cluster nou"
 
@@ -12653,9 +12661,6 @@ msgid "Default Topic"
 msgstr ""
 
 msgid "Default User Profile"
-msgstr ""
-
-msgid "Default Value"
 msgstr ""
 
 #, fuzzy
@@ -31028,14 +31033,6 @@ msgstr "foloseste numele portului"
 #, fuzzy
 msgid "Node port"
 msgstr "catre port:"
-
-#, fuzzy
-msgid "Node specific CPU utilization"
-msgstr "Dezactiveaza Notificarile"
-
-#, fuzzy
-msgid "Node specific memory utilization"
-msgstr "Dezactiveaza Notificarile"
 
 #, fuzzy
 msgid "Node state"

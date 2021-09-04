@@ -9612,6 +9612,14 @@ msgstr "重複するクラスターのクラスター化されたサービス"
 msgid "Clusters: Prefered check result of local checks"
 msgstr "クラスター: ローカルチェックの優先チェック結果"
 
+#, fuzzy
+msgid "Clusters: node specific CPU utilization"
+msgstr "ソフォスのCPU使用率"
+
+#, fuzzy
+msgid "Clusters: node specific memory utilization"
+msgstr "Sophosのメモリ使用率"
+
 msgid "Clusterwide"
 msgstr "クラスター全体"
 
@@ -12710,9 +12718,6 @@ msgstr "デフォルトのトピック"
 
 msgid "Default User Profile"
 msgstr "デフォルトのユーザープロファイル"
-
-msgid "Default Value"
-msgstr "デフォルト値"
 
 msgid "Default color"
 msgstr "デフォルトの色"
@@ -31073,14 +31078,6 @@ msgstr "ノードまたはバケット名"
 
 msgid "Node port"
 msgstr "ノードポート"
-
-#, fuzzy
-msgid "Node specific CPU utilization"
-msgstr "ソフォスのCPU使用率"
-
-#, fuzzy
-msgid "Node specific memory utilization"
-msgstr "Sophosのメモリ使用率"
 
 msgid "Node state"
 msgstr "ノードの状態"
@@ -61469,6 +61466,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Default Value"
+#~ msgstr "デフォルト値"
 
 #~ msgid "WATO - Checkmk's Web Administration Tool"
 #~ msgstr "WATO-CheckmkのWeb管理ツール"

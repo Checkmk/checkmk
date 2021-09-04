@@ -9982,6 +9982,14 @@ msgstr "Geclusterte Services für überlappende Cluster"
 msgid "Clusters: Prefered check result of local checks"
 msgstr "Cluster: Bevorzugtes Checkergebnis von Local-Checks"
 
+#, fuzzy
+msgid "Clusters: node specific CPU utilization"
+msgstr "CPU-Auslastung von Sophos"
+
+#, fuzzy
+msgid "Clusters: node specific memory utilization"
+msgstr "Speicherauslastung von Sophos"
+
 msgid "Clusterwide"
 msgstr "Geclustert"
 
@@ -13167,9 +13175,6 @@ msgstr "Standardthema"
 
 msgid "Default User Profile"
 msgstr "Standard Benutzerprofil"
-
-msgid "Default Value"
-msgstr "Standardwert"
 
 msgid "Default color"
 msgstr "Standardfarbe"
@@ -32192,14 +32197,6 @@ msgstr "Name des Knotens oder Buckets"
 
 msgid "Node port"
 msgstr "Node Port"
-
-#, fuzzy
-msgid "Node specific CPU utilization"
-msgstr "CPU-Auslastung von Sophos"
-
-#, fuzzy
-msgid "Node specific memory utilization"
-msgstr "Speicherauslastung von Sophos"
 
 msgid "Node state"
 msgstr "Node-Zustand"
@@ -64394,6 +64391,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Default Value"
+#~ msgstr "Standardwert"
 
 #~ msgid "WATO - Checkmk's Web Administration Tool"
 #~ msgstr "WATO - Checkmk's Web Administration Tool"

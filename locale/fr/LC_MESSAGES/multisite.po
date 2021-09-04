@@ -10118,6 +10118,14 @@ msgstr "Services en grappe pour les grappes qui se chevauchent"
 msgid "Clusters: Prefered check result of local checks"
 msgstr "Clusters : Résultat du contrôle préféré des contrôles locaux"
 
+#, fuzzy
+msgid "Clusters: node specific CPU utilization"
+msgstr "Utilisation du CPU de Sophos"
+
+#, fuzzy
+msgid "Clusters: node specific memory utilization"
+msgstr "Sophos Utilisation de la mémoire"
+
 msgid "Clusterwide"
 msgstr "À l'échelle du groupe"
 
@@ -13335,9 +13343,6 @@ msgstr "Sujet par défaut"
 
 msgid "Default User Profile"
 msgstr "Profil utilisateur par défaut"
-
-msgid "Default Value"
-msgstr "Valeur par défaut"
 
 msgid "Default color"
 msgstr "Couleur par défaut"
@@ -32554,14 +32559,6 @@ msgstr "Nom du nœud ou du seau"
 
 msgid "Node port"
 msgstr "Port du nœud"
-
-#, fuzzy
-msgid "Node specific CPU utilization"
-msgstr "Utilisation du CPU de Sophos"
-
-#, fuzzy
-msgid "Node specific memory utilization"
-msgstr "Sophos Utilisation de la mémoire"
 
 msgid "Node state"
 msgstr "État du nœud"
@@ -65262,6 +65259,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tous droits réservés."
+
+#~ msgid "Default Value"
+#~ msgstr "Valeur par défaut"
 
 #~ msgid "WATO - Checkmk's Web Administration Tool"
 #~ msgstr "WATO - Outil d'administration Web de Checkmk"

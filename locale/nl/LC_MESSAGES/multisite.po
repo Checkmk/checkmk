@@ -9996,6 +9996,14 @@ msgstr "Geclusterde diensten voor overlappende clusters"
 msgid "Clusters: Prefered check result of local checks"
 msgstr "Clusters: Voorkeur voor het resultaat van lokale controles"
 
+#, fuzzy
+msgid "Clusters: node specific CPU utilization"
+msgstr "Sophos CPU gebruik"
+
+#, fuzzy
+msgid "Clusters: node specific memory utilization"
+msgstr "Sophos Geheugengebruik"
+
 msgid "Clusterwide"
 msgstr "Clusterbreed"
 
@@ -13172,9 +13180,6 @@ msgstr "Standaard onderwerp"
 
 msgid "Default User Profile"
 msgstr "Standaard gebruikersprofiel"
-
-msgid "Default Value"
-msgstr "Standaardwaarde"
 
 msgid "Default color"
 msgstr "Standaard kleur"
@@ -32161,14 +32166,6 @@ msgstr "Naam knooppunt of emmer"
 
 msgid "Node port"
 msgstr "Knooppuntpoort"
-
-#, fuzzy
-msgid "Node specific CPU utilization"
-msgstr "Sophos CPU gebruik"
-
-#, fuzzy
-msgid "Node specific memory utilization"
-msgstr "Sophos Geheugengebruik"
 
 msgid "Node state"
 msgstr "Toestand knooppunt"
@@ -64410,6 +64407,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Default Value"
+#~ msgstr "Standaardwaarde"
 
 #~ msgid "WATO - Checkmk's Web Administration Tool"
 #~ msgstr "WATO - Checkmk's web beheertool"

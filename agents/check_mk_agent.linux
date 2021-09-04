@@ -102,7 +102,7 @@ preamble_3() {
     # case.
     if $DEBUG; then
         set -xv
-    elif [ -z "$MK_FROM_NODE" ]; then
+    else
         exec </dev/null 2>/dev/null
     fi
 }

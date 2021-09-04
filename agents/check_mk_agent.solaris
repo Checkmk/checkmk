@@ -7,6 +7,12 @@
 # BEGIN COMMON AGENT CODE
 #
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -157,12 +163,6 @@ set_up_profiling() {
 # END COMMON AGENT CODE
 #
 
-# Function to replace "if type [somecmd]" idiom
-# 'command -v' tends to be more robust vs 'which' and 'type' based tests
-inpath() {
-    command -v "${1:?No command to test}" >/dev/null 2>&1
-}
-
 read_python_version() {
     if inpath "$1"; then
         version=$($1 -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
@@ -210,7 +210,7 @@ preamble_4() {
 preamble_5() {
     # Find out what zone we are running in
     # Treat all pre-Solaris 10 systems as "global"
-    if type zonename &>/dev/null; then
+    if inpath zonename; then
         zonename=$(zonename)
         pszone="-z $zonename"
     else
@@ -289,7 +289,7 @@ section_df() {
 
 section_zfs() {
     # Filesystem usage for ZFS
-    if type zfs &>/dev/null; then
+    if inpath zfs; then
         echo '<<<zfsget>>>'
         zfs get -t filesystem,volume -Hp name,quota,used,avail,mountpoint,type 2>/dev/null \
         || zfs get -Hp name,referenced,avail,mountpoint,type | sed 's/referenced/used/g'
@@ -302,10 +302,10 @@ section_zfs_arc_cache() {
     # ZFS arc cache
     # newer Solaris (>=11.3) do not provide hits and misses via mdb -k
     echo '<<<zfs_arc_cache>>>'
-    if type kstat &>/dev/null; then
+    if inpath kstat; then
         kstat -p zfs:0:arcstats | sed -e 's/.*arcstats://g' | awk '{printf "%s = %s\n", $1, $2;}'
 
-    elif type mdb &>/dev/null; then
+    elif inpath mdb; then
         echo '::arc' | mdb -k
     fi
 }
@@ -350,12 +350,12 @@ section_statgrab() {
     # Statgrab
     # source: http://www.i-scream.org/libstatgrab/
     # binary: http://www.opencsw.org/
-    if type statgrab &>/dev/null; then
+    if inpath statgrab; then
         statgrab_vars="const. cpu. disk. general. mem. page. swap. user."
         statgrab_sections="cpu disk page"
 
         # Collect net stats in the global zone and in local zones if dlstat is present.
-        if [ "$zonename" == "global" ] || type dlstat &>/dev/null; then
+        if [ "$zonename" == "global" ] || inpath dlstat; then
             statgrab_vars="$statgrab_vars net."
             statgrab_sections="$statgrab_sections net"
         fi
@@ -430,7 +430,7 @@ section_ntp() {
 }
 
 section_solaris_prtg() {
-    if type prtdiag >/dev/null 2>&1; then
+    if inpath prtdiag; then
         # prtdiag does not work in local zones
         if [ "$zonename" == "global" ]; then
             run_cached "solaris_prtdiag_status" 300 \
@@ -448,7 +448,7 @@ section_tcp() {
 
 section_multipathing() {
     # Multipathing
-    if type mpathadm &>/dev/null; then
+    if inpath mpathadm; then
         if [ "$zonename" == "global" ]; then
             echo '<<<solaris_multipath>>>'
             mpathadm list LU | nawk '{if(NR%3==1){dev=$1}
@@ -503,7 +503,7 @@ section_fileinfo() {
 
 section_libelle() {
     # Libelle Business Shadow
-    if type trd >/dev/null 2>&1; then
+    if inpath trd; then
         echo '<<<libelle_business_shadow:sep(58)>>>'
         trd -s
     fi
@@ -512,7 +512,7 @@ section_libelle() {
 section_solaris_fmadm() {
     # Displaying Information About Faults or Defects
     # If there are no faults the output of this command will be empty.
-    if type fmadm >/dev/null 2>&1; then
+    if inpath fmadm; then
         echo '<<<solaris_fmadm:sep(58)>>>'
         fmadm faulty
     fi
@@ -522,7 +522,7 @@ section_solaris_services() {
     # Getting Information About Services Running on Solaris
     # We can get a list of all service instances, including disabled
     # or incomplete ones by 'svcs -a'
-    if type svcs > /dev/null 2>&1; then
+    if inpath svcs; then
         echo '<<<solaris_services>>>'
         svcs -a
     fi

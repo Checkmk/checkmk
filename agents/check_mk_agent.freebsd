@@ -20,6 +20,12 @@
 # BEGIN COMMON AGENT CODE
 #
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -141,12 +147,6 @@ set_up_profiling() {
 #
 # END COMMON AGENT CODE
 #
-
-# Function to replace "if type [somecmd]" idiom
-# 'command -v' tends to be more robust vs 'which' and 'type' based tests
-inpath() {
-    command -v "${1:?No command to test}" >/dev/null 2>&1
-}
 
 section_checkmk() {
     echo "<<<check_mk>>>"

@@ -7,6 +7,12 @@
 # BEGIN COMMON AGENT CODE
 #
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -147,7 +153,7 @@ set_up_profiling() {
 # Prefer (relatively) new /usr/bin/timeout from coreutils against
 # our shipped waitmax. waitmax is statically linked and crashes on
 # some Ubuntu versions recently.
-if type timeout >/dev/null 2>&1; then
+if inpath timeout; then
     waitmax() {
         timeout "$@"
     }
@@ -234,7 +240,7 @@ section_df() {
 
 section_zfsget() {
     # Filesystem usage for ZFS
-    if type zfs >/dev/null 2>&1; then
+    if inpath zfs; then
         echo '<<<zfsget>>>'
         zfs get -Hp name,quota,used,avail,mountpoint,type -t filesystem,volume ||
             zfs get -Hp name,quota,used,avail,mountpoint,type
@@ -247,7 +253,7 @@ section_mounts() {
     # Check NFS mounts by accessing them with stat -f (System
     # call statfs()). If this lasts more then 2 seconds we
     # consider it as hanging. We need waitmax.
-    if type waitmax >/dev/null; then
+    if inpath waitmax; then
         STAT_VERSION=$(stat --version | head -1 | cut -d" " -f4)
         STAT_BROKE="5.3.0"
 
@@ -299,7 +305,7 @@ section_uptime() {
 
 section_lnx_if() {
     # New variant: Information about speed and state in one section
-    if type ip >/dev/null; then
+    if inpath ip; then
         echo '<<<lnx_if>>>'
         echo "[start_iplink]"
         ip link
@@ -308,7 +314,7 @@ section_lnx_if() {
 
     echo '<<<lnx_if:sep(58)>>>'
     sed 1,2d /proc/net/dev
-    if type ethtool >/dev/null; then
+    if inpath ethtool; then
         for eth in $(sed -e 1,2d /proc/net/dev | cut -d':' -f1 | sort); do
             echo "[$eth]"
             ethtool "$eth" | grep -E '(Speed|Duplex|Link detected|Auto-negotiation):'
@@ -328,7 +334,7 @@ section_bonding_interfaces() {
 
 section_ovs_bonding() {
     # Same for Open vSwitch bonding
-    if type ovs-appctl >/dev/null; then
+    if inpath ovs-appctl; then
         BONDS=$(ovs-appctl bond/list)
         COL=$(echo "$BONDS" | awk '{for(i=1;i<=NF;i++) {if($i == "bond") printf("%d", i)} exit 0}')
         echo '<<<ovs_bonding:sep(58)>>>'
@@ -347,7 +353,7 @@ section_tcp_conn() {
 
 section_multipath() {
     # Linux Multipathing
-    if type multipath >/dev/null; then
+    if inpath multipath; then
         if [ -f /etc/multipath.conf ]; then
             echo '<<<multipath>>>'
             multipath -l
@@ -360,7 +366,7 @@ section_diskstat() {
     echo '<<<diskstat>>>'
     date +%s
     egrep ' (x?[shv]d[a-z]*|cciss/c[0-9]+d[0-9]+|emcpower[a-z]+|dm-[0-9]+|VxVM.*|mmcblk.*|dasd[a-z]*) ' </proc/diskstats
-    if type dmsetup >/dev/null; then
+    if inpath dmsetup; then
         echo '[dmsetup_info]'
         dmsetup info -c --noheadings --separator ' ' -o name,devno,vg_name,lv_name
     fi
@@ -379,7 +385,7 @@ section_kernel() {
 
 section_ipmitool() {
     # Hardware sensors via IPMI (need ipmitool)
-    if type ipmitool >/dev/null; then
+    if inpath ipmitool; then
         run_cached "ipmi" 300 "echo <<<ipmi:sep(124)>>>; waitmax 300 ipmitool sensor list | grep -v 'command failed' | egrep -v '^[^ ]+ na ' | grep -v ' discrete '"
         # readable discrete sensor states
         run_cached "ipmi_discrete" 300 "echo <<<ipmi_discrete:sep(124)>>>; waitmax 300 ipmitool sdr elist compact"
@@ -389,7 +395,7 @@ section_ipmitool() {
 section_ipmisensors() {
     # IPMI data via ipmi-sensors (of freeipmi). Please make sure, that if you
     # have installed freeipmi that IPMI is really support by your hardware.
-    if (type ipmi-sensors && ls /dev/ipmi*) &>/dev/null; then
+    if (inpath ipmi-sensors && ls /dev/ipmi*) &> /dev/null; then
         ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
         # Newer ipmi-sensors version have new output format; Legacy format can be used
         if ipmi-sensors --help | grep -q legacy-output; then
@@ -415,7 +421,7 @@ section_md() {
 
 section_dmraid() {
     # RAID status of Linux RAID via device mapper
-    if type dmraid >/dev/null && DMSTATUS=$(dmraid -r); then
+    if inpath dmraid && DMSTATUS=$(dmraid -r); then
         echo '<<<dmraid>>>'
 
         # Output name and status
@@ -434,7 +440,7 @@ section_dmraid() {
 
 section_lsi() {
     # RAID status of LSI controllers via cfggen
-    if type cfggen >/dev/null; then
+    if inpath cfggen; then
         echo '<<<lsi>>>'
         cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
     fi
@@ -443,15 +449,15 @@ section_lsi() {
 section_megaraid() {
     # RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
     # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
-    if type MegaCli >/dev/null; then
+    if inpath MegaCli; then
         MegaCli_bin="MegaCli"
-    elif type MegaCli64 >/dev/null; then
+    elif inpath MegaCli64; then
         MegaCli_bin="MegaCli64"
-    elif type megacli >/dev/null; then
+    elif inpath megacli; then
         MegaCli_bin="megacli"
-    elif type storcli >/dev/null; then
+    elif inpath storcli; then
         MegaCli_bin="storcli"
-    elif type storcli64 >/dev/null; then
+    elif inpath storcli64; then
         MegaCli_bin="storcli64"
     else
         MegaCli_bin="unknown"
@@ -476,7 +482,7 @@ section_megaraid() {
 
 section_3ware() {
     # RAID status of 3WARE disk controller (by Radoslaw Bak)
-    if type tw_cli >/dev/null; then
+    if inpath tw_cli; then
         for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
             echo '<<<3ware_info>>>'
             tw_cli /$C show all | egrep 'Model =|Firmware|Serial'
@@ -491,7 +497,7 @@ section_3ware() {
 section_arc_raid_status() {
     # RAID controllers from areca (Taiwan)
     # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
-    if type cli64 >/dev/null; then
+    if inpath cli64; then
         run_cached "arc_raid_status" 300 "echo <<<arc_raid_status>>>; cli64 rsf info | tail -n +3 | head -n -2"
     fi
 }
@@ -507,7 +513,7 @@ section_openvpn_clients() {
 
 section_ntp() {
     # Time synchronization with NTP
-    if type ntpq >/dev/null 2>&1; then
+    if inpath ntpq; then
         # remove heading, make first column space separated
         run_cached "ntp" 30 "echo <<<ntp>>>; waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' || true"
     fi
@@ -515,14 +521,14 @@ section_ntp() {
 
 section_chrony() {
     # Time synchronization with Chrony
-    if type chronyc >/dev/null 2>&1; then
+    if inpath chronyc; then
         # Force successful exit code. Otherwise section will be missing if daemon not running
         run_cached "chrony" 30 "echo <<<chrony>>>; waitmax 5 chronyc tracking || true"
     fi
 }
 
 section_nvidia() {
-    if type nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]; then
+    if inpath nvidia-settings && [ -S /tmp/.X11-unix/X0 ]; then
         echo '<<<nvidia>>>'
         for var in GPUErrors GPUCoreTemp; do
             DISPLAY=:0 waitmax 2 nvidia-settings -t -q $var | sed "s/^/$var: /"
@@ -539,7 +545,7 @@ section_drbd() {
 
 section_cups_queues() {  # TODO: this seems broken. Don't we need to export cups_queues?
     # Status of CUPS printer queues
-    if type lpstat >/dev/null 2>&1; then
+    if inpath lpstat; then
         if pgrep -f "\bcupsd" >/dev/null 2>&1; then
             # first define a function to check cups
             cups_queues() {
@@ -579,7 +585,7 @@ section_heartbeat() {
         echo '<<<heartbeat_crm>>>'
         TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
     fi
-    if type cl_status >/dev/null 2>&1; then
+    if inpath cl_status; then
         echo '<<<heartbeat_rscstatus>>>'
         cl_status rscstatus
 
@@ -600,7 +606,7 @@ section_heartbeat() {
 section_postfix() {
     # Postfix mailqueue monitoring
     # Determine the number of mails and their size in several postfix mail queues
-    if type postconf >/dev/null; then
+    if inpath postconf; then
         postfix_queue_dir=$(postconf -h queue_directory 2>/dev/null)
 
         if [ -n "$postfix_queue_dir" ]; then
@@ -622,7 +628,7 @@ section_postfix() {
 
 section_qmail() {
     # Check status of qmail mailqueue
-    if type qmail-qstat >/dev/null; then
+    if inpath qmail-qstat; then
         echo "<<<qmail_stats>>>"
         qmail-qstat
     fi
@@ -630,7 +636,7 @@ section_qmail() {
 
 section_nullmailer() {
     # Nullmailer queue monitoring
-    if type nullmailer-send >/dev/null && [ -d /var/spool/nullmailer/queue ]; then
+    if inpath nullmailer-send && [ -d /var/spool/nullmailer/queue ]; then
         echo '<<<nullmailer_mailq>>>'
         COUNT=$(find /var/spool/nullmailer/queue -type f | wc -l)
         SIZE=$(du -s /var/spool/nullmailer/queue | awk '{print $1 }')
@@ -640,7 +646,7 @@ section_nullmailer() {
 
 section_mknotify() {
     # Check status of OMD sites and Checkmk Notification spooler
-    if type omd >/dev/null; then
+    if inpath omd; then
         run_cached "omd_status" 60 "echo <<<omd_status>>>; omd status --bare --auto || true"
         echo '<<<mknotifyd:sep(0)>>>'
         date +%s
@@ -656,7 +662,7 @@ section_mknotify() {
 }
 
 section_omd_apache() {
-    if type omd >/dev/null; then
+    if inpath omd; then
         echo '<<<omd_apache:sep(124)>>>'
         for statsfile in /omd/sites/*/var/log/apache/stats; do
             if [ -e "$statsfile" ]; then
@@ -674,7 +680,7 @@ section_zpool() {
     # Welcome the ZFS check on Linux
     # We do not endorse running ZFS on linux if your vendor doesnt support it ;)
     # check zpool status
-    if type zpool >/dev/null; then
+    if inpath zpool; then
         echo "<<<zpool_status>>>"
         zpool status -x
     fi
@@ -791,7 +797,7 @@ section_lnx_thermal() {
 
 section_libelle() {
     # Libelle Business Shadow
-    if type trd >/dev/null; then
+    if inpath trd; then
         echo "<<<libelle_business_shadow:sep(58)>>>"
         trd -s
     fi
@@ -799,7 +805,7 @@ section_libelle() {
 
 section_varnish() {
     # HTTP Accelerator Statistics
-    if type varnishstat >/dev/null; then
+    if inpath varnishstat; then
         echo "<<<varnish>>>"
         varnishstat -1
     fi
@@ -807,7 +813,7 @@ section_varnish() {
 
 section_pvecm() {
     # Proxmox Cluster
-    if type pvecm >/dev/null 2>&1; then
+    if inpath pvecm; then
         echo "<<<pvecm_status:sep(58)>>>"
         pvecm status
         echo "<<<pvecm_nodes>>>"
@@ -883,7 +889,7 @@ run_real_time_checks() {
     if [ -e $MK_CONFDIR/real_time_checks.cfg ]; then
         if [ -z $REMOTE ]; then
             echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
-        elif ! type openssl >/dev/null; then
+        elif ! inpath openssl; then
             echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
         else
             run_real_time_checks_for_remote >/dev/null &

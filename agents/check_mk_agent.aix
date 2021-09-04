@@ -7,6 +7,12 @@
 # BEGIN COMMON AGENT CODE
 #
 
+inpath() {
+    # replace "if type [somecmd]" idiom
+    # 'command -v' tends to be more robust vs 'which' and 'type' based tests
+    command -v "${1:?No command to test}" >/dev/null 2>&1
+}
+
 get_file_mtime() {
     stat -c %Y "${1}" 2>/dev/null ||
         stat -f %m "${1}" 2>/dev/null ||
@@ -170,12 +176,6 @@ set_up_profiling() {
 # END COMMON AGENT CODE
 #
 
-# Function to replace "if type [somecmd]" idiom
-# 'command -v' tends to be more robust vs 'which' and 'type' based tests
-inpath() {
-    command -v "${1:?No command to test}" >/dev/null 2>&1
-}
-
 read_python_version() {
     if inpath "$1"; then
         version=$($1 -c 'import sys; print("%s.%s"%(sys.version_info[0], sys.version_info[1]))')
@@ -288,7 +288,7 @@ section_df() {
 
 section_nfs_mounts() {
     # Check for hanging NFS mounts. This needs a GNU stat installed in the PATH
-    if type stat >/dev/null 2>&1; then
+    if inpath stat; then
         echo '<<<nfsmounts>>>'
         mount | grep ' nfs' | awk '{print $3;}' | while read MP; do
             waitmax 5 stat -f -c '"'"${MP}"' ok - - - -"' "${MP}" || echo "${MP} hanging 0 0 0 0"
@@ -311,7 +311,7 @@ section_ps() {
 }
 
 section_lparstat_aix() {
-    if type lparstat >/dev/null 2>&1; then
+    if inpath lparstat; then
       echo '<<<lparstat_aix>>>'
       lparstat 1 1
     fi
@@ -363,7 +363,7 @@ section_aix_if() {
 }
 
 section_ntp() {
-    if which ntpq > /dev/null 2>&1; then
+    if inpath ntpq; then
         if [ "$(lssrc -s xntpd|grep -c active)" -gt 0 ]; then
             echo '<<<ntp>>>'
             ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
@@ -390,7 +390,7 @@ section_tcp() {
 
 section_libelle() {
     # Libelle Business Shadow
-    if type trd >/dev/null 2>&1; then
+    if inpath trd; then
       echo '<<<libelle_business_shadow:sep(58)>>>'
       $(which trd) -s
     fi
@@ -482,7 +482,7 @@ section_fileinfo() {
 
 section_aix_hacmp() {
     # powerHA
-    if type lslpp >/dev/null 2>&1; then
+    if inpath lslpp; then
         cluster_cmd_output=$(lslpp -l cluster.es.server.rte)
         if ! echo "${cluster_cmd_output}" | grep -q "not installed"; then
             # now the following commands should be available
@@ -502,7 +502,7 @@ section_aix_hacmp() {
             fi
 
             echo '<<<aix_hacmp_services>>>'
-            if type clshowsrv; then
+            if inpath clshowsrv; then
                 waitmax 5 clshowsrv -v
             else # fallback, hardcoded base installation path
                 waitmax 5 /usr/es/sbin/cluster/utilities/clshowsrv -v

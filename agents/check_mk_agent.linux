@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 DEBUG=false
-LOG_SECTION_TIME=false
 
 #
 # BEGIN COMMON AGENT CODE
@@ -145,7 +144,7 @@ set_up_profiling() {
 
     PROFILING_LOGFILE_DIR="${MK_LOGDIR}/profiling/$(date +%Y%m%d_%H%M%S)"
 
-    if ${LOG_SECTION_TIME}; then
+    if ${LOG_SECTION_TIME:-false}; then
         mkdir -p "${PROFILING_LOGFILE_DIR}"
         agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
 

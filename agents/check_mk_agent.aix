@@ -765,9 +765,7 @@ main_setup() {
     preamble_2
     preamble_3
 
-    if $LOG_SECTION_TIME; then
-        agent_start="$(perl -MTime::HiRes=time -le 'print time()')"
-    fi
+    set_up_profiling
 }
 
 main_sync_parts() {
@@ -799,11 +797,7 @@ main_async_parts() {
 main_finalize_sync() {
     _log_section_time section_checkmk_failed_plugins
 
-    if $LOG_SECTION_TIME; then
-        profiling_logfile_check_mk_agent="${PROFILING_LOGFILE_DIR}/profiling_check_mk_agent.log"
-        agent_end="$(perl -MTime::HiRes=time -le 'print time()')"
-        printf "\nruntime %.4fs\n" "$((agent_end-agent_start))" >>"$profiling_logfile_check_mk_agent"
-    fi
+    finalize_profiling
 }
 
 #

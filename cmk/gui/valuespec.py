@@ -726,20 +726,7 @@ class UUID(TextInput):
 def ID(**kwargs):
     """Internal ID as used in many places (for contact names, group name, an so on)"""
     return TextInput(
-        regex=re.compile("^[a-zA-Z_][-a-zA-Z0-9_]*$"),
-        regex_error=_(
-            "An identifier must only consist of letters, digits, dash and "
-            "underscore and it must start with a letter or underscore."
-        ),
-        **kwargs,
-    )
-
-
-# TODO: Cleanup kwargs
-def UnicodeID(**kwargs):
-    """Same as the ID class, but allowing unicode objects"""
-    return TextInput(
-        regex=re.compile(r"^[\w][-\w0-9_]*$", re.UNICODE),
+        regex=cmk.utils.regex.regex(cmk.utils.regex.REGEX_ID, re.ASCII),
         regex_error=_(
             "An identifier must only consist of letters, digits, dash and "
             "underscore and it must start with a letter or underscore."
@@ -751,10 +738,10 @@ def UnicodeID(**kwargs):
 # TODO: Cleanup kwargs
 def UserID(**kwargs):
     return TextInput(
-        regex=re.compile(r"^[\w][-\w0-9_\.@]*$", re.UNICODE),
+        regex=re.compile(r"^[\w][-\w.@]*$", re.UNICODE),
         regex_error=_(
             "An identifier must only consist of letters, digits, dash, dot, "
-            "at and underscore. But it must start with a letter or underscore."
+            "at and underscore. But it must start with a digit, letter or underscore."
         ),
         **kwargs,
     )

@@ -305,7 +305,7 @@ section_checkmk() {
     echo "<<<check_mk>>>"
     echo "Version: 2.1.0i1"
     echo "AgentOS: linux"
-    echo "Hostname: $(hostname)"
+    echo "Hostname: $(uname -n)"
     echo "AgentDirectory: $MK_CONFDIR"
     echo "DataDirectory: $MK_VARDIR"
     echo "SpoolDirectory: $SPOOLDIR"
@@ -805,7 +805,7 @@ section_heartbeat() {
 
         echo '<<<heartbeat_nodes>>>'
         for NODE in $(cl_status listnodes); do
-            if [ "$NODE" != "$(echo "$HOSTNAME" | tr '[:upper:]' '[:lower:]')" ]; then
+            if [ "$NODE" != "$(uname -n | tr '[:upper:]' '[:lower:]')" ]; then
                 STATUS=$(cl_status nodestatus "$NODE")
                 echo -n "$NODE $STATUS"
                 for LINK in $(cl_status listhblinks "$NODE" 2>/dev/null); do
@@ -1123,7 +1123,7 @@ section_job() {
             (
                 # the return below only terminates the subshell, not the entire function
                 cd "$username" 2>/dev/null || return
-                if [ $EUID -eq 0 ]; then
+                if [ "$(id -u)" -eq 0 ]; then
                     su -s "$SHELL" "$username" -c "head -n -0 -v *"
                 else
                     head -n -0 -v ./*

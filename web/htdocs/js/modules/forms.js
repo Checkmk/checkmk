@@ -68,16 +68,28 @@ function enable_label_input_fields(container) {
         tagify.settings.validate = (t => {
             return add_label => {
                 let label_key = add_label.value.split(":", 1)[0];
-                for (const existing_label of t.value) {
-                    // Do not check the current edited value. KEY would be
-                    // always present leading to invalid value
-                    if (t.state.editing) {
-                        continue;
-                    }
-                    let existing_key = existing_label.value.split(":", 1)[0];
+                let key_error_msg = "Only one value per KEY can be used at a time.";
+                if (tagify.settings.maxTags == 1) {
+                    let existing_tags = document.querySelectorAll(".tagify__tag-text");
+                    let existing_keys_array = Array.prototype.map.call(existing_tags, function (x) {
+                        return x.textContent.split(":")[0];
+                    });
 
-                    if (label_key == existing_key) {
-                        return "Only one value per KEY can be used at a time.";
+                    if (existing_keys_array.includes(label_key)) {
+                        return key_error_msg;
+                    }
+                } else {
+                    for (const existing_label of t.value) {
+                        // Do not check the current edited value. KEY would be
+                        // always present leading to invalid value
+                        if (t.state.editing) {
+                            continue;
+                        }
+                        let existing_key = existing_label.value.split(":", 1)[0];
+
+                        if (label_key == existing_key) {
+                            return key_error_msg;
+                        }
                     }
                 }
                 return true;

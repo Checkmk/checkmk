@@ -3845,7 +3845,11 @@ def _valuespec_special_agents_aws():
                                     totext=_("Monitor costs and usage"),
                                     title=_("Costs and usage (CE)"),
                                 ),
-                            )
+                            ),
+                            (
+                                "route53",
+                                FixedValue(None, totext=_("Monitor Route53"), title=_("Route53")),
+                            ),
                         ],
                     ),
                 ),

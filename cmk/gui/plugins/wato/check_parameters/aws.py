@@ -2034,3 +2034,66 @@ rulespec_registry.register(
         title=lambda: _("AWS/Lambda Memory"),
     )
 )
+
+
+def _parameter_valuespec_aws_route53() -> Dictionary:
+    return Dictionary(
+        elements=[
+            (
+                "levels_connection_time",
+                Tuple(
+                    title=_("Upper levels for connection_time"),
+                    elements=[
+                        Float(title=_("Warning at"), unit="s", default_value=0.2),
+                        Float(title=_("Critical at"), unit="s", default_value=0.5),
+                    ],
+                ),
+            ),
+            (
+                "levels_health_check_percentage_healthy",
+                Tuple(
+                    title=_("Lower levels for health check percentage healty"),
+                    elements=[
+                        Percentage(
+                            title=_("Warning at"), display_format="%.2f", default_value=100.0
+                        ),
+                        Percentage(
+                            title=_("Critical at"), display_format="%.2f", default_value=100.0
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "levels_ssl_handshake_time",
+                Tuple(
+                    title=_("Upper levels for SSL handshake time"),
+                    elements=[
+                        Float(title=_("Warning at"), unit="s", default_value=0.4),
+                        Float(title=_("Critical at"), unit="s", default_value=1.0),
+                    ],
+                ),
+            ),
+            (
+                "levels_time_to_first_byte",
+                Tuple(
+                    title=_("Upper levels for time to first byte"),
+                    elements=[
+                        Float(title=_("Warning at"), unit="s", default_value=0.4),
+                        Float(title=_("Critical at"), unit="s", default_value=1.0),
+                    ],
+                ),
+            ),
+        ],
+    )
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithItem(
+        check_group_name="aws_route53",
+        group=RulespecGroupCheckParametersApplications,
+        item_spec=_item_spec_aws_limits_generic,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_aws_route53,
+        title=lambda: _("AWS/Route53"),
+    )
+)

@@ -11,6 +11,7 @@ import abc
 import argparse
 import errno
 import hashlib
+import itertools
 import json
 import logging
 import sys
@@ -28,6 +29,7 @@ from typing import (
     Sequence,
     Set,
     Tuple,
+    TypedDict,
     Union,
 )
 
@@ -4487,6 +4489,142 @@ class LambdaCloudwatchInsights(AWSSection):
 
 
 # .
+#   .--Route53-------------------------------------------------------------.
+#   |                                  _       ____ _____                  |
+#   |                  _ __ ___  _   _| |_ ___| ___|___ /                  |
+#   |                 | '__/ _ \| | | | __/ _ \___ \ |_ \                  |
+#   |                 | | | (_) | |_| | ||  __/___) |__) |                 |
+#   |                 |_|  \___/ \__,_|\__\___|____/____/                  |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+class HealthCheckConfig(TypedDict, total=False):
+    Port: int
+    Type: str
+    FullyQualifiedDomainName: str
+    RequestInterval: int
+    FailureThreshold: int
+    MeasureLatency: bool
+    Inverted: bool
+    Disabled: bool
+    EnableSNI: bool
+
+
+class HealthCheck(TypedDict, total=False):
+    Id: str
+    CallerReference: str
+    HealthCheckConfig: HealthCheckConfig
+    HealthCheckVersion: int
+
+
+class Route53HealthChecks(AWSSectionGeneric):
+    def __init__(self, client, region, config, distributor=None) -> None:
+        super().__init__(client, region, config, distributor=distributor)
+        self._names = self._config.service_config["route53_names"]
+        self._tags = self._prepare_tags_for_api_response(
+            self._config.service_config["route53_tags"]
+        )
+
+    @property
+    def name(self) -> str:
+        return "route53_health_checks"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        return AWSColleagueContents([], 0.0)
+
+    def get_live_data(self, *args) -> Sequence[HealthCheck]:
+        return list(
+            itertools.chain.from_iterable(
+                self._get_response_content(page, "HealthChecks")
+                for page in self._client.get_paginator("list_health_checks").paginate()
+            )
+        )
+
+    def _compute_content(self, raw_content, colleague_contents) -> AWSComputedContent:
+        return AWSComputedContent(
+            raw_content.content,
+            raw_content.cache_timestamp,
+        )
+
+    def _create_results(self, computed_content) -> List[AWSSectionResult]:
+        return [AWSSectionResult("", computed_content.content)]
+
+
+class Route53Cloudwatch(AWSSectionCloudwatch):
+    def __init__(self, client, region, config, distributor=None) -> None:
+        super().__init__(client, region, config, distributor=None)
+
+    @property
+    def name(self) -> str:
+        return "route53_cloudwatch"
+
+    @property
+    def cache_interval(self) -> int:
+        return 300
+
+    @property
+    def granularity(self) -> int:
+        return 300
+
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("route53_health_checks")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents({}, 0.0)
+
+    def _get_metrics(self, colleague_contents) -> Sequence[Mapping[str, Any]]:
+        health_checks: Sequence[HealthCheck] = colleague_contents.content
+        return [
+            {
+                "Id": self._create_id_for_metric_data_query(idx, metric_name),
+                "Label": health_check["Id"],
+                "MetricStat": {
+                    "Metric": {
+                        "Namespace": "AWS/Route53",
+                        "MetricName": metric_name,
+                        "Dimensions": [
+                            {
+                                "Name": "HealthCheckId",
+                                "Value": health_check["Id"],
+                            }
+                        ],
+                    },
+                    "Period": self.period,
+                    "Stat": stat,
+                    "Unit": unit,
+                },
+            }
+            for idx, health_check in enumerate(health_checks)
+            for metric_name, unit, stat in [
+                ("ChildHealthCheckHealthyCount", "Count", "Average"),
+                ("ConnectionTime", "Milliseconds", "Average"),
+                ("HealthCheckPercentageHealthy", "Percent", "Average"),
+                ("HealthCheckStatus", "None", "Maximum"),
+                ("SSLHandshakeTime", "Milliseconds", "Average"),
+                ("TimeToFirstByte", "Milliseconds", "Average"),
+            ]
+        ]
+
+    def _compute_content(self, raw_content, colleague_contents) -> AWSComputedContent:
+        content_by_piggyback_hosts: Dict[str, List[str]] = {}
+        for row in raw_content.content:
+            content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
+        return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
+
+    def _create_results(self, computed_content) -> List[AWSSectionResult]:
+        return [AWSSectionResult("", rows) for _id, rows in computed_content.content.items()]
+
+
+# .
 #   .--sections------------------------------------------------------------.
 #   |                               _   _                                  |
 #   |                 ___  ___  ___| |_(_) ___  _ __  ___                  |
@@ -4615,6 +4753,7 @@ class AWSSectionsUSEast(AWSSections):
         if "ce" in services:
             self._sections.append(CostsAndUsage(self._init_client("ce"), region, config))
 
+        cloudwatch_client = self._init_client("cloudwatch")
         if "wafv2" in services and config.service_config["wafv2_cloudfront"]:
             wafv2_client = self._init_client("wafv2")
             wafv2_limits_distributor = ResultDistributor()
@@ -4626,12 +4765,23 @@ class AWSSectionsUSEast(AWSSections):
                 wafv2_client, region, config, "CLOUDFRONT", distributor=wafv2_summary_distributor
             )
             wafv2_limits_distributor.add(wafv2_summary)
-            wafv2_web_acl = WAFV2WebACL(self._init_client("cloudwatch"), region, config, False)
+            wafv2_web_acl = WAFV2WebACL(cloudwatch_client, region, config, False)
             wafv2_summary_distributor.add(wafv2_web_acl)
             if config.service_config.get("wafv2_limits"):
                 self._sections.append(wafv2_limits)
             self._sections.append(wafv2_summary)
             self._sections.append(wafv2_web_acl)
+
+        if "route53" in services:
+            route53_client = self._init_client("route53")
+            route53_health_checks, route53_cloudwatch = create_route53_sections(
+                route53_client,
+                cloudwatch_client,
+                region,
+                config,
+            )
+            self._sections.append(route53_health_checks)
+            self._sections.append(route53_cloudwatch)
 
 
 def create_lamdba_sections(
@@ -4689,9 +4839,18 @@ def create_lamdba_sections(
     )
 
 
+def create_route53_sections(
+    route53_client, cloudwatch_client, region: str, config: AWSConfig
+) -> Tuple[Route53HealthChecks, Route53Cloudwatch]:
+    route53_distributor = ResultDistributor()
+    route53_health_checks = Route53HealthChecks(route53_client, region, config, route53_distributor)
+    route53_cloudwatch = Route53Cloudwatch(cloudwatch_client, region, config, distributor=None)
+    route53_distributor.add(route53_cloudwatch)
+    return route53_health_checks, route53_cloudwatch
+
+
 class AWSSectionsGeneric(AWSSections):
     def init_sections(self, services, region, config, s3_limits_distributor=None):
-
         assert (
             s3_limits_distributor is not None
         ), "AWSSectionsGeneric.init_sections: Must provide s3_limits_distributor"
@@ -5086,6 +5245,14 @@ AWSServices = [
         filter_by_tags=True,
         limits=True,
     ),
+    AWSServiceAttributes(
+        key="route53",
+        title="Route53",
+        global_service=True,
+        filter_by_names=True,
+        filter_by_tags=True,
+        limits=False,
+    ),
 ]
 
 
@@ -5305,7 +5472,6 @@ def main(sys_argv=None):
     stdin_args = json.loads(sys.stdin.read() or "{}")
     access_key_id = stdin_args.get("access_key_id") or args.access_key_id
     secret_access_key = stdin_args.get("secret_access_key") or args.secret_access_key
-
     has_exceptions = False
 
     if not access_key_id:
@@ -5363,6 +5529,7 @@ def main(sys_argv=None):
             (args.lambda_tag_key, args.lambda_tag_values),
             args.lambda_limits,
         ),
+        ("route53", args.route53_names, (args.route53_tag_key, args.route53_tag_values), None),
     ]:
         aws_config.add_single_service_config("%s_names" % service_key, service_names)
         aws_config.add_service_tags("%s_tags" % service_key, service_tags)

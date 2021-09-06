@@ -23,8 +23,6 @@ from typing import (
     Union,
 )
 
-from six import ensure_binary
-
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
 import cmk.utils.misc
@@ -62,7 +60,7 @@ class DefaultAgentFileCache(AgentFileCache):
     @staticmethod
     def _to_cache_file(raw_data: AgentRawData) -> bytes:
         # TODO: This does not seem to be needed
-        return ensure_binary(raw_data)
+        return raw_data
 
     def make_path(self, mode: Mode) -> Path:
         return self.base_path / self.hostname
@@ -97,7 +95,7 @@ class NoCache(AgentFileCache):
 
     @staticmethod
     def _to_cache_file(raw_data: AgentRawData) -> bytes:
-        return ensure_binary(raw_data)
+        return raw_data
 
     def make_path(self, mode: Mode):
         return Path(os.devnull)

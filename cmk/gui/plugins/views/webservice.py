@@ -8,8 +8,6 @@ import json
 import time
 from typing import Dict, List, TYPE_CHECKING, Union
 
-from six import ensure_str
-
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.globals import request, response
 from cmk.gui.plugins.views import (
@@ -106,7 +104,7 @@ exporter_registry.register(Exporter(
 def _export_json_export(view: "View", rows: Rows) -> None:
     filename = '%s-%s.json' % (view.name,
                                time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % ensure_str(filename)
+    response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
 
     response.set_data(_get_json_body(view, rows))
 

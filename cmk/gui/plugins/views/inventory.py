@@ -11,8 +11,6 @@ import time
 from functools import partial
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, TYPE_CHECKING, Union
 
-from six import ensure_str
-
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
 import cmk.utils.defines as defines
@@ -2001,7 +1999,7 @@ class NodeRenderer:
             _tdclass, code = paint_function(value)
             html.write_text(code)
         elif isinstance(value, str):
-            html.write_text(ensure_str(value))
+            html.write_text(value)
         elif isinstance(value, int):
             html.write_text(str(value))
         elif isinstance(value, float):

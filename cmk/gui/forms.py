@@ -7,8 +7,6 @@
 import base64
 from typing import Any, Callable, Dict, List, Optional, Tuple, TYPE_CHECKING, Union
 
-from six import ensure_binary, ensure_str
-
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.globals import html, request, theme, transactions, user, user_errors
@@ -122,7 +120,7 @@ def header(
     if g_header_open:
         end()
 
-    id_ = ensure_str(base64.b64encode(ensure_binary(title)))
+    id_ = base64.b64encode(title.encode()).decode()
     treename = html.form_name or "nform"
     isopen = user.get_tree_state(treename, id_, isopen)
     container_id = foldable_container_id(treename, id_)

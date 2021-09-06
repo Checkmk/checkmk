@@ -13,8 +13,6 @@ import re
 import time
 from typing import Any, Dict, Iterator, List, Union
 
-from six import ensure_str
-
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.werks
@@ -500,8 +498,7 @@ _SORT_AND_GROUP = {
     ),
     "week": (
         cmk.utils.werks.sort_by_date,
-        lambda werk: time.strftime("%s %%U - %%Y" % ensure_str(_("Week")),
-                                   time.localtime(werk["date"]))  #
+        lambda werk: time.strftime("%s %%U - %%Y" % _("Week"), time.localtime(werk["date"]))  #
     ),
     None: (
         cmk.utils.werks.sort_by_date,

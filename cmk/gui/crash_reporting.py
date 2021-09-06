@@ -14,8 +14,6 @@ import time
 import traceback
 from typing import Dict, Iterator, Mapping, Optional, Type
 
-from six import ensure_str
-
 import livestatus
 from livestatus import SiteId
 
@@ -160,9 +158,9 @@ class ABCCrashReportPage(cmk.gui.pages.Page, abc.ABC):
         return row
 
     def _get_crash_report_row(self, crash_id: str, site_id: str) -> Optional[Dict[str, str]]:
-        rows = CrashReportsRowTable().get_crash_report_rows(
-            only_sites=[SiteId(ensure_str(site_id))],
-            filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id))
+        rows = CrashReportsRowTable().get_crash_report_rows(only_sites=[SiteId(site_id)],
+                                                            filter_headers="Filter: id = %s" %
+                                                            livestatus.lqencode(crash_id))
         if not rows:
             return None
         return rows[0]
@@ -649,7 +647,7 @@ def _crash_row(title, infotext, odd=True, legend=False, pre=False):
 # Local vars are a base64 encoded repr of the python dict containing the local vars of
 # the exception context. Decode it!
 def format_local_vars(local_vars):
-    return ensure_str(base64.b64decode(local_vars))
+    return base64.b64decode(local_vars).decode()
 
 
 def format_params(params):

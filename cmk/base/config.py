@@ -1708,7 +1708,7 @@ def _get_cached_check_includes(check_file_path: str, cache_file_path: str) -> Ch
     if cache_stat.st_size == 0:
         raise OSError("Cache generation in progress (file is locked)")
 
-    x = open(cache_file_path).read().strip()
+    x = Path(cache_file_path).read_text().strip()
     if not x:
         return []  # Shouldn't happen. Empty files are handled above
     return x.split("|")
@@ -1759,7 +1759,7 @@ def includes_of_plugin(check_file_path: str) -> CheckIncludes:
                                              "names, found '%s'" % type(element))
                 include_names[element.s] = True
 
-    tree = ast.parse(open(check_file_path).read())
+    tree = ast.parse(Path(check_file_path).read_text())
     for child in ast.iter_child_nodes(tree):
         if not isinstance(child, ast.Assign):
             continue  # We only care about top level assigns
@@ -1824,7 +1824,7 @@ def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
         store.makedirs(os.path.dirname(precompiled_path))
         py_compile.compile(path, precompiled_path, doraise=True)
 
-    exec(marshal.loads(open(precompiled_path, "rb").read()[_PYCHeader.SIZE:]), check_context)
+    exec(marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE:]), check_context)
 
     return do_compile
 

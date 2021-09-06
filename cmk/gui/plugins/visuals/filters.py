@@ -2384,8 +2384,7 @@ class FilterAggrGroup(Filter):
     def display(self) -> None:
         htmlvar = self.htmlvars[0]
         empty_choices: Choices = [("", "")]
-        groups: Choices = [(group, group) for group in bi.get_aggregation_group_trees()]
-        html.dropdown(htmlvar, empty_choices + groups)
+        html.dropdown(htmlvar, empty_choices + bi.aggregation_group_choices())
 
     def selected_group(self):
         return html.request.get_unicode_input(self.htmlvars[0])

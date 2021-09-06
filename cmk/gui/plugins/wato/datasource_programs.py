@@ -5100,9 +5100,9 @@ def _valuespec_special_agents_fuse_management_central():
         _("This rule set selects the special agent for Fuse Management Central "
           "instead of the normal Check_MK agent and allows monitoring via REST API."),
         elements=[
-            ("user", TextAscii(title=("Username"), allow_empty=False)),
+            ("user", TextInput(title=("Username"), allow_empty=False)),
             ("password", IndividualOrStoredPassword(title=("Password"), allow_empty=False)),
-            ("url", TextAscii(title=("Alerts API Endpoint"), allow_empty=False))
+            ("url", TextInput(title=("Alerts API Endpoint"), allow_empty=False))
         ],
         required_keys=["user","password","url"]
     )

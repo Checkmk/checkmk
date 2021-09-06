@@ -25,7 +25,7 @@ factory_settings["memory_default_levels"] = {
 
 class MemBytes(NamedTuple('MemBytes', [('bytes', int), ('kb', float), ('mb', float)])):
     def __new__(cls, value):
-        return super(MemBytes, cls).__new__(cls, int(value * 1024), float(value), value / 1024.0)
+        return super().__new__(cls, int(value * 1024), float(value), value / 1024.0)
 
     def render(self):
         return get_bytes_human_readable(self.bytes, base=1024)

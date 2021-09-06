@@ -340,7 +340,7 @@ class Result(
         **kwargs,
     ) -> 'Result':
         state, summary, details = _create_result_fields(**kwargs)
-        return super(Result, cls).__new__(
+        return super().__new__(
             cls,
             state=state,
             summary=summary,

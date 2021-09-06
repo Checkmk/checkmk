@@ -13,7 +13,6 @@
 #include <ratio>
 #include <sstream>
 #include <stdexcept>
-#include <utility>
 
 #include "Aggregator.h"
 #include "AndingFilter.h"
@@ -77,8 +76,6 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     , _show_column_headers(true)
     , _output_format(OutputFormat::broken_csv)
     , _limit(-1)
-    , _time_limit(-1)
-    , _time_limit_timeout(0)
     , _current_line(0)
     , _timezone_offset(0)
     , _logger(logger) {
@@ -521,8 +518,8 @@ void Query::parseLimitLine(char *line) {
 }
 
 void Query::parseTimelimitLine(char *line) {
-    _time_limit = nextNonNegativeIntegerArgument(&line);
-    _time_limit_timeout = time(nullptr) + _time_limit;
+    auto duration = std::chrono::seconds{nextNonNegativeIntegerArgument(&line)};
+    _time_limit = {duration, std::chrono::steady_clock::now() + duration};
 }
 
 void Query::parseWaitTimeoutLine(char *line) {
@@ -613,11 +610,18 @@ void Query::start(QueryRenderer &q) {
 }
 
 bool Query::timelimitReached() const {
-    if (_time_limit >= 0 && time(nullptr) >= _time_limit_timeout) {
-        _output.setError(OutputBuffer::ResponseCode::payload_too_large,
-                         "Maximum query time of " +
-                             std::to_string(_time_limit) +
-                             " seconds exceeded!");
+    if (!_time_limit) {
+        return false;
+    }
+    const auto &[duration, timeout] = *_time_limit;
+    if (std::chrono::steady_clock::now() >= timeout) {
+        _output.setError(
+            OutputBuffer::ResponseCode::payload_too_large,
+            "Maximum query time of " +
+                std::to_string(
+                    std::chrono::duration_cast<std::chrono::seconds>(duration)
+                        .count()) +
+                " seconds exceeded!");
         return true;
     }
     return false;

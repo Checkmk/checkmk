@@ -28,6 +28,7 @@ from cmk.utils.log import VERBOSE
 import cmk.utils.daemon as daemon
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
+from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
 
 import cmk.gui.log
 from cmk.gui.i18n import _
@@ -272,7 +273,8 @@ class BackgroundJob:
     job_prefix = "unnamed-job"
 
     def __init__(self, job_id: str, logger: Optional[logging.Logger] = None, **kwargs: Any) -> None:
-        super(BackgroundJob, self).__init__()
+        super().__init__()
+        self.validate_job_id(job_id)
         self._job_id = job_id
         self._job_base_dir = BackgroundJobDefines.base_dir
         self._job_initializiation_lock = os.path.join(self._job_base_dir, "job_initialization.lock")
@@ -289,6 +291,11 @@ class BackgroundJob:
 
         # The function ptr and its args/kwargs
         self._queued_function: Optional[Tuple[Callable, Tuple[Any, ...], Dict[str, Any]]] = None
+
+    @staticmethod
+    def validate_job_id(job_id: str) -> None:
+        if not regex(REGEX_GENERIC_IDENTIFIER).match(job_id):
+            raise MKGeneralException(_("Invalid Job ID"))
 
     def get_job_id(self) -> str:
         return self._job_id

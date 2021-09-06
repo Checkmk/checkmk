@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <chrono>
-#include <cstdint>
 #include <ctime>
 #include <filesystem>
 #include <functional>
@@ -732,12 +731,11 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
         offsets, [mc](const host &hst) {
             return pnpgraph_present(mc, hst.name, dummy_service_description());
         }));
-    table->addColumn(std::make_unique<IntColumn::Callback<host>>(
+    table->addColumn(std::make_unique<TimeColumn::Callback<host>>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present",
         offsets, [mc](const host &hst) {
-            return static_cast<int32_t>(
-                mk_inventory_last(mc->mkInventoryPath() / hst.name));
+            return mk_inventory_last(mc->mkInventoryPath() / hst.name);
         }));
 
     table->addColumn(std::make_unique<BlobColumn::Callback<host>::File>(

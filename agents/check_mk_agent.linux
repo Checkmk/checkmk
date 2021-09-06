@@ -264,7 +264,7 @@ set_up_encryption() {
     # shellcheck source=/dev/null
     [ -f "${MK_CONFDIR}/encryption.cfg" ] && . "${MK_CONFDIR}/encryption.cfg"
 
-    if [ "${ENCRYPTED}" == "yes" ]; then
+    if [ "${ENCRYPTED}" = "yes" ]; then
         OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
         # Depending on the Checkmk version, a key of proper length (256 bits) is provided.
         # However, always use key derivation here (suitable for passwords of all lengths).
@@ -427,10 +427,9 @@ section_df() {
 
     # The exclusion list is getting a bit of a problem.
     # -l should hide any remote FS but seems to be all but working.
-    local excludefs
     excludefs="-x smbfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x prl_fs -x squashfs -x devtmpfs -x autofs"
     if [ -z "$IS_LXC_CONTAINER" ]; then
-        excludefs+=" -x zfs"
+        excludefs="${excludefs} -x zfs"
     fi
 
     echo '<<<df>>>'
@@ -573,9 +572,8 @@ section_vswitch_bonding() {
 section_tcp() {
     if inpath waitmax; then
         echo '<<<tcp_conn_stats>>>'
-        THIS=$(waitmax 5 cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }')
-        if [ $? == 0 ]; then
-            echo "$THIS"
+        if OUTPUT=$(waitmax 5 cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }'); then
+            echo "${OUTPUT}"
         elif inpath ss; then
             ss -ant | grep -v ^State | awk ' /:/ { c[$1]++; } END { for (x in c) { print x, c[x]; } }' |
                 sed -e 's/^ESTAB/01/g;s/^SYN-SENT/02/g;s/^SYN-RECV/03/g;s/^FIN-WAIT-1/04/g;s/^FIN-WAIT-2/05/g;s/^TIME-WAIT/06/g;s/^CLOSED/07/g;s/^CLOSE-WAIT/08/g;s/^LAST-ACK/09/g;s/^LISTEN/0A/g;s/^CLOSING/0B/g;'
@@ -653,7 +651,7 @@ section_ipmitool() {
 }
 
 section_ipmisensors() {
-    if (type ipmi-sensors && ls /dev/ipmi*) &>/dev/null; then
+    if (inpath ipmi-sensors && ls /dev/ipmi* >/dev/null); then
         ${MK_RUN_SYNC_PARTS} && echo '<<<ipmi_sensors>>>'
         # Newer ipmi-sensors version have new output format; Legacy format can be used
         if ipmi-sensors --help | grep -q legacy-output; then
@@ -727,9 +725,9 @@ section_megaraid() {
         echo '<<<megaraid_pdisks>>>'
         for part in $($MegaCli_bin -EncInfo -aALL -NoLog </dev/null |
             sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
-            [ "$part" = adapter ] && echo ""
-            [ "$part" = 'Enclosure' ] && echo -ne "\ndev2enc"
-            echo -n " $part"
+            [ "$part" = adapter ] && printf "\n"
+            [ "$part" = 'Enclosure' ] && printf "\ndev2enc"
+            printf " %s" "${part}"
         done
         echo
         $MegaCli_bin -PDList -aALL -NoLog </dev/null |
@@ -763,8 +761,7 @@ section_areca_raid() {
 section_vbox_guest() {
     echo '<<<vbox_guest>>>'
     if inpath VBoxControl && lsmod | grep vboxguest >/dev/null 2>&1; then
-        VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
-        [ "${PIPESTATUS[0]}" = 0 ] || echo "ERROR"
+        (VBoxControl -nologo guestproperty enumerate || echo "ERROR") | cut -d, -f1,2
     fi
 }
 
@@ -942,13 +939,13 @@ section_omd() {
             version=${versiondir#/omd/versions/}
 
             # filter out special directory 'default'
-            if [[ $version == "default" ]]; then
+            if [ "${version}" = "default" ]; then
                 continue
             fi
 
-            number=$version
+            number=${version}
             demo="0"
-            if [[ "$version" == *.demo ]]; then
+            if [ "${version##*.}" = "demo" ]; then
                 number=${version%.demo}
                 demo="1"
             fi
@@ -1008,8 +1005,7 @@ section_omd_core() {
             echo "[$site]"
             for PEM_PATH in "/omd/sites/$site/etc/ssl/ca.pem" "/omd/sites/$site/etc/ssl/sites/$site.pem"; do
                 if [ -f "$PEM_PATH" ]; then
-                    CERT_DATE=$(openssl x509 -enddate -noout -in "$PEM_PATH")
-                    CERT_DATE=${CERT_DATE/notAfter=/}
+                    CERT_DATE=$(openssl x509 -enddate -noout -in "$PEM_PATH" | sed 's/notAfter=//')
                     echo "$PEM_PATH|$(date --date="$CERT_DATE" --utc +%s)"
                 fi
             done
@@ -1140,8 +1136,8 @@ section_thermal() {
         for F in /sys/class/thermal/thermal_zone*; do
             line="${F##*/}"
             if [ ! -e "$F/mode" ]; then line="${line}|-"; else line="${line}|$(cat "$F"/mode)"; fi
-            line="${line}|$(cat "$F"/{type,temp} | tr \\n "|")"
-            for G in "$F"/trip_point_*_{temp,type}; do
+            line="${line}|$(cat "${F}/type" "${F}/temp" | tr \\n "|")"
+            for G in "${F}"/trip_point_*_temp "${F}"/trip_point_*_type; do
                 line="${line}$(tr <"$G" \\n "|")"
             done
             echo "${line%?}"
@@ -1335,20 +1331,20 @@ run_runas_executor() {
         grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/runas.cfg" |
             while read -r type user configfile; do
                 # TODO: cleanup: run_remote_plugins checks for existence.
-                if [ -d "$configfile" ] || [ "$type" == "mrpe" ] && [ -f "$configfile" ]; then
+                if [ -d "$configfile" ] || [ "$type" = "mrpe" ] && [ -f "$configfile" ]; then
                     prefix=""
                     if [ "$user" != "-" ]; then
                         prefix="su $user -c "
                     fi
 
                     # mrpe includes
-                    if [ "$type" == "mrpe" ]; then
+                    if [ "$type" = "mrpe" ]; then
                         run_remote_plugins "$configfile" "$prefix"
 
                     # local and plugin includes
-                    elif [ "$type" == "local" ] || [ "$type" == "plugin" ]; then
+                    elif [ "$type" = "local" ] || [ "$type" = "plugin" ]; then
                         if ${MK_RUN_SYNC_PARTS}; then
-                            if [ "$type" == "local" ]; then
+                            if [ "$type" = "local" ]; then
                                 echo "<<<local:sep(0)>>>"
                             fi
 
@@ -1581,8 +1577,8 @@ run_mrpe() {
     PLUGIN=${cmdline%% *}
     OUTPUT=$(eval "${MK_DEFINE_LOG_SECTION_TIME}; _log_section_time ${cmdline}")
 
-    echo -n "(${PLUGIN##*/}) $descr $? $OUTPUT" | tr \\n \\1
-    echo
+    printf "(%s) %s %s %s" "${PLUGIN##*/}" "${descr}" "$?" "${OUTPUT}" | tr \\n \\1
+    printf "\n"
 }
 
 export -f run_mrpe
@@ -1617,7 +1613,7 @@ run_real_time_checks() {
             # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
             # dd is used to concatenate the output of all commands to a single write/block => udp packet
             {
-                echo -n $PROTOCOL
+                printf "%s" "${PROTOCOL}"
                 date +%s | tr -d '\n'
                 if [ "$ENCRYPTED_RT" != "no" ]; then
                     export RTC_SECRET=$RTC_SECRET
@@ -1640,7 +1636,7 @@ run_real_time_checks() {
                 # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
                 # dd is used to concatenate the output of all commands to a single write/block => udp packet
                 {
-                    echo -n $PROTOCOL
+                    printf "%s" "${PROTOCOL}"
                     date +%s | tr -d '\n'
                     if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
                         if [ "$ENCRYPTED_RT" != "no" ]; then

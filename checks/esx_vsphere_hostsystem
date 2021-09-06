@@ -412,14 +412,15 @@ check_info['esx_vsphere_hostsystem.maintenance'] = {
 def esx_vsphere_multipath_convert(info):
     data = esx_vsphere_hostsystem_convert(info)
 
-    raw_path_info = data.get('config.storageDevice.multipathInfo')
-    if not raw_path_info:
-        return {}
-    path_info = zip(raw_path_info[::3], raw_path_info[1::3], raw_path_info[2::3])
-
+    raw_path_info = iter(data.get('config.storageDevice.multipathInfo', []))
     paths = {}
-    for lun_id, path, state in path_info:
-        paths.setdefault(lun_id, []).append((state, path))
+    for line in raw_path_info:
+        if len(line) != 32:
+            # The UUID of multipath consists of 32 characters and designates the start of a "section".
+            # There could be other IDs in info, but they are not considered valid multipath items and
+            # therefore should not be shown.
+            continue
+        paths.setdefault(line, []).append((next(raw_path_info), next(raw_path_info)))
 
     return paths
 
@@ -447,7 +448,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
     for path, states in esx_vsphere_multipath_convert(info).iteritems():
         if path == item:
             # Collect states
-            for path_state, path_name in states:
+            for path_name, path_state in states:
                 state_item = state_infos.get(path_state)
                 path_info = path_name
                 if state_item:

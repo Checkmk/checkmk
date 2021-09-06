@@ -62,7 +62,6 @@ discovery = {
         (u'6e843b6d8f2740bdecbad4676da7a9dd', None),
         (u'6e843b6bc5cc897d430ad40b7d9172d1', None),
         (u'6e843b63fcbd92ad8f22d4cf7d8e6cdc', None),
-        (u'766d6862', None),
         (u'600605b002db9f7018d0a40c2a1444b0', None),
     ],
     'state': [(None, None)]
@@ -113,11 +112,6 @@ checks = {
         (u'6e843b63fcbd92ad8f22d4cf7d8e6cdc', {}, [(
             0,
             u'1 active, 0 dead, 0 disabled, 0 standby, 0 unknown\nIncluded Paths:\nvmhba66:C0:T1:L0',
-            [],
-        )]),
-        (u'766d6862', {}, [(
-            0,
-            u'1 active, 0 dead, 0 disabled, 0 standby, 0 unknown\nIncluded Paths:\nvmhba1:C0:T0:L0',
             [],
         )]),
         (u'600605b002db9f7018d0a40c2a1444b0', {}, [(

@@ -333,10 +333,9 @@ class PerfValSorter(Sorter):
         return ['service_perf_data']
 
     def cmp(self, r1, r2):
-        return (utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True)) > utils.savefloat(
-            get_perfdata_nth_value(r2, self._num - 1, True))) - (utils.savefloat(
-                get_perfdata_nth_value(r1, self._num - 1, True)) < utils.savefloat(
-                    get_perfdata_nth_value(r2, self._num - 1, True)))
+        v1 = utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True))
+        v2 = utils.savefloat(get_perfdata_nth_value(r2, self._num - 1, True))
+        return (v1 > v2) - (v1 < v2)
 
 
 @sorter_registry.register

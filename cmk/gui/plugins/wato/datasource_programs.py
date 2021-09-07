@@ -5114,11 +5114,6 @@ rulespec_registry.register(
         help_func=lambda: _("This rule selects the special agent for Fuse Management Central."),
         name="special_agents:fuse_management_central",
         title=lambda: _("Fuse Management Central"),
-<<<<<<< HEAD
-        valuespec=_valuespec_special_agents_fuse,
+        valuespec=_valuespec_special_agents_fuse_management_central,
     )
 )
-=======
-        valuespec=_valuespec_special_agents_fuse_management_central,
-    ))
->>>>>>> Fixed problems for pull request

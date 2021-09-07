@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import argparse
 import json
 import sys
-import argparse
-from typing import List, Dict, Tuple, Optional
+from typing import Dict, List, Optional, Tuple
+
 import requests
+
 import cmk.utils.password_store
 
 
@@ -196,6 +198,9 @@ def parse_arguments(argv: List[str]) -> argparse.Namespace:
     parser.add_argument("host",
                         metavar="HOST",
                         help="")
+    parser.add_argument('--debug',
+                        action='store_true',
+                        help='Debug mode: let Python exceptions raise through')
     return parser.parse_args(argv)
 
 

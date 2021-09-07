@@ -126,6 +126,7 @@ REQUIRED_ARGUMENTS: Dict[str, List[str]] = {
         "APP_KEY",
         "ADDRESS",
     ],
+    'agent_fuse_management_central': ['USER', 'PASSWORD', 'URL', 'HOSTNAME'],
 }
 
 

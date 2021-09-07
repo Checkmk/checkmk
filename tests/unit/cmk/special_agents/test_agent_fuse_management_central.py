@@ -4,12 +4,12 @@
 import pytest
 
 from cmk.special_agents.agent_fuse_management_central import (
-    SummaryStructure,
     Alert,
+    get_admin_alerts,
+    get_environment_alerts,
     get_summary_structure,
     get_systems_alerts,
-    get_environment_alerts,
-    get_admin_alerts
+    SummaryStructure,
 )
 
 pytestmark = pytest.mark.checks

@@ -92,14 +92,14 @@ private:
 template <class T>
 void RRDColumn<T>::output(Row row, RowRenderer &r,
                           const contact * /* auth_user */,
-                          std::chrono::seconds /*timezone_offset*/) const {
+                          std::chrono::seconds timezone_offset) const {
     // We output meta data as first elements in the list. Note: In Python or
     // JSON we could output nested lists. In CSV mode this is not possible and
     // we rather stay compatible with CSV mode.
     const auto data = getRawValue(row);
     ListRenderer l(r);
-    l.output(data.start);
-    l.output(data.end);
+    l.output(data.start + timezone_offset);
+    l.output(data.end + timezone_offset);
     l.output(data.step);
     for (const auto &value : data.values) {
         l.output(value);

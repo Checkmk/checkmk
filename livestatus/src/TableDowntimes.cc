@@ -40,9 +40,7 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
         [](const Downtime &r) { return r._id; }));
     addColumn(std::make_unique<TimeColumn::Callback<Downtime>>(
         "entry_time", "The time the entry was made as UNIX timestamp", offsets,
-        [](const Downtime &r) {
-            return std::chrono::system_clock::from_time_t(r._entry_time);
-        }));
+        [](const Downtime &r) { return r._entry_time; }));
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "type",
         "The type of the downtime: 0 if it is active, 1 if it is pending",
@@ -54,14 +52,10 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
 
     addColumn(std::make_unique<TimeColumn::Callback<Downtime>>(
         "start_time", "The start time of the downtime as UNIX timestamp",
-        offsets, [](const Downtime &r) {
-            return std::chrono::system_clock::from_time_t(r._start_time);
-        }));
+        offsets, [](const Downtime &r) { return r._start_time; }));
     addColumn(std::make_unique<TimeColumn::Callback<Downtime>>(
         "end_time", "The end time of the downtime as UNIX timestamp", offsets,
-        [](const Downtime &r) {
-            return std::chrono::system_clock::from_time_t(r._end_time);
-        }));
+        [](const Downtime &r) { return r._end_time; }));
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "fixed", "A 1 if the downtime is fixed, a 0 if it is flexible", offsets,
         [](const Downtime &r) {
@@ -72,9 +66,8 @@ TableDowntimes::TableDowntimes(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "duration", "The duration of the downtime in seconds", offsets,
         [](const Downtime &r) {
-            // TODO(ml): Ugly cast unsigned long to int because
-            //           the int columns are currently 32-bits signed only.
-            return static_cast<int>(r._duration);
+            return std::chrono::duration_cast<std::chrono::seconds>(r._duration)
+                .count();
         }));
     addColumn(std::make_unique<IntColumn::Callback<Downtime>>(
         "triggered_by",

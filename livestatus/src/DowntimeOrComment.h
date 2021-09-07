@@ -8,7 +8,7 @@
 
 #include "config.h"  // IWYU pragma: keep
 
-#include <ctime>
+#include <chrono>
 #include <string>
 
 #include "nagios.h"
@@ -68,7 +68,7 @@ public:
     bool _is_service;
     host *_host;
     service *_service;
-    time_t _entry_time;
+    std::chrono::system_clock::time_point _entry_time;
     std::string _author_name;
     std::string _comment;
     unsigned long _id;
@@ -82,17 +82,17 @@ protected:
 
 class Downtime : public DowntimeOrComment {
 public:
-    time_t _start_time;
-    time_t _end_time;
+    std::chrono::system_clock::time_point _start_time;
+    std::chrono::system_clock::time_point _end_time;
     int _fixed;
-    unsigned long _duration;
+    std::chrono::seconds _duration;
     unsigned long _triggered_by;
     Downtime(host *hst, service *svc, nebstruct_downtime_struct *dt);
 };
 
 class Comment : public DowntimeOrComment {
 public:
-    time_t _expire_time;
+    std::chrono::system_clock::time_point _expire_time;
     int _persistent;
     int _source;
     int _entry_type;

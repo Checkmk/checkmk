@@ -971,18 +971,23 @@ class CommandScheduleDowntimes(Command):
 
         recurring_number = self._recurring_number()
         title_prefix = self._title_prefix(recurring_number)
+        varprefix: str
 
         if html.request.var("_down_from_now"):
+            varprefix = "_down_from_now"
             start_time = self._current_local_time()
             duration_minutes = self._from_now_minutes()
             end_time = self._time_after_minutes(start_time, duration_minutes)
             title = self._title_for_next_minutes(duration_minutes, title_prefix)
         elif html.request.var("_down_adhoc"):
+            varprefix = "_down_adhoc"
             start_time = self._current_local_time()
             duration_minutes = config.adhoc_downtime.get("duration", 0)
             end_time = self._time_after_minutes(start_time, duration_minutes)
             title = self._title_for_next_minutes(duration_minutes, title_prefix)
         elif html.request.var("_down_custom"):
+            varprefix = "_down_custom"
+            start_time = self._current_local_time()
             start_time = self._custom_start_time()
             end_time = self._custom_end_time(start_time)
             title = self._title_range(start_time, end_time)
@@ -992,12 +997,18 @@ class CommandScheduleDowntimes(Command):
                 # the remove button in the Show Downtimes WATO view returns None here
                 # TODO: separate the remove mechanism from the create downtime procedure in the views call
                 return
+            varprefix = "_downrange__%s" % button_value
             next_time_interval = button_value
             start_time = self._current_local_time()
             end_time = time_interval_end(next_time_interval, start_time)
             if end_time is None:
                 end_time = start_time + int(next_time_interval)
             title = time_interval_to_human_readable(next_time_interval, title_prefix)
+
+        if recurring_number == 8 and not 1 <= time.localtime(start_time).tm_mday <= 28:
+            raise MKUserError(
+                varprefix,
+                _("The start of a recurring downtime can only be set for days 1-28 of a month."))
 
         comment = self._comment()
         delayed_duration = self._flexible_option()

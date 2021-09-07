@@ -15,6 +15,12 @@ var g_reload_pause_timer = null;
 export function pause(seconds) {
     utils.stop_reload_timer();
     draw_overlay(seconds);
+    // Reset the timer if pause was used. Otherwise the page will reload even
+    // in pause mode.
+    if (g_reload_pause_timer) {
+        clearTimeout(g_reload_pause_timer);
+        return;
+    }
     set_timer(seconds);
 }
 
@@ -29,8 +35,6 @@ export function stop() {
 }
 
 function set_timer(seconds) {
-    if (g_reload_pause_timer) clearTimeout(g_reload_pause_timer);
-
     g_reload_pause_timer = setTimeout(function () {
         update_timer(seconds);
     }, 1000);

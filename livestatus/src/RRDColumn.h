@@ -29,21 +29,22 @@ class MonitoringCore;
 class ColumnOffsets;
 
 namespace detail {
+struct Data {
+    using time_point = std::chrono::system_clock::time_point;
+    Data() : start{}, end{}, step{0}, values{} {}
+    Data(time_point s, time_point e, unsigned long d, std::vector<double> v)
+        : start{std::move(s)}
+        , end{std::move(e)}
+        , step{d}
+        , values{std::move(v)} {}
+    time_point start;
+    time_point end;
+    unsigned long step;
+    std::vector<double> values;
+};
+
 class RRDDataMaker {
 public:
-    struct Data {
-        using time_point = std::chrono::system_clock::time_point;
-        Data() : start{}, end{}, step{0}, values{} {}
-        Data(time_point s, time_point e, unsigned long d, std::vector<double> v)
-            : start{std::move(s)}
-            , end{std::move(e)}
-            , step{d}
-            , values{std::move(v)} {}
-        time_point start;
-        time_point end;
-        unsigned long step;
-        std::vector<double> values;
-    };
     RRDDataMaker(MonitoringCore *mc, RRDColumnArgs args)
         : _mc{mc}, _args{std::move(args)} {}
 
@@ -83,8 +84,8 @@ public:
 
 private:
     const detail::RRDDataMaker data_maker_;
-    detail::RRDDataMaker::Data getRawValue(Row row) const {
-        return columnData<T>(row) == nullptr ? detail::RRDDataMaker::Data{}
+    detail::Data getRawValue(Row row) const {
+        return columnData<T>(row) == nullptr ? detail::Data{}
                                              : data_maker_(*columnData<T>(row));
     }
 };

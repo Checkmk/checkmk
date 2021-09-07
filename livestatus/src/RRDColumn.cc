@@ -65,7 +65,7 @@ std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
 // and that have a different syntax then we have in our metrics system.
 // >= --> GE. Or should we also go with GE instead of >=?
 // Look at http://oss.oetiker.ch/rrdtool/doc/rrdgraph_rpn.en.html for details!
-detail::RRDDataMaker::Data detail::RRDDataMaker::make(
+detail::Data detail::RRDDataMaker::make(
     const std::pair<std::string, std::string> &host_name_service_description)
     const {
     // Prepare the arguments for rrdtool xport in a dynamic array of strings.

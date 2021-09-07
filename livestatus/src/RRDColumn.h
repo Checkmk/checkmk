@@ -33,10 +33,7 @@ struct Data {
     using time_point = std::chrono::system_clock::time_point;
     Data() : start{}, end{}, step{0}, values{} {}
     Data(time_point s, time_point e, unsigned long d, std::vector<double> v)
-        : start{std::move(s)}
-        , end{std::move(e)}
-        , step{d}
-        , values{std::move(v)} {}
+        : start{s}, end{e}, step{d}, values{std::move(v)} {}
     time_point start;
     time_point end;
     unsigned long step;
@@ -49,8 +46,11 @@ public:
         : _mc{mc}, _args{std::move(args)} {}
 
     template <class T>
-    [[nodiscard]] Data operator()(const T &row) const {
-        return make(getHostNameServiceDesc(row));
+    [[nodiscard]] Data operator()(const T &row,
+                                  std::chrono::seconds timezone_offset) const {
+        const auto data = make(getHostNameServiceDesc(row));
+        return {data.start + timezone_offset, data.end + timezone_offset,
+                data.step, data.values};
     }
 
 private:
@@ -84,9 +84,11 @@ public:
 
 private:
     const detail::RRDDataMaker data_maker_;
-    detail::Data getRawValue(Row row) const {
-        return columnData<T>(row) == nullptr ? detail::Data{}
-                                             : data_maker_(*columnData<T>(row));
+    detail::Data getRawValue(Row row,
+                             std::chrono::seconds timezone_offset) const {
+        return columnData<T>(row) == nullptr
+                   ? detail::Data{}
+                   : data_maker_(*columnData<T>(row), timezone_offset);
     }
 };
 
@@ -97,10 +99,10 @@ void RRDColumn<T>::output(Row row, RowRenderer &r,
     // We output meta data as first elements in the list. Note: In Python or
     // JSON we could output nested lists. In CSV mode this is not possible and
     // we rather stay compatible with CSV mode.
-    const auto data = getRawValue(row);
+    const auto data = getRawValue(row, timezone_offset);
     ListRenderer l(r);
-    l.output(data.start + timezone_offset);
-    l.output(data.end + timezone_offset);
+    l.output(data.start);
+    l.output(data.end);
     l.output(data.step);
     for (const auto &value : data.values) {
         l.output(value);
@@ -111,12 +113,12 @@ template <class T>
 std::vector<std::string> RRDColumn<T>::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds timezone_offset) const {
-    const auto data = getRawValue(row);
+    const auto data = getRawValue(row, timezone_offset);
     std::vector<std::string> strings;
-    strings.push_back(std::to_string(
-        std::chrono::system_clock::to_time_t(data.start + timezone_offset)));
-    strings.push_back(std::to_string(
-        std::chrono::system_clock::to_time_t(data.end + timezone_offset)));
+    strings.push_back(
+        std::to_string(std::chrono::system_clock::to_time_t(data.start)));
+    strings.push_back(
+        std::to_string(std::chrono::system_clock::to_time_t(data.end)));
     strings.push_back(std::to_string(data.step));
     std::transform(data.values.begin(), data.values.end(),
                    std::back_inserter(strings),

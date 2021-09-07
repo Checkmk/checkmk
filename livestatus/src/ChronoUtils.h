@@ -10,7 +10,6 @@
 
 #include <chrono>
 #include <cstdlib>
-#include <ctime>
 #include <iomanip>
 #include <ratio>
 #include <string>
@@ -34,7 +33,7 @@ inline double elapsed_ms_since(std::chrono::steady_clock::time_point then) {
 }
 
 inline tm to_tm(std::chrono::system_clock::time_point tp) {
-    time_t t = std::chrono::system_clock::to_time_t(tp);
+    auto t = std::chrono::system_clock::to_time_t(tp);
     struct tm ret;
 // NOTE: A brilliant example of how to make a simple API function a total
 // chaos follows...

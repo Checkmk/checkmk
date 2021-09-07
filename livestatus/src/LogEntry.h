@@ -9,8 +9,8 @@
 #include "config.h"  // IWYU pragma: keep
 
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
-#include <ctime>
 #include <string>
 #include <string_view>
 #include <vector>

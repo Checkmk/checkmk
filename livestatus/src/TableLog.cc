@@ -6,8 +6,8 @@
 #include "TableLog.h"
 
 #include <bitset>
+#include <chrono>
 #include <cstdint>
-#include <ctime>
 #include <map>
 #include <mutex>
 #include <optional>
@@ -163,8 +163,10 @@ void TableLog::answerQuery(Query *query) {
     // optimal entry point into the logfile
     auto since = std::chrono::system_clock::from_time_t(
         query->greatestLowerBoundFor("time").value_or(0));
+    auto now =
+        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     auto until = std::chrono::system_clock::from_time_t(
-        query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1);
+        query->leastUpperBoundFor("time").value_or(now) + 1);
 
     // The second optimization is for log message types. We want to load only
     // those log type that are queried.

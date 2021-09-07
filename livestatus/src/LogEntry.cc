@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <charconv>
+#include <ctime>
 #include <iterator>
 #include <system_error>
 #include <utility>

@@ -6,7 +6,6 @@
 #include "TableStateHistory.h"
 
 #include <cstdint>
-#include <ctime>
 #include <mutex>
 #include <optional>
 #include <ratio>
@@ -319,8 +318,10 @@ void TableStateHistory::answerQuery(Query *query) {
             "Start of timeframe required. e.g. Filter: time > 1234567890");
         return;
     }
+    auto now =
+        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
     _until = std::chrono::system_clock::from_time_t(
-        query->leastUpperBoundFor("time").value_or(time(nullptr)) + 1);
+        query->leastUpperBoundFor("time").value_or(now) + 1);
     if (_until - _since <= 1s) {
         return;
     }

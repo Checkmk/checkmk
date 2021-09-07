@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cstring>
-#include <ctime>
 #include <filesystem>
 #include <functional>
 #include <iterator>
@@ -57,7 +56,9 @@ extern TimeperiodsCache *g_timeperiods_cache;
 // TODO(ml): Here we use `static` instead of an anonymous namespace because
 // of the `extern` declaration.  We should find something better.
 static double staleness(const service &svc) {
-    auto check_result_age = static_cast<double>(time(nullptr) - svc.last_check);
+    auto now =
+        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    auto check_result_age = static_cast<double>(now - svc.last_check);
     if (svc.check_interval != 0) {
         return check_result_age / (svc.check_interval * interval_length);
     }

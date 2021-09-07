@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <chrono>
-#include <ctime>
 #include <filesystem>
 #include <functional>
 #include <iterator>
@@ -778,7 +777,9 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
     table->addColumn(std::make_unique<DoubleColumn::Callback<host>>(
         prefix + "staleness", "Staleness indicator for this host", offsets,
         [](const host &hst) {
-            return static_cast<double>(time(nullptr) - hst.last_check) /
+            auto now = std::chrono::system_clock::to_time_t(
+                std::chrono::system_clock::now());
+            return static_cast<double>(now - hst.last_check) /
                    ((hst.check_interval == 0 ? 1 : hst.check_interval) *
                     interval_length);
         }));

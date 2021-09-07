@@ -804,6 +804,7 @@ export function metric_value_component(selection, options) {
         .attr("x", options.position.x)
         .attr("y", options.position.y)
         .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
         .style("font-weight", "bold")
         .style("font-size", font_size + "px");
 

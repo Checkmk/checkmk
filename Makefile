@@ -426,6 +426,7 @@ setup:
 	    doxygen \
 	    figlet \
 	    g++ \
+		gdebi \
 	    libpcap-dev \
 	    librrd-dev \
 	    libxml2-dev \

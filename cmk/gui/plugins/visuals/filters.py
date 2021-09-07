@@ -2373,7 +2373,9 @@ class FilterAggrGroup(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
         empty_choices: Choices = [("", "")]
-        html.dropdown(htmlvar, empty_choices + bi.aggregation_group_choices(), deflt=value.get(htmlvar, ""))
+        html.dropdown(htmlvar,
+                      empty_choices + bi.aggregation_group_choices(),
+                      deflt=value.get(htmlvar, ""))
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})

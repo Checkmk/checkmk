@@ -502,7 +502,7 @@ def declare_host_attribute(a,
         "from_config": lambda self: self._from_config,
     })
 
-    attrs['openapi_field'] = lambda: fields.String(description=a.help())
+    attrs['openapi_field'] = lambda self: fields.String(description=self.help())
 
     # Apply the left over missing attributes that we get from the function arguments
     # by creating the final concrete class of this attribute

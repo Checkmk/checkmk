@@ -154,20 +154,20 @@ def check_proxmox_ve_vm_backup_status(
     if 'archive_size' in last_backup:
         yield Result(state=State.OK, summary=f"Size: {render.bytes(last_backup['archive_size'])}")
 
-    if all(k in last_backup for k in {'bytes_written_size', 'bytes_written_bandwidth'}):
+    if all(k in last_backup for k in ('bytes_written_size', 'bytes_written_bandwidth')):
         bandwidth = last_backup['bytes_written_bandwidth']
-    elif all(k in last_backup for k in {'transfer_size', 'transfer_time'}):
+    elif all(k in last_backup for k in ('transfer_size', 'transfer_time')):
         if last_backup['transfer_time'] == 0:
             return
         bandwidth = last_backup['transfer_size'] / last_backup['transfer_time']
-    elif all(k in last_backup for k in {'upload_amount', 'upload_total', 'upload_time'}):
+    elif all(k in last_backup for k in ('upload_amount', 'upload_total', 'upload_time')):
         if last_backup['upload_amount'] > 0:
             dedup_rate = last_backup['upload_total'] / last_backup['upload_amount']
             yield Result(state=State.OK, summary=f"Dedup rate: {dedup_rate:.2f}")
         if last_backup['upload_time'] == 0:
             return
         bandwidth = last_backup['upload_amount'] / last_backup['upload_time']
-    elif all(k in last_backup for k in {'backup_amount', 'backup_total', 'backup_time'}):
+    elif all(k in last_backup for k in ('backup_amount', 'backup_total', 'backup_time')):
         if last_backup['backup_amount'] > 0:
             dedup_rate = last_backup['backup_total'] / last_backup['backup_amount']
             yield Result(state=State.OK, summary=f"Dedup rate: {dedup_rate:.2f}")

@@ -448,7 +448,7 @@ def agent_proxmox_ve_main(args: Args) -> None:
     with ProxmoxVeAPI(
             host=args.hostname,
             port=args.port,
-            credentials={k: getattr(args, k) for k in {"username", "password"} if getattr(args, k)},
+            credentials={k: getattr(args, k) for k in ("username", "password") if getattr(args, k)},
             timeout=args.timeout,
             verify_ssl=not args.no_cert_check,
     ) as session:

@@ -197,7 +197,7 @@ def parse_ps_lnx(string_table: StringTable,) -> Optional[ps.Section]:
     attrs = tuple(word.lower() for word in string_table[0][1:-1])
 
     # busybox' ps seems to not provide the columns we need so we abort
-    if not all(att in attrs for att in {'user', 'vsz', 'rss', 'time', 'elapsed', 'pid'}):
+    if not all(att in attrs for att in ('user', 'vsz', 'rss', 'time', 'elapsed', 'pid')):
         return None
 
     cmd_idx = len(attrs)

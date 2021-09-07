@@ -163,7 +163,6 @@ disable=
     # this provide some micro speedups if fixed
     use-dict-literal,
     use-list-literal,
-    use-sequence-for-iteration,
 
 
 

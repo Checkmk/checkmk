@@ -9609,7 +9609,8 @@ msgstr "クラスター化されたサービス"
 msgid "Clustered services for overlapping clusters"
 msgstr "重複するクラスターのクラスター化されたサービス"
 
-msgid "Clusters: Prefered check result of local checks"
+#, fuzzy
+msgid "Clusters: Preferred check result of local checks"
 msgstr "クラスター: ローカルチェックの優先チェック結果"
 
 #, fuzzy
@@ -22414,7 +22415,7 @@ msgstr ""
 "ドでログインをユーザーに許可するかどうかを指定します。"
 
 msgid ""
-"If provided, the service result is expected to originate from the prefered "
+"If provided, the service result is expected to originate from the preferred "
 "node. If the result originates from any other node, the service will at "
 "least be in a WARNING state (even if the result itself is OK)."
 msgstr ""
@@ -24463,12 +24464,16 @@ msgstr "VM、クラウド、またはコンテナプラットフォームと統�
 msgid "Integration Key"
 msgstr "統合キー"
 
+#, fuzzy
 msgid ""
 "Interactive search field for direct access to monitoring instances (hosts, "
 "services, host- and servicegroups).<br>You can use the following filters: "
-"<i>h:</i> Host,<br> <i>s:</i> Service, <i>hg:</i> Hostgroup, <i>sg:</i> "
-"Servicegroup,<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Hosttag"
+"<i>h:</i> Host,<br> <i>s:</i> Service, <i>hg:</i> Host group, <i>sg:</i> "
+"Service group,<br><i>ad:</i> Address, <i>al:</i> Alias, <i>tg:</i> Host tag, "
+"<i>hl:</i> Host label, <i>sl:</i> Service label"
 msgstr ""
+"メニューエントリ、ホスト、サービス、またはホストグループとサービスグループを"
+"検索します"
 
 msgid "Interface"
 msgstr "インターフェース"
@@ -24595,6 +24600,10 @@ msgstr "無効なDCDコマンド: %r"
 #, python-format
 msgid "Invalid IPv4 address: %s"
 msgstr "無効なIPv4アドレス:%s"
+
+#, fuzzy
+msgid "Invalid Job ID"
+msgstr "無効なトピック"
 
 #, python-format
 msgid "Invalid None argument at for %s idx %d"
@@ -25608,9 +25617,10 @@ msgstr "ラベル付けオプション"
 msgid "Labels"
 msgstr "ラベル"
 
+#, fuzzy
 msgid ""
-"Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>os:"
-"windows</tt>."
+"Labels need to be in the format <tt>[KEY]:[VALUE]</tt>. For example <tt>cmk/"
+"os_family:linux</tt>."
 msgstr ""
 "ラベルは<tt> [KEY]:[VALUE] </tt>の形式である必要があります。たとえば、<tt> "
 "os:windows </tt>です。"
@@ -25994,6 +26004,10 @@ msgstr "メタのレベル"
 
 msgid "Levels for Number of Licenses"
 msgstr "ライセンス数のレベル"
+
+#, fuzzy
+msgid "Levels for Power Supply Wattage"
+msgstr "メモリ使用量のレベル"
 
 msgid "Levels for Prometheus services"
 msgstr "Prometheusサービスのレベル"
@@ -27484,6 +27498,14 @@ msgstr "未確認メッセージの総数の下位レベル"
 
 msgid "Lower levels"
 msgstr "低いレベル"
+
+#, fuzzy
+msgid "Lower levels (absolute)"
+msgstr "低いレベル"
+
+#, fuzzy
+msgid "Lower levels (in percent)"
+msgstr "制限のパーセンテージのより低いレベル"
 
 #, python-format
 msgid "Lower levels for %s"
@@ -35319,6 +35341,10 @@ msgstr "電源供給装置"
 msgid "Power Supply Unit"
 msgstr "電源ユニット"
 
+#, fuzzy
+msgid "Power Supply Wattage"
+msgstr "電源名"
+
 msgid "Power Supply name"
 msgstr "電源名"
 
@@ -35386,7 +35412,7 @@ msgid "Prefer systemd, fallback to xinetd if xinetd is available"
 msgstr "systemdを優先し、xinetdが利用可能な場合はxinetdにフォールバックします"
 
 #, fuzzy
-msgid "Prefered node"
+msgid "Preferred node"
 msgstr "参照"
 
 msgid "Prefetch data hit ratio"
@@ -38834,13 +38860,13 @@ msgid ""
 "You can use the following filters:\n"
 "h: Host\n"
 "s: Service\n"
-"hg: Hostgroup\n"
-"sg: Servicegroup\n"
+"hg: Host group\n"
+"sg: Service group\n"
 "ad: Address\n"
 "al: Alias\n"
-"tg: Hosttag\n"
-"hl: Hostlabel\n"
-"sl: Servicelabel"
+"tg: Host tag\n"
+"hl: Host label (e.g. hl: cmk/os_family:linux)\n"
+"sl: Service label (e.g. sl: cmk/os_family:linux)"
 msgstr ""
 "メニューエントリ、ホスト、サービス、またはホストグループとサービスグループを"
 "検索します"
@@ -40957,7 +40983,7 @@ msgstr ""
 msgid ""
 "Since all nodes yield metrics with the same name, Checkmk has to decide "
 "which nodes' metrics to keep. By default, it will select the node that was "
-"crucial for the overall result (the prefered one if in doubt). You can "
+"crucial for the overall result (the preferred one if in doubt). You can "
 "override this automatism by specifying a node here."
 msgstr ""
 
@@ -47198,15 +47224,15 @@ msgstr "結果のサービスは、このエントリをサービスの説明と
 
 msgid ""
 "The results of the node in the best state are displayed most prominently. If "
-"multiple nodes share the same 'best' state and a prefered node is "
-"configured, the result of the prefered node will be chosen. This is "
+"multiple nodes share the same 'best' state and a preferred node is "
+"configured, the result of the preferred node will be chosen. This is "
 "hopefully relevant most of the time: when all nodes are OK."
 msgstr ""
 
 msgid ""
 "The results of the node in the worst state are displayed most prominently. "
-"If multiple nodes share the same 'worst' state and a prefered node is "
-"configured, the result of the prefered node will be chosen. This is "
+"If multiple nodes share the same 'worst' state and a preferred node is "
+"configured, the result of the preferred node will be chosen. This is "
 "hopefully relevant most of the time: when all nodes are OK."
 msgstr ""
 
@@ -53967,6 +53993,14 @@ msgstr "未確認メッセージの総数の上位レベル"
 
 msgid "Upper levels"
 msgstr "上位レベル"
+
+#, fuzzy
+msgid "Upper levels (absolute)"
+msgstr "レイテンシの上位レベル"
+
+#, fuzzy
+msgid "Upper levels (in percent)"
+msgstr "パーセントでの上限"
 
 msgid "Upper levels for \"ESI errors\" per second"
 msgstr "1秒あたりの\"ESIエラー\"の上位レベル"

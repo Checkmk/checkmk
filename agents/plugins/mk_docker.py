@@ -223,7 +223,7 @@ class ParallelDfCall:
     def _unlink(file_):
         try:
             file_.unlink()
-        except FileNotFoundError:
+        except OSError:
             pass
 
     def _spool_df_result(self):
@@ -240,8 +240,8 @@ class ParallelDfCall:
         return self._read_df_result()
 
     def _write_df_result(self, data):
-        with self._my_tmp_file.open('w') as file_:
-            file_.write(json.dumps(data))
+        with self._my_tmp_file.open('wb') as file_:
+            file_.write(json.dumps(data).encode("utf-8"))
         self._my_tmp_file.rename(self._spool_file)
 
     def _read_df_result(self):

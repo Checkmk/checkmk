@@ -205,7 +205,11 @@ def test_get_all_hosts_effective_attributes(web):
 
 
 def test_get_ruleset(web):
+    # The configuration_hash is a md5 of the other content json encoded.
+    # Hardcoding hashes does not make sense...
     response = web.get_ruleset("extra_host_conf:notification_options")
+    assert isinstance(response["configuration_hash"], str)
+    del response["configuration_hash"]
     assert response == {
         'ruleset': {
             '': [{
@@ -213,10 +217,11 @@ def test_get_ruleset(web):
                 'condition': {}
             }]
         },
-        'configuration_hash': 'b76f205bbe674300f677a282d9ccd71f',
     }
 
     response = web.get_ruleset("inventory_df_rules")
+    assert isinstance(response["configuration_hash"], str)
+    del response["configuration_hash"]
     assert response == {
         'ruleset': {
             '': [{
@@ -231,7 +236,6 @@ def test_get_ruleset(web):
                 }
             }]
         },
-        'configuration_hash': '385d0f340a33b95bb0d58622d2304fe8',
     }
 
 

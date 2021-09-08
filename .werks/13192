@@ -1,0 +1,10 @@
+Title: Fix potential XSS in pnp_template.py
+Level: 1
+Component: wato
+Compatible: compat
+Edition: cre
+Version: 1.6.0p26
+Date: 1631080442
+Class: security
+
+

@@ -670,6 +670,7 @@ def _scalar_value_command(scalar, translated_metrics):
 @cmk.gui.pages.register("noauth:pnp_template")
 def page_pnp_template():
     try:
+        html.set_output_format("text")
         template_id = html.request.var("id")
 
         check_command, perf_string = template_id.split(":", 1)

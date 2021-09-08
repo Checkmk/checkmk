@@ -919,14 +919,14 @@ class CMKOpenAPISession:
     def get_baking_status(self, assertion=True):
         return self.request(
             "get",
-            "domain-types/agent/actions/baking_status",
+            "domain-types/agent/actions/baking_status/invoke",
             assertion=assertion,
         ).json()
 
     def bake_agents(self, assertion=True):
         resp = self.request(
             "post",
-            "domain-types/agent/actions/bake",
+            "domain-types/agent/actions/bake/invoke",
             assertion=assertion,
         )
         return resp
@@ -935,7 +935,7 @@ class CMKOpenAPISession:
         request_params = {"key_id": key_id, "passphrase": passphrase}
         resp = self.request(
             "post",
-            "domain-types/agent/actions/bake_and_sign",
+            "domain-types/agent/actions/bake_and_sign/invoke",
             request_params=request_params,
             assertion=assertion,
         )
@@ -945,7 +945,7 @@ class CMKOpenAPISession:
         request_params = {"key_id": key_id, "passphrase": passphrase}
         resp = self.request(
             "post",
-            "domain-types/agent/actions/sign",
+            "domain-types/agent/actions/sign/invoke",
             request_params=request_params,
             assertion=assertion,
         )

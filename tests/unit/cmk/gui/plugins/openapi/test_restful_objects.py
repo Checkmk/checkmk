@@ -50,7 +50,7 @@ def test_domain_object():
                     'type': 'application/json'
                 }, {
                     'domainType': 'link',
-                    'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8/actions/move',
+                    'href': '/objects/folder/a71684ebd8fe49548263083a3da332c8/actions/move/invoke',
                     'method': 'GET',
                     'rel': '.../details;action="move"',
                     'type': 'application/json'

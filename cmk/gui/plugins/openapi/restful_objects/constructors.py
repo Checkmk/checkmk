@@ -241,7 +241,6 @@ def object_action(name: str, parameters: dict, base: str) -> Dict[str, Any]:
         'memberType': "action",
         'links': [
             link_rel('up', base),
-            link_rel('.../details', base + f'/actions/{name}', parameters={'action': name}),
             link_rel('.../invoke',
                      base + f'/actions/{name}/invoke',
                      method='post',

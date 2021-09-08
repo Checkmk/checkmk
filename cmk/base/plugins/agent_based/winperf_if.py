@@ -7,62 +7,18 @@
 import dataclasses
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
 
-from .agent_based_api.v1 import register, Result
-from .agent_based_api.v1 import State as state
-from .agent_based_api.v1 import type_defs
-from .utils import interfaces
-
-# Example output from agent
-# <<<winperf_if>>>
-# 1366721523.71 510
-# 3 instances: Ethernetadapter_der_AMD-PCNET-Familie__2_-_Paketplaner-Miniport Ethernetadapter_der_AMD-PCNET-Familie_-_Paketplaner-Miniport MS_TCP_Loopback_interface
-# -122 43364 1085829 41602 bulk_count
-# -110 293 4174 932 counter
-# -244 138 3560 466 counter
-# -58 155 614 466 counter
-# 10 100000000 100000000 10000000 rawcount
-# -246 21219 780491 20801 counter
-# 14 0 383 466 counter
-# 16 138 3176 0 counter
-# 18 0 0 0 rawcount
-# 20 0 0 0 rawcount
-# 22 0 1 0 rawcount
-# -4 22145 305338 20801 counter
-# 26 0 428 466 counter
-# 28 155 186 0 counter
-# 30 0 0 0 rawcount
-# 32 0 0 0 rawcount
-# 34 0 0 0 rawcount
-# <<<winperf_if:sep(44)>>>
-# Node,MACAddress,Name,NetConnectionID,NetConnectionStatus
-# WINDOWSXP,08:00:27:8D:47:A4,Ethernetadapter der AMD-PCNET-Familie,LAN-Verbindung,2
-# WINDOWSXP,,Asynchroner RAS-Adapter,,
-# WINDOWSXP,08:00:27:8D:47:A4,Paketplaner-Miniport,,
-# WINDOWSXP,,WAN-Miniport (L2TP),,
-# WINDOWSXP,50:50:54:50:30:30,WAN-Miniport (PPTP),,
-# WINDOWSXP,33:50:6F:45:30:30,WAN-Miniport (PPPOE),,
-# WINDOWSXP,,Parallelanschluss (direkt),,
-# WINDOWSXP,,WAN-Miniport (IP),,
-# WINDOWSXP,00:E5:20:52:41:53,Paketplaner-Miniport,,
-# WINDOWSXP,08:00:27:35:20:4D,Ethernetadapter der AMD-PCNET-Familie,LAN-Verbindung 2,2
-# WINDOWSXP,08:00:27:35:20:4D,Paketplaner-Miniport,,
-#
-# ------- DHCP-section -------
-# This section had a live time of two months (26.10. - 11.12.2015) and was replaced by
-# '<<<winperf_if>>>'
-# [dhcp_start]
-# ...
-# [dhcp_end]
-#
-# Example output for the optional dhcp section. If this plugin is active, any interface for which
-# dhcp is enabled will warn
-# <<<dhcp:sep(44)>>>
-# Node,Description,DHCPEnabled
-# WINDOWS,Intel(R) PRO/1000 MT-Desktopadapter,TRUE
-# WINDOWS,WAN Miniport (IP),FALSE
-# WINDOWS,Microsoft-ISATAP-Adapter,FALSE
-# WINDOWS,RAS Async Adapter,FALSE
-# WINDOWS,Intel(R) PRO/1000 MT-Desktopadapter #2,TRUE
+from .agent_based_api.v1 import register, Result, State
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.interfaces import (
+    CHECK_DEFAULT_PARAMETERS,
+    check_multiple_interfaces,
+    discover_interfaces,
+    DISCOVERY_DEFAULT_PARAMETERS,
+    Interface,
+    mac_address_from_hexstring,
+    saveint,
+)
+from .utils.interfaces import Section as SectionInterfaces
 
 Line = Sequence[str]
 Lines = Iterator[Line]
@@ -72,7 +28,7 @@ RawSubSection = List[ParsedSubSectionLine]
 SubSection = Dict[str, ParsedSubSectionLine]
 AgentTimestamp = Optional[float]
 AgentSection = Dict[str, Line]
-Section = Tuple[AgentTimestamp, interfaces.Section, SubSection]
+Section = Tuple[AgentTimestamp, SectionInterfaces, SubSection]
 
 
 @dataclasses.dataclass
@@ -176,7 +132,7 @@ def _parse_winperf_if_agent_section_timestamp_and_instance_names(
 
 
 def _parse_winperf_if_section(
-    string_table: type_defs.StringTable,
+    string_table: StringTable,
 ) -> Tuple[AgentTimestamp, NICNames, AgentSection, RawSubSection, RawSubSection, RawSubSection]:
     agent_timestamp = None
     raw_nic_names: NICNames = []
@@ -332,7 +288,7 @@ def _get_if_table(
     nic_attrs: NICAttrs,
     plugin_info: SubSection,
     teaming_info: SubSection,
-) -> interfaces.Section:
+) -> SectionInterfaces:
     # Now convert the dicts into the format that is needed by if.include
     if_table = []
     for nic_name, nic_attr in nic_attrs.items():
@@ -340,7 +296,7 @@ def _get_if_table(
         nic.setdefault("index", nic_attr.index)
         nic.update(plugin_info.get(nic_name, {}))
 
-        bandwidth = interfaces.saveint(nic.get("Speed"))
+        bandwidth = saveint(nic.get("Speed"))
         # Some interfaces report several exabyte as bandwidth when down..
         if bandwidth > 1024 ** 5:
             # Greater than petabyte
@@ -358,25 +314,25 @@ def _get_if_table(
         oper_status, oper_status_name = _CONNECTION_STATES[str(connection_status)]
 
         if_table.append(
-            interfaces.Interface(
+            Interface(
                 index=str(nic["index"]),
                 descr=nic_name,
                 alias=str(nic.get("NetConnectionID", nic_name)),
                 type="loopback" in nic_name.lower() and "24" or "6",
-                speed=bandwidth or interfaces.saveint(nic["10"]),
+                speed=bandwidth or saveint(nic["10"]),
                 oper_status=oper_status,
-                in_octets=interfaces.saveint(nic["-246"]),
-                in_ucast=interfaces.saveint(nic["14"]),
-                in_bcast=interfaces.saveint(nic["16"]),
-                in_discards=interfaces.saveint(nic["18"]),
-                in_errors=interfaces.saveint(nic["20"]),
-                out_octets=interfaces.saveint(nic["-4"]),
-                out_ucast=interfaces.saveint(nic["26"]),
-                out_bcast=interfaces.saveint(nic["28"]),
-                out_discards=interfaces.saveint(nic["30"]),
-                out_errors=interfaces.saveint(nic["32"]),
-                out_qlen=interfaces.saveint(nic["34"]),
-                phys_address=interfaces.mac_address_from_hexstring(str(nic.get("MACAddress", ""))),
+                in_octets=saveint(nic["-246"]),
+                in_ucast=saveint(nic["14"]),
+                in_bcast=saveint(nic["16"]),
+                in_discards=saveint(nic["18"]),
+                in_errors=saveint(nic["20"]),
+                out_octets=saveint(nic["-4"]),
+                out_ucast=saveint(nic["26"]),
+                out_bcast=saveint(nic["28"]),
+                out_discards=saveint(nic["30"]),
+                out_errors=saveint(nic["32"]),
+                out_qlen=saveint(nic["34"]),
+                phys_address=mac_address_from_hexstring(str(nic.get("MACAddress", ""))),
                 oper_status_name=oper_status_name,
                 group=group,
             )
@@ -399,7 +355,7 @@ def _parse_winperf_if_nic_attrs(
     return nic_attrs
 
 
-def parse_winperf_if(string_table: type_defs.StringTable) -> Section:
+def parse_winperf_if(string_table: StringTable) -> Section:
     (
         agent_timestamp,
         raw_nic_names,
@@ -431,8 +387,8 @@ register.agent_section(
 def discover_winperf_if(
     params: Sequence[Mapping[str, Any]],
     section: Section,
-) -> type_defs.DiscoveryResult:
-    yield from interfaces.discover_interfaces(
+) -> DiscoveryResult:
+    yield from discover_interfaces(
         params,
         section[1],
     )
@@ -442,9 +398,9 @@ def check_winperf_if(
     item: str,
     params: Mapping[str, Any],
     section: Section,
-) -> type_defs.CheckResult:
+) -> CheckResult:
     agent_timestamp, if_table, dhcp_info = section
-    yield from interfaces.check_multiple_interfaces(
+    yield from check_multiple_interfaces(
         item,
         params,
         if_table,
@@ -473,11 +429,11 @@ def check_if_dhcp(
         dhcp_enabled = attrs["DHCPEnabled"]
         if dhcp_enabled == "TRUE":
             return Result(
-                state=state.WARN,
+                state=State.WARN,
                 summary="DHCP: enabled",
             )
         return Result(
-            state=state.OK,
+            state=State.OK,
             summary="DHCP: %s" % dhcp_enabled,
         )
     return None
@@ -488,9 +444,9 @@ register.check_plugin(
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
     discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters=dict(interfaces.DISCOVERY_DEFAULT_PARAMETERS),
+    discovery_default_parameters=dict(DISCOVERY_DEFAULT_PARAMETERS),
     discovery_function=discover_winperf_if,
     check_ruleset_name="if",
-    check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
+    check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_function=check_winperf_if,
 )

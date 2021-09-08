@@ -832,7 +832,7 @@ run_mrpe() {
 # Implements Real-Time Check feature of the Checkmk agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
-run_real_time_checks() {
+run_real_time_checks_for_remote() {
     PIDFILE=$MK_VARDIR/real_time_checks.pid
     echo $$ >$PIDFILE
 
@@ -876,7 +876,7 @@ run_real_time_checks() {
     done
 }
 
-run_liveupdate() {
+run_real_time_checks() {
     # Start new liveupdate process in background on each agent execution. Starting
     # a new live update process will terminate the old one automatically after
     # max. 1 sec.
@@ -886,7 +886,7 @@ run_liveupdate() {
         elif ! type openssl >/dev/null; then
             echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
         else
-            run_real_time_checks >/dev/null &
+            run_real_time_checks_for_remote >/dev/null &
         fi
     fi
 }
@@ -1216,7 +1216,7 @@ main_mixed_parts() {
 
 main_async_parts() {
 
-    run_liveupdate
+    run_real_time_checks
 
 }
 

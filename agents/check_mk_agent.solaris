@@ -851,7 +851,7 @@ main_mixed_parts(){
 }
 
 main_async_parts(){
-    # no run_liveupdate available
+    # no run_real_time_checks available
     :
 }
 

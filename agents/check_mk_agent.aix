@@ -803,7 +803,7 @@ main_mixed_parts() {
 }
 
 main_async_parts() {
-    # run_liveupdate not implemented in this agent
+    # run_real_time_checks not implemented in this agent
     :
 }
 

@@ -1294,7 +1294,7 @@ section_ntp() {
     fi
 }
 
-run_liveupdate() {
+run_real_time_checks() {
     if [ -e "$MK_CONFDIR/real_time_checks.cfg" ]; then
         if [ -z "$REMOTE" ]; then
             echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
@@ -1303,7 +1303,7 @@ run_liveupdate() {
         elif ! inpath openssl; then
             echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
         else
-            run_real_time_checks >/dev/null &
+            run_real_time_checks_for_remote "${REMOTE}" >/dev/null &
         fi
     fi
 }
@@ -1595,7 +1595,7 @@ export -f run_mrpe
 # Implements Real-Time Check feature of the Checkmk agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
-run_real_time_checks() {
+run_real_time_checks_for_remote() {
     PIDFILE=$MK_VARDIR/real_time_checks.pid
     echo $$ >"$PIDFILE"
 
@@ -1630,7 +1630,7 @@ run_real_time_checks() {
                 else
                     section_"$SECTION"
                 fi
-            } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
+            } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${1}/${RTC_PORT}"
         done
 
         # Plugins
@@ -1655,7 +1655,7 @@ run_real_time_checks() {
                             _log_section_time "${plugin_interpreter}" "${PLUGIN}"
                         fi
                     fi
-                } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${REMOTE}/${RTC_PORT}"
+                } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${1}/${RTC_PORT}"
             done
         fi
 
@@ -1871,8 +1871,8 @@ main_async_parts() {
     # Start new liveupdate process in background
     # Starting a new live update process will terminate the old one automatically after
     # max. 1 sec.
-    # run_liveupdate -> run_real_time_checks -> _log_section_time CMD
-    run_liveupdate
+    # run_real_time_checks -> run_real_time_checks_for_remote -> _log_section_time CMD
+    run_real_time_checks
 }
 
 main_finalize_sync() {

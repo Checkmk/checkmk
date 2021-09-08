@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
+from dataclasses import asdict
 from typing import (
     Any,
     Collection,
@@ -706,6 +707,109 @@ def parse_winperf_if_dhcp(string_table: StringTable) -> SectionDHPC:
 #     name='winperf_if_dhcp',
 #     parse_function=parse_winperf_if_dhcp,
 # )
+
+
+def _normalize_name(
+    name: str,
+    names: Collection[str],
+) -> str:
+    """
+    >>> _normalize_name("my interface #3", ["my interface 1", "my interface 2", "my interface 3"])
+    'my interface 3'
+    >>> _normalize_name("my interface(R)", ["my interface[R]", "another interface(?)"])
+    'my interface(R)'
+    """
+    # Intel[R] PRO 1000 MT-Desktopadapter__3   (perf counter)
+    # Intel(R) PRO/1000 MT-Desktopadapter 3    (wmic name)
+    # Intel(R) PRO/1000 MT-Desktopadapter #3   (wmic InterfaceDescription)
+    mod_name = name
+    for from_token, to_token in [("/", " "), ("(", "["), (")", "]"), ("#", " ")]:
+        for n in names:
+            if from_token in n:
+                # we do not modify it if this character is in any of the counter names
+                break
+        else:
+            mod_name = mod_name.replace(from_token, to_token).replace("  ", " ")
+    return mod_name
+
+
+def _match_add_data_to_interfaces(
+    interface_names: Collection[str],
+    section_teaming: SectionTeaming,
+    section_extended: SectionExtended,
+):
+    additional_data: MutableMapping[str, AdditionalIfData] = {}
+
+    for add_data in section_extended:
+        if add_data.guid is not None and (teaming_entry := section_teaming.get(add_data.guid)):
+            name = teaming_entry.name
+        else:
+            name = add_data.name
+
+        # Exact match
+        if name in interface_names:
+            additional_data.setdefault(name, add_data)
+            continue
+
+        # In the perf counters the nics have strange suffixes, e.g.
+        # Ethernetadapter der AMD-PCNET-Familie 2 - Paketplaner-Miniport, while
+        # in wmic it's only named "Ethernetadapter der AMD-PCNET-Familie 2".
+        if (
+            mod_name := _normalize_name(
+                name,
+                interface_names,
+            )
+        ) in interface_names:
+            additional_data.setdefault(mod_name, add_data)
+            continue
+
+        for name in interface_names:
+            if name.startswith(mod_name + " "):
+                l = len(mod_name)
+                if not (name[l:].strip()[0]).isdigit():
+                    additional_data.setdefault(name, add_data)
+                    break
+
+    return additional_data
+
+
+def _merge_sections(
+    interfaces: Mapping[str, Interface],
+    section_teaming: Optional[SectionTeaming],
+    section_extended: Optional[SectionExtended],
+) -> SectionInterfaces:
+
+    section_teaming = section_teaming or {}
+    additional_data = (
+        _match_add_data_to_interfaces(
+            interfaces,
+            section_teaming,
+            section_extended,
+        )
+        if section_extended
+        else {}
+    )
+
+    return [
+        Interface(
+            **{
+                **asdict(interface),
+                **dict(
+                    alias=add_if_data.alias,
+                    speed=add_if_data.speed or interface.speed,
+                    group=section_teaming[add_if_data.guid].team_name
+                    if add_if_data.guid in section_teaming
+                    else None,
+                    oper_status=add_if_data.oper_status,
+                    oper_status_name=add_if_data.oper_status_name,
+                    phys_address=mac_address_from_hexstring(add_if_data.mac_address),
+                ),
+            }
+        )
+        if (add_if_data := additional_data.get(name))
+        else interface
+        for name, interface in interfaces.items()
+    ]
 
 
 def discover_winperf_if(

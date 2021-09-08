@@ -15,8 +15,11 @@ from cmk.base.plugins.agent_based.winperf_if import (
     check_if_dhcp,
     inventory_winperf_if,
     parse_winperf_if,
+    parse_winperf_if_teaming,
     Section,
+    SectionTeaming,
     SubSection,
+    TeamingData,
 )
 
 
@@ -2184,6 +2187,156 @@ def test_parse_winperf_if(
     section: Section,
 ) -> None:
     assert parse_winperf_if(string_table) == section
+
+
+@pytest.mark.parametrize(
+    "string_table, section",
+    [
+        pytest.param(
+            [
+                [
+                    "TeamName",
+                    "TeamingMode",
+                    "LoadBalancingAlgorithm",
+                    "MemberMACAddresses",
+                    "MemberNames",
+                    "MemberDescriptions",
+                    "Speed",
+                    "GUID",
+                ],
+                [
+                    "DAG-NET ",
+                    "SwitchIndependent ",
+                    "Dynamic ",
+                    "40:90:7C:1A:45:F8;7C:33:82:DE:F6:3A",
+                    "SLOT 6 Port 1 DAG;SLOT 4 Port 2 DAG",
+                    "Intel(R) Ethernet 10G 2P X520 Adapter #2;Intel(R) Ethernet 10G 2P X520 Adapter #4",
+                    "10000000000;10000000000",
+                    "{70F3DEC7-8347-4157-B066-95F5672F39BA};{9C4971CB-95AA-4B01-B828-F61B339E4F19}",
+                ],
+                [
+                    "MAPI-NET ",
+                    "SwitchIndependent ",
+                    "Dynamic ",
+                    "C4:B7:2C:2A:7C:43;5C:74:5B:97:33:7D",
+                    "SLOT 6 Port 2 MAPI;SLOT 4 Port 1 MAPI",
+                    "Intel(R) Ethernet 10G 2P X520 Adapter;Intel(R) Ethernet 10G 2P X520 Adapter #3",
+                    "10000000000;10000000000",
+                    "{4C88A19B-5EE4-44A6-ACBB-262131EE1560};{9BD62095-22A8-49CA-BA8B-A7846C6B5FDB}",
+                ],
+            ],
+            {
+                "{70F3DEC7-8347-4157-B066-95F5672F39BA}": TeamingData(
+                    team_name="DAG-NET",
+                    name="Intel(R) Ethernet 10G 2P X520 Adapter #2",
+                ),
+                "{9C4971CB-95AA-4B01-B828-F61B339E4F19}": TeamingData(
+                    team_name="DAG-NET",
+                    name="Intel(R) Ethernet 10G 2P X520 Adapter #4",
+                ),
+                "{4C88A19B-5EE4-44A6-ACBB-262131EE1560}": TeamingData(
+                    team_name="MAPI-NET",
+                    name="Intel(R) Ethernet 10G 2P X520 Adapter",
+                ),
+                "{9BD62095-22A8-49CA-BA8B-A7846C6B5FDB}": TeamingData(
+                    team_name="MAPI-NET",
+                    name="Intel(R) Ethernet 10G 2P X520 Adapter #3",
+                ),
+            },
+        ),
+        pytest.param(
+            [
+                [
+                    "TeamName",
+                    "TeamingMode",
+                    "LoadBalancingAlgorithm",
+                    "MemberMACAddresses",
+                    "MemberNames",
+                    "MemberDescriptions",
+                    "Speed",
+                    "GUID",
+                ],
+                [
+                    "PVSMWTeam ",
+                    "Lacp ",
+                    "Dynamic ",
+                    "14:42:AD:DB:92:BB;5B:02:F6:E1:43:36",
+                    "Ethernet 3;Ethernet 6",
+                    "HP NC523SFP 10Gb 2-port Server Adapter;HP NC523SFP 10Gb 2-port Server Adapter #3",
+                    "10000000000;10000000000",
+                    "{9F992251-4863-4207-9B48-FA095C0A1165};{F6036562-3810-402C-BE91-5B78E0C94AA0}",
+                ],
+                [
+                    "SRVMWTeam ",
+                    "Lacp ",
+                    "Dynamic ",
+                    "E9:A8:BE:9B:83:23;99:CC:82:AB:97:98",
+                    "Ethernet 7;Ethernet 5",
+                    "HP NC382i DP Multifunction Gigabit Server Adapter #52;HP NC382i DP Multifunction Gigabit Server Adapter #53",
+                    "1000000000;1000000000",
+                    "{7A548B9E-C618-4620-B0BC-1974251252DB};{B434E38A-A0A7-4CBD-959D-FB450768C511}",
+                ],
+            ],
+            {
+                "{9F992251-4863-4207-9B48-FA095C0A1165}": TeamingData(
+                    team_name="PVSMWTeam",
+                    name="HP NC523SFP 10Gb 2-port Server Adapter",
+                ),
+                "{F6036562-3810-402C-BE91-5B78E0C94AA0}": TeamingData(
+                    team_name="PVSMWTeam",
+                    name="HP NC523SFP 10Gb 2-port Server Adapter #3",
+                ),
+                "{7A548B9E-C618-4620-B0BC-1974251252DB}": TeamingData(
+                    team_name="SRVMWTeam",
+                    name="HP NC382i DP Multifunction Gigabit Server Adapter #52",
+                ),
+                "{B434E38A-A0A7-4CBD-959D-FB450768C511}": TeamingData(
+                    team_name="SRVMWTeam",
+                    name="HP NC382i DP Multifunction Gigabit Server Adapter #53",
+                ),
+            },
+        ),
+        pytest.param(
+            [
+                [
+                    "TeamName",
+                    "TeamingMode",
+                    "LoadBalancingAlgorithm",
+                    "MemberMACAddresses",
+                    "MemberNames",
+                    "MemberDescriptions",
+                    "Speed",
+                    "GUID",
+                ],
+                [
+                    "LAN ",
+                    "Lacp ",
+                    "Dynamic ",
+                    "35:37:CF:44:20:A2;21:77:22:AE:F8:B4",
+                    "Ethernet;Ethernet 2",
+                    "QLogic 1/10GbE Server Adapter #2;QLogic 1/10GbE Server Adapter",
+                    "10000000000;10000000000",
+                    "{11477AB1-0A73-449C-8768-A17F47C02A1F};{2B232067-0EE5-41EE-B498-0CA2FE8715D0}",
+                ],
+            ],
+            {
+                "{11477AB1-0A73-449C-8768-A17F47C02A1F}": TeamingData(
+                    team_name="LAN",
+                    name="QLogic 1/10GbE Server Adapter #2",
+                ),
+                "{2B232067-0EE5-41EE-B498-0CA2FE8715D0}": TeamingData(
+                    team_name="LAN",
+                    name="QLogic 1/10GbE Server Adapter",
+                ),
+            },
+        ),
+    ],
+)
+def test_parse_winperf_if_teaming(
+    string_table: StringTable,
+    section: SectionTeaming,
+) -> None:
+    assert parse_winperf_if_teaming(string_table) == section
 
 
 _DHCP_INFO: SubSection = {

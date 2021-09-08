@@ -5,7 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Iterator, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
 
 from .agent_based_api.v1 import Attributes, register, Result, State, TableRow
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
@@ -40,6 +40,26 @@ class NICAttr:
 
 
 NICAttrs = Dict[str, NICAttr]
+
+
+def _canonize_name(name: str) -> str:
+    return name.replace("_", " ").replace("  ", " ").rstrip()
+
+
+def _line_to_mapping(
+    headers: Line,
+    line: Line,
+) -> Mapping[str, str]:
+    """
+    >>> _line_to_mapping(["a", "b"], ["1", "2  ", "3"])
+    {'a': '1', 'b': '2'}
+    """
+    return dict(
+        zip(
+            headers,
+            (x.strip() for x in line),
+        )
+    )
 
 
 def winperf_if_canonize_nic_name(name: str) -> str:
@@ -384,6 +404,41 @@ register.agent_section(
     parse_function=parse_winperf_if,
     supersedes=["if", "if64"],
 )
+
+
+class TeamingData(NamedTuple):
+    team_name: str
+    name: str
+
+
+SectionTeaming = Mapping[str, TeamingData]
+
+
+def parse_winperf_if_teaming(string_table: StringTable) -> SectionTeaming:
+    return {
+        guid: TeamingData(
+            team_name=line_dict["TeamName"],
+            name=_canonize_name(name),
+        )
+        for line_dict in (
+            _line_to_mapping(
+                string_table[0],
+                line,
+            )
+            for line in string_table[1:]
+        )
+        for guid, name in zip(
+            line_dict["GUID"].split(";"),
+            line_dict["MemberDescriptions"].split(";"),
+        )
+    }
+
+
+# TODO: register once restructuring is complete, otherwise a unit test for non-used sections fails
+# register.agent_section(
+#     name='winperf_if_teaming',
+#     parse_function=parse_winperf_if_teaming,
+# )
 
 
 def discover_winperf_if(

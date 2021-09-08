@@ -32,155 +32,178 @@ import cmk.base.core_nagios as core_nagios
 def test_format_nagios_object() -> None:
     spec = {
         "use": "ding",
-        "bla": u"däng",
-        "check_interval": u"hüch",
-        u"_HÄÄÄÄ": "XXXXXX_YYYY",
+        "bla": "däng",
+        "check_interval": "hüch",
+        "_HÄÄÄÄ": "XXXXXX_YYYY",
     }
     cfg = core_nagios._format_nagios_object("service", spec)
     assert isinstance(cfg, str)
-    assert cfg == """define service {
+    assert (
+        cfg
+        == """define service {
   %-29s %s
   %-29s %s
   %-29s %s
   %-29s %s
 }
 
-""" % tuple(itertools.chain(*sorted(spec.items(), key=lambda x: x[0])))
+"""
+        % tuple(itertools.chain(*sorted(spec.items(), key=lambda x: x[0])))
+    )
 
 
-@pytest.mark.parametrize("hostname_str,result", [
-    ("localhost", {
-        '_ADDRESS_4': '127.0.0.1',
-        '_ADDRESS_6': '',
-        '_ADDRESS_FAMILY': '4',
-        '_TAGS': '/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:unit tcp',
-        '__TAG_address_family': 'ip-v4-only',
-        '__TAG_agent': 'cmk-agent',
-        '__TAG_criticality': 'prod',
-        '__TAG_ip-v4': 'ip-v4',
-        '__TAG_networking': 'lan',
-        '__TAG_piggyback': 'auto-piggyback',
-        '__TAG_site': 'unit',
-        '__TAG_snmp_ds': 'no-snmp',
-        '__TAG_tcp': 'tcp',
-        '__TAG_checkmk-agent': 'checkmk-agent',
-        '_FILENAME': '/wato/hosts.mk',
-        'address': '127.0.0.1',
-        'alias': 'localhost',
-        'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
-        'host_name': 'localhost',
-        'hostgroups': 'check_mk',
-        'use': 'check_mk_host',
-    }),
-    ("host2", {
-        '_ADDRESS_4': '0.0.0.0',
-        '_ADDRESS_6': '',
-        '_ADDRESS_FAMILY': '4',
-        '_FILENAME': '/wato/hosts.mk',
-        '_TAGS': '/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:unit tcp',
-        '__TAG_address_family': 'ip-v4-only',
-        '__TAG_agent': 'cmk-agent',
-        '__TAG_criticality': 'prod',
-        '__TAG_ip-v4': 'ip-v4',
-        '__TAG_networking': 'lan',
-        '__TAG_piggyback': 'auto-piggyback',
-        '__TAG_site': 'unit',
-        '__TAG_snmp_ds': 'no-snmp',
-        '__TAG_tcp': 'tcp',
-        '__TAG_checkmk-agent': 'checkmk-agent',
-        'address': '0.0.0.0',
-        'alias': 'lOCALhost',
-        'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
-        'host_name': 'host2',
-        'hostgroups': 'check_mk',
-        'use': 'check_mk_host',
-    }),
-    ("cluster1", {
-        '_ADDRESS_4': '',
-        '_ADDRESS_6': '',
-        '_ADDRESS_FAMILY': '4',
-        '_FILENAME': '/wato/hosts.mk',
-        '_NODEIPS': '',
-        '_NODEIPS_4': '',
-        '_NODEIPS_6': '',
-        '_NODENAMES': '',
-        '_TAGS': '/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:unit tcp',
-        '__TAG_address_family': 'ip-v4-only',
-        '__TAG_agent': 'cmk-agent',
-        '__TAG_criticality': 'prod',
-        '__TAG_ip-v4': 'ip-v4',
-        '__TAG_networking': 'lan',
-        '__TAG_piggyback': 'auto-piggyback',
-        '__TAG_site': 'unit',
-        '__TAG_snmp_ds': 'no-snmp',
-        '__TAG_tcp': 'tcp',
-        '__TAG_checkmk-agent': 'checkmk-agent',
-        'address': '0.0.0.0',
-        'alias': 'cluster1',
-        'check_command': 'check-mk-host-ping-cluster!-w 200.00,80.00% -c 500.00,100.00%',
-        'host_name': 'cluster1',
-        'hostgroups': 'check_mk',
-        'parents': '',
-        'use': 'check_mk_cluster',
-    }),
-    ("cluster2", {
-        '_ADDRESS_4': '',
-        '_ADDRESS_6': '',
-        '_ADDRESS_FAMILY': '4',
-        '_FILENAME': '/wato/hosts.mk',
-        '_NODEIPS': '127.0.0.1 127.0.0.2',
-        '_NODEIPS_4': '127.0.0.1 127.0.0.2',
-        '_NODEIPS_6': '',
-        '_NODENAMES': 'node1 node2',
-        '_TAGS': '/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:unit tcp',
-        '__TAG_address_family': 'ip-v4-only',
-        '__TAG_agent': 'cmk-agent',
-        '__TAG_criticality': 'prod',
-        '__TAG_ip-v4': 'ip-v4',
-        '__TAG_networking': 'lan',
-        '__TAG_piggyback': 'auto-piggyback',
-        '__TAG_site': 'unit',
-        '__TAG_snmp_ds': 'no-snmp',
-        '__TAG_tcp': 'tcp',
-        '__TAG_checkmk-agent': 'checkmk-agent',
-        'address': '0.0.0.0',
-        'alias': 'CLUSTer',
-        'check_command': 'check-mk-host-ping-cluster!-w 200.00,80.00% -c 500.00,100.00%',
-        'host_name': 'cluster2',
-        'hostgroups': 'check_mk',
-        'parents': 'node1,node2',
-        'use': 'check_mk_cluster',
-    }),
-    ("node1", {
-        '_ADDRESS_4': '127.0.0.1',
-        '_ADDRESS_6': '',
-        '_ADDRESS_FAMILY': '4',
-        '_FILENAME': '/wato/hosts.mk',
-        '_TAGS': '/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:unit tcp',
-        '__TAG_address_family': 'ip-v4-only',
-        '__TAG_agent': 'cmk-agent',
-        '__TAG_criticality': 'prod',
-        '__TAG_ip-v4': 'ip-v4',
-        '__TAG_networking': 'lan',
-        '__TAG_piggyback': 'auto-piggyback',
-        '__TAG_site': 'unit',
-        '__TAG_snmp_ds': 'no-snmp',
-        '__TAG_tcp': 'tcp',
-        '__TAG_checkmk-agent': 'checkmk-agent',
-        'address': '127.0.0.1',
-        'alias': 'node1',
-        'check_command': 'check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%',
-        'host_name': 'node1',
-        'hostgroups': 'check_mk',
-        'parents': 'switch',
-        'use': 'check_mk_host',
-    }),
-])
-def test_create_nagios_host_spec(hostname_str: str, result: Dict[str, str],
-                                 monkeypatch: MonkeyPatch) -> None:
+@pytest.mark.parametrize(
+    "hostname_str,result",
+    [
+        (
+            "localhost",
+            {
+                "_ADDRESS_4": "127.0.0.1",
+                "_ADDRESS_6": "",
+                "_ADDRESS_FAMILY": "4",
+                "_TAGS": "/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:unit tcp",
+                "__TAG_address_family": "ip-v4-only",
+                "__TAG_agent": "cmk-agent",
+                "__TAG_criticality": "prod",
+                "__TAG_ip-v4": "ip-v4",
+                "__TAG_networking": "lan",
+                "__TAG_piggyback": "auto-piggyback",
+                "__TAG_site": "unit",
+                "__TAG_snmp_ds": "no-snmp",
+                "__TAG_tcp": "tcp",
+                "__TAG_checkmk-agent": "checkmk-agent",
+                "_FILENAME": "/wato/hosts.mk",
+                "address": "127.0.0.1",
+                "alias": "localhost",
+                "check_command": "check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%",
+                "host_name": "localhost",
+                "hostgroups": "check_mk",
+                "use": "check_mk_host",
+            },
+        ),
+        (
+            "host2",
+            {
+                "_ADDRESS_4": "0.0.0.0",
+                "_ADDRESS_6": "",
+                "_ADDRESS_FAMILY": "4",
+                "_FILENAME": "/wato/hosts.mk",
+                "_TAGS": "/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:unit tcp",
+                "__TAG_address_family": "ip-v4-only",
+                "__TAG_agent": "cmk-agent",
+                "__TAG_criticality": "prod",
+                "__TAG_ip-v4": "ip-v4",
+                "__TAG_networking": "lan",
+                "__TAG_piggyback": "auto-piggyback",
+                "__TAG_site": "unit",
+                "__TAG_snmp_ds": "no-snmp",
+                "__TAG_tcp": "tcp",
+                "__TAG_checkmk-agent": "checkmk-agent",
+                "address": "0.0.0.0",
+                "alias": "lOCALhost",
+                "check_command": "check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%",
+                "host_name": "host2",
+                "hostgroups": "check_mk",
+                "use": "check_mk_host",
+            },
+        ),
+        (
+            "cluster1",
+            {
+                "_ADDRESS_4": "",
+                "_ADDRESS_6": "",
+                "_ADDRESS_FAMILY": "4",
+                "_FILENAME": "/wato/hosts.mk",
+                "_NODEIPS": "",
+                "_NODEIPS_4": "",
+                "_NODEIPS_6": "",
+                "_NODENAMES": "",
+                "_TAGS": "/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:unit tcp",
+                "__TAG_address_family": "ip-v4-only",
+                "__TAG_agent": "cmk-agent",
+                "__TAG_criticality": "prod",
+                "__TAG_ip-v4": "ip-v4",
+                "__TAG_networking": "lan",
+                "__TAG_piggyback": "auto-piggyback",
+                "__TAG_site": "unit",
+                "__TAG_snmp_ds": "no-snmp",
+                "__TAG_tcp": "tcp",
+                "__TAG_checkmk-agent": "checkmk-agent",
+                "address": "0.0.0.0",
+                "alias": "cluster1",
+                "check_command": "check-mk-host-ping-cluster!-w 200.00,80.00% -c 500.00,100.00%",
+                "host_name": "cluster1",
+                "hostgroups": "check_mk",
+                "parents": "",
+                "use": "check_mk_cluster",
+            },
+        ),
+        (
+            "cluster2",
+            {
+                "_ADDRESS_4": "",
+                "_ADDRESS_6": "",
+                "_ADDRESS_FAMILY": "4",
+                "_FILENAME": "/wato/hosts.mk",
+                "_NODEIPS": "127.0.0.1 127.0.0.2",
+                "_NODEIPS_4": "127.0.0.1 127.0.0.2",
+                "_NODEIPS_6": "",
+                "_NODENAMES": "node1 node2",
+                "_TAGS": "/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:unit tcp",
+                "__TAG_address_family": "ip-v4-only",
+                "__TAG_agent": "cmk-agent",
+                "__TAG_criticality": "prod",
+                "__TAG_ip-v4": "ip-v4",
+                "__TAG_networking": "lan",
+                "__TAG_piggyback": "auto-piggyback",
+                "__TAG_site": "unit",
+                "__TAG_snmp_ds": "no-snmp",
+                "__TAG_tcp": "tcp",
+                "__TAG_checkmk-agent": "checkmk-agent",
+                "address": "0.0.0.0",
+                "alias": "CLUSTer",
+                "check_command": "check-mk-host-ping-cluster!-w 200.00,80.00% -c 500.00,100.00%",
+                "host_name": "cluster2",
+                "hostgroups": "check_mk",
+                "parents": "node1,node2",
+                "use": "check_mk_cluster",
+            },
+        ),
+        (
+            "node1",
+            {
+                "_ADDRESS_4": "127.0.0.1",
+                "_ADDRESS_6": "",
+                "_ADDRESS_FAMILY": "4",
+                "_FILENAME": "/wato/hosts.mk",
+                "_TAGS": "/wato/ auto-piggyback checkmk-agent cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:unit tcp",
+                "__TAG_address_family": "ip-v4-only",
+                "__TAG_agent": "cmk-agent",
+                "__TAG_criticality": "prod",
+                "__TAG_ip-v4": "ip-v4",
+                "__TAG_networking": "lan",
+                "__TAG_piggyback": "auto-piggyback",
+                "__TAG_site": "unit",
+                "__TAG_snmp_ds": "no-snmp",
+                "__TAG_tcp": "tcp",
+                "__TAG_checkmk-agent": "checkmk-agent",
+                "address": "127.0.0.1",
+                "alias": "node1",
+                "check_command": "check-mk-host-ping!-w 200.00,80.00% -c 500.00,100.00%",
+                "host_name": "node1",
+                "hostgroups": "check_mk",
+                "parents": "switch",
+                "use": "check_mk_host",
+            },
+        ),
+    ],
+)
+def test_create_nagios_host_spec(
+    hostname_str: str, result: Dict[str, str], monkeypatch: MonkeyPatch
+) -> None:
     if cmk_version.is_managed_edition():
         result = result.copy()
-        result['_CUSTOMER'] = 'provider'
+        result["_CUSTOMER"] = "provider"
 
     ts = Scenario()
     ts.add_host(HostName("localhost"))
@@ -191,23 +214,35 @@ def test_create_nagios_host_spec(hostname_str: str, result: Dict[str, str],
     ts.add_host(HostName("node1"))
     ts.add_host(HostName("node2"))
     ts.add_host(HostName("switch"))
-    ts.set_option("ipaddresses", {
-        HostName("node1"): "127.0.0.1",
-        HostName("node2"): "127.0.0.2",
-    })
-
-    ts.set_option("extra_host_conf", {
-        "alias": [(u'lOCALhost', ['localhost']),],
-    })
+    ts.set_option(
+        "ipaddresses",
+        {
+            HostName("node1"): "127.0.0.1",
+            HostName("node2"): "127.0.0.2",
+        },
+    )
 
     ts.set_option(
-        "extra_host_conf", {
+        "extra_host_conf",
+        {
             "alias": [
-                (u'lOCALhost', ['host2']),
-                (u'CLUSTer', ['cluster2']),
+                ("lOCALhost", ["localhost"]),
             ],
-            "parents": [('switch', ['node1', 'node2']),],
-        })
+        },
+    )
+
+    ts.set_option(
+        "extra_host_conf",
+        {
+            "alias": [
+                ("lOCALhost", ["host2"]),
+                ("CLUSTer", ["cluster2"]),
+            ],
+            "parents": [
+                ("switch", ["node1", "node2"]),
+            ],
+        },
+    )
 
     hostname = HostName(hostname_str)
     outfile = io.StringIO()
@@ -227,18 +262,22 @@ def fixture_config_path() -> VersionedConfigPath:
 
 class TestHostCheckStore:
     def test_host_check_file_path(self, config_path: VersionedConfigPath) -> None:
-        assert core_nagios.HostCheckStore.host_check_file_path(config_path,
-                                                               HostName("abc")) == Path(
-                                                                   Path(config_path),
-                                                                   "host_checks",
-                                                                   "abc",
-                                                               )
+        assert core_nagios.HostCheckStore.host_check_file_path(
+            config_path, HostName("abc")
+        ) == Path(
+            Path(config_path),
+            "host_checks",
+            "abc",
+        )
 
     def test_host_check_source_file_path(self, config_path: VersionedConfigPath) -> None:
-        assert core_nagios.HostCheckStore.host_check_source_file_path(
-            config_path,
-            HostName("abc"),
-        ) == Path(config_path) / "host_checks" / "abc.py"
+        assert (
+            core_nagios.HostCheckStore.host_check_source_file_path(
+                config_path,
+                HostName("abc"),
+            )
+            == Path(config_path) / "host_checks" / "abc.py"
+        )
 
     def test_write(self, config_path: VersionedConfigPath) -> None:
         hostname = HostName("aaa")
@@ -263,8 +302,9 @@ class TestHostCheckStore:
         assert os.access(store.host_check_file_path(config_path, hostname), os.X_OK)
 
 
-def test_dump_precompiled_hostcheck(monkeypatch: MonkeyPatch,
-                                    config_path: VersionedConfigPath) -> None:
+def test_dump_precompiled_hostcheck(
+    monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
+) -> None:
     hostname = HostName("localhost")
     ts = Scenario().add_host(hostname)
     config_cache = ts.apply(monkeypatch)
@@ -286,7 +326,8 @@ def test_dump_precompiled_hostcheck(monkeypatch: MonkeyPatch,
 
 
 def test_dump_precompiled_hostcheck_without_check_mk_service(
-        monkeypatch: MonkeyPatch, config_path: VersionedConfigPath) -> None:
+    monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
+) -> None:
     hostname = HostName("localhost")
     ts = Scenario().add_host(hostname)
     config_cache = ts.apply(monkeypatch)
@@ -298,8 +339,9 @@ def test_dump_precompiled_hostcheck_without_check_mk_service(
     assert host_check is None
 
 
-def test_dump_precompiled_hostcheck_not_existing_host(monkeypatch: MonkeyPatch,
-                                                      config_path: VersionedConfigPath) -> None:
+def test_dump_precompiled_hostcheck_not_existing_host(
+    monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
+) -> None:
     config_cache = Scenario().apply(monkeypatch)
     host_check = core_nagios._dump_precompiled_hostcheck(
         config_cache,
@@ -309,8 +351,9 @@ def test_dump_precompiled_hostcheck_not_existing_host(monkeypatch: MonkeyPatch,
     assert host_check is None
 
 
-def test_compile_delayed_host_check(monkeypatch: MonkeyPatch,
-                                    config_path: VersionedConfigPath) -> None:
+def test_compile_delayed_host_check(
+    monkeypatch: MonkeyPatch, config_path: VersionedConfigPath
+) -> None:
     hostname = HostName("localhost")
     ts = Scenario().add_host(hostname)
     ts.set_option("delay_precompile", True)
@@ -351,8 +394,9 @@ def test_compile_delayed_host_check(monkeypatch: MonkeyPatch,
 
     # Expect the command to fail: We don't have the correct environment to execute it.
     # But this is no problem for our test, we only want to see the result of the compilation.
-    assert subprocess.Popen(["python3", str(compiled_file)], shell=False,
-                            close_fds=True).wait() == 1
+    assert (
+        subprocess.Popen(["python3", str(compiled_file)], shell=False, close_fds=True).wait() == 1
+    )
 
     assert compiled_file.resolve() != source_file
     with compiled_file.open("rb") as f:

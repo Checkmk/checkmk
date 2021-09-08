@@ -34,21 +34,23 @@ def _write_hosts_mk(content: str) -> Path:
 
 
 def test_rewrite_folder_explicit_site():
-    _write_folder_attributes({
-        'title': 'Main directory',
-        'attributes': {
-            'site': 'stable',
-            'meta_data': {
-                'created_at': 1627991988.6232662,
-                'updated_at': 1627991994.7575116,
-                'created_by': None
-            }
-        },
-        'num_hosts': 0,
-        'lock': False,
-        'lock_subfolders': False,
-        '__id': '9f5a85386b7c4ad68738d66a49a4bfa9'
-    })
+    _write_folder_attributes(
+        {
+            "title": "Main directory",
+            "attributes": {
+                "site": "stable",
+                "meta_data": {
+                    "created_at": 1627991988.6232662,
+                    "updated_at": 1627991994.7575116,
+                    "created_by": None,
+                },
+            },
+            "num_hosts": 0,
+            "lock": False,
+            "lock_subfolders": False,
+            "__id": "9f5a85386b7c4ad68738d66a49a4bfa9",
+        }
+    )
 
     folder = Folder.root_folder()
     folder.load_instance()
@@ -59,7 +61,8 @@ def test_rewrite_folder_explicit_site():
 
 
 def test_rewrite_host_explicit_site():
-    _write_hosts_mk("""# Created by WATO
+    _write_hosts_mk(
+        """# Created by WATO
 # encoding: utf-8
 
 all_hosts += ['ag']
@@ -74,7 +77,8 @@ ipaddresses.update({'ag': '127.0.0.1'})
 # Host attributes (needed for WATO)
 host_attributes.update(
 {'ag': {'ipaddress': '127.0.0.1', 'site': 'stable', 'meta_data': {'created_at': 1627486290.0, 'created_by': 'cmkadmin', 'updated_at': 1627993165.0079741}}})
-""")
+"""
+    )
 
     assert Folder.root_folder().host("ag").attribute("site") == "stable"
     update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"))
@@ -87,22 +91,25 @@ host_attributes.update(
 
 
 def test_rewrite_tags_no_explicit_site_set(monkeypatch):
-    _write_folder_attributes({
-        'title': 'Main directory',
-        'attributes': {
-            'meta_data': {
-                'created_at': 1627991988.6232662,
-                'updated_at': 1627991994.7575116,
-                'created_by': None
-            }
-        },
-        'num_hosts': 0,
-        'lock': False,
-        'lock_subfolders': False,
-        '__id': '9f5a85386b7c4ad68738d66a49a4bfa9'
-    })
+    _write_folder_attributes(
+        {
+            "title": "Main directory",
+            "attributes": {
+                "meta_data": {
+                    "created_at": 1627991988.6232662,
+                    "updated_at": 1627991994.7575116,
+                    "created_by": None,
+                }
+            },
+            "num_hosts": 0,
+            "lock": False,
+            "lock_subfolders": False,
+            "__id": "9f5a85386b7c4ad68738d66a49a4bfa9",
+        }
+    )
 
-    _write_hosts_mk("""# Created by WATO
+    _write_hosts_mk(
+        """# Created by WATO
 # encoding: utf-8
 
 all_hosts += ['ag']
@@ -117,7 +124,8 @@ ipaddresses.update({'ag': '127.0.0.1'})
 # Host attributes (needed for WATO)
 host_attributes.update(
 {'ag': {'ipaddress': '127.0.0.1', 'meta_data': {'created_at': 1627486290.0, 'created_by': 'cmkadmin', 'updated_at': 1627993165.0079741}}})
-""")
+"""
+    )
 
     assert Folder.root_folder().attribute("site") is None
     assert Folder.root_folder().host("ag").attribute("site") is None

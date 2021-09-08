@@ -15,12 +15,12 @@ def test_check_dell_poweredge_amperage_state_simple():
         "My-test-item",
         None,
         # actual snmp data
-        [['1', '3', '2', '3', '168', '26', 'My-test-item', '980', '896']],
+        [["1", "3", "2", "3", "168", "26", "My-test-item", "980", "896"]],
     )
     assert result == (
         0,
-        '168 Watt  (upper limits 896/980)',
-        [('power', '168W', '896', '980', '', 1078.0)],
+        "168 Watt  (upper limits 896/980)",
+        [("power", "168W", "896", "980", "", 1078.0)],
     )
 
 
@@ -29,7 +29,7 @@ def test_check_dell_poweredge_amperage_state_unknown():
         "My-test-item",
         None,
         # as seen in the crash report:
-        [['1', '1', '1', '2', '', '23', 'My-test-item', '', '']],
+        [["1", "1", "1", "2", "", "23", "My-test-item", "", ""]],
     )
     assert result[0] == 3
     assert "unknown" in result[1].lower()

@@ -11,11 +11,12 @@ from tests.testlib import ActiveCheck
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("params,expected_args", [
-    ({
-        "timeout": 30
-    }, "-t 30 -w 200.00,80% -c 500.00,100% $HOSTADDRESS$"),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        ({"timeout": 30}, "-t 30 -w 200.00,80% -c 500.00,100% $HOSTADDRESS$"),
+    ],
+)
 def test_check_icmp_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_icmp")

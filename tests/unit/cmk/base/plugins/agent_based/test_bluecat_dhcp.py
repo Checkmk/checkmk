@@ -20,23 +20,24 @@ def check_bluecat_dhcp_ok():
                 },
             },
             {
-                'oper_state': 1,
-                'leases': 11,
+                "oper_state": 1,
+                "leases": 11,
             },
-        )) == [
-            Result(
-                state=state.OK,
-                summary="DHCP is running normally",
-            ),
-            Result(
-                state=state.OK,
-                summary="11 leases per second",
-            ),
-            Metric(
-                'leases',
-                11,
-            ),
-        ]
+        )
+    ) == [
+        Result(
+            state=state.OK,
+            summary="DHCP is running normally",
+        ),
+        Result(
+            state=state.OK,
+            summary="11 leases per second",
+        ),
+        Metric(
+            "leases",
+            11,
+        ),
+    ]
 
 
 def check_bluecat_dhcp_crit():
@@ -49,23 +50,24 @@ def check_bluecat_dhcp_crit():
                 },
             },
             {
-                'oper_state': 5,
-                'leases': 10,
+                "oper_state": 5,
+                "leases": 10,
             },
-        )) == [
-            Result(
-                state=state.CRIT,
-                summary="DHCP is fault",
-            ),
-            Result(
-                state=state.OK,
-                summary="1 lease per second",
-            ),
-            Metric(
-                'leases',
-                1,
-            ),
-        ]
+        )
+    ) == [
+        Result(
+            state=state.CRIT,
+            summary="DHCP is fault",
+        ),
+        Result(
+            state=state.OK,
+            summary="1 lease per second",
+        ),
+        Metric(
+            "leases",
+            1,
+        ),
+    ]
 
 
 def check_bluecat_dhcp_one_lease():
@@ -78,23 +80,24 @@ def check_bluecat_dhcp_one_lease():
                 },
             },
             {
-                'oper_state': 1,
-                'leases': 1,
+                "oper_state": 1,
+                "leases": 1,
             },
-        )) == [
-            Result(
-                state=state.OK,
-                summary="DHCP is running normally",
-            ),
-            Result(
-                state=state.OK,
-                summary="1 lease per second",
-            ),
-            Metric(
-                'leases',
-                1,
-            ),
-        ]
+        )
+    ) == [
+        Result(
+            state=state.OK,
+            summary="DHCP is running normally",
+        ),
+        Result(
+            state=state.OK,
+            summary="1 lease per second",
+        ),
+        Metric(
+            "leases",
+            1,
+        ),
+    ]
 
 
 def test_cluster_check_bluecat_all_ok():
@@ -107,45 +110,46 @@ def test_cluster_check_bluecat_all_ok():
                 },
             },
             {
-                'node1': {
-                    'oper_state': 1,
-                    'leases': 11,
+                "node1": {
+                    "oper_state": 1,
+                    "leases": 11,
                 },
-                'node2': {
-                    'oper_state': 1,
-                    'leases': 11,
+                "node2": {
+                    "oper_state": 1,
+                    "leases": 11,
                 },
             },
-        )) == [
-            Result(
-                state=state.OK,
-                notice='[node1]: DHCP is running normally',
-            ),
-            Result(
-                state=state.OK,
-                notice='[node1]: 11 leases per second',
-            ),
-            Result(
-                state=state.OK,
-                notice='[node2]: DHCP is running normally',
-            ),
-            Result(
-                state=state.OK,
-                notice='[node2]: 11 leases per second',
-            ),
-            Result(
-                state=state.OK,
-                summary='DHCP is running normally on node2',
-            ),
-            Result(
-                state=state.OK,
-                summary='11 leases per second on node2',
-            ),
-            Metric(
-                'leases',
-                11,
-            ),
-        ]
+        )
+    ) == [
+        Result(
+            state=state.OK,
+            notice="[node1]: DHCP is running normally",
+        ),
+        Result(
+            state=state.OK,
+            notice="[node1]: 11 leases per second",
+        ),
+        Result(
+            state=state.OK,
+            notice="[node2]: DHCP is running normally",
+        ),
+        Result(
+            state=state.OK,
+            notice="[node2]: 11 leases per second",
+        ),
+        Result(
+            state=state.OK,
+            summary="DHCP is running normally on node2",
+        ),
+        Result(
+            state=state.OK,
+            summary="11 leases per second on node2",
+        ),
+        Metric(
+            "leases",
+            11,
+        ),
+    ]
 
 
 def test_cluster_check_bluecat_one_ok():
@@ -158,45 +162,46 @@ def test_cluster_check_bluecat_one_ok():
                 },
             },
             {
-                'node1': {
-                    'oper_state': 1,
-                    'leases': 13,
+                "node1": {
+                    "oper_state": 1,
+                    "leases": 13,
                 },
-                'node2': {
-                    'oper_state': 4,
-                    'leases': 11,
+                "node2": {
+                    "oper_state": 4,
+                    "leases": 11,
                 },
             },
-        )) == [
-            Result(
-                state=state.OK,
-                notice='[node1]: DHCP is running normally',
-            ),
-            Result(
-                state=state.OK,
-                notice='[node1]: 13 leases per second',
-            ),
-            Result(
-                state=state.OK,
-                notice='[node2]: DHCP is currently stopping(!)',
-            ),
-            Result(
-                state=state.OK,
-                notice='[node2]: 11 leases per second',
-            ),
-            Result(
-                state=state.OK,
-                summary='DHCP is running normally on node1',
-            ),
-            Result(
-                state=state.OK,
-                summary='13 leases per second on node1',
-            ),
-            Metric(
-                'leases',
-                13,
-            ),
-        ]
+        )
+    ) == [
+        Result(
+            state=state.OK,
+            notice="[node1]: DHCP is running normally",
+        ),
+        Result(
+            state=state.OK,
+            notice="[node1]: 13 leases per second",
+        ),
+        Result(
+            state=state.OK,
+            notice="[node2]: DHCP is currently stopping(!)",
+        ),
+        Result(
+            state=state.OK,
+            notice="[node2]: 11 leases per second",
+        ),
+        Result(
+            state=state.OK,
+            summary="DHCP is running normally on node1",
+        ),
+        Result(
+            state=state.OK,
+            summary="13 leases per second on node1",
+        ),
+        Metric(
+            "leases",
+            13,
+        ),
+    ]
 
 
 def test_cluster_check_bluecat_none_ok():
@@ -209,34 +214,35 @@ def test_cluster_check_bluecat_none_ok():
                 },
             },
             {
-                'node1': {
-                    'oper_state': 1,
-                    'leases': 0,
+                "node1": {
+                    "oper_state": 1,
+                    "leases": 0,
                 },
-                'node2': {
-                    'oper_state': 3,
-                    'leases': 1,
+                "node2": {
+                    "oper_state": 3,
+                    "leases": 1,
                 },
             },
-        )) == [
-            Result(
-                state=state.WARN,
-                notice='[node1]: DHCP is running normally',
-            ),
-            Result(
-                state=state.OK,
-                notice='[node1]: 0 leases per second',
-            ),
-            Result(
-                state=state.CRIT,
-                notice='[node2]: DHCP is currently starting',
-            ),
-            Result(
-                state=state.OK,
-                notice='[node2]: 1 lease per second',
-            ),
-            Result(
-                state=state.CRIT,
-                summary='No node with OK DHCP state',
-            ),
-        ]
+        )
+    ) == [
+        Result(
+            state=state.WARN,
+            notice="[node1]: DHCP is running normally",
+        ),
+        Result(
+            state=state.OK,
+            notice="[node1]: 0 leases per second",
+        ),
+        Result(
+            state=state.CRIT,
+            notice="[node2]: DHCP is currently starting",
+        ),
+        Result(
+            state=state.OK,
+            notice="[node2]: 1 lease per second",
+        ),
+        Result(
+            state=state.CRIT,
+            summary="No node with OK DHCP state",
+        ),
+    ]

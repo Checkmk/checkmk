@@ -22,10 +22,12 @@ def site(request):
 @pytest.fixture(scope="session")
 def site_factory():
     try:
-        sf = SiteFactory(version=os.environ.get("VERSION", CMKVersion.DAILY),
-                         edition=os.environ.get("EDITION", CMKVersion.CEE),
-                         branch=os.environ.get("BRANCH", current_branch_name()),
-                         prefix="comp_")
+        sf = SiteFactory(
+            version=os.environ.get("VERSION", CMKVersion.DAILY),
+            edition=os.environ.get("EDITION", CMKVersion.CEE),
+            branch=os.environ.get("BRANCH", current_branch_name()),
+            prefix="comp_",
+        )
         yield sf
     finally:
         sf.save_results()

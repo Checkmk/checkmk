@@ -37,75 +37,88 @@ from cmk.gui.watolib.search import (
 )
 
 from cmk.gui.watolib.search import (  # isort: skip
-    match_item_generator_registry as real_match_item_generator_registry,)
+    match_item_generator_registry as real_match_item_generator_registry,
+)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def fake_omd_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
-        ConfigDomainOMD, "default_globals", lambda s: {
-            'site_admin_mail': '',
-            'site_apache_mode': 'own',
-            'site_apache_tcp_addr': '127.0.0.1',
-            'site_apache_tcp_port': '5000',
-            'site_autostart': False,
-            'site_core': 'cmc',
-            'site_liveproxyd': True,
-            'site_livestatus_tcp': None,
-            'site_livestatus_tcp_only_from': '0.0.0.0 ::/0',
-            'site_livestatus_tcp_port': '6557',
-            'site_livestatus_tcp_tls': True,
-            'site_mkeventd': ['SYSLOG'],
-            'site_mkeventd_snmptrap': False,
-            'site_mkeventd_syslog': True,
-            'site_mkeventd_syslog_tcp': False,
-            'site_multisite_authorisation': True,
-            'site_multisite_cookie_auth': True,
-            'site_nagios_theme': 'classicui',
-            'site_nsca': None,
-            'site_nsca_tcp_port': '5667',
-            'site_pnp4nagios': True,
-            'site_tmpfs': True,
-        })
-
-
-@pytest.fixture(scope='function')
-def fake_diskspace_default_globals(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(ConfigDomainDiskspace, "default_globals", lambda s: {
-        'diskspace_cleanup': {
-            'cleanup_abandoned_host_files': 2592000
+        ConfigDomainOMD,
+        "default_globals",
+        lambda s: {
+            "site_admin_mail": "",
+            "site_apache_mode": "own",
+            "site_apache_tcp_addr": "127.0.0.1",
+            "site_apache_tcp_port": "5000",
+            "site_autostart": False,
+            "site_core": "cmc",
+            "site_liveproxyd": True,
+            "site_livestatus_tcp": None,
+            "site_livestatus_tcp_only_from": "0.0.0.0 ::/0",
+            "site_livestatus_tcp_port": "6557",
+            "site_livestatus_tcp_tls": True,
+            "site_mkeventd": ["SYSLOG"],
+            "site_mkeventd_snmptrap": False,
+            "site_mkeventd_syslog": True,
+            "site_mkeventd_syslog_tcp": False,
+            "site_multisite_authorisation": True,
+            "site_multisite_cookie_auth": True,
+            "site_nagios_theme": "classicui",
+            "site_nsca": None,
+            "site_nsca_tcp_port": "5667",
+            "site_pnp4nagios": True,
+            "site_tmpfs": True,
         },
-    })
+    )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
+def fake_diskspace_default_globals(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        ConfigDomainDiskspace,
+        "default_globals",
+        lambda s: {
+            "diskspace_cleanup": {"cleanup_abandoned_host_files": 2592000},
+        },
+    )
+
+
+@pytest.fixture(scope="function")
 def fake_apache_default_globals(monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(ConfigDomainApache, "default_globals",
-                        lambda s: {'apache_process_tuning': {
-                            'number_of_processes': 64
-                        }})
+    monkeypatch.setattr(
+        ConfigDomainApache,
+        "default_globals",
+        lambda s: {"apache_process_tuning": {"number_of_processes": 64}},
+    )
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def fake_rrdcached_default_globals(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
-        ConfigDomainRRDCached, "default_globals", lambda s: {
-            'rrdcached_tuning': {
-                'TIMEOUT': 3600,
-                'RANDOM_DELAY': 1800,
-                'FLUSH_TIMEOUT': 7200,
-                'WRITE_THREADS': 4,
+        ConfigDomainRRDCached,
+        "default_globals",
+        lambda s: {
+            "rrdcached_tuning": {
+                "TIMEOUT": 3600,
+                "RANDOM_DELAY": 1800,
+                "FLUSH_TIMEOUT": 7200,
+                "WRITE_THREADS": 4,
             },
-        })
+        },
+    )
 
 
 def test_match_item() -> None:
-    assert MatchItem(
-        "1",
-        "2",
-        "3",
-        ["ABC", "Some text", "df"],
-    ).match_texts == ["abc", "some text", "df"]
+    assert (
+        MatchItem(
+            "1",
+            "2",
+            "3",
+            ["ABC", "Some text", "df"],
+        ).match_texts
+        == ["abc", "some text", "df"]
+    )
 
 
 class MatchItemGeneratorLocDep(ABCMatchItemGenerator):
@@ -175,7 +188,8 @@ def fixture_match_item_generator_registry() -> MatchItemGeneratorRegistry:
 
 @pytest.fixture(name="index_builder")
 def fixture_index_builder(
-    match_item_generator_registry: MatchItemGeneratorRegistry,) -> IndexBuilder:
+    match_item_generator_registry: MatchItemGeneratorRegistry,
+) -> IndexBuilder:
     return IndexBuilder(match_item_generator_registry)
 
 
@@ -273,6 +287,7 @@ class TestIndexBuilderAndSearcher:
         """
         Test if things can also be deleted from the index during an update
         """
+
         def empty_match_item_gen():
             yield from ()
 
@@ -342,19 +357,22 @@ class TestIndexSearcher:
 
     def test_sort_search_results(self) -> None:
         assert list(
-            IndexSearcher._sort_search_results({
-                "Hosts": [SearchResult(title="host", url="")],
-                "Setup": [SearchResult(title="setup_menu_entry", url="")],
-                "Global settings": [SearchResult(title="global_setting", url="")],
-                "Other topic": [SearchResult(title="other_item", url="")],
-                "Another topic": [SearchResult(title="another_item", url="")],
-            })) == [
-                ('Setup', [SearchResult(title='setup_menu_entry', url='')]),
-                ('Hosts', [SearchResult(title='host', url='')]),
-                ('Another topic', [SearchResult(title='another_item', url='')]),
-                ('Other topic', [SearchResult(title='other_item', url='')]),
-                ('Global settings', [SearchResult(title='global_setting', url='')]),
-            ]
+            IndexSearcher._sort_search_results(
+                {
+                    "Hosts": [SearchResult(title="host", url="")],
+                    "Setup": [SearchResult(title="setup_menu_entry", url="")],
+                    "Global settings": [SearchResult(title="global_setting", url="")],
+                    "Other topic": [SearchResult(title="other_item", url="")],
+                    "Another topic": [SearchResult(title="another_item", url="")],
+                }
+            )
+        ) == [
+            ("Setup", [SearchResult(title="setup_menu_entry", url="")]),
+            ("Hosts", [SearchResult(title="host", url="")]),
+            ("Another topic", [SearchResult(title="another_item", url="")]),
+            ("Other topic", [SearchResult(title="other_item", url="")]),
+            ("Global settings", [SearchResult(title="global_setting", url="")]),
+        ]
 
 
 class TestRealisticSearch:
@@ -387,9 +405,9 @@ class TestRealisticSearch:
         self,
         live: MockLiveStatusConnection,
     ) -> MockLiveStatusConnection:
-        live.add_table('eventconsolerules', [])
-        live.expect_query('GET eventconsolerules\nColumns: rule_id rule_hits\n')
-        live.expect_query('GET eventconsolerules\nColumns: rule_id rule_hits\n')
+        live.add_table("eventconsolerules", [])
+        live.expect_query("GET eventconsolerules\nColumns: rule_id rule_hits\n")
+        live.expect_query("GET eventconsolerules\nColumns: rule_id rule_hits\n")
         return live
 
     @pytest.mark.usefixtures(
@@ -440,6 +458,7 @@ class TestRealisticSearch:
         This test ensures that test_index_is_built_as_super_user makes sense, ie. that if we do not
         build as a super user, the entry "Custom host attributes" is not found.
         """
+
         @contextmanager
         def SuperUserContext() -> Iterator[None]:
             yield

@@ -14,80 +14,84 @@ from cmk.gui.plugins.dashboard import utils
     [
         pytest.param(
             {
-                'type': 'pnpgraph',
-                'show_legend': True,
-                'show_service': True,
-                'single_infos': [],
-                'context': {
+                "type": "pnpgraph",
+                "show_legend": True,
+                "show_service": True,
+                "single_infos": [],
+                "context": {
                     "host": "abc",
                 },
             },
             {
-                'graph_render_options': {
-                    'show_legend': True
-                },
-                'single_infos': ['service', 'host'],
-                'type': 'pnpgraph',
-                'context': {
-                    'host': 'abc',
-                    'service': '_HOST_',
+                "graph_render_options": {"show_legend": True},
+                "single_infos": ["service", "host"],
+                "type": "pnpgraph",
+                "context": {
+                    "host": "abc",
+                    "service": "_HOST_",
                 },
             },
             id="->1.5.0i2->2.0.0b6 pnpgraph",
         ),
         pytest.param(
             {
-                'type': 'pnpgraph',
-                'graph_render_options': {
-                    'show_legend': False,
-                    'show_title': True,
-                    'title_format': 'plain',
+                "type": "pnpgraph",
+                "graph_render_options": {
+                    "show_legend": False,
+                    "show_title": True,
+                    "title_format": "plain",
                 },
-                'single_infos': ['host', 'service'],
-                'context': {
+                "single_infos": ["host", "service"],
+                "context": {
                     "host": "abc",
                 },
             },
             {
-                'graph_render_options': {
-                    'show_legend': False,
+                "graph_render_options": {
+                    "show_legend": False,
                 },
-                'single_infos': ['host', 'service'],
-                'type': 'pnpgraph',
-                'context': {
-                    'host': 'abc',
-                    'service': '_HOST_',
+                "single_infos": ["host", "service"],
+                "type": "pnpgraph",
+                "context": {
+                    "host": "abc",
+                    "service": "_HOST_",
                 },
             },
             id="1.6.0->2.0.0b6 pnpgraph",
         ),
         pytest.param(
             {
-                'type': 'notifications_bar_chart',
-                'time_range': 'd0',
-                'time_resolution': 'h',
+                "type": "notifications_bar_chart",
+                "time_range": "d0",
+                "time_resolution": "h",
             },
             {
-                'type': 'notifications_bar_chart',
-                'render_mode': ("bar_chart", {
-                    'time_range': 'd0',
-                    'time_resolution': 'h',
-                }),
+                "type": "notifications_bar_chart",
+                "render_mode": (
+                    "bar_chart",
+                    {
+                        "time_range": "d0",
+                        "time_resolution": "h",
+                    },
+                ),
             },
             id="2.0.0->2.0.0b6 notification bar chart",
         ),
         pytest.param(
             {
-                'type': 'alerts_bar_chart',
-                'time_range': 'd0',
-                'time_resolution': 'h',
+                "type": "alerts_bar_chart",
+                "time_range": "d0",
+                "time_resolution": "h",
             },
             {
-                'type': 'alerts_bar_chart',
-                'render_mode': ("bar_chart", {
-                    'time_range': 'd0',
-                    'time_resolution': 'h',
-                }),
+                "type": "alerts_bar_chart",
+                "render_mode": (
+                    "bar_chart",
+                    {
+                        "time_range": "d0",
+                        "time_resolution": "h",
+                    },
+                ),
             },
             id="2.0.0->2.0.0b6 alerts bar chart",
         ),
@@ -101,18 +105,8 @@ def test_transform_dashlets_mut(entry, result):
     "entry, result",
     [
         pytest.param(
-            {
-                'svc_status_display': {
-                    'some': 'content'
-                },
-                'some': 'other stuff'
-            },
-            {
-                'status_display': {
-                    'some': 'content'
-                },
-                'some': 'other stuff'
-            },
+            {"svc_status_display": {"some": "content"}, "some": "other stuff"},
+            {"status_display": {"some": "content"}, "some": "other stuff"},
             id="2.0.0->2.1.0i1",
         ),
     ],
@@ -165,7 +159,7 @@ def test_transform_dashlet_status_display(entry, result):
             {
                 "$DEFAULT_TITLE$": "dashlet",
                 "$HOST_NAME$": "vm-123",
-                "$SERVICE_DESCRIPTION$": "CPU utilization"
+                "$SERVICE_DESCRIPTION$": "CPU utilization",
             },
             id="host and service single_infos",
         ),
@@ -224,13 +218,16 @@ def test_macro_mapping_from_context(
         "get_alias_of_host",
         lambda _site, _host_name: "alias",
     )
-    assert utils.macro_mapping_from_context(
-        context,
-        single_infos,
-        title,
-        "dashlet",
-        **additional_macros,
-    ) == result
+    assert (
+        utils.macro_mapping_from_context(
+            context,
+            single_infos,
+            title,
+            "dashlet",
+            **additional_macros,
+        )
+        == result
+    )
 
 
 @pytest.mark.parametrize(
@@ -266,7 +263,7 @@ def test_get_title_macros_from_single_infos(single_infos, result):
             "You can use the following macros to fill in the corresponding information:"
             "<ul><li><tt>$DEFAULT_TITLE$ (default title of the element)</tt></li></ul>"
             "These macros can be combined with arbitrary text elements, e.g. "
-            "\"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\".",
+            '"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>".',
             id="default title only",
         ),
         pytest.param(
@@ -277,7 +274,7 @@ def test_get_title_macros_from_single_infos(single_infos, result):
             "<li><tt>$HOST_NAME$</tt></li>"
             "<li><tt>$HOST_ALIAS$</tt></li></ul>"
             "These macros can be combined with arbitrary text elements, e.g. "
-            "\"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\".",
+            '"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>".',
             id="host single infos",
         ),
         pytest.param(
@@ -287,7 +284,7 @@ def test_get_title_macros_from_single_infos(single_infos, result):
             "<ul><li><tt>$DEFAULT_TITLE$ (default title of the element)</tt></li>"
             "<li><tt>$MACRO$</tt></li></ul>"
             "These macros can be combined with arbitrary text elements, e.g. "
-            "\"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\".",
+            '"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>".',
             id="additional macro",
         ),
         pytest.param(
@@ -301,7 +298,7 @@ def test_get_title_macros_from_single_infos(single_infos, result):
             "<li><tt>$MACRO1$</tt></li>"
             "<li><tt>$MACRO2$ (some explanation)</tt></li></ul>"
             "These macros can be combined with arbitrary text elements, e.g. "
-            "\"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>\".",
+            '"some text <tt>$MACRO1$</tt> -- <tt>$MACRO2$</tt>".',
             id="host, service in single infos and additional macros",
         ),
     ],

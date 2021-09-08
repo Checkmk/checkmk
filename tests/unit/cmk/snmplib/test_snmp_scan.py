@@ -25,7 +25,8 @@ from cmk.snmplib.utils import evaluate_snmp_detection
 import cmk.base.api.agent_based.register as agent_based_register
 
 from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (  # isort: skip
-    create_detect_spec,)
+    create_detect_spec,
+)
 
 
 @pytest.mark.parametrize(
@@ -33,54 +34,42 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
     [
         (
             "quanta_fan",
-            {
-                '.1.3.6.1.2.1.1.2.0': '.1.3.6.1.4.1.8072.3.2.10'
-            },
+            {".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.8072.3.2.10"},
             False,
         ),
         (
             "quanta_fan",
             {
-                '.1.3.6.1.2.1.1.2.0': '.1.3.6.1.4.1.8072.3.2.10',
-                '.1.3.6.1.4.1.7244.1.2.1.1.1.0': "exists"
+                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.8072.3.2.10",
+                ".1.3.6.1.4.1.7244.1.2.1.1.1.0": "exists",
             },
             True,
         ),
         # make sure casing is ignored
         (
             "hwg_temp",
-            {
-                ".1.3.6.1.2.1.1.1.0": "contains lower HWG"
-            },
+            {".1.3.6.1.2.1.1.1.0": "contains lower HWG"},
             True,
         ),
         # make sure casing is ignored
         (
             "hwg_humidity",
-            {
-                ".1.3.6.1.2.1.1.1.0": "contains lower HWG"
-            },
+            {".1.3.6.1.2.1.1.1.0": "contains lower HWG"},
             True,
         ),
         (
             "hwg_ste2",
-            {
-                ".1.3.6.1.2.1.1.1.0": "contains STE2"
-            },
+            {".1.3.6.1.2.1.1.1.0": "contains STE2"},
             True,
         ),
         (
             "aironet_clients",
-            {
-                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.9.1.5251"
-            },
+            {".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.9.1.5251"},
             False,
         ),
         (
             "aironet_clients",
-            {
-                ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.9.1.525"
-            },
+            {".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.9.1.525"},
             True,
         ),
         # for one example do all 6 permutations:
@@ -88,7 +77,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
             "brocade_info",
             {
                 ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.1588.Moo",
-                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None"
+                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None",
             },
             True,
         ),
@@ -96,7 +85,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
             "brocade_info",
             {
                 ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.1588.Moo",
-                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None
+                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None,
             },
             False,
         ),
@@ -104,7 +93,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
             "brocade_info",
             {
                 ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.24.1.1588.2.1.1.Quack",
-                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None"
+                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None",
             },
             True,
         ),
@@ -112,27 +101,22 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
             "brocade_info",
             {
                 ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.24.1.1588.2.1.1.Quack",
-                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None
+                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None,
             },
             False,
         ),
         (
             "brocade_info",
-            {
-                ".1.3.6.1.2.1.1.2.0": "Moo.Quack",
-                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None"
-            },
+            {".1.3.6.1.2.1.1.2.0": "Moo.Quack", ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": "Not None"},
             False,
         ),
         (
             "brocade_info",
-            {
-                ".1.3.6.1.2.1.1.2.0": "Moo.Quack",
-                ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None
-            },
+            {".1.3.6.1.2.1.1.2.0": "Moo.Quack", ".1.3.6.1.4.1.1588.2.1.1.1.1.6.0": None},
             False,
         ),
-    ])
+    ],
+)
 def test_evaluate_snmp_detection(fix_plugin_legacy, name, oids_data, expected_result):
     def oid_function(oid, _default=None, _name=None):
         return oids_data.get(oid)
@@ -181,8 +165,9 @@ def backend():
     try:
         yield SNMPTestBackend(SNMPConfig, logger)
     finally:
-        cachefile = Path("tmp/check_mk/snmp_scan_cache/%s.%s" %
-                         (SNMPConfig.hostname, SNMPConfig.ipaddress))
+        cachefile = Path(
+            "tmp/check_mk/snmp_scan_cache/%s.%s" % (SNMPConfig.hostname, SNMPConfig.ipaddress)
+        )
         try:
             cachefile.unlink()
         except FileNotFoundError:

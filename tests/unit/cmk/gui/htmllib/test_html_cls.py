@@ -28,56 +28,62 @@ def test_render_help_empty(request_context):
 
 def test_render_help_html(request_context):
     assert html.have_help is False
-    assert compare_html(html.render_help(HTML("<abc>")),
-                        HTML("<div style=\"display:none\" class=\"help\"><abc></div>"))
+    assert compare_html(
+        html.render_help(HTML("<abc>")), HTML('<div style="display:none" class="help"><abc></div>')
+    )
     # NOTE: This seems to be a mypy 0.780 bug.
     assert html.have_help is True  # type: ignore[comparison-overlap]
 
 
 def test_render_help_text(request_context):
-    assert compare_html(html.render_help(u"äbc"),
-                        HTML(u"<div style=\"display:none\" class=\"help\">äbc</div>"))
+    assert compare_html(
+        html.render_help("äbc"), HTML('<div style="display:none" class="help">äbc</div>')
+    )
 
 
 def test_render_help_visible(request_context, monkeypatch):
     monkeypatch.setattr(LoggedInUser, "show_help", property(lambda s: True))
     assert user.show_help is True
-    assert compare_html(html.render_help(u"äbc"),
-                        HTML(u"<div style=\"display:block\" class=\"help\">äbc</div>"))
+    assert compare_html(
+        html.render_help("äbc"), HTML('<div style="display:block" class="help">äbc</div>')
+    )
 
 
 def test_add_manual_link(request_context):
     assert user.language is None
     assert compare_html(
-        html.render_help(u"[introduction_docker|docker]"),
+        html.render_help("[introduction_docker|docker]"),
         HTML(
-            u"<div style=\"display:none\" class=\"help\"><a href=\"https://docs.checkmk.com/master/en/introduction_docker.html\" target=\"_blank\">docker</a></div>"
-        ))
+            '<div style="display:none" class="help"><a href="https://docs.checkmk.com/master/en/introduction_docker.html" target="_blank">docker</a></div>'
+        ),
+    )
 
 
 def test_add_manual_link_localized(request_context, monkeypatch):
     monkeypatch.setattr(user, "language", lambda: "de")
     assert compare_html(
-        html.render_help(u"[introduction_docker|docker]"),
+        html.render_help("[introduction_docker|docker]"),
         HTML(
-            u"<div style=\"display:none\" class=\"help\"><a href=\"https://docs.checkmk.com/master/de/introduction_docker.html\" target=\"_blank\">docker</a></div>"
-        ))
+            '<div style="display:none" class="help"><a href="https://docs.checkmk.com/master/de/introduction_docker.html" target="_blank">docker</a></div>'
+        ),
+    )
 
 
 def test_add_manual_link_anchor(request_context, monkeypatch):
     monkeypatch.setattr(user, "language", lambda: "de")
     assert compare_html(
-        html.render_help(u"[graphing#rrds|RRDs]"),
+        html.render_help("[graphing#rrds|RRDs]"),
         HTML(
-            u"<div style=\"display:none\" class=\"help\"><a href=\"https://docs.checkmk.de/master/de/graphing.html#rrds\" target=\"_blank\">RRDs</a></div>"
-        ))
+            '<div style="display:none" class="help"><a href="https://docs.checkmk.de/master/de/graphing.html#rrds" target="_blank">RRDs</a></div>'
+        ),
+    )
 
 
 def test_user_error(request_context):
     with output_funnel.plugged():
         html.user_error(MKUserError(None, "asd <script>alert(1)</script> <br> <b>"))
         c = output_funnel.drain()
-    assert c == "<div class=\"error\">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>"
+    assert c == '<div class="error">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>'
 
 
 def test_show_user_errors(request_context):
@@ -88,7 +94,7 @@ def test_show_user_errors(request_context):
     with output_funnel.plugged():
         html.show_user_errors()
         c = output_funnel.drain()
-    assert c == "<div class=\"error\">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>"
+    assert c == '<div class="error">asd &lt;script&gt;alert(1)&lt;/script&gt; <br> <b></div>'
 
 
 def test_ABCHTMLGenerator(request_context):
@@ -97,42 +103,47 @@ def test_ABCHTMLGenerator(request_context):
         with output_funnel.plugged():
             html.open_div()
             text = output_funnel.drain()
-            assert text.rstrip('\n').rstrip(' ') == "<div>"
+            assert text.rstrip("\n").rstrip(" ") == "<div>"
 
         with output_funnel.plugged():
-            #html.open_div().write("test").close_div()
+            # html.open_div().write("test").close_div()
             html.open_div()
             html.write_text("test")
             html.close_div()
             assert compare_html(output_funnel.drain(), "<div>test</div>")
 
         with output_funnel.plugged():
-            #html.open_table().open_tr().td("1").td("2").close_tr().close_table()
+            # html.open_table().open_tr().td("1").td("2").close_tr().close_table()
             html.open_table()
             html.open_tr()
             html.td("1")
             html.td("2")
             html.close_tr()
             html.close_table()
-            assert compare_html(output_funnel.drain(),
-                                "<table><tr><td>1</td><td>2</td></tr></table>")
+            assert compare_html(
+                output_funnel.drain(), "<table><tr><td>1</td><td>2</td></tr></table>"
+            )
 
         with output_funnel.plugged():
             html.div("test", **{"</div>malicious_code<div>": "trends"})
-            assert compare_html(output_funnel.drain(),
-                                "<div &lt;/div&gt;malicious_code&lt;div&gt;=trends>test</div>")
+            assert compare_html(
+                output_funnel.drain(),
+                "<div &lt;/div&gt;malicious_code&lt;div&gt;=trends>test</div>",
+            )
 
-        a = u"\u2665"
+        a = "\u2665"
         with output_funnel.plugged():
             assert html.render_a("test", href="www.test.case")
-            html.render_a(u"test", href="www.test.case")
-            html.render_a("test", href=u"www.test.case")
-            html.render_a(u"test", href=u"www.test.case")
+            html.render_a("test", href="www.test.case")
+            html.render_a("test", href="www.test.case")
+            html.render_a("test", href="www.test.case")
             try:
-                assert html.render_a(u"test",
-                                     href=str("www.test.case"),
-                                     id_=str("something"),
-                                     class_=str("test_%s") % a)
+                assert html.render_a(
+                    "test",
+                    href=str("www.test.case"),
+                    id_=str("something"),
+                    class_=str("test_%s") % a,
+                )
             except Exception as e:
                 traceback.print_exc()
                 print(e)
@@ -140,9 +151,9 @@ def test_ABCHTMLGenerator(request_context):
 
 def test_multiclass_call(request_context):
     with output_funnel.plugged():
-        html.div('', class_="1", css="3", cssclass="4", **{"class": "2"})
+        html.div("", class_="1", css="3", cssclass="4", **{"class": "2"})
         written_text = "".join(output_funnel.drain())
-    assert compare_html(written_text, "<div class=\"1 3 4 2\"></div>")
+    assert compare_html(written_text, '<div class="1 3 4 2"></div>')
 
 
 def test_exception_handling(request_context):
@@ -154,40 +165,47 @@ def test_exception_handling(request_context):
 
 def test_text_input(request_context):
     with output_funnel.plugged():
-        html.text_input('tralala')
+        html.text_input("tralala")
         written_text = "".join(output_funnel.drain())
         assert compare_html(
-            written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />')
-
-    with output_funnel.plugged():
-        html.text_input('blabla', cssclass='blubb')
-        written_text = "".join(output_funnel.drain())
-        assert compare_html(
-            written_text, '<input style="" name="tralala" type="text" class="blubb" value=\'\' />')
-
-    with output_funnel.plugged():
-        html.text_input('blabla', autocomplete='yep')
-        written_text = "".join(output_funnel.drain())
-        assert compare_html(
-            written_text,
-            '<input style="" name="blabla" autocomplete="yep" type="text" class="text" value=\'\' />'
+            written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />'
         )
 
     with output_funnel.plugged():
-        html.text_input('blabla', placeholder='placido', data_world='welt', data_max_labels=42)
+        html.text_input("blabla", cssclass="blubb")
         written_text = "".join(output_funnel.drain())
         assert compare_html(
-            written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />')
+            written_text, '<input style="" name="tralala" type="text" class="blubb" value=\'\' />'
+        )
+
+    with output_funnel.plugged():
+        html.text_input("blabla", autocomplete="yep")
+        written_text = "".join(output_funnel.drain())
+        assert compare_html(
+            written_text,
+            '<input style="" name="blabla" autocomplete="yep" type="text" class="text" value=\'\' />',
+        )
+
+    with output_funnel.plugged():
+        html.text_input("blabla", placeholder="placido", data_world="welt", data_max_labels=42)
+        written_text = "".join(output_funnel.drain())
+        assert compare_html(
+            written_text, '<input style="" name="tralala" type="text" class="text" value=\'\' />'
+        )
 
 
 def test_render_a(request_context):
     a = html.render_a("bla", href="blu", class_=["eee"], target="_blank")
     assert compare_html(a, '<a href="blu" target="_blank" class="eee">bla</a>')
 
-    a = html.render_a("b<script>alert(1)</script>la",
-                      href="b<script>alert(1)</script>lu",
-                      class_=["eee"],
-                      target="_blank")
+    a = html.render_a(
+        "b<script>alert(1)</script>la",
+        href="b<script>alert(1)</script>lu",
+        class_=["eee"],
+        target="_blank",
+    )
     assert compare_html(
-        a, '<a href="b&lt;script&gt;alert(1)&lt;/script&gt;lu" target="_blank" '
-        'class="eee">b&lt;script&gt;alert(1)&lt;/script&gt;la</a>')
+        a,
+        '<a href="b&lt;script&gt;alert(1)&lt;/script&gt;lu" target="_blank" '
+        'class="eee">b&lt;script&gt;alert(1)&lt;/script&gt;la</a>',
+    )

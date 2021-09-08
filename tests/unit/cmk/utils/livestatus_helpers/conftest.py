@@ -18,10 +18,11 @@ from cmk.gui.utils.script_helpers import DummyApplication
 def with_request_context():
     environ = create_environ()
     resp = Response()
-    with AppContext(DummyApplication(environ, None)), \
-            RequestContext(req=Request(environ),
-                           resp=resp,
-                           funnel=OutputFunnel(resp),
-                           config_obj=make_config_object(get_default_config()),
-                           display_options=DisplayOptions()):
+    with AppContext(DummyApplication(environ, None)), RequestContext(
+        req=Request(environ),
+        resp=resp,
+        funnel=OutputFunnel(resp),
+        config_obj=make_config_object(get_default_config()),
+        display_options=DisplayOptions(),
+    ):
         yield

@@ -38,30 +38,37 @@ class IconRenderResult(NamedTuple):
             IconRenderArgs(
                 what="service",
                 row={
-                    'site': 'heute',
-                    'host_name': 'heute',
-                    'service_check_command': "check_mk_active-mkevents!'$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
+                    "site": "heute",
+                    "host_name": "heute",
+                    "service_check_command": "check_mk_active-mkevents!'$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
                 },
                 tags=[],
-                custom_vars={}),
-            IconRenderResult(name="mkeventd",
-                             title="Events of Host heute",
-                             url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost"),
+                custom_vars={},
+            ),
+            IconRenderResult(
+                name="mkeventd",
+                title="Events of Host heute",
+                url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
+            ),
         ),
         # Host specification:
         #     Specify host explicitly
         (
-            IconRenderArgs(what="service",
-                           row={
-                               'site': 'heute',
-                               'host_name': 'heute',
-                               'service_check_command': "check_mk_active-mkevents!'heute'"
-                           },
-                           tags=[],
-                           custom_vars={}),
-            IconRenderResult(name="mkeventd",
-                             title="Events of Host heute",
-                             url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost"),
+            IconRenderArgs(
+                what="service",
+                row={
+                    "site": "heute",
+                    "host_name": "heute",
+                    "service_check_command": "check_mk_active-mkevents!'heute'",
+                },
+                tags=[],
+                custom_vars={},
+            ),
+            IconRenderResult(
+                name="mkeventd",
+                title="Events of Host heute",
+                url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
+            ),
         ),
         # Host specification:
         #   Specify host explicitly
@@ -70,17 +77,17 @@ class IconRenderResult(NamedTuple):
             IconRenderArgs(
                 what="service",
                 row={
-                    'site': 'heute',
-                    'host_name': 'heute',
-                    'service_check_command': "check_mk_active-mkevents!'heute' '^my_apps*'"
+                    "site": "heute",
+                    "host_name": "heute",
+                    "service_check_command": "check_mk_active-mkevents!'heute' '^my_apps*'",
                 },
                 tags=[],
-                custom_vars={}),
+                custom_vars={},
+            ),
             IconRenderResult(
                 name="mkeventd",
-                title="Events of Application \"^my_apps*\" on Host heute",
-                url=
-                "view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost"
+                title='Events of Application "^my_apps*" on Host heute',
+                url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
         ),
         # Host specification:
@@ -93,15 +100,18 @@ class IconRenderResult(NamedTuple):
             IconRenderArgs(
                 what="service",
                 row={
-                    'site': 'heute',
-                    'host_name': 'heute',
-                    'service_check_command': "check_mk_active-mkevents!'-a' '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'"
+                    "site": "heute",
+                    "host_name": "heute",
+                    "service_check_command": "check_mk_active-mkevents!'-a' '$HOSTNAME$/$HOSTADDRESS$/$HOSTALIAS$'",
                 },
                 tags=[],
-                custom_vars={}),
-            IconRenderResult(name="mkeventd",
-                             title="Events of Host heute",
-                             url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost"),
+                custom_vars={},
+            ),
+            IconRenderResult(
+                name="mkeventd",
+                title="Events of Host heute",
+                url="view.py?host=heute&site=heute&view_name=ec_events_of_monhost",
+            ),
         ),
         # Host specification:
         #     Match host with
@@ -112,17 +122,17 @@ class IconRenderResult(NamedTuple):
             IconRenderArgs(
                 what="service",
                 row={
-                    'site': 'heute',
-                    'host_name': 'heute',
-                    'service_check_command': "check_mk_active-mkevents!'-a' '$HOSTALIAS$' '^my_apps*'"
+                    "site": "heute",
+                    "host_name": "heute",
+                    "service_check_command": "check_mk_active-mkevents!'-a' '$HOSTALIAS$' '^my_apps*'",
                 },
                 tags=[],
-                custom_vars={}),
+                custom_vars={},
+            ),
             IconRenderResult(
                 name="mkeventd",
-                title="Events of Application \"^my_apps*\" on Host my_alias",
-                url=
-                "view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost"
+                title='Events of Application "^my_apps*" on Host my_alias',
+                url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
         ),
         # Host specification:
@@ -134,32 +144,33 @@ class IconRenderResult(NamedTuple):
             IconRenderArgs(
                 what="service",
                 row={
-                    'site': 'heute',
-                    'host_name': 'heute',
-                    'host_address': "127.0.0.1",
-                    'service_check_command': "check_mk_active-mkevents!'-a' '$HOSTADDRESS$' '^my_apps*'"
+                    "site": "heute",
+                    "host_name": "heute",
+                    "host_address": "127.0.0.1",
+                    "service_check_command": "check_mk_active-mkevents!'-a' '$HOSTADDRESS$' '^my_apps*'",
                 },
                 tags=[],
-                custom_vars={}),
+                custom_vars={},
+            ),
             IconRenderResult(
                 name="mkeventd",
-                title="Events of Application \"^my_apps*\" on Host 127.0.0.1",
-                url=
-                "view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
+                title='Events of Application "^my_apps*" on Host 127.0.0.1',
+                url="view.py?event_application=%5Emy_apps%2A&host=heute&site=heute&view_name=ec_events_of_monhost",
             ),
         ),
-    ])
+    ],
+)
 def test_icon_options(args, result, request_context, monkeypatch):
-    """ Creation of title and url for links to event console entries of host """
+    """Creation of title and url for links to event console entries of host"""
     icon = icons.get_multisite_icons()["mkeventd"]
 
     def _get_dummy_hostname(args, row):
         args_splitted = args[0].split("/")
-        if args_splitted[0] == '$HOSTNAME$':
-            return row['host_name']
-        if args_splitted[0] == '$HOSTADDRESS$':
-            return row['host_address']
-        if args_splitted[0] == '$HOSTALIAS$':
+        if args_splitted[0] == "$HOSTNAME$":
+            return row["host_name"]
+        if args_splitted[0] == "$HOSTADDRESS$":
+            return row["host_address"]
+        if args_splitted[0] == "$HOSTALIAS$":
             return "my_alias"
         return args[0]
 

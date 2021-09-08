@@ -12,10 +12,12 @@ from cmk.base.plugins.agent_based.snmp_extended_info import (
 
 
 def test_host_labels():
-    section = parse_snmp_extended_info([
-        ["_", "fibrechannel switch", "_", "_", "_", "_", "_", "_", "_"],
-        ["_", "_", "_", "_", "_", "_", "_", "_", "_"],
-    ])
+    section = parse_snmp_extended_info(
+        [
+            ["_", "fibrechannel switch", "_", "_", "_", "_", "_", "_", "_"],
+            ["_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ]
+    )
     assert list(get_device_type_label(section)) == [
         HostLabel("cmk/device_type", "fcswitch"),
     ]

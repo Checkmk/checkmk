@@ -76,9 +76,7 @@ def test_format_var_for_export_strip_nested_dict():
 
 def test_format_var_for_export_strip_large_data():
     orig_var = {
-        "a": {
-            "y": ("a" * 1024 * 1024) + "a"
-        },
+        "a": {"y": ("a" * 1024 * 1024) + "a"},
     }
 
     var = copy.deepcopy(orig_var)
@@ -147,4 +145,4 @@ def test_crash_report_store_cleanup(crash_dir, n_crashes):
             crash_ids.append(crash.ident_to_text())
 
     assert len(set(crash_dir.glob("*"))) <= store._keep_num_crashes
-    assert {e.name for e in crash_dir.glob("*")} == set(crash_ids[-store._keep_num_crashes:])
+    assert {e.name for e in crash_dir.glob("*")} == set(crash_ids[-store._keep_num_crashes :])

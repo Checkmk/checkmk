@@ -16,11 +16,15 @@ from cmk.base.api.agent_based.type_defs import OIDSpecTuple
 class TestSNMPDetectSpec:
     @pytest.fixture
     def specs(self):
-        return SNMPDetectSpec([[
-            ("oid0", "regex0", True),
-            ("oid1", "regex1", True),
-            ("oid2", "regex2", False),
-        ]])
+        return SNMPDetectSpec(
+            [
+                [
+                    ("oid0", "regex0", True),
+                    ("oid1", "regex1", True),
+                    ("oid2", "regex2", False),
+                ]
+            ]
+        )
 
     def test_serialization(self, specs):
         assert SNMPDetectSpec.from_json(specs.to_json()) == specs
@@ -31,9 +35,9 @@ def test_snmptree_from_frontend():
     tree = BackendSNMPTree.from_frontend(
         base=base,
         oids=[
-            OIDSpecTuple('2', "string", False),
-            OIDSpecTuple('2', "string", True),
-            OIDSpecTuple('2', "binary", False),
+            OIDSpecTuple("2", "string", False),
+            OIDSpecTuple("2", "string", True),
+            OIDSpecTuple("2", "binary", False),
             OIDSpecTuple(SpecialColumn.END, "string", False),
         ],
     )
@@ -47,22 +51,25 @@ def test_snmptree_from_frontend():
     ]
 
 
-@pytest.mark.parametrize("tree", [
-    BackendSNMPTree(
-        base=".1.2.3",
-        oids=[
-            BackendOIDSpec("4.5.6", "string", False),
-            BackendOIDSpec("7.8.9", "string", False),
-        ],
-    ),
-    BackendSNMPTree(
-        base=".1.2.3",
-        oids=[
-            BackendOIDSpec("4.5.6", "binary", False),
-            BackendOIDSpec("7.8.9", "string", True),
-            BackendOIDSpec(SpecialColumn.END, "string", False),
-        ],
-    ),
-])
+@pytest.mark.parametrize(
+    "tree",
+    [
+        BackendSNMPTree(
+            base=".1.2.3",
+            oids=[
+                BackendOIDSpec("4.5.6", "string", False),
+                BackendOIDSpec("7.8.9", "string", False),
+            ],
+        ),
+        BackendSNMPTree(
+            base=".1.2.3",
+            oids=[
+                BackendOIDSpec("4.5.6", "binary", False),
+                BackendOIDSpec("7.8.9", "string", True),
+                BackendOIDSpec(SpecialColumn.END, "string", False),
+            ],
+        ),
+    ],
+)
 def test_serialize_snmptree(tree):
     assert tree.from_json(json.loads(json.dumps(tree.to_json()))) == tree

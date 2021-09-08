@@ -20,7 +20,7 @@ _SECTION = {
     "TowerA_InfeedC": PDU(state="on", power=0),
     "TowerB_InfeedA": PDU(state="on", power=665),
     "TowerB_InfeedB": PDU(state="unknown", power=203),
-    "TowerB_InfeedC": PDU(state="on", power=0)
+    "TowerB_InfeedC": PDU(state="on", power=0),
 }
 
 
@@ -28,39 +28,27 @@ def test_inventory_sentry_pdu() -> None:
     assert list(Check("sentry_pdu").run_discovery(_SECTION)) == [
         (
             "TowerA_InfeedA",
-            {
-                "discovered_state": "on"
-            },
+            {"discovered_state": "on"},
         ),
         (
             "TowerA_InfeedB",
-            {
-                "discovered_state": "on"
-            },
+            {"discovered_state": "on"},
         ),
         (
             "TowerA_InfeedC",
-            {
-                "discovered_state": "on"
-            },
+            {"discovered_state": "on"},
         ),
         (
             "TowerB_InfeedA",
-            {
-                "discovered_state": "on"
-            },
+            {"discovered_state": "on"},
         ),
         (
             "TowerB_InfeedB",
-            {
-                "discovered_state": "unknown"
-            },
+            {"discovered_state": "unknown"},
         ),
         (
             "TowerB_InfeedC",
-            {
-                "discovered_state": "on"
-            },
+            {"discovered_state": "on"},
         ),
     ]
 
@@ -137,8 +125,13 @@ def test_check_sentry_pdu(
     params: CombinedParams,
     expected_result: Sequence[Union[Tuple[int, str], Tuple[int, str, Tuple[str, int]]]],
 ) -> None:
-    assert list(Check("sentry_pdu").run_check(
-        item,
-        params,
-        _SECTION,
-    )) == expected_result
+    assert (
+        list(
+            Check("sentry_pdu").run_check(
+                item,
+                params,
+                _SECTION,
+            )
+        )
+        == expected_result
+    )

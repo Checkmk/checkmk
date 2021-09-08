@@ -11,13 +11,16 @@ import subprocess
 import pytest
 
 
-@pytest.mark.parametrize("rel_path,expected_capability", [
-    ("bin/mkeventd_open514", "cap_net_bind_service=ep"),
-    ("lib/nagios/plugins/check_icmp", "cap_net_raw=ep"),
-    ("lib/nagios/plugins/check_dhcp", "cap_net_bind_service,cap_net_raw=ep"),
-    ("lib/cmc/icmpsender", "cap_net_raw=ep"),
-    ("lib/cmc/icmpreceiver", "cap_net_raw=ep"),
-])
+@pytest.mark.parametrize(
+    "rel_path,expected_capability",
+    [
+        ("bin/mkeventd_open514", "cap_net_bind_service=ep"),
+        ("lib/nagios/plugins/check_icmp", "cap_net_raw=ep"),
+        ("lib/nagios/plugins/check_dhcp", "cap_net_bind_service,cap_net_raw=ep"),
+        ("lib/cmc/icmpsender", "cap_net_raw=ep"),
+        ("lib/cmc/icmpreceiver", "cap_net_raw=ep"),
+    ],
+)
 def test_binary_capability(site, rel_path, expected_capability):
     path = site.path(rel_path)
     assert os.path.exists(path)
@@ -36,7 +39,7 @@ def test_binary_capability(site, rel_path, expected_capability):
     assert p.stdout
     stdout = p.stdout.read()
 
-    assert oct(stat.S_IMODE(os.stat(path).st_mode)) == '0o750'
+    assert oct(stat.S_IMODE(os.stat(path).st_mode)) == "0o750"
 
     # getcap 2.41 introduced a new output format. As long as we have distros with newer and older
     # versions, we need to support both formats.

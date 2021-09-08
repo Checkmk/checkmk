@@ -78,23 +78,38 @@ def test_main_version_root(capsys, monkeypatch, version_info):
 
 def test_main_version_root_not_existing_site(version_info):
     with pytest.raises(SystemExit, match="No such site: testsite"):
-        omdlib.main.main_version(version_info, omdlib.main.RootContext(),
-                                 omdlib.main.default_global_options(), ["testsite"], {})
+        omdlib.main.main_version(
+            version_info,
+            omdlib.main.RootContext(),
+            omdlib.main.default_global_options(),
+            ["testsite"],
+            {},
+        )
 
 
 def test_main_version_root_specific_site_broken_version(tmp_path, version_info):
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     with pytest.raises(SystemExit, match="Failed to determine site version"):
-        omdlib.main.main_version(version_info, omdlib.main.RootContext(),
-                                 omdlib.main.default_global_options(), ["testsite"], {})
+        omdlib.main.main_version(
+            version_info,
+            omdlib.main.RootContext(),
+            omdlib.main.default_global_options(),
+            ["testsite"],
+            {},
+        )
 
 
 def test_main_version_root_specific_site(tmp_path, capsys, monkeypatch, version_info):
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/testsite/version").symlink_to("../../versions/1.2.3p4")
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
-    omdlib.main.main_version(version_info, omdlib.main.RootContext(),
-                             omdlib.main.default_global_options(), ["testsite"], {})
+    omdlib.main.main_version(
+        version_info,
+        omdlib.main.RootContext(),
+        omdlib.main.default_global_options(),
+        ["testsite"],
+        {},
+    )
 
     stdout = capsys.readouterr()[0]
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
@@ -104,8 +119,13 @@ def test_main_version_root_specific_site_bare(tmp_path, capsys, monkeypatch, ver
     tmp_path.joinpath("omd/sites/testsite").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/testsite/version").symlink_to("../../versions/1.2.3p4")
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
-    omdlib.main.main_version(version_info, omdlib.main.RootContext(),
-                             omdlib.main.default_global_options(), ["testsite"], {"bare": None})
+    omdlib.main.main_version(
+        version_info,
+        omdlib.main.RootContext(),
+        omdlib.main.default_global_options(),
+        ["testsite"],
+        {"bare": None},
+    )
 
     stdout = capsys.readouterr()[0]
     assert stdout == "1.2.3p4\n"
@@ -116,8 +136,9 @@ def test_main_versions(tmp_path, capsys, monkeypatch, version_info):
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p14").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/default").symlink_to("1.6.0p4")
-    omdlib.main.main_versions(version_info, omdlib.main.RootContext(),
-                              omdlib.main.default_global_options(), [], {})
+    omdlib.main.main_versions(
+        version_info, omdlib.main.RootContext(), omdlib.main.default_global_options(), [], {}
+    )
 
     stdout = capsys.readouterr()[0]
     assert stdout == "1.2.3p4\n1.6.0p14\n1.6.0p4 (default)\n"
@@ -128,8 +149,13 @@ def test_main_versions_bare(tmp_path, capsys, monkeypatch, version_info):
     tmp_path.joinpath("omd/versions/1.6.0p4").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/1.6.0p14").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/default").symlink_to("1.6.0p4")
-    omdlib.main.main_versions(version_info, omdlib.main.RootContext(),
-                              omdlib.main.default_global_options(), [], {"bare": None})
+    omdlib.main.main_versions(
+        version_info,
+        omdlib.main.RootContext(),
+        omdlib.main.default_global_options(),
+        [],
+        {"bare": None},
+    )
 
     stdout = capsys.readouterr()[0]
     assert stdout == "1.2.3p4\n1.6.0p14\n1.6.0p4\n"
@@ -152,7 +178,11 @@ def test_omd_versions(tmp_path):
     tmp_path.joinpath("omd/versions/default").symlink_to("2019.12.11.cee")
 
     assert omdlib.main.omd_versions() == [
-        '1.2.0p23', '1.6.0i1', '1.6.0i10', '1.6.0p7', '2019.12.11.cee'
+        "1.2.0p23",
+        "1.6.0i1",
+        "1.6.0i10",
+        "1.6.0p7",
+        "2019.12.11.cee",
     ]
 
 
@@ -192,16 +222,18 @@ def test_main_sites(tmp_path, capsys, monkeypatch, version_info):
     tmp_path.joinpath("omd/sites/disabled").mkdir(parents=True)
     tmp_path.joinpath("omd/sites/disabled/version").symlink_to("../../versions/1.6.0p4")
 
-    omdlib.main.main_sites(version_info, omdlib.main.RootContext(),
-                           omdlib.main.default_global_options(), [], {})
+    omdlib.main.main_sites(
+        version_info, omdlib.main.RootContext(), omdlib.main.default_global_options(), [], {}
+    )
 
     stdout = _strip_ansi(capsys.readouterr()[0])
-    assert stdout == \
-            'broken           1.0.0             \n' \
-            'default          1.6.0p4          default version \n' \
-            'disabled         1.6.0p4          default version, disabled \n' \
-            'empty            (none)           empty site dir \n' \
-            'xyz              1.2.3p4           \n'
+    assert (
+        stdout == "broken           1.0.0             \n"
+        "default          1.6.0p4          default version \n"
+        "disabled         1.6.0p4          default version, disabled \n"
+        "empty            (none)           empty site dir \n"
+        "xyz              1.2.3p4           \n"
+    )
 
 
 def test_sitename_must_be_valid_ok(tmp_path):
@@ -209,13 +241,16 @@ def test_sitename_must_be_valid_ok(tmp_path):
     assert omdlib.main.sitename_must_be_valid(omdlib.main.SiteContext("lulu")) is None
 
 
-@pytest.mark.parametrize("name,expected_result", [
-    ("0asd", False),
-    ("asd0", True),
-    ("", False),
-    ("aaaaaaaaaaaaaaaa", True),
-    ("aaaaaaaaaaaaaaaaa", False),
-])
+@pytest.mark.parametrize(
+    "name,expected_result",
+    [
+        ("0asd", False),
+        ("asd0", True),
+        ("", False),
+        ("aaaaaaaaaaaaaaaa", True),
+        ("aaaaaaaaaaaaaaaaa", False),
+    ],
+)
 def test_sitename_must_be_valid_regex(tmp_path, name, expected_result):
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
 

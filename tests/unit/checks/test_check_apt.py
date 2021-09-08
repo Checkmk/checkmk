@@ -51,15 +51,15 @@ def test_inventory_apt(section: Section) -> None:
         pytest.param(
             parse_apt(_SECTION_UPDATES_AV),
             [
-                (1, '3 normal updates', [('normal_updates', 3)]),
-                (1, '2 auto removals (default-java-plugin, icedtea-8-plugin)', [('removals', 2)]),
-                (2, '1 security updates (librsvg2-2)', [('security_updates', 1)]),
+                (1, "3 normal updates", [("normal_updates", 3)]),
+                (1, "2 auto removals (default-java-plugin, icedtea-8-plugin)", [("removals", 2)]),
+                (2, "1 security updates (librsvg2-2)", [("security_updates", 1)]),
             ],
             id="updates_available",
         ),
         pytest.param(
             parse_apt(_SECTION_NO_UPDATES),
-            [(0, 'No updates pending for installation')],
+            [(0, "No updates pending for installation")],
             id="no_updates",
         ),
     ],

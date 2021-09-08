@@ -11,14 +11,15 @@ from tests.testlib import SpecialAgent
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('params,expected_args', [
-    ({}, ["address"]),
-    ({
-        'timeout': 20
-    }, ['--timeout', '20', "address"]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        ({}, ["address"]),
+        ({"timeout": 20}, ["--timeout", "20", "address"]),
+    ],
+)
 def test_allnet_ip_sensoric_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_allnet_ip_sensoric')
+    agent = SpecialAgent("agent_allnet_ip_sensoric")
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

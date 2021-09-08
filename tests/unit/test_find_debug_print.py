@@ -40,19 +40,19 @@ def find_debugs(line):
 
 
 @pytest.mark.parametrize(
-    "line",
-    ['  print "hello Word"', 'print("variable")', '  pprint(dict)', '  pprint.pprint(list)'])
+    "line", ['  print "hello Word"', 'print("variable")', "  pprint(dict)", "  pprint.pprint(list)"]
+)
 def test_find_debugs(line):
     assert find_debugs(line)
 
 
-@pytest.mark.parametrize("line", ['sys.stdout.write("message")', '# print(variable)'])
+@pytest.mark.parametrize("line", ['sys.stdout.write("message")', "# print(variable)"])
 def test_find_debugs_false(line):
     assert find_debugs(line) is None
 
 
 @pytest.mark.parametrize(
-    'path',
+    "path",
     [
         p  #
         for base_path in [cmk_path(), cmc_path(), cme_path()]  #
@@ -84,8 +84,10 @@ def test_find_debug_code(path):
                         if nr == 0 and ("bash" in line or "php" in line):
                             break  # skip non python files
 
-                        assert not find_debugs(line), ("Found \"print(...)\" call in %s:%d" %
-                                                       (file_path, nr + 1))
+                        assert not find_debugs(line), 'Found "print(...)" call in %s:%d' % (
+                            file_path,
+                            nr + 1,
+                        )
             except UnicodeDecodeError:
                 LOGGER.warning("Could not read %r due to UnicodeDecodeError", file_path)
 

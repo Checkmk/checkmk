@@ -9,12 +9,19 @@ import pytest
 from tests.testlib import Check
 
 
-@pytest.mark.parametrize("info, expected_result", [(
-    [[51]],
-    (1, "Disk percentage usage: 51 % (warn/crit at 40 %/60 %)", [
-        ("disk_utilization", 51, 40.0, 60.0)
-    ]),
-)])
+@pytest.mark.parametrize(
+    "info, expected_result",
+    [
+        (
+            [[51]],
+            (
+                1,
+                "Disk percentage usage: 51 % (warn/crit at 40 %/60 %)",
+                [("disk_utilization", 51, 40.0, 60.0)],
+            ),
+        )
+    ],
+)
 def test_check_sophos_disk(info, expected_result):
     parsed_info = Check("sophos_disk").run_parse(info)
     result = Check("sophos_disk").run_check(None, {"disk_levels": (40, 60)}, parsed_info)

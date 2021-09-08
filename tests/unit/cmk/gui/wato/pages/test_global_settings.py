@@ -26,11 +26,14 @@ def test_match_item_generator_settings(monkeypatch, request_context):
 
     class SomeSettingsMode(ModeEditGlobals):
         def iter_all_configuration_variables(
-                self) -> Iterable[Tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
-            return [(
-                ConfigVariableGroup(),
-                [SomeConfigVariable()],
-            )]
+            self,
+        ) -> Iterable[Tuple[ConfigVariableGroup, Iterable[ConfigVariable]]]:
+            return [
+                (
+                    ConfigVariableGroup(),
+                    [SomeConfigVariable()],
+                )
+            ]
 
     monkeypatch.setattr(ABCConfigDomain, "get_all_default_globals", lambda: {})
 
@@ -39,11 +42,12 @@ def test_match_item_generator_settings(monkeypatch, request_context):
             "settings",
             "Settings",
             SomeSettingsMode,
-        ).generate_match_items()) == [
-            MatchItem(
-                title='title',
-                topic='Settings',
-                url='wato.py?mode=edit_configvar&varname=ident',
-                match_texts=['title', 'ident'],
-            ),
-        ]
+        ).generate_match_items()
+    ) == [
+        MatchItem(
+            title="title",
+            topic="Settings",
+            url="wato.py?mode=edit_configvar&varname=ident",
+            match_texts=["title", "ident"],
+        ),
+    ]

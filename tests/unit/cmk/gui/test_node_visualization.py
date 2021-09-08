@@ -33,38 +33,42 @@ from cmk.gui.node_visualization import (
 @pytest.fixture(name="rough_livestatus")
 def rough_liovestatus_mock(mock_livestatus: MockLiveStatusConnection) -> MockLiveStatusConnection:
     live = mock_livestatus
-    live.set_sites(['foobar'])
+    live.set_sites(["foobar"])
 
-    table = [{
-        "name": "foo<(/",
-        "host_name": "heute",
-        "state": 0,
-        "alias": "fooalias",
-        "icon_image": "?",
-        "parents": "?",
-        "childs": "?",
-        "has_been_checked": "?",
-    }, {
-        "name": "bar<(/",
-        "host_name": "heute",
-        "state": 0,
-        "alias": "fooalias",
-        "icon_image": "?",
-        "parents": "",
-        "childs": "?",
-        "has_been_checked": "?",
-    }]
+    table = [
+        {
+            "name": "foo<(/",
+            "host_name": "heute",
+            "state": 0,
+            "alias": "fooalias",
+            "icon_image": "?",
+            "parents": "?",
+            "childs": "?",
+            "has_been_checked": "?",
+        },
+        {
+            "name": "bar<(/",
+            "host_name": "heute",
+            "state": 0,
+            "alias": "fooalias",
+            "icon_image": "?",
+            "parents": "",
+            "childs": "?",
+            "has_been_checked": "?",
+        },
+    ]
     live.add_table("hosts", table)
     return live
 
 
 def test_ParentChildNetworkTopology_fetch_data_for_hosts(
-        rough_livestatus: MockLiveStatusConnection) -> None:
+    rough_livestatus: MockLiveStatusConnection,
+) -> None:
     settings = TopologySettings()
     topology = ParentChildNetworkTopology(topology_settings=settings)
 
     rough_livestatus.expect_query(
-        'GET hosts\nColumns: name state alias icon_image parents childs has_been_checked\nFilter: host_name = heute\nOr: 1',
+        "GET hosts\nColumns: name state alias icon_image parents childs has_been_checked\nFilter: host_name = heute\nOr: 1",
     )
     with rough_livestatus(expect_status_query=True):
         host_info = topology._fetch_data_for_hosts({HostName("heute")})
@@ -72,8 +76,9 @@ def test_ParentChildNetworkTopology_fetch_data_for_hosts(
 
 
 def test_ParentChildTopologyPage_get_hostnames_from_filters(
-        rough_livestatus: MockLiveStatusConnection, mocker) -> None:
-    rough_livestatus.expect_query('GET hosts\nColumns: name')
+    rough_livestatus: MockLiveStatusConnection, mocker
+) -> None:
+    rough_livestatus.expect_query("GET hosts\nColumns: name")
 
     class MockView:
         context = None
@@ -94,7 +99,8 @@ def test_ParentChildTopologyPage_get_hostnames_from_filters(
 
 
 def test_ParentChildTopologyPage_get_default_view_hostnames(
-        rough_livestatus: MockLiveStatusConnection) -> None:
+    rough_livestatus: MockLiveStatusConnection,
+) -> None:
     rough_livestatus.expect_query("GET hosts\nColumns: name\nFilter: parents =")
     with rough_livestatus(expect_status_query=True):
         page = ParentChildTopologyPage()

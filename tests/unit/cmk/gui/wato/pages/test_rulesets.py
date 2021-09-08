@@ -19,59 +19,65 @@ from cmk.gui.wato.pages.rulesets import config, RuleConditionRenderer
 @pytest.fixture(name="tag_config")
 def fixture_tag_config():
     tag_config = TagConfig()
-    tag_config.parse_config({
-        "aux_tags": [{
-            "id": "aux_tag_1",
-            "topic": "Auxiliary tags",
-            "title": "Auxiliary tag 1",
-        }],
-        "tag_groups": [
-            {
-                "id": "tag_grp_1",
-                "topic": "Topic 1",
-                "title": "Tag group 1",
-                "tags": [
-                    {
-                        "aux_tags": [],
-                        "id": "grp_1_tg_1",
-                        "title": "Tag 1.1",
-                    },
-                    {
-                        "aux_tags": [],
-                        "id": "grp_1_tg_2",
-                        "title": "Tag 1.2",
-                    },
-                ],
-            },
-            {
-                "id": "tag_grp_2",
-                "topic": "Topic 2",
-                "title": "Tag group 2",
-                "tags": [
-                    {
-                        "aux_tags": [],
-                        "id": "grp_2_tg_1",
-                        "title": "Tag 2.1",
-                    },
-                    {
-                        "aux_tags": [],
-                        "id": "grp_2_tg_2",
-                        "title": "Tag 2.2",
-                    },
-                ],
-            },
-            {
-                "id": "tag_grp_3",
-                "topic": "Topic 3",
-                "title": "Tag group 3",
-                "tags": [{
-                    "aux_tags": [],
-                    "id": "grp_3_tg_1",
-                    "title": "Tag 3.1",
-                },],
-            },
-        ],
-    })
+    tag_config.parse_config(
+        {
+            "aux_tags": [
+                {
+                    "id": "aux_tag_1",
+                    "topic": "Auxiliary tags",
+                    "title": "Auxiliary tag 1",
+                }
+            ],
+            "tag_groups": [
+                {
+                    "id": "tag_grp_1",
+                    "topic": "Topic 1",
+                    "title": "Tag group 1",
+                    "tags": [
+                        {
+                            "aux_tags": [],
+                            "id": "grp_1_tg_1",
+                            "title": "Tag 1.1",
+                        },
+                        {
+                            "aux_tags": [],
+                            "id": "grp_1_tg_2",
+                            "title": "Tag 1.2",
+                        },
+                    ],
+                },
+                {
+                    "id": "tag_grp_2",
+                    "topic": "Topic 2",
+                    "title": "Tag group 2",
+                    "tags": [
+                        {
+                            "aux_tags": [],
+                            "id": "grp_2_tg_1",
+                            "title": "Tag 2.1",
+                        },
+                        {
+                            "aux_tags": [],
+                            "id": "grp_2_tg_2",
+                            "title": "Tag 2.2",
+                        },
+                    ],
+                },
+                {
+                    "id": "tag_grp_3",
+                    "topic": "Topic 3",
+                    "title": "Tag group 3",
+                    "tags": [
+                        {
+                            "aux_tags": [],
+                            "id": "grp_3_tg_1",
+                            "title": "Tag 3.1",
+                        },
+                    ],
+                },
+            ],
+        }
+    )
     return tag_config
 
 
@@ -136,30 +142,35 @@ class TestRuleConditionRenderer:
         tag_spec: Union[Optional[TagID], TagConditionNE],
         rendered_condition: HTML,
     ) -> None:
-        assert RuleConditionRenderer()._single_tag_condition(
-            taggroup_id,
-            tag_spec,
-        ) == rendered_condition
+        assert (
+            RuleConditionRenderer()._single_tag_condition(
+                taggroup_id,
+                tag_spec,
+            )
+            == rendered_condition
+        )
 
     def test_tag_condition(self) -> None:
-        assert list(RuleConditionRenderer()._tag_conditions({
-            "tag_grp_1": {
-                "$or": [
-                    "grp_1_tg_1",
-                    "grp_1_tg_2",
-                ]
-            },
-            "tag_grp_2": {
-                "$nor": [
-                    "grp_2_tg_1",
-                    "grp_2_tg_2",
-                ]
-            },
-            "tag_grp_3": "grp_3_tg_1",
-            "aux_tag_1": {
-                "$ne": "aux_tag_1"
-            },
-        })) == [
+        assert list(
+            RuleConditionRenderer()._tag_conditions(
+                {
+                    "tag_grp_1": {
+                        "$or": [
+                            "grp_1_tg_1",
+                            "grp_1_tg_2",
+                        ]
+                    },
+                    "tag_grp_2": {
+                        "$nor": [
+                            "grp_2_tg_1",
+                            "grp_2_tg_2",
+                        ]
+                    },
+                    "tag_grp_3": "grp_3_tg_1",
+                    "aux_tag_1": {"$ne": "aux_tag_1"},
+                }
+            )
+        ) == [
             HTML(
                 "Host tag: Tag group 1 is <b>Tag 1.1</b> <i>or</i> Host tag: Tag group 1 is <b>Tag 1.2</b>"
             ),

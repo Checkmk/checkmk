@@ -35,7 +35,8 @@ def test_test_check_1(request, site, web):  # noqa: F811 # pylint: disable=redef
     request.addfinalizer(cleanup)
 
     site.write_file(
-        test_check_path, """
+        test_check_path,
+        """
 
 test_check_1_default_levels = 10.0, 20.0
 
@@ -51,7 +52,8 @@ check_info["test_check_1"] = {
     "service_description"     : "Testcheck 1",
 #    "default_levels_variable" : "test_check_1_default_levels"
 }
-""")
+""",
+    )
 
     config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
     config.load(with_conf_d=False)
@@ -77,18 +79,19 @@ check_info["test_check_1"] = {
     p = site.execute(["cmk", "-nv", host_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert "OK - (10.0, 20.0)" in stdout
-    assert stderr == ''
+    assert stderr == ""
     assert p.returncode == 0
 
     # And now overwrite the setting in the config
-    site.write_file("etc/check_mk/conf.d/test_check_1.mk",
-                    "test_check_1_default_levels = 5.0, 30.1\n")
+    site.write_file(
+        "etc/check_mk/conf.d/test_check_1.mk", "test_check_1_default_levels = 5.0, 30.1\n"
+    )
 
     p = site.execute(["cmk", "-nv", host_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert "OK - (10.0, 20.0)" not in stdout
     assert "OK - (5.0, 30.1)" in stdout
-    assert stderr == ''
+    assert stderr == ""
     assert p.returncode == 0
 
     # rediscover with the setting in the config
@@ -117,7 +120,8 @@ def test_test_check_2(request, site, web):  # noqa: F811 # pylint: disable=redef
     request.addfinalizer(cleanup)
 
     site.write_file(
-        test_check_path, """
+        test_check_path,
+        """
 
 discover_service = False
 
@@ -133,7 +137,8 @@ check_info["test_check_2"] = {
     "inventory_function"  : inventory,
     "service_description" : "Testcheck 2",
 }
-""")
+""",
+    )
 
     config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
     config.load(with_conf_d=False)
@@ -166,7 +171,9 @@ check_info["test_check_2"] = {
 
 
 # Test whether or not factory settings and checkgroup parameters work
-def test_check_factory_settings(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_check_factory_settings(
+    request, site, web
+):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     host_name = "check-variables-test-host"
 
@@ -184,7 +191,8 @@ def test_check_factory_settings(request, site, web):  # noqa: F811 # pylint: dis
     request.addfinalizer(cleanup)
 
     site.write_file(
-        test_check_path, """
+        test_check_path,
+        """
 
 factory_settings["test_check_3_default_levels"] = {
     "param1": 123,
@@ -203,7 +211,8 @@ check_info["test_check_3"] = {
     "group"                   : "asd",
     "default_levels_variable" : "test_check_3_default_levels",
 }
-""")
+""",
+    )
 
     config.load_checks(check_api.get_check_api_context, ["%s/%s" % (site.root, test_check_path)])
     config.load(with_conf_d=False)
@@ -228,23 +237,25 @@ check_info["test_check_3"] = {
     p = site.execute(["cmk", "-nv", host_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert "OK - {'param1': 123}\n" in stdout, stdout
-    assert stderr == ''
+    assert stderr == ""
     assert p.returncode == 0
 
     # And now overwrite the setting in the config
     site.write_file(
-        "etc/check_mk/conf.d/test_check_3.mk", """
+        "etc/check_mk/conf.d/test_check_3.mk",
+        """
 checkgroup_parameters.setdefault('asd', [])
 
 checkgroup_parameters['asd'] = [
     ( {'param2': 'xxx'}, [], ALL_HOSTS, {} ),
 ] + checkgroup_parameters['asd']
-""")
+""",
+    )
 
     # And execute the check again to check for the parameters
     p = site.execute(["cmk", "-nv", host_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate()
     assert "'param1': 123" in stdout
     assert "'param2': 'xxx'" in stdout
-    assert stderr == ''
+    assert stderr == ""
     assert p.returncode == 0

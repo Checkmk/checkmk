@@ -28,25 +28,21 @@ INFO = [
 
 PARSED = (
     # warnings
-    Counter({'I assume a warning looks like this!': 1}),
+    Counter({"I assume a warning looks like this!": 1}),
     # configured:
     {
-        '/tmp/noti/nodata': 'file',
-        '/tmp/noti/test': 'file',
-        '/tmp/noti': 'folder',
+        "/tmp/noti/nodata": "file",
+        "/tmp/noti/test": "file",
+        "/tmp/noti": "folder",
     },
     # stats
     {
-        '/tmp/noti': {
-            'modify': 1465470056,
-            'open': 1465470056,
-            'delete': 1465470058,
+        "/tmp/noti": {
+            "modify": 1465470056,
+            "open": 1465470056,
+            "delete": 1465470058,
         },
-        '/tmp/noti/test': {
-            'modify': 1465470056,
-            'open': 1465470056,
-            'delete': 1465470058
-        },
+        "/tmp/noti/test": {"modify": 1465470056, "open": 1465470056, "delete": 1465470058},
     },
 )
 
@@ -73,19 +69,19 @@ def test_inotify_parse():
 
 def test_discovery():
     assert sorted(discover_inotify(Section(*PARSED))) == [
-        ('File /tmp/noti/nodata', {}),
-        ('File /tmp/noti/test', {}),
-        ('Folder /tmp/noti', {}),
+        ("File /tmp/noti/nodata", {}),
+        ("File /tmp/noti/test", {}),
+        ("Folder /tmp/noti", {}),
     ]
 
 
 def test_updated_data():
     item = "Folder /tmp/noti"
     params = {
-        'age_last_operation': [
-            ('modify', 90, 110),
-            ('open', 80, 90),
-            ('just_for_test_coverage', 1, 2),
+        "age_last_operation": [
+            ("modify", 90, 110),
+            ("open", 80, 90),
+            ("just_for_test_coverage", 1, 2),
         ]
     }
     section = Section(*PARSED)
@@ -93,23 +89,23 @@ def test_updated_data():
     now = 1465470156
 
     assert list(check_inotify(item, params, section, last_status, now)) == [
-        (0, 'Time since last delete: 98 s', []),
-        (1, 'Time since last modify: 100 s (warn/crit at 90 s/110 s)', []),
-        (2, 'Time since last open: 100 s (warn/crit at 80 s/90 s)', []),
-        (3, 'Time since last just_for_test_coverage: unknown'),
-        (1, 'Incomplete data!'),
-        (1, '1 warning(s): I assume a warning looks like this!'),
+        (0, "Time since last delete: 98 s", []),
+        (1, "Time since last modify: 100 s (warn/crit at 90 s/110 s)", []),
+        (2, "Time since last open: 100 s (warn/crit at 80 s/90 s)", []),
+        (3, "Time since last just_for_test_coverage: unknown"),
+        (1, "Incomplete data!"),
+        (1, "1 warning(s): I assume a warning looks like this!"),
     ]
     assert last_status == {
-        'delete': 1465470058,
-        'modify': 1465470056,
-        'open': 1465470056,
+        "delete": 1465470058,
+        "modify": 1465470056,
+        "open": 1465470056,
     }
 
 
 def test_not_configured():
     item = "File /tmp/noti/nodata"
-    params = {'age_last_operation': [('modify', 90, 110)]}
+    params = {"age_last_operation": [("modify", 90, 110)]}
     section = Section(Counter(), {}, {})
     last_status: Dict = {}
     now = 1465470156
@@ -120,26 +116,26 @@ def test_not_configured():
 
 def test_nodata():
     item = "File /tmp/noti/nodata"
-    params = {'age_last_operation': [('modify', 90, 110)]}
-    section = Section(Counter(), {'/tmp/noti/nodata': 'file'}, {})
+    params = {"age_last_operation": [("modify", 90, 110)]}
+    section = Section(Counter(), {"/tmp/noti/nodata": "file"}, {})
     last_status: Dict = {}
     now = 1465470156
 
     assert list(check_inotify(item, params, section, last_status, now)) == [
-        (3, 'Time since last modify: unknown'),
-        (0, 'No data available yet'),
+        (3, "Time since last modify: unknown"),
+        (0, "No data available yet"),
     ]
     assert not last_status
 
 
 def test_old_status():
     item = "File /tmp/noti/nodata"
-    params = {'age_last_operation': [('modify', 90, 110)]}
-    section = Section(Counter(), {'/tmp/noti/nodata': 'file'}, {})
-    last_status = {'modify': 1465470000}
+    params = {"age_last_operation": [("modify", 90, 110)]}
+    section = Section(Counter(), {"/tmp/noti/nodata": "file"}, {})
+    last_status = {"modify": 1465470000}
     now = 1465470156
 
     assert list(check_inotify(item, params, section, last_status, now)) == [
-        (2, 'Time since last modify: 156 s (warn/crit at 90 s/110 s)', []),
+        (2, "Time since last modify: 156 s (warn/crit at 90 s/110 s)", []),
     ]
-    assert last_status == {'modify': 1465470000}
+    assert last_status == {"modify": 1465470000}

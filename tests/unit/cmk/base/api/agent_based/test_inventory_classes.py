@@ -49,9 +49,10 @@ def test_attributes_instanciated():
     assert attr.path == ["software", "os"]
     assert attr.status_attributes == {"vendor": "emmentaler"}
     assert attr.inventory_attributes == {"version": "42"}
-    assert repr(
-        attr
-    ) == "Attributes(path=['software', 'os'], inventory_attributes={'version': '42'}, status_attributes={'vendor': 'emmentaler'})"
+    assert (
+        repr(attr)
+        == "Attributes(path=['software', 'os'], inventory_attributes={'version': '42'}, status_attributes={'vendor': 'emmentaler'})"
+    )
 
     attr2 = Attributes(
         path=["software", "os"],
@@ -94,9 +95,10 @@ def test_tablerow_instanciated():
     assert table_row.key_columns == {"foo": "bar"}
     assert table_row.status_columns == {"packages": 42}
     assert table_row.inventory_columns == {"vendor": "emmentaler"}
-    assert repr(
-        table_row
-    ) == "TableRow(path=['software', 'os'], key_columns={'foo': 'bar'}, inventory_columns={'vendor': 'emmentaler'}, status_columns={'packages': 42})"
+    assert (
+        repr(table_row)
+        == "TableRow(path=['software', 'os'], key_columns={'foo': 'bar'}, inventory_columns={'vendor': 'emmentaler'}, status_columns={'packages': 42})"
+    )
 
     table_row2 = TableRow(
         path=["software", "os"],

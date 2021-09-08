@@ -18,9 +18,7 @@ import cmk.base.config as config
 from cmk.base.config import SpecialAgentConfiguration, SpecialAgentInfoFunctionResult
 from cmk.base.sources.programs import DSProgramSource, SpecialAgentSource
 
-fun_args_stdin: Tuple[  #
-    Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]  #
-] = (  #
+fun_args_stdin: Tuple[Tuple[SpecialAgentInfoFunctionResult, Tuple[str, Optional[str]]]] = (  #  #  #
     ("arg0 arg1", "arg0 arg1", None),
     (["arg0", "arg1"], "'arg0' 'arg1'", None),
     (SpecialAgentConfiguration(["arg0"], None), "'arg0'", None),
@@ -126,6 +124,7 @@ class TestSpecialAgentChecker:
         assert source.hostname == hostname
         assert source.ipaddress == ipaddress
         assert source.cmdline == (  #
-            str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args)
+            str(agent_dir / "special" / ("agent_%s" % special_agent_id)) + " " + expected_args
+        )
         assert source.stdin == expected_stdin
         assert source.id == "special_%s" % special_agent_id

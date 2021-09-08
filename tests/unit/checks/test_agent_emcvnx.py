@@ -11,15 +11,17 @@ from tests.testlib import SpecialAgent
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('params,expected_args', [
-    ({
-        'infos': ['disks', 'hba', 'hwstatus'],
-        'password': 'password',
-        'user': 'user'
-    }, ["-u", "user", "-p", "password", "-i", "disks,hba,hwstatus", "address"]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        (
+            {"infos": ["disks", "hba", "hwstatus"], "password": "password", "user": "user"},
+            ["-u", "user", "-p", "password", "-i", "disks,hba,hwstatus", "address"],
+        ),
+    ],
+)
 def test_emcvnx_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_emcvnx')
+    agent = SpecialAgent("agent_emcvnx")
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

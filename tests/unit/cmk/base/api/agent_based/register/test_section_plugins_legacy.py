@@ -35,17 +35,21 @@ def old_school_discover_function(parsed_extra):
     yield "item3", "{'how_bad_is_this': 100}"
 
 
-@pytest.mark.parametrize("name_in, name_out", [
-    ("foo.bar", "foo"),
-    ("foobar", "foobar"),
-])
+@pytest.mark.parametrize(
+    "name_in, name_out",
+    [
+        ("foo.bar", "foo"),
+        ("foobar", "foobar"),
+    ],
+)
 def test_get_section_name(name_in, name_out):
     assert name_out == section_plugins_legacy.get_section_name(name_in)
 
 
 def test_create_agent_parse_function():
     compliant_parse_function = section_plugins_legacy._create_agent_parse_function(
-        old_school_parse_function)
+        old_school_parse_function
+    )
 
     with pytest.raises(ValueError):
         # raises b/c of wrong signature!
@@ -81,10 +85,11 @@ def test_create_snmp_parse_function():
         expected_annotation=(str, "str"),  # irrel. in test, SNMP parse function is not annotated
     )
 
-    arbitrary_non_empty_input = [[['moo']]]
+    arbitrary_non_empty_input = [[["moo"]]]
     assert compliant_parse_function([[]]) is None
-    assert compliant_parse_function(arbitrary_non_empty_input  # type: ignore[arg-type]
-                                   ) == old_school_parse_function(arbitrary_non_empty_input)
+    assert compliant_parse_function(
+        arbitrary_non_empty_input  # type: ignore[arg-type]
+    ) == old_school_parse_function(arbitrary_non_empty_input)
 
 
 def test_create_snmp_parse_function_handle_empty():
@@ -102,8 +107,8 @@ def test_create_snmp_section_plugin_from_legacy():
     plugin = section_plugins_legacy.create_snmp_section_plugin_from_legacy(
         "norris",
         {
-            'parse_function': old_school_parse_function,
-            'inventory_function': old_school_discover_function,
+            "parse_function": old_school_parse_function,
+            "inventory_function": old_school_discover_function,
         },
         old_school_scan_function,
         (".1.2.3.4.5", ["2", 3]),

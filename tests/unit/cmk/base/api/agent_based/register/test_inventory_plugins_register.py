@@ -24,7 +24,8 @@ def test_create_inventory_plugin_missing_kwarg():
 
     with pytest.raises(TypeError):
         _ = inventory_plugins.create_inventory_plugin(
-            inventory_function=dummy_generator)  # type: ignore[call-arg]
+            inventory_function=dummy_generator
+        )  # type: ignore[call-arg]
 
 
 def test_create_inventory_plugin_not_a_generator():

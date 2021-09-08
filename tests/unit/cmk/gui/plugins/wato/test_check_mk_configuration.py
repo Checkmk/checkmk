@@ -39,43 +39,65 @@ def test_ui_theme_default_value(request_context):
     [
         ({}, {}),
         # These params have to be transformed
-        ({
-            "other_opt": "other opt",
-            "service_whitelist": ["white"],
-        }, {
-            "other_opt": "other opt",
-            "service_filters": ("combined", {
+        (
+            {
+                "other_opt": "other opt",
                 "service_whitelist": ["white"],
-            })
-        }),
-        ({
-            "other_opt": "other opt",
-            "service_blacklist": ["black"],
-        }, {
-            "other_opt": "other opt",
-            "service_filters": ("combined", {
+            },
+            {
+                "other_opt": "other opt",
+                "service_filters": (
+                    "combined",
+                    {
+                        "service_whitelist": ["white"],
+                    },
+                ),
+            },
+        ),
+        (
+            {
+                "other_opt": "other opt",
                 "service_blacklist": ["black"],
-            })
-        }),
-        ({
-            "other_opt": "other opt",
-            "service_whitelist": ["white"],
-            "service_blacklist": ["black"],
-        }, {
-            "other_opt": "other opt",
-            "service_filters": ("combined", {
+            },
+            {
+                "other_opt": "other opt",
+                "service_filters": (
+                    "combined",
+                    {
+                        "service_blacklist": ["black"],
+                    },
+                ),
+            },
+        ),
+        (
+            {
+                "other_opt": "other opt",
                 "service_whitelist": ["white"],
                 "service_blacklist": ["black"],
-            })
-        }),
+            },
+            {
+                "other_opt": "other opt",
+                "service_filters": (
+                    "combined",
+                    {
+                        "service_whitelist": ["white"],
+                        "service_blacklist": ["black"],
+                    },
+                ),
+            },
+        ),
         # These params go through the transform func
-        ({
-            "other_opt": "other opt",
-            "service_filters": "service filters",
-        }, {
-            "other_opt": "other opt",
-            "service_filters": "service filters",
-        }),
-    ])
+        (
+            {
+                "other_opt": "other opt",
+                "service_filters": "service filters",
+            },
+            {
+                "other_opt": "other opt",
+                "service_filters": "service filters",
+            },
+        ),
+    ],
+)
 def test__transform_automatic_rediscover_parameters(parameters, result):
     assert _transform_automatic_rediscover_parameters(parameters) == result

@@ -39,13 +39,16 @@ def test_get_start_url(request_context):
     assert cmk.gui.main._get_start_url() == start_url
 
 
-@pytest.mark.parametrize("invalid_url", [
-    "http://localhost/",
-    "://localhost",
-    "javascript:alert(1)",
-    "javAscRiPt:alert(1)",
-    "localhost:80/bla",
-])
+@pytest.mark.parametrize(
+    "invalid_url",
+    [
+        "http://localhost/",
+        "://localhost",
+        "javascript:alert(1)",
+        "javAscRiPt:alert(1)",
+        "localhost:80/bla",
+    ],
+)
 def test_get_start_url_invalid(request_context, invalid_url):
     html.request.set_var("start_url", invalid_url)
 
@@ -53,7 +56,11 @@ def test_get_start_url_invalid(request_context, invalid_url):
 
 
 def test_get_start_url_invalid_config(monkeypatch, request_context):
-    monkeypatch.setattr(user, "_attributes", {
-        "start_url": "http://asdasd/",
-    })
+    monkeypatch.setattr(
+        user,
+        "_attributes",
+        {
+            "start_url": "http://asdasd/",
+        },
+    )
     assert cmk.gui.main._get_start_url() == "dashboard.py"

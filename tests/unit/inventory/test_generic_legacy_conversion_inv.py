@@ -20,13 +20,15 @@ def test_no_new_legacy_tests():
 
     assert [p.name for p in this_dir.iterdir() if p.name != "__pycache__"] == [
         "test_generic_legacy_conversion_inv.py",
-    ], ("Please do not put new tests in %s. They belong to the tests for agent_based plugins." %
-        this_dir)
+    ], (
+        "Please do not put new tests in %s. They belong to the tests for agent_based plugins."
+        % this_dir
+    )
 
 
 def test_create_section_plugin_from_legacy(fix_plugin_legacy):
     for inv_info_dict in fix_plugin_legacy.inv_info.values():
-        assert 'snmp_info' not in inv_info_dict
+        assert "snmp_info" not in inv_info_dict
 
 
 def test_migrated_inventory_plugin(fix_plugin_legacy, fix_register):
@@ -50,5 +52,5 @@ def test_migrated_inventory_plugin(fix_plugin_legacy, fix_register):
         "version": "42.23",  # abracadabra! Is this your version?
         "vendor": "IBM",
         "type": "aix",
-        "name": "IBM AIX 42.23"
+        "name": "IBM AIX 42.23",
     }

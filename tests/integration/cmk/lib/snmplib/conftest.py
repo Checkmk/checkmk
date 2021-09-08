@@ -82,15 +82,17 @@ def _define_process(index, auth, tmp_path, snmp_data_dir):
                 "--data-dir",
                 str(snmp_data_dir),
                 # TODO: Fix port allocation to prevent problems with parallel tests
-                #"--agent-unix-endpoint="
+                # "--agent-unix-endpoint="
                 "--agent-udpv4-endpoint=127.0.0.1:%s" % port,
                 "--agent-udpv6-endpoint=[::1]:%s" % port,
-            ] + auth,
+            ]
+            + auth,
             close_fds=True,
             # Silence the very noisy output. May be useful to enable this for debugging tests
-            #stdout=open(os.devnull, "w"),
-            #stderr=subprocess.STDOUT,
-        ))
+            # stdout=open(os.devnull, "w"),
+            # stderr=subprocess.STDOUT,
+        ),
+    )
 
 
 def _create_auth_list():
@@ -157,6 +159,7 @@ def _is_listening(process_def):
 
     # Correct module is only available in the site
     import netsnmp  # type: ignore[import] # pylint: disable=import-error,import-outside-toplevel
+
     var = netsnmp.Varbind("SNMPv2-MIB::sysDescr.0")
     result = netsnmp.snmpget(var, Version=2, DestHost="127.0.0.1:%s" % port, Community="public")
     if result is None or result[0] is None:
@@ -164,8 +167,9 @@ def _is_listening(process_def):
     return True
 
 
-@pytest.fixture(name="backend",
-                params=[ClassicSNMPBackend, StoredWalkSNMPBackend, InlineSNMPBackend])
+@pytest.fixture(
+    name="backend", params=[ClassicSNMPBackend, StoredWalkSNMPBackend, InlineSNMPBackend]
+)
 def backend_fixture(request, snmp_data_dir):
     backend = request.param
     if backend is None:
@@ -187,7 +191,8 @@ def backend_fixture(request, snmp_data_dir):
         character_encoding=None,
         is_usewalk_host=backend is StoredWalkSNMPBackend,
         snmp_backend=SNMPBackendEnum.INLINE
-        if backend is InlineSNMPBackend else SNMPBackendEnum.CLASSIC,
+        if backend is InlineSNMPBackend
+        else SNMPBackendEnum.CLASSIC,
     )
 
     snmpwalks_dir = cmk.utils.paths.snmpwalks_dir

@@ -12,34 +12,32 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 
 
-@pytest.mark.parametrize("string_table,expected_parsed_data", [
-    (
-        [[['172']]],
-        {
-            'n_users': 172
-        },
-    ),
-    (
-        [[['']]],
-        {},
-    ),
-])
+@pytest.mark.parametrize(
+    "string_table,expected_parsed_data",
+    [
+        (
+            [[["172"]]],
+            {"n_users": 172},
+        ),
+        (
+            [[[""]]],
+            {},
+        ),
+    ],
+)
 def test_parse_pulse_secure_users(string_table, expected_parsed_data):
     assert pulse_secure_users.parse_pulse_secure_users(string_table) == expected_parsed_data
 
 
 def test_check_pulse_secure_users():
-    assert list(pulse_secure_users.check_pulse_secure_users(
-        {},
-        {'n_users': 172},
-    )) == [
+    assert list(pulse_secure_users.check_pulse_secure_users({}, {"n_users": 172},)) == [
         Result(
             state=state.OK,
-            summary='Pulse Secure users: 172',
-            details='Pulse Secure users: 172',
+            summary="Pulse Secure users: 172",
+            details="Pulse Secure users: 172",
         ),
         Metric(
-            'current_users',
+            "current_users",
             172.0,
             levels=(None, None),
             boundaries=(None, None),
@@ -51,32 +49,26 @@ def test_cluster_check_pulse_secure_users():
     assert list(
         pulse_secure_users.cluster_check_pulse_secure_users(
             {},
-            {
-                'node1': {
-                    'n_users': 20
-                },
-                'node2': {
-                    'n_users': 30
-                }
-            },
-        )) == [
-            Result(
-                state=state.OK,
-                notice='[node1]: Pulse Secure users: 20',
-            ),
-            Result(
-                state=state.OK,
-                notice='[node2]: Pulse Secure users: 30',
-            ),
-            Result(
-                state=state.OK,
-                summary='Pulse Secure users across cluster: 50',
-                details='Pulse Secure users across cluster: 50',
-            ),
-            Metric(
-                'current_users',
-                50.0,
-                levels=(None, None),
-                boundaries=(None, None),
-            ),
-        ]
+            {"node1": {"n_users": 20}, "node2": {"n_users": 30}},
+        )
+    ) == [
+        Result(
+            state=state.OK,
+            notice="[node1]: Pulse Secure users: 20",
+        ),
+        Result(
+            state=state.OK,
+            notice="[node2]: Pulse Secure users: 30",
+        ),
+        Result(
+            state=state.OK,
+            summary="Pulse Secure users across cluster: 50",
+            details="Pulse Secure users across cluster: 50",
+        ),
+        Metric(
+            "current_users",
+            50.0,
+            levels=(None, None),
+            boundaries=(None, None),
+        ),
+    ]

@@ -15,64 +15,71 @@ from cmk.base.plugins.agent_based.proxmox_ve_snapshot_age import (
 )
 
 
-@pytest.mark.parametrize('data,expected', [
-    ('{"snaptimes": []}', {
-        "snaptimes": []
-    }),
-    ('{"snaptimes": [1]}', {
-        "snaptimes": [1]
-    }),
-])
+@pytest.mark.parametrize(
+    "data,expected",
+    [
+        ('{"snaptimes": []}', {"snaptimes": []}),
+        ('{"snaptimes": [1]}', {"snaptimes": [1]}),
+    ],
+)
 def test_parse_proxmox_ve_snapshot_age(data, expected):
     assert parse_proxmox_ve_snapshot_age([[data]]) == expected
 
 
-@pytest.mark.parametrize('now,params,section,expected', [
-    (1, {
-        "oldest_levels": (604800, 2592000)
-    }, {
-        "snaptimes": []
-    }, [Result(state=State.OK, summary="No snapshot found")]),
-])
+@pytest.mark.parametrize(
+    "now,params,section,expected",
+    [
+        (
+            1,
+            {"oldest_levels": (604800, 2592000)},
+            {"snaptimes": []},
+            [Result(state=State.OK, summary="No snapshot found")],
+        ),
+    ],
+)
 def test_check_proxmox_ve_snapshot_age_no_snapshot(now, params, section, expected):
     with on_time(now, "CET"):
         assert list(check_proxmox_ve_snapshot_age(params, section)) == expected
 
 
-@pytest.mark.parametrize('params,section_data,expected_state,expected_metric', [
-    (
-        {
-            "oldest_levels": (5000, 10000),
-        },
-        {
-            "snaptimes": [96_000],
-        },
-        State.OK,
-        4000.0,
-    ),
-    (
-        {
-            "oldest_levels": (5000, 10000),
-        },
-        {
-            "snaptimes": [96_000, 94_000],
-        },
-        State.WARN,
-        6000.0,
-    ),
-    (
-        {
-            "oldest_levels": (5000, 10000),
-        },
-        {
-            "snaptimes": [96_000, 94_000, 89_000],
-        },
-        State.CRIT,
-        11000.0,
-    ),
-])
-def test_check_proxmox_ve_snapshot_age_with_snapshot(params, section_data, expected_state,
-                                                     expected_metric):
+@pytest.mark.parametrize(
+    "params,section_data,expected_state,expected_metric",
+    [
+        (
+            {
+                "oldest_levels": (5000, 10000),
+            },
+            {
+                "snaptimes": [96_000],
+            },
+            State.OK,
+            4000.0,
+        ),
+        (
+            {
+                "oldest_levels": (5000, 10000),
+            },
+            {
+                "snaptimes": [96_000, 94_000],
+            },
+            State.WARN,
+            6000.0,
+        ),
+        (
+            {
+                "oldest_levels": (5000, 10000),
+            },
+            {
+                "snaptimes": [96_000, 94_000, 89_000],
+            },
+            State.CRIT,
+            11000.0,
+        ),
+    ],
+)
+def test_check_proxmox_ve_snapshot_age_with_snapshot(
+    params, section_data, expected_state, expected_metric
+):
     with on_time(100_000, "CET"):
         result, metric = check_proxmox_ve_snapshot_age(params, section_data)
         assert isinstance(result, Result) and isinstance(metric, Metric)

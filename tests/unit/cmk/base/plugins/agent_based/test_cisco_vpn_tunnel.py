@@ -150,16 +150,16 @@ def test_discover_cisco_vpn_tunnel() -> None:
     assert list(discover_cisco_vpn_tunnel(_SECTION)) == [
         Service(item="110.173.49.157"),
         Service(item="211.167.210.107"),
-        Service(item='176.210.155.217'),
-        Service(item='62.111.62.165'),
-        Service(item='158.244.78.71'),
-        Service(item='107.36.151.171'),
-        Service(item='13.232.54.46'),
-        Service(item='158.8.11.214'),
-        Service(item='237.39.169.243'),
-        Service(item='99.155.108.155'),
-        Service(item='88.40.117.192'),
-        Service(item='211.26.203.53'),
+        Service(item="176.210.155.217"),
+        Service(item="62.111.62.165"),
+        Service(item="158.244.78.71"),
+        Service(item="107.36.151.171"),
+        Service(item="13.232.54.46"),
+        Service(item="158.8.11.214"),
+        Service(item="237.39.169.243"),
+        Service(item="99.155.108.155"),
+        Service(item="88.40.117.192"),
+        Service(item="211.26.203.53"),
     ]
 
 
@@ -189,10 +189,10 @@ def fixture_time_and_value_store(monkeypatch: MonkeyPatch) -> None:
             "110.173.49.157",
             {},
             [
-                Result(state=State.OK, summary='Phase 1: in: 463 kBit/s, out: 485 kBit/s'),
-                Result(state=State.OK, summary='Phase 2: in: 34.2 GBit/s, out: 4.42 GBit/s'),
-                Metric('if_in_octets', 4275729150.0),
-                Metric('if_out_octets', 552130799.0),
+                Result(state=State.OK, summary="Phase 1: in: 463 kBit/s, out: 485 kBit/s"),
+                Result(state=State.OK, summary="Phase 2: in: 34.2 GBit/s, out: 4.42 GBit/s"),
+                Metric("if_in_octets", 4275729150.0),
+                Metric("if_out_octets", 552130799.0),
             ],
             id="standard case",
         ),
@@ -200,10 +200,10 @@ def fixture_time_and_value_store(monkeypatch: MonkeyPatch) -> None:
             "211.167.210.107",
             {},
             [
-                Result(state=State.OK, summary='Phase 1: in: 12.5 kBit/s, out: 12.8 kBit/s'),
-                Result(state=State.OK, summary='Phase 2 missing'),
-                Metric('if_in_octets', 1564.0),
-                Metric('if_out_octets', 1600.0),
+                Result(state=State.OK, summary="Phase 1: in: 12.5 kBit/s, out: 12.8 kBit/s"),
+                Result(state=State.OK, summary="Phase 2 missing"),
+                Metric("if_in_octets", 1564.0),
+                Metric("if_out_octets", 1600.0),
             ],
             id="phase 2 missing",
         ),
@@ -217,11 +217,13 @@ def fixture_time_and_value_store(monkeypatch: MonkeyPatch) -> None:
                 ],
             },
             [
-                Result(state=State.OK,
-                       summary='[herbert] [hansi] Phase 1: in: 463 kBit/s, out: 485 kBit/s'),
-                Result(state=State.OK, summary='Phase 2: in: 34.2 GBit/s, out: 4.42 GBit/s'),
-                Metric('if_in_octets', 4275729150.0),
-                Metric('if_out_octets', 552130799.0),
+                Result(
+                    state=State.OK,
+                    summary="[herbert] [hansi] Phase 1: in: 463 kBit/s, out: 485 kBit/s",
+                ),
+                Result(state=State.OK, summary="Phase 2: in: 34.2 GBit/s, out: 4.42 GBit/s"),
+                Metric("if_in_octets", 4275729150.0),
+                Metric("if_out_octets", 552130799.0),
             ],
             id="with aliases",
         ),
@@ -263,22 +265,31 @@ def test_check_cisco_vpn_tunnel(
     params: CheckParameters,
     expected_result: Sequence[Union[Result, Metric]],
 ) -> None:
-    assert list(check_cisco_vpn_tunnel(
-        item,
-        params,
-        _SECTION,
-    )) == expected_result
+    assert (
+        list(
+            check_cisco_vpn_tunnel(
+                item,
+                params,
+                _SECTION,
+            )
+        )
+        == expected_result
+    )
 
 
 def test_check_cisco_vpn_tunnel_counter_init() -> None:
     with pytest.raises(IgnoreResultsError):
-        list(check_cisco_vpn_tunnel(
+        list(
+            check_cisco_vpn_tunnel(
+                "110.173.49.157",
+                {},
+                _SECTION,
+            )
+        )
+    list(
+        check_cisco_vpn_tunnel(
             "110.173.49.157",
             {},
             _SECTION,
-        ))
-    list(check_cisco_vpn_tunnel(
-        "110.173.49.157",
-        {},
-        _SECTION,
-    ))
+        )
+    )

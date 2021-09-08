@@ -11,28 +11,25 @@ from livestatus import SiteId
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 
 
-@pytest.mark.parametrize("context,result", [
-    pytest.param(
-        {"site": {
-            "site": "sitename"
-        }},
-        [SiteId("sitename")],
-        id="Site enforced",
-    ),
-    pytest.param(
-        {"siteopt": {
-            "site": ""
-        }},
-        None,
-        id="No site selected",
-    ),
-    pytest.param(
-        {"sites": {
-            "sites": "first|second"
-        }},
-        [SiteId("first"), SiteId("second")],
-        id="Multiple sites selected",
-    ),
-])
+@pytest.mark.parametrize(
+    "context,result",
+    [
+        pytest.param(
+            {"site": {"site": "sitename"}},
+            [SiteId("sitename")],
+            id="Site enforced",
+        ),
+        pytest.param(
+            {"siteopt": {"site": ""}},
+            None,
+            id="No site selected",
+        ),
+        pytest.param(
+            {"sites": {"sites": "first|second"}},
+            [SiteId("first"), SiteId("second")],
+            id="Multiple sites selected",
+        ),
+    ],
+)
 def test_get_only_sites_from_context(context, result):
     assert get_only_sites_from_context(context) == result

@@ -34,8 +34,10 @@ def parent_is_HTML(node):
         return isinstance(node.parent.func, astroid.Name) and node.parent.func.name == "HTML"
     if str(node.parent) == "BinOp()" and str(node.parent.parent) == "Call()":
         # Case HTML(_("sth %s usw") % "etc")
-        return isinstance(node.parent.parent.func,
-                          astroid.Name) and node.parent.parent.func.name == "HTML"
+        return (
+            isinstance(node.parent.parent.func, astroid.Name)
+            and node.parent.parent.func.name == "HTML"
+        )
     return False
 
 
@@ -46,8 +48,10 @@ def all_tags_are_unescapable(first):
     escapable = [tag in escapable_tags for tag in tags]
     if not tags:
         return True, []
-    return (all(tag in escapable_tags for tag in tags),
-            [tag for tag, able in zip(tags, escapable) if not able])
+    return (
+        all(tag in escapable_tags for tag in tags),
+        [tag for tag, able in zip(tags, escapable) if not able],
+    )
 
 
 #
@@ -63,27 +67,28 @@ class TranslationBaseChecker(BaseChecker):
 
     __implements__ = (IAstroidChecker,)
     TRANSLATION_FUNCTIONS = {
-        '_',
-        '_l',
-        'gettext',
-        'ngettext',
-        'ngettext_lazy',
-        'npgettext',
-        'npgettext_lazy',
-        'pgettext',
-        'pgettext_lazy',
-        'ugettext',
-        'ugettext_lazy',
-        'ugettext_noop',
-        'ungettext',
-        'ungettext_lazy',
+        "_",
+        "_l",
+        "gettext",
+        "ngettext",
+        "ngettext_lazy",
+        "npgettext",
+        "npgettext_lazy",
+        "pgettext",
+        "pgettext_lazy",
+        "ugettext",
+        "ugettext_lazy",
+        "ugettext_noop",
+        "ungettext",
+        "ungettext_lazy",
     }
 
-    name = 'translation-base-checker'
+    name = "translation-base-checker"
     BASE_ID = 76
-    MESSAGE_ID = 'translation-base'
+    MESSAGE_ID = "translation-base"
     msgs = {
-        'E%d10' % BASE_ID: (
+        "E%d10"
+        % BASE_ID: (
             " %s",
             MESSAGE_ID,
             "YO!",
@@ -130,11 +135,12 @@ class TranslationStringConstantsChecker(TranslationBaseChecker):
 
     """
 
-    name = 'translation-string-checker'
+    name = "translation-string-checker"
     BASE_ID = 77
-    MESSAGE_ID = 'translation-of-non-string'
+    MESSAGE_ID = "translation-of-non-string"
     msgs = {
-        'E%d10' % BASE_ID: (
+        "E%d10"
+        % BASE_ID: (
             "i18n function %s() must be called with a literal string",
             MESSAGE_ID,
             "i18n functions must be called with a literal string",
@@ -165,11 +171,13 @@ class EscapingProtectionChecker(TranslationBaseChecker):
     The message id is `protection-of-html-tags`.
 
     """
+
     name = "escaping-protection-checker"
     BASE_ID = 78
-    MESSAGE_ID = 'protection-of-html-tags'
+    MESSAGE_ID = "protection-of-html-tags"
     msgs = {
-        'E%d10' % BASE_ID: (
+        "E%d10"
+        % BASE_ID: (
             "%s",
             MESSAGE_ID,
             "YO!",
@@ -213,11 +221,13 @@ class EscapingChecker(TranslationBaseChecker):
     The message id is `escaping-of-html-tags`.
 
     """
+
     name = "escaping-checker"
     BASE_ID = 79
-    MESSAGE_ID = 'escaping-of-html-tags'
+    MESSAGE_ID = "escaping-of-html-tags"
     msgs = {
-        'E%d10' % BASE_ID: (
+        "E%d10"
+        % BASE_ID: (
             "%s",
             MESSAGE_ID,
             "YO!",

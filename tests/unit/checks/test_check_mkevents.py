@@ -11,10 +11,9 @@ from tests.testlib import ActiveCheck
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("params,expected_args", [({}, ["$HOSTADDRESS$"]),
-                                                  ({
-                                                      "hostspec": "foobar"
-                                                  }, ["foobar"])])
+@pytest.mark.parametrize(
+    "params,expected_args", [({}, ["$HOSTADDRESS$"]), ({"hostspec": "foobar"}, ["foobar"])]
+)
 def test_check_mkevents_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_mkevents")

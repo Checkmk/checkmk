@@ -70,7 +70,8 @@ def fixture_test_registry(monkeypatch):
 def test_run_executes_plugins(capsys, test_registry, mocker):
     handler_mock = mocker.MagicMock()
     test_registry.register(
-        RenameAction(name="test", title="Test Title", sort_index=0, handler=handler_mock))
+        RenameAction(name="test", title="Test Title", sort_index=0, handler=handler_mock)
+    )
 
     assert main.main(["-v", "old"]) == 0
 

@@ -13,19 +13,25 @@ from cmk.base.check_legacy_includes.mysql import *
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('info,expected_items', [
-    ([
-        ['this is not a header line -> default item: mysql'],
-        ['[[some/other/socket/name]]'],
-        ['some', 'info'],
-        ['[[item/w/o/info]]'],
-    ], ('mysql', 'some/other/socket/name')),
-])
+@pytest.mark.parametrize(
+    "info,expected_items",
+    [
+        (
+            [
+                ["this is not a header line -> default item: mysql"],
+                ["[[some/other/socket/name]]"],
+                ["some", "info"],
+                ["[[item/w/o/info]]"],
+            ],
+            ("mysql", "some/other/socket/name"),
+        ),
+    ],
+)
 def test_mysql_parse_per_item(info, expected_items):
     @mysql_parse_per_item  # type: ignore[name-defined] # pylint: disable=undefined-variable
     def dummy_parse(info):
-        return 'Whoop'
+        return "Whoop"
 
     parsed = dummy_parse(info)
 
-    assert parsed == {key: 'Whoop' for key in expected_items}
+    assert parsed == {key: "Whoop" for key in expected_items}

@@ -28,8 +28,8 @@ def test_load_host_value_store_loads_file(monkeypatch):
     )
 
     with load_host_value_store(
-            "test_load_host_value_store_loads_file",
-            store_changes=False,
+        "test_load_host_value_store_loads_file",
+        store_changes=False,
     ) as mgr:
         with mgr.namespace(service_id):
             assert get_value_store()["loaded_file"]

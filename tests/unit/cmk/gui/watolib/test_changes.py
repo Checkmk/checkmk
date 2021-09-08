@@ -28,19 +28,15 @@ class TestObjectRef:
     def test_serialize(self):
         ty = ObjectRefType.Host
         ident = "node1"
-        assert ObjectRef(ty, ident).serialize() == {'ident': 'node1', 'object_type': 'Host'}
+        assert ObjectRef(ty, ident).serialize() == {"ident": "node1", "object_type": "Host"}
 
     def test_serialization_with_labels(self):
         ty = ObjectRefType.Host
         ident = "node1"
-        assert ObjectRef(ty, ident, {
-            "a": "b"
-        }).serialize() == {
-            'ident': 'node1',
-            'object_type': 'Host',
-            'labels': {
-                'a': 'b'
-            }
+        assert ObjectRef(ty, ident, {"a": "b"}).serialize() == {
+            "ident": "node1",
+            "object_type": "Host",
+            "labels": {"a": "b"},
         }
 
     def test_serialize_represented_as_native_types(self):
@@ -91,8 +87,9 @@ class TestAuditLogStore:
         assert list(store.read()) == [entry, entry]
 
     def test_transport_html(self, store, request_context):
-        entry = AuditLogStore.Entry(int(time.time()), None, "user", "action",
-                                    HTML("Mäss<b>ädsch</b>"), None)
+        entry = AuditLogStore.Entry(
+            int(time.time()), None, "user", "action", HTML("Mäss<b>ädsch</b>"), None
+        )
         store.append(entry)
         assert list(store.read()) == [entry]
 
@@ -120,8 +117,9 @@ class TestAuditLogStore:
             for archive_num in range(n + 1):
                 archive_path = store._path.with_name(store._path.name + time.strftime(".%Y-%m-%d"))
                 if archive_num != 0:
-                    archive_path = archive_path.with_name(archive_path.name + "-%d" %
-                                                          (archive_num + 1))
+                    archive_path = archive_path.with_name(
+                        archive_path.name + "-%d" % (archive_num + 1)
+                    )
 
                 assert archive_path.exists()
 
@@ -134,15 +132,15 @@ class TestSiteChanges:
     @pytest.fixture(name="entry")
     def fixture_entry(self):
         return {
-            'id': 'd60ca3d4-7201-4a89-b66f-2f156192cad2',
-            'action_name': 'create-host',
-            'text': 'Created new host node1.',
-            'object': ObjectRef(ObjectRefType.Host, "node1"),
-            'user_id': 'cmkadmin',
-            'domains': ['check_mk'],
-            'time': 1605461248.786142,
-            'need_sync': True,
-            'need_restart': True,
+            "id": "d60ca3d4-7201-4a89-b66f-2f156192cad2",
+            "action_name": "create-host",
+            "text": "Created new host node1.",
+            "object": ObjectRef(ObjectRefType.Host, "node1"),
+            "user_id": "cmkadmin",
+            "domains": ["check_mk"],
+            "time": 1605461248.786142,
+            "need_sync": True,
+            "need_restart": True,
         }
 
     def test_read_not_existing(self, store):
@@ -174,28 +172,35 @@ class TestSiteChanges:
         store.clear()
         assert list(store.read()) == []
 
-    @pytest.mark.parametrize("old_type,ref_type", [
-        ("CREHost", ObjectRefType.Host),
-        ("CMEHost", ObjectRefType.Host),
-        ("CREFolder", ObjectRefType.Folder),
-        ("CMEFolder", ObjectRefType.Folder),
-    ])
+    @pytest.mark.parametrize(
+        "old_type,ref_type",
+        [
+            ("CREHost", ObjectRefType.Host),
+            ("CMEHost", ObjectRefType.Host),
+            ("CREFolder", ObjectRefType.Folder),
+            ("CMEFolder", ObjectRefType.Folder),
+        ],
+    )
     def test_read_pre_20_host_change(self, store, old_type, ref_type):
         with store._path.open("wb") as f:
             f.write(
-                repr({
-                    'id': 'd60ca3d4-7201-4a89-b66f-2f156192cad2',
-                    'action_name': 'create-host',
-                    'text': 'Created new host node1.',
-                    'object': (old_type, 'node1'),
-                    'user_id': 'cmkadmin',
-                    'domains': ['check_mk'],
-                    'time': 1605461248.786142,
-                    'need_sync': True,
-                    'need_restart': True,
-                }).encode("utf-8") + b"\0")
+                repr(
+                    {
+                        "id": "d60ca3d4-7201-4a89-b66f-2f156192cad2",
+                        "action_name": "create-host",
+                        "text": "Created new host node1.",
+                        "object": (old_type, "node1"),
+                        "user_id": "cmkadmin",
+                        "domains": ["check_mk"],
+                        "time": 1605461248.786142,
+                        "need_sync": True,
+                        "need_restart": True,
+                    }
+                ).encode("utf-8")
+                + b"\0"
+            )
 
-        assert store.read()[0]["object"] == ObjectRef(ref_type, 'node1')
+        assert store.read()[0]["object"] == ObjectRef(ref_type, "node1")
 
 
 def test_log_audit_with_object_diff(request_context):
@@ -207,7 +212,7 @@ def test_log_audit_with_object_diff(request_context):
         "b": "c",
     }
 
-    with on_time('2018-04-15 16:50', 'CET'):
+    with on_time("2018-04-15 16:50", "CET"):
         log_audit(
             object_ref=None,
             action="bla",
@@ -221,19 +226,19 @@ def test_log_audit_with_object_diff(request_context):
         AuditLogStore.Entry(
             time=1523811000,
             object_ref=None,
-            user_id='calvin',
-            action='bla',
-            text='Message',
+            user_id="calvin",
+            action="bla",
+            text="Message",
             diff_text='Attribute "a" with value "b" removed.',
         ),
     ]
 
 
 def test_log_audit_with_html_message(request_context):
-    with on_time('2018-04-15 16:50', 'CET'):
+    with on_time("2018-04-15 16:50", "CET"):
         log_audit(
             object_ref=None,
-            user_id=UserId('calvin'),
+            user_id=UserId("calvin"),
             action="bla",
             message=HTML("Message <b>bla</b>"),
         )
@@ -243,8 +248,8 @@ def test_log_audit_with_html_message(request_context):
         AuditLogStore.Entry(
             time=1523811000,
             object_ref=None,
-            user_id='calvin',
-            action='bla',
+            user_id="calvin",
+            action="bla",
             text=HTML("Message <b>bla</b>"),
             diff_text=None,
         ),

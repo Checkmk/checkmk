@@ -11,12 +11,13 @@ from tests.testlib import ActiveCheck
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("params,expected_args", [
-    ({}, ["-H", "$HOSTADDRESS$"]),
-    ({
-        "port": 21
-    }, ["-H", "$HOSTADDRESS$", "-p", 21]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        ({}, ["-H", "$HOSTADDRESS$"]),
+        ({"port": 21}, ["-H", "$HOSTADDRESS$", "-p", 21]),
+    ],
+)
 def test_check_ftp_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_ftp")

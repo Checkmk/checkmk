@@ -28,8 +28,11 @@ SEP_LINUX = ":"
 SEP_WINDOWS = "|"
 VALID_CONFIG_WITHOUT_INSTANCE = ["# A comment", "not a comment but trash", "", "", "DBUSER=user_xy"]
 VALID_CONFIG_WITH_INSTANCES = [
-    "# A comment", "", "not a comment but trash", "DBUSER=user_yz",
-    "INSTANCE=/home/postgres/db1.env{sep}USER_NAME{sep}/PATH/TO/.pgpass"
+    "# A comment",
+    "",
+    "not a comment but trash",
+    "DBUSER=user_yz",
+    "INSTANCE=/home/postgres/db1.env{sep}USER_NAME{sep}/PATH/TO/.pgpass",
 ]
 PG_PASSFILE = ["myhost:myport:mydb:myusr:mypw"]
 
@@ -54,23 +57,22 @@ def fake_get_postgres_user_linux():
 
 @pytest.fixture()
 def is_linux(monkeypatch, mk_postgres):
-    monkeypatch.setattr(mk_postgres, 'IS_WINDOWS', False)
-    monkeypatch.setattr(mk_postgres, 'IS_LINUX', True)
+    monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
+    monkeypatch.setattr(mk_postgres, "IS_LINUX", True)
     monkeypatch.setattr(mk_postgres, "get_postgres_user_linux", fake_get_postgres_user_linux)
     monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])
 
 
 @pytest.fixture()
 def is_windows(monkeypatch, mk_postgres):
-    monkeypatch.setattr(mk_postgres, 'IS_WINDOWS', True)
-    monkeypatch.setattr(mk_postgres, 'IS_LINUX', False)
+    monkeypatch.setattr(mk_postgres, "IS_WINDOWS", True)
+    monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
     monkeypatch.setattr(mk_postgres, "open_env_file", lambda *_args: ["export PGPORT=5432"])
     monkeypatch.setattr(
         mk_postgres.PostgresWin,
         "_call_wmic_logicaldisk",
         staticmethod(
-            lambda:
-            "DeviceID  \r\r\nC:        \r\r\nD:        \r\r\nH:        \r\r\nI:        \r\r\nR:        \r\r\n\r\r\n"
+            lambda: "DeviceID  \r\r\nC:        \r\r\nD:        \r\r\nH:        \r\r\nI:        \r\r\nR:        \r\r\n\r\r\n"
         ),
     )
 
@@ -105,12 +107,15 @@ def test_postgres_windows_config_with_instance(mk_postgres, monkeypatch, is_wind
     assert instances[0]["pg_passfile"] == "/PATH/TO/.pgpass"
 
 
-@patch('subprocess.Popen')
+@patch("subprocess.Popen")
 def test_postgres_factory_linux_without_instance(mock_Popen, mk_postgres, is_linux):
     process_mock = Mock()
     attrs = {
-        'communicate.side_effect': [('/usr/lib/postgres/psql', None), ('postgres\ndb1', None),
-                                    ('12.3', None)]
+        "communicate.side_effect": [
+            ("/usr/lib/postgres/psql", None),
+            ("postgres\ndb1", None),
+            ("12.3", None),
+        ]
     }
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
@@ -132,23 +137,23 @@ def test_postgres_factory_linux_without_instance(mock_Popen, mk_postgres, is_lin
     assert myPostgresOnLinux.pg_port == "5432"
 
 
-@patch('os.path.isfile', return_value=True)
-@patch('subprocess.Popen')
+@patch("os.path.isfile", return_value=True)
+@patch("subprocess.Popen")
 def test_postgres_factory_win_without_instance(mock_Popen, mock_isfile, mk_postgres, is_windows):
     process_mock = Mock()
-    attrs = {'communicate.side_effect': [(b'postgres\ndb1', b'ok'), (b'12.1', b'ok')]}
+    attrs = {"communicate.side_effect": [(b"postgres\ndb1", b"ok"), (b"12.1", b"ok")]}
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
     instance = {
-        'pg_port': '5432',
-        'pg_database': 'postgres',
-        'name': 'data',
-        'pg_user': 'myuser',
-        'pg_passfile': '/home/.pgpass',
+        "pg_port": "5432",
+        "pg_database": "postgres",
+        "name": "data",
+        "pg_user": "myuser",
+        "pg_passfile": "/home/.pgpass",
     }
     myPostgresOnWin = mk_postgres.postgres_factory("postgres", instance)
 
-    mock_isfile.assert_called_with('C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe')
+    mock_isfile.assert_called_with("C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe")
     assert isinstance(myPostgresOnWin, mk_postgres.PostgresWin)
     assert myPostgresOnWin.psql == "C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe"
     assert myPostgresOnWin.bin_path == "C:\\Program Files\\PostgreSQL\\12\\bin"
@@ -158,21 +163,21 @@ def test_postgres_factory_win_without_instance(mock_Popen, mock_isfile, mk_postg
     assert myPostgresOnWin.pg_port == "5432"
 
 
-@patch('subprocess.Popen')
+@patch("subprocess.Popen")
 def test_postgres_factory_linux_with_instance(mock_Popen, monkeypatch, mk_postgres, is_linux):
     instance = {
-        'pg_database': 'mydb',
-        'pg_port': '1234',
-        'name': 'mydb',
-        'pg_user': 'myuser',
-        'pg_passfile': '/home/.pgpass',
+        "pg_database": "mydb",
+        "pg_port": "1234",
+        "name": "mydb",
+        "pg_user": "myuser",
+        "pg_passfile": "/home/.pgpass",
     }
     process_mock = Mock()
     attrs = {
-        'communicate.side_effect': [
-            ('/usr/lib/postgres/psql', None),
-            ('postgres\ndb1', None),
-            ('12.3.6', None),
+        "communicate.side_effect": [
+            ("/usr/lib/postgres/psql", None),
+            ("postgres\ndb1", None),
+            ("12.3.6", None),
         ]
     }
     process_mock.configure_mock(**attrs)
@@ -191,8 +196,8 @@ def test_postgres_factory_linux_with_instance(mock_Popen, monkeypatch, mk_postgr
     assert myPostgresOnLinux.name == "mydb"
 
 
-@patch('os.path.isfile', return_value=True)
-@patch('subprocess.Popen')
+@patch("os.path.isfile", return_value=True)
+@patch("subprocess.Popen")
 def test_postgres_factory_windows_with_instance(
     mock_Popen,
     mock_isfile,
@@ -201,20 +206,20 @@ def test_postgres_factory_windows_with_instance(
     is_windows,
 ):
     instance = {
-        'pg_database': 'mydb',
-        'pg_port': '1234',
-        'name': 'mydb',
-        'pg_user': 'myuser',
-        'pg_passfile': 'c:\\User\\.pgpass',
+        "pg_database": "mydb",
+        "pg_port": "1234",
+        "name": "mydb",
+        "pg_user": "myuser",
+        "pg_passfile": "c:\\User\\.pgpass",
     }
     process_mock = Mock()
-    attrs = {'communicate.side_effect': [(b'postgres\ndb1', b'ok'), (b'12.1.5', b'ok')]}
+    attrs = {"communicate.side_effect": [(b"postgres\ndb1", b"ok"), (b"12.1.5", b"ok")]}
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
 
     myPostgresOnWin = mk_postgres.postgres_factory("postgres", instance)
 
-    mock_isfile.assert_called_with('C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe')
+    mock_isfile.assert_called_with("C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe")
     assert isinstance(myPostgresOnWin, mk_postgres.PostgresWin)
     assert myPostgresOnWin.psql == "C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe"
     assert myPostgresOnWin.bin_path == "C:\\Program Files\\PostgreSQL\\12\\bin"

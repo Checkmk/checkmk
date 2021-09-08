@@ -33,28 +33,28 @@ def debug_logging():
 
 def test_registered_background_jobs():
     expected_jobs = [
-        'ActivateChangesSchedulerBackgroundJob',
-        'ParentScanBackgroundJob',
-        'DummyBackgroundJob',
-        'RenameHostsBackgroundJob',
-        'RenameHostBackgroundJob',
-        'FetchAgentOutputBackgroundJob',
-        'BulkDiscoveryBackgroundJob',
-        'UserSyncBackgroundJob',
-        'UserProfileCleanupBackgroundJob',
-        'ServiceDiscoveryBackgroundJob',
-        'ActivationCleanupBackgroundJob',
-        'CheckmkAutomationBackgroundJob',
-        'DiagnosticsDumpBackgroundJob',
-        'SearchIndexBackgroundJob',
-        'DiscoveredHostLabelSyncJob',
+        "ActivateChangesSchedulerBackgroundJob",
+        "ParentScanBackgroundJob",
+        "DummyBackgroundJob",
+        "RenameHostsBackgroundJob",
+        "RenameHostBackgroundJob",
+        "FetchAgentOutputBackgroundJob",
+        "BulkDiscoveryBackgroundJob",
+        "UserSyncBackgroundJob",
+        "UserProfileCleanupBackgroundJob",
+        "ServiceDiscoveryBackgroundJob",
+        "ActivationCleanupBackgroundJob",
+        "CheckmkAutomationBackgroundJob",
+        "DiagnosticsDumpBackgroundJob",
+        "SearchIndexBackgroundJob",
+        "DiscoveredHostLabelSyncJob",
     ]
 
     if not cmk_version.is_raw_edition():
         expected_jobs += [
-            'BakeAgentsBackgroundJob',
-            'SignAgentsBackgroundJob',
-            'ReportingBackgroundJob',
+            "BakeAgentsBackgroundJob",
+            "SignAgentsBackgroundJob",
+            "ReportingBackgroundJob",
         ]
 
     assert sorted(gui_background_job.job_registry.keys()) == sorted(expected_jobs)
@@ -89,7 +89,7 @@ class DummyBackgroundJob(gui_background_job.GUIBackgroundJob):
 
     @classmethod
     def gui_title(cls):
-        return u"Dummy Job"
+        return "Dummy Job"
 
     def __init__(self):
         kwargs = {}
@@ -129,10 +129,11 @@ def test_start_job(request_context):
     job.finish_hello_event.set()
 
     testlib.wait_until(
-        lambda: job.get_status()["state"] not in
-        [background_job.JobStatusStates.INITIALIZED, background_job.JobStatusStates.RUNNING],
+        lambda: job.get_status()["state"]
+        not in [background_job.JobStatusStates.INITIALIZED, background_job.JobStatusStates.RUNNING],
         timeout=5,
-        interval=0.1)
+        interval=0.1,
+    )
 
     status = job.get_status()
     assert status["state"] == background_job.JobStatusStates.FINISHED
@@ -147,9 +148,11 @@ def test_stop_job(request_context):
     job.set_function(job.execute_endless)
     job.start()
 
-    testlib.wait_until(lambda: "Hanging loop" in job.get_status()["loginfo"]["JobProgressUpdate"],
-                       timeout=5,
-                       interval=0.1)
+    testlib.wait_until(
+        lambda: "Hanging loop" in job.get_status()["loginfo"]["JobProgressUpdate"],
+        timeout=5,
+        interval=0.1,
+    )
 
     status = job.get_status()
     assert status["state"] == background_job.JobStatusStates.RUNNING

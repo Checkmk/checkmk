@@ -12,8 +12,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
 from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
-DATA = [[
-    '''
+DATA = [
+    [
+        """
     {
         "test_alert_group_1": [{
             "name": "test_rule_1",
@@ -43,35 +44,37 @@ DATA = [[
             "message": "testmessage"
         }]
     }
-    '''
-]]
+    """
+    ]
+]
 
-alternative_discovery_params = alertmanager.DiscoveryParams(group_services=(
-    False,
-    alertmanager.GroupServices(),
-))
+alternative_discovery_params = alertmanager.DiscoveryParams(
+    group_services=(
+        False,
+        alertmanager.GroupServices(),
+    )
+)
 alternative_check_params = alertmanager.CheckParams()
-custom_remapping_check_params = alertmanager.CheckParams(alert_remapping=[
-    alertmanager.AlertRemapping(
-        rule_names=["foo"],
-        map={
-            'inactive': 0,
-            'pending': 2,
-            'firing': 1,
-            'none': 1,
-            'n/a': 3
-        },
-    ),
-],)
+custom_remapping_check_params = alertmanager.CheckParams(
+    alert_remapping=[
+        alertmanager.AlertRemapping(
+            rule_names=["foo"],
+            map={"inactive": 0, "pending": 2, "firing": 1, "none": 1, "n/a": 3},
+        ),
+    ],
+)
 
 
-@pytest.mark.parametrize('alertmanager_rule_state, params, status', [
-    (alertmanager.RuleState.INACTIVE, custom_remapping_check_params, state.OK),
-    (alertmanager.RuleState.PENDING, custom_remapping_check_params, state.CRIT),
-    (alertmanager.RuleState.FIRING, custom_remapping_check_params, state.WARN),
-    (alertmanager.RuleState.NONE, custom_remapping_check_params, state.WARN),
-    (alertmanager.RuleState.NA, custom_remapping_check_params, state.UNKNOWN),
-])
+@pytest.mark.parametrize(
+    "alertmanager_rule_state, params, status",
+    [
+        (alertmanager.RuleState.INACTIVE, custom_remapping_check_params, state.OK),
+        (alertmanager.RuleState.PENDING, custom_remapping_check_params, state.CRIT),
+        (alertmanager.RuleState.FIRING, custom_remapping_check_params, state.WARN),
+        (alertmanager.RuleState.NONE, custom_remapping_check_params, state.WARN),
+        (alertmanager.RuleState.NA, custom_remapping_check_params, state.UNKNOWN),
+    ],
+)
 def test_alertmanager_get_rule_state_remapping(
     alertmanager_rule_state: alertmanager.RuleState,
     params: alertmanager.CheckParams,
@@ -97,18 +100,29 @@ def test_alertmanager_get_rule_state_remapping(
 #   '----------------------------------------------------------------------'
 
 
-@pytest.mark.parametrize('params, data, result', [
-    (alertmanager.default_discovery_parameters, DATA, [
-        Service(item='foo'),
-    ]),
-    (alternative_discovery_params, DATA, [
-        Service(item='test_rule_1'),
-        Service(item='test_rule_2'),
-        Service(item='test_rule_3'),
-        Service(item='Watchdog'),
-        Service(item='foo'),
-    ]),
-])
+@pytest.mark.parametrize(
+    "params, data, result",
+    [
+        (
+            alertmanager.default_discovery_parameters,
+            DATA,
+            [
+                Service(item="foo"),
+            ],
+        ),
+        (
+            alternative_discovery_params,
+            DATA,
+            [
+                Service(item="test_rule_1"),
+                Service(item="test_rule_2"),
+                Service(item="test_rule_3"),
+                Service(item="Watchdog"),
+                Service(item="foo"),
+            ],
+        ),
+    ],
+)
 def test_alertmanager_discover_rules(
     params: alertmanager.DiscoveryParams,
     data: type_defs.StringTable,
@@ -119,17 +133,29 @@ def test_alertmanager_discover_rules(
 
 
 @pytest.mark.parametrize(
-    'item, params, data, result',
-    [("foo", alertmanager.default_check_parameters, DATA, [
-        Result(state=state.OK, summary='Severity: info'),
-        Result(state=state.OK, summary='Group name: test_alert_group_2'),
-        Result(state=state.CRIT, summary='Active alert', details='testmessage'),
-    ]),
-     ("Watchdog", alternative_check_params, DATA, [
-         Result(state=state.OK, summary='Severity: critical'),
-         Result(state=state.OK, summary='Group name: test_alert_group_1'),
-         Result(state=state.CRIT, summary='Active alert', details='fööbär'),
-     ])],
+    "item, params, data, result",
+    [
+        (
+            "foo",
+            alertmanager.default_check_parameters,
+            DATA,
+            [
+                Result(state=state.OK, summary="Severity: info"),
+                Result(state=state.OK, summary="Group name: test_alert_group_2"),
+                Result(state=state.CRIT, summary="Active alert", details="testmessage"),
+            ],
+        ),
+        (
+            "Watchdog",
+            alternative_check_params,
+            DATA,
+            [
+                Result(state=state.OK, summary="Severity: critical"),
+                Result(state=state.OK, summary="Group name: test_alert_group_1"),
+                Result(state=state.CRIT, summary="Active alert", details="fööbär"),
+            ],
+        ),
+    ],
 )
 def test_alertmanager_check_rules(
     item: str,
@@ -152,12 +178,19 @@ def test_alertmanager_check_rules(
 #   '----------------------------------------------------------------------'
 
 
-@pytest.mark.parametrize('params, data, result', [
-    (alertmanager.default_discovery_parameters, DATA, [
-        Service(item='test_alert_group_1'),
-    ]),
-    (alternative_discovery_params, DATA, []),
-])
+@pytest.mark.parametrize(
+    "params, data, result",
+    [
+        (
+            alertmanager.default_discovery_parameters,
+            DATA,
+            [
+                Service(item="test_alert_group_1"),
+            ],
+        ),
+        (alternative_discovery_params, DATA, []),
+    ],
+)
 def test_alertmanager_discover_groups(
     params: alertmanager.DiscoveryParams,
     data: type_defs.StringTable,
@@ -168,12 +201,22 @@ def test_alertmanager_discover_groups(
 
 
 @pytest.mark.parametrize(
-    'item, params, data, result',
-    [("test_alert_group_1", alertmanager.default_check_parameters, DATA, [
-        Result(state=state.OK, summary='Number of rules: 4'),
-        Result(state=state.CRIT, summary='Active alert: test_rule_3',
-               details="test_rule_3: foobar"),
-    ])],
+    "item, params, data, result",
+    [
+        (
+            "test_alert_group_1",
+            alertmanager.default_check_parameters,
+            DATA,
+            [
+                Result(state=state.OK, summary="Number of rules: 4"),
+                Result(
+                    state=state.CRIT,
+                    summary="Active alert: test_rule_3",
+                    details="test_rule_3: foobar",
+                ),
+            ],
+        )
+    ],
 )
 def test_alertmanager_check_groups(
     item: str,
@@ -196,12 +239,19 @@ def test_alertmanager_check_groups(
 #   '----------------------------------------------------------------------'
 
 
-@pytest.mark.parametrize('params, data, result', [
-    (alertmanager.default_discovery_parameters, DATA, [
-        Service(),
-    ]),
-    (alternative_discovery_params, DATA, []),
-])
+@pytest.mark.parametrize(
+    "params, data, result",
+    [
+        (
+            alertmanager.default_discovery_parameters,
+            DATA,
+            [
+                Service(),
+            ],
+        ),
+        (alternative_discovery_params, DATA, []),
+    ],
+)
 def test_alertmanager_discover_summary(
     params: alertmanager.DiscoveryParams,
     data: type_defs.StringTable,
@@ -212,13 +262,22 @@ def test_alertmanager_discover_summary(
 
 
 @pytest.mark.parametrize(
-    'params, data, result',
-    [(alertmanager.default_check_parameters, DATA, [
-        Result(state=state.OK, summary='Number of rules: 5'),
-        Result(state=state.CRIT, summary='Active alert: test_rule_3',
-               details="test_rule_3: foobar"),
-        Result(state=state.CRIT, summary='Active alert: foo', details="foo: testmessage"),
-    ])],
+    "params, data, result",
+    [
+        (
+            alertmanager.default_check_parameters,
+            DATA,
+            [
+                Result(state=state.OK, summary="Number of rules: 5"),
+                Result(
+                    state=state.CRIT,
+                    summary="Active alert: test_rule_3",
+                    details="test_rule_3: foobar",
+                ),
+                Result(state=state.CRIT, summary="Active alert: foo", details="foo: testmessage"),
+            ],
+        )
+    ],
 )
 def test_alertmanager_check_summary(
     params: alertmanager.CheckParams,

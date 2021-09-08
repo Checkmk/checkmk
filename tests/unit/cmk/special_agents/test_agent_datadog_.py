@@ -18,33 +18,35 @@ from cmk.special_agents.agent_datadog import (
 
 
 def test_parse_arguments() -> None:
-    parse_arguments([
-        'testhost',
-        '12345',
-        'powerg',
-        'api.datadoghq.eu',
-        '--monitor_tags',
-        't1',
-        't2',
-        '--monitor_monitor_tags',
-        'mt1',
-        'mt2',
-        '--event_tags',
-        't3',
-        't4',
-        '--event_tags_show',
-        '.*',
-        '--event_syslog_facility',
-        '1',
-        '--event_syslog_priority',
-        '1',
-        '--event_service_level',
-        '0',
-        '--event_add_text',
-        '--sections',
-        'monitors',
-        'events',
-    ])
+    parse_arguments(
+        [
+            "testhost",
+            "12345",
+            "powerg",
+            "api.datadoghq.eu",
+            "--monitor_tags",
+            "t1",
+            "t2",
+            "--monitor_monitor_tags",
+            "mt1",
+            "mt2",
+            "--event_tags",
+            "t3",
+            "t4",
+            "--event_tags_show",
+            ".*",
+            "--event_syslog_facility",
+            "1",
+            "--event_syslog_priority",
+            "1",
+            "--event_service_level",
+            "0",
+            "--event_add_text",
+            "--sections",
+            "monitors",
+            "events",
+        ]
+    )
 
 
 @pytest.fixture(name="datadog_api")
@@ -65,13 +67,13 @@ class TestMonitorsQuerier:
         # note: this data is of course incomplete, but sufficient for this test
         monitors_data = [
             {
-                'name': 'monitor1',
+                "name": "monitor1",
             },
             {
-                'name': 'monitor2',
+                "name": "monitor2",
             },
             {
-                'name': 'monitor3',
+                "name": "monitor3",
             },
         ]
 
@@ -88,10 +90,15 @@ class TestMonitorsQuerier:
             patch_get_request_json_decoded,
         )
 
-        assert list(MonitorsQuerier(datadog_api).query_monitors(
-            [],
-            [],
-        )) == monitors_data
+        assert (
+            list(
+                MonitorsQuerier(datadog_api).query_monitors(
+                    [],
+                    [],
+                )
+            )
+            == monitors_data
+        )
 
 
 class TestEventsQuerier:
@@ -167,13 +174,13 @@ class TestEventsQuerier:
         # note: this data is of course incomplete, but sufficient for this test
         events_data = [
             {
-                'title': 'event1',
+                "title": "event1",
             },
             {
-                'title': 'event2',
+                "title": "event2",
             },
             {
-                'title': 'event3',
+                "title": "event3",
             },
         ]
 
@@ -195,35 +202,38 @@ class TestEventsQuerier:
 
 
 def test_to_syslog_message() -> None:
-    assert repr(
-        _to_syslog_message(
-            {
-                'date_happened': 1618216122,
-                'alert_type': 'info',
-                'is_aggregate': False,
-                'title': 'something bad happened',
-                'url': '/event/event?id=5938350476538858876',
-                'text': 'Abandon ship\n, abandon ship!',
-                'tags': [
-                    'ship:enterprise',
-                    'location:alpha_quadrant',
-                    'priority_one',
+    assert (
+        repr(
+            _to_syslog_message(
+                {
+                    "date_happened": 1618216122,
+                    "alert_type": "info",
+                    "is_aggregate": False,
+                    "title": "something bad happened",
+                    "url": "/event/event?id=5938350476538858876",
+                    "text": "Abandon ship\n, abandon ship!",
+                    "tags": [
+                        "ship:enterprise",
+                        "location:alpha_quadrant",
+                        "priority_one",
+                    ],
+                    "comments": [],
+                    "device_name": None,
+                    "priority": "normal",
+                    "source": "main bridge",
+                    "host": "starbase 3",
+                    "resource": "/api/v1/events/5938350476538858876",
+                    "id": 5938350476538858876,
+                },
+                [
+                    "ship:.*",
+                    "^priority_one$",
                 ],
-                'comments': [],
-                'device_name': None,
-                'priority': 'normal',
-                'source': 'main bridge',
-                'host': 'starbase 3',
-                'resource': '/api/v1/events/5938350476538858876',
-                'id': 5938350476538858876,
-            },
-            [
-                "ship:.*",
-                "^priority_one$",
-            ],
-            1,
-            1,
-            0,
-            True,
+                1,
+                1,
+                0,
+                True,
+            )
         )
-    ) == '<9>1 2021-04-12T08:28:42+00:00 - - - - [Checkmk@18662 host="starbase 3" application="main bridge"] something bad happened, Tags: ship:enterprise, priority_one, Text: Abandon ship ~ , abandon ship!'
+        == '<9>1 2021-04-12T08:28:42+00:00 - - - - [Checkmk@18662 host="starbase 3" application="main bridge"] something bad happened, Tags: ship:enterprise, priority_one, Text: Abandon ship ~ , abandon ship!'
+    )

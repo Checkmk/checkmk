@@ -14,369 +14,392 @@ from cmk.base.plugins.agent_based.netapp_api_snapvault import (
 )
 
 
-@pytest.mark.parametrize("string_table, expected_parsed", [
-    (
-        [
+@pytest.mark.parametrize(
+    "string_table, expected_parsed",
+    [
+        (
             [
-                u'snapvault my_snap',
-                u'state snapmirrored',
-                u'source-system c1',
-                u'destination-location d3:my_snap',
-                u'policy ABCDefault',
-                u'lag-time 91486',
-                u'destination-system a2-b0-02',
-                u'status idle',
+                [
+                    "snapvault my_snap",
+                    "state snapmirrored",
+                    "source-system c1",
+                    "destination-location d3:my_snap",
+                    "policy ABCDefault",
+                    "lag-time 91486",
+                    "destination-system a2-b0-02",
+                    "status idle",
+                ],
+                [
+                    "snapvault my_snap",
+                    "state snapmirrored",
+                    "source-system i1",
+                    "destination-location d1:my_snap",
+                    "policy Default",
+                    "lag-time 82486",
+                    "destination-system a2-b0-02",
+                    "status idle",
+                ],
+                [
+                    "snapvault my_snap",
+                    "state snapmirrored",
+                    "source-system t1",
+                    "destination-location d2:my_snap",
+                    "policy Default",
+                    "lag-time 73487",
+                    "destination-system a2-b0-02",
+                    "status idle",
+                ],
             ],
+            {
+                "my_snap": {
+                    "snapvault": "my_snap",
+                    "state": "snapmirrored",
+                    "source-system": "t1",
+                    "destination-location": "d2:my_snap",
+                    "policy": "Default",
+                    "lag-time": "73487",
+                    "destination-system": "a2-b0-02",
+                    "status": "idle",
+                },
+                "d3:my_snap": {
+                    "snapvault": "my_snap",
+                    "state": "snapmirrored",
+                    "source-system": "c1",
+                    "destination-location": "d3:my_snap",
+                    "policy": "ABCDefault",
+                    "lag-time": "91486",
+                    "destination-system": "a2-b0-02",
+                    "status": "idle",
+                },
+                "d1:my_snap": {
+                    "snapvault": "my_snap",
+                    "state": "snapmirrored",
+                    "source-system": "i1",
+                    "destination-location": "d1:my_snap",
+                    "policy": "Default",
+                    "lag-time": "82486",
+                    "destination-system": "a2-b0-02",
+                    "status": "idle",
+                },
+                "d2:my_snap": {
+                    "snapvault": "my_snap",
+                    "state": "snapmirrored",
+                    "source-system": "t1",
+                    "destination-location": "d2:my_snap",
+                    "policy": "Default",
+                    "lag-time": "73487",
+                    "destination-system": "a2-b0-02",
+                    "status": "idle",
+                },
+            },
+        ),
+        (
             [
-                u'snapvault my_snap',
-                u'state snapmirrored',
-                u'source-system i1',
-                u'destination-location d1:my_snap',
-                u'policy Default',
-                u'lag-time 82486',
-                u'destination-system a2-b0-02',
-                u'status idle',
+                [
+                    "snapvault /vol/ipb_user/",
+                    "status idle state snapvaulted",
+                    "lag-time 97007",
+                    "source-system 172.31.12.15",
+                ],
             ],
-            [
-                u'snapvault my_snap',
-                u'state snapmirrored',
-                u'source-system t1',
-                u'destination-location d2:my_snap',
-                u'policy Default',
-                u'lag-time 73487',
-                u'destination-system a2-b0-02',
-                u'status idle',
-            ],
-        ],
-        {
-            'my_snap': {
-                'snapvault': 'my_snap',
-                'state': 'snapmirrored',
-                'source-system': 't1',
-                'destination-location': 'd2:my_snap',
-                'policy': 'Default',
-                'lag-time': '73487',
-                'destination-system': 'a2-b0-02',
-                'status': 'idle',
+            {
+                "/vol/ipb_user/": {
+                    "snapvault": "/vol/ipb_user/",
+                    "status": "idle state snapvaulted",
+                    "lag-time": "97007",
+                    "source-system": "172.31.12.15",
+                },
             },
-            'd3:my_snap': {
-                'snapvault': 'my_snap',
-                'state': 'snapmirrored',
-                'source-system': 'c1',
-                'destination-location': 'd3:my_snap',
-                'policy': 'ABCDefault',
-                'lag-time': '91486',
-                'destination-system': 'a2-b0-02',
-                'status': 'idle',
-            },
-            'd1:my_snap': {
-                'snapvault': 'my_snap',
-                'state': 'snapmirrored',
-                'source-system': 'i1',
-                'destination-location': 'd1:my_snap',
-                'policy': 'Default',
-                'lag-time': '82486',
-                'destination-system': 'a2-b0-02',
-                'status': 'idle',
-            },
-            'd2:my_snap': {
-                'snapvault': 'my_snap',
-                'state': 'snapmirrored',
-                'source-system': 't1',
-                'destination-location': 'd2:my_snap',
-                'policy': 'Default',
-                'lag-time': '73487',
-                'destination-system': 'a2-b0-02',
-                'status': 'idle',
-            }
-        },
-    ),
-    (
-        [
-            [
-                'snapvault /vol/ipb_user/', 'status idle state snapvaulted', 'lag-time 97007',
-                'source-system 172.31.12.15'
-            ],
-        ],
-        {
-            '/vol/ipb_user/': {
-                'snapvault': '/vol/ipb_user/',
-                'status': 'idle state snapvaulted',
-                'lag-time': '97007',
-                'source-system': '172.31.12.15',
-            },
-        },
-    ),
-])
+        ),
+    ],
+)
 def test_parse_netapp_api_snapvault(string_table, expected_parsed):
     assert parse_netapp_api_snapvault(string_table) == expected_parsed
 
 
-@pytest.mark.parametrize('string_table, discovery_params, expected_discovery', [
-    (
-        [
+@pytest.mark.parametrize(
+    "string_table, discovery_params, expected_discovery",
+    [
+        (
             [
-                u'snapvault my_snap',
-                u'state snapmirrored',
-                u'source-system c1',
-                u'destination-location d3:my_snap',
-                u'policy ABCDefault',
-                u'lag-time 91486',
-                u'destination-system a2-b0-02',
-                u'status idle',
+                [
+                    "snapvault my_snap",
+                    "state snapmirrored",
+                    "source-system c1",
+                    "destination-location d3:my_snap",
+                    "policy ABCDefault",
+                    "lag-time 91486",
+                    "destination-system a2-b0-02",
+                    "status idle",
+                ],
+                [
+                    "snapvault my_snap",
+                    "state snapmirrored",
+                    "source-system i1",
+                    "destination-location d1:my_snap",
+                    "policy Default",
+                    "lag-time 82486",
+                    "destination-system a2-b0-02",
+                    "status idle",
+                ],
+                [
+                    "snapvault my_snap",
+                    "state snapmirrored",
+                    "source-system t1",
+                    "destination-location d2:my_snap",
+                    "policy Default",
+                    "lag-time 73487",
+                    "destination-system a2-b0-02",
+                    "status idle",
+                ],
             ],
+            {
+                "exclude_destination_vserver": True,
+            },
             [
-                u'snapvault my_snap',
-                u'state snapmirrored',
-                u'source-system i1',
-                u'destination-location d1:my_snap',
-                u'policy Default',
-                u'lag-time 82486',
-                u'destination-system a2-b0-02',
-                u'status idle',
+                Service(item="my_snap"),
             ],
+        ),
+        (
             [
-                u'snapvault my_snap',
-                u'state snapmirrored',
-                u'source-system t1',
-                u'destination-location d2:my_snap',
-                u'policy Default',
-                u'lag-time 73487',
-                u'destination-system a2-b0-02',
-                u'status idle',
+                [
+                    "snapvault my_snap",
+                    "state snapmirrored",
+                    "source-system c1",
+                    "destination-location d3:my_snap",
+                    "policy ABCDefault",
+                    "lag-time 91486",
+                    "destination-system a2-b0-02",
+                    "status idle",
+                ],
+                [
+                    "snapvault my_snap",
+                    "state snapmirrored",
+                    "source-system i1",
+                    "destination-location d1:my_snap",
+                    "policy Default",
+                    "lag-time 82486",
+                    "destination-system a2-b0-02",
+                    "status idle",
+                ],
+                [
+                    "snapvault my_snap",
+                    "state snapmirrored",
+                    "source-system t1",
+                    "destination-location d2:my_snap",
+                    "policy Default",
+                    "lag-time 73487",
+                    "destination-system a2-b0-02",
+                    "status idle",
+                ],
             ],
-        ],
-        {
-            'exclude_destination_vserver': True,
-        },
-        [
-            Service(item='my_snap'),
-        ],
-    ),
-    (
-        [
+            {
+                "exclude_destination_vserver": False,
+            },
             [
-                u'snapvault my_snap',
-                u'state snapmirrored',
-                u'source-system c1',
-                u'destination-location d3:my_snap',
-                u'policy ABCDefault',
-                u'lag-time 91486',
-                u'destination-system a2-b0-02',
-                u'status idle',
+                Service(item="d3:my_snap"),
+                Service(item="d1:my_snap"),
+                Service(item="d2:my_snap"),
             ],
+        ),
+        (
             [
-                u'snapvault my_snap',
-                u'state snapmirrored',
-                u'source-system i1',
-                u'destination-location d1:my_snap',
-                u'policy Default',
-                u'lag-time 82486',
-                u'destination-system a2-b0-02',
-                u'status idle',
+                [
+                    "snapvault /vol/ipb_user/",
+                    "status idle state snapvaulted",
+                    "lag-time 97007",
+                    "source-system 172.31.12.15",
+                ],
             ],
+            {
+                "exclude_destination_vserver": False,
+            },
             [
-                u'snapvault my_snap',
-                u'state snapmirrored',
-                u'source-system t1',
-                u'destination-location d2:my_snap',
-                u'policy Default',
-                u'lag-time 73487',
-                u'destination-system a2-b0-02',
-                u'status idle',
+                Service(item="/vol/ipb_user/"),
             ],
-        ],
-        {
-            'exclude_destination_vserver': False,
-        },
-        [
-            Service(item='d3:my_snap'),
-            Service(item='d1:my_snap'),
-            Service(item='d2:my_snap'),
-        ],
-    ),
-    (
-        [
-            [
-                'snapvault /vol/ipb_user/', 'status idle state snapvaulted', 'lag-time 97007',
-                'source-system 172.31.12.15'
-            ],
-        ],
-        {
-            'exclude_destination_vserver': False,
-        },
-        [
-            Service(item='/vol/ipb_user/'),
-        ],
-    ),
-])
+        ),
+    ],
+)
 def test_discover_netapp_api_snapvault(string_table, discovery_params, expected_discovery):
-    assert list(
-        discover_netapp_api_snapvault(
-            discovery_params,
-            parse_netapp_api_snapvault(string_table),
-        )) == expected_discovery
+    assert (
+        list(
+            discover_netapp_api_snapvault(
+                discovery_params,
+                parse_netapp_api_snapvault(string_table),
+            )
+        )
+        == expected_discovery
+    )
 
 
-@pytest.mark.parametrize('item, params, parsed, expected_result', [
-    (
-        'my_snap',
-        {},
-        {
-            'my_snap': {
-                'snapvault': 'my_snap',
-                'state': 'snapmirrored',
-                'source-system': 'c1',
-                'destination-location': 'd3:my_snap',
-                'policy': 'ABCDefault',
-                'lag-time': '91486',
-                'destination-system': 'a2-b0-02',
-                'status': 'idle',
+@pytest.mark.parametrize(
+    "item, params, parsed, expected_result",
+    [
+        (
+            "my_snap",
+            {},
+            {
+                "my_snap": {
+                    "snapvault": "my_snap",
+                    "state": "snapmirrored",
+                    "source-system": "c1",
+                    "destination-location": "d3:my_snap",
+                    "policy": "ABCDefault",
+                    "lag-time": "91486",
+                    "destination-system": "a2-b0-02",
+                    "status": "idle",
+                },
             },
-        },
-        [
-            Result(state=State.OK, summary='Source-System: c1'),
-            Result(state=State.OK, summary='Destination-System: a2-b0-02'),
-            Result(state=State.OK, summary='Policy: ABCDefault'),
-            Result(state=State.OK, summary='Status: idle'),
-            Result(state=State.OK, summary='State: snapmirrored'),
-            Result(state=State.OK, summary='Lag time: 1 day 1 hour'),
-        ],
-    ),
-    (
-        'my_snap',
-        {
-            'policy_lag_time': [
-                ('ABC', (9000, 10000)),
-                ('ABCDef', (1, 2)),
-            ]
-        },
-        {
-            'my_snap': {
-                'snapvault': 'my_snap',
-                'state': 'snapmirrored',
-                'source-system': 'c1',
-                'destination-location': 'd3:my_snap',
-                'policy': 'ABCDefault',
-                'lag-time': '91486',
-                'destination-system': 'a2-b0-02',
-                'status': 'idle',
-            },
-        },
-        [
-            Result(state=State.OK, summary='Source-System: c1'),
-            Result(state=State.OK, summary='Destination-System: a2-b0-02'),
-            Result(state=State.OK, summary='Policy: ABCDefault'),
-            Result(state=State.OK, summary='Status: idle'),
-            Result(state=State.OK, summary='State: snapmirrored'),
-            Result(state=State.OK, summary='Lag time: 1 day 1 hour'),
-        ],
-    ),
-    (
-        'my_snap',
-        {
-            'policy_lag_time': [
-                ('ABC', (9000, 10000)),
-                ('ABCDefault', (1, 2)),
-            ]
-        },
-        {
-            'my_snap': {
-                'snapvault': 'my_snap',
-                'state': 'snapmirrored',
-                'source-system': 'c1',
-                'destination-location': 'd3:my_snap',
-                'policy': 'ABCDefault',
-                'lag-time': '91486',
-                'destination-system': 'a2-b0-02',
-                'status': 'idle',
-            },
-        },
-        [
-            Result(state=State.OK, summary='Source-System: c1'),
-            Result(state=State.OK, summary='Destination-System: a2-b0-02'),
-            Result(state=State.OK, summary='Policy: ABCDefault'),
-            Result(state=State.OK, summary='Status: idle'),
-            Result(state=State.OK, summary='State: snapmirrored'),
-            Result(state=State.CRIT,
-                   summary='Lag time: 1 day 1 hour (warn/crit at 1 second/2 seconds)'),
-        ],
-    ),
-    (
-        'my_snap',
-        {
-            'policy_lag_time': [
-                ('XDP', (9000, 10000)),
-                ('XDPDef', (9000, 10000)),
+            [
+                Result(state=State.OK, summary="Source-System: c1"),
+                Result(state=State.OK, summary="Destination-System: a2-b0-02"),
+                Result(state=State.OK, summary="Policy: ABCDefault"),
+                Result(state=State.OK, summary="Status: idle"),
+                Result(state=State.OK, summary="State: snapmirrored"),
+                Result(state=State.OK, summary="Lag time: 1 day 1 hour"),
             ],
-            'lag_time': (3, 4),
-        },
-        {
-            'my_snap': {
-                'snapvault': 'my_snap',
-                'state': 'snapmirrored',
-                'source-system': 'c1',
-                'destination-location': 'd3:my_snap',
-                'policy': 'ABCDefault',
-                'lag-time': '91486',
-                'destination-system': 'a2-b0-02',
-                'status': 'idle',
+        ),
+        (
+            "my_snap",
+            {
+                "policy_lag_time": [
+                    ("ABC", (9000, 10000)),
+                    ("ABCDef", (1, 2)),
+                ]
             },
-        },
-        [
-            Result(state=State.OK, summary='Source-System: c1'),
-            Result(state=State.OK, summary='Destination-System: a2-b0-02'),
-            Result(state=State.OK, summary='Policy: ABCDefault'),
-            Result(state=State.OK, summary='Status: idle'),
-            Result(state=State.OK, summary='State: snapmirrored'),
-            Result(state=State.CRIT,
-                   summary='Lag time: 1 day 1 hour (warn/crit at 3 seconds/4 seconds)'),
-        ],
-    ),
-    (
-        'my_snap',
-        {
-            'lag_time': (3, 4),
-        },
-        {
-            'my_snap': {
-                'snapvault': 'my_snap',
-                'state': 'snapmirrored',
-                'source-system': 'c1',
-                'destination-location': 'd3:my_snap',
-                'policy': 'ABCDefault',
-                'lag-time': '91486',
-                'destination-system': 'a2-b0-02',
-                'status': 'idle',
+            {
+                "my_snap": {
+                    "snapvault": "my_snap",
+                    "state": "snapmirrored",
+                    "source-system": "c1",
+                    "destination-location": "d3:my_snap",
+                    "policy": "ABCDefault",
+                    "lag-time": "91486",
+                    "destination-system": "a2-b0-02",
+                    "status": "idle",
+                },
             },
-        },
-        [
-            Result(state=State.OK, summary='Source-System: c1'),
-            Result(state=State.OK, summary='Destination-System: a2-b0-02'),
-            Result(state=State.OK, summary='Policy: ABCDefault'),
-            Result(state=State.OK, summary='Status: idle'),
-            Result(state=State.OK, summary='State: snapmirrored'),
-            Result(state=State.CRIT,
-                   summary='Lag time: 1 day 1 hour (warn/crit at 3 seconds/4 seconds)'),
-        ],
-    ),
-    (
-        '/vol/ipb_user/',
-        {},
-        {
-            '/vol/ipb_user/': {
-                'snapvault': '/vol/ipb_user/',
-                'status': 'idle state snapvaulted',
-                'lag-time': '97007',
-                'source-system': '172.31.12.15',
+            [
+                Result(state=State.OK, summary="Source-System: c1"),
+                Result(state=State.OK, summary="Destination-System: a2-b0-02"),
+                Result(state=State.OK, summary="Policy: ABCDefault"),
+                Result(state=State.OK, summary="Status: idle"),
+                Result(state=State.OK, summary="State: snapmirrored"),
+                Result(state=State.OK, summary="Lag time: 1 day 1 hour"),
+            ],
+        ),
+        (
+            "my_snap",
+            {
+                "policy_lag_time": [
+                    ("ABC", (9000, 10000)),
+                    ("ABCDefault", (1, 2)),
+                ]
             },
-        },
-        [
-            Result(state=State.OK, summary='Source-System: 172.31.12.15'),
-            Result(state=State.OK, summary='Status: idle state snapvaulted'),
-            Result(state=State.OK, summary='Lag time: 1 day 2 hours'),
-        ],
-    ),
-])
+            {
+                "my_snap": {
+                    "snapvault": "my_snap",
+                    "state": "snapmirrored",
+                    "source-system": "c1",
+                    "destination-location": "d3:my_snap",
+                    "policy": "ABCDefault",
+                    "lag-time": "91486",
+                    "destination-system": "a2-b0-02",
+                    "status": "idle",
+                },
+            },
+            [
+                Result(state=State.OK, summary="Source-System: c1"),
+                Result(state=State.OK, summary="Destination-System: a2-b0-02"),
+                Result(state=State.OK, summary="Policy: ABCDefault"),
+                Result(state=State.OK, summary="Status: idle"),
+                Result(state=State.OK, summary="State: snapmirrored"),
+                Result(
+                    state=State.CRIT,
+                    summary="Lag time: 1 day 1 hour (warn/crit at 1 second/2 seconds)",
+                ),
+            ],
+        ),
+        (
+            "my_snap",
+            {
+                "policy_lag_time": [
+                    ("XDP", (9000, 10000)),
+                    ("XDPDef", (9000, 10000)),
+                ],
+                "lag_time": (3, 4),
+            },
+            {
+                "my_snap": {
+                    "snapvault": "my_snap",
+                    "state": "snapmirrored",
+                    "source-system": "c1",
+                    "destination-location": "d3:my_snap",
+                    "policy": "ABCDefault",
+                    "lag-time": "91486",
+                    "destination-system": "a2-b0-02",
+                    "status": "idle",
+                },
+            },
+            [
+                Result(state=State.OK, summary="Source-System: c1"),
+                Result(state=State.OK, summary="Destination-System: a2-b0-02"),
+                Result(state=State.OK, summary="Policy: ABCDefault"),
+                Result(state=State.OK, summary="Status: idle"),
+                Result(state=State.OK, summary="State: snapmirrored"),
+                Result(
+                    state=State.CRIT,
+                    summary="Lag time: 1 day 1 hour (warn/crit at 3 seconds/4 seconds)",
+                ),
+            ],
+        ),
+        (
+            "my_snap",
+            {
+                "lag_time": (3, 4),
+            },
+            {
+                "my_snap": {
+                    "snapvault": "my_snap",
+                    "state": "snapmirrored",
+                    "source-system": "c1",
+                    "destination-location": "d3:my_snap",
+                    "policy": "ABCDefault",
+                    "lag-time": "91486",
+                    "destination-system": "a2-b0-02",
+                    "status": "idle",
+                },
+            },
+            [
+                Result(state=State.OK, summary="Source-System: c1"),
+                Result(state=State.OK, summary="Destination-System: a2-b0-02"),
+                Result(state=State.OK, summary="Policy: ABCDefault"),
+                Result(state=State.OK, summary="Status: idle"),
+                Result(state=State.OK, summary="State: snapmirrored"),
+                Result(
+                    state=State.CRIT,
+                    summary="Lag time: 1 day 1 hour (warn/crit at 3 seconds/4 seconds)",
+                ),
+            ],
+        ),
+        (
+            "/vol/ipb_user/",
+            {},
+            {
+                "/vol/ipb_user/": {
+                    "snapvault": "/vol/ipb_user/",
+                    "status": "idle state snapvaulted",
+                    "lag-time": "97007",
+                    "source-system": "172.31.12.15",
+                },
+            },
+            [
+                Result(state=State.OK, summary="Source-System: 172.31.12.15"),
+                Result(state=State.OK, summary="Status: idle state snapvaulted"),
+                Result(state=State.OK, summary="Lag time: 1 day 2 hours"),
+            ],
+        ),
+    ],
+)
 def test_check_netapp_api_snapvault(item, params, parsed, expected_result):
     assert list(check_netapp_api_snapvault(item, params, parsed)) == expected_result

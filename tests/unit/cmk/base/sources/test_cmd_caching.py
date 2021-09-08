@@ -95,9 +95,13 @@ def _patch_data_source(mocker, **kwargs):
 
         file_cache = self._make_file_cache()
 
-        assert file_cache.disabled == (True if isinstance(
-            file_cache, NoCache) else defaults["disabled"] if isinstance(self, SNMPSource) else
-                                       defaults["disabled"]), repr(file_cache)
+        assert file_cache.disabled == (
+            True
+            if isinstance(file_cache, NoCache)
+            else defaults["disabled"]
+            if isinstance(self, SNMPSource)
+            else defaults["disabled"]
+        ), repr(file_cache)
 
         assert file_cache.use_outdated == defaults["use_outdated"]
         assert file_cache.max_age == defaults["max_age"]
@@ -106,7 +110,8 @@ def _patch_data_source(mocker, **kwargs):
             assert self.use_only_cache == defaults["use_only_cache"]
         if isinstance(self, AgentSource):
             assert (
-                self.use_outdated_persisted_sections == defaults["use_outdated_persisted_sections"])
+                self.use_outdated_persisted_sections == defaults["use_outdated_persisted_sections"]
+            )
 
         elif isinstance(self, SNMPSource):
             assert self._on_snmp_scan_error == defaults["on_error"]
@@ -131,7 +136,7 @@ def patch_data_source(mocker):
 
 @pytest.fixture
 def without_inventory_plugins(monkeypatch):
-    monkeypatch.setattr(cmk.base.api.agent_based.register, 'iter_all_inventory_plugins', lambda: ())
+    monkeypatch.setattr(cmk.base.api.agent_based.register, "iter_all_inventory_plugins", lambda: ())
 
 
 # When called without hosts, it uses all hosts and defaults to using the data source cache
@@ -160,23 +165,15 @@ def without_inventory_plugins(monkeypatch):
     ("cache"),
     [
         (None, {}),
-        (True, {
-            "maybe": True,
-            "use_outdated": True
-        }),
-        (False, {
-            "maybe": False,
-            "disabled": True
-        }),
+        (True, {"maybe": True, "use_outdated": True}),
+        (False, {"maybe": False, "disabled": True}),
     ],
     ids=["cache=None", "cache=True", "cache=False"],
 )
 @pytest.mark.parametrize(
     ("force"),
     [
-        (True, {
-            "use_outdated_persisted_sections": True
-        }),
+        (True, {"use_outdated_persisted_sections": True}),
         (False, {}),
     ],
     ids=["force=True", "force=False"],
@@ -214,7 +211,7 @@ def test_mode_inventory_caching(hosts, cache, force, mocker):
     else:
         valid_hosts = hosts[0]
 
-    num_runs = (len([h for h in valid_hosts if not config_cache.get_host_config(h).is_cluster]) * 2)
+    num_runs = len([h for h in valid_hosts if not config_cache.get_host_config(h).is_cluster]) * 2
 
     assert Source.parse.call_count == num_runs  # type: ignore[attr-defined]
 
@@ -271,8 +268,7 @@ def test_mode_discover_all_hosts(mocker):
     )
     cmk.base.modes.check_mk.mode_discover({"discover": 1}, [])
     active_real_hosts = config.get_config_cache().all_active_realhosts()
-    assert Source.parse.call_count == (  # type: ignore[attr-defined]
-        len(active_real_hosts) * 2)
+    assert Source.parse.call_count == (len(active_real_hosts) * 2)  # type: ignore[attr-defined]
 
 
 @pytest.mark.usefixtures("scenario")
@@ -389,12 +385,8 @@ def test_mode_dump_agent_explicit_host_no_cache(mocker, capsys):
 @pytest.mark.parametrize(
     ("raise_errors"),
     [
-        ("@raiseerrors", {
-            "on_error": "raise"
-        }),
-        (None, {
-            "on_error": "ignore"
-        }),
+        ("@raiseerrors", {"on_error": "raise"}),
+        (None, {"on_error": "ignore"}),
     ],
     ids=["raise_errors=@raiseerrors", "raise_errors=None"],
 )
@@ -417,12 +409,8 @@ def test_automation_try_discovery_caching(scan, raise_errors, mocker):
 @pytest.mark.parametrize(
     ("raise_errors"),
     [
-        ("@raiseerrors", {
-            "on_error": "raise"
-        }),
-        (None, {
-            "on_error": "ignore"
-        }),
+        ("@raiseerrors", {"on_error": "raise"}),
+        (None, {"on_error": "ignore"}),
     ],
     ids=["raise_errors=@raiserrors", "raise_errors=none"],
 )

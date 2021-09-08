@@ -14,7 +14,7 @@ INFO = [["MODEL", "SERIAL", "BOOTLOADER", "FW", "_ALARMS", "_DIAGSTATE", "_TEMP_
 
 EXPECTED = [
     Attributes(
-        path=['hardware', 'chassis'],
+        path=["hardware", "chassis"],
         inventory_attributes={
             "serial": "SERIAL",
             "model": "MODEL",
@@ -26,5 +26,5 @@ EXPECTED = [
 
 
 def test_inv_perle_chassis(fix_register):
-    plugin = fix_register.inventory_plugins[InventoryPluginName('perle_chassis')]
+    plugin = fix_register.inventory_plugins[InventoryPluginName("perle_chassis")]
     assert list(plugin.inventory_function(INFO)) == EXPECTED

@@ -11,11 +11,14 @@ from tests.testlib import SpecialAgent
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('params,expected_args', [
-    (('user', 'password'), ["address", "user", "password"]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        (("user", "password"), ["address", "user", "password"]),
+    ],
+)
 def test_hivemanager_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_hivemanager')
+    agent = SpecialAgent("agent_hivemanager")
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

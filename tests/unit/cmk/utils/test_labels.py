@@ -30,8 +30,10 @@ def fixture_discovered_host_labels_dir(tmp_path: Path, monkeypatch: MonkeyPatch)
 
 
 def test_discovered_host_labels_store_file_path(discovered_host_labels_dir: Path) -> None:
-    assert DiscoveredHostLabelsStore(
-        HostName("host")).file_path == discovered_host_labels_dir / "host.mk"
+    assert (
+        DiscoveredHostLabelsStore(HostName("host")).file_path
+        == discovered_host_labels_dir / "host.mk"
+    )
 
 
 def test_discovered_host_labels_store_load_default(discovered_host_labels_dir: Path) -> None:
@@ -44,29 +46,35 @@ def test_get_updated_host_label_files(discovered_host_labels_dir: Path) -> None:
     time_1 = 1616655912.123
     time_2 = 1616655912.234
 
-    save_updated_host_label_files([
-        ('host1.mk', time_1, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n"),
-        ('host2.mk', time_2, "{'äbc': {'value': 'xyz', 'plugin_name': 'plugin_1'}}\n"),
-    ])
+    save_updated_host_label_files(
+        [
+            ("host1.mk", time_1, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n"),
+            ("host2.mk", time_2, "{'äbc': {'value': 'xyz', 'plugin_name': 'plugin_1'}}\n"),
+        ]
+    )
 
     assert get_updated_host_label_files(newer_than=time_1 - 1) == [
-        ('host1.mk', time_1, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n"),
-        ('host2.mk', time_2, "{'äbc': {'value': 'xyz', 'plugin_name': 'plugin_1'}}\n"),
+        ("host1.mk", time_1, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n"),
+        ("host2.mk", time_2, "{'äbc': {'value': 'xyz', 'plugin_name': 'plugin_1'}}\n"),
     ]
     assert get_updated_host_label_files(newer_than=time_1) == [
-        ('host2.mk', time_2, "{'äbc': {'value': 'xyz', 'plugin_name': 'plugin_1'}}\n"),
+        ("host2.mk", time_2, "{'äbc': {'value': 'xyz', 'plugin_name': 'plugin_1'}}\n"),
     ]
     assert get_updated_host_label_files(newer_than=time_2) == []
 
 
 def test_get_host_labels_entry_of_host(discovered_host_labels_dir: Path) -> None:
-    save_updated_host_label_files([
-        ('host1.mk', 123, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n"),
-    ])
+    save_updated_host_label_files(
+        [
+            ("host1.mk", 123, "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n"),
+        ]
+    )
 
-    assert get_host_labels_entry_of_host(
-        HostName("host1")) == ('host1.mk', 123,
-                               "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n")
+    assert get_host_labels_entry_of_host(HostName("host1")) == (
+        "host1.mk",
+        123,
+        "{'äbc': {'value': '123', 'plugin_name': 'plugin_1'}}\n",
+    )
 
 
 def test_get_host_labels_entry_of_host_not_existing() -> None:

@@ -29,14 +29,14 @@ def test__generate_table_rows_list():
     table_rows = list(_generate_table_rows(local_status_data_tree, local_inventory_tree))
     assert table_rows == [
         TableRow(
-            path=['level0_1', 'level1_list'],
-            key_columns={'l': 'L1'},
+            path=["level0_1", "level1_list"],
+            key_columns={"l": "L1"},
             inventory_columns={},
             status_columns={},
         ),
         TableRow(
-            path=['level0_1', 'level1_list'],
-            key_columns={'l': 'L2'},
+            path=["level0_1", "level1_list"],
+            key_columns={"l": "L2"},
             inventory_columns={},
             status_columns={},
         ),

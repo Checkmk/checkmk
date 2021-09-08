@@ -48,7 +48,8 @@ def fixture_gen_id(monkeypatch):
         ("checkgroup_parameters:local", None, False),
         # binary service ruleset
         ("clustered_services", True, True),
-    ])
+    ],
+)
 def test_rule_initialize(request_context, ruleset_name, default_value, is_binary):
     rule = _rule(ruleset_name)
     assert isinstance(rule.conditions, rulesets.RuleConditions)
@@ -57,7 +58,9 @@ def test_rule_initialize(request_context, ruleset_name, default_value, is_binary
     assert rule.ruleset.rulespec.is_binary_ruleset == is_binary
 
 
-def test_rule_from_config_unhandled_format(request_context,):
+def test_rule_from_config_unhandled_format(
+    request_context,
+):
     rule = _rule("inventory_processes_rules")
     with pytest.raises(MKGeneralException, match="Invalid rule"):
         rule.from_config([])
@@ -69,9 +72,7 @@ def test_rule_from_config_unhandled_format(request_context,):
 @pytest.mark.parametrize(
     "rule_options",
     [
-        {
-            "disabled": True
-        },
+        {"disabled": True},
         None,
     ],
 )
@@ -85,7 +86,7 @@ def test_rule_from_config_unhandled_format(request_context,):
             {
                 "value": "VAL",
                 "conditions": {
-                    'host_name': ['HOSTLIST'],
+                    "host_name": ["HOSTLIST"],
                 },
             },
         ),
@@ -95,68 +96,78 @@ def test_rule_from_config_unhandled_format(request_context,):
             {
                 "value": "VAL",
                 "conditions": {
-                    'host_name': ['HOSTLIST'],
-                    'host_tags': {
-                        'specs': 'specs',
-                        'tag': 'tag',
+                    "host_name": ["HOSTLIST"],
+                    "host_tags": {
+                        "specs": "specs",
+                        "tag": "tag",
                     },
                 },
             },
         ),
         # binary host ruleset
-        ("only_hosts", (["HOSTLIST"],), {
-            "value": True,
-            "conditions": {
-                'host_name': ['HOSTLIST'],
-            }
-        }),
-        ("only_hosts", (
-            rulesets.NEGATE,
-            ["HOSTLIST"],
-        ), {
-            "value": False,
-            "conditions": {
-                'host_name': ['HOSTLIST'],
+        (
+            "only_hosts",
+            (["HOSTLIST"],),
+            {
+                "value": True,
+                "conditions": {
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }),
+        ),
+        (
+            "only_hosts",
+            (
+                rulesets.NEGATE,
+                ["HOSTLIST"],
+            ),
+            {
+                "value": False,
+                "conditions": {
+                    "host_name": ["HOSTLIST"],
+                },
+            },
+        ),
         # non-binary service ruleset
-        ("checkgroup_parameters:local", ("VAL", ["HOSTLIST"], ["SVC", "LIST"]), {
-            "value": "VAL",
-            "conditions": {
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
-                'host_name': ['HOSTLIST']
+        (
+            "checkgroup_parameters:local",
+            ("VAL", ["HOSTLIST"], ["SVC", "LIST"]),
+            {
+                "value": "VAL",
+                "conditions": {
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }),
+        ),
         # binary service ruleset
-        ("clustered_services", (["HOSTLIST"], ["SVC", "LIST"]), {
-            "value": True,
-            "conditions": {
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
-                'host_name': ['HOSTLIST']
+        (
+            "clustered_services",
+            (["HOSTLIST"], ["SVC", "LIST"]),
+            {
+                "value": True,
+                "conditions": {
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }),
-        ("clustered_services", (rulesets.NEGATE, ["HOSTLIST"], ["SVC", "LIST"]), {
-            "value": False,
-            "conditions": {
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
-                'host_name': ['HOSTLIST']
+        ),
+        (
+            "clustered_services",
+            (rulesets.NEGATE, ["HOSTLIST"], ["SVC", "LIST"]),
+            {
+                "value": False,
+                "conditions": {
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }),
-    ])
-def test_rule_from_config_tuple(request_context, ruleset_name, rule_spec, expected_attributes,
-                                rule_options):
+        ),
+    ],
+)
+def test_rule_from_config_tuple(
+    request_context, ruleset_name, rule_spec, expected_attributes, rule_options
+):
     if rule_options is not None:
         rule_spec = rule_spec + (rule_options,)
 
@@ -179,9 +190,7 @@ def test_rule_from_config_tuple(request_context, ruleset_name, rule_spec, expect
 @pytest.mark.parametrize(
     "rule_options",
     [
-        {
-            "disabled": True
-        },
+        {"disabled": True},
         None,
     ],
 )
@@ -195,14 +204,14 @@ def test_rule_from_config_tuple(request_context, ruleset_name, rule_spec, expect
                 "id": "1",
                 "value": "VAL",
                 "condition": {
-                    'host_name': ['HOSTLIST'],
+                    "host_name": ["HOSTLIST"],
                 },
             },
             {
                 "id": "1",
                 "value": "VAL",
                 "conditions": {
-                    'host_name': ['HOSTLIST'],
+                    "host_name": ["HOSTLIST"],
                 },
             },
         ),
@@ -212,21 +221,21 @@ def test_rule_from_config_tuple(request_context, ruleset_name, rule_spec, expect
                 "id": "1",
                 "value": "VAL",
                 "condition": {
-                    'host_name': ['HOSTLIST'],
-                    'host_tags': {
-                        'specs': 'specs',
-                        'tag': 'tag',
-                    }
+                    "host_name": ["HOSTLIST"],
+                    "host_tags": {
+                        "specs": "specs",
+                        "tag": "tag",
+                    },
                 },
             },
             {
                 "id": "1",
                 "value": "VAL",
                 "conditions": {
-                    'host_name': ['HOSTLIST'],
-                    'host_tags': {
-                        'specs': 'specs',
-                        'tag': 'tag',
+                    "host_name": ["HOSTLIST"],
+                    "host_tags": {
+                        "specs": "specs",
+                        "tag": "tag",
                     },
                 },
             },
@@ -238,11 +247,11 @@ def test_rule_from_config_tuple(request_context, ruleset_name, rule_spec, expect
                 "id": "1",
                 "value": "ORED_TAGS",
                 "condition": {
-                    'host_tags': {
-                        'specs': {
+                    "host_tags": {
+                        "specs": {
                             "$or": [
-                                'specs',
-                                'tag',
+                                "specs",
+                                "tag",
                             ],
                         }
                     }
@@ -252,11 +261,11 @@ def test_rule_from_config_tuple(request_context, ruleset_name, rule_spec, expect
                 "id": "1",
                 "value": "ORED_TAGS",
                 "conditions": {
-                    'host_tags': {
-                        'specs': {
+                    "host_tags": {
+                        "specs": {
                             "$or": [
-                                'specs',
-                                'tag',
+                                "specs",
+                                "tag",
                             ],
                         }
                     }
@@ -270,11 +279,11 @@ def test_rule_from_config_tuple(request_context, ruleset_name, rule_spec, expect
                 "id": "1",
                 "value": "NORED_TAGS",
                 "condition": {
-                    'host_tags': {
-                        'specs': {
+                    "host_tags": {
+                        "specs": {
                             "$nor": [
-                                'specs',
-                                'tag',
+                                "specs",
+                                "tag",
                             ],
                         }
                     }
@@ -284,11 +293,11 @@ def test_rule_from_config_tuple(request_context, ruleset_name, rule_spec, expect
                 "id": "1",
                 "value": "NORED_TAGS",
                 "conditions": {
-                    'host_tags': {
-                        'specs': {
+                    "host_tags": {
+                        "specs": {
                             "$nor": [
-                                'specs',
-                                'tag',
+                                "specs",
+                                "tag",
                             ],
                         }
                     }
@@ -296,119 +305,121 @@ def test_rule_from_config_tuple(request_context, ruleset_name, rule_spec, expect
             },
         ),
         # binary host ruleset
-        ("only_hosts", {
-            "id": "1",
-            "value": True,
-            "condition": {
-                'host_name': ['HOSTLIST'],
+        (
+            "only_hosts",
+            {
+                "id": "1",
+                "value": True,
+                "condition": {
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }, {
-            "id": "1",
-            "value": True,
-            "conditions": {
-                'host_name': ['HOSTLIST'],
+            {
+                "id": "1",
+                "value": True,
+                "conditions": {
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }),
-        ("only_hosts", {
-            "id": "1",
-            "value": False,
-            "condition": {
-                'host_name': ['HOSTLIST'],
+        ),
+        (
+            "only_hosts",
+            {
+                "id": "1",
+                "value": False,
+                "condition": {
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }, {
-            "id": "1",
-            "value": False,
-            "conditions": {
-                'host_name': ['HOSTLIST'],
+            {
+                "id": "1",
+                "value": False,
+                "conditions": {
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }),
+        ),
         # non-binary service ruleset
-        ("checkgroup_parameters:local", {
-            "id": "1",
-            "value": "VAL",
-            "condition": {
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
-                'host_name': ['HOSTLIST']
+        (
+            "checkgroup_parameters:local",
+            {
+                "id": "1",
+                "value": "VAL",
+                "condition": {
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }, {
-            "id": "1",
-            "value": "VAL",
-            "conditions": {
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
-                'host_name': ['HOSTLIST']
+            {
+                "id": "1",
+                "value": "VAL",
+                "conditions": {
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }),
+        ),
         # binary service ruleset
-        ("clustered_services", {
-            "id": "1",
-            "value": True,
-            "condition": {
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
-                'host_name': ['HOSTLIST']
+        (
+            "clustered_services",
+            {
+                "id": "1",
+                "value": True,
+                "condition": {
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }, {
-            "id": "1",
-            "value": True,
-            "conditions": {
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
-                'host_name': ['HOSTLIST']
+            {
+                "id": "1",
+                "value": True,
+                "conditions": {
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }),
-        ("clustered_services", {
-            "id": "1",
-            "value": False,
-            "condition": {
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
-                'host_name': ['HOSTLIST']
+        ),
+        (
+            "clustered_services",
+            {
+                "id": "1",
+                "value": False,
+                "condition": {
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }, {
-            "id": "1",
-            "value": False,
-            "conditions": {
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
-                'host_name': ['HOSTLIST']
+            {
+                "id": "1",
+                "value": False,
+                "conditions": {
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }),
+        ),
         # No rule ID (pre 2.0)
-        ("only_hosts", {
-            "value": True,
-            "condition": {
-                'host_name': ['HOSTLIST'],
+        (
+            "only_hosts",
+            {
+                "value": True,
+                "condition": {
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }, {
-            "id": "1",
-            "value": True,
-            "conditions": {
-                'host_name': ['HOSTLIST'],
+            {
+                "id": "1",
+                "value": True,
+                "conditions": {
+                    "host_name": ["HOSTLIST"],
+                },
             },
-        }),
-    ])
-def test_rule_from_config_dict(request_context, ruleset_name, rule_spec, expected_attributes,
-                               rule_options):
+        ),
+    ],
+)
+def test_rule_from_config_dict(
+    request_context, ruleset_name, rule_spec, expected_attributes, rule_options
+):
     rule_spec = rule_spec.copy()
     if rule_options is not None:
         rule_spec["options"] = rule_options
@@ -443,7 +454,9 @@ def test_rule_from_config_dict(request_context, ruleset_name, rule_spec, expecte
 @pytest.mark.parametrize(
     "wato_use_git,expected_result",
     [
-        (True, """
+        (
+            True,
+            """
 checkgroup_parameters.setdefault('local', [])
 
 checkgroup_parameters['local'] = [
@@ -457,54 +470,56 @@ checkgroup_parameters['local'] = [
  'value': 'VAL2'},
 ] + checkgroup_parameters['local']
 
-"""),
+""",
+        ),
         # TODO: Can currently not be tested because it's PYTHONHASHSEED specific. The pprint test above is enough for the moment.
         #    (False, """
-        #checkgroup_parameters.setdefault('local', [])
+        # checkgroup_parameters.setdefault('local', [])
         #
-        #checkgroup_parameters['local'] = [
-        #{'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_folder': '%#%FOLDER_PATH%#%', 'host_name': ['HOSTLIST']}, 'value': 'VAL'},
-        #{'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_folder': '%#%FOLDER_PATH%#%', 'host_name': ['HOSTLIST']}, 'value': 'VAL2'},
-        #] + checkgroup_parameters['local']
+        # checkgroup_parameters['local'] = [
+        # {'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_folder': '%#%FOLDER_PATH%#%', 'host_name': ['HOSTLIST']}, 'value': 'VAL'},
+        # {'condition': {'service_description': [{'$regex': 'SVC'}, {'$regex': 'LIST'}], 'host_folder': '%#%FOLDER_PATH%#%', 'host_name': ['HOSTLIST']}, 'value': 'VAL2'},
+        # ] + checkgroup_parameters['local']
         #
-        #"""),
-    ])
+        # """),
+    ],
+)
 def test_ruleset_to_config(request_context, monkeypatch, wato_use_git, expected_result):
     monkeypatch.setattr(config, "wato_use_git", wato_use_git)
 
-    ruleset = rulesets.Ruleset("checkgroup_parameters:local",
-                               ruleset_matcher.get_tag_to_group_map(config.tags))
-    ruleset.from_config(hosts_and_folders.Folder.root_folder(), [
-        {
-            "id": "1",
-            "value": "VAL",
-            "condition": {
-                'host_name': ['HOSTLIST'],
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
+    ruleset = rulesets.Ruleset(
+        "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(config.tags)
+    )
+    ruleset.from_config(
+        hosts_and_folders.Folder.root_folder(),
+        [
+            {
+                "id": "1",
+                "value": "VAL",
+                "condition": {
+                    "host_name": ["HOSTLIST"],
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                },
             },
-        },
-        {
-            "id": "2",
-            "value": "VAL2",
-            "condition": {
-                'host_name': ['HOSTLIST'],
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
+            {
+                "id": "2",
+                "value": "VAL2",
+                "condition": {
+                    "host_name": ["HOSTLIST"],
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                },
             },
-        },
-    ])
+        ],
+    )
     assert ruleset.to_config(hosts_and_folders.Folder.root_folder()) == expected_result
 
 
-@pytest.mark.parametrize("wato_use_git,expected_result", [
-    (True, """
+@pytest.mark.parametrize(
+    "wato_use_git,expected_result",
+    [
+        (
+            True,
+            """
 checkgroup_parameters.setdefault('local', [])
 
 checkgroup_parameters['local'] = [
@@ -520,60 +535,56 @@ checkgroup_parameters['local'] = [
  'value': 'VAL2'},
 ] + checkgroup_parameters['local']
 
-"""),
-])
+""",
+        ),
+    ],
+)
 def test_ruleset_to_config_sub_folder(with_admin_login, monkeypatch, wato_use_git, expected_result):
     monkeypatch.setattr(config, "wato_use_git", wato_use_git)
 
-    ruleset = rulesets.Ruleset("checkgroup_parameters:local",
-                               ruleset_matcher.get_tag_to_group_map(config.tags))
+    ruleset = rulesets.Ruleset(
+        "checkgroup_parameters:local", ruleset_matcher.get_tag_to_group_map(config.tags)
+    )
 
     hosts_and_folders.Folder.create_missing_folders("abc")
     folder = hosts_and_folders.Folder.folder("abc")
 
-    ruleset.from_config(folder, [
-        {
-            "id": "1",
-            "value": "VAL",
-            "condition": {
-                'host_name': ['HOSTLIST'],
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
+    ruleset.from_config(
+        folder,
+        [
+            {
+                "id": "1",
+                "value": "VAL",
+                "condition": {
+                    "host_name": ["HOSTLIST"],
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                },
             },
-        },
-        {
-            "id": "2",
-            "value": "VAL2",
-            "condition": {
-                'host_name': ['HOSTLIST'],
-                'service_description': [{
-                    '$regex': 'SVC'
-                }, {
-                    '$regex': 'LIST'
-                }],
+            {
+                "id": "2",
+                "value": "VAL2",
+                "condition": {
+                    "host_name": ["HOSTLIST"],
+                    "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+                },
             },
-        },
-    ])
+        ],
+    )
     assert ruleset.to_config(folder) == expected_result
 
 
 def test_rule_clone(request_context):
     rule = _rule("clustered_services")
-    rule.from_config({
-        "id": "10",
-        "value": True,
-        "condition": {
-            'host_name': ['HOSTLIST'],
-            'service_description': [{
-                '$regex': 'SVC'
-            }, {
-                '$regex': 'LIST'
-            }],
-        },
-    })
+    rule.from_config(
+        {
+            "id": "10",
+            "value": True,
+            "condition": {
+                "host_name": ["HOSTLIST"],
+                "service_description": [{"$regex": "SVC"}, {"$regex": "LIST"}],
+            },
+        }
+    )
 
     cloned_rule = rule.clone()
 

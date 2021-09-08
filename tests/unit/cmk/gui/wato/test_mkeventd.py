@@ -17,21 +17,13 @@ def test_match_item_generator_ec_rule_packs_and_rules():
     mkp_rule_pack.rule_pack = {
         "title": "MKP Rule pack",
         "id": "mkp_rule_pack_id",
-        "rules": [{
-            "id": "mkp_rule_id",
-            "description": "descr",
-            "comment": "comment"
-        }]
+        "rules": [{"id": "mkp_rule_id", "description": "descr", "comment": "comment"}],
     }
     rule_packs: Iterable[ECRulePack] = [
         {
             "title": "Rule pack",
             "id": "rule_pack_id",
-            "rules": [{
-                "id": "rule_id",
-                "description": "descr",
-                "comment": ""
-            }]
+            "rules": [{"id": "rule_id", "description": "descr", "comment": ""}],
         },
         mkp_rule_pack,
     ]
@@ -40,29 +32,30 @@ def test_match_item_generator_ec_rule_packs_and_rules():
         MatchItemGeneratorECRulePacksAndRules(
             "event_console",
             lambda: rule_packs,
-        ).generate_match_items()) == [
-            MatchItem(
-                title='rule_pack_id (Rule pack)',
-                topic='Event Console rule packages',
-                url='wato.py?mode=mkeventd_rules&rule_pack=rule_pack_id',
-                match_texts=['rule pack', 'rule_pack_id'],
-            ),
-            MatchItem(
-                title='rule_id (descr)',
-                topic='Event Console rules',
-                url='wato.py?edit=0&mode=mkeventd_edit_rule&rule_pack=rule_pack_id',
-                match_texts=['rule_id', 'descr'],
-            ),
-            MatchItem(
-                title='mkp_rule_pack_id (MKP Rule pack)',
-                topic='Event Console rule packages',
-                url='wato.py?mode=mkeventd_rules&rule_pack=mkp_rule_pack_id',
-                match_texts=['mkp rule pack', 'mkp_rule_pack_id'],
-            ),
-            MatchItem(
-                title='mkp_rule_id (descr)',
-                topic='Event Console rules',
-                url='wato.py?edit=0&mode=mkeventd_edit_rule&rule_pack=mkp_rule_pack_id',
-                match_texts=['mkp_rule_id', 'descr', 'comment'],
-            ),
-        ]
+        ).generate_match_items()
+    ) == [
+        MatchItem(
+            title="rule_pack_id (Rule pack)",
+            topic="Event Console rule packages",
+            url="wato.py?mode=mkeventd_rules&rule_pack=rule_pack_id",
+            match_texts=["rule pack", "rule_pack_id"],
+        ),
+        MatchItem(
+            title="rule_id (descr)",
+            topic="Event Console rules",
+            url="wato.py?edit=0&mode=mkeventd_edit_rule&rule_pack=rule_pack_id",
+            match_texts=["rule_id", "descr"],
+        ),
+        MatchItem(
+            title="mkp_rule_pack_id (MKP Rule pack)",
+            topic="Event Console rule packages",
+            url="wato.py?mode=mkeventd_rules&rule_pack=mkp_rule_pack_id",
+            match_texts=["mkp rule pack", "mkp_rule_pack_id"],
+        ),
+        MatchItem(
+            title="mkp_rule_id (descr)",
+            topic="Event Console rules",
+            url="wato.py?edit=0&mode=mkeventd_edit_rule&rule_pack=mkp_rule_pack_id",
+            match_texts=["mkp_rule_id", "descr", "comment"],
+        ),
+    ]

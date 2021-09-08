@@ -16,11 +16,11 @@ def test_register_modules(monkeypatch):
     monkeypatch.setattr(main_menu, "main_module_registry", ModuleRegistry())
     module = main_menu.WatoModule(
         mode_or_url="dang",
-        description='descr',
-        permission='icons',
-        title='Custom DING',
+        description="descr",
+        permission="icons",
+        title="Custom DING",
         sort_index=100,
-        icon='icons',
+        icon="icons",
     )
     main_menu.register_modules(module)
 
@@ -29,10 +29,10 @@ def test_register_modules(monkeypatch):
     registered = modules[0]
     assert isinstance(registered, main_menu.ABCMainModule)
     assert registered.mode_or_url == "dang"
-    assert registered.description == 'descr'
-    assert registered.permission == 'icons'
-    assert registered.title == 'Custom DING'
+    assert registered.description == "descr"
+    assert registered.permission == "icons"
+    assert registered.title == "Custom DING"
     assert registered.sort_index == 100
-    assert registered.icon == 'icons'
+    assert registered.icon == "icons"
     assert registered.is_show_more is False
     assert registered.topic == main_menu.MainModuleTopicCustom

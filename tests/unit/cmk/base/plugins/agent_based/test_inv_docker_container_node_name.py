@@ -17,15 +17,17 @@ AGENT_OUTPUT = """@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersio
 
 def test_inv_docker_container_node_name(fix_register):
     info = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    plugin = fix_register.inventory_plugins[InventoryPluginName('docker_container_node_name')]
+    plugin = fix_register.inventory_plugins[InventoryPluginName("docker_container_node_name")]
     assert list(plugin.inventory_function(info)) == [
-        Attributes(path=['software', 'applications', 'docker', 'container'],
-                   inventory_attributes={'node_name': 'klappben'},
-                   status_attributes={})
+        Attributes(
+            path=["software", "applications", "docker", "container"],
+            inventory_attributes={"node_name": "klappben"},
+            status_attributes={},
+        )
     ]
 
 
 def test_inv_docker_container_node_name_legacy_agent_output(fix_register):
-    plugin = fix_register.inventory_plugins[InventoryPluginName('docker_container_node_name')]
+    plugin = fix_register.inventory_plugins[InventoryPluginName("docker_container_node_name")]
     with pytest.raises(AgentOutputMalformatted):
-        list(plugin.inventory_function([['node_name']]))
+        list(plugin.inventory_function([["node_name"]]))

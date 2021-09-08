@@ -18,22 +18,28 @@ def test_parse_kaspersky_av_tasks(string_table, expected_result):
     assert parse_kaspersky_av_tasks(string_table) == expected_result
 
 
-@pytest.mark.parametrize("item,section,results",
-                         [("System:EventManager", {
-                             "UnmonitoredTask": {
-                                 "State": "NotStarted"
-                             },
-                             "System:EventManager": {
-                                 "State": "Started"
-                             }
-                         }, [Result(state=State.OK, summary='Current state is Started')]),
-                          ("System:EventManager", {
-                              "System:EventManager": {
-                                  "State": "NotStarted"
-                              }
-                          }, [Result(state=State.CRIT, summary="Current state is NotStarted")]),
-                          ("System:EventManager", {},
-                           [Result(state=State.UNKNOWN, summary="Task not found in agent output")])]
-                        )
+@pytest.mark.parametrize(
+    "item,section,results",
+    [
+        (
+            "System:EventManager",
+            {
+                "UnmonitoredTask": {"State": "NotStarted"},
+                "System:EventManager": {"State": "Started"},
+            },
+            [Result(state=State.OK, summary="Current state is Started")],
+        ),
+        (
+            "System:EventManager",
+            {"System:EventManager": {"State": "NotStarted"}},
+            [Result(state=State.CRIT, summary="Current state is NotStarted")],
+        ),
+        (
+            "System:EventManager",
+            {},
+            [Result(state=State.UNKNOWN, summary="Task not found in agent output")],
+        ),
+    ],
+)
 def test_check_kaspersky_av_client(item, section, results):
     assert list(check_kaspersky_av_tasks(item, section)) == results

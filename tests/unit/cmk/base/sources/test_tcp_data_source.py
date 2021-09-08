@@ -19,14 +19,24 @@ from cmk.core_helpers.cache import MaxAge
 from cmk.base.sources.tcp import TCPSource
 
 
-@pytest.mark.parametrize("res,reported,rule", [
-    (None, "127.0.0.1", None),
-    (None, None, "127.0.0.1"),
-    ((0, 'Allowed IP ranges: 1.2.3.4'), "1.2.3.4", "1.2.3.4"),
-    ((1, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)'), "1.2.{3,4,5}.6",
-     "1.2.3.6"),
-    ((1, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)'), "1.2.3.6", "1.2.3.{4,5,6}"),
-])
+@pytest.mark.parametrize(
+    "res,reported,rule",
+    [
+        (None, "127.0.0.1", None),
+        (None, None, "127.0.0.1"),
+        ((0, "Allowed IP ranges: 1.2.3.4"), "1.2.3.4", "1.2.3.4"),
+        (
+            (1, "Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)"),
+            "1.2.{3,4,5}.6",
+            "1.2.3.6",
+        ),
+        (
+            (1, "Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)"),
+            "1.2.3.6",
+            "1.2.3.{4,5,6}",
+        ),
+    ],
+)
 def test_tcpdatasource_only_from(monkeypatch, res, reported, rule):
     # TODO(ml): Not only is this white box testing but all these instantiations
     #           before the summarizer obscure the purpose of the test.  This is
@@ -49,27 +59,71 @@ def test_tcpdatasource_only_from(monkeypatch, res, reported, rule):
     assert summarizer._check_only_from(reported) == res
 
 
-@pytest.mark.parametrize("restricted_address_mismatch_state, only_from, rule, res", [
-    (None, "1.2.{3,4,5}.6", "1.2.3.6",
-     (1, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)')),
-    (None, "1.2.3.6", "1.2.3.{4,5,6}",
-     (1, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)')),
-    (1, "1.2.{3,4,5}.6", "1.2.3.6",
-     (1, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)')),
-    (1, "1.2.3.6", "1.2.3.{4,5,6}",
-     (1, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)')),
-    (0, "1.2.{3,4,5}.6", "1.2.3.6",
-     (0, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)')),
-    (0, "1.2.3.6", "1.2.3.{4,5,6}", (0, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)')),
-    (2, "1.2.{3,4,5}.6", "1.2.3.6",
-     (2, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!!)')),
-    (2, "1.2.3.6", "1.2.3.{4,5,6}",
-     (2, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!!)')),
-    (3, "1.2.{3,4,5}.6", "1.2.3.6",
-     (3, 'Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(?)')),
-    (3, "1.2.3.6", "1.2.3.{4,5,6}",
-     (3, 'Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(?)')),
-])
+@pytest.mark.parametrize(
+    "restricted_address_mismatch_state, only_from, rule, res",
+    [
+        (
+            None,
+            "1.2.{3,4,5}.6",
+            "1.2.3.6",
+            (1, "Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)"),
+        ),
+        (
+            None,
+            "1.2.3.6",
+            "1.2.3.{4,5,6}",
+            (1, "Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)"),
+        ),
+        (
+            1,
+            "1.2.{3,4,5}.6",
+            "1.2.3.6",
+            (1, "Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!)"),
+        ),
+        (
+            1,
+            "1.2.3.6",
+            "1.2.3.{4,5,6}",
+            (1, "Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!)"),
+        ),
+        (
+            0,
+            "1.2.{3,4,5}.6",
+            "1.2.3.6",
+            (0, "Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)"),
+        ),
+        (
+            0,
+            "1.2.3.6",
+            "1.2.3.{4,5,6}",
+            (0, "Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)"),
+        ),
+        (
+            2,
+            "1.2.{3,4,5}.6",
+            "1.2.3.6",
+            (2, "Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(!!)"),
+        ),
+        (
+            2,
+            "1.2.3.6",
+            "1.2.3.{4,5,6}",
+            (2, "Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(!!)"),
+        ),
+        (
+            3,
+            "1.2.{3,4,5}.6",
+            "1.2.3.6",
+            (3, "Unexpected allowed IP ranges (exceeding: 1.2.4.6 1.2.5.6)(?)"),
+        ),
+        (
+            3,
+            "1.2.3.6",
+            "1.2.3.{4,5,6}",
+            (3, "Unexpected allowed IP ranges (missing: 1.2.3.4 1.2.3.5)(?)"),
+        ),
+    ],
+)
 def test_tcpdatasource_restricted_address_mismatch(
     monkeypatch,
     restricted_address_mismatch_state,
@@ -87,11 +141,19 @@ def test_tcpdatasource_restricted_address_mismatch(
     ts.set_option("agent_config", {"only_from": [(rule, [], [str(hostname)], {})]})
 
     if restricted_address_mismatch_state is not None:
-        ts.set_ruleset("check_mk_exit_status", [
-            ({
-                "restricted_address_mismatch": restricted_address_mismatch_state,
-            }, [], [str(hostname)], {}),
-        ])
+        ts.set_ruleset(
+            "check_mk_exit_status",
+            [
+                (
+                    {
+                        "restricted_address_mismatch": restricted_address_mismatch_state,
+                    },
+                    [],
+                    [str(hostname)],
+                    {},
+                ),
+            ],
+        )
 
     ts.apply(monkeypatch)
     source = TCPSource(hostname, "ipaddress")

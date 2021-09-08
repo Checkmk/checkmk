@@ -37,14 +37,16 @@ PYTHON_VERSION_MAJOR, PYTHON_VERSION_MINOR = sys.version_info.major, sys.version
 
 
 class Site:
-    def __init__(self,
-                 site_id,
-                 reuse=True,
-                 version=CMKVersion.DEFAULT,
-                 edition=CMKVersion.CEE,
-                 branch="master",
-                 update_from_git=False,
-                 install_test_python_modules=True):
+    def __init__(
+        self,
+        site_id,
+        reuse=True,
+        version=CMKVersion.DEFAULT,
+        edition=CMKVersion.CEE,
+        branch="master",
+        update_from_git=False,
+        install_test_python_modules=True,
+    ):
         assert site_id
         self.id = site_id
         self.root = "/omd/sites/%s" % self.id
@@ -70,8 +72,12 @@ class Site:
     @property
     def internal_url(self):
         """This gives the address-port combination where the site-Apache process listens."""
-        return "%s://%s:%s/%s/check_mk/" % (self.http_proto, self.http_address, self.apache_port,
-                                            self.id)
+        return "%s://%s:%s/%s/check_mk/" % (
+            self.http_proto,
+            self.http_address,
+            self.apache_port,
+            self.id,
+        )
 
     # Previous versions of integration/composition tests needed this distinction. This is no
     # longer the case and can be safely removed once all tests switch to either one of url
@@ -90,9 +96,13 @@ class Site:
 
         # Note: If the site comes from a SiteFactory instance, the TCP connection
         # is insecure, i.e. no TLS.
-        live = (livestatus.LocalConnection() if self._is_running_as_site_user() else
-                livestatus.SingleSiteConnection("tcp:%s:%d" %
-                                                (self.http_address, self.livestatus_port)))
+        live = (
+            livestatus.LocalConnection()
+            if self._is_running_as_site_user()
+            else livestatus.SingleSiteConnection(
+                "tcp:%s:%d" % (self.http_address, self.livestatus_port)
+            )
+        )
         live.set_timeout(2)
         return live
 
@@ -106,7 +116,7 @@ class Site:
 
         if "/" not in urllib.parse.urlparse(path).path:
             path = "/%s/check_mk/%s" % (self.id, path)
-        return '%s://%s:%d%s' % (self.http_proto, self.http_address, self.apache_port, path)
+        return "%s://%s:%d%s" % (self.http_proto, self.http_address, self.apache_port, path)
 
     def wait_for_core_reloaded(self, after):
         # Activating changes can involve an asynchronous(!) monitoring
@@ -114,6 +124,7 @@ class Site:
         # might not reflect the changes yet. Ask the core for a successful reload.
         def config_reloaded():
             import livestatus  # pylint: disable=import-outside-toplevel,import-outside-toplevel
+
             try:
                 new_t = self.live.query_value("GET status\nColumns: program_start\n")
             except livestatus.MKLivestatusException:
@@ -143,25 +154,27 @@ class Site:
             expected_state = state
         last_check_before = self._last_host_check(hostname)
         command_timestamp = self._command_timestamp(last_check_before)
-        self.live.command("[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" %
-                          (command_timestamp, hostname, state, output))
-        self._wait_for_next_host_check(hostname, last_check_before, command_timestamp,
-                                       expected_state)
+        self.live.command(
+            "[%d] PROCESS_HOST_CHECK_RESULT;%s;%d;%s" % (command_timestamp, hostname, state, output)
+        )
+        self._wait_for_next_host_check(
+            hostname, last_check_before, command_timestamp, expected_state
+        )
 
-    def send_service_check_result(self,
-                                  hostname,
-                                  service_description,
-                                  state,
-                                  output,
-                                  expected_state=None):
+    def send_service_check_result(
+        self, hostname, service_description, state, output, expected_state=None
+    ):
         if expected_state is None:
             expected_state = state
         last_check_before = self._last_service_check(hostname, service_description)
         command_timestamp = self._command_timestamp(last_check_before)
-        self.live.command("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s" %
-                          (command_timestamp, hostname, service_description, state, output))
-        self._wait_for_next_service_check(hostname, service_description, last_check_before,
-                                          command_timestamp, expected_state)
+        self.live.command(
+            "[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s"
+            % (command_timestamp, hostname, service_description, state, output)
+        )
+        self._wait_for_next_service_check(
+            hostname, service_description, last_check_before, command_timestamp, expected_state
+        )
 
     def schedule_check(self, hostname, service_description, expected_state):
         logger.debug("%s;%s schedule check", hostname, service_description)
@@ -170,14 +183,19 @@ class Site:
 
         command_timestamp = self._command_timestamp(last_check_before)
 
-        command = "[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" % \
-            (command_timestamp, hostname, service_description, command_timestamp)
+        command = "[%d] SCHEDULE_FORCED_SVC_CHECK;%s;%s;%d" % (
+            command_timestamp,
+            hostname,
+            service_description,
+            command_timestamp,
+        )
 
         logger.debug("%s;%s: %r", hostname, service_description, command)
         self.live.command(command)
 
-        self._wait_for_next_service_check(hostname, service_description, last_check_before,
-                                          command_timestamp, expected_state)
+        self._wait_for_next_service_check(
+            hostname, service_description, last_check_before, command_timestamp, expected_state
+        )
 
     def _command_timestamp(self, last_check_before):
         # Ensure the next check result is not in same second as the previous check
@@ -187,8 +205,9 @@ class Site:
             time.sleep(0.1)
         return timestamp
 
-    def _wait_for_next_host_check(self, hostname, last_check_before, command_timestamp,
-                                  expected_state):
+    def _wait_for_next_host_check(
+        self, hostname, last_check_before, command_timestamp, expected_state
+    ):
         wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
             "GET hosts\n"
@@ -198,13 +217,22 @@ class Site:
             "WaitTimeout: %d\n"
             "WaitCondition: last_check > %d\n"
             "WaitCondition: state = %d\n"
-            "WaitTrigger: check\n" %
-            (hostname, hostname, wait_timeout * 1000, last_check_before, expected_state))
-        self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
-                                       expected_state, plugin_output, wait_timeout)
+            "WaitTrigger: check\n"
+            % (hostname, hostname, wait_timeout * 1000, last_check_before, expected_state)
+        )
+        self._verify_next_check_output(
+            command_timestamp,
+            last_check,
+            last_check_before,
+            state,
+            expected_state,
+            plugin_output,
+            wait_timeout,
+        )
 
-    def _wait_for_next_service_check(self, hostname, service_description, last_check_before,
-                                     command_timestamp, expected_state):
+    def _wait_for_next_service_check(
+        self, hostname, service_description, last_check_before, command_timestamp, expected_state
+    ):
         wait_timeout = 20
         last_check, state, plugin_output = self.live.query_row(
             "GET services\n"
@@ -216,32 +244,61 @@ class Site:
             "WaitCondition: last_check > %d\n"
             "WaitCondition: state = %d\n"
             "WaitCondition: has_been_checked = 1\n"
-            "WaitTrigger: check\n" % (hostname, service_description, hostname, service_description,
-                                      wait_timeout * 1000, last_check_before, expected_state))
-        self._verify_next_check_output(command_timestamp, last_check, last_check_before, state,
-                                       expected_state, plugin_output, wait_timeout)
+            "WaitTrigger: check\n"
+            % (
+                hostname,
+                service_description,
+                hostname,
+                service_description,
+                wait_timeout * 1000,
+                last_check_before,
+                expected_state,
+            )
+        )
+        self._verify_next_check_output(
+            command_timestamp,
+            last_check,
+            last_check_before,
+            state,
+            expected_state,
+            plugin_output,
+            wait_timeout,
+        )
 
-    def _verify_next_check_output(self, command_timestamp, last_check, last_check_before, state,
-                                  expected_state, plugin_output, wait_timeout):
+    def _verify_next_check_output(
+        self,
+        command_timestamp,
+        last_check,
+        last_check_before,
+        state,
+        expected_state,
+        plugin_output,
+        wait_timeout,
+    ):
         logger.debug("processing check result took %0.2f seconds", time.time() - command_timestamp)
-        assert last_check > last_check_before, \
-                "Check result not processed within %d seconds (last check before reschedule: %d, " \
-                "scheduled at: %d, last check: %d)" % \
-                (wait_timeout, last_check_before, command_timestamp, last_check)
-        assert state == expected_state, \
-            "Expected %d state, got %d state, output %s" % (expected_state, state, plugin_output)
+        assert last_check > last_check_before, (
+            "Check result not processed within %d seconds (last check before reschedule: %d, "
+            "scheduled at: %d, last check: %d)"
+            % (wait_timeout, last_check_before, command_timestamp, last_check)
+        )
+        assert state == expected_state, "Expected %d state, got %d state, output %s" % (
+            expected_state,
+            state,
+            plugin_output,
+        )
 
     def _last_host_check(self, hostname):
-        return self.live.query_value("GET hosts\n"
-                                     "Columns: last_check\n"
-                                     "Filter: host_name = %s\n" % (hostname))
+        return self.live.query_value(
+            "GET hosts\n" "Columns: last_check\n" "Filter: host_name = %s\n" % (hostname)
+        )
 
     def _last_service_check(self, hostname, service_description):
-        return self.live.query_value("GET services\n"
-                                     "Columns: last_check\n"
-                                     "Filter: host_name = %s\n"
-                                     "Filter: service_description = %s\n" %
-                                     (hostname, service_description))
+        return self.live.query_value(
+            "GET services\n"
+            "Columns: last_check\n"
+            "Filter: host_name = %s\n"
+            "Filter: service_description = %s\n" % (hostname, service_description)
+        )
 
     def get_host_state(self, hostname):
         return self.live.query_value("GET hosts\nColumns: state\nFilter: host_name = %s" % hostname)
@@ -254,11 +311,19 @@ class Site:
 
         kwargs.setdefault("encoding", "utf-8")
         cmd_txt = (
-            subprocess.list2cmdline(cmd) if self._is_running_as_site_user() else  #
-            " ".join([
-                "sudo", "su", "-l", self.id, "-c",
-                pipes.quote(" ".join(pipes.quote(p) for p in cmd))
-            ]))
+            subprocess.list2cmdline(cmd)
+            if self._is_running_as_site_user()
+            else " ".join(  #
+                [
+                    "sudo",
+                    "su",
+                    "-l",
+                    self.id,
+                    "-c",
+                    pipes.quote(" ".join(pipes.quote(p) for p in cmd)),
+                ]
+            )
+        )
         logger.info("Executing: %s", cmd_txt)
         kwargs["shell"] = True
         return subprocess.Popen(cmd_txt, *args, **kwargs)
@@ -267,10 +332,9 @@ class Site:
         sudo, site_id = ([], []) if self._is_running_as_site_user() else (["sudo"], [self.id])
         cmd = sudo + ["/usr/bin/omd", mode] + site_id + list(args)
         logger.info("Executing: %s", subprocess.list2cmdline(cmd))
-        p = subprocess.Popen(cmd,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
-                             encoding="utf-8")
+        p = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf-8"
+        )
         stdout, _stderr = p.communicate()
         logger.debug("Exit code: %d", p.returncode)
         if stdout:
@@ -302,17 +366,18 @@ class Site:
         if not self._is_running_as_site_user():
             p = self.execute(["rm", "-rf", self.path(rel_path)])
             if p.wait() != 0:
-                raise Exception("Failed to delete directory %s. Exit-Code: %d" %
-                                (rel_path, p.wait()))
+                raise Exception(
+                    "Failed to delete directory %s. Exit-Code: %d" % (rel_path, p.wait())
+                )
         else:
             shutil.rmtree(self.path(rel_path))
 
     # TODO: Rename to write_text_file?
     def write_file(self, rel_path, content):
         if not self._is_running_as_site_user():
-            p = self.execute(["tee", self.path(rel_path)],
-                             stdin=subprocess.PIPE,
-                             stdout=open(os.devnull, "w"))
+            p = self.execute(
+                ["tee", self.path(rel_path)], stdin=subprocess.PIPE, stdout=open(os.devnull, "w")
+            )
             p.communicate(ensure_str(content))
             p.stdin.close()
             if p.wait() != 0:
@@ -325,10 +390,12 @@ class Site:
 
     def write_binary_file(self, rel_path, content):
         if not self._is_running_as_site_user():
-            p = self.execute(["tee", self.path(rel_path)],
-                             stdin=subprocess.PIPE,
-                             stdout=open(os.devnull, "w"),
-                             encoding=None)
+            p = self.execute(
+                ["tee", self.path(rel_path)],
+                stdin=subprocess.PIPE,
+                stdout=open(os.devnull, "w"),
+                encoding=None,
+            )
             p.communicate(content)
             p.stdin.close()
             if p.wait() != 0:
@@ -341,13 +408,17 @@ class Site:
 
     def create_rel_symlink(self, link_rel_target, rel_link_name):
         if not self._is_running_as_site_user():
-            p = self.execute(["ln", "-s", link_rel_target, rel_link_name],
-                             stdout=subprocess.PIPE,
-                             stdin=subprocess.PIPE)
+            p = self.execute(
+                ["ln", "-s", link_rel_target, rel_link_name],
+                stdout=subprocess.PIPE,
+                stdin=subprocess.PIPE,
+            )
             p.communicate()
             if p.wait() != 0:
-                raise Exception("Failed to create symlink from %s to ./%s. Exit-Code: %d" %
-                                (rel_link_name, link_rel_target, p.wait()))
+                raise Exception(
+                    "Failed to create symlink from %s to ./%s. Exit-Code: %d"
+                    % (rel_link_name, link_rel_target, p.wait())
+                )
         else:
             return os.symlink(link_rel_target, os.path.join(self.root, rel_link_name))
 
@@ -355,8 +426,9 @@ class Site:
         if not self._is_running_as_site_user():
             p = self.execute(["readlink", "-e", self.path(rel_path)], stdout=subprocess.PIPE)
             if p.wait() != 0:
-                raise Exception("Failed to read symlink at %s. Exit-Code: %d" %
-                                (rel_path, p.wait()))
+                raise Exception(
+                    "Failed to read symlink at %s. Exit-Code: %d" % (rel_path, p.wait())
+                )
             return Path(p.stdout.read().strip())
         return self.path(rel_path).resolve()
 
@@ -386,20 +458,29 @@ class Site:
 
     def create(self):
         if not self.version.is_installed():
-            raise Exception("Version %s not installed. "
-                            "Use \"tests/scripts/install-cmk.py\" or install it manually." %
-                            self.version.version)
+            raise Exception(
+                "Version %s not installed. "
+                'Use "tests/scripts/install-cmk.py" or install it manually.' % self.version.version
+            )
 
         if not self.reuse and self.exists():
             raise Exception("The site %s already exists." % self.id)
 
         if not self.exists():
             logger.info("Creating site '%s'", self.id)
-            p = subprocess.Popen([
-                "/usr/bin/sudo", "/usr/bin/omd", "-V",
-                self.version.version_directory(), "create", "--admin-password", "cmk",
-                "--apache-reload", self.id
-            ])
+            p = subprocess.Popen(
+                [
+                    "/usr/bin/sudo",
+                    "/usr/bin/omd",
+                    "-V",
+                    self.version.version_directory(),
+                    "create",
+                    "--admin-password",
+                    "cmk",
+                    "--apache-reload",
+                    self.id,
+                ]
+            )
             exit_code = p.wait()
             assert exit_code == 0
             assert os.path.exists("/omd/sites/%s" % self.id)
@@ -459,7 +540,7 @@ class Site:
                 cmc_path() + "/core",
                 # TODO: Do not invoke the chroot build mechanism here, which is very time
                 # consuming when not initialized yet
-                #cmc_path() + "/agents",
+                # cmc_path() + "/agents",
             ]
 
         if os.path.exists(cme_path()) and self.version.is_managed_edition():
@@ -470,13 +551,18 @@ class Site:
 
         for path in paths:
             if os.path.exists("%s/.f12" % path):
-                print("Executing .f12 in \"%s\"..." % path)
-                assert os.system(  # nosec
-                    "cd \"%s\" ; "
-                    "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
-                    "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
-                    "bash .f12" % (path, self.id)) >> 8 == 0
-                print("Executing .f12 in \"%s\" DONE" % path)
+                print('Executing .f12 in "%s"...' % path)
+                assert (
+                    os.system(  # nosec
+                        'cd "%s" ; '
+                        "sudo PATH=$PATH ONLY_COPY=1 ALL_EDITIONS=0 SITE=%s "
+                        "CHROOT_BASE_PATH=$CHROOT_BASE_PATH CHROOT_BUILD_DIR=$CHROOT_BUILD_DIR "
+                        "bash .f12" % (path, self.id)
+                    )
+                    >> 8
+                    == 0
+                )
+                print('Executing .f12 in "%s" DONE' % path)
                 sys.stdout.flush()
 
     def _update_cmk_core_config(self):
@@ -492,20 +578,24 @@ class Site:
         self.makedirs("etc/check_mk/liveproxyd.d")
         # 15 = verbose
         # 10 = debug
-        self.write_file("etc/check_mk/liveproxyd.d/logging.mk",
-                        "liveproxyd_log_levels = {'cmk.liveproxyd': 15}")
+        self.write_file(
+            "etc/check_mk/liveproxyd.d/logging.mk", "liveproxyd_log_levels = {'cmk.liveproxyd': 15}"
+        )
 
     def _enable_mkeventd_debug_logging(self):
         self.makedirs("etc/check_mk/mkeventd.d")
         self.write_file(
-            "etc/check_mk/mkeventd.d/logging.mk", "log_level = %r\n" % {
-                'cmk.mkeventd': 10,
-                'cmk.mkeventd.EventServer': 10,
-                'cmk.mkeventd.EventServer.snmp': 10,
-                'cmk.mkeventd.EventStatus': 10,
-                'cmk.mkeventd.StatusServer': 10,
-                'cmk.mkeventd.lock': 20
-            })
+            "etc/check_mk/mkeventd.d/logging.mk",
+            "log_level = %r\n"
+            % {
+                "cmk.mkeventd": 10,
+                "cmk.mkeventd.EventServer": 10,
+                "cmk.mkeventd.EventServer.snmp": 10,
+                "cmk.mkeventd.EventStatus": 10,
+                "cmk.mkeventd.StatusServer": 10,
+                "cmk.mkeventd.lock": 20,
+            },
+        )
 
     def _enable_cmc_core_dumps(self):
         self.makedirs("etc/check_mk/conf.d")
@@ -514,55 +604,72 @@ class Site:
     def _enable_cmc_debug_logging(self):
         self.makedirs("etc/check_mk/conf.d")
         self.write_file(
-            "etc/check_mk/conf.d/cmc-logging.mk", "cmc_log_levels = %r\n" % {
-                'cmk.alert': 7,
-                'cmk.carbon': 7,
-                'cmk.core': 7,
-                'cmk.downtime': 7,
-                'cmk.helper': 6,
-                'cmk.livestatus': 7,
-                'cmk.notification': 7,
-                'cmk.rrd': 7,
-                'cmk.influxdb': 7,
-                'cmk.smartping': 7,
-            })
+            "etc/check_mk/conf.d/cmc-logging.mk",
+            "cmc_log_levels = %r\n"
+            % {
+                "cmk.alert": 7,
+                "cmk.carbon": 7,
+                "cmk.core": 7,
+                "cmk.downtime": 7,
+                "cmk.helper": 6,
+                "cmk.livestatus": 7,
+                "cmk.notification": 7,
+                "cmk.rrd": 7,
+                "cmk.influxdb": 7,
+                "cmk.smartping": 7,
+            },
+        )
 
     def _enable_gui_debug_logging(self):
         self.makedirs("etc/check_mk/multisite.d")
         self.write_file(
-            "etc/check_mk/multisite.d/logging.mk", "log_levels = %r\n" % {
+            "etc/check_mk/multisite.d/logging.mk",
+            "log_levels = %r\n"
+            % {
                 "cmk.web": 10,
                 "cmk.web.ldap": 10,
                 "cmk.web.auth": 10,
                 "cmk.web.bi.compilation": 10,
                 "cmk.web.automations": 10,
                 "cmk.web.background-job": 10,
-            })
+            },
+        )
 
     def _tune_nagios(self):
         # We want nagios to process queued external commands as fast as possible.  Even if we
         # set command_check_interval to -1, nagios is doing some sleeping in between the
         # command processing. We reduce the sleep time here to make it a little faster.
         self.write_file(
-            "etc/nagios/nagios.d/zzz-test-tuning.cfg", "log_passive_checks=1\n"
+            "etc/nagios/nagios.d/zzz-test-tuning.cfg",
+            "log_passive_checks=1\n"
             "service_inter_check_delay_method=n\n"
             "host_inter_check_delay_method=n\n"
-            "sleep_time=0.05\n")
+            "sleep_time=0.05\n",
+        )
 
     def _install_test_python_modules(self):
         venv = virtualenv_path()
         bin_dir = venv / "bin"
         self._copy_python_modules_from(
-            venv / f"lib/python{PYTHON_VERSION_MAJOR}.{PYTHON_VERSION_MINOR}/site-packages")
+            venv / f"lib/python{PYTHON_VERSION_MAJOR}.{PYTHON_VERSION_MINOR}/site-packages"
+        )
 
         # Some distros have a separate platfrom dependent library directory, handle it....
-        platlib64 = venv / f"lib64/python{PYTHON_VERSION_MAJOR}.{PYTHON_VERSION_MINOR}/site-packages"
+        platlib64 = (
+            venv / f"lib64/python{PYTHON_VERSION_MAJOR}.{PYTHON_VERSION_MINOR}/site-packages"
+        )
         if platlib64.exists():
             self._copy_python_modules_from(platlib64)
 
         for file_name in ["py.test", "pytest"]:
-            assert os.system("sudo rsync -a --chown %s:%s %s %s/local/bin" %  # nosec
-                             (self.id, self.id, bin_dir / file_name, self.root)) >> 8 == 0
+            assert (
+                os.system(
+                    "sudo rsync -a --chown %s:%s %s %s/local/bin"
+                    % (self.id, self.id, bin_dir / file_name, self.root)  # nosec
+                )
+                >> 8
+                == 0
+            )
 
     def _copy_python_modules_from(self, packages_dir):
         enforce_override = ["backports"]
@@ -570,38 +677,43 @@ class Site:
         for file_name in os.listdir(str(packages_dir)):
             # Only copy modules that do not exist in regular module path
             if file_name not in enforce_override:
-                if os.path.exists("%s/lib/python/%s" % (self.root, file_name)) \
-                   or os.path.exists(f"{self.root}/lib/python{PYTHON_VERSION_MAJOR}.{PYTHON_VERSION_MINOR}/site-packages/{file_name}"):
+                if os.path.exists("%s/lib/python/%s" % (self.root, file_name)) or os.path.exists(
+                    f"{self.root}/lib/python{PYTHON_VERSION_MAJOR}.{PYTHON_VERSION_MINOR}/site-packages/{file_name}"
+                ):
                     continue
 
-            assert os.system(  # nosec
-                f"sudo rsync -a --chown {self.id}:{self.id} {packages_dir / file_name} {self.root}/local/lib/python{PYTHON_VERSION_MAJOR}/"
-            ) >> 8 == 0
+            assert (
+                os.system(  # nosec
+                    f"sudo rsync -a --chown {self.id}:{self.id} {packages_dir / file_name} {self.root}/local/lib/python{PYTHON_VERSION_MAJOR}/"
+                )
+                >> 8
+                == 0
+            )
 
     def rm(self, site_id=None):
         if site_id is None:
             site_id = self.id
 
         # TODO: LM: Temporarily disabled until "omd rm" issue is fixed.
-        #assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
+        # assert subprocess.Popen(["/usr/bin/sudo", "/usr/bin/omd",
         subprocess.Popen(
-            ["/usr/bin/sudo", "/usr/bin/omd", "-f", "rm", "--apache-reload", "--kill",
-             site_id]).wait()
+            ["/usr/bin/sudo", "/usr/bin/omd", "-f", "rm", "--apache-reload", "--kill", site_id]
+        ).wait()
 
     def start(self):
         if not self.is_running():
             assert self.omd("start") == 0
-            #print("= BEGIN PROCESSES AFTER START ==============================")
-            #self.execute(["ps", "aux"]).wait()
-            #print("= END PROCESSES AFTER START ==============================")
+            # print("= BEGIN PROCESSES AFTER START ==============================")
+            # self.execute(["ps", "aux"]).wait()
+            # print("= END PROCESSES AFTER START ==============================")
             i = 0
             while not self.is_running():
                 i += 1
                 if i > 10:
                     self.execute(["/usr/bin/omd", "status"]).wait()
-                    #print("= BEGIN PROCESSES FAIL ==============================")
-                    #self.execute(["ps", "aux"]).wait()
-                    #print("= END PROCESSES FAIL ==============================")
+                    # print("= BEGIN PROCESSES FAIL ==============================")
+                    # self.execute(["ps", "aux"]).wait()
+                    # print("= END PROCESSES FAIL ==============================")
                     logger.warning("Could not start site %s. Stop waiting.", self.id)
                     break
                 logger.warning("The site %s is not running yet, sleeping... (round %d)", self.id, i)
@@ -610,24 +722,25 @@ class Site:
 
             self.ensure_running()
 
-        assert os.path.ismount(self.path("tmp")), \
-            "The site does not have a tmpfs mounted! We require this for good performing tests"
+        assert os.path.ismount(
+            self.path("tmp")
+        ), "The site does not have a tmpfs mounted! We require this for good performing tests"
 
     def stop(self):
         if self.is_stopped():
             return  # Nothing to do
 
-        #logger.debug("= BEGIN PROCESSES BEFORE =======================================")
-        #os.system("ps -fwwu %s" % self.id)  # nosec
-        #logger.debug("= END PROCESSES BEFORE =======================================")
+        # logger.debug("= BEGIN PROCESSES BEFORE =======================================")
+        # os.system("ps -fwwu %s" % self.id)  # nosec
+        # logger.debug("= END PROCESSES BEFORE =======================================")
 
         stop_exit_code = self.omd("stop")
         if stop_exit_code != 0:
             logger.error("omd stop exit code: %d", stop_exit_code)
 
-        #logger.debug("= BEGIN PROCESSES AFTER STOP =======================================")
-        #os.system("ps -fwwu %s" % self.id)  # nosec
-        #logger.debug("= END PROCESSES AFTER STOP =======================================")
+        # logger.debug("= BEGIN PROCESSES AFTER STOP =======================================")
+        # os.system("ps -fwwu %s" % self.id)  # nosec
+        # logger.debug("= END PROCESSES AFTER STOP =======================================")
 
         i = 0
         while not self.is_stopped():
@@ -646,15 +759,19 @@ class Site:
             pytest.exit("Site was not running completely while it should. Enforcing stop.")
 
     def is_running(self):
-        return self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull,
-                                                                              "w")).wait() == 0
+        return (
+            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull, "w")).wait()
+            == 0
+        )
 
     def is_stopped(self):
         # 0 -> fully running
         # 1 -> fully stopped
         # 2 -> partially running
-        return self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull,
-                                                                              "w")).wait() == 1
+        return (
+            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=open(os.devnull, "w")).wait()
+            == 1
+        )
 
     def set_config(self, key, val, with_restart=False):
         if self.get_config(key) == val:
@@ -676,9 +793,9 @@ class Site:
         self.set_config("CORE", core, with_restart=True)
 
     def get_config(self, key):
-        p = self.execute(["omd", "config", "show", key],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE)
+        p = self.execute(
+            ["omd", "config", "show", key], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
         stdout, stderr = p.communicate()
         logger.debug("omd config: %s is set to %r", key, stdout.strip())
         if stderr:
@@ -688,17 +805,15 @@ class Site:
     # These things are needed to make the site basically being setup. So this
     # is checked during site initialization instead of a dedicated test.
     def verify_cmk(self):
-        p = self.execute(["cmk", "--help"],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT,
-                         close_fds=True)
+        p = self.execute(
+            ["cmk", "--help"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True
+        )
         stdout = p.communicate()[0]
         assert p.returncode == 0, "Failed to execute 'cmk': %s" % stdout
 
-        p = self.execute(["cmk", "-U"],
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT,
-                         close_fds=True)
+        p = self.execute(
+            ["cmk", "-U"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True
+        )
         stdout = p.communicate()[0]
         assert p.returncode == 0, "Failed to execute 'cmk -U': %s" % stdout
 
@@ -719,7 +834,7 @@ class Site:
         # Call WATO once for creating the default WATO configuration
         logger.debug("Requesting wato.py (which creates the WATO factory settings)...")
         response = web.get("wato.py?mode=sites").text
-        #logger.debug("Debug: %r" % response)
+        # logger.debug("Debug: %r" % response)
         assert "site=%s" % web.site.id in response
 
         logger.debug("Waiting for WATO files to be created...")
@@ -729,9 +844,9 @@ class Site:
             wait_time -= 0.5
 
         missing_files = self._missing_but_required_wato_files()
-        assert not missing_files, \
-            "Failed to initialize WATO data structures " \
-            "(Still missing: %s)" % missing_files
+        assert not missing_files, (
+            "Failed to initialize WATO data structures " "(Still missing: %s)" % missing_files
+        )
 
         web.enforce_non_localized_gui()
 
@@ -751,15 +866,14 @@ class Site:
                 "ruleset": {
                     "": [  # "" -> folder
                         {
-                            'condition': {},
-                            'options': {},
-                            'value': {
-                                'group_patterns': [('TESTGROUP', ('*gwia*', ''))]
-                            }
+                            "condition": {},
+                            "options": {},
+                            "value": {"group_patterns": [("TESTGROUP", ("*gwia*", ""))]},
                         },
                     ],
                 }
-            })
+            },
+        )
 
     def _missing_but_required_wato_files(self):
         required_files = [
@@ -829,10 +943,12 @@ class Site:
         with suppress(FileNotFoundError):
             shutil.copy(self.path("junit.xml"), self.result_dir())
 
-        shutil.copytree(self.path("var/log"),
-                        "%s/logs" % self.result_dir(),
-                        ignore_dangling_symlinks=True,
-                        ignore=shutil.ignore_patterns('.*'))
+        shutil.copytree(
+            self.path("var/log"),
+            "%s/logs" % self.result_dir(),
+            ignore_dangling_symlinks=True,
+            ignore=shutil.ignore_patterns(".*"),
+        )
 
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
             shutil.copy(nagios_log_path, "%s/logs" % self.result_dir())
@@ -841,9 +957,11 @@ class Site:
             shutil.copy(self.path("var/check_mk/core/core"), "%s/cmc_core_dump" % self.result_dir())
 
         with suppress(FileNotFoundError):
-            shutil.copytree(self.path("var/check_mk/crashes"),
-                            "%s/crashes" % self.result_dir(),
-                            ignore=shutil.ignore_patterns('.*'))
+            shutil.copytree(
+                self.path("var/check_mk/crashes"),
+                "%s/crashes" % self.result_dir(),
+                ignore=shutil.ignore_patterns(".*"),
+            )
 
     def result_dir(self):
         return os.path.join(os.environ.get("RESULT_PATH", self.path("results")), self.id)
@@ -854,13 +972,15 @@ def _is_dockerized():
 
 
 class SiteFactory:
-    def __init__(self,
-                 version,
-                 edition,
-                 branch,
-                 update_from_git=False,
-                 install_test_python_modules=True,
-                 prefix=None):
+    def __init__(
+        self,
+        version,
+        edition,
+        branch,
+        update_from_git=False,
+        install_test_python_modules=True,
+        prefix=None,
+    ):
         self._base_ident = prefix or "s_%s_" % branch[:6]
         self._version = version
         self._edition = edition
@@ -909,13 +1029,15 @@ class SiteFactory:
 
     def _site_obj(self, name):
         site_id = "%s%s" % (self._base_ident, name)
-        return Site(site_id=site_id,
-                    reuse=False,
-                    version=self._version,
-                    edition=self._edition,
-                    branch=self._branch,
-                    update_from_git=self._update_from_git,
-                    install_test_python_modules=self._install_test_python_modules)
+        return Site(
+            site_id=site_id,
+            reuse=False,
+            version=self._version,
+            edition=self._edition,
+            branch=self._branch,
+            update_from_git=self._update_from_git,
+            install_test_python_modules=self._install_test_python_modules,
+        )
 
     def _new_site(self, name):
         site = self._site_obj(name)

@@ -13,92 +13,62 @@ from tests.testlib import Check
 pytestmark = pytest.mark.checks
 
 _SECTION = {
-    "1": {
-        "outlet_name": "outlet1",
-        "state": (0, "on")
-    },
-    "2": {
-        "outlet_name": "outlet2",
-        "state": (2, "off")
-    },
-    "3": {
-        "outlet_name": "",
-        "state": (0, "closed")
-    },
-    "4": {
-        "outlet_name": "",
-        "state": (0, "on")
-    },
-    "5": {
-        "outlet_name": "",
-        "state": (0, "on")
-    },
-    "6": {
-        "outlet_name": "",
-        "state": (0, "on")
-    },
-    "7": {
-        "outlet_name": "broken",
-        "state": (3, "unknown")
-    },
+    "1": {"outlet_name": "outlet1", "state": (0, "on")},
+    "2": {"outlet_name": "outlet2", "state": (2, "off")},
+    "3": {"outlet_name": "", "state": (0, "closed")},
+    "4": {"outlet_name": "", "state": (0, "on")},
+    "5": {"outlet_name": "", "state": (0, "on")},
+    "6": {"outlet_name": "", "state": (0, "on")},
+    "7": {"outlet_name": "broken", "state": (3, "unknown")},
 }
 
 
 def test_parse_raritan_pdu_plugs() -> None:
-    assert Check("raritan_pdu_plugs").run_parse([
-        ["1", "outlet1", "7"],
-        ["2", "outlet2", "8"],
-        ["3", "", "1"],
-        ["4", "", "7"],
-        ["5", "", "7"],
-        ["6", "", "7"],
-        ["7", "broken", "45"],
-    ]) == _SECTION
+    assert (
+        Check("raritan_pdu_plugs").run_parse(
+            [
+                ["1", "outlet1", "7"],
+                ["2", "outlet2", "8"],
+                ["3", "", "1"],
+                ["4", "", "7"],
+                ["5", "", "7"],
+                ["6", "", "7"],
+                ["7", "broken", "45"],
+            ]
+        )
+        == _SECTION
+    )
 
 
 def test_inventory_raritan_pdu_plugs() -> None:
     assert list(Check("raritan_pdu_plugs").run_discovery(_SECTION)) == [
         (
             "1",
-            {
-                "discovered_state": "on"
-            },
+            {"discovered_state": "on"},
         ),
         (
             "2",
-            {
-                "discovered_state": "off"
-            },
+            {"discovered_state": "off"},
         ),
         (
             "3",
-            {
-                "discovered_state": "closed"
-            },
+            {"discovered_state": "closed"},
         ),
         (
             "4",
-            {
-                "discovered_state": "on"
-            },
+            {"discovered_state": "on"},
         ),
         (
             "5",
-            {
-                "discovered_state": "on"
-            },
+            {"discovered_state": "on"},
         ),
         (
             "6",
-            {
-                "discovered_state": "on"
-            },
+            {"discovered_state": "on"},
         ),
         (
             "7",
-            {
-                "discovered_state": "unknown"
-            },
+            {"discovered_state": "unknown"},
         ),
     ]
 
@@ -183,8 +153,13 @@ def test_check_raritan_pdu_plugs(
     params: CombinedParams,
     expected_result: Sequence[Tuple[int, str]],
 ) -> None:
-    assert list(Check("raritan_pdu_plugs").run_check(
-        item,
-        params,
-        _SECTION,
-    )) == expected_result
+    assert (
+        list(
+            Check("raritan_pdu_plugs").run_check(
+                item,
+                params,
+                _SECTION,
+            )
+        )
+        == expected_result
+    )

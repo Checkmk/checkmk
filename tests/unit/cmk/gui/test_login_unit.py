@@ -44,9 +44,10 @@ def test_authenticate_fails(request_context, monkeypatch, user_id):
 def fixture_pre_16_cookie():
     environ = dict(
         create_environ(),
-        HTTP_COOKIE=
-        u"xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
-            "utf-8"))
+        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
+            "utf-8"
+        ),
+    )
 
     with application_and_request_context(environ):
         yield "auth_stable"
@@ -56,9 +57,10 @@ def fixture_pre_16_cookie():
 def fixture_pre_20_cookie():
     environ = dict(
         create_environ(),
-        HTTP_COOKIE=
-        u"xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
-            "utf-8"))
+        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
+            "utf-8"
+        ),
+    )
 
     with application_and_request_context(environ):
         yield "auth_stable"
@@ -94,8 +96,11 @@ def test_parse_auth_cookie_refuse_pre_20(pre_20_cookie):
 
 
 def test_parse_auth_cookie_allow_current(current_cookie, with_user, session_id):
-    assert login.user_from_cookie(login._fetch_cookie(current_cookie)) == (UserId(
-        with_user[0]), session_id, login._generate_auth_hash(with_user[0], session_id))
+    assert login.user_from_cookie(login._fetch_cookie(current_cookie)) == (
+        UserId(with_user[0]),
+        session_id,
+        login._generate_auth_hash(with_user[0], session_id),
+    )
 
 
 def test_auth_cookie_is_valid_refuse_pre_16(pre_16_cookie):

@@ -59,11 +59,13 @@ def test_snmp_ipaddress_from_mgmt_board_unresolvable(hostname, monkeypatch):
 
     Scenario().add_host(hostname).apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
-    monkeypatch.setattr(config, "host_attributes", {
-        "hostname": {
-            "management_address": "lolo"
+    monkeypatch.setattr(
+        config,
+        "host_attributes",
+        {
+            "hostname": {"management_address": "lolo"},
         },
-    })
+    )
     host_config = config.get_config_cache().get_host_config(hostname)
     assert config.lookup_mgmt_board_ip_address(host_config) is None
 
@@ -95,7 +97,8 @@ class TestSNMPSource_SNMP:
             force_cache_refresh=False,
         )
         assert source.description == (
-            "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)")
+            "SNMP (Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
+        )
 
 
 class TestSNMPSource_MGMT:
@@ -109,9 +112,7 @@ class TestSNMPSource_MGMT:
         ts.set_option(
             "host_attributes",
             {
-                hostname: {
-                    "management_address": ipaddress
-                },
+                hostname: {"management_address": ipaddress},
             },
         )
         ts.apply(monkeypatch)
@@ -125,7 +126,8 @@ class TestSNMPSource_MGMT:
         )
         assert source.description == (
             "Management board - SNMP "
-            "(Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)")
+            "(Community: 'public', Bulk walk: no, Port: 161, Backend: Classic)"
+        )
 
 
 class TestSNMPSummaryResult:

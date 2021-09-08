@@ -23,16 +23,17 @@ from .agent_aws_fake_clients import FakeCloudwatchClient  # type: ignore[import]
 @pytest.fixture()
 def get_cloudwatch_alarms_sections():
     def _create_cloudwatch_alarms_sections(alarm_names):
-        region = 'region'
-        config = AWSConfig('hostname', [], (None, None))
-        config.add_single_service_config('cloudwatch_alarms', alarm_names)
+        region = "region"
+        config = AWSConfig("hostname", [], (None, None))
+        config.add_single_service_config("cloudwatch_alarms", alarm_names)
 
         fake_cloudwatch_client = FakeCloudwatchClient()
 
         cloudwatch_alarms_limits_distributor = ResultDistributor()
 
-        cloudwatch_alarms_limits = CloudwatchAlarmsLimits(fake_cloudwatch_client, region, config,
-                                                          cloudwatch_alarms_limits_distributor)
+        cloudwatch_alarms_limits = CloudwatchAlarmsLimits(
+            fake_cloudwatch_client, region, config, cloudwatch_alarms_limits_distributor
+        )
         cloudwatch_alarms = CloudwatchAlarms(fake_cloudwatch_client, region, config)
 
         cloudwatch_alarms_limits_distributor.add(cloudwatch_alarms)
@@ -44,17 +45,18 @@ def get_cloudwatch_alarms_sections():
 cloudwatch_params: List[Tuple[Optional[List[str]], int]] = [
     (None, 2),
     ([], 2),
-    (['AlarmName-0'], 1),
-    (['not found'], 1),
-    (['AlarmName-0', 'too many'], 1),
-    (['AlarmName-0', 'AlarmName-1'], 2),
-    (['AlarmName-0', 'AlarmName-1', 'too many'], 2),
+    (["AlarmName-0"], 1),
+    (["not found"], 1),
+    (["AlarmName-0", "too many"], 1),
+    (["AlarmName-0", "AlarmName-1"], 2),
+    (["AlarmName-0", "AlarmName-1", "too many"], 2),
 ]
 
 
 @pytest.mark.parametrize("alarm_names,amount_alarms", cloudwatch_params)
-def test_agent_aws_cloudwatch_alarms_limits(get_cloudwatch_alarms_sections, alarm_names,
-                                            amount_alarms):
+def test_agent_aws_cloudwatch_alarms_limits(
+    get_cloudwatch_alarms_sections, alarm_names, amount_alarms
+):
     cloudwatch_alarms_limits, _cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)
     cloudwatch_alarms_limits_results = cloudwatch_alarms_limits.run().results
 
@@ -64,12 +66,12 @@ def test_agent_aws_cloudwatch_alarms_limits(get_cloudwatch_alarms_sections, alar
 
     assert len(cloudwatch_alarms_limits_results) == 1
     cloudwatch_alarms_limits_result = cloudwatch_alarms_limits_results[0]
-    assert cloudwatch_alarms_limits_result.piggyback_hostname == ''
+    assert cloudwatch_alarms_limits_result.piggyback_hostname == ""
 
     assert len(cloudwatch_alarms_limits_result.content) == 1
     cloudwatch_alarms_limits_content = cloudwatch_alarms_limits_result.content[0]
-    assert cloudwatch_alarms_limits_content.key == 'cloudwatch_alarms'
-    assert cloudwatch_alarms_limits_content.title == 'CloudWatch Alarms'
+    assert cloudwatch_alarms_limits_content.key == "cloudwatch_alarms"
+    assert cloudwatch_alarms_limits_content.title == "CloudWatch Alarms"
     assert cloudwatch_alarms_limits_content.limit == 5000
     assert cloudwatch_alarms_limits_content.amount == 2
 
@@ -86,13 +88,14 @@ def test_agent_aws_cloudwatch_alarms(get_cloudwatch_alarms_sections, alarm_names
 
     assert len(cloudwatch_alarms_results) == 1
     cloudwatch_alarms_result = cloudwatch_alarms_results[0]
-    assert cloudwatch_alarms_result.piggyback_hostname == ''
+    assert cloudwatch_alarms_result.piggyback_hostname == ""
     assert len(cloudwatch_alarms_result.content) == amount_alarms
 
 
 @pytest.mark.parametrize("alarm_names,amount_alarms", cloudwatch_params)
-def test_agent_aws_cloudwatch_alarms_without_limits(get_cloudwatch_alarms_sections, alarm_names,
-                                                    amount_alarms):
+def test_agent_aws_cloudwatch_alarms_without_limits(
+    get_cloudwatch_alarms_sections, alarm_names, amount_alarms
+):
     _cloudwatch_alarms_limits, cloudwatch_alarms = get_cloudwatch_alarms_sections(alarm_names)
     cloudwatch_alarms_results = cloudwatch_alarms.run().results
 
@@ -102,5 +105,5 @@ def test_agent_aws_cloudwatch_alarms_without_limits(get_cloudwatch_alarms_sectio
 
     assert len(cloudwatch_alarms_results) == 1
     cloudwatch_alarms_result = cloudwatch_alarms_results[0]
-    assert cloudwatch_alarms_result.piggyback_hostname == ''
+    assert cloudwatch_alarms_result.piggyback_hostname == ""
     assert len(cloudwatch_alarms_result.content) == amount_alarms

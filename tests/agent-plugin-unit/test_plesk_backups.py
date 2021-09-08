@@ -14,6 +14,9 @@ def test_import_module(capfd):
     out, _ = capfd.readouterr()
     # PY2 vs PY3: No module named 'MySQLdb' vs No module named MySQLdb
     out = out.replace("'", "")
-    assert out == "<<<plesk_backups>>>\nNo module named MySQLdb. Please install missing module via pip install <module>."
+    assert (
+        out
+        == "<<<plesk_backups>>>\nNo module named MySQLdb. Please install missing module via pip install <module>."
+    )
     assert pytest_wrapped_e.type == SystemExit
     assert pytest_wrapped_e.value.code == 0

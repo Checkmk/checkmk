@@ -18,16 +18,18 @@ from cmk.base.plugins.agent_based.utils import df
             [("SUMMARY", {}), ("ceph_bar", {}), ("ceph_foo", {})],
         ),
         (
-            [{
-                "groups": [{
-                    "group_name": "Foo",
-                    "patterns_exclude": ["SUMM"],
-                    "patterns_include": ["ceph*"],
-                }]
-            }],
-            [("SUMMARY", {}), ("Foo", {
-                "patterns": (["ceph*"], ["SUMM"])
-            })],
+            [
+                {
+                    "groups": [
+                        {
+                            "group_name": "Foo",
+                            "patterns_exclude": ["SUMM"],
+                            "patterns_include": ["ceph*"],
+                        }
+                    ]
+                }
+            ],
+            [("SUMMARY", {}), ("Foo", {"patterns": (["ceph*"], ["SUMM"])})],
         ),
     ],
 )
@@ -39,24 +41,19 @@ def test_df_discovery(params, expected):
         assert elem in actual
 
 
-@pytest.mark.parametrize("params,expected", [
-    (
-        ({
-            "fake": "fake"
-        }, "/fake", None, None, None, None, None, {
-            "fake": "fake"
-        }, None),
-        (Result(state=State.OK, summary="no filesystem size information"),),
-    ),
-    (
-        ({
-            "fake": "fake"
-        }, "/fake", 0, None, None, None, None, {
-            "fake": "fake"
-        }, None),
-        (Result(state=State.WARN, summary="Size of filesystem is 0 MB"),),
-    ),
-])
+@pytest.mark.parametrize(
+    "params,expected",
+    [
+        (
+            ({"fake": "fake"}, "/fake", None, None, None, None, None, {"fake": "fake"}, None),
+            (Result(state=State.OK, summary="no filesystem size information"),),
+        ),
+        (
+            ({"fake": "fake"}, "/fake", 0, None, None, None, None, {"fake": "fake"}, None),
+            (Result(state=State.WARN, summary="Size of filesystem is 0 MB"),),
+        ),
+    ],
+)
 def test_df_check_filesystem_single(params, expected):
     """Check only the early exit Result if size_mb or avail_mb or reserved_mb is None."""
     result = tuple(df.df_check_filesystem_single(*params))
@@ -64,33 +61,46 @@ def test_df_check_filesystem_single(params, expected):
     assert result == expected
 
 
-@pytest.mark.parametrize("mplist,patterns_include,patterns_exclude,expected", [
-    ({
-        "fake1": {
-            "size_mb": None,
-            "avail_mb": None,
-            "reserved_mb": 0,
-        },
-        "fake2": {
-            "size_mb": None,
-            "avail_mb": None,
-            "reserved_mb": 0,
-        }
-    }, ['fake1', 'fake2'], [], ['fake1', 'fake2']),
-    ({
-        "fake_same_name": {
-            "size_mb": None,
-            "avail_mb": None,
-            "reserved_mb": 0,
-        },
-        "fake_same_name": {
-            "size_mb": None,
-            "avail_mb": None,
-            "reserved_mb": 0,
-        }
-    }, ['fake_same_name', 'fake_same_name'], [], ['fake_same_name']),
-],
-                         ids=["unique", "duplicates"])
+@pytest.mark.parametrize(
+    "mplist,patterns_include,patterns_exclude,expected",
+    [
+        (
+            {
+                "fake1": {
+                    "size_mb": None,
+                    "avail_mb": None,
+                    "reserved_mb": 0,
+                },
+                "fake2": {
+                    "size_mb": None,
+                    "avail_mb": None,
+                    "reserved_mb": 0,
+                },
+            },
+            ["fake1", "fake2"],
+            [],
+            ["fake1", "fake2"],
+        ),
+        (
+            {
+                "fake_same_name": {
+                    "size_mb": None,
+                    "avail_mb": None,
+                    "reserved_mb": 0,
+                },
+                "fake_same_name": {
+                    "size_mb": None,
+                    "avail_mb": None,
+                    "reserved_mb": 0,
+                },
+            },
+            ["fake_same_name", "fake_same_name"],
+            [],
+            ["fake_same_name"],
+        ),
+    ],
+    ids=["unique", "duplicates"],
+)
 def test_mountpoints_in_group(mplist, patterns_include, patterns_exclude, expected):
     """Returns list of mountpoints without duplicates."""
 

@@ -13,7 +13,9 @@ import cmk.base.autochecks as autochecks
 import cmk.base.config as config
 
 
-def test_test_check_1_merged_rule(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_test_check_1_merged_rule(
+    request, site, web
+):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     host_name = "disco-params-test-host"
 
@@ -31,7 +33,8 @@ def test_test_check_1_merged_rule(request, site, web):  # noqa: F811 # pylint: d
     request.addfinalizer(cleanup)
 
     site.write_file(
-        test_check_path, """
+        test_check_path,
+        """
 import pprint
 
 from .agent_based_api.v1 import register, Service
@@ -55,7 +58,8 @@ register.check_plugin(
     check_function=check,
     service_name="Foo %s",
 )
-""")
+""",
+    )
 
     web.activate_changes()
 
@@ -71,8 +75,10 @@ register.check_plugin(
         assert False, '"test_check_1" not discovered'
 
     # And now overwrite the setting in the config
-    site.write_file("etc/check_mk/conf.d/test_check_1.mk",
-                    "discover_test_check_1 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n")
+    site.write_file(
+        "etc/check_mk/conf.d/test_check_1.mk",
+        "discover_test_check_1 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n",
+    )
 
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
@@ -86,7 +92,9 @@ register.check_plugin(
         assert False, '"test_check_1" not discovered'
 
 
-def test_test_check_1_all_rule(request, site, web):  # noqa: F811 # pylint: disable=redefined-outer-name
+def test_test_check_1_all_rule(
+    request, site, web
+):  # noqa: F811 # pylint: disable=redefined-outer-name
 
     host_name = "disco-params-test-host"
 
@@ -104,7 +112,8 @@ def test_test_check_1_all_rule(request, site, web):  # noqa: F811 # pylint: disa
     request.addfinalizer(cleanup)
 
     site.write_file(
-        test_check_path, """
+        test_check_path,
+        """
 import pprint
 
 from .agent_based_api.v1 import register, Service
@@ -128,7 +137,8 @@ register.check_plugin(
     check_function=check,
     service_name="Foo %s",
 )
-""")
+""",
+    )
 
     web.activate_changes()
 
@@ -145,8 +155,10 @@ register.check_plugin(
         assert False, '"test_check_2" not discovered'
 
     # And now overwrite the setting in the config
-    site.write_file("etc/check_mk/conf.d/test_check_2.mk",
-                    "discover_test_check_2 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n")
+    site.write_file(
+        "etc/check_mk/conf.d/test_check_2.mk",
+        "discover_test_check_2 = [{'value': {'levels': (1, 2)}, 'condition': {}}]\n",
+    )
 
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
@@ -154,8 +166,9 @@ register.check_plugin(
     services = autochecks.parse_autochecks_file(HostName(host_name), config.service_description)
     for service in services:
         if str(service.check_plugin_name) == "test_check_2":
-            assert service.item == ("[Parameters({'levels': (1, 2)}),"
-                                    " Parameters({'default': 42})]")
+            assert service.item == (
+                "[Parameters({'levels': (1, 2)})," " Parameters({'default': 42})]"
+            )
             break
     else:
         assert False, '"test_check_2" not discovered'

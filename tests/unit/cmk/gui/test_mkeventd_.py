@@ -21,15 +21,18 @@ def test_send_event(monkeypatch: MonkeyPatch) -> None:
         "execute_command",
         lambda *args, **kwargs: None,
     )
-    assert send_event(
-        {
-            "facility": 17,
-            "priority": 1,
-            "sl": 20,
-            "host": "horst",
-            "ipaddress": "127.0.0.1",
-            "application": "Barz App",
-            "text": "I am a unit test",
-            "site": "heute",
-        }
-    ) == '<137>1 2021-06-02T12:47:01+00:00 horst - - - [Checkmk@18662 ipaddress="127.0.0.1" sl="20" application="Barz App"] I am a unit test'
+    assert (
+        send_event(
+            {
+                "facility": 17,
+                "priority": 1,
+                "sl": 20,
+                "host": "horst",
+                "ipaddress": "127.0.0.1",
+                "application": "Barz App",
+                "text": "I am a unit test",
+                "site": "heute",
+            }
+        )
+        == '<137>1 2021-06-02T12:47:01+00:00 horst - - - [Checkmk@18662 ipaddress="127.0.0.1" sl="20" application="Barz App"] I am a unit test'
+    )

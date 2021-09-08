@@ -20,7 +20,7 @@ INFO_TREE = BackendSNMPTree(
     oids=[
         BackendOIDSpec("1.0", "string", False),
         BackendOIDSpec("2.0", "string", False),
-        BackendOIDSpec("5.0", "string", False)
+        BackendOIDSpec("5.0", "string", False),
     ],
 )
 
@@ -32,6 +32,7 @@ def monkeymodule(request):
     from _pytest.monkeypatch import (
         MonkeyPatch,  # type: ignore[import] # pylint: disable=import-outside-toplevel
     )
+
     mpatch = MonkeyPatch()
     yield mpatch
     mpatch.undo()
@@ -39,17 +40,20 @@ def monkeymodule(request):
 
 # Missing in currently used dump:
 # 5 NULL
-#68 - Opaque
-@pytest.mark.parametrize("type_name,oid,expected_response", [
-    ("Counter64", ".1.3.6.1.2.1.4.31.1.1.21.1", "15833452"),
-    ("OCTET STRING", ".1.3.6.1.2.1.1.4.0", "SNMP Laboratories, info@snmplabs.com"),
-    ("OBJECT IDENTIFIER", ".1.3.6.1.2.1.1.9.1.2.1", ".1.3.6.1.6.3.10.3.1.1"),
-    ("IpAddress", ".1.3.6.1.2.1.3.1.1.3.2.1.195.218.254.97", "195.218.254.97"),
-    ("Integer32", ".1.3.6.1.2.1.1.7.0", "72"),
-    ("Counter32", ".1.3.6.1.2.1.5.1.0", "324"),
-    ("Gauge32", ".1.3.6.1.2.1.6.9.0", "9"),
-    ("TimeTicks", ".1.3.6.1.2.1.1.3.0", "449613886"),
-])
+# 68 - Opaque
+@pytest.mark.parametrize(
+    "type_name,oid,expected_response",
+    [
+        ("Counter64", ".1.3.6.1.2.1.4.31.1.1.21.1", "15833452"),
+        ("OCTET STRING", ".1.3.6.1.2.1.1.4.0", "SNMP Laboratories, info@snmplabs.com"),
+        ("OBJECT IDENTIFIER", ".1.3.6.1.2.1.1.9.1.2.1", ".1.3.6.1.6.3.10.3.1.1"),
+        ("IpAddress", ".1.3.6.1.2.1.3.1.1.3.2.1.195.218.254.97", "195.218.254.97"),
+        ("Integer32", ".1.3.6.1.2.1.1.7.0", "72"),
+        ("Counter32", ".1.3.6.1.2.1.5.1.0", "324"),
+        ("Gauge32", ".1.3.6.1.2.1.6.9.0", "9"),
+        ("TimeTicks", ".1.3.6.1.2.1.1.3.0", "449613886"),
+    ],
+)
 def test_get_data_types(backend, type_name, oid, expected_response):
     response = snmp_modes.get_single_oid(oid, backend=backend)
     assert response == expected_response
@@ -121,9 +125,9 @@ def test_get_simple_snmp_table_bulkwalk(backend, bulk):
 
     assert table == [
         [
-            u'Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686',
-            u'.1.3.6.1.4.1.8072.3.2.10',
-            u'new system name',
+            "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686",
+            ".1.3.6.1.4.1.8072.3.2.10",
+            "new system name",
         ],
     ]
     assert isinstance(table[0][0], str)
@@ -157,9 +161,9 @@ def test_get_simple_snmp_table(backend):
 
     assert table == [
         [
-            u'Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686',
-            u'.1.3.6.1.4.1.8072.3.2.10',
-            u'new system name',
+            "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686",
+            ".1.3.6.1.4.1.8072.3.2.10",
+            "new system name",
         ],
     ]
     assert isinstance(table[0][0], str)
@@ -183,8 +187,8 @@ def test_get_simple_snmp_table_oid_end(backend):
     )
 
     assert table == [
-        [u'1', u'lo', u'24', u'1'],
-        [u'2', u'eth0', u'6', u'2'],
+        ["1", "lo", "24", "1"],
+        ["2", "eth0", "6", "2"],
     ]
 
 
@@ -207,8 +211,8 @@ def test_get_simple_snmp_table_oid_string(backend):
     )
 
     assert table == [
-        [u'1', u'lo', u'24', u'.1.3.6.1.2.1.2.2.1.1.1'],
-        [u'2', u'eth0', u'6', u'.1.3.6.1.2.1.2.2.1.1.2'],
+        ["1", "lo", "24", ".1.3.6.1.2.1.2.2.1.1.1"],
+        ["2", "eth0", "6", ".1.3.6.1.2.1.2.2.1.1.2"],
     ]
 
 
@@ -231,8 +235,8 @@ def test_get_simple_snmp_table_oid_bin(backend):
     )
 
     assert table == [
-        [u'1', u'lo', u'24', u'\x01\x03\x06\x01\x02\x01\x02\x02\x01\x01\x01'],
-        [u'2', u'eth0', u'6', u'\x01\x03\x06\x01\x02\x01\x02\x02\x01\x01\x02'],
+        ["1", "lo", "24", "\x01\x03\x06\x01\x02\x01\x02\x02\x01\x01\x01"],
+        ["2", "eth0", "6", "\x01\x03\x06\x01\x02\x01\x02\x02\x01\x01\x02"],
     ]
 
 
@@ -255,8 +259,8 @@ def test_get_simple_snmp_table_oid_end_bin(backend):
     )
 
     assert table == [
-        [u'1', u'lo', u'24', u'\x01'],
-        [u'2', u'eth0', u'6', u'\x02'],
+        ["1", "lo", "24", "\x01"],
+        ["2", "eth0", "6", "\x02"],
     ]
 
 
@@ -274,8 +278,8 @@ def test_get_simple_snmp_table_with_hex_str(backend):
     )
 
     assert table == [
-        [u''],
+        [""],
         [
-            u'\x00\x12yb\xf9@',
+            "\x00\x12yb\xf9@",
         ],
     ]

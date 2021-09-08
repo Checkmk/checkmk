@@ -86,7 +86,7 @@ class TestStructuredDataValue:
             ),
             pytest.param(
                 StructuredDataValue(r'\tell me, where "is" ]Gandalf'),
-                r'\\tell me, where \"is\" \]Gandalf',
+                r"\\tell me, where \"is\" \]Gandalf",
                 id="with escaping",
             ),
         ],
@@ -109,18 +109,22 @@ class TestStructuredDataParameters:
                 id="no parameters",
             ),
             pytest.param(
-                StructuredDataParameters({
-                    StructuredDataName("name"): StructuredDataValue("value"),
-                }),
+                StructuredDataParameters(
+                    {
+                        StructuredDataName("name"): StructuredDataValue("value"),
+                    }
+                ),
                 'name="value"',
                 id="one parameter",
             ),
             pytest.param(
-                StructuredDataParameters({
-                    StructuredDataName("name1"): StructuredDataValue("value1"),
-                    StructuredDataName("name2"): StructuredDataValue("value[2]"),
-                    StructuredDataName("hobbits"): StructuredDataValue("isengard"),
-                }),
+                StructuredDataParameters(
+                    {
+                        StructuredDataName("name1"): StructuredDataValue("value1"),
+                        StructuredDataName("name2"): StructuredDataValue("value[2]"),
+                        StructuredDataName("hobbits"): StructuredDataValue("isengard"),
+                    }
+                ),
                 r'name1="value1" name2="value[2\]" hobbits="isengard"',
                 id="multiple parameters",
             ),
@@ -144,34 +148,46 @@ class TestStructuredData:
                 id="no data (NILVALUE)",
             ),
             pytest.param(
-                StructuredData({
-                    StructuredDataID("exampleSDID@32473"): StructuredDataParameters({}),
-                }),
+                StructuredData(
+                    {
+                        StructuredDataID("exampleSDID@32473"): StructuredDataParameters({}),
+                    }
+                ),
                 "[exampleSDID@32473]",
                 id="one element with id only",
             ),
             pytest.param(
-                StructuredData({
-                    StructuredDataID("Checkmk@18662"): StructuredDataParameters({
-                        StructuredDataName("sl"): StructuredDataValue("20"),
-                        StructuredDataName("ipaddress"): StructuredDataValue("127.0.0.1"),
-                    }),
-                }),
+                StructuredData(
+                    {
+                        StructuredDataID("Checkmk@18662"): StructuredDataParameters(
+                            {
+                                StructuredDataName("sl"): StructuredDataValue("20"),
+                                StructuredDataName("ipaddress"): StructuredDataValue("127.0.0.1"),
+                            }
+                        ),
+                    }
+                ),
                 '[Checkmk@18662 sl="20" ipaddress="127.0.0.1"]',
                 id="one element with id and data",
             ),
             pytest.param(
-                StructuredData({
-                    StructuredDataID("examplePriority@32473"): StructuredDataParameters({}),
-                    StructuredDataID("Checkmk@18662"): StructuredDataParameters({
-                        StructuredDataName("sl"): StructuredDataValue("20"),
-                        StructuredDataName("ipaddress"): StructuredDataValue("127.0.0.1"),
-                    }),
-                    StructuredDataID("whatever"): StructuredDataParameters({
-                        StructuredDataName("abc"): StructuredDataValue('x"yz'),
-                        StructuredDataName("hurz"): StructuredDataValue("bärz"),
-                    }),
-                }),
+                StructuredData(
+                    {
+                        StructuredDataID("examplePriority@32473"): StructuredDataParameters({}),
+                        StructuredDataID("Checkmk@18662"): StructuredDataParameters(
+                            {
+                                StructuredDataName("sl"): StructuredDataValue("20"),
+                                StructuredDataName("ipaddress"): StructuredDataValue("127.0.0.1"),
+                            }
+                        ),
+                        StructuredDataID("whatever"): StructuredDataParameters(
+                            {
+                                StructuredDataName("abc"): StructuredDataValue('x"yz'),
+                                StructuredDataName("hurz"): StructuredDataValue("bärz"),
+                            }
+                        ),
+                    }
+                ),
                 r'[examplePriority@32473][Checkmk@18662 sl="20" ipaddress="127.0.0.1"][whatever abc="x\"yz" hurz="bärz"]',
                 id="multiple elements",
             ),
@@ -204,9 +220,11 @@ class TestSyslogMessage:
             pytest.param(
                 4,
                 5,
-                StructuredData({
-                    StructuredDataID("Checkmk@18662"): StructuredDataParameters({}),
-                }),
+                StructuredData(
+                    {
+                        StructuredDataID("Checkmk@18662"): StructuredDataParameters({}),
+                    }
+                ),
                 id="invalid structured data",
             ),
         ],
@@ -244,12 +262,18 @@ class TestSyslogMessage:
                     application="some_deamon",
                     proc_id="procid",
                     msg_id="msgid",
-                    structured_data=StructuredData({
-                        StructuredDataID("exampleSDID@32473"): StructuredDataParameters({
-                            StructuredDataName("iut"): StructuredDataValue("3"),
-                            StructuredDataName("eventSource"): StructuredDataValue("Application"),
-                        }),
-                    }),
+                    structured_data=StructuredData(
+                        {
+                            StructuredDataID("exampleSDID@32473"): StructuredDataParameters(
+                                {
+                                    StructuredDataName("iut"): StructuredDataValue("3"),
+                                    StructuredDataName("eventSource"): StructuredDataValue(
+                                        "Application"
+                                    ),
+                                }
+                            ),
+                        }
+                    ),
                     text="something is wrong with herbert",
                 ),
                 '<10>1 2021-04-08T06:47:17+00:00 herbert some_deamon procid msgid [exampleSDID@32473 iut="3" eventSource="Application"][Checkmk@18662] something is wrong with herbert',
@@ -264,12 +288,18 @@ class TestSyslogMessage:
                     application="some_deamon",
                     proc_id="procid",
                     msg_id="msgid",
-                    structured_data=StructuredData({
-                        StructuredDataID("exampleSDID@32473"): StructuredDataParameters({
-                            StructuredDataName("iut"): StructuredDataValue("3"),
-                            StructuredDataName("eventSource"): StructuredDataValue("Application"),
-                        }),
-                    }),
+                    structured_data=StructuredData(
+                        {
+                            StructuredDataID("exampleSDID@32473"): StructuredDataParameters(
+                                {
+                                    StructuredDataName("iut"): StructuredDataValue("3"),
+                                    StructuredDataName("eventSource"): StructuredDataValue(
+                                        "Application"
+                                    ),
+                                }
+                            ),
+                        }
+                    ),
                     text="something is wrong with herbert",
                     ip_address="127.0.0.2",
                     service_level=13,
@@ -286,12 +316,18 @@ class TestSyslogMessage:
                     application="some_deamon",
                     proc_id="procid",
                     msg_id="msgid",
-                    structured_data=StructuredData({
-                        StructuredDataID("exampleSDID@32473"): StructuredDataParameters({
-                            StructuredDataName("iut"): StructuredDataValue("3"),
-                            StructuredDataName("eventSource"): StructuredDataValue("Application"),
-                        }),
-                    }),
+                    structured_data=StructuredData(
+                        {
+                            StructuredDataID("exampleSDID@32473"): StructuredDataParameters(
+                                {
+                                    StructuredDataName("iut"): StructuredDataValue("3"),
+                                    StructuredDataName("eventSource"): StructuredDataValue(
+                                        "Application"
+                                    ),
+                                }
+                            ),
+                        }
+                    ),
                     text="something is wrong with härbört",
                     ip_address="127.0.0.2",
                     service_level=13,
@@ -308,21 +344,29 @@ class TestSyslogMessage:
                     application="somé_deamon",
                     proc_id="ìd",
                     msg_id="mässage",
-                    structured_data=StructuredData({
-                        StructuredDataID("exampleSDID@32473"): StructuredDataParameters({
-                            StructuredDataName("iut"): StructuredDataValue("3"),
-                            StructuredDataName("eventSource"): StructuredDataValue("Application"),
-                        }),
-                        StructuredDataID("needEscaping@123"): StructuredDataParameters({
-                            StructuredDataName("escapeMe"): StructuredDataValue(r'"abc\]'),
-                        }),
-                    }),
+                    structured_data=StructuredData(
+                        {
+                            StructuredDataID("exampleSDID@32473"): StructuredDataParameters(
+                                {
+                                    StructuredDataName("iut"): StructuredDataValue("3"),
+                                    StructuredDataName("eventSource"): StructuredDataValue(
+                                        "Application"
+                                    ),
+                                }
+                            ),
+                            StructuredDataID("needEscaping@123"): StructuredDataParameters(
+                                {
+                                    StructuredDataName("escapeMe"): StructuredDataValue(r'"abc\]'),
+                                }
+                            ),
+                        }
+                    ),
                     text="something is wrong with he\ufeffrbert härry",
                     ip_address="1.2.3.4",
                     service_level=20,
                 ),
                 r'<10>1 2021-04-08T06:47:17.230000+00:00 - - - - [exampleSDID@32473 iut="3" eventSource="Application"][needEscaping@123 escapeMe="\"abc\\\]"][Checkmk@18662 ipaddress="1.2.3.4" sl="20" host="herbert härry" application="somé_deamon" pid="ìd" msg_id="mässage"]'
-                + ' \ufeffsomething is wrong with he\ufeffrbert härry',
+                + " \ufeffsomething is wrong with he\ufeffrbert härry",
                 id="nothing rfc conform",
             ),
         ],

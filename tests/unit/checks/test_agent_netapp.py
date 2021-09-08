@@ -12,14 +12,10 @@ pytestmark = pytest.mark.checks
 
 
 @pytest.mark.parametrize(
-    'params, expected_args',
+    "params, expected_args",
     [
         pytest.param(
-            {
-                'username': 'user',
-                'password': 'password',
-                'skip_elements': []
-            },
+            {"username": "user", "password": "password", "skip_elements": []},
             [
                 "address",
                 "user",
@@ -29,11 +25,7 @@ pytestmark = pytest.mark.checks
             id="no elements to skip",
         ),
         pytest.param(
-            {
-                'username': 'user',
-                'password': 'password',
-                'skip_elements': ['ctr_volumes']
-            },
+            {"username": "user", "password": "password", "skip_elements": ["ctr_volumes"]},
             [
                 "address",
                 "user",
@@ -47,6 +39,6 @@ pytestmark = pytest.mark.checks
 )
 def test_netapp_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_netapp')
+    agent = SpecialAgent("agent_netapp")
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

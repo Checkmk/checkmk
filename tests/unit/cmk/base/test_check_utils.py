@@ -24,12 +24,14 @@ def _service(plugin: str, item: Optional[str]) -> Service:
 
 def test_service_sortable():
 
-    assert sorted([
-        _service("B", "b"),
-        _service("A", "b"),
-        _service("B", "a"),
-        _service("A", None),
-    ]) == [
+    assert sorted(
+        [
+            _service("B", "b"),
+            _service("A", "b"),
+            _service("B", "a"),
+            _service("A", None),
+        ]
+    ) == [
         _service("A", None),
         _service("A", "b"),
         _service("B", "a"),

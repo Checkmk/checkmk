@@ -39,13 +39,13 @@ def test_man_page_exists_only_shipped():
 
 def test_man_page_exists_both_dirs(tmp_path):
     f1 = tmp_path / "file1"
-    f1.write_text(u"x", encoding="utf-8")
+    f1.write_text("x", encoding="utf-8")
 
     assert man_pages.man_page_exists("file1") is True
     assert man_pages.man_page_exists("file2") is False
 
     f2 = tmp_path / "if"
-    f2.write_text(u"x", encoding="utf-8")
+    f2.write_text("x", encoding="utf-8")
 
     assert man_pages.man_page_exists("if") is True
 
@@ -57,13 +57,13 @@ def test_man_page_path_only_shipped():
 
 def test_man_page_path_both_dirs(tmp_path):
     f1 = tmp_path / "file1"
-    f1.write_text(u"x", encoding="utf-8")
+    f1.write_text("x", encoding="utf-8")
 
     assert man_pages.man_page_path("file1") == tmp_path / "file1"
     assert man_pages.man_page_path("file2") is None
 
     f2 = tmp_path / "if"
-    f2.write_text(u"x", encoding="utf-8")
+    f2.write_text("x", encoding="utf-8")
 
     assert man_pages.man_page_path("if") == tmp_path / "if"
 
@@ -76,9 +76,9 @@ def test_all_manpages_migrated(all_pages):
 
 
 def test_all_man_pages(tmp_path):
-    (tmp_path / ".asd").write_text(u"", encoding="utf-8")
-    (tmp_path / "asd~").write_text(u"", encoding="utf-8")
-    (tmp_path / "if").write_text(u"", encoding="utf-8")
+    (tmp_path / ".asd").write_text("", encoding="utf-8")
+    (tmp_path / "asd~").write_text("", encoding="utf-8")
+    (tmp_path / "if").write_text("", encoding="utf-8")
 
     pages = man_pages.all_man_pages()
 
@@ -164,10 +164,9 @@ def test_cluster_check_functions_match_manpages_cluster_sections(fix_register, a
         has_cluster_doc = "cluster" in man_page["header"]
         has_cluster_func = plugin.cluster_check_function is not None
         if has_cluster_doc is not has_cluster_func:
-            (
-                missing_cluster_description,
-                unexpected_cluster_description,
-            )[has_cluster_doc].add(str(plugin.name))
+            (missing_cluster_description, unexpected_cluster_description,)[
+                has_cluster_doc
+            ].add(str(plugin.name))
 
     assert not missing_cluster_description
     assert not unexpected_cluster_description
@@ -177,7 +176,9 @@ def test_no_subtree_and_entries_on_same_level(catalog):
     for category, entries in catalog.items():
         has_entries = entries != []
         has_categories = man_pages._manpage_catalog_subtree_names(catalog, category) != []
-        assert has_entries != has_categories, "A category must only have entries or categories, not both"
+        assert (
+            has_entries != has_categories
+        ), "A category must only have entries or categories, not both"
 
 
 # TODO: print_man_page_browser()
@@ -191,7 +192,7 @@ def _check_man_page_structure(page):
     for key in ["header"]:
         assert key in page
 
-    for key in ['description', 'license', 'title', 'catalog', 'agents', 'distribution']:
+    for key in ["description", "license", "title", "catalog", "agents", "distribution"]:
         assert key in page["header"]
 
     for key in ["configuration", "parameters", "discovery"]:
@@ -208,7 +209,7 @@ def test_load_man_page_format(all_pages):
     _check_man_page_structure(page)
 
     # Check optional keys
-    for key in ['item', 'discovery']:
+    for key in ["item", "discovery"]:
         assert key in page["header"]
 
 
@@ -250,7 +251,8 @@ def test_missing_catalog_entries_of_man_pages(all_pages) -> None:
     for name in man_pages.all_man_pages():
         man_page = all_pages[name]
         assert man_page is not None
-        found_catalog_entries_from_man_pages |= set(man_page['header']['catalog'].split("/"))
+        found_catalog_entries_from_man_pages |= set(man_page["header"]["catalog"].split("/"))
     missing_catalog_entries = found_catalog_entries_from_man_pages - catalog_titles
     assert missing_catalog_entries == set(), "Found missing catalog entries: %s" % ", ".join(
-        sorted(missing_catalog_entries))
+        sorted(missing_catalog_entries)
+    )

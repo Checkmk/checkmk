@@ -17,6 +17,7 @@ import cmk.base.config as config
 
 class Scenario:
     """Helper class to modify the Check_MK base configuration for unit tests"""
+
     def __init__(self, site_id="unit"):
         super().__init__()
 
@@ -36,12 +37,9 @@ class Scenario:
         }
         self.config_cache = config.get_config_cache()
 
-    def add_host(self,
-                 hostname,
-                 tags=None,
-                 host_path="/wato/hosts.mk",
-                 labels=None,
-                 ipaddress=None):
+    def add_host(
+        self, hostname, tags=None, host_path="/wato/hosts.mk", labels=None, ipaddress=None
+    ):
         if tags is None:
             tags = {}
         assert isinstance(tags, dict)
@@ -102,13 +100,13 @@ class Scenario:
 
         # TODO: Compute this dynamically with self.tags
         tag_config = {
-            'piggyback': 'auto-piggyback',
-            'networking': 'lan',
-            'agent': 'cmk-agent',
-            'criticality': 'prod',
-            'snmp_ds': 'no-snmp',
-            'site': self.site_id,
-            'address_family': 'ip-v4-only',
+            "piggyback": "auto-piggyback",
+            "networking": "lan",
+            "agent": "cmk-agent",
+            "criticality": "prod",
+            "snmp_ds": "no-snmp",
+            "site": self.site_id,
+            "address_family": "ip-v4-only",
         }
         tag_config.update(tags)
 
@@ -153,13 +151,17 @@ class Scenario:
 
         if self._autochecks:
             # TODO: This monkeypatching is horrible, it totally breaks any abstraction!
-            monkeypatch.setattr(self.config_cache._autochecks_manager,
-                                "_raw_autochecks",
-                                dict(self._autochecks.items()),
-                                raising=False)
+            monkeypatch.setattr(
+                self.config_cache._autochecks_manager,
+                "_raw_autochecks",
+                dict(self._autochecks.items()),
+                raising=False,
+            )
 
             monkeypatch.setattr(
-                autochecks.AutochecksManager, "_read_raw_autochecks_uncached",
-                lambda self, hostname, service_description: self._raw_autochecks.get(hostname, []))
+                autochecks.AutochecksManager,
+                "_read_raw_autochecks_uncached",
+                lambda self, hostname, service_description: self._raw_autochecks.get(hostname, []),
+            )
 
         return self.config_cache

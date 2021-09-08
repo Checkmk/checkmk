@@ -52,7 +52,7 @@ from .run import run
 
 pytestmark = pytest.mark.checks
 
-#FIXME automatic download crashreports to ~git/zeug_cmk/crashreports/crashdata
+# FIXME automatic download crashreports to ~git/zeug_cmk/crashreports/crashdata
 CRASHDATA_DIR = Path.home() / "crashdata"
 
 
@@ -62,76 +62,77 @@ class SkipReport(RuntimeError):
 
 class CrashDataset(WritableDataset):
     def __init__(self, crash_report_fn):
-        '''
+        """
         Try to create a dataset like object from a crash report
 
         Errors that raise a SkipReport exception will result
         in a SKIP-state in the state file.
-        '''
+        """
         with tarfile.open(crash_report_fn, "r:gz") as tar:
-            tar_entry = tar.extractfile('crash.info')
+            tar_entry = tar.extractfile("crash.info")
             assert tar_entry is not None
             content = tar_entry.read()
         crashinfo = json.loads(content)
 
-        if crashinfo['crash_type'] != 'check':
-            raise SkipReport("crash type: %s" % crashinfo['crash_type'])
+        if crashinfo["crash_type"] != "check":
+            raise SkipReport("crash type: %s" % crashinfo["crash_type"])
 
-        traceback = crashinfo.get('exc_traceback', [])
+        traceback = crashinfo.get("exc_traceback", [])
         for line in traceback:
-            if '/local/share/check_mk/' in line[0]:
+            if "/local/share/check_mk/" in line[0]:
                 raise SkipReport("local check plugin")
 
         init_dict = {}
-        full_checkname = crashinfo['details']['check_type']
-        if full_checkname == 'discovery':
+        full_checkname = crashinfo["details"]["check_type"]
+        if full_checkname == "discovery":
             full_checkname = self._find_checkname_from_traceback(traceback)
             if not full_checkname:
                 raise SkipReport("found no check plugin from traceback")
 
         self.full_checkname = full_checkname
-        checkname = self.full_checkname.split('.', 1)[0]
-        init_dict['checkname'] = checkname
+        checkname = self.full_checkname.split(".", 1)[0]
+        init_dict["checkname"] = checkname
 
-        local_vars_encoded = crashinfo.get('local_vars')
+        local_vars_encoded = crashinfo.get("local_vars")
         if not local_vars_encoded:
             raise SkipReport("no local_vars")
 
         # can't use json.loads here :-(
         exec_scope: Dict[str, Any] = {}
-        exec_command = 'local_vars = ' + base64.b64decode(local_vars_encoded).decode('utf-8')
+        exec_command = "local_vars = " + base64.b64decode(local_vars_encoded).decode("utf-8")
         try:
             exec(exec_command, exec_scope)  # pylint: disable=exec-used
         except Exception as exc:
             raise SkipReport("failed to load local_vars: %r" % exc)
 
-        local_vars = exec_scope['local_vars']
-        if '_no_item' in local_vars:
-            local_vars['item'] = local_vars['_no_item']
+        local_vars = exec_scope["local_vars"]
+        if "_no_item" in local_vars:
+            local_vars["item"] = local_vars["_no_item"]
 
-        if not ('info' in local_vars or 'parsed' in local_vars):
+        if not ("info" in local_vars or "parsed" in local_vars):
             raise SkipReport("found neither 'info' nor 'parsed'")
 
-        init_dict['parsed'] = local_vars.get('parsed')
-        init_dict['info'] = local_vars.get('info')
+        init_dict["parsed"] = local_vars.get("parsed")
+        init_dict["info"] = local_vars.get("info")
         self.vars = local_vars
         self.crash_id = crash_report_fn.split("/")[-1].replace(".gz", "").replace(".tar", "")
         super().__init__(init_dict)
 
     def _find_checkname_from_traceback(self, traceback):
         for line in traceback[::-1]:
-            if 'share/check_mk/checks/' in line[0]:
-                return line[0].split('share/check_mk/checks/')[-1]
+            if "share/check_mk/checks/" in line[0]:
+                return line[0].split("share/check_mk/checks/")[-1]
         return
 
     def __repr__(self):
-        return 'CrashDataset(checkname=%r, id=%r)' % (self.checkname, self.crash_id)
+        return "CrashDataset(checkname=%r, id=%r)" % (self.checkname, self.crash_id)
 
 
 class CrashReportList(list):
     """Save crash reports below $HOME/crashdata.
     Use update_crashes.py in order to read new crash reports and list them in the state file.
     Crash reports are read from state_file in order to speed up generic crash report tests"""
+
     def __init__(self, state_file):
         self.state_file = state_file
         with open(self.state_file) as file_:
@@ -146,12 +147,12 @@ class CrashReportList(list):
             for crashdata in self._iter_applicable_crashes():
                 yield crashdata
         finally:
-            with open(self.state_file, 'w') as file_:
-                file_.write('\n'.join([" ".join(line).strip() for line in self.state_info]))
+            with open(self.state_file, "w") as file_:
+                file_.write("\n".join([" ".join(line).strip() for line in self.state_info]))
 
     def _iter_applicable_crashes(self):
         for cr_info in self.state_info:
-            if cr_info[1] == 'SKIP':
+            if cr_info[1] == "SKIP":
                 continue
 
             crash_report_path = CRASHDATA_DIR / Path("%s.tar.gz" % cr_info[0])
@@ -161,17 +162,17 @@ class CrashReportList(list):
             try:
                 yield CrashDataset(str(crash_report_path))
             except SkipReport as exc:
-                cr_info[1] = 'SKIP'
-                cr_info[3] = 'Exception: %s' % exc
+                cr_info[1] = "SKIP"
+                cr_info[3] = "Exception: %s" % exc
 
 
 def test_crashreport(fix_plugin_legacy, crashdata):
     try:
         run(fix_plugin_legacy.check_info, crashdata)
         check = Check(crashdata.full_checkname)
-        if 'item' in crashdata.vars:
-            item = crashdata.vars['item']
-            params = crashdata.vars.get('params', {})
+        if "item" in crashdata.vars:
+            item = crashdata.vars["item"]
+            params = crashdata.vars.get("params", {})
             if crashdata.parsed:
                 raw_result = check.run_check(item, params, crashdata.parsed)
             else:
@@ -179,5 +180,5 @@ def test_crashreport(fix_plugin_legacy, crashdata):
             print(CheckResult(raw_result))
     except Exception:
         pprint.pprint(crashdata.__dict__)
-        crashdata.write('/tmp')
+        crashdata.write("/tmp")
         raise

@@ -17,7 +17,8 @@ from pathlib import Path
 from tests.testlib import cmk_path, is_enterprise_repo, repo_path
 
 from pylint.reporters.text import (  # type: ignore[import] # isort: skip
-    ColorizedTextReporter, ParseableTextReporter,
+    ColorizedTextReporter,
+    ParseableTextReporter,
 )
 
 
@@ -25,8 +26,9 @@ def check_files(base_dir):
     filelist = sorted([base_dir + "/" + f for f in os.listdir(base_dir) if not f.startswith(".")])
 
     # Sort: first includes, then other
-    filelist = [ f for f in filelist if f.endswith(".include") ] + \
-               [ f for f in filelist if not f.endswith(".include") ]
+    filelist = [f for f in filelist if f.endswith(".include")] + [
+        f for f in filelist if not f.endswith(".include")
+    ]
 
     return filelist
 
@@ -50,14 +52,18 @@ def run_pylint(base_path, check_files):
 
     pylint_cfg = repo_path() + "/.pylintrc"
 
-    cmd = [
-        "python",
-        "-m",
-        "pylint",
-        "--rcfile",
-        pylint_cfg,
-        "--jobs=%d" % num_jobs_to_use(),
-    ] + pylint_args + check_files
+    cmd = (
+        [
+            "python",
+            "-m",
+            "pylint",
+            "--rcfile",
+            pylint_cfg,
+            "--jobs=%d" % num_jobs_to_use(),
+        ]
+        + pylint_args
+        + check_files
+    )
 
     print("Running pylint in '%s' with: %s" % (base_path, subprocess.list2cmdline(cmd)))
     p = subprocess.Popen(cmd, shell=False, cwd=base_path)
@@ -86,7 +92,7 @@ def num_jobs_to_use():
 def get_pylint_files(base_path, file_pattern):
     files = []
     for path in glob.glob("%s/%s" % (base_path, file_pattern)):
-        f = path[len(base_path) + 1:]
+        f = path[len(base_path) + 1 :]
 
         if f.endswith(".pyc"):
             continue
@@ -165,12 +171,18 @@ class CMKOutputScanTimesMixin:
 
     Can be useful to track down pylint performance issues. Simply make the
     reporter class inherit from this class to use it."""
+
     def on_set_current_module(self, modname, filepath):
         # HACK: See note above.
         getattr(super(), "on_set_current_module")(modname, filepath)
         if hasattr(self, "_current_start_time"):
-            print("% 8.3fs %s" % (time.time() - getattr(self, "_current_start_time"),
-                                  getattr(self, "_current_filepath")))
+            print(
+                "% 8.3fs %s"
+                % (
+                    time.time() - getattr(self, "_current_start_time"),
+                    getattr(self, "_current_filepath"),
+                )
+            )
 
         print("          %s..." % filepath)
         self._current_name = modname
@@ -182,8 +194,13 @@ class CMKOutputScanTimesMixin:
         # HACK: See note above.
         getattr(super(), "on_close")(stats, previous_stats)
         if hasattr(self, "_current_start_time"):
-            print("% 8.3fs %s" % (time.time() - getattr(self, "_current_start_time"),
-                                  getattr(self, "_current_filepath")))
+            print(
+                "% 8.3fs %s"
+                % (
+                    time.time() - getattr(self, "_current_start_time"),
+                    getattr(self, "_current_filepath"),
+                )
+            )
 
 
 class CMKColorizedTextReporter(CMKFixFileMixin, ColorizedTextReporter):
@@ -196,9 +213,12 @@ class CMKParseableTextReporter(CMKFixFileMixin, ParseableTextReporter):
 
 def verify_pylint_version():
     import pylint  # type: ignore[import] # pylint: disable=import-outside-toplevel
+
     if tuple(map(int, pylint.__version__.split("."))) < (1, 5, 5):
-        raise Exception("You need to use at least pylint 1.5.5. Run \"make setup\" in "
-                        "pylint directory to get the current version.")
+        raise Exception(
+            'You need to use at least pylint 1.5.5. Run "make setup" in '
+            "pylint directory to get the current version."
+        )
 
 
 # Is called by pylint to load this plugin
@@ -209,11 +229,13 @@ def register(linter):
     if not is_enterprise_repo():
         # Is used to disable import-error. Would be nice if no-name-in-module could be
         # disabled using this, but this does not seem to be possible :(
-        linter.global_set_option("ignored-modules",
-                                 "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed")
+        linter.global_set_option(
+            "ignored-modules", "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed"
+        )
         # This disables no-member errors
-        linter.global_set_option("generated-members",
-                                 r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme)(\..*)?")
+        linter.global_set_option(
+            "generated-members", r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme)(\..*)?"
+        )
 
     linter.register_reporter(CMKColorizedTextReporter)
     linter.register_reporter(CMKParseableTextReporter)

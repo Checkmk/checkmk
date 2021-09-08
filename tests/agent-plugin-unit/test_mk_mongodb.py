@@ -28,8 +28,10 @@ def read_dataset(filename):
     :return: dataset as extended JSON
     """
     from bson.json_util import loads  # type: ignore[import]
+
     dataset_file = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), 'datasets', 'mk_mongodb', filename))
+        os.path.join(os.path.dirname(__file__), "datasets", "mk_mongodb", filename)
+    )
     with open(dataset_file) as f:
         return loads(f.read())
 
@@ -199,81 +201,102 @@ def test_router_instance_mongodb_3_4(mk_mongodb):
     mk_mongodb.sections_replica(dataset)
 
 
-@pytest.mark.parametrize("config, expected_pymongo_config", [
-    ({}, {}),
-    ({
-        "username": "t_user",
-        "password": "t_pwd",
-    }, {
-        'username': 't_user',
-        'password': 't_pwd',
-    }),
-    ({
-        "username": "t_user",
-        "password": "t_pwd",
-        "tls_enable": "1",
-    }, {
-        'username': 't_user',
-        'password': 't_pwd',
-        'tls': True,
-    }),
-    ({
-        "username": "t_user",
-        "password": "t_pwd",
-        "tls_enable": "1",
-        "tls_verify": "0",
-        "tls_ca_file": "/path/to/ca.pem",
-    }, {
-        'username': 't_user',
-        'password': 't_pwd',
-        'tls': True,
-        'tlsInsecure': True,
-        'tlsCAFile': '/path/to/ca.pem'
-    }),
-    ({
-        "username": "t_user",
-        "password": "t_pwd",
-        "tls_enable": "1",
-        "tls_verify": "0",
-        "tls_ca_file": "/path/to/ca.pem",
-        "auth_mechanism": "DEFAULT",
-        "auth_source": "not_admin",
-    }, {
-        'authMechanism': 'DEFAULT',
-        'authSource': 'not_admin',
-        'password': 't_pwd',
-        'tls': True,
-        'tlsCAFile': '/path/to/ca.pem',
-        'tlsInsecure': True,
-        'username': 't_user'
-    }),
-])
+@pytest.mark.parametrize(
+    "config, expected_pymongo_config",
+    [
+        ({}, {}),
+        (
+            {
+                "username": "t_user",
+                "password": "t_pwd",
+            },
+            {
+                "username": "t_user",
+                "password": "t_pwd",
+            },
+        ),
+        (
+            {
+                "username": "t_user",
+                "password": "t_pwd",
+                "tls_enable": "1",
+            },
+            {
+                "username": "t_user",
+                "password": "t_pwd",
+                "tls": True,
+            },
+        ),
+        (
+            {
+                "username": "t_user",
+                "password": "t_pwd",
+                "tls_enable": "1",
+                "tls_verify": "0",
+                "tls_ca_file": "/path/to/ca.pem",
+            },
+            {
+                "username": "t_user",
+                "password": "t_pwd",
+                "tls": True,
+                "tlsInsecure": True,
+                "tlsCAFile": "/path/to/ca.pem",
+            },
+        ),
+        (
+            {
+                "username": "t_user",
+                "password": "t_pwd",
+                "tls_enable": "1",
+                "tls_verify": "0",
+                "tls_ca_file": "/path/to/ca.pem",
+                "auth_mechanism": "DEFAULT",
+                "auth_source": "not_admin",
+            },
+            {
+                "authMechanism": "DEFAULT",
+                "authSource": "not_admin",
+                "password": "t_pwd",
+                "tls": True,
+                "tlsCAFile": "/path/to/ca.pem",
+                "tlsInsecure": True,
+                "username": "t_user",
+            },
+        ),
+    ],
+)
 def test_read_config(config, expected_pymongo_config, mk_mongodb):
     """
     see if the config is corretly transformed to pymongo arguments
     """
     config_parser = mk_mongodb.MongoDBConfigParser()
-    config_parser.add_section('MONGODB')
+    config_parser.add_section("MONGODB")
     for key, value in config.items():
-        config_parser.set('MONGODB', key, value)
+        config_parser.set("MONGODB", key, value)
     assert mk_mongodb.Config(config_parser).get_pymongo_config() == expected_pymongo_config
 
 
-@pytest.mark.parametrize("pymongo_version, pymongo_config", [(
-    (999, 9, 9),
-    {
-        'host': 'example.com',
-        'password': '/?!/',
-        'tls': True,
-        'username': 'username',
-    },
-), (
-    (3, 2, 0),
-    {
-        'host': 'mongodb://username:%2F%3F%21%2F@example.com',
-        'ssl': True,
-    },
-)])
+@pytest.mark.parametrize(
+    "pymongo_version, pymongo_config",
+    [
+        (
+            (999, 9, 9),
+            {
+                "host": "example.com",
+                "password": "/?!/",
+                "tls": True,
+                "username": "username",
+            },
+        ),
+        (
+            (3, 2, 0),
+            {
+                "host": "mongodb://username:%2F%3F%21%2F@example.com",
+                "ssl": True,
+            },
+        ),
+    ],
+)
 def test_transform_config(pymongo_version, pymongo_config, mk_mongodb):
     class DummyConfig(mk_mongodb.Config):  # type: ignore[name-defined]
         def __init__(self):

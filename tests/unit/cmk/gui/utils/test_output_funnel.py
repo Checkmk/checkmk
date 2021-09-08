@@ -76,10 +76,10 @@ def test_output_funnel_context_drain(funnel: OutputFunnel) -> None:
     assert written(funnel) == b"A"
     with funnel.plugged():
         funnel.write(b"B")
-        assert response_texts(funnel) == [['B']]
+        assert response_texts(funnel) == [["B"]]
         code = funnel.drain()
         assert response_texts(funnel) == [[]]
-    assert code == 'B'
+    assert code == "B"
     assert written(funnel) == b"A"
 
 
@@ -89,7 +89,7 @@ def test_output_funnel_context_raise(funnel: OutputFunnel) -> None:
         assert written(funnel) == b"A"
         with funnel.plugged():
             funnel.write(b"B")
-            assert response_texts(funnel) == [['B']]
+            assert response_texts(funnel) == [["B"]]
             raise Exception("Test exception")
     except Exception as e:
         assert "%s" % e == "Test exception"

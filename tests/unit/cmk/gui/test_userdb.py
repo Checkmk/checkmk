@@ -73,14 +73,17 @@ def user_idle_timeout_enabled(monkeypatch, user_id):
 def fixture_session_timed_out(monkeypatch, user_id, fix_time):
     session_id = "sess1"
     now = int(time.time()) - 20
-    userdb._save_session_infos(user_id, {
-        session_id: userdb.SessionInfo(
-            session_id,
-            started_at=now,
-            last_activity=now,
-            flashes=[],
-        )
-    })
+    userdb._save_session_infos(
+        user_id,
+        {
+            session_id: userdb.SessionInfo(
+                session_id,
+                started_at=now,
+                last_activity=now,
+                flashes=[],
+            )
+        },
+    )
     return session_id
 
 
@@ -88,14 +91,17 @@ def fixture_session_timed_out(monkeypatch, user_id, fix_time):
 def fixture_session_valid(monkeypatch, user_id, fix_time):
     session_id = "sess2"
     now = int(time.time()) - 5
-    userdb._save_session_infos(user_id, {
-        session_id: userdb.SessionInfo(
-            session_id,
-            started_at=now,
-            last_activity=now,
-            flashes=[],
-        )
-    })
+    userdb._save_session_infos(
+        user_id,
+        {
+            session_id: userdb.SessionInfo(
+                session_id,
+                started_at=now,
+                last_activity=now,
+                flashes=[],
+            )
+        },
+    )
     return session_id
 
 
@@ -278,27 +284,40 @@ def test_on_succeeded_login_already_existing_session(user_id, session_valid):
 
 def test_is_valid_user_session_single_user_session_disabled(user_id):
     assert config.single_user_session is None
-    assert userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id),
-                                         "session1") is False
+    assert (
+        userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id), "session1")
+        is False
+    )
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_not_existing(user_id):
-    assert userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id),
-                                         "not-existing-session") is False
+    assert (
+        userdb._is_valid_user_session(
+            user_id, userdb._load_session_infos(user_id), "not-existing-session"
+        )
+        is False
+    )
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_still_valid_when_last_activity_extends_timeout(
-        user_id, session_timed_out):
-    assert userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id),
-                                         session_timed_out) is True
+    user_id, session_timed_out
+):
+    assert (
+        userdb._is_valid_user_session(
+            user_id, userdb._load_session_infos(user_id), session_timed_out
+        )
+        is True
+    )
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_valid(user_id, session_valid):
-    assert userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id),
-                                         session_valid) is True
+    assert (
+        userdb._is_valid_user_session(user_id, userdb._load_session_infos(user_id), session_valid)
+        is True
+    )
 
 
 def test_ensure_user_can_init_no_single_user_session(user_id):
@@ -339,21 +358,27 @@ def test_cleanup_old_sessions_no_existing(request_context):
 
 
 def test_cleanup_old_sessions_remove_outdated(request_context):
-    assert list(
-        userdb._cleanup_old_sessions({
-            "outdated": userdb.SessionInfo(
-                session_id="outdated",
-                started_at=int(time.time()) - (86400 * 10),
-                last_activity=int(time.time()) - (86400 * 8),
-                flashes=[],
-            ),
-            "keep": userdb.SessionInfo(
-                session_id="keep",
-                started_at=int(time.time()) - (86400 * 10),
-                last_activity=int(time.time()) - (86400 * 5),
-                flashes=[],
-            ),
-        }).keys()) == ["keep"]
+    assert (
+        list(
+            userdb._cleanup_old_sessions(
+                {
+                    "outdated": userdb.SessionInfo(
+                        session_id="outdated",
+                        started_at=int(time.time()) - (86400 * 10),
+                        last_activity=int(time.time()) - (86400 * 8),
+                        flashes=[],
+                    ),
+                    "keep": userdb.SessionInfo(
+                        session_id="keep",
+                        started_at=int(time.time()) - (86400 * 10),
+                        last_activity=int(time.time()) - (86400 * 5),
+                        flashes=[],
+                    ),
+                }
+            ).keys()
+        )
+        == ["keep"]
+    )
 
 
 def test_cleanup_old_sessions_too_many(request_context):
@@ -363,14 +388,37 @@ def test_cleanup_old_sessions_too_many(request_context):
             started_at=int(time.time()) - (86400 * 10),
             last_activity=int(time.time()) - (86400 * 5) + num,
             flashes=[],
-        ) for num in range(21)
+        )
+        for num in range(21)
     }
 
-    assert sorted([
-        'keep_1', 'keep_2', 'keep_3', 'keep_4', 'keep_5', 'keep_6', 'keep_7', 'keep_8', 'keep_9',
-        'keep_10', 'keep_11', 'keep_12', 'keep_13', 'keep_14', 'keep_15', 'keep_16', 'keep_17',
-        'keep_18', 'keep_19', 'keep_20'
-    ]) == sorted(userdb._cleanup_old_sessions(sessions).keys())
+    assert (
+        sorted(
+            [
+                "keep_1",
+                "keep_2",
+                "keep_3",
+                "keep_4",
+                "keep_5",
+                "keep_6",
+                "keep_7",
+                "keep_8",
+                "keep_9",
+                "keep_10",
+                "keep_11",
+                "keep_12",
+                "keep_13",
+                "keep_14",
+                "keep_15",
+                "keep_16",
+                "keep_17",
+                "keep_18",
+                "keep_19",
+                "keep_20",
+            ]
+        )
+        == sorted(userdb._cleanup_old_sessions(sessions).keys())
+    )
 
 
 def test_create_session_id_is_correct_type():
@@ -420,16 +468,22 @@ def test_get_last_activity(with_user, session_valid):
 
 
 def test_user_attribute_sync_plugins(request_context, monkeypatch):
-    monkeypatch.setattr(config, "wato_user_attrs", [{
-        'add_custom_macro': False,
-        'help': u'VIP attribute',
-        'name': 'vip',
-        'show_in_table': False,
-        'title': u'VIP',
-        'topic': 'ident',
-        'type': 'TextAscii',
-        'user_editable': True
-    }])
+    monkeypatch.setattr(
+        config,
+        "wato_user_attrs",
+        [
+            {
+                "add_custom_macro": False,
+                "help": "VIP attribute",
+                "name": "vip",
+                "show_in_table": False,
+                "title": "VIP",
+                "topic": "ident",
+                "type": "TextAscii",
+                "user_editable": True,
+            }
+        ],
+    )
 
     monkeypatch.setattr(utils, "user_attribute_registry", utils.UserAttributeRegistry())
     monkeypatch.setattr(userdb, "user_attribute_registry", utils.user_attribute_registry)
@@ -443,14 +497,22 @@ def test_user_attribute_sync_plugins(request_context, monkeypatch):
     assert "vip" in utils.user_attribute_registry
     assert "vip" in ldap.ldap_attribute_plugin_registry
 
-    connection = ldap.LDAPUserConnector({
-        "id": "ldp",
-        "directory_type": ("ad", {
-            "connect_to": ("fixed_list", {
-                "server": "127.0.0.1",
-            })
-        })
-    })
+    connection = ldap.LDAPUserConnector(
+        {
+            "id": "ldp",
+            "directory_type": (
+                "ad",
+                {
+                    "connect_to": (
+                        "fixed_list",
+                        {
+                            "server": "127.0.0.1",
+                        },
+                    )
+                },
+            ),
+        }
+    )
 
     ldap_plugin = ldap.ldap_attribute_plugin_registry["vip"]()
     assert ldap_plugin.title == "VIP"
@@ -480,7 +542,8 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc():
     assert user_id not in _load_users_uncached(lock=False)
 
     htpasswd.Htpasswd(Path(cmk.utils.paths.htpasswd_file)).save(
-        {"sha256user": htpasswd.hash_password("cmk")})
+        {"sha256user": htpasswd.hash_password("cmk")}
+    )
     # Once a user exists in the htpasswd, the GUI treats the user as existing user and will
     # automatically initialize the missing data structures
     assert userdb.user_exists(user_id) is True
@@ -528,6 +591,7 @@ def make_cme_global_user(user_id):
         pytest.skip("not relevant")
 
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+
     users = _load_users_uncached(lock=True)
 
     users[user_id]["customer"] = managed.SCOPE_GLOBAL
@@ -600,8 +664,9 @@ def test_load_custom_attr_from_file(user_id):
 def test_load_custom_attr_convert(user_id):
     with Path(userdb.custom_attr_path(user_id, "a")).open("w") as f:
         f.write("xyz\n")
-    assert userdb.load_custom_attr(user_id, "a", conv_func=lambda x: "a"
-                                   if x == "xyz" else "b") == "a"
+    assert (
+        userdb.load_custom_attr(user_id, "a", conv_func=lambda x: "a" if x == "xyz" else "b") == "a"
+    )
 
 
 def test_cleanup_user_profiles_keep_recently_updated(user_id):
@@ -620,7 +685,7 @@ def test_cleanup_user_profiles_remove_empty(user_id):
 def test_cleanup_user_profiles_remove_abandoned(user_id):
     (profile := cmk.utils.paths.profile_dir.joinpath("profile")).mkdir()
     (bla := profile / "bla.mk").touch()
-    with on_time('2018-04-15 16:50', 'CET'):
+    with on_time("2018-04-15 16:50", "CET"):
         os.utime(bla, (time.time(), time.time()))
     userdb.UserProfileCleanupBackgroundJob()._do_cleanup()
     assert not profile.exists()
@@ -637,7 +702,7 @@ def test_cleanup_user_profiles_keep_active_profile_old(user_id):
 
     assert profile_dir.exists()
 
-    with on_time('2018-04-15 16:50', 'CET'):
+    with on_time("2018-04-15 16:50", "CET"):
         for file_path in profile_dir.glob("*.mk"):
             os.utime(file_path, (time.time(), time.time()))
 

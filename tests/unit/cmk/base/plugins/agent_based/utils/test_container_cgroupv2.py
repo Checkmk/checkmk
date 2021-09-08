@@ -60,6 +60,6 @@ def test_check_cpu_cgroupv2():
         _ = list(_check_cpu(value_store, {}, parse_cpu(AGENT_OUTPUT_0)))
     result = _check_cpu(value_store, {}, parse_cpu(AGENT_OUTPUT_1))
     assert list(result) == [
-        Result(state=State.OK, summary='Total CPU: 51.93%'),
-        Metric('util', 51.9263206459054, boundaries=(0.0, None)),
+        Result(state=State.OK, summary="Total CPU: 51.93%"),
+        Metric("util", 51.9263206459054, boundaries=(0.0, None)),
     ]

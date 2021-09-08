@@ -22,10 +22,11 @@ def test_profiling(wsgi_app):
     assert not os.path.exists(var_dir + "/multisite.profile")
     assert not os.path.exists(var_dir + "/multisite.cachegrind")
 
-    store.save_mk_file(cmk.utils.paths.default_config_dir + "/multisite.d/wato/global.mk",
-                       "profile = True\n")
+    store.save_mk_file(
+        cmk.utils.paths.default_config_dir + "/multisite.d/wato/global.mk", "profile = True\n"
+    )
 
-    _ = wsgi_app.get('/NO_SITE/check_mk/login.py')
+    _ = wsgi_app.get("/NO_SITE/check_mk/login.py")
 
     assert os.path.exists(var_dir + "/multisite.py")
     assert os.path.exists(var_dir + "/multisite.profile")
@@ -36,18 +37,20 @@ def test_webserver_auth(wsgi_app, with_user):
     username, _ = with_user
     wsgi_app.get("/NO_SITE/check_mk/api/1.0/version", status=401)
 
-    wsgi_app.get("/NO_SITE/check_mk/api/1.0/version",
-                 status=401,
-                 extra_environ={'REMOTE_USER': 'unknown_random_dude'})
+    wsgi_app.get(
+        "/NO_SITE/check_mk/api/1.0/version",
+        status=401,
+        extra_environ={"REMOTE_USER": "unknown_random_dude"},
+    )
 
-    wsgi_app.get("/NO_SITE/check_mk/api/1.0/version",
-                 status=200,
-                 extra_environ={'REMOTE_USER': username})
+    wsgi_app.get(
+        "/NO_SITE/check_mk/api/1.0/version", status=200, extra_environ={"REMOTE_USER": username}
+    )
 
-    wsgi_app.set_authorization(('Basic', ("unknown_random_dude", "foobazbar")))
-    wsgi_app.get("/NO_SITE/check_mk/api/1.0/version",
-                 status=401,
-                 extra_environ={'REMOTE_USER': username})
+    wsgi_app.set_authorization(("Basic", ("unknown_random_dude", "foobazbar")))
+    wsgi_app.get(
+        "/NO_SITE/check_mk/api/1.0/version", status=401, extra_environ={"REMOTE_USER": username}
+    )
 
 
 def test_normal_auth(wsgi_app, with_user):
@@ -55,12 +58,12 @@ def test_normal_auth(wsgi_app, with_user):
     wsgi_app.get("/NO_SITE/check_mk/api/1.0/version", status=401)
 
     # Add a failing Basic Auth to check if the other types will succeed.
-    wsgi_app.set_authorization(('Basic', ("foobazbar", "foobazbar")))
+    wsgi_app.set_authorization(("Basic", ("foobazbar", "foobazbar")))
 
-    login: 'webtest.TestResponse' = wsgi_app.get('/NO_SITE/check_mk/login.py')
-    login.form['_username'] = username
-    login.form['_password'] = password
-    resp = login.form.submit('_login', index=1)
+    login: "webtest.TestResponse" = wsgi_app.get("/NO_SITE/check_mk/login.py")
+    login.form["_username"] = username
+    login.form["_password"] = password
+    resp = login.form.submit("_login", index=1)
 
     assert "Invalid credentials." not in resp.text
 
@@ -69,62 +72,61 @@ def test_normal_auth(wsgi_app, with_user):
 
 def test_openapi_version(wsgi_app, with_automation_user):
     username, secret = with_automation_user
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0/version", status=200)
-    assert resp.json['site'] == omd_site()
+    assert resp.json["site"] == omd_site()
 
 
 def test_openapi_app_exception(wsgi_app_debug_off, with_automation_user):
     wsgi_app = wsgi_app_debug_off
     username, secret = with_automation_user
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
     resp = wsgi_app.get("/NO_SITE/check_mk/api/1.0/version?fail=1", status=500)
-    assert 'detail' in resp.json
-    assert 'title' in resp.json
-    assert 'crash_report' in resp.json
-    assert 'check_mk' in resp.json['crash_report']['href']
-    assert 'crash_id' in resp.json
+    assert "detail" in resp.json
+    assert "title" in resp.json
+    assert "crash_report" in resp.json
+    assert "check_mk" in resp.json["crash_report"]["href"]
+    assert "crash_id" in resp.json
 
 
 @pytest.mark.skip
 def test_legacy_webapi(wsgi_app, with_automation_user):
     username, password = with_automation_user
     wsgi_app.set_credentials(username, password)
-    hostname = 'foobar'
+    hostname = "foobar"
 
     try:
-        ipaddress = '127.0.0.1'
+        ipaddress = "127.0.0.1"
         wsgi_app.api_request(
-            'add_host',
+            "add_host",
             {
                 "hostname": hostname,
-                "folder": 'eins/zwei',
+                "folder": "eins/zwei",
                 # Optional
-                "attributes": {
-                    'ipaddress': ipaddress
-                },
+                "attributes": {"ipaddress": ipaddress},
                 "create_folders": True,
                 "nodes": [],
-            })
-
-        resp = wsgi_app.api_request(
-            'foo_host',
-            {'hostname': hostname},
-        )
-        assert "Unknown API action" in resp['result']
-        assert resp['result_code'] == 1
-
-        resp = wsgi_app.api_request(
-            'get_host',
-            {
-                'hostname': hostname,
             },
-            output_format='python',
+        )
+
+        resp = wsgi_app.api_request(
+            "foo_host",
+            {"hostname": hostname},
+        )
+        assert "Unknown API action" in resp["result"]
+        assert resp["result_code"] == 1
+
+        resp = wsgi_app.api_request(
+            "get_host",
+            {
+                "hostname": hostname,
+            },
+            output_format="python",
         )
         assert isinstance(resp, dict), resp
-        assert isinstance(resp['result'], dict), resp['result']
-        assert resp['result']['hostname'] == hostname
-        assert resp['result']['attributes']['ipaddress'] == ipaddress
+        assert isinstance(resp["result"], dict), resp["result"]
+        assert resp["result"]["hostname"] == hostname
+        assert resp["result"]["attributes"]["ipaddress"] == ipaddress
 
     finally:
 
@@ -159,9 +161,11 @@ def test_cmk_ajax_graph_images(wsgi_app):
     resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py", status=200)
     assert resp.text.startswith("You are not allowed")
 
-    resp = wsgi_app.get("/NO_SITE/check_mk/ajax_graph_images.py",
-                        status=200,
-                        extra_environ={'REMOTE_ADDR': '127.0.0.1'})
+    resp = wsgi_app.get(
+        "/NO_SITE/check_mk/ajax_graph_images.py",
+        status=200,
+        extra_environ={"REMOTE_ADDR": "127.0.0.1"},
+    )
     assert resp.text == ""
 
 

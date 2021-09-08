@@ -18,13 +18,12 @@ from _pytest.doctest import DoctestItem
 
 # TODO: Can we somehow push some of the registrations below to the subdirectories?
 pytest.register_assert_rewrite(
-    "tests.testlib",  #
-    "tests.unit.checks.checktestlib",  #
-    "tests.unit.checks.generictests.run")
+    "tests.testlib", "tests.unit.checks.checktestlib", "tests.unit.checks.generictests.run"
+)
 
 import tests.testlib as testlib
 
-#TODO Hack: Exclude cee tests in cre repo
+# TODO Hack: Exclude cee tests in cre repo
 if not Path(testlib.utils.cmc_path()).exists():
     collect_ignore_glob = ["*/cee/*"]
 
@@ -45,17 +44,19 @@ class ExecutionType(enum.Enum):
     VirtualEnv = enum.auto()
 
 
-test_types = collections.OrderedDict([
-    ("unit", ExecutionType.VirtualEnv),
-    ("pylint", ExecutionType.VirtualEnv),
-    ("docker", ExecutionType.VirtualEnv),
-    ("agent-integration", ExecutionType.VirtualEnv),
-    ("agent-plugin-unit", ExecutionType.VirtualEnv),
-    ("integration", ExecutionType.Site),
-    ("gui_crawl", ExecutionType.VirtualEnv),
-    ("packaging", ExecutionType.VirtualEnv),
-    ("composition", ExecutionType.VirtualEnv),
-])
+test_types = collections.OrderedDict(
+    [
+        ("unit", ExecutionType.VirtualEnv),
+        ("pylint", ExecutionType.VirtualEnv),
+        ("docker", ExecutionType.VirtualEnv),
+        ("agent-integration", ExecutionType.VirtualEnv),
+        ("agent-plugin-unit", ExecutionType.VirtualEnv),
+        ("integration", ExecutionType.Site),
+        ("gui_crawl", ExecutionType.VirtualEnv),
+        ("packaging", ExecutionType.VirtualEnv),
+        ("composition", ExecutionType.VirtualEnv),
+    ]
+)
 
 
 def pytest_addoption(parser):
@@ -66,23 +67,28 @@ def pytest_addoption(parser):
     if "-T" in options:
         return
 
-    parser.addoption("-T",
-                     action="store",
-                     metavar="TYPE",
-                     default=None,
-                     help="Run tests of the given TYPE. Available types are: %s" %
-                     ", ".join(test_types.keys()))
+    parser.addoption(
+        "-T",
+        action="store",
+        metavar="TYPE",
+        default=None,
+        help="Run tests of the given TYPE. Available types are: %s" % ", ".join(test_types.keys()),
+    )
 
 
 def pytest_configure(config):
     """Registers custom markers to pytest"""
     config.addinivalue_line(
-        "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types.keys()))
+        "markers", "type(TYPE): Mark TYPE of test. Available: %s" % ", ".join(test_types.keys())
+    )
     config.addinivalue_line(
-        "markers", "non_resilient:"
-        " Tests marked as non-resilient are allowed to fail when run in resilience test.")
-    config.addinivalue_line("markers",
-                            "registry_reset: Marker to add arguments to `registry_reset` fixture.")
+        "markers",
+        "non_resilient:"
+        " Tests marked as non-resilient are allowed to fail when run in resilience test.",
+    )
+    config.addinivalue_line(
+        "markers", "registry_reset: Marker to add arguments to `registry_reset` fixture."
+    )
 
 
 def pytest_collection_modifyitems(items):
@@ -151,8 +157,10 @@ def verify_site():
 
 def verify_virtualenv():
     if not testlib.virtualenv_path():
-        raise SystemExit("ERROR: Please load virtual environment first "
-                         "(Use \"pipenv shell\" or configure direnv)")
+        raise SystemExit(
+            "ERROR: Please load virtual environment first "
+            '(Use "pipenv shell" or configure direnv)'
+        )
 
 
 #

@@ -58,37 +58,39 @@ from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
 # .1.3.6.1.4.1.14179.2.1.1.1.38.4 6
 # .1.3.6.1.4.1.14179.2.1.1.1.38.5 5
 
-INFO = [[
-    ["corp_internal_001", "corp_intern_001", "1"],
-    ["corp_internal_003", "corp_intern_003", "3"],
-    ["AnotherWifiSSID", "interface_name", "0"],
-    ["FreePublicWifi", "guest1", "0"],
-    ["FreePublicWifi", "guest2", "114"],
-    ["FreePublicWifi", "guest3", "68"],
-]]
+INFO = [
+    [
+        ["corp_internal_001", "corp_intern_001", "1"],
+        ["corp_internal_003", "corp_intern_003", "3"],
+        ["AnotherWifiSSID", "interface_name", "0"],
+        ["FreePublicWifi", "guest1", "0"],
+        ["FreePublicWifi", "guest2", "114"],
+        ["FreePublicWifi", "guest3", "68"],
+    ]
+]
 
 ITEM_RESULT = [
     [
         "Summary",
         [
-            Result(state=State.OK, summary='Connections: 186'),
-            Metric('connections', 186.0),
+            Result(state=State.OK, summary="Connections: 186"),
+            Metric("connections", 186.0),
         ],
     ],
     [
         "corp_internal_003",
         [
-            Result(state=State.OK, summary='Connections: 3'),
-            Metric('connections', 3.0),
-            Result(state=State.OK, summary='(corp_intern_003: 3)'),
+            Result(state=State.OK, summary="Connections: 3"),
+            Metric("connections", 3.0),
+            Result(state=State.OK, summary="(corp_intern_003: 3)"),
         ],
     ],
     [
         "FreePublicWifi",
         [
-            Result(state=State.OK, summary='Connections: 182'),
-            Metric('connections', 182.0),
-            Result(state=State.OK, summary='(guest1: 0, guest2: 114, guest3: 68)'),
+            Result(state=State.OK, summary="Connections: 182"),
+            Metric("connections", 182.0),
+            Result(state=State.OK, summary="(guest1: 0, guest2: 114, guest3: 68)"),
         ],
     ],
 ]
@@ -106,7 +108,8 @@ def _run_parse_and_check(
             item=item,
             params=params,
             section=parse_cisco_wlc_clients(info),
-        ))
+        )
+    )
     return result
 
 
@@ -134,7 +137,7 @@ PARAM_STATUS = [
 
 @pytest.mark.parametrize("param, status", PARAM_STATUS)
 def test_cisco_wlc_clients_parameter(param, status):
-    result = _run_parse_and_check('Summary', INFO, param)
+    result = _run_parse_and_check("Summary", INFO, param)
     assert result[0].state == status
 
 
@@ -144,29 +147,34 @@ def test_parse_cisco_wlc_clients():
     assert result == WlcClientsSection(
         total_clients=186,
         clients_per_ssid={
-            'FreePublicWifi': ClientsPerInterface(per_interface=dict(
-                guest1=0,
-                guest2=114,
-                guest3=68,
-            )),
-            'AnotherWifiSSID': ClientsPerInterface(per_interface=dict(interface_name=0)),
-            'corp_internal_001': ClientsPerInterface(per_interface=dict(corp_intern_001=1)),
-            'corp_internal_003': ClientsPerInterface(per_interface=dict(corp_intern_003=3)),
+            "FreePublicWifi": ClientsPerInterface(
+                per_interface=dict(
+                    guest1=0,
+                    guest2=114,
+                    guest3=68,
+                )
+            ),
+            "AnotherWifiSSID": ClientsPerInterface(per_interface=dict(interface_name=0)),
+            "corp_internal_001": ClientsPerInterface(per_interface=dict(corp_intern_001=1)),
+            "corp_internal_003": ClientsPerInterface(per_interface=dict(corp_intern_003=3)),
         },
     )
 
 
-INFO_9800 = [[
-    ["guest"],
-    ["guest"],
-    ["mobile"],
-    ["internal"],
-], [
-    ["9"],
-    ["8"],
-    ["6"],
-    ["5"],
-]]
+INFO_9800 = [
+    [
+        ["guest"],
+        ["guest"],
+        ["mobile"],
+        ["internal"],
+    ],
+    [
+        ["9"],
+        ["8"],
+        ["6"],
+        ["5"],
+    ],
+]
 
 
 def test_parse_cisco_wlc_9800_clients():
@@ -175,8 +183,8 @@ def test_parse_cisco_wlc_9800_clients():
     assert result == WlcClientsSection(
         total_clients=9 + 8 + 6 + 5,
         clients_per_ssid={
-            'guest': ClientsTotal(total=9 + 8),
-            'mobile': ClientsTotal(total=6),
-            'internal': ClientsTotal(total=5),
+            "guest": ClientsTotal(total=9 + 8),
+            "mobile": ClientsTotal(total=6),
+            "internal": ClientsTotal(total=5),
         },
     )

@@ -86,30 +86,22 @@ def test_qualified_discovery_keeps_old():
 
 def test_qualified_discovery_replaced():
     result = QualifiedDiscovery(
-        preexisting=([
-            {
-                "key": "a",
-                "value": "1"
-            },
-            {
-                "key": "b",
-                "value": "1"
-            },
-        ]),
-        current=([
-            {
-                "key": "a",
-                "value": "1"
-            },
-            {
-                "key": "b",
-                "value": "2"
-            },
-        ]),
+        preexisting=(
+            [
+                {"key": "a", "value": "1"},
+                {"key": "b", "value": "1"},
+            ]
+        ),
+        current=(
+            [
+                {"key": "a", "value": "1"},
+                {"key": "b", "value": "2"},
+            ]
+        ),
         key=lambda item: item["key"] + ":" + item["value"],
     )
 
-    assert result.vanished == [{'key': 'b', 'value': '1'}]
-    assert result.old == [{'key': 'a', 'value': '1'}]
-    assert result.new == [{'key': 'b', 'value': '2'}]
-    assert result.present == [{'key': 'a', 'value': '1'}, {'key': 'b', 'value': '2'}]
+    assert result.vanished == [{"key": "b", "value": "1"}]
+    assert result.old == [{"key": "a", "value": "1"}]
+    assert result.new == [{"key": "b", "value": "2"}]
+    assert result.present == [{"key": "a", "value": "1"}, {"key": "b", "value": "2"}]

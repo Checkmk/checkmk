@@ -65,16 +65,20 @@ def test_size_trend_growing(args: ArgsDict) -> None:
     args["levels"] = {
         "trend_range": 1,
         "trend_perfdata": True,
-        "trend_bytes": (150 * 1024**2, 250 * 1024**2),
-        "trend_perc": (5.0, 15.0)
+        "trend_bytes": (150 * 1024 ** 2, 250 * 1024 ** 2),
+        "trend_perc": (5.0, 15.0),
     }
     args.update({"used_mb": 200, "timestamp": 1801.0})
     assert list(size_trend(**args)) == [
         Metric(name="growth", value=4800.0),
-        Result(state=State.WARN,
-               summary="trend per 1 hour 0 minutes: +200 MiB (warn/crit at +150 MiB/+250 MiB)"),
-        Result(state=State.WARN,
-               summary="trend per 1 hour 0 minutes: +10.00% (warn/crit at +5.00%/+15.00%)"),
+        Result(
+            state=State.WARN,
+            summary="trend per 1 hour 0 minutes: +200 MiB (warn/crit at +150 MiB/+250 MiB)",
+        ),
+        Result(
+            state=State.WARN,
+            summary="trend per 1 hour 0 minutes: +10.00% (warn/crit at +5.00%/+15.00%)",
+        ),
         Metric("trend", 4800.0, levels=(100.0, 250.0), boundaries=(0.0, 2000.0)),
         Result(state=State.OK, summary="Time left until resource_name full: 9 hours 0 minutes"),
     ]
@@ -88,13 +92,15 @@ def test_size_trend_shrinking_ok(args: ArgsDict) -> None:
     args["levels"] = {
         "trend_range": 1,
         "trend_perfdata": True,
-        "trend_shrinking_bytes": (100 * 1024**2, 200 * 1024**2),
-        "trend_shrinking_perc": (5.0, 10.0)
+        "trend_shrinking_bytes": (100 * 1024 ** 2, 200 * 1024 ** 2),
+        "trend_shrinking_perc": (5.0, 10.0),
     }
-    args.update({
-        "timestamp": 1801.0,
-        "used_mb": 990,
-    })
+    args.update(
+        {
+            "timestamp": 1801.0,
+            "used_mb": 990,
+        }
+    )
     assert list(size_trend(**args)) == [
         Metric(name="growth", value=-480.0),
         Result(state=State.OK, summary="trend per 1 hour 0 minutes: -20.0 MiB"),
@@ -111,18 +117,24 @@ def test_size_trend_shrinking_warn(args: ArgsDict) -> None:
     args["levels"] = {
         "trend_range": 1,
         "trend_perfdata": True,
-        "trend_shrinking_bytes": (100 * 1024**2, 200 * 1024**2),
-        "trend_shrinking_perc": (5.0, 10.0)
+        "trend_shrinking_bytes": (100 * 1024 ** 2, 200 * 1024 ** 2),
+        "trend_shrinking_perc": (5.0, 10.0),
     }
-    args.update({
-        "timestamp": 1801.0,
-        "used_mb": 900,
-    })
+    args.update(
+        {
+            "timestamp": 1801.0,
+            "used_mb": 900,
+        }
+    )
     assert list(size_trend(**args)) == [
         Metric(name="growth", value=-4800.0),
-        Result(state=State.WARN,
-               summary="trend per 1 hour 0 minutes: -200 MiB (warn/crit below -100 MiB/-200 MiB)"),
-        Result(state=State.WARN,
-               summary="trend per 1 hour 0 minutes: -10.00% (warn/crit below -5.00%/-10.00%)"),
+        Result(
+            state=State.WARN,
+            summary="trend per 1 hour 0 minutes: -200 MiB (warn/crit below -100 MiB/-200 MiB)",
+        ),
+        Result(
+            state=State.WARN,
+            summary="trend per 1 hour 0 minutes: -10.00% (warn/crit below -5.00%/-10.00%)",
+        ),
         Metric("trend", -4800.0, boundaries=(0.0, 2000.0)),
     ]

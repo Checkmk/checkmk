@@ -32,8 +32,14 @@ _DOCKER_BUILD_ID = 1
 logger = logging.getLogger()
 
 
-def execute_tests_in_container(distro_name: str, docker_tag: str, version: CMKVersion,
-                               result_path: Path, command: List[str], interactive: bool) -> int:
+def execute_tests_in_container(
+    distro_name: str,
+    docker_tag: str,
+    version: CMKVersion,
+    result_path: Path,
+    command: List[str],
+    interactive: bool,
+) -> int:
     client = _docker_client()
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
@@ -43,31 +49,31 @@ def execute_tests_in_container(distro_name: str, docker_tag: str, version: CMKVe
 
     # Start the container
     with _start(
-            client,
-            image=image_name_with_tag,
-            command="/bin/bash",
-            volumes=list(_runtime_volumes().keys()),
-            host_config=client.api.create_host_config(
-                # Create some init process that manages signals and processes
-                init=True,
-                # needed to make the overlay mounts work on the /git directory
-                # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
-                privileged=True,
-                # Important to workaround really high default of docker which results
-                # in problems when trying to close all FDs in Python 2.
-                ulimits=[
-                    docker.types.Ulimit(name="nofile", soft=2048, hard=2048),
-                ],
-                binds=[":".join([k, v["bind"], v["mode"]]) for k, v in _runtime_volumes().items()],
-                # Our SNMP integration tests need SNMP. For this reason we enable the IPv6 support
-                # docker daemon wide, but set some fixed local network which is not being routed.
-                # This makes it possible to use IPv6 on the "lo" interface. Externally IPv4 is used
-                sysctls={
-                    "net.ipv6.conf.eth0.disable_ipv6": 1,
-                },
-            ),
-            stdin_open=True,
-            tty=True,
+        client,
+        image=image_name_with_tag,
+        command="/bin/bash",
+        volumes=list(_runtime_volumes().keys()),
+        host_config=client.api.create_host_config(
+            # Create some init process that manages signals and processes
+            init=True,
+            # needed to make the overlay mounts work on the /git directory
+            # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
+            privileged=True,
+            # Important to workaround really high default of docker which results
+            # in problems when trying to close all FDs in Python 2.
+            ulimits=[
+                docker.types.Ulimit(name="nofile", soft=2048, hard=2048),
+            ],
+            binds=[":".join([k, v["bind"], v["mode"]]) for k, v in _runtime_volumes().items()],
+            # Our SNMP integration tests need SNMP. For this reason we enable the IPv6 support
+            # docker daemon wide, but set some fixed local network which is not being routed.
+            # This makes it possible to use IPv6 on the "lo" interface. Externally IPv4 is used
+            sysctls={
+                "net.ipv6.conf.eth0.disable_ipv6": 1,
+            },
+        ),
+        stdin_open=True,
+        tty=True,
     ) as container:
         # Ensure we can make changes to the git directory (not persisting it outside of the container)
         _prepare_git_overlay(container, "/git-lowerdir", "/git")
@@ -87,14 +93,18 @@ def execute_tests_in_container(distro_name: str, docker_tag: str, version: CMKVe
             logger.info("| ")
             logger.info("|   Execute all integration tests")
             logger.info("| ")
-            logger.info("| tests/scripts/run-integration-test.py "
-                        "tests/integration/livestatus/test_livestatus.py")
+            logger.info(
+                "| tests/scripts/run-integration-test.py "
+                "tests/integration/livestatus/test_livestatus.py"
+            )
             logger.info("| ")
             logger.info("|   Execute some integration tests")
             logger.info("| ")
-            logger.info("| tests/scripts/run-integration-test.py "
-                        "tests/integration/livestatus/test_livestatus.py "
-                        "-k test_service_custom_variables ")
+            logger.info(
+                "| tests/scripts/run-integration-test.py "
+                "tests/integration/livestatus/test_livestatus.py "
+                "-k test_service_custom_variables "
+            )
             logger.info("| ")
             logger.info("|   Execute a single test")
             logger.info("| ")
@@ -140,8 +150,9 @@ def _get_or_load_image(client: docker.DockerClient, image_name_with_tag: str) ->
         logger.info("  Not in sync with registry (%s), try to pull", registry_data.short_id)
 
     except docker.errors.ImageNotFound:
-        logger.info("  Not available locally, try to pull "
-                    "(May take some time. Grab a coffee or two...)")
+        logger.info(
+            "  Not available locally, try to pull " "(May take some time. Grab a coffee or two...)"
+        )
 
     try:
         image = client.images.pull(image_name_with_tag)
@@ -171,8 +182,9 @@ def _handle_api_error(e):
     if "no basic auth" in "%s" % e:
         raise Exception(
             "No authentication information stored for %s. You will have to login to the "
-            "registry using \"docker login %s\" to be able to execute the tests." %
-            (_DOCKER_REGISTRY, _DOCKER_REGISTRY_URL))
+            'registry using "docker login %s" to be able to execute the tests.'
+            % (_DOCKER_REGISTRY, _DOCKER_REGISTRY_URL)
+        )
     if "request canceled while waiting for connection" in "%s" % e:
         return None
     if "dial tcp: lookup " in "%s" % e:
@@ -181,8 +193,9 @@ def _handle_api_error(e):
     raise e
 
 
-def _create_cmk_image(client: docker.DockerClient, base_image_name: str, docker_tag: str,
-                      version: CMKVersion) -> str:
+def _create_cmk_image(
+    client: docker.DockerClient, base_image_name: str, docker_tag: str, version: CMKVersion
+) -> str:
     base_image_name_with_tag = "%s:%s" % (base_image_name, docker_tag)
     logger.info("Preparing base image [%s]", base_image_name_with_tag)
     base_image = _get_or_load_image(client, base_image_name_with_tag)
@@ -206,36 +219,36 @@ def _create_cmk_image(client: docker.DockerClient, base_image_name: str, docker_
     logger.info("Build image from [%s]", base_image_name_with_tag)
     if base_image is None:
         raise Exception(
-            "Image [%s] is not available locally and the registry \"%s\" is not reachable. It is "
-            "not implemented yet to build the image locally. Terminating." %
-            (base_image_name_with_tag, _DOCKER_REGISTRY_URL))
+            'Image [%s] is not available locally and the registry "%s" is not reachable. It is '
+            "not implemented yet to build the image locally. Terminating."
+            % (base_image_name_with_tag, _DOCKER_REGISTRY_URL)
+        )
 
     with _start(
-            client,
-            image=base_image_name_with_tag,
-            labels={
-                "org.tribe29.build_time": "%d" % time.time(),
-                "org.tribe29.build_id": base_image.short_id,
-                "org.tribe29.base_image": base_image_name_with_tag,
-                "org.tribe29.base_image_hash": base_image.short_id,
-                "org.tribe29.cmk_edition_short": version.edition_short,
-                "org.tribe29.cmk_version": version.version,
-                "org.tribe29.cmk_branch": version.branch(),
-            },
-            command=["tail", "-f", "/dev/null"],  # keep running
-            volumes=list(_image_build_volumes().keys()),
-            host_config=client.api.create_host_config(
-                # needed to make the overlay mounts work on the /git directory
-                # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
-                privileged=True,
-                binds=[
-                    ":".join([k, v["bind"], v["mode"]]) for k, v in _image_build_volumes().items()
-                ],
-            ),
+        client,
+        image=base_image_name_with_tag,
+        labels={
+            "org.tribe29.build_time": "%d" % time.time(),
+            "org.tribe29.build_id": base_image.short_id,
+            "org.tribe29.base_image": base_image_name_with_tag,
+            "org.tribe29.base_image_hash": base_image.short_id,
+            "org.tribe29.cmk_edition_short": version.edition_short,
+            "org.tribe29.cmk_version": version.version,
+            "org.tribe29.cmk_branch": version.branch(),
+        },
+        command=["tail", "-f", "/dev/null"],  # keep running
+        volumes=list(_image_build_volumes().keys()),
+        host_config=client.api.create_host_config(
+            # needed to make the overlay mounts work on the /git directory
+            # Should work, but does not seem to be enough: 'cap_add=["SYS_ADMIN"]'. Using this instead:
+            privileged=True,
+            binds=[":".join([k, v["bind"], v["mode"]]) for k, v in _image_build_volumes().items()],
+        ),
     ) as container:
 
-        logger.info("Building in container %s (from [%s])", container.short_id,
-                    base_image_name_with_tag)
+        logger.info(
+            "Building in container %s (from [%s])", container.short_id, base_image_name_with_tag
+        )
 
         assert _exec_run(container, ["mkdir", "-p", "/results"]) == 0
 
@@ -245,13 +258,16 @@ def _create_cmk_image(client: docker.DockerClient, base_image_name: str, docker_
         _persist_virtual_environment(container, version)
 
         logger.info("Install Checkmk version")
-        assert _exec_run(
-            container,
-            ["scripts/run-pipenv", "run", "/git/tests/scripts/install-cmk.py"],
-            workdir="/git",
-            environment=_container_env(version),
-            stream=True,
-        ) == 0
+        assert (
+            _exec_run(
+                container,
+                ["scripts/run-pipenv", "run", "/git/tests/scripts/install-cmk.py"],
+                workdir="/git",
+                environment=_container_env(version),
+                stream=True,
+            )
+            == 0
+        )
 
         logger.info("Check whether or not installation was OK")
         assert _exec_run(container, ["ls", "/omd/versions/default"], workdir="/") == 0
@@ -274,8 +290,9 @@ def _create_cmk_image(client: docker.DockerClient, base_image_name: str, docker_
     return image_name_with_tag
 
 
-def _is_based_on_current_base_image(client: docker.DockerClient, image: Image,
-                                    base_image: Optional[Image]) -> bool:
+def _is_based_on_current_base_image(
+    client: docker.DockerClient, image: Image, base_image: Optional[Image]
+) -> bool:
     logger.info("  Check whether or not image is based on the current base image")
     if base_image is None:
         logger.info("  Base image not available, assuming it's up-to-date")
@@ -283,8 +300,11 @@ def _is_based_on_current_base_image(client: docker.DockerClient, image: Image,
 
     image_base_hash = image.labels.get("org.tribe29.base_image_hash")
     if base_image.short_id != image_base_hash:
-        logger.info("  Is based on an outdated base image (%s), current is (%s)", image_base_hash,
-                    base_image.short_id)
+        logger.info(
+            "  Is based on an outdated base image (%s), current is (%s)",
+            image_base_hash,
+            base_image.short_id,
+        )
         return False
 
     logger.info("  Is based on current base image (%s)", base_image.short_id)
@@ -304,7 +324,7 @@ def _image_build_volumes():
         os.path.join(os.environ["HOME"], ".cmk-credentials"): {
             "bind": "/root/.cmk-credentials",
             "mode": "ro",
-        }
+        },
     }
     volumes.update(_git_repos())
     return volumes
@@ -314,7 +334,7 @@ def _git_repos():
     # This ensures that we can also work with git-worktrees. For this, the original git repository
     # needs to be mapped into the container as well.
     repo_path = testlib.repo_path()
-    git_entry = os.path.join(repo_path, '.git')
+    git_entry = os.path.join(repo_path, ".git")
     repos = {
         # To get access to the test scripts and for updating the version from
         # the current git checkout. Will also be used for updating the image with
@@ -393,8 +413,12 @@ def _start(client, **kwargs):
 
 def _exec_run(c, cmd, **kwargs):
     if kwargs:
-        logger.info("Execute in container %s: %r (kwargs: %r)", c.short_id,
-                    subprocess.list2cmdline(cmd), kwargs)
+        logger.info(
+            "Execute in container %s: %r (kwargs: %r)",
+            c.short_id,
+            subprocess.list2cmdline(cmd),
+            kwargs,
+        )
     else:
         logger.info("Execute in container %s: %r", c.short_id, subprocess.list2cmdline(cmd))
 
@@ -413,19 +437,21 @@ def _exec_run(c, cmd, **kwargs):
     return result.poll()
 
 
-def container_exec(container,
-                   cmd,
-                   stdout=True,
-                   stderr=True,
-                   stdin=False,
-                   tty=False,
-                   privileged=False,
-                   user='',
-                   detach=False,
-                   stream=False,
-                   socket=False,
-                   environment=None,
-                   workdir=None):
+def container_exec(
+    container,
+    cmd,
+    stdout=True,
+    stderr=True,
+    stdin=False,
+    tty=False,
+    privileged=False,
+    user="",
+    detach=False,
+    stream=False,
+    socket=False,
+    environment=None,
+    workdir=None,
+):
     """
     An enhanced version of #docker.Container.exec_run() which returns an object
     that can be properly inspected for the status of the executed commands.
@@ -433,22 +459,22 @@ def container_exec(container,
     Taken from https://github.com/docker/docker-py/issues/1989. Thanks!
     """
 
-    exec_id = container.client.api.exec_create(container.id,
-                                               cmd,
-                                               stdout=stdout,
-                                               stderr=stderr,
-                                               stdin=stdin,
-                                               tty=tty,
-                                               privileged=privileged,
-                                               user=user,
-                                               environment=environment,
-                                               workdir=workdir)['Id']
+    exec_id = container.client.api.exec_create(
+        container.id,
+        cmd,
+        stdout=stdout,
+        stderr=stderr,
+        stdin=stdin,
+        tty=tty,
+        privileged=privileged,
+        user=user,
+        environment=environment,
+        workdir=workdir,
+    )["Id"]
 
-    output = container.client.api.exec_start(exec_id,
-                                             detach=detach,
-                                             tty=tty,
-                                             stream=stream,
-                                             socket=socket)
+    output = container.client.api.exec_start(
+        exec_id, detach=detach, tty=tty, stream=stream, socket=socket
+    )
 
     return ContainerExec(container.client, exec_id, output)
 
@@ -463,18 +489,18 @@ class ContainerExec:
         return self.client.api.exec_inspect(self.id)
 
     def poll(self):
-        return self.inspect()['ExitCode']
+        return self.inspect()["ExitCode"]
 
-    def communicate(self, line_prefix=b''):
+    def communicate(self, line_prefix=b""):
         for data in self.output:
             if not data:
                 continue
 
             offset = 0
             while offset < len(data):
-                nl = data.find(b'\n', offset)
+                nl = data.find(b"\n", offset)
                 if nl >= 0:
-                    slce = data[offset:nl + 1]
+                    slce = data[offset : nl + 1]
                     offset = nl + 1
                     sys.stdout.buffer.write(slce)
                     sys.stdout.buffer.write(line_prefix)
@@ -488,8 +514,9 @@ class ContainerExec:
         return self.poll()
 
 
-def _copy_directory(container: 'docker.types.containers.Container', src_path: Path,
-                    dest_path: Path) -> None:
+def _copy_directory(
+    container: "docker.types.containers.Container", src_path: Path, dest_path: Path
+) -> None:
     logger.info("Copying %s from container to %s", src_path, dest_path)
 
     tar_stream = BytesIO()
@@ -518,23 +545,33 @@ def _prepare_git_overlay(container, lower_path, target_path):
     assert _exec_run(container, ["mkdir", "-p", tmpfs_path, target_path]) == 0
 
     # Prepare the tmpfs as base for the rw-overlay and workdir
-    assert _exec_run(
-        container,
-        ["mount", "-t", "tmpfs", "tmpfs", tmpfs_path],
-    ) == 0
+    assert (
+        _exec_run(
+            container,
+            ["mount", "-t", "tmpfs", "tmpfs", tmpfs_path],
+        )
+        == 0
+    )
 
     # Create directory structure for the overlay
     assert _exec_run(container, ["mkdir", "-p", upperdir_path, workdir_path]) == 0
 
     # Finally add the overlay mount
-    assert _exec_run(
-        container,
-        [
-            "mount", "-t", "overlay", "overlay", "-o",
-            "lowerdir=%s,upperdir=%s,workdir=%s" %
-            (lower_path, upperdir_path, workdir_path), target_path
-        ],
-    ) == 0
+    assert (
+        _exec_run(
+            container,
+            [
+                "mount",
+                "-t",
+                "overlay",
+                "overlay",
+                "-o",
+                "lowerdir=%s,upperdir=%s,workdir=%s" % (lower_path, upperdir_path, workdir_path),
+                target_path,
+            ],
+        )
+        == 0
+    )
 
 
 def _prepare_virtual_environment(container, version):
@@ -550,13 +587,16 @@ def _prepare_virtual_environment(container, version):
 
 def _setup_virtual_environment(container, version):
     logger.info("Prepare virtual environment")
-    assert _exec_run(
-        container,
-        ["make", ".venv"],
-        workdir="/git",
-        environment=_container_env(version),
-        stream=True,
-    ) == 0
+    assert (
+        _exec_run(
+            container,
+            ["make", ".venv"],
+            workdir="/git",
+            environment=_container_env(version),
+            stream=True,
+        )
+        == 0
+    )
 
     assert _exec_run(container, ["test", "-d", "/git/.venv"]) == 0
 
@@ -571,13 +611,16 @@ def _cleanup_previous_virtual_environment(container, version):
     The copied .venv will be used by _reuse_persisted_virtual_environment().
     """
     logger.info("Cleanup previous virtual environments")
-    assert _exec_run(
-        container,
-        ["rm", "-rf", ".venv"],
-        workdir="/git",
-        environment=_container_env(version),
-        stream=True,
-    ) == 0
+    assert (
+        _exec_run(
+            container,
+            ["rm", "-rf", ".venv"],
+            workdir="/git",
+            environment=_container_env(version),
+            stream=True,
+        )
+        == 0
+    )
 
     assert _exec_run(container, ["test", "-n", "/.venv"]) == 0
 
@@ -589,30 +632,39 @@ def _persist_virtual_environment(container, version):
     to /.venv (persisted in image). This will be reused later during test executions.
     """
     logger.info("Persisting virtual environments for later use")
-    assert _exec_run(
-        container,
-        ["rsync", "-aR", ".venv", "/"],
-        workdir="/git",
-        environment=_container_env(version),
-        stream=True,
-    ) == 0
+    assert (
+        _exec_run(
+            container,
+            ["rsync", "-aR", ".venv", "/"],
+            workdir="/git",
+            environment=_container_env(version),
+            stream=True,
+        )
+        == 0
+    )
 
     assert _exec_run(container, ["test", "-d", "/.venv"]) == 0
 
 
 def _reuse_persisted_virtual_environment(container, version):
     """Copy /.venv to /git/.venv to reuse previous venv during testing"""
-    if _exec_run(container, ["test", "-d", "/.venv"],
-                 workdir="/git",
-                 environment=_container_env(version)) == 0:
+    if (
+        _exec_run(
+            container, ["test", "-d", "/.venv"], workdir="/git", environment=_container_env(version)
+        )
+        == 0
+    ):
         logger.info("Restore previously created virtual environment")
-        assert _exec_run(
-            container,
-            ["rsync", "-a", "/.venv", "/git"],
-            workdir="/git",
-            environment=_container_env(version),
-            stream=True,
-        ) == 0
+        assert (
+            _exec_run(
+                container,
+                ["rsync", "-a", "/.venv", "/git"],
+                workdir="/git",
+                environment=_container_env(version),
+                stream=True,
+            )
+            == 0
+        )
 
     if _mirror_reachable():
         #  Only try to update when the mirror is available, otherwise continue with the current

@@ -18,7 +18,7 @@ from cmk.gui.utils.html import HTML
 def test_render_start_tag_no_attributes():
     tag = render_start_tag("div")
     assert isinstance(tag, HTML)
-    assert str(tag) == '<div>'
+    assert str(tag) == "<div>"
 
 
 def test_render_start_tag_simple_attributes():
@@ -33,12 +33,12 @@ def test_render_start_tag_convert_data_attributes():
 
 def test_render_start_tag_skip_none_values():
     tag = render_start_tag("div", name=None)
-    assert str(tag) == '<div>'
+    assert str(tag) == "<div>"
 
 
 def test_render_start_tag_keep_empty_values():
     tag = render_start_tag("div", name="")
-    assert str(tag) == '<div name=\'\'>'
+    assert str(tag) == "<div name=''>"
 
 
 @pytest.mark.parametrize("value", [["1", "2"], "1 2", ["1", None, "2"]])
@@ -86,7 +86,7 @@ def test_render_start_tag_escape_list_of_values():
 def test_render_end_tag():
     tag = render_end_tag("a")
     assert isinstance(tag, HTML)
-    assert str(tag) == '</a>'
+    assert str(tag) == "</a>"
 
 
 def test_render_element_simple():

@@ -19,11 +19,14 @@ from cmk.gui.utils.script_helpers import application_and_request_context
 
 
 def test_http_request_allowed_vars():
-    environ = dict(create_environ(
-        method="POST",
-        content_type="application/x-www-form-urlencoded",
-        input_stream=io.BytesIO(b"asd=x&_Y21rYWRtaW4%3D=aaa&foo%3ABAR_BAZ=abc")),
-                   REQUEST_URI='')
+    environ = dict(
+        create_environ(
+            method="POST",
+            content_type="application/x-www-form-urlencoded",
+            input_stream=io.BytesIO(b"asd=x&_Y21rYWRtaW4%3D=aaa&foo%3ABAR_BAZ=abc"),
+        ),
+        REQUEST_URI="",
+    )
     req = http.Request(environ)
     assert req.var("asd") == "x"
     assert req.var("_Y21rYWRtaW4=") == "aaa"
@@ -97,7 +100,7 @@ def test_get_binary_input_type():
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_binary_input_non_ascii():
-    assert html.request.get_binary_input("abc") == u"äbc".encode("utf-8")
+    assert html.request.get_binary_input("abc") == "äbc".encode("utf-8")
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -114,7 +117,7 @@ def test_get_binary_input_mandatory_input_type():
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_binary_input_mandatory_non_ascii():
-    assert html.request.get_binary_input_mandatory("abc") == u"äbc".encode("utf-8")
+    assert html.request.get_binary_input_mandatory("abc") == "äbc".encode("utf-8")
 
 
 @pytest.mark.usefixtures("set_vars")
@@ -173,29 +176,29 @@ def test_get_unicode_input_type():
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_unicode_input_non_ascii():
-    assert html.request.get_unicode_input("abc") == u"äbc"
+    assert html.request.get_unicode_input("abc") == "äbc"
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_unicode_input_default():
-    assert html.request.get_unicode_input("get_default", u"xyz") == u"xyz"
+    assert html.request.get_unicode_input("get_default", "xyz") == "xyz"
     assert html.request.get_unicode_input("zzz") is None
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_unicode_input_mandatory_input_type():
-    assert html.request.get_unicode_input_mandatory("xyz") == u"x"
+    assert html.request.get_unicode_input_mandatory("xyz") == "x"
     assert isinstance(html.request.get_unicode_input_mandatory("xyz"), str)
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_unicode_input_mandatory_non_ascii():
-    assert html.request.get_unicode_input_mandatory("abc") == u"äbc"
+    assert html.request.get_unicode_input_mandatory("abc") == "äbc"
 
 
 @pytest.mark.usefixtures("set_vars")
 def test_get_unicode_input_mandatory_default():
-    assert html.request.get_unicode_input_mandatory("get_default", u"xyz") == u"xyz"
+    assert html.request.get_unicode_input_mandatory("get_default", "xyz") == "xyz"
 
     with pytest.raises(MKUserError, match="is missing"):
         html.request.get_unicode_input_mandatory("zzz")
@@ -263,7 +266,7 @@ def test_cookie_handling(request_context, monkeypatch):
     monkeypatch.setattr(html.request, "cookies", {"cookie1": {"key": "1a"}})
     assert html.request.has_cookie("cookie1")
     assert not html.request.has_cookie("cookie2")
-    #TODO: Write proper test assert html.cookie("cookie1", "2n class") == "1a"
+    # TODO: Write proper test assert html.cookie("cookie1", "2n class") == "1a"
     assert html.request.cookie("cookie2", "2n class") == "2n class"
 
 
@@ -282,15 +285,19 @@ def test_request_processing(request_context):
 def test_response_set_http_cookie(request_context):
     response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=False)
 
-    assert response.headers.getlist("Set-Cookie")[-1] == \
-        "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/; SameSite=Lax"
+    assert (
+        response.headers.getlist("Set-Cookie")[-1]
+        == "auth_SITE=user:123456:abcdefg; HttpOnly; Path=/; SameSite=Lax"
+    )
 
 
 def test_response_set_http_cookie_secure(request_context, monkeypatch):
     response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=True)
 
-    assert response.headers.getlist("Set-Cookie")[-1] == \
-            "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/; SameSite=Lax"
+    assert (
+        response.headers.getlist("Set-Cookie")[-1]
+        == "auth_SITE=user:123456:abcdefg; Secure; HttpOnly; Path=/; SameSite=Lax"
+    )
 
 
 def test_response_del_cookie(request_context, monkeypatch):
@@ -298,8 +305,10 @@ def test_response_del_cookie(request_context, monkeypatch):
 
     response.delete_cookie("auth_SITE")
 
-    assert response.headers.getlist("Set-Cookie")[-1] == \
-            "auth_SITE=; Expires=Thu, 01-Jan-1970 00:00:00 GMT; Max-Age=0; Path=/"
+    assert (
+        response.headers.getlist("Set-Cookie")[-1]
+        == "auth_SITE=; Expires=Thu, 01-Jan-1970 00:00:00 GMT; Max-Age=0; Path=/"
+    )
 
 
 # User IDs in Checkmk may contain non ascii characters. When they need to be encoded,
@@ -313,9 +322,10 @@ def test_response_del_cookie(request_context, monkeypatch):
 def test_pre_16_format_cookie_handling(monkeypatch):
     environ = dict(
         create_environ(),
-        HTTP_COOKIE=
-        u"xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
-            "utf-8"))
+        HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(
+            "utf-8"
+        ),
+    )
     request = http.Request(environ)
 
     assert isinstance(request.cookie("auth_stable"), str)
@@ -326,9 +336,9 @@ def test_pre_16_format_cookie_handling(monkeypatch):
 
 
 def test_del_vars_from_env():
-    environ = dict(create_environ(),
-                   REQUEST_URI='',
-                   QUERY_STRING='foo=foo&_username=foo&_password=bar&bar=bar')
+    environ = dict(
+        create_environ(), REQUEST_URI="", QUERY_STRING="foo=foo&_username=foo&_password=bar&bar=bar"
+    )
     with application_and_request_context(environ):
         # First we hit the cached property so we can see that the underlying Request object
         # actually got replaced later.
@@ -341,22 +351,22 @@ def test_del_vars_from_env():
         html.request.del_var_from_env("_password")
 
         # Make test independent of dict sorting
-        assert html.request.query_string in [b'foo=foo&bar=bar', b'bar=bar&foo=foo']
+        assert html.request.query_string in [b"foo=foo&bar=bar", b"bar=bar&foo=foo"]
 
-        assert '_password' not in html.request.args
-        assert '_username' not in html.request.args
+        assert "_password" not in html.request.args
+        assert "_username" not in html.request.args
 
         # Check the request local proxied version too.
         # Make test independent of dict sorting
-        assert global_request.query_string in [b'foo=foo&bar=bar', b'bar=bar&foo=foo']
-        assert '_password' not in global_request.args
-        assert '_username' not in global_request.args
+        assert global_request.query_string in [b"foo=foo&bar=bar", b"bar=bar&foo=foo"]
+        assert "_password" not in global_request.args
+        assert "_username" not in global_request.args
 
         assert html.request.var("foo") == "123"
 
 
 def test_del_vars():
-    environ = dict(create_environ(), REQUEST_URI='', QUERY_STRING='opt_x=x&foo=foo')
+    environ = dict(create_environ(), REQUEST_URI="", QUERY_STRING="opt_x=x&foo=foo")
     with application_and_request_context(environ):
         assert html.request.var("opt_x") == "x"
         assert html.request.var("foo") == "foo"
@@ -371,11 +381,14 @@ def test_del_vars():
         assert global_request.var("foo") == "foo"
 
 
-@pytest.mark.parametrize("invalid_url", [
-    "http://localhost/",
-    "://localhost",
-    "localhost:80/bla",
-])
+@pytest.mark.parametrize(
+    "invalid_url",
+    [
+        "http://localhost/",
+        "://localhost",
+        "localhost:80/bla",
+    ],
+)
 def test_get_url_input_invalid_urls(request_context, invalid_url):
     html.request.set_var("varname", invalid_url)
 

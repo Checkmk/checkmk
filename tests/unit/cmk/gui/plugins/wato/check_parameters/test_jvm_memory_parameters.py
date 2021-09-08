@@ -15,7 +15,7 @@ from cmk.gui.plugins.wato.check_parameters.jvm_memory import _transform_legacy_p
     "parameters, expected_result",
     [
         pytest.param(
-            (10., 20.),
+            (10.0, 20.0),
             {
                 "perc_total": (10.0, 20.0),
             },
@@ -25,12 +25,12 @@ from cmk.gui.plugins.wato.check_parameters.jvm_memory import _transform_legacy_p
             {
                 "totalheap": (10.0, 20.0),
                 "heap": (13.4, 15.9),
-                "nonheap": (0.1, 30.),
+                "nonheap": (0.1, 30.0),
             },
             {
                 "perc_total": (10.0, 20.0),
                 "perc_heap": (13.4, 15.9),
-                "perc_nonheap": (0.1, 30.),
+                "perc_nonheap": (0.1, 30.0),
             },
             id="legacy case 1",
         ),
@@ -48,12 +48,7 @@ from cmk.gui.plugins.wato.check_parameters.jvm_memory import _transform_legacy_p
             id="legacy case 2",
         ),
         pytest.param(
-            {
-                "totalheap": (1, 2),
-                "heap": (3, 4),
-                "nonheap": (5, 6),
-                "perm": (10., 20.)
-            },
+            {"totalheap": (1, 2), "heap": (3, 4), "nonheap": (5, 6), "perm": (10.0, 20.0)},
             {
                 "abs_total": (1048576, 2097152),
                 "abs_heap": (3145728, 4194304),
@@ -65,7 +60,7 @@ from cmk.gui.plugins.wato.check_parameters.jvm_memory import _transform_legacy_p
             {
                 "perc_total": (10.0, 20.0),
                 "perc_heap": (13.4, 15.9),
-                "perc_nonheap": (0.1, 30.),
+                "perc_nonheap": (0.1, 30.0),
                 "abs_total": (10000, 100000),
                 "abs_heap": (20000, 312548),
                 "abs_nonheap": (987654, 1002455),
@@ -73,7 +68,7 @@ from cmk.gui.plugins.wato.check_parameters.jvm_memory import _transform_legacy_p
             {
                 "perc_total": (10.0, 20.0),
                 "perc_heap": (13.4, 15.9),
-                "perc_nonheap": (0.1, 30.),
+                "perc_nonheap": (0.1, 30.0),
                 "abs_total": (10000, 100000),
                 "abs_heap": (20000, 312548),
                 "abs_nonheap": (987654, 1002455),

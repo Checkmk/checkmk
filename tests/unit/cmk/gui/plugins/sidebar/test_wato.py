@@ -20,99 +20,99 @@ def expected_items() -> Dict[str, List[str]]:
 
     if cmk_version.is_raw_edition():
         agents_items += [
-            'download_agents_linux',
-            'download_agents_windows',
+            "download_agents_linux",
+            "download_agents_windows",
         ]
     else:
         agents_items += [
-            'agents',
+            "agents",
         ]
 
     agents_items += [
-        'download_agents',
-        'wato.py?group=vm_cloud_container&mode=rulesets',
-        'wato.py?group=datasource_programs&mode=rulesets',
-        'wato.py?group=agent&mode=rulesets',
-        'wato.py?group=snmp&mode=rulesets',
+        "download_agents",
+        "wato.py?group=vm_cloud_container&mode=rulesets",
+        "wato.py?group=datasource_programs&mode=rulesets",
+        "wato.py?group=agent&mode=rulesets",
+        "wato.py?group=snmp&mode=rulesets",
     ]
 
     events_items = [
-        'notifications',
-        'mkeventd_rule_packs',
+        "notifications",
+        "mkeventd_rule_packs",
     ]
 
     if not cmk_version.is_raw_edition():
-        events_items.append('alert_handlers')
+        events_items.append("alert_handlers")
 
-    maintenance_items = ['backup']
+    maintenance_items = ["backup"]
 
     if not cmk_version.is_raw_edition():
-        maintenance_items.append('license_usage')
-        maintenance_items.append('mkps')
+        maintenance_items.append("license_usage")
+        maintenance_items.append("mkps")
 
     maintenance_items += [
-        'diagnostics',
-        'analyze_config',
-        'background_jobs_overview',
+        "diagnostics",
+        "analyze_config",
+        "background_jobs_overview",
     ]
 
     hosts_items = [
-        'folder',
-        'wato.py?group=host_monconf&mode=rulesets',
-        'tags',
+        "folder",
+        "wato.py?group=host_monconf&mode=rulesets",
+        "tags",
     ]
 
     if not cmk_version.is_raw_edition():
-        hosts_items.append('dcd_connections')
+        hosts_items.append("dcd_connections")
 
     hosts_items += [
-        'host_groups',
-        'host_attrs',
-        'wato.py?group=inventory&mode=rulesets',
+        "host_groups",
+        "host_attrs",
+        "wato.py?group=inventory&mode=rulesets",
     ]
 
     users_items = [
-        'users',
-        'contact_groups',
-        'roles',
-        'ldap_config',
-        'user_attrs',
+        "users",
+        "contact_groups",
+        "roles",
+        "ldap_config",
+        "user_attrs",
     ]
 
     if cmk_version.is_managed_edition():
-        users_items.insert(0, 'customer_management')
+        users_items.insert(0, "customer_management")
 
     expected_items = {
-        'agents': agents_items,
-        'events': events_items,
-        'general': [
-            'rule_search',
-            'globalvars',
-            'read_only',
-            'predefined_conditions',
-            'timeperiods',
-            'passwords',
-            'sites',
-            'auditlog',
-            'icons',
+        "agents": agents_items,
+        "events": events_items,
+        "general": [
+            "rule_search",
+            "globalvars",
+            "read_only",
+            "predefined_conditions",
+            "timeperiods",
+            "passwords",
+            "sites",
+            "auditlog",
+            "icons",
         ],
-        'hosts': hosts_items,
-        'maintenance': maintenance_items,
-        'services': [
-            'wato.py?group=monconf&mode=rulesets',
-            'wato.py?group=checkparams&mode=rulesets',
-            'wato.py?group=static&mode=rulesets',
-            'wato.py?group=activechecks&mode=rulesets',
-            'wato.py?group=custom_checks&mode=rulesets',
-            'service_groups',
-            'check_plugins',
+        "hosts": hosts_items,
+        "maintenance": maintenance_items,
+        "services": [
+            "wato.py?group=monconf&mode=rulesets",
+            "wato.py?group=checkparams&mode=rulesets",
+            "wato.py?group=static&mode=rulesets",
+            "wato.py?group=activechecks&mode=rulesets",
+            "wato.py?group=custom_checks&mode=rulesets",
+            "service_groups",
+            "check_plugins",
         ],
-        'bi': ['bi_packs'],
-        'users': users_items,
+        "bi": ["bi_packs"],
+        "users": users_items,
     }
 
     if not cmk_version.is_raw_edition():
-        expected_items.update({'custom': ['influxdb_connections']})
+        expected_items.update({"custom": ["influxdb_connections"]})
 
     return expected_items
 
@@ -152,7 +152,8 @@ def test_match_item_generator_setup_menu():
                     ],
                 )
             ],
-        ).generate_match_items()) == [
-            MatchItem(title='Item 1', topic='Setup', url='url 1', match_texts=['item 1']),
-            MatchItem(title='Item 2', topic='Setup', url='url 2', match_texts=['item 2']),
-        ]
+        ).generate_match_items()
+    ) == [
+        MatchItem(title="Item 1", topic="Setup", url="url 1", match_texts=["item 1"]),
+        MatchItem(title="Item 2", topic="Setup", url="url 2", match_texts=["item 2"]),
+    ]

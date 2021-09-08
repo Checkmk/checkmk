@@ -13,80 +13,86 @@ from cmk.gui.plugins.wato.datasource_programs import (
 )
 
 
-@pytest.mark.parametrize('parameters, expected_result', [
-    (
-        {
-            'url-prefix': 'https://someserver:123/blah',
-        },
-        {
-            'infos': ['nodes'],
-            'no-cert-check': False,
-            'namespaces': False,
-            'api-server-endpoint': (
-                'url_custom',
-                'https://someserver:123/blah',
-            ),
-        },
-    ),
-    (
-        {
-            'url-prefix': 'https://someserver',
-            'port': 123,
-            'path-prefix': 'blah',
-        },
-        {
-            'infos': ['nodes'],
-            'no-cert-check': False,
-            'namespaces': False,
-            'api-server-endpoint': (
-                'url_custom',
-                'https://someserver:123/blah',
-            ),
-        },
-    ),
-    (
-        {
-            'port': 123,
-            'path-prefix': 'blah',
-        },
-        {
-            'infos': ['nodes'],
-            'no-cert-check': False,
-            'namespaces': False,
-            'api-server-endpoint': (
-                'ipaddress',
-                {
-                    'port': 123,
-                    'path-prefix': 'blah',
-                },
-            ),
-        },
-    ),
-    (
-        {},
-        {
-            'infos': ['nodes'],
-            'no-cert-check': False,
-            'namespaces': False,
-            'api-server-endpoint': (
-                'ipaddress',
-                {},
-            ),
-        },
-    ),
-])
+@pytest.mark.parametrize(
+    "parameters, expected_result",
+    [
+        (
+            {
+                "url-prefix": "https://someserver:123/blah",
+            },
+            {
+                "infos": ["nodes"],
+                "no-cert-check": False,
+                "namespaces": False,
+                "api-server-endpoint": (
+                    "url_custom",
+                    "https://someserver:123/blah",
+                ),
+            },
+        ),
+        (
+            {
+                "url-prefix": "https://someserver",
+                "port": 123,
+                "path-prefix": "blah",
+            },
+            {
+                "infos": ["nodes"],
+                "no-cert-check": False,
+                "namespaces": False,
+                "api-server-endpoint": (
+                    "url_custom",
+                    "https://someserver:123/blah",
+                ),
+            },
+        ),
+        (
+            {
+                "port": 123,
+                "path-prefix": "blah",
+            },
+            {
+                "infos": ["nodes"],
+                "no-cert-check": False,
+                "namespaces": False,
+                "api-server-endpoint": (
+                    "ipaddress",
+                    {
+                        "port": 123,
+                        "path-prefix": "blah",
+                    },
+                ),
+            },
+        ),
+        (
+            {},
+            {
+                "infos": ["nodes"],
+                "no-cert-check": False,
+                "namespaces": False,
+                "api-server-endpoint": (
+                    "ipaddress",
+                    {},
+                ),
+            },
+        ),
+    ],
+)
 def test__special_agents_kubernetes_transform(parameters, expected_result):
     assert _special_agents_kubernetes_transform(parameters) == expected_result
 
 
-@pytest.mark.parametrize('parameters, expected_result', [
-    (('USER123', 'PasswordABC'), {
-        'auth_basic': {
-            'password': ('password', 'PasswordABC'),
-            'username': 'USER123'
-        },
-    }),
-])
+@pytest.mark.parametrize(
+    "parameters, expected_result",
+    [
+        (
+            ("USER123", "PasswordABC"),
+            {
+                "auth_basic": {"password": ("password", "PasswordABC"), "username": "USER123"},
+            },
+        ),
+    ],
+)
 def test__special_agents_innovaphone_transform(parameters, expected_result):
     assert _special_agents_innovaphone_transform(parameters) == expected_result
 
@@ -95,12 +101,9 @@ def test__special_agents_innovaphone_transform(parameters, expected_result):
 def _bi_datasource_parameters():
     # parameter format introduced with 2.0.0p9
     return {
-        'site': 'local',
-        'credentials': 'automation',
-        'filter': {
-            'aggr_name': ['Host admin-pc'],
-            'aggr_group_prefix': ['Hosts']
-        }
+        "site": "local",
+        "credentials": "automation",
+        "filter": {"aggr_name": ["Host admin-pc"], "aggr_group_prefix": ["Hosts"]},
     }
 
 
@@ -110,24 +113,22 @@ def _bi_datasource_parameters():
         (
             # filter keys till 2.0.0p8
             {
-                'site': 'local',
-                'credentials': 'automation',
-                'filter': {
-                    'aggr_name_regex': ['Host admin-pc'],
-                    'aggr_groups': ['Hosts']
-                }
-            }),
-        ({
-            # filter keys from 2.0.0p9
-            'site': 'local',
-            'credentials': 'automation',
-            'filter': {
-                'aggr_name': ['Host admin-pc'],
-                'aggr_group_prefix': ['Hosts']
+                "site": "local",
+                "credentials": "automation",
+                "filter": {"aggr_name_regex": ["Host admin-pc"], "aggr_groups": ["Hosts"]},
             }
-        })
+        ),
+        (
+            {
+                # filter keys from 2.0.0p9
+                "site": "local",
+                "credentials": "automation",
+                "filter": {"aggr_name": ["Host admin-pc"], "aggr_group_prefix": ["Hosts"]},
+            }
+        ),
     ],
 )
 def test_bi_datasource_parameters(value, _bi_datasource_parameters):
-    assert MultisiteBiDatasource().get_valuespec().transform_value(
-        value) == _bi_datasource_parameters
+    assert (
+        MultisiteBiDatasource().get_valuespec().transform_value(value) == _bi_datasource_parameters
+    )

@@ -28,10 +28,14 @@ def _section(name: str, parse_function: Callable) -> AgentSectionPlugin:
 class TestSectionsParser:
     @pytest.fixture
     def sections_parser(self) -> SectionsParser:
-        return SectionsParser(host_sections=AgentHostSections(sections={
-            SectionName("one"): [],
-            SectionName("two"): [],
-        }))
+        return SectionsParser(
+            host_sections=AgentHostSections(
+                sections={
+                    SectionName("one"): [],
+                    SectionName("two"): [],
+                }
+            )
+        )
 
     @staticmethod
     def test_parse_function_called_once(sections_parser: SectionsParser) -> None:
@@ -49,7 +53,7 @@ class TestSectionsParser:
 
         monkeypatch.setattr(
             crash_reporting,
-            'create_section_crash_dump',
+            "create_section_crash_dump",
             lambda **kw: "crash dump msg",
         )
 
@@ -58,7 +62,8 @@ class TestSectionsParser:
         assert sections_parser.parse(section) is None
         assert len(sections_parser.parsing_errors) == 1
         assert sections_parser.parsing_errors[0].startswith(
-            "Parsing of section one failed - please submit a crash report! (Crash-ID: ")
+            "Parsing of section one failed - please submit a crash report! (Crash-ID: "
+        )
 
     @staticmethod
     def test_parse(sections_parser: SectionsParser) -> None:

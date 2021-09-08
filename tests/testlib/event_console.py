@@ -39,33 +39,38 @@ class CMKEventConsole:
         assert "mode=mkeventd_edit_configvar&amp;site=&amp;varname=remote_status" in html
 
         html = web.get(
-            "wato.py?folder=&mode=mkeventd_edit_configvar&site=&varname=remote_status").text
+            "wato.py?folder=&mode=mkeventd_edit_configvar&site=&varname=remote_status"
+        ).text
         assert "Save" in html
 
-        html = web.post("wato.py",
-                        data={
-                            "filled_in": "value_editor",
-                            "ve_use": "on",
-                            "ve_value_0": self.status_port,
-                            "ve_value_2_use": "on",
-                            "ve_value_2_value_0": "127.0.0.1",
-                            "save": "Save",
-                            "varname": "remote_status",
-                            "mode": "mkeventd_edit_configvar",
-                        },
-                        add_transid=True).text
+        html = web.post(
+            "wato.py",
+            data={
+                "filled_in": "value_editor",
+                "ve_use": "on",
+                "ve_value_0": self.status_port,
+                "ve_value_2_use": "on",
+                "ve_value_2_value_0": "127.0.0.1",
+                "save": "Save",
+                "varname": "remote_status",
+                "mode": "mkeventd_edit_configvar",
+            },
+            add_transid=True,
+        ).text
         assert "%d, no commands, 127.0.0.1" % self.status_port in html
 
     def activate_changes(self, web):
         old_t = web.site.live.query_value(
-            "GET eventconsolestatus\nColumns: status_config_load_time\n")
+            "GET eventconsolestatus\nColumns: status_config_load_time\n"
+        )
         assert old_t > time.time() - 86400
 
         self.web_session.activate_changes(allow_foreign_changes=True)
 
         def config_reloaded():
             new_t = web.site.live.query_value(
-                "GET eventconsolestatus\nColumns: status_config_load_time\n")
+                "GET eventconsolestatus\nColumns: status_config_load_time\n"
+            )
             return new_t > old_t
 
         reload_time, timeout = time.time(), 10

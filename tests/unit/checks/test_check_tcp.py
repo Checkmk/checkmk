@@ -11,9 +11,12 @@ from tests.testlib import ActiveCheck
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("params,expected_args", [
-    ((1, {}), ["-p", "1", "-H", "$HOSTADDRESS$"]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        ((1, {}), ["-p", "1", "-H", "$HOSTADDRESS$"]),
+    ],
+)
 def test_check_tcp_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_tcp")

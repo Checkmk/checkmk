@@ -13,18 +13,22 @@ info = [
 ]
 
 discovery = {
-    "": [(None, None),],
+    "": [
+        (None, None),
+    ],
 }
 
 checks = {
-    "": [(
-        None,
-        {},
-        [
-            (
-                2,
-                "Instance is down",
-            ),
-        ],
-    ),],
+    "": [
+        (
+            None,
+            {},
+            [
+                (
+                    2,
+                    "Instance is down",
+                ),
+            ],
+        ),
+    ],
 }

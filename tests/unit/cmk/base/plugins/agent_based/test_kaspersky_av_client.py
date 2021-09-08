@@ -18,43 +18,69 @@ def set_fixed_timezone():
         yield
 
 
-@pytest.mark.parametrize("string_table,now,expected_section", [
-    ([["Fullscan", "01.01.1970", "00:00:00", "1"]], 1, dict(fullscan_age=1, fullscan_failed=True)),
-    ([["Signatures", "01.01.1970", "00:00:00"]], 1, dict(signature_age=1)),
-    ([["Signatures", "01.01.1970"]], 1, dict(signature_age=1)),
-    ([["Signatures", "Missing"]], 0, dict()),
-])
+@pytest.mark.parametrize(
+    "string_table,now,expected_section",
+    [
+        (
+            [["Fullscan", "01.01.1970", "00:00:00", "1"]],
+            1,
+            dict(fullscan_age=1, fullscan_failed=True),
+        ),
+        ([["Signatures", "01.01.1970", "00:00:00"]], 1, dict(signature_age=1)),
+        ([["Signatures", "01.01.1970"]], 1, dict(signature_age=1)),
+        ([["Signatures", "Missing"]], 0, dict()),
+    ],
+)
 def test_parse_kaspersky_av_client(string_table, now, expected_section):
     assert kaspersky_av_client._parse_kaspersky_av_client(string_table, now=now) == expected_section
 
 
-@pytest.mark.parametrize("section,results", [
-    (dict(fullscan_age=2, signature_age=2), [
-        Result(
-            state=State.WARN,
-            summary=
-            'Last update of signatures: 2 seconds ago (warn/crit at 2 seconds ago/3 seconds ago)'),
-        Result(state=State.WARN,
-               summary='Last fullscan: 2 seconds ago (warn/crit at 2 seconds ago/3 seconds ago)'),
-    ]),
-    (dict(fullscan_age=3, signature_age=3), [
-        Result(
-            state=State.CRIT,
-            summary=
-            'Last update of signatures: 3 seconds ago (warn/crit at 2 seconds ago/3 seconds ago)'),
-        Result(state=State.CRIT,
-               summary='Last fullscan: 3 seconds ago (warn/crit at 2 seconds ago/3 seconds ago)'),
-    ]),
-    (dict(fullscan_failed=True, fullscan_age=1, signature_age=1), [
-        Result(state=State.OK, summary='Last update of signatures: 1 second ago'),
-        Result(state=State.OK, summary='Last fullscan: 1 second ago'),
-        Result(state=State.CRIT, summary='Last fullscan failed'),
-    ]),
-    (dict(), [
-        Result(state=State.UNKNOWN, summary='Last update of signatures unkown'),
-        Result(state=State.UNKNOWN, summary='Last fullscan unkown')
-    ]),
-])
+@pytest.mark.parametrize(
+    "section,results",
+    [
+        (
+            dict(fullscan_age=2, signature_age=2),
+            [
+                Result(
+                    state=State.WARN,
+                    summary="Last update of signatures: 2 seconds ago (warn/crit at 2 seconds ago/3 seconds ago)",
+                ),
+                Result(
+                    state=State.WARN,
+                    summary="Last fullscan: 2 seconds ago (warn/crit at 2 seconds ago/3 seconds ago)",
+                ),
+            ],
+        ),
+        (
+            dict(fullscan_age=3, signature_age=3),
+            [
+                Result(
+                    state=State.CRIT,
+                    summary="Last update of signatures: 3 seconds ago (warn/crit at 2 seconds ago/3 seconds ago)",
+                ),
+                Result(
+                    state=State.CRIT,
+                    summary="Last fullscan: 3 seconds ago (warn/crit at 2 seconds ago/3 seconds ago)",
+                ),
+            ],
+        ),
+        (
+            dict(fullscan_failed=True, fullscan_age=1, signature_age=1),
+            [
+                Result(state=State.OK, summary="Last update of signatures: 1 second ago"),
+                Result(state=State.OK, summary="Last fullscan: 1 second ago"),
+                Result(state=State.CRIT, summary="Last fullscan failed"),
+            ],
+        ),
+        (
+            dict(),
+            [
+                Result(state=State.UNKNOWN, summary="Last update of signatures unkown"),
+                Result(state=State.UNKNOWN, summary="Last fullscan unkown"),
+            ],
+        ),
+    ],
+)
 def test_check_kaskpersky_av_client(section, results):
     test_params = dict(signature_age=(2.0, 3.0), fullscan_age=(2.0, 3.0))
     assert list(kaspersky_av_client.check_kaspersky_av_client(test_params, section)) == results

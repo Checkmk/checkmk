@@ -17,70 +17,79 @@ from cmk.base.plugins.agent_based.printer_pages_ricoh import parse_printer_pages
 from cmk.base.plugins.agent_based.utils.printer import check_printer_pages_types
 
 
-@pytest.mark.parametrize("string_table,expected_parsed_data", [
-    ([[]], None),
-    ([[['585']]], {
-        'pages_total': 585
-    }),
-])
+@pytest.mark.parametrize(
+    "string_table,expected_parsed_data",
+    [
+        ([[]], None),
+        ([[["585"]]], {"pages_total": 585}),
+    ],
+)
 def test_parse_printer_pages(string_table, expected_parsed_data):
     assert parse_printer_pages(string_table) == expected_parsed_data
 
 
-@pytest.mark.parametrize("string_table,expected_parsed_data", [
-    ([[]], None),
-    ([[['2240', '113'], ['1343', '123'], ['3464', '301'], ['122', '501']]], {
-        'pages_color_a3': 501
-    }),
-])
+@pytest.mark.parametrize(
+    "string_table,expected_parsed_data",
+    [
+        ([[]], None),
+        (
+            [[["2240", "113"], ["1343", "123"], ["3464", "301"], ["122", "501"]]],
+            {"pages_color_a3": 501},
+        ),
+    ],
+)
 def test_parse_printer_pages_canon(string_table, expected_parsed_data):
     assert parse_printer_pages_canon(string_table) == expected_parsed_data
 
 
-@pytest.mark.parametrize("string_table,expected_parsed_data", [
-    ([[]], None),
-    (
-        [[
-            ['Counter: Machine Total', '118722'],
-            ['Counter:Print:Total', '118722'],
-            ['Counter:Print:Black & White', '62846'],
-            ['Counter:Print:Full Color', '55876'],
-            ['Counter: Machine Total', '118722'],
-            ['Total Prints: Full Color', '55876'],
-            ['Total Prints: Monocolor', '62846'],
-            ['Development: Color', '167628'],
-            ['Development: Black & White', '118722'],
-            ['Printer: Color', '55876'],
-            ['Printer: Black & White', '62846'],
-            ['Total Prints: Color', '55876'],
-            ['Total Prints: Black & White', '62846'],
-            ['Printer: Black & White', '62846'],
-            ['Printer: Full Color', '55876'],
-        ]],
-        {
-            'pages_total': 118722,
-            'pages_color': 55876,
-            'pages_bw': 62846
-        },
-    ),
-])
+@pytest.mark.parametrize(
+    "string_table,expected_parsed_data",
+    [
+        ([[]], None),
+        (
+            [
+                [
+                    ["Counter: Machine Total", "118722"],
+                    ["Counter:Print:Total", "118722"],
+                    ["Counter:Print:Black & White", "62846"],
+                    ["Counter:Print:Full Color", "55876"],
+                    ["Counter: Machine Total", "118722"],
+                    ["Total Prints: Full Color", "55876"],
+                    ["Total Prints: Monocolor", "62846"],
+                    ["Development: Color", "167628"],
+                    ["Development: Black & White", "118722"],
+                    ["Printer: Color", "55876"],
+                    ["Printer: Black & White", "62846"],
+                    ["Total Prints: Color", "55876"],
+                    ["Total Prints: Black & White", "62846"],
+                    ["Printer: Black & White", "62846"],
+                    ["Printer: Full Color", "55876"],
+                ]
+            ],
+            {"pages_total": 118722, "pages_color": 55876, "pages_bw": 62846},
+        ),
+    ],
+)
 def test_parse_printer_pages_ricoh(string_table, expected_parsed_data):
     assert parse_printer_pages_ricoh(string_table) == expected_parsed_data
 
 
-@pytest.mark.parametrize("section,expected_results", [
-    ({
-        'pages_color': 21693,
-        'pages_bw': 54198
-    }, [
-        Result(state=state.OK, summary='total prints: 75891'),
-        Metric('pages_total', 75891.0),
-        Result(state=state.OK, summary='b/w: 54198'),
-        Metric('pages_bw', 54198.0),
-        Result(state=state.OK, summary='color: 21693'),
-        Metric('pages_color', 21693.0),
-    ]),
-])
+@pytest.mark.parametrize(
+    "section,expected_results",
+    [
+        (
+            {"pages_color": 21693, "pages_bw": 54198},
+            [
+                Result(state=state.OK, summary="total prints: 75891"),
+                Metric("pages_total", 75891.0),
+                Result(state=state.OK, summary="b/w: 54198"),
+                Metric("pages_bw", 54198.0),
+                Result(state=state.OK, summary="color: 21693"),
+                Metric("pages_color", 21693.0),
+            ],
+        ),
+    ],
+)
 def test_check_printer_pages_types(section, expected_results):
     assert list(check_printer_pages_types(section)) == expected_results
 

@@ -21,13 +21,15 @@ def test_foldable_container(request_context) -> None:
             assert is_open is False
         code = output_funnel.drain()
         assert compare_html(
-            code, '''<div class="foldable closed"><b
+            code,
+            """<div class="foldable closed"><b
 onclick="cmk.foldable_container.toggle(&quot;name&quot;, &quot;id&quot;,
 &quot;&quot;)" class="treeangle title">Title</b><img id="treeimg.name.id"
 onclick="cmk.foldable_container.toggle(&quot;name&quot;, &quot;id&quot;,
 &quot;&quot;)" src="themes/facelift/images/tree_closed.svg" class="treeangle
 closed" /><br/><ul id="tree.name.id" style="padding-left: 15px; " class="treeangle
-closed"></ul></div>''')
+closed"></ul></div>""",
+        )
 
 
 def test_foldable_container_id() -> None:
@@ -39,11 +41,14 @@ def test_foldable_container_img_id() -> None:
 
 
 def test_foldable_container_onclick_without_url() -> None:
-    assert foldable_container_onclick("name", "id",
-                                      None) == 'cmk.foldable_container.toggle("name", "id", "")'
+    assert (
+        foldable_container_onclick("name", "id", None)
+        == 'cmk.foldable_container.toggle("name", "id", "")'
+    )
 
 
 def test_foldable_container_onclick_with_url() -> None:
-    assert foldable_container_onclick(
-        "name", "id",
-        "http://bla") == 'cmk.foldable_container.toggle("name", "id", "http:\\/\\/bla")'
+    assert (
+        foldable_container_onclick("name", "id", "http://bla")
+        == 'cmk.foldable_container.toggle("name", "id", "http:\\/\\/bla")'
+    )

@@ -26,7 +26,7 @@ def test_request_memoize():
     assert blah() == [1]
     assert blah() == [1]
 
-    hooks.call('request-end')
+    hooks.call("request-end")
 
     assert blah() == [1, 1]
 
@@ -55,7 +55,7 @@ def test_request_memoize_request_integration(logged_in_wsgi_app, mocker):
     mock.return_value = 2
     assert memoized() == 2
     # But there is no reset triggered outside of the request. We do it manually here.
-    hooks.call('request-end')
+    hooks.call("request-end")
 
     # And now try a second request
     mock.return_value = 1
@@ -77,12 +77,12 @@ def test_request_memoize_unregister():
     assert blah() == [1]
     assert blah() == [1]
 
-    hooks.call('request-end')
+    hooks.call("request-end")
 
     assert blah() == [1, 1]
 
     hooks.unregister_plugin_hooks()
-    hooks.call('request-end')
+    hooks.call("request-end")
 
     assert blah() == [1, 1, 1]
     assert blah() == [1, 1, 1]

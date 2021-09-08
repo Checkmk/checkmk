@@ -8,12 +8,14 @@ from cmk.gui.plugins.wato.ac_tests import ACTestGenericCheckHelperUsage
 
 def test_local_connection_mocked(mock_livestatus):
     live = mock_livestatus
-    live.set_sites(['local'])
-    live.expect_query([
-        'GET status',
-        'Columns: helper_usage_generic average_latency_generic',
-        'ColumnHeaders: off',
-    ])
+    live.set_sites(["local"])
+    live.expect_query(
+        [
+            "GET status",
+            "Columns: helper_usage_generic average_latency_generic",
+            "ColumnHeaders: off",
+        ]
+    )
     with live(expect_status_query=False):
         gen = ACTestGenericCheckHelperUsage().execute()
         list(gen)

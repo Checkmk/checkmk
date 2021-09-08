@@ -11,32 +11,35 @@ from tests.testlib import SpecialAgent
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('params, hostname, ipaddress, args', [
-    (
-        {
-            'basicauth': ('bla', ('password', '123')),
-            'port': 8080,
-            'no-tls': True,
-            'no-cert-check': True,
-            'timeout': 60,
-        },
-        'myhost',
-        '127.0.0.1',
-        [
-            '--hostname',
-            '127.0.0.1',
-            '-u',
-            'bla:123',
-            '--port',
-            '8080',
-            '--no-tls',
-            '--no-cert-check',
-            '--timeout',
-            '60',
-        ],
-    ),
-])
+@pytest.mark.parametrize(
+    "params, hostname, ipaddress, args",
+    [
+        (
+            {
+                "basicauth": ("bla", ("password", "123")),
+                "port": 8080,
+                "no-tls": True,
+                "no-cert-check": True,
+                "timeout": 60,
+            },
+            "myhost",
+            "127.0.0.1",
+            [
+                "--hostname",
+                "127.0.0.1",
+                "-u",
+                "bla:123",
+                "--port",
+                "8080",
+                "--no-tls",
+                "--no-cert-check",
+                "--timeout",
+                "60",
+            ],
+        ),
+    ],
+)
 def test_cisco_prime_argument_parsing(params, hostname, ipaddress, args):
-    agent = SpecialAgent('agent_cisco_prime')
+    agent = SpecialAgent("agent_cisco_prime")
     arguments = agent.argument_func(params, hostname, ipaddress)
     assert arguments == args

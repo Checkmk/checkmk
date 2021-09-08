@@ -14,30 +14,35 @@ def test_local_table_assoc(mock_livestatus):
     live.set_sites(["local"])
     live.add_table(
         "hosts",
-        [{
-            'name': 'example.com',
-            'alias': 'example.com alias',
-            'address': 'server.example.com',
-            'custom_variables': {
-                "FILENAME": "/wato/hosts.mk",
-                "ADDRESS_FAMILY": "4",
-                "ADDRESS_4": "127.0.0.1",
-                "ADDRESS_6": "",
-                "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
-            },
-            'contacts': [],
-            'contact_groups': ['all'],
-        }],
+        [
+            {
+                "name": "example.com",
+                "alias": "example.com alias",
+                "address": "server.example.com",
+                "custom_variables": {
+                    "FILENAME": "/wato/hosts.mk",
+                    "ADDRESS_FAMILY": "4",
+                    "ADDRESS_4": "127.0.0.1",
+                    "ADDRESS_6": "",
+                    "TAGS": "/wato/ auto-piggyback cmk-agent ip-v4 ip-v4-only lan no-snmp prod site:heute tcp",
+                },
+                "contacts": [],
+                "contact_groups": ["all"],
+            }
+        ],
         site="local",
     )
-    live.expect_query([
-        "GET hosts", "Columns: name alias address custom_variables contacts contact_groups",
-        "ColumnHeaders: on"
-    ])
+    live.expect_query(
+        [
+            "GET hosts",
+            "Columns: name alias address custom_variables contacts contact_groups",
+            "ColumnHeaders: on",
+        ]
+    )
     with live(expect_status_query=False):
         livestatus.LocalConnection().query_table_assoc(
-            "GET hosts\n"
-            "Columns: name alias address custom_variables contacts contact_groups")
+            "GET hosts\n" "Columns: name alias address custom_variables contacts contact_groups"
+        )
 
 
 def test_intercept_queries(mock_livestatus, with_request_context):

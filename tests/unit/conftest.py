@@ -61,18 +61,18 @@ def patch_omd_site(monkeypatch):
 
     _touch(cmk.utils.paths.htpasswd_file)
     store.makedirs(cmk.utils.paths.autochecks_dir)
-    store.makedirs(cmk.utils.paths.var_dir + '/web')
-    store.makedirs(cmk.utils.paths.var_dir + '/php-api')
-    store.makedirs(cmk.utils.paths.var_dir + '/wato/php-api')
+    store.makedirs(cmk.utils.paths.var_dir + "/web")
+    store.makedirs(cmk.utils.paths.var_dir + "/php-api")
+    store.makedirs(cmk.utils.paths.var_dir + "/wato/php-api")
     store.makedirs(cmk.utils.paths.var_dir + "/wato/auth")
     store.makedirs(cmk.utils.paths.tmp_dir + "/wato/activation")
-    store.makedirs(cmk.utils.paths.omd_root + '/var/log')
-    store.makedirs(cmk.utils.paths.omd_root + '/tmp/check_mk')
-    store.makedirs(cmk.utils.paths.default_config_dir + '/conf.d/wato')
-    store.makedirs(cmk.utils.paths.default_config_dir + '/multisite.d/wato')
-    store.makedirs(cmk.utils.paths.default_config_dir + '/mkeventd.d/wato')
-    _touch(cmk.utils.paths.default_config_dir + '/mkeventd.mk')
-    _touch(cmk.utils.paths.default_config_dir + '/multisite.mk')
+    store.makedirs(cmk.utils.paths.omd_root + "/var/log")
+    store.makedirs(cmk.utils.paths.omd_root + "/tmp/check_mk")
+    store.makedirs(cmk.utils.paths.default_config_dir + "/conf.d/wato")
+    store.makedirs(cmk.utils.paths.default_config_dir + "/multisite.d/wato")
+    store.makedirs(cmk.utils.paths.default_config_dir + "/mkeventd.d/wato")
+    _touch(cmk.utils.paths.default_config_dir + "/mkeventd.mk")
+    _touch(cmk.utils.paths.default_config_dir + "/multisite.mk")
 
     yield
     omd_site.cache_clear()
@@ -127,8 +127,8 @@ def fixup_ip_lookup(monkeypatch):
 
 
 class FixRegister:
-    """Access agent based plugins
-    """
+    """Access agent based plugins"""
+
     def __init__(self):
         # Local import to have faster pytest initialization
         import cmk.base.api.agent_based.register as register  # pylint: disable=bad-option-value,import-outside-toplevel
@@ -174,11 +174,12 @@ class FixRegister:
 
 
 class FixPluginLegacy:
-    """Access legacy dicts like `check_info`
-    """
+    """Access legacy dicts like `check_info`"""
+
     def __init__(self, fixed_register: FixRegister):
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
         import cmk.base.inventory_plugins as inventory_plugins
+
         assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
 
         self._check_info = copy.deepcopy(config.check_info)
@@ -213,7 +214,7 @@ class FixPluginLegacy:
         return self._check_variables
 
 
-@pytest.fixture(scope="session", name='fix_register')
+@pytest.fixture(scope="session", name="fix_register")
 def fix_register_fixture():
     yield FixRegister()
 
@@ -228,9 +229,13 @@ def prevent_livestatus_connect(monkeypatch):
     """Prevent tests from trying to open livestatus connections. This will result in connect
     timeouts which slow down our tests."""
     monkeypatch.setattr(
-        livestatus.SingleSiteConnection, "_create_socket", lambda *_: pytest.fail(
+        livestatus.SingleSiteConnection,
+        "_create_socket",
+        lambda *_: pytest.fail(
             "The test tried to use a livestatus connection. This will result in connect timeouts. "
-            "Use mock_livestatus for mocking away the livestatus API"))
+            "Use mock_livestatus for mocking away the livestatus API"
+        ),
+    )
 
     orig_init = livestatus.MultiSiteConnection.__init__
 
@@ -283,8 +288,8 @@ class _MockVSManager(NamedTuple):
 def initialised_item_state():
     mock_vs = _MockVSManager({})
     with mock.patch(
-            "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
-            mock_vs,
+        "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
+        mock_vs,
     ):
         yield
 

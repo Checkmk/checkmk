@@ -15,26 +15,28 @@ def test_openapi_wato_disabled_blocks_query(
 ):
     live: MockLiveStatusConnection = mock_livestatus
     username, secret = with_automation_user
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
-    base = '/NO_SITE/check_mk/api/1.0'
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+    base = "/NO_SITE/check_mk/api/1.0"
 
     # add a host, so we can query it
     wsgi_app.call_method(
-        'post',
+        "post",
         base + "/domain-types/host_config/collections/all",
         params='{"host_name": "neute", "folder": "/"}',
         status=200,
-        content_type='application/json',
+        content_type="application/json",
     )
 
-    live.expect_query([
-        'GET services',
-        'Columns: host_name description',
-    ])
+    live.expect_query(
+        [
+            "GET services",
+            "Columns: host_name description",
+        ]
+    )
 
     # calls to setup endpoints work correctly
     wsgi_app.call_method(
-        'get',
+        "get",
         base + "/objects/host_config/neute",
         status=200,
     )
@@ -43,14 +45,14 @@ def test_openapi_wato_disabled_blocks_query(
     with wsgi_app.set_config(wato_enabled=False):
         # calls to setup endpoints are forbidden
         wsgi_app.call_method(
-            'get',
+            "get",
             base + "/objects/host_config/neute",
             status=403,
         )
         with live:
             # calls to monitoring endpoints should be allowed
             wsgi_app.call_method(
-                'get',
+                "get",
                 base + "/domain-types/service/collections/all",
                 status=200,
             )

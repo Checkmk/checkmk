@@ -28,10 +28,13 @@ class TestGlobalConfig:
 
 class TestControllerApi:
     def test_controller_log(self):
-        assert CMCMessage.log_answer(
-            "payload",
-            logging.WARNING,
-        ) == b"fetch:LOG    :warning :7       :payload"
+        assert (
+            CMCMessage.log_answer(
+                "payload",
+                logging.WARNING,
+            )
+            == b"fetch:LOG    :warning :7       :payload"
+        )
 
     def test_controller_end_of_reply(self):
         assert CMCMessage.end_of_reply() == b"fetch:ENDREPL:        :0       :"

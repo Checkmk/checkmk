@@ -58,42 +58,47 @@ def test_03_pip_interpreter_version(site):
 
 
 # TODO: Improve this test to automatically adapt the expected modules from our Pipfile
-@pytest.mark.parametrize("module_name", [
-    "netsnmp",
-    "ldap",
-    "OpenSSL",
-    "cryptography",
-    "pysmi",
-    "pysnmp",
-    "ldap",
-    "pymysql",
-    "psycopg2",
-    "dicttoxml",
-    "enum",
-    "PIL",
-    "reportlab",
-    "PyPDF2",
-    "psutil",
-    "ipaddress",
-    "requests",
-    "paramiko",
-    "pyghmi",
-    "typing",
-    "dateutil",
-    "snap7",
-    "rrdtool",
-    "werkzeug",
-    "boto3",
-    "kubernetes",
-    "numpy",
-    "google.protobuf",
-])
+@pytest.mark.parametrize(
+    "module_name",
+    [
+        "netsnmp",
+        "ldap",
+        "OpenSSL",
+        "cryptography",
+        "pysmi",
+        "pysnmp",
+        "ldap",
+        "pymysql",
+        "psycopg2",
+        "dicttoxml",
+        "enum",
+        "PIL",
+        "reportlab",
+        "PyPDF2",
+        "psutil",
+        "ipaddress",
+        "requests",
+        "paramiko",
+        "pyghmi",
+        "typing",
+        "dateutil",
+        "snap7",
+        "rrdtool",
+        "werkzeug",
+        "boto3",
+        "kubernetes",
+        "numpy",
+        "google.protobuf",
+    ],
+)
 def test_python_modules(site, module_name):
     import importlib  # pylint: disable=import-outside-toplevel
+
     module = importlib.import_module(module_name)
     assert module.__file__.startswith(site.root)
 
 
 def test_python_preferred_encoding():
     import locale  # pylint: disable=import-outside-toplevel
+
     assert locale.getpreferredencoding() == "UTF-8"

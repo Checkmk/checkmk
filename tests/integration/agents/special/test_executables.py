@@ -16,12 +16,11 @@ def test_no_exeption(site):
     Possible reasons for an exception are e.g. a wrong shebang, import
     errors or a wrong PYTHONPATH.
     """
-    special_agent_dir = Path(site.root) / 'share' / 'check_mk' / 'agents' / 'special'
-    for special_agent_path in special_agent_dir.glob('agent_*'):
+    special_agent_dir = Path(site.root) / "share" / "check_mk" / "agents" / "special"
+    for special_agent_path in special_agent_dir.glob("agent_*"):
         command = [str(special_agent_path)]
-        p = site.execute(command,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE,
-                         stdin=open(os.devnull))
+        p = site.execute(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=open(os.devnull)
+        )
         stderr = p.communicate()[1]
         assert "Traceback (most recent call last):" not in stderr

@@ -80,35 +80,59 @@ def fixture_build_setup_search_index_background(monkeypatch: MonkeyPatch) -> Non
 
 
 def test_package_parts():
-    assert sorted(packaging.get_package_parts()) == sorted([
-        packaging.PackagePart("agent_based", _("Agent based plugins (Checks, Inventory)"),
-                              str(cmk.utils.paths.local_agent_based_plugins_dir)),
-        packaging.PackagePart('checks', _('Legacy check plugins'),
-                              str(cmk.utils.paths.local_checks_dir)),
-        packaging.PackagePart('notifications', _('Notification scripts'),
-                              str(cmk.utils.paths.local_notifications_dir)),
-        packaging.PackagePart('inventory', _('Legacy inventory plugins'),
-                              str(cmk.utils.paths.local_inventory_dir)),
-        packaging.PackagePart('checkman', _("Checks' man pages"),
-                              str(cmk.utils.paths.local_check_manpages_dir)),
-        packaging.PackagePart('agents', _('Agents'), str(cmk.utils.paths.local_agents_dir)),
-        packaging.PackagePart('web', _('GUI extensions'), str(cmk.utils.paths.local_web_dir)),
-        packaging.PackagePart('pnp-templates', _('PNP4Nagios templates (deprecated)'),
-                              str(cmk.utils.paths.local_pnp_templates_dir)),
-        packaging.PackagePart('doc', _('Documentation files'), str(cmk.utils.paths.local_doc_dir)),
-        packaging.PackagePart('locales', _('Localizations'), str(cmk.utils.paths.local_locale_dir)),
-        packaging.PackagePart('bin', _('Binaries'), str(cmk.utils.paths.local_bin_dir)),
-        packaging.PackagePart('lib', _('Libraries'), str(cmk.utils.paths.local_lib_dir)),
-        packaging.PackagePart('mibs', _('SNMP MIBs'), str(cmk.utils.paths.local_mib_dir)),
-        packaging.PackagePart('alert_handlers', _('Alert handlers'),
-                              str(cmk.utils.paths.local_share_dir.joinpath('alert_handlers'))),
-    ])
+    assert sorted(packaging.get_package_parts()) == sorted(
+        [
+            packaging.PackagePart(
+                "agent_based",
+                _("Agent based plugins (Checks, Inventory)"),
+                str(cmk.utils.paths.local_agent_based_plugins_dir),
+            ),
+            packaging.PackagePart(
+                "checks", _("Legacy check plugins"), str(cmk.utils.paths.local_checks_dir)
+            ),
+            packaging.PackagePart(
+                "notifications",
+                _("Notification scripts"),
+                str(cmk.utils.paths.local_notifications_dir),
+            ),
+            packaging.PackagePart(
+                "inventory", _("Legacy inventory plugins"), str(cmk.utils.paths.local_inventory_dir)
+            ),
+            packaging.PackagePart(
+                "checkman", _("Checks' man pages"), str(cmk.utils.paths.local_check_manpages_dir)
+            ),
+            packaging.PackagePart("agents", _("Agents"), str(cmk.utils.paths.local_agents_dir)),
+            packaging.PackagePart("web", _("GUI extensions"), str(cmk.utils.paths.local_web_dir)),
+            packaging.PackagePart(
+                "pnp-templates",
+                _("PNP4Nagios templates (deprecated)"),
+                str(cmk.utils.paths.local_pnp_templates_dir),
+            ),
+            packaging.PackagePart(
+                "doc", _("Documentation files"), str(cmk.utils.paths.local_doc_dir)
+            ),
+            packaging.PackagePart(
+                "locales", _("Localizations"), str(cmk.utils.paths.local_locale_dir)
+            ),
+            packaging.PackagePart("bin", _("Binaries"), str(cmk.utils.paths.local_bin_dir)),
+            packaging.PackagePart("lib", _("Libraries"), str(cmk.utils.paths.local_lib_dir)),
+            packaging.PackagePart("mibs", _("SNMP MIBs"), str(cmk.utils.paths.local_mib_dir)),
+            packaging.PackagePart(
+                "alert_handlers",
+                _("Alert handlers"),
+                str(cmk.utils.paths.local_share_dir.joinpath("alert_handlers")),
+            ),
+        ]
+    )
 
 
 def test_config_parts():
     assert packaging.get_config_parts() == [
-        packaging.PackagePart("ec_rule_packs", "Event Console rule packs",
-                              "%s/mkeventd.d/mkp/rule_packs" % cmk.utils.paths.default_config_dir)
+        packaging.PackagePart(
+            "ec_rule_packs",
+            "Event Console rule packs",
+            "%s/mkeventd.d/mkp/rule_packs" % cmk.utils.paths.default_config_dir,
+        )
     ]
 
 
@@ -117,10 +141,13 @@ def test_get_permissions_unknown_path():
         assert packaging._get_permissions("lala")
 
 
-@pytest.mark.parametrize("path,expected", [
-    (str(cmk.utils.paths.local_checks_dir), 0o644),
-    (str(cmk.utils.paths.local_bin_dir), 0o755),
-])
+@pytest.mark.parametrize(
+    "path,expected",
+    [
+        (str(cmk.utils.paths.local_checks_dir), 0o644),
+        (str(cmk.utils.paths.local_bin_dir), 0o755),
+    ],
+)
 def test_get_permissions(path, expected):
     assert packaging._get_permissions(path) == expected
 
@@ -134,22 +161,24 @@ def test_get_config_parts():
 
 
 def test_get_package_parts():
-    assert sorted([p.ident for p in packaging.get_package_parts()]) == sorted([
-        'agent_based',
-        'agents',
-        'alert_handlers',
-        'bin',
-        'checkman',
-        'checks',
-        'doc',
-        'inventory',
-        'lib',
-        'locales',
-        'mibs',
-        'notifications',
-        'pnp-templates',
-        'web',
-    ])
+    assert sorted([p.ident for p in packaging.get_package_parts()]) == sorted(
+        [
+            "agent_based",
+            "agents",
+            "alert_handlers",
+            "bin",
+            "checkman",
+            "checks",
+            "doc",
+            "inventory",
+            "lib",
+            "locales",
+            "mibs",
+            "notifications",
+            "pnp-templates",
+            "web",
+        ]
+    )
 
 
 def _create_simple_test_package(pacname):
@@ -167,7 +196,7 @@ def _create_simple_test_package(pacname):
 def _create_test_file(name):
     check_path = cmk.utils.paths.local_checks_dir.joinpath(name)
     with check_path.open("w", encoding="utf-8") as f:
-        f.write(u"lala\n")
+        f.write("lala\n")
 
 
 def test_create():
@@ -297,21 +326,21 @@ def test_remove():
 
 def test_unpackaged_files_none():
     assert {part.ident: files for part, files in packaging.unpackaged_files().items()} == {
-        'agent_based': [],
-        'agents': [],
-        'alert_handlers': [],
-        'bin': [],
-        'checkman': [],
-        'checks': [],
-        'doc': [],
-        'ec_rule_packs': [],
-        'inventory': [],
-        'lib': [],
-        'locales': [],
-        'mibs': [],
-        'notifications': [],
-        'pnp-templates': [],
-        'web': [],
+        "agent_based": [],
+        "agents": [],
+        "alert_handlers": [],
+        "bin": [],
+        "checkman": [],
+        "checks": [],
+        "doc": [],
+        "ec_rule_packs": [],
+        "inventory": [],
+        "lib": [],
+        "locales": [],
+        "mibs": [],
+        "notifications": [],
+        "pnp-templates": [],
+        "web": [],
     }
 
 
@@ -320,33 +349,33 @@ def test_unpackaged_files():
 
     p = cmk.utils.paths.local_doc_dir.joinpath("docxx")
     with p.open("w", encoding="utf-8") as f:
-        f.write(u"lala\n")
+        f.write("lala\n")
 
     p = cmk.utils.paths.local_agent_based_plugins_dir.joinpath("dada")
     with p.open("w", encoding="utf-8") as f:
-        f.write(u"huhu\n")
+        f.write("huhu\n")
 
     assert {part.ident: files for part, files in packaging.unpackaged_files().items()} == {
-        'agent_based': ['dada'],
-        'agents': [],
-        'alert_handlers': [],
-        'bin': [],
-        'checkman': [],
-        'checks': ['abc'],
-        'doc': ["docxx"],
-        'ec_rule_packs': [],
-        'inventory': [],
-        'lib': [],
-        'locales': [],
-        'mibs': [],
-        'notifications': [],
-        'pnp-templates': [],
-        'web': [],
+        "agent_based": ["dada"],
+        "agents": [],
+        "alert_handlers": [],
+        "bin": [],
+        "checkman": [],
+        "checks": ["abc"],
+        "doc": ["docxx"],
+        "ec_rule_packs": [],
+        "inventory": [],
+        "lib": [],
+        "locales": [],
+        "mibs": [],
+        "notifications": [],
+        "pnp-templates": [],
+        "web": [],
     }
 
 
 # TODO:
-#def test_package_part_info()
+# def test_package_part_info()
 
 
 def test_get_all_package_infos():

@@ -36,10 +36,9 @@ class InvalidUrl(Exception):
 
 
 class Url:
-    def __init__(self,
-                 url: str,
-                 orig_url: Optional[str] = None,
-                 referer_url: Optional[str] = None) -> None:
+    def __init__(
+        self, url: str, orig_url: Optional[str] = None, referer_url: Optional[str] = None
+    ) -> None:
         self.url = url
         self.orig_url = orig_url
         self.referer_url = referer_url
@@ -158,7 +157,8 @@ class PageValidator:
                 self.verify_is_valid_url(url.url)
             except InvalidUrl as invalid_url:
                 self.event_queue.put(
-                    SkipReference(url, reason="invalid-url", message=invalid_url.message))
+                    SkipReference(url, reason="invalid-url", message=invalid_url.message)
+                )
             else:
                 self.event_queue.put(ReferenceFound(url))
 
@@ -178,11 +178,13 @@ class PageValidator:
         if url.startswith("http://") and not url.startswith(self.base_url):
             raise InvalidUrl(url, "external url")
         # skip non check_mk urls
-        if not parsed.path.startswith(f"/{self.site_id}/check_mk") \
-           or "../pnp4nagios/" in parsed.path \
-           or "../nagvis/" in parsed.path \
-           or "check_mk/plugin-api" in parsed.path \
-           or "../nagios/" in parsed.path:
+        if (
+            not parsed.path.startswith(f"/{self.site_id}/check_mk")
+            or "../pnp4nagios/" in parsed.path
+            or "../nagvis/" in parsed.path
+            or "check_mk/plugin-api" in parsed.path
+            or "../nagios/" in parsed.path
+        ):
             raise InvalidUrl(url, "non Check_MK URL")
         # skip current url with link to index
         if "index.py?start_url=" in url:
@@ -228,27 +230,27 @@ class PageVisitor:
         content_type = await self.get_content_type(url)
         if content_type.startswith("text/html"):
             await self.validate(url, event_queue)
-        elif any((content_type.startswith(ignored_start)
-                  for ignored_start in ["text/plain", "text/csv"])):
+        elif any(
+            (content_type.startswith(ignored_start) for ignored_start in ["text/plain", "text/csv"])
+        ):
             event_queue.put(SkipReference(url, reason="content-type", message=content_type))
         elif content_type in [
-                "application/x-rpm",
-                "application/x-deb",
-                "application/x-debian-package",
-                "application/x-gzip",
-                "application/x-msdos-program",
-                "application/x-msi",
-                "application/x-tgz",
-                "application/x-redhat-package-manager",
-                "application/x-pkg",
-                "application/x-tar",
-                "application/json",
-                "application/pdf",
-                "image/png",
-                "image/gif"
-                "text/x-chdr",
-                "text/x-c++src",
-                "text/x-sh",
+            "application/x-rpm",
+            "application/x-deb",
+            "application/x-debian-package",
+            "application/x-gzip",
+            "application/x-msdos-program",
+            "application/x-msi",
+            "application/x-tgz",
+            "application/x-redhat-package-manager",
+            "application/x-pkg",
+            "application/x-tar",
+            "application/json",
+            "application/pdf",
+            "image/png",
+            "image/gif" "text/x-chdr",
+            "text/x-c++src",
+            "text/x-sh",
         ]:
             event_queue.put(SkipReference(url, reason="content-type", message=content_type))
         else:
@@ -259,7 +261,7 @@ class PageVisitor:
     async def get_content_type(self, url: Url) -> str:
         def blocking():
             response = self.web_session.request("head", url.url_without_host())
-            return response.headers.get('content-type')
+            return response.headers.get("content-type")
 
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, blocking)
@@ -286,8 +288,12 @@ class PageVisitor:
 class BrowserPageVisitor(PageVisitor):
     TASK_LIMIT = 10
 
-    def __init__(self, site: Site, web_session: CMKWebSession,
-                 browser_context: playwright.async_api.BrowserContext) -> None:
+    def __init__(
+        self,
+        site: Site,
+        web_session: CMKWebSession,
+        browser_context: playwright.async_api.BrowserContext,
+    ) -> None:
         super().__init__(site, web_session)
         self.browser_context = browser_context
 
@@ -295,7 +301,9 @@ class BrowserPageVisitor(PageVisitor):
         logs = []
 
         async def handle_console_messages(msg):
-            location = f"{msg.location['url']}:{msg.location['lineNumber']}:{msg.location['columnNumber']}"
+            location = (
+                f"{msg.location['url']}:{msg.location['lineNumber']}:{msg.location['columnNumber']}"
+            )
             logs.append(f"{msg.type}: {msg.text} ({location})")
 
         page = await self.browser_context.new_page()
@@ -326,8 +334,8 @@ async def create_browser_context(site: Site) -> playwright.async_api.BrowserCont
 
     page = await context.new_page()
     await page.goto(site.internal_url)
-    await page.fill("input[name=\"_username\"]", "cmkadmin")
-    await page.fill("input[name=\"_password\"]", "cmk")
+    await page.fill('input[name="_username"]', "cmkadmin")
+    await page.fill('input[name="_password"]', "cmk")
     async with page.expect_navigation():
         await page.click("text=Login")
     await page.close()
@@ -392,14 +400,19 @@ class Crawler:
         self._write_report_file()
 
         error_messages = list(
-            chain.from_iterable(([
-                f"[{url} - found on {error['referer_url']}] {error['message']}"
-                for error in result["errors"]
-            ]
-                                 for url, result in self.results.items()
-                                 if "errors" in result)))
+            chain.from_iterable(
+                (
+                    [
+                        f"[{url} - found on {error['referer_url']}] {error['message']}"
+                        for error in result["errors"]
+                    ]
+                    for url, result in self.results.items()
+                    if "errors" in result
+                )
+            )
+        )
         if error_messages:
-            joined_error_messages = '\n'.join(error_messages)
+            joined_error_messages = "\n".join(error_messages)
             raise Exception(
                 f"Crawled {len(self.results)} URLs in {self.duration} seconds. Failures:\n{joined_error_messages}"
             )
@@ -410,28 +423,32 @@ class Crawler:
 
         tests, errors, skipped = 0, 0, 0
         for url, result in self.results.items():
-            testcase = etree.SubElement(testsuite,
-                                        "testcase",
-                                        attrib={
-                                            "name": url,
-                                            "classname": "crawled_urls",
-                                            "time": f"{result.get('duration', 0.0):.3f}",
-                                        })
+            testcase = etree.SubElement(
+                testsuite,
+                "testcase",
+                attrib={
+                    "name": url,
+                    "classname": "crawled_urls",
+                    "time": f"{result.get('duration', 0.0):.3f}",
+                },
+            )
             if "skipped" in result:
                 skipped += 1
                 skip_info = result["skipped"]
-                etree.SubElement(testcase,
-                                 "skipped",
-                                 attrib={
-                                     "type": skip_info["reason"],
-                                     "message": skip_info["message"],
-                                 })
+                etree.SubElement(
+                    testcase,
+                    "skipped",
+                    attrib={
+                        "type": skip_info["reason"],
+                        "message": skip_info["message"],
+                    },
+                )
             elif result.get("errors", None):
                 errors += 1
                 for error in result["errors"]:
-                    failure = etree.SubElement(testcase,
-                                               "failure",
-                                               attrib={"message": error["message"]})
+                    failure = etree.SubElement(
+                        testcase, "failure", attrib={"message": error["message"]}
+                    )
                     failure.text = f'referer_url: {error["referer_url"]}'
 
             tests += 1
@@ -470,19 +487,18 @@ class Crawler:
                             self.results[event.url.url] = CrawlResult()
                             todo.put(event.url)
                     elif isinstance(event, PageError):
-                        self.results.setdefault(event.url.url,
-                                                CrawlResult()).setdefault("errors", []).append({
-                                                    "referer_url": event.url.referer_url,
-                                                    "message": event.message
-                                                })
+                        self.results.setdefault(event.url.url, CrawlResult()).setdefault(
+                            "errors", []
+                        ).append({"referer_url": event.url.referer_url, "message": event.message})
                     elif isinstance(event, SkipReference):
                         self.results.setdefault(event.url.url, CrawlResult())["skipped"] = {
                             "reason": event.reason,
                             "message": event.message,
                         }
                     elif isinstance(event, PageDone):
-                        self.results.setdefault(event.url.url,
-                                                CrawlResult())["duration"] = event.duration
+                        self.results.setdefault(event.url.url, CrawlResult())[
+                            "duration"
+                        ] = event.duration
                         progress.done(1)
                     else:
                         raise RuntimeError(f"unkown event: {type(event)}")
@@ -496,9 +512,9 @@ class Crawler:
 @pytest.fixture
 def site() -> Site:
     version = os.environ.get("VERSION", CMKVersion.DAILY)
-    sf = get_site_factory(prefix="crawl_",
-                          update_from_git=version == "git",
-                          install_test_python_modules=False)
+    sf = get_site_factory(
+        prefix="crawl_", update_from_git=version == "git", install_test_python_modules=False
+    )
 
     site = None
     if os.environ.get("REUSE", 0) == "1":

@@ -11,24 +11,25 @@ from tests.testlib import SpecialAgent
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('params,expected_args', [
-    ({
-        'password': 'password',
-        'user': 'username'
-    }, ["--address=host", "--user=username", "--password=password"]),
-    ({
-        'cert': True,
-        'password': 'password',
-        'user': 'username'
-    }, ["--address=host", "--user=username", "--password=password"]),
-    ({
-        'cert': False,
-        'password': 'password',
-        'user': 'username'
-    }, ["--address=host", "--user=username", "--password=password", "--no-cert-check"]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        (
+            {"password": "password", "user": "username"},
+            ["--address=host", "--user=username", "--password=password"],
+        ),
+        (
+            {"cert": True, "password": "password", "user": "username"},
+            ["--address=host", "--user=username", "--password=password"],
+        ),
+        (
+            {"cert": False, "password": "password", "user": "username"},
+            ["--address=host", "--user=username", "--password=password", "--no-cert-check"],
+        ),
+    ],
+)
 def test_storeonce_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_storeonce')
+    agent = SpecialAgent("agent_storeonce")
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

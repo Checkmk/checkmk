@@ -27,45 +27,39 @@ def test_is_ntop_available():
 
 
 @pytest.mark.usefixtures("load_config")
-@pytest.mark.parametrize("ntop_connection, custom_user, answer, reason", [
-    (
-        {
-            'is_activated': False
-        },
-        "",
-        False,
-        "ntopng integration is not activated under global settings.",
-    ),
-    (
-        {
-            'is_activated': True,
-            'use_custom_attribute_as_ntop_username': False
-        },
-        "",
-        True,
-        "",
-    ),
-    (
-        {
-            'is_activated': True,
-            'use_custom_attribute_as_ntop_username': 'ntop_alias'
-        },
-        "",
-        False,
-        ("The ntopng username should be derived from \'ntopng Username\' "
-         "under the current's user settings (identity) but this is not "
-         "set for the current user."),
-    ),
-    (
-        {
-            'is_activated': True,
-            'use_custom_attribute_as_ntop_username': 'ntop_alias'
-        },
-        "a_ntop_user",
-        True,
-        "",
-    ),
-])
+@pytest.mark.parametrize(
+    "ntop_connection, custom_user, answer, reason",
+    [
+        (
+            {"is_activated": False},
+            "",
+            False,
+            "ntopng integration is not activated under global settings.",
+        ),
+        (
+            {"is_activated": True, "use_custom_attribute_as_ntop_username": False},
+            "",
+            True,
+            "",
+        ),
+        (
+            {"is_activated": True, "use_custom_attribute_as_ntop_username": "ntop_alias"},
+            "",
+            False,
+            (
+                "The ntopng username should be derived from 'ntopng Username' "
+                "under the current's user settings (identity) but this is not "
+                "set for the current user."
+            ),
+        ),
+        (
+            {"is_activated": True, "use_custom_attribute_as_ntop_username": "ntop_alias"},
+            "a_ntop_user",
+            True,
+            "",
+        ),
+    ],
+)
 def test_is_ntop_configured_and_reason(
     mocker,
     ntop_connection,
@@ -79,7 +73,7 @@ def test_is_ntop_configured_and_reason(
     if not cmk_version.is_raw_edition():
         mocker.patch.object(
             config,
-            'ntop_connection',
+            "ntop_connection",
             ntop_connection,
         )
         if custom_user:

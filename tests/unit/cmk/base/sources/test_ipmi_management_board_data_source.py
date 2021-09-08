@@ -53,30 +53,40 @@ def test_ipmi_ipaddress_from_mgmt_board(monkeypatch):
 
     Scenario().add_host(hostname).apply(monkeypatch)
     monkeypatch.setattr(ip_lookup, "lookup_ip_address", fake_lookup_ip_address)
-    monkeypatch.setattr(config, "host_attributes", {
-        hostname: {
-            "management_address": ipaddress
+    monkeypatch.setattr(
+        config,
+        "host_attributes",
+        {
+            hostname: {"management_address": ipaddress},
         },
-    })
+    )
 
     source = IPMISource(hostname, ipaddress)
     assert source.host_config.management_address == ipaddress
 
 
 def test_description_with_ipaddress(monkeypatch):
-    assert IPMISource._make_description(
-        "1.2.3.4",
-        {},
-    ) == "Management board - IPMI (Address: 1.2.3.4)"
+    assert (
+        IPMISource._make_description(
+            "1.2.3.4",
+            {},
+        )
+        == "Management board - IPMI (Address: 1.2.3.4)"
+    )
 
 
 def test_description_with_credentials(monkeypatch):
-    assert IPMISource._make_description(
-        None, {"username": "Bobby"}) == "Management board - IPMI (User: Bobby)"
+    assert (
+        IPMISource._make_description(None, {"username": "Bobby"})
+        == "Management board - IPMI (User: Bobby)"
+    )
 
 
 def test_description_with_ipaddress_and_credentials(monkeypatch):
-    assert IPMISource._make_description(
-        "1.2.3.4",
-        {"username": "Bobby"},
-    ) == "Management board - IPMI (Address: 1.2.3.4, User: Bobby)"
+    assert (
+        IPMISource._make_description(
+            "1.2.3.4",
+            {"username": "Bobby"},
+        )
+        == "Management board - IPMI (Address: 1.2.3.4, User: Bobby)"
+    )

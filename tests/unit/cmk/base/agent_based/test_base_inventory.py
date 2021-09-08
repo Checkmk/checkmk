@@ -36,7 +36,8 @@ def test_aggregator_raises_collision():
 
     assert isinstance(result, TypeError)
     assert str(result) == (
-        "Cannot create TableRow at path ['a', 'b', 'c']: this is a Attributes node.")
+        "Cannot create TableRow at path ['a', 'b', 'c']: this is a Attributes node."
+    )
 
 
 _TREE_WITH_OTHER = StructuredDataNode()
@@ -45,20 +46,26 @@ _TREE_WITH_EDGE = StructuredDataNode()
 _TREE_WITH_EDGE.setdefault_node(["edge"])
 
 
-@pytest.mark.parametrize("old_tree, inv_tree", [
-    (_TREE_WITH_OTHER, None),
-    (_TREE_WITH_EDGE, None),
-    (_TREE_WITH_EDGE, _TREE_WITH_OTHER),
-    (_TREE_WITH_OTHER, _TREE_WITH_EDGE),
-])
+@pytest.mark.parametrize(
+    "old_tree, inv_tree",
+    [
+        (_TREE_WITH_OTHER, None),
+        (_TREE_WITH_EDGE, None),
+        (_TREE_WITH_EDGE, _TREE_WITH_OTHER),
+        (_TREE_WITH_OTHER, _TREE_WITH_EDGE),
+    ],
+)
 def test__tree_nodes_are_not_equal(old_tree, inv_tree):
     assert inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
 
 
-@pytest.mark.parametrize("old_tree, inv_tree", [
-    (_TREE_WITH_OTHER, _TREE_WITH_OTHER),
-    (_TREE_WITH_EDGE, _TREE_WITH_EDGE),
-])
+@pytest.mark.parametrize(
+    "old_tree, inv_tree",
+    [
+        (_TREE_WITH_OTHER, _TREE_WITH_OTHER),
+        (_TREE_WITH_EDGE, _TREE_WITH_EDGE),
+    ],
+)
 def test__tree_nodes_are_equal(old_tree, inv_tree):
     assert inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
 
@@ -83,32 +90,29 @@ def test_integrate_attributes():
     )
 
     assert tree_aggr.trees.inventory.serialize() == {
-        'Attributes': {},
-        'Nodes': {
-            'a': {
-                'Attributes': {},
-                'Nodes': {
-                    'b': {
-                        'Attributes': {},
-                        'Nodes': {
-                            'c': {
-                                'Attributes': {
-                                    'Pairs': {
-                                        'foo0': 'bar0',
-                                        'foo1': 'bar1'
-                                    },
+        "Attributes": {},
+        "Nodes": {
+            "a": {
+                "Attributes": {},
+                "Nodes": {
+                    "b": {
+                        "Attributes": {},
+                        "Nodes": {
+                            "c": {
+                                "Attributes": {
+                                    "Pairs": {"foo0": "bar0", "foo1": "bar1"},
                                 },
-                                'Nodes': {},
-                                'Table': {}
+                                "Nodes": {},
+                                "Table": {},
                             }
                         },
-                        'Table': {}
+                        "Table": {},
                     }
                 },
-                'Table': {}
+                "Table": {},
             }
         },
-        'Table': {}
+        "Table": {},
     }
 
 
@@ -150,50 +154,43 @@ def test_integrate_table_row():
     )
 
     assert tree_aggr.trees.inventory.serialize() == {
-        'Attributes': {},
-        'Nodes': {
-            'a': {
-                'Attributes': {},
-                'Nodes': {
-                    'b': {
-                        'Attributes': {},
-                        'Nodes': {
-                            'c': {
-                                'Attributes': {},
-                                'Nodes': {},
-                                'Table': {
-                                    'KeyColumns': ['foo'],
-                                    'Rows': [
+        "Attributes": {},
+        "Nodes": {
+            "a": {
+                "Attributes": {},
+                "Nodes": {
+                    "b": {
+                        "Attributes": {},
+                        "Nodes": {
+                            "c": {
+                                "Attributes": {},
+                                "Nodes": {},
+                                "Table": {
+                                    "KeyColumns": ["foo"],
+                                    "Rows": [
                                         {
-                                            'col1': 'baz '
-                                                    'val1',
-                                            'col2': 'baz '
-                                                    'val2',
-                                            'col3': 'baz '
-                                                    'val3',
-                                            'foo': 'baz'
+                                            "col1": "baz " "val1",
+                                            "col2": "baz " "val2",
+                                            "col3": "baz " "val3",
+                                            "foo": "baz",
                                         },
                                         {
-                                            'col1': 'new '
-                                                    'bar '
-                                                    'val1',
-                                            'col2': 'bar '
-                                                    'val2',
-                                            'col3': 'bar '
-                                                    'val3',
-                                            'foo': 'bar'
+                                            "col1": "new " "bar " "val1",
+                                            "col2": "bar " "val2",
+                                            "col3": "bar " "val3",
+                                            "foo": "bar",
                                         },
                                     ],
-                                }
+                                },
                             }
                         },
-                        'Table': {}
+                        "Table": {},
                     }
                 },
-                'Table': {}
+                "Table": {},
             }
         },
-        'Table': {}
+        "Table": {},
     }
 
 
@@ -207,61 +204,145 @@ def test_integrate_table_row():
         ([], "Attributes", ["path-to", "node"], None),
         ([], "Attributes", ["path-to", "node"], (1, 2)),
         # config, wrong path
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.foo",
-        }], "", [], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.foo",
-        }], "Attributes", [], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.foo",
-        }], "Attributes", ["path-to", "node"], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.foo",
-        }], "Attributes", ["path-to", "node"], (1, 2)),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.foo",
+                }
+            ],
+            "",
+            [],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.foo",
+                }
+            ],
+            "Attributes",
+            [],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.foo",
+                }
+            ],
+            "Attributes",
+            ["path-to", "node"],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.foo",
+                }
+            ],
+            "Attributes",
+            ["path-to", "node"],
+            (1, 2),
+        ),
         # config, right path, no choices
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-        }], "", [], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-        }], "Attributes", [], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-        }], "Attributes", ["path-to", "node"], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-        }], "Attributes", ["path-to", "node"], (1, 2)),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                }
+            ],
+            "",
+            [],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                }
+            ],
+            "Attributes",
+            [],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                }
+            ],
+            "Attributes",
+            ["path-to", "node"],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                }
+            ],
+            "Attributes",
+            ["path-to", "node"],
+            (1, 2),
+        ),
         # config, right path, all attributes
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-            "attributes": "all",
-        }], "", [], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-            "attributes": "all",
-        }], "Attributes", [], None),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "attributes": "all",
+                }
+            ],
+            "",
+            [],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "attributes": "all",
+                }
+            ],
+            "Attributes",
+            [],
+            None,
+        ),
         # config, right path, attributes choices
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-            "attributes": ("choices", ["some", "keys"]),
-        }], "", [], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-            "attributes": ("choices", ["some", "keys"]),
-        }], "Attributes", [], None),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "attributes": ("choices", ["some", "keys"]),
+                }
+            ],
+            "",
+            [],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "attributes": ("choices", ["some", "keys"]),
+                }
+            ],
+            "Attributes",
+            [],
+            None,
+        ),
         # === Table ===
         # empty config
         ([], "", [], None),
@@ -269,62 +350,147 @@ def test_integrate_table_row():
         ([], "Table", ["path-to", "node"], None),
         ([], "Table", ["path-to", "node"], (1, 2)),
         # config, wrong path
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.foo",
-        }], "", [], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.foo",
-        }], "Table", [], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.foo",
-        }], "Table", ["path-to", "node"], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.foo",
-        }], "Table", ["path-to", "node"], (1, 2)),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.foo",
+                }
+            ],
+            "",
+            [],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.foo",
+                }
+            ],
+            "Table",
+            [],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.foo",
+                }
+            ],
+            "Table",
+            ["path-to", "node"],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.foo",
+                }
+            ],
+            "Table",
+            ["path-to", "node"],
+            (1, 2),
+        ),
         # config, right path, no choices
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-        }], "", [], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-        }], "Table", [], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-        }], "Table", ["path-to", "node"], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-        }], "Table", ["path-to", "node"], (1, 2)),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                }
+            ],
+            "",
+            [],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                }
+            ],
+            "Table",
+            [],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                }
+            ],
+            "Table",
+            ["path-to", "node"],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                }
+            ],
+            "Table",
+            ["path-to", "node"],
+            (1, 2),
+        ),
         # config, right path, all columns
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-            "columns": "all",
-        }], "", [], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-            "columns": "all",
-        }], "Table", [], None),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "columns": "all",
+                }
+            ],
+            "",
+            [],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "columns": "all",
+                }
+            ],
+            "Table",
+            [],
+            None,
+        ),
         # config, right path, columns choices
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-            "columns": ("choices", ["some", "keys"]),
-        }], "", [], None),
-        ([{
-            "interval": 3,
-            "visible_raw_path": "path-to.node",
-            "columns": ("choices", ["some", "keys"]),
-        }], "Table", [], None),
-    ])
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "columns": ("choices", ["some", "keys"]),
+                }
+            ],
+            "",
+            [],
+            None,
+        ),
+        (
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "columns": ("choices", ["some", "keys"]),
+                }
+            ],
+            "Table",
+            [],
+            None,
+        ),
+    ],
+)
 def test_retentions_add_cache_info_no_match(
     raw_intervals,
     node_name,
@@ -348,11 +514,13 @@ def test_retentions_add_cache_info_no_match(
         # === Attributes ===
         # config, right path, all attributes
         (
-            [{
-                "interval": 3,
-                "visible_raw_path": "path-to.node",
-                "attributes": "all",
-            }],
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "attributes": "all",
+                }
+            ],
             "Attributes",
             ["path-to", "node"],
             None,
@@ -365,11 +533,13 @@ def test_retentions_add_cache_info_no_match(
             True,
         ),
         (
-            [{
-                "interval": 3,
-                "visible_raw_path": "path-to.node",
-                "attributes": "all",
-            }],
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "attributes": "all",
+                }
+            ],
             "Attributes",
             ["path-to", "node"],
             (1, 2),
@@ -383,11 +553,13 @@ def test_retentions_add_cache_info_no_match(
         ),
         # config, right path, attributes choices
         (
-            [{
-                "interval": 3,
-                "visible_raw_path": "path-to.node",
-                "attributes": ("choices", ["some", "keys"]),
-            }],
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "attributes": ("choices", ["some", "keys"]),
+                }
+            ],
             "Attributes",
             ["path-to", "node"],
             None,
@@ -400,11 +572,13 @@ def test_retentions_add_cache_info_no_match(
             False,
         ),
         (
-            [{
-                "interval": 3,
-                "visible_raw_path": "path-to.node",
-                "attributes": ("choices", ["some", "keys"]),
-            }],
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "attributes": ("choices", ["some", "keys"]),
+                }
+            ],
             "Attributes",
             ["path-to", "node"],
             (1, 2),
@@ -419,11 +593,13 @@ def test_retentions_add_cache_info_no_match(
         # === Table ===
         # config, right path, all columns
         (
-            [{
-                "interval": 3,
-                "visible_raw_path": "path-to.node",
-                "columns": "all",
-            }],
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "columns": "all",
+                }
+            ],
             "Table",
             ["path-to", "node"],
             None,
@@ -436,11 +612,13 @@ def test_retentions_add_cache_info_no_match(
             True,
         ),
         (
-            [{
-                "interval": 3,
-                "visible_raw_path": "path-to.node",
-                "columns": "all",
-            }],
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "columns": "all",
+                }
+            ],
             "Table",
             ["path-to", "node"],
             (1, 2),
@@ -454,11 +632,13 @@ def test_retentions_add_cache_info_no_match(
         ),
         # config, right path, columns choices
         (
-            [{
-                "interval": 3,
-                "visible_raw_path": "path-to.node",
-                "columns": ("choices", ["some", "keys"]),
-            }],
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "columns": ("choices", ["some", "keys"]),
+                }
+            ],
             "Table",
             ["path-to", "node"],
             None,
@@ -471,11 +651,13 @@ def test_retentions_add_cache_info_no_match(
             False,
         ),
         (
-            [{
-                "interval": 3,
-                "visible_raw_path": "path-to.node",
-                "columns": ("choices", ["some", "keys"]),
-            }],
+            [
+                {
+                    "interval": 3,
+                    "visible_raw_path": "path-to.node",
+                    "columns": ("choices", ["some", "keys"]),
+                }
+            ],
             "Table",
             ["path-to", "node"],
             (1, 2),
@@ -487,7 +669,8 @@ def test_retentions_add_cache_info_no_match(
             True,
             False,
         ),
-    ])
+    ],
+)
 def test_retentions_add_cache_info(
     raw_intervals,
     node_name,
@@ -519,80 +702,62 @@ def test_retentions_add_cache_info(
 
 
 def _make_trees(previous_attributes_retentions, previous_table_retentions):
-    previous_tree = StructuredDataNode.deserialize({
-        "Attributes": {},
-        "Table": {},
-        "Nodes": {
-            "path-to": {
-                "Attributes": {},
-                "Table": {},
-                "Nodes": {
-                    "node": {
-                        "Attributes": {
-                            "Pairs": {
-                                "old": "Key",
-                                "keys": "Previous Keys"
+    previous_tree = StructuredDataNode.deserialize(
+        {
+            "Attributes": {},
+            "Table": {},
+            "Nodes": {
+                "path-to": {
+                    "Attributes": {},
+                    "Table": {},
+                    "Nodes": {
+                        "node": {
+                            "Attributes": {
+                                "Pairs": {"old": "Key", "keys": "Previous Keys"},
+                                "Retentions": previous_attributes_retentions,
                             },
-                            "Retentions": previous_attributes_retentions,
-                        },
-                        "Table": {
-                            "KeyColumns": ["ident"],
-                            "Rows": [
-                                {
-                                    "ident": "Ident 1",
-                                    "old": "Key 1",
-                                    "keys": "Previous Keys 1"
-                                },
-                                {
-                                    "ident": "Ident 2",
-                                    "old": "Key 2",
-                                    "keys": "Previous Keys 2"
-                                },
-                            ],
-                            "Retentions": previous_table_retentions,
-                        },
-                        "Nodes": {},
-                    }
-                },
-            }
-        },
-    })
-    inv_tree = StructuredDataNode.deserialize({
-        "Attributes": {},
-        "Table": {},
-        "Nodes": {
-            "path-to": {
-                "Attributes": {},
-                "Table": {},
-                "Nodes": {
-                    "node": {
-                        "Attributes": {
-                            "Pairs": {
-                                "new": "Key",
-                                "keys": "New Keys"
+                            "Table": {
+                                "KeyColumns": ["ident"],
+                                "Rows": [
+                                    {"ident": "Ident 1", "old": "Key 1", "keys": "Previous Keys 1"},
+                                    {"ident": "Ident 2", "old": "Key 2", "keys": "Previous Keys 2"},
+                                ],
+                                "Retentions": previous_table_retentions,
                             },
-                        },
-                        "Table": {
-                            "KeyColumns": ["ident"],
-                            "Rows": [
-                                {
-                                    "ident": "Ident 1",
-                                    "new": "Key 1",
-                                    "keys": "New Keys 1"
-                                },
-                                {
-                                    "ident": "Ident 2",
-                                    "new": "Key 2",
-                                    "keys": "New Keys 2"
-                                },
-                            ],
-                        },
-                        "Nodes": {},
-                    }
-                },
-            }
-        },
-    })
+                            "Nodes": {},
+                        }
+                    },
+                }
+            },
+        }
+    )
+    inv_tree = StructuredDataNode.deserialize(
+        {
+            "Attributes": {},
+            "Table": {},
+            "Nodes": {
+                "path-to": {
+                    "Attributes": {},
+                    "Table": {},
+                    "Nodes": {
+                        "node": {
+                            "Attributes": {
+                                "Pairs": {"new": "Key", "keys": "New Keys"},
+                            },
+                            "Table": {
+                                "KeyColumns": ["ident"],
+                                "Rows": [
+                                    {"ident": "Ident 1", "new": "Key 1", "keys": "New Keys 1"},
+                                    {"ident": "Ident 2", "new": "Key 2", "keys": "New Keys 2"},
+                                ],
+                            },
+                            "Nodes": {},
+                        }
+                    },
+                }
+            },
+        }
+    )
     return previous_tree, inv_tree
 
 
@@ -670,12 +835,17 @@ def test_updater_null_obj_tables_outdated():
 #   ---no previous node, inv node-------------------------------------------
 
 
-@pytest.mark.parametrize("filter_func, path, expected_retentions", [
-    (lambda key: key in ["unknown", "keyz"], ["path-to", "node"], {}),
-    (lambda key: key in ["new", "keyz"], ["path-to", "node"], {
-        'new': RetentionIntervals(1, 2, 3)
-    }),
-])
+@pytest.mark.parametrize(
+    "filter_func, path, expected_retentions",
+    [
+        (lambda key: key in ["unknown", "keyz"], ["path-to", "node"], {}),
+        (
+            lambda key: key in ["new", "keyz"],
+            ["path-to", "node"],
+            {"new": RetentionIntervals(1, 2, 3)},
+        ),
+    ],
+)
 def test_updater_handle_inv_attributes(
     filter_func,
     path,
@@ -704,12 +874,17 @@ def test_updater_handle_inv_attributes(
     assert inv_node.attributes.retentions == expected_retentions
 
 
-@pytest.mark.parametrize("filter_func, path, expected_retentions", [
-    (lambda key: key in ["unknown", "keyz"], ["path-to", "node"], {}),
-    (lambda key: key in ["new", "keyz"], ["path-to", "node"], {
-        'new': RetentionIntervals(1, 2, 3)
-    }),
-])
+@pytest.mark.parametrize(
+    "filter_func, path, expected_retentions",
+    [
+        (lambda key: key in ["unknown", "keyz"], ["path-to", "node"], {}),
+        (
+            lambda key: key in ["new", "keyz"],
+            ["path-to", "node"],
+            {"new": RetentionIntervals(1, 2, 3)},
+        ),
+    ],
+)
 def test_updater_handle_inv_attributes_outdated(
     filter_func,
     path,
@@ -738,17 +913,20 @@ def test_updater_handle_inv_attributes_outdated(
     assert inv_node.attributes.retentions == expected_retentions
 
 
-@pytest.mark.parametrize("filter_func, path, expected_retentions", [
-    (lambda key: key in ["unknown", "keyz"], ["path-to", "node"], {}),
-    (lambda key: key in ["new", "keyz"], ["path-to", "node"], {
-        ("Ident 1",): {
-            'new': RetentionIntervals(1, 2, 3)
-        },
-        ("Ident 2",): {
-            'new': RetentionIntervals(1, 2, 3)
-        }
-    }),
-])
+@pytest.mark.parametrize(
+    "filter_func, path, expected_retentions",
+    [
+        (lambda key: key in ["unknown", "keyz"], ["path-to", "node"], {}),
+        (
+            lambda key: key in ["new", "keyz"],
+            ["path-to", "node"],
+            {
+                ("Ident 1",): {"new": RetentionIntervals(1, 2, 3)},
+                ("Ident 2",): {"new": RetentionIntervals(1, 2, 3)},
+            },
+        ),
+    ],
+)
 def test_updater_handle_inv_tables(
     filter_func,
     path,
@@ -777,17 +955,20 @@ def test_updater_handle_inv_tables(
     assert inv_node.table.retentions == expected_retentions
 
 
-@pytest.mark.parametrize("filter_func, path, expected_retentions", [
-    (lambda key: key in ["unknown", "keyz"], ["path-to", "node"], {}),
-    (lambda key: key in ["new", "keyz"], ["path-to", "node"], {
-        ('Ident 1',): {
-            'new': RetentionIntervals(1, 2, 3)
-        },
-        ('Ident 2',): {
-            'new': RetentionIntervals(1, 2, 3)
-        },
-    }),
-])
+@pytest.mark.parametrize(
+    "filter_func, path, expected_retentions",
+    [
+        (lambda key: key in ["unknown", "keyz"], ["path-to", "node"], {}),
+        (
+            lambda key: key in ["new", "keyz"],
+            ["path-to", "node"],
+            {
+                ("Ident 1",): {"new": RetentionIntervals(1, 2, 3)},
+                ("Ident 2",): {"new": RetentionIntervals(1, 2, 3)},
+            },
+        ),
+    ],
+)
 def test_updater_handle_inv_tables_outdated(
     filter_func,
     path,
@@ -819,12 +1000,13 @@ def test_updater_handle_inv_tables_outdated(
 #   ---previous node, new inv node------------------------------------------
 
 
-@pytest.mark.parametrize("filter_func, expected_retentions", [
-    (lambda key: key in ["unknown", "keyz"], {}),
-    (lambda key: key in ["old", "keyz"], {
-        'old': RetentionIntervals(1, 2, 3)
-    }),
-])
+@pytest.mark.parametrize(
+    "filter_func, expected_retentions",
+    [
+        (lambda key: key in ["unknown", "keyz"], {}),
+        (lambda key: key in ["old", "keyz"], {"old": RetentionIntervals(1, 2, 3)}),
+    ],
+)
 def test_updater_merge_previous_attributes(
     filter_func,
     expected_retentions,
@@ -856,10 +1038,13 @@ def test_updater_merge_previous_attributes(
         assert "old" in inv_node.attributes.pairs
 
 
-@pytest.mark.parametrize("filter_func", [
-    lambda key: key in ["unknown", "keyz"],
-    lambda key: key in ["old", "keyz"],
-])
+@pytest.mark.parametrize(
+    "filter_func",
+    [
+        lambda key: key in ["unknown", "keyz"],
+        lambda key: key in ["old", "keyz"],
+    ],
+)
 def test_updater_merge_previous_attributes_outdated(filter_func):
     previous_tree, _inv_tree = _make_trees({"old": (1, 2, 3)}, {})
     inv_tree = StructuredDataNode()
@@ -881,29 +1066,30 @@ def test_updater_merge_previous_attributes_outdated(filter_func):
     assert inv_node.attributes.retentions == {}
 
 
-@pytest.mark.parametrize("filter_func, expected_retentions", [
-    (lambda key: key in ["unknown", "keyz"], {}),
-    (lambda key: key in ["old", "keyz"], {
-        ('Ident 1',): {
-            'old': RetentionIntervals(1, 2, 3)
-        },
-        ('Ident 2',): {
-            'old': RetentionIntervals(1, 2, 3)
-        },
-    }),
-])
+@pytest.mark.parametrize(
+    "filter_func, expected_retentions",
+    [
+        (lambda key: key in ["unknown", "keyz"], {}),
+        (
+            lambda key: key in ["old", "keyz"],
+            {
+                ("Ident 1",): {"old": RetentionIntervals(1, 2, 3)},
+                ("Ident 2",): {"old": RetentionIntervals(1, 2, 3)},
+            },
+        ),
+    ],
+)
 def test_updater_merge_previous_tables(
     filter_func,
     expected_retentions,
 ):
-    previous_tree, _inv_tree = _make_trees({}, {
-        ('Ident 1',): {
-            "old": (1, 2, 3)
+    previous_tree, _inv_tree = _make_trees(
+        {},
+        {
+            ("Ident 1",): {"old": (1, 2, 3)},
+            ("Ident 2",): {"old": RetentionIntervals(1, 2, 3)},
         },
-        ('Ident 2',): {
-            'old': RetentionIntervals(1, 2, 3)
-        },
-    })
+    )
     inv_tree = StructuredDataNode()
 
     updater = TableUpdater(
@@ -931,19 +1117,21 @@ def test_updater_merge_previous_tables(
             assert "old" in row
 
 
-@pytest.mark.parametrize("filter_func", [
-    lambda key: key in ["unknown", "keyz"],
-    lambda key: key in ["old", "keyz"],
-])
+@pytest.mark.parametrize(
+    "filter_func",
+    [
+        lambda key: key in ["unknown", "keyz"],
+        lambda key: key in ["old", "keyz"],
+    ],
+)
 def test_updater_merge_previous_tables_outdated(filter_func):
-    previous_tree, _inv_tree = _make_trees({}, {
-        ('Ident 1',): {
-            "old": (1, 2, 3)
+    previous_tree, _inv_tree = _make_trees(
+        {},
+        {
+            ("Ident 1",): {"old": (1, 2, 3)},
+            ("Ident 2",): {"old": (1, 2, 3)},
         },
-        ('Ident 2',): {
-            "old": (1, 2, 3)
-        },
-    })
+    )
     inv_tree = StructuredDataNode()
 
     updater = TableUpdater(
@@ -966,27 +1154,37 @@ def test_updater_merge_previous_tables_outdated(filter_func):
 #   ---previous node, inv node----------------------------------------------
 
 
-@pytest.mark.parametrize("filter_func, expected_retentions", [
-    (lambda key: key in ["unknown", "keyz"], {}),
-    (lambda key: key in [
-        "old",
-        "and",
-        "new",
-        "keys",
-    ], {
-        'old': RetentionIntervals(1, 2, 3),
-        'new': RetentionIntervals(4, 5, 6),
-        'keys': RetentionIntervals(4, 5, 6),
-    }),
-])
+@pytest.mark.parametrize(
+    "filter_func, expected_retentions",
+    [
+        (lambda key: key in ["unknown", "keyz"], {}),
+        (
+            lambda key: key
+            in [
+                "old",
+                "and",
+                "new",
+                "keys",
+            ],
+            {
+                "old": RetentionIntervals(1, 2, 3),
+                "new": RetentionIntervals(4, 5, 6),
+                "keys": RetentionIntervals(4, 5, 6),
+            },
+        ),
+    ],
+)
 def test_updater_merge_attributes(
     filter_func,
     expected_retentions,
 ):
-    previous_tree, inv_tree = _make_trees({
-        "old": (1, 2, 3),
-        "keys": (1, 2, 3),
-    }, {})
+    previous_tree, inv_tree = _make_trees(
+        {
+            "old": (1, 2, 3),
+            "keys": (1, 2, 3),
+        },
+        {},
+    )
 
     previous_node = previous_tree.get_node(["path-to", "node"])
     assert previous_node is not None
@@ -1017,26 +1215,36 @@ def test_updater_merge_attributes(
         assert inv_node.attributes.pairs.get("keys") == "New Keys"
 
 
-@pytest.mark.parametrize("filter_func, expected_retentions", [
-    (lambda key: key in ["unknown", "keyz"], {}),
-    (lambda key: key in [
-        "old",
-        "and",
-        "new",
-        "keys",
-    ], {
-        'new': RetentionIntervals(4, 5, 6),
-        'keys': RetentionIntervals(4, 5, 6),
-    }),
-])
+@pytest.mark.parametrize(
+    "filter_func, expected_retentions",
+    [
+        (lambda key: key in ["unknown", "keyz"], {}),
+        (
+            lambda key: key
+            in [
+                "old",
+                "and",
+                "new",
+                "keys",
+            ],
+            {
+                "new": RetentionIntervals(4, 5, 6),
+                "keys": RetentionIntervals(4, 5, 6),
+            },
+        ),
+    ],
+)
 def test_updater_merge_attributes_outdated(
     filter_func,
     expected_retentions,
 ):
-    previous_tree, inv_tree = _make_trees({
-        "old": (1, 2, 3),
-        "keys": (1, 2, 3),
-    }, {})
+    previous_tree, inv_tree = _make_trees(
+        {
+            "old": (1, 2, 3),
+            "keys": (1, 2, 3),
+        },
+        {},
+    )
 
     previous_node = previous_tree.get_node(["path-to", "node"])
     assert previous_node is not None
@@ -1063,37 +1271,47 @@ def test_updater_merge_attributes_outdated(
     assert inv_node.attributes.retentions == expected_retentions
 
 
-@pytest.mark.parametrize("filter_func, expected_retentions", [
-    (lambda key: key in ["unknown", "keyz"], {}),
-    (lambda key: key in [
-        "old",
-        "and",
-        "new",
-        "keys",
-    ], {
-        ('Ident 1',): {
-            'old': RetentionIntervals(1, 2, 3),
-            'new': RetentionIntervals(4, 5, 6),
-            'keys': RetentionIntervals(4, 5, 6),
-        },
-        ('Ident 2',): {
-            'old': RetentionIntervals(1, 2, 3),
-            'new': RetentionIntervals(4, 5, 6),
-            'keys': RetentionIntervals(4, 5, 6),
-        },
-    }),
-])
+@pytest.mark.parametrize(
+    "filter_func, expected_retentions",
+    [
+        (lambda key: key in ["unknown", "keyz"], {}),
+        (
+            lambda key: key
+            in [
+                "old",
+                "and",
+                "new",
+                "keys",
+            ],
+            {
+                ("Ident 1",): {
+                    "old": RetentionIntervals(1, 2, 3),
+                    "new": RetentionIntervals(4, 5, 6),
+                    "keys": RetentionIntervals(4, 5, 6),
+                },
+                ("Ident 2",): {
+                    "old": RetentionIntervals(1, 2, 3),
+                    "new": RetentionIntervals(4, 5, 6),
+                    "keys": RetentionIntervals(4, 5, 6),
+                },
+            },
+        ),
+    ],
+)
 def test_updater_merge_tables(filter_func, expected_retentions):
-    previous_tree, inv_tree = _make_trees({}, {
-        ('Ident 1',): {
-            "old": (1, 2, 3),
-            "keys": (1, 2, 3),
+    previous_tree, inv_tree = _make_trees(
+        {},
+        {
+            ("Ident 1",): {
+                "old": (1, 2, 3),
+                "keys": (1, 2, 3),
+            },
+            ("Ident 2",): {
+                "old": (1, 2, 3),
+                "keys": (1, 2, 3),
+            },
         },
-        ('Ident 2',): {
-            "old": (1, 2, 3),
-            "keys": (1, 2, 3),
-        },
-    })
+    )
 
     previous_node = previous_tree.get_node(["path-to", "node"])
     assert previous_node is not None
@@ -1125,24 +1343,31 @@ def test_updater_merge_tables(filter_func, expected_retentions):
             assert row.get("keys").startswith("New Keys")
 
 
-@pytest.mark.parametrize("filter_func, expected_retentions", [
-    (lambda key: key in ["unknown", "keyz"], {}),
-    (lambda key: key in [
-        "old",
-        "and",
-        "new",
-        "keys",
-    ], {
-        ('Ident 1',): {
-            'new': RetentionIntervals(4, 5, 6),
-            'keys': RetentionIntervals(4, 5, 6),
-        },
-        ('Ident 2',): {
-            'new': RetentionIntervals(4, 5, 6),
-            'keys': RetentionIntervals(4, 5, 6),
-        },
-    }),
-])
+@pytest.mark.parametrize(
+    "filter_func, expected_retentions",
+    [
+        (lambda key: key in ["unknown", "keyz"], {}),
+        (
+            lambda key: key
+            in [
+                "old",
+                "and",
+                "new",
+                "keys",
+            ],
+            {
+                ("Ident 1",): {
+                    "new": RetentionIntervals(4, 5, 6),
+                    "keys": RetentionIntervals(4, 5, 6),
+                },
+                ("Ident 2",): {
+                    "new": RetentionIntervals(4, 5, 6),
+                    "keys": RetentionIntervals(4, 5, 6),
+                },
+            },
+        ),
+    ],
+)
 def test_updater_merge_tables_outdated(
     filter_func,
     expected_retentions,
@@ -1150,14 +1375,8 @@ def test_updater_merge_tables_outdated(
     previous_tree, inv_tree = _make_trees(
         {},
         {
-            ('Ident 1',): {
-                "old": (1, 2, 3),
-                "keys": (1, 2, 3)
-            },
-            ('Ident 2',): {
-                "old": (1, 2, 3),
-                "keys": (1, 2, 3)
-            },
+            ("Ident 1",): {"old": (1, 2, 3), "keys": (1, 2, 3)},
+            ("Ident 2",): {"old": (1, 2, 3), "keys": (1, 2, 3)},
         },
     )
 

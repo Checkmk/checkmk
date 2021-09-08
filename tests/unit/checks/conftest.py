@@ -19,7 +19,8 @@ def _autouse_fix_register(fix_register):
 @pytest.fixture(autouse=True, scope="function")
 def patch_cmk_utils_paths(monkeypatch, tmp_path):
     import cmk.utils.paths
-    var_dir_path = tmp_path / 'var' / 'check_mk'
+
+    var_dir_path = tmp_path / "var" / "check_mk"
     # don't mkdir, check should be able to handle that.
     monkeypatch.setattr(cmk.utils.paths, "var_dir", str(var_dir_path))
 
@@ -29,6 +30,7 @@ def patch_cmk_utils_paths(monkeypatch, tmp_path):
 def clear_config_caches(monkeypatch):
     from cmk.utils.caching import config_cache as _config_cache
     from cmk.utils.caching import runtime_cache as _runtime_cache
+
     _config_cache.clear()
     _runtime_cache.clear()
 

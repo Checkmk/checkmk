@@ -12,12 +12,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, Sta
 from cmk.base.plugins.agent_based.lsi import parse_lsi
 
 INFO = [
-    ['VolumeID', '286'],
-    ['Statusofvolume', 'Okay(OKY)'],
-    ['TargetID', '15'],
-    ['State', 'Optimal(OPT)'],
-    ['TargetID', '1'],
-    ['State', 'Optimal(OPT)'],
+    ["VolumeID", "286"],
+    ["Statusofvolume", "Okay(OKY)"],
+    ["TargetID", "15"],
+    ["State", "Optimal(OPT)"],
+    ["TargetID", "1"],
+    ["State", "Optimal(OPT)"],
 ]
 
 
@@ -29,15 +29,24 @@ def test_lsi_parsing(fix_register):
     assert result["disks"]["1"] == "OPT"
 
 
-@pytest.mark.parametrize('plugin,expected', [
-    ('lsi_array', [
-        Service(item='286'),
-    ]),
-    ('lsi_disk', [
-        Service(item='15', parameters={'expected_state': 'OPT'}),
-        Service(item='1', parameters={'expected_state': 'OPT'}),
-    ]),
-])
+@pytest.mark.parametrize(
+    "plugin,expected",
+    [
+        (
+            "lsi_array",
+            [
+                Service(item="286"),
+            ],
+        ),
+        (
+            "lsi_disk",
+            [
+                Service(item="15", parameters={"expected_state": "OPT"}),
+                Service(item="1", parameters={"expected_state": "OPT"}),
+            ],
+        ),
+    ],
+)
 def test_lsi_discovery(fix_register, plugin, expected):
     plugin = fix_register.check_plugins[CheckPluginName(plugin)]
     section = parse_lsi(INFO)
@@ -45,26 +54,40 @@ def test_lsi_discovery(fix_register, plugin, expected):
 
 
 def test_lsi_array(fix_register):
-    plugin = fix_register.check_plugins[CheckPluginName('lsi_array')]
+    plugin = fix_register.check_plugins[CheckPluginName("lsi_array")]
     section = parse_lsi(INFO)
-    assert list(plugin.check_function(item='286', params={}, section=section)) == [
-        Result(state=State.OK, summary='Status is \'Okay(OKY)\'')
+    assert list(plugin.check_function(item="286", params={}, section=section)) == [
+        Result(state=State.OK, summary="Status is 'Okay(OKY)'")
     ]
 
 
-@pytest.mark.parametrize('plugin,item,params,expected', [
-    ('lsi_disk', '1', {
-        'expected_state': 'OPT'
-    }, [Result(state=State.OK, summary='Disk has state \'OPT\'')]),
-    ('lsi_disk', '15', {
-        'expected_state': 'OPT'
-    }, [Result(state=State.OK, summary='Disk has state \'OPT\'')]),
-])
+@pytest.mark.parametrize(
+    "plugin,item,params,expected",
+    [
+        (
+            "lsi_disk",
+            "1",
+            {"expected_state": "OPT"},
+            [Result(state=State.OK, summary="Disk has state 'OPT'")],
+        ),
+        (
+            "lsi_disk",
+            "15",
+            {"expected_state": "OPT"},
+            [Result(state=State.OK, summary="Disk has state 'OPT'")],
+        ),
+    ],
+)
 def test_lsi(fix_register, plugin, item, params, expected):
     plugin = fix_register.check_plugins[CheckPluginName(plugin)]
     section = parse_lsi(INFO)
-    assert list(plugin.check_function(
-        item=item,
-        params=params,
-        section=section,
-    )) == expected
+    assert (
+        list(
+            plugin.check_function(
+                item=item,
+                params=params,
+                section=section,
+            )
+        )
+        == expected
+    )

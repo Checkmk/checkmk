@@ -46,9 +46,16 @@ class Automation(NamedTuple):
     remote_automation: MagicMock
     responses: Any
 
+
 HTTPMethod = Literal[
-    "get", "put", "post", "delete",
-    "GET", "PUT", "POST", "DELETE",
+    "get",
+    "put",
+    "post",
+    "delete",
+    "GET",
+    "PUT",
+    "POST",
+    "DELETE",
 ]  # yapf: disable
 
 
@@ -89,7 +96,8 @@ def load_config(request_context):
 @pytest.fixture()
 def load_plugins(request_context, monkeypatch, tmp_path):
     import cmk.gui.modules as modules
-    monkeypatch.setattr(config, "roles", {'user': {}, 'admin': {}, 'guest': {}})
+
+    monkeypatch.setattr(config, "roles", {"user": {}, "admin": {}, "guest": {}})
     modules.load_all_plugins()
     yield
     monkeypatch.undo()
@@ -142,10 +150,12 @@ def suppress_automation_calls(mocker):
     remote_automation = mocker.patch("cmk.gui.watolib.automations.do_remote_automation")
     mocker.patch("cmk.gui.watolib.do_remote_automation", new=remote_automation)
 
-    yield Automation(automation=automation,
-                     local_automation=local_automation,
-                     remote_automation=remote_automation,
-                     responses=None)
+    yield Automation(
+        automation=automation,
+        local_automation=local_automation,
+        remote_automation=remote_automation,
+        responses=None,
+    )
 
 
 @pytest.fixture()
@@ -153,6 +163,7 @@ def inline_local_automation_calls(mocker):
     # Only works from Python3 code.
     def call_automation(cmd, args):
         from cmk.base.automations import automations
+
         return automations.execute(cmd, args)
 
     mocker.patch("cmk.gui.watolib.automations.check_mk_automation", new=call_automation)
@@ -197,17 +208,17 @@ def with_automation_user(request_context, load_config):
 
 
 def get_link(resp, rel: str):
-    for link in resp.get('links', []):
-        if link['rel'].startswith(rel):
+    for link in resp.get("links", []):
+        if link["rel"].startswith(rel):
             return link
-    if 'result' in resp:
-        for link in resp['result'].get('links', []):
-            if link['rel'].startswith(rel):
+    if "result" in resp:
+        for link in resp["result"].get("links", []):
+            if link["rel"].startswith(rel):
                 return link
-    for member in resp.get('members', {}).values():
-        if member['memberType'] == 'action':
-            for link in member['links']:
-                if link['rel'].startswith(rel):
+    for member in resp.get("members", {}).values():
+        if member["memberType"] == "action":
+            for link in member["links"]:
+                if link["rel"].startswith(rel):
                     return link
     raise KeyError("%r not found" % (rel,))
 
@@ -222,6 +233,7 @@ def _expand_rel(rel):
 
 class WebTestAppForCMK(webtest.TestApp):
     """A webtest.TestApp class with helper functions for automation user APIs"""
+
     def __init__(self, *args, **kw):
         super().__init__(*args, **kw)
         self.username = None
@@ -257,42 +269,42 @@ class WebTestAppForCMK(webtest.TestApp):
             if json_data is None:
                 json_data = resp.json
             link = get_link(json_data, _expand_rel(rel))
-            if 'body_params' in link and link['body_params']:
-                params['params'] = json.dumps(link['body_params'])
-                params['content_type'] = 'application/json'
-            resp = self.call_method(link['method'], link['href'], **params)
+            if "body_params" in link and link["body_params"]:
+                params["params"] = json.dumps(link["body_params"])
+                params["content_type"] = "application/json"
+            resp = self.call_method(link["method"], link["href"], **params)
         return resp
 
-    def api_request(self, action, request, output_format='json', **kw):
+    def api_request(self, action, request, output_format="json", **kw):
         if self.username is None or self.password is None:
             raise RuntimeError("Not logged in.")
-        qs = urllib.parse.urlencode([
-            ('_username', self.username),
-            ('_secret', self.password),
-            ('request_format', output_format),
-            ('action', action),
-        ])
-        if output_format == 'python':
+        qs = urllib.parse.urlencode(
+            [
+                ("_username", self.username),
+                ("_secret", self.password),
+                ("request_format", output_format),
+                ("action", action),
+            ]
+        )
+        if output_format == "python":
             request = repr(request)
-        elif output_format == 'json':
+        elif output_format == "json":
             request = json.dumps(request)
         else:
             raise NotImplementedError("Format %s not implemented" % output_format)
 
-        _resp = self.call_method('post',
-                                 '/NO_SITE/check_mk/webapi.py?' + qs,
-                                 params={
-                                     'request': request,
-                                     '_username': self.username,
-                                     '_secret': self.password
-                                 },
-                                 **kw)
+        _resp = self.call_method(
+            "post",
+            "/NO_SITE/check_mk/webapi.py?" + qs,
+            params={"request": request, "_username": self.username, "_secret": self.password},
+            **kw,
+        )
         assert "Invalid automation secret for user" not in _resp.body
         assert "API is only available for automation users" not in _resp.body
 
-        if output_format == 'python':
+        if output_format == "python":
             return ast.literal_eval(_resp.body)
-        if output_format == 'json':
+        if output_format == "json":
             return json.loads(_resp.body)
         raise NotImplementedError("Format %s not implemented" % output_format)
 
@@ -304,6 +316,7 @@ class WebTestAppForCMK(webtest.TestApp):
         attribute of your choice. But with the webtest, the config is read during the request
         handling in the test. This needs a special handling.
         """
+
         def _set_config():
             for key, val in kwargs.items():
                 setattr(config, key, val)
@@ -314,10 +327,10 @@ class WebTestAppForCMK(webtest.TestApp):
 
     def login(self, username: str, password: str) -> WebTestAppForCMK:
         self.username = username
-        login = self.get('/NO_SITE/check_mk/login.py')
-        login.form['_username'] = username
-        login.form['_password'] = password
-        resp = login.form.submit('_login', index=1)
+        login = self.get("/NO_SITE/check_mk/login.py")
+        login.form["_username"] = username
+        login.form["_password"] = password
+        resp = login.form.submit("_login", index=1)
         assert "Invalid credentials." not in resp.text
         return self
 
@@ -346,8 +359,8 @@ def wsgi_app_debug_off(monkeypatch):
 def avoid_search_index_update_background(monkeypatch):
     monkeypatch.setattr(
         search,
-        'update_index_background',
-        lambda _change_action_name:...,
+        "update_index_background",
+        lambda _change_action_name: ...,
     )
 
 
@@ -363,21 +376,21 @@ def logged_in_admin_wsgi_app(wsgi_app, with_admin):
 
 @pytest.fixture()
 def with_groups(request_context, with_admin_login, suppress_automation_calls):
-    watolib.add_group('windows', 'host', {'alias': 'windows'})
-    watolib.add_group('routers', 'service', {'alias': 'routers'})
-    watolib.add_group('admins', 'contact', {'alias': 'admins'})
+    watolib.add_group("windows", "host", {"alias": "windows"})
+    watolib.add_group("routers", "service", {"alias": "routers"})
+    watolib.add_group("admins", "contact", {"alias": "admins"})
     yield
-    watolib.delete_group('windows', 'host')
-    watolib.delete_group('routers', 'service')
-    watolib.delete_group('admins', 'contact')
+    watolib.delete_group("windows", "host")
+    watolib.delete_group("routers", "service")
+    watolib.delete_group("admins", "contact")
 
 
 @pytest.fixture()
 def with_host(request_context, with_admin_login, suppress_automation_calls):
     hostnames = ["heute", "example.com"]
-    hosts_and_folders.CREFolder.root_folder().create_hosts([
-        (hostname, {}, None) for hostname in hostnames
-    ])
+    hosts_and_folders.CREFolder.root_folder().create_hosts(
+        [(hostname, {}, None) for hostname in hostnames]
+    )
     yield hostnames
     hosts_and_folders.CREFolder.root_folder().delete_hosts(hostnames)
 

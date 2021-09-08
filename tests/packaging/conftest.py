@@ -14,8 +14,9 @@ import pytest
 def package_path():
     path = os.environ.get("PACKAGE_PATH")
     if not path:
-        raise Exception("PACKAGE_PATH environment variable pointing to the package "
-                        "to be tested is missing")
+        raise Exception(
+            "PACKAGE_PATH environment variable pointing to the package to be tested is missing"
+        )
     return path
 
 

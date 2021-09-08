@@ -34,7 +34,8 @@ def fixture_my_theme(theme_dirs, monkeypatch):
     my_dir = theme_path / "my_theme"
     my_dir.mkdir()
     (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
-        str(json.dumps({"title": "Määh Theme :-)"})))
+        str(json.dumps({"title": "Määh Theme :-)"}))
+    )
 
     # Update the theme choices after introducing a new theme here
     monkeypatch.setattr(theme, "theme_choices", theme_choices())
@@ -77,8 +78,10 @@ def test_detect_icon_path(th: Theme) -> None:
     assert th.detect_icon_path("ldap", prefix="icon_") == "themes/facelift/images/icon_ldap.svg"
     assert th.detect_icon_path("email", prefix="icon_") == "themes/facelift/images/icon_email.png"
     assert th.detect_icon_path("window_list", prefix="icon_") == "images/icons/window_list.png"
-    assert th.detect_icon_path("snmpmib",
-                               prefix="icon_") == "themes/modern-dark/images/icon_snmpmib.svg"
+    assert (
+        th.detect_icon_path("snmpmib", prefix="icon_")
+        == "themes/modern-dark/images/icon_snmpmib.svg"
+    )
 
 
 def test_url(th: Theme) -> None:
@@ -104,7 +107,7 @@ def test_theme_choices_empty(theme_dirs):
 
 
 def test_theme_choices_normal(my_theme):
-    assert theme_choices() == [("my_theme", u"Määh Theme :-)")]
+    assert theme_choices() == [("my_theme", "Määh Theme :-)")]
 
 
 def test_theme_choices_local_theme(theme_dirs, my_theme):
@@ -113,12 +116,15 @@ def test_theme_choices_local_theme(theme_dirs, my_theme):
     my_dir = local_theme_path / "my_improved_theme"
     my_dir.mkdir()
     (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
-        str(json.dumps({"title": "Määh Bettr Theme :-D"})))
+        str(json.dumps({"title": "Määh Bettr Theme :-D"}))
+    )
 
-    assert theme_choices() == sorted([
-        ("my_theme", u"Määh Theme :-)"),
-        ("my_improved_theme", u"Määh Bettr Theme :-D"),
-    ])
+    assert theme_choices() == sorted(
+        [
+            ("my_theme", "Määh Theme :-)"),
+            ("my_improved_theme", "Määh Bettr Theme :-D"),
+        ]
+    )
 
 
 def test_theme_choices_override(theme_dirs, my_theme):
@@ -126,18 +132,24 @@ def test_theme_choices_override(theme_dirs, my_theme):
 
     my_dir = local_theme_path / "my_theme"
     my_dir.mkdir()
-    (my_dir / "theme.json").open(mode="w",
-                                 encoding="utf-8").write(str(json.dumps({"title": "Fixed theme"})))
+    (my_dir / "theme.json").open(mode="w", encoding="utf-8").write(
+        str(json.dumps({"title": "Fixed theme"}))
+    )
 
-    assert theme_choices() == sorted([
-        ("my_theme", u"Fixed theme"),
-    ])
+    assert theme_choices() == sorted(
+        [
+            ("my_theme", "Fixed theme"),
+        ]
+    )
 
 
 def test_theme_broken_meta(my_theme):
-    (my_theme / "theme.json").open(mode="w",
-                                   encoding="utf-8").write(str("{\"titlewrong\": xyz\"bla\"}"))
+    (my_theme / "theme.json").open(mode="w", encoding="utf-8").write(
+        str('{"titlewrong": xyz"bla"}')
+    )
 
-    assert theme_choices() == sorted([
-        ("my_theme", u"my_theme"),
-    ])
+    assert theme_choices() == sorted(
+        [
+            ("my_theme", "my_theme"),
+        ]
+    )

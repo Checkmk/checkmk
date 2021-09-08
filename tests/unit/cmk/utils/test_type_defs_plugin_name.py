@@ -9,8 +9,9 @@ import pytest
 from cmk.utils.type_defs import CheckPluginName, SectionName
 
 
-@pytest.mark.parametrize("str_name",
-                         ['', 23] + list("\"'^°!²³§$½¬%&/{([])}=?ß\\'`*+~#-.:,;ÜÖÄüöä<>|"))
+@pytest.mark.parametrize(
+    "str_name", ["", 23] + list("\"'^°!²³§$½¬%&/{([])}=?ß\\'`*+~#-.:,;ÜÖÄüöä<>|")
+)
 def test_invalid_plugin_name(str_name):
     with pytest.raises((TypeError, ValueError)):
         CheckPluginName(str_name)
@@ -21,7 +22,7 @@ def test_plugin_name_repr():
 
 
 def test_plugin_name_str():
-    assert str(CheckPluginName("Margo")) == 'Margo'
+    assert str(CheckPluginName("Margo")) == "Margo"
 
 
 def test_plugin_name_equal():
@@ -47,7 +48,7 @@ def test_plugin_name_sort():
     assert sorted(plugin_dict) == [
         CheckPluginName("Bob"),
         CheckPluginName("Dave"),
-        CheckPluginName("Stuart")
+        CheckPluginName("Stuart"),
     ]
 
 

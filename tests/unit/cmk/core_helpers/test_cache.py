@@ -49,10 +49,15 @@ class TestPersistedSections:
 
 class TestSectionStore:
     def test_repr(self):
-        assert isinstance(repr(SectionStore(
-            "/dev/null",
-            logger=logging.getLogger("test"),
-        )), str)
+        assert isinstance(
+            repr(
+                SectionStore(
+                    "/dev/null",
+                    logger=logging.getLogger("test"),
+                )
+            ),
+            str,
+        )
 
 
 class TestMaxAge:

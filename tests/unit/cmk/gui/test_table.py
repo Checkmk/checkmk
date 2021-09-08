@@ -22,13 +22,13 @@ def read_out_simple_table(text):
     assert isinstance(text, str)
     # Get the contents of the table as a list of lists
     data = []
-    for row in bs(text, 'lxml').findAll('tr'):
-        columns = row.findAll('th')
+    for row in bs(text, "lxml").findAll("tr"):
+        columns = row.findAll("th")
         if not columns:
-            columns = row.findAll('td')
+            columns = row.findAll("td")
         row_data = []
         for cell in columns:
-            cell = re.sub(r'\s', '', re.sub(r'<[^<]*>', '', cell.text))
+            cell = re.sub(r"\s", "", re.sub(r"<[^<]*>", "", cell.text))
             row_data.append(cell)
         data.append(row_data)
     return data
@@ -37,10 +37,10 @@ def read_out_simple_table(text):
 def read_out_csv(text, separator):
     # Get the contents of the table as a list of lists
     data = []
-    for row in text.split('\n'):
+    for row in text.split("\n"):
         columns = row.split(separator)
-        data.append([re.sub(r'\s', '', re.sub(r'<[^<]*>', '', cell)) for cell in columns])
-    data = [row for row in data if not all(cell == '' for cell in row)]
+        data.append([re.sub(r"\s", "", re.sub(r"<[^<]*>", "", cell)) for cell in columns])
+    data = [row for row in data if not all(cell == "" for cell in row)]
     return data
 
 
@@ -58,7 +58,7 @@ def test_basic(request_context):
             table.cell("C", "4")
 
         written_text = "".join(output_funnel.drain())
-    assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1', u'2'], [u'1', u'4']]
+    assert read_out_simple_table(written_text) == [["A", "B"], ["1", "2"], ["1", "4"]]
 
 
 def test_cell_content_escaping(request_context):
@@ -109,12 +109,12 @@ def test_plug(request_context):
             html.write_text("c")
 
         written_text = "".join(output_funnel.drain())
-    assert read_out_simple_table(written_text) == [[u'A', u'B'], [u'1a', u'2b'], [u'1a', u'4c']]
+    assert read_out_simple_table(written_text) == [["A", "B"], ["1a", "2b"], ["1a", "4c"]]
 
 
 def test_context(request_context):
     table_id = 0
-    rows = [(i, i**3) for i in range(10)]
+    rows = [(i, i ** 3) for i in range(10)]
     header = ["Number", "Cubical"]
 
     with output_funnel.plugged():
@@ -140,15 +140,17 @@ def test_nesting(request_context):
             table1.row()
             table1.cell("A", "1")
             table1.cell("B", "")
-            with table_element("%d" % (table_id + 1), title + "2", searchable=False,
-                               sortable=False) as table2:
+            with table_element(
+                "%d" % (table_id + 1), title + "2", searchable=False, sortable=False
+            ) as table2:
                 table2.row()
                 table2.cell("_", "+")
                 table2.cell("|", "-")
 
         written_text = "".join(output_funnel.drain())
     assert compare_html(
-        written_text, '''<h3 class="table">  TEST </h3>
+        written_text,
+        """<h3 class="table">  TEST </h3>
                             <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
@@ -160,7 +162,8 @@ def test_nesting(request_context):
                                 <tr class="data even0"><td>+</td><td>-</td></tr>
                                 </table>  </td>
                             </tr>
-                            </table>'''), written_text
+                            </table>""",
+    ), written_text
 
 
 def test_nesting_context(request_context):
@@ -168,20 +171,23 @@ def test_nesting_context(request_context):
     title = " TEST "
 
     with output_funnel.plugged():
-        with table_element(table_id="%d" % table_id, title=title, searchable=False,
-                           sortable=False) as table1:
+        with table_element(
+            table_id="%d" % table_id, title=title, searchable=False, sortable=False
+        ) as table1:
             table1.row()
             table1.cell("A", "1")
             table1.cell("B", "")
-            with table_element("%d" % (table_id + 1), title + "2", searchable=False,
-                               sortable=False) as table2:
+            with table_element(
+                "%d" % (table_id + 1), title + "2", searchable=False, sortable=False
+            ) as table2:
                 table2.row()
                 table2.cell("_", "+")
                 table2.cell("|", "-")
 
         written_text = "".join(output_funnel.drain())
     assert compare_html(
-        written_text, '''<h3 class="table">  TEST </h3>
+        written_text,
+        """<h3 class="table">  TEST </h3>
                             <script type="text/javascript">\ncmk.utils.update_row_info(\'1 row\');\n</script>
                             <table class="data oddeven">
                             <tr>  <th>   A  </th>  <th>   B  </th> </tr>
@@ -193,7 +199,8 @@ def test_nesting_context(request_context):
                                 <tr class="data even0"><td>+</td><td>-</td></tr>
                                 </table>  </td>
                             </tr>
-                            </table>'''), written_text
+                            </table>""",
+    ), written_text
 
 
 @pytest.mark.parametrize("sortable", [True, False])
@@ -204,44 +211,46 @@ def test_table_cubical(request_context, monkeypatch, sortable, searchable, limit
     monkeypatch.setattr(LoggedInNobody, "save_tableoptions", lambda s: None)
 
     # Test data
-    rows = [(i, i**3) for i in range(10)]
+    rows = [(i, i ** 3) for i in range(10)]
     header = ["Number", "Cubical"]
 
     # Table options
     table_id = 0
     title = " TEST "
-    separator = ';'
-    html.request.set_var('_%s_sort' % table_id, "1,0")
-    html.request.set_var('_%s_actions' % table_id, '1')
+    separator = ";"
+    html.request.set_var("_%s_sort" % table_id, "1,0")
+    html.request.set_var("_%s_actions" % table_id, "1")
 
     def _render_table():
-        with table_element(table_id="%d" % table_id,
-                           title=title,
-                           sortable=sortable,
-                           searchable=searchable,
-                           limit=limit,
-                           output_format=output_format) as table:
+        with table_element(
+            table_id="%d" % table_id,
+            title=title,
+            sortable=sortable,
+            searchable=searchable,
+            limit=limit,
+            output_format=output_format,
+        ) as table:
             for row in rows:
                 table.row()
                 for h, r in zip(header, row):
                     table.cell(_(h), r)
 
     # Data assertions
-    assert output_format in ['html', 'csv'], 'Fetch is not yet implemented'
-    if output_format == 'html':
+    assert output_format in ["html", "csv"], "Fetch is not yet implemented"
+    if output_format == "html":
         with output_funnel.plugged():
             _render_table()
             written_text = "".join(output_funnel.drain())
 
         data = read_out_simple_table(written_text)
-        assert data.pop(0) == header, 'Wrong header'
-    elif output_format == 'csv':
+        assert data.pop(0) == header, "Wrong header"
+    elif output_format == "csv":
         _render_table()
         data = read_out_csv(response.get_data(as_text=True), separator)
         limit = len(data)
-        assert data.pop(0) == header, 'Wrong header'
+        assert data.pop(0) == header, "Wrong header"
     else:
-        raise Exception('Not yet implemented')
+        raise Exception("Not yet implemented")
 
     # Reconstruct table data
     data = [tuple(map(int, row)) for row in data if row and row[0]]
@@ -249,5 +258,5 @@ def test_table_cubical(request_context, monkeypatch, sortable, searchable, limit
         limit = len(rows)
 
     # Assert data correctness
-    assert len(data) <= limit, 'Wrong number of rows: Got %s, should be <= %s' % (len(data), limit)
+    assert len(data) <= limit, "Wrong number of rows: Got %s, should be <= %s" % (len(data), limit)
     assert data == rows[:limit], "Incorrect data: %s\n\nVS\n%s" % (data, rows[:limit])

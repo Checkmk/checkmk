@@ -32,8 +32,11 @@ def _section_permutations(
 
 
 def _get_empty_parsed_result(section: SectionPlugin) -> object:
-    return section.parse_function(len(section.trees) * [[]]  # type: ignore[arg-type]
-                                 ) if isinstance(section, SNMPSectionPlugin) else None
+    return (
+        section.parse_function(len(section.trees) * [[]])  # type: ignore[arg-type]
+        if isinstance(section, SNMPSectionPlugin)
+        else None
+    )
 
 
 def test_check_plugins_do_not_discover_upon_empty_snmp_input(monkeypatch, fix_register):
@@ -75,11 +78,13 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(monkeypatch, fix_re
                 kwargs = {"section": v for v in kwargs.values()}
 
             if plugin.discovery_default_parameters is not None:
-                kwargs["params"] = plugin.discovery_default_parameters if (
-                    plugin.discovery_ruleset_type
-                    == "merged") else [plugin.discovery_default_parameters]
+                kwargs["params"] = (
+                    plugin.discovery_default_parameters
+                    if (plugin.discovery_ruleset_type == "merged")
+                    else [plugin.discovery_default_parameters]
+                )
 
-            with current_host('testhost'):  # host_extra_conf needs a host_name()
+            with current_host("testhost"):  # host_extra_conf needs a host_name()
                 if list(plugin.discovery_function(**kwargs)):
                     plugins_discovering_upon_empty.add(str(plugin.name))
 
@@ -95,7 +100,8 @@ def test_no_plugins_with_trivial_sections(fix_register):
     to the known exceptions below.
     """
     known_exceptions = {
-        ParsedSectionName(s) for s in [
+        ParsedSectionName(s)
+        for s in [
             "aix_baselevel",
             "aix_lparstat_inventory",
             "aix_packages",
@@ -152,15 +158,18 @@ def test_no_plugins_with_trivial_sections(fix_register):
     }
 
     plugins_with_trivial_sections: Dict[str, Set[str]] = defaultdict(set)
-    for plugin in chain(fix_register.check_plugins.values(),
-                        fix_register.inventory_plugins.values()):
+    for plugin in chain(
+        fix_register.check_plugins.values(), fix_register.inventory_plugins.values()
+    ):
         for section in plugin.sections:
             if section not in registered_sections and section not in known_exceptions:
                 plugins_with_trivial_sections[plugin.name].add(str(section))
 
     if plugins_with_trivial_sections:
-        msg = "\n".join(f"{plugin}: {', '.join(sections)}"
-                        for plugin, sections in sorted(plugins_with_trivial_sections.items()))
+        msg = "\n".join(
+            f"{plugin}: {', '.join(sections)}"
+            for plugin, sections in sorted(plugins_with_trivial_sections.items())
+        )
         assert 0, f"""Found new plugins with trivial sections:
 PLUGIN - TRIVIAL SECTIONS'
 ----------------

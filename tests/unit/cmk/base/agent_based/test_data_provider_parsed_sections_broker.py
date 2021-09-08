@@ -48,40 +48,28 @@ def _test_section(
 SECTION_ONE = _test_section(
     section_name="one",
     parsed_section_name="parsed",
-    parse_function=lambda x: {
-        "parsed_by": "one",
-        "node": x[0][0]
-    },
+    parse_function=lambda x: {"parsed_by": "one", "node": x[0][0]},
     supersedes=(),
 )
 
 SECTION_TWO = _test_section(
     section_name="two",
     parsed_section_name="parsed",
-    parse_function=lambda x: {
-        "parsed_by": "two",
-        "node": x[0][0]
-    },
+    parse_function=lambda x: {"parsed_by": "two", "node": x[0][0]},
     supersedes={"one"},
 )
 
 SECTION_THREE = _test_section(
     section_name="three",
     parsed_section_name="parsed2",
-    parse_function=lambda x: {
-        "parsed_by": "three",
-        "node": x[0][0]
-    },
+    parse_function=lambda x: {"parsed_by": "three", "node": x[0][0]},
     supersedes=(),
 )
 
 SECTION_FOUR = _test_section(
     section_name="four",
     parsed_section_name="parsed_four",
-    parse_function=lambda x: {
-        "parsed_by": "four",
-        "node": x[0][0]
-    },
+    parse_function=lambda x: {"parsed_by": "four", "node": x[0][0]},
     supersedes={"one"},
 )
 
@@ -96,33 +84,44 @@ NODE_2: AgentRawDataSection = [
 ]
 
 
-@pytest.mark.parametrize("node_sections,expected_result", [
-    (AgentHostSections(sections={}), None),
-    (AgentHostSections(sections={SectionName("one"): NODE_1}), {
-                                     "parsed_by": "one",
-                                     "node": "node1"
-                                 }),
-    (AgentHostSections(sections={SectionName("two"): NODE_1}), {
-                                     "parsed_by": "two",
-                                     "node": "node1"
-                                 }),
-    (AgentHostSections(sections={
-        SectionName("one"): NODE_1,
-        SectionName("two"): NODE_1,
-    }), {
-        "parsed_by": "two",
-        "node": "node1",
-    }),
-])
+@pytest.mark.parametrize(
+    "node_sections,expected_result",
+    [
+        (AgentHostSections(sections={}), None),
+        (
+            AgentHostSections(sections={SectionName("one"): NODE_1}),
+            {"parsed_by": "one", "node": "node1"},
+        ),
+        (
+            AgentHostSections(sections={SectionName("two"): NODE_1}),
+            {"parsed_by": "two", "node": "node1"},
+        ),
+        (
+            AgentHostSections(
+                sections={
+                    SectionName("one"): NODE_1,
+                    SectionName("two"): NODE_1,
+                }
+            ),
+            {
+                "parsed_by": "two",
+                "node": "node1",
+            },
+        ),
+    ],
+)
 def test_get_parsed_section(node_sections: AgentHostSections, expected_result: Mapping) -> None:
 
-    parsed_sections_broker = ParsedSectionsBroker({
-        HostKey(HostName("node1"), HostAddress("127.0.0.1"), SourceType.HOST): (
-            ParsedSectionsResolver(
-                section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],),
-            SectionsParser(host_sections=node_sections),
-        ),
-    })
+    parsed_sections_broker = ParsedSectionsBroker(
+        {
+            HostKey(HostName("node1"), HostAddress("127.0.0.1"), SourceType.HOST): (
+                ParsedSectionsResolver(
+                    section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
+                ),
+                SectionsParser(host_sections=node_sections),
+            ),
+        }
+    )
 
     content = parsed_sections_broker.get_parsed_section(
         HostKey(HostName("node1"), HostAddress("127.0.0.1"), SourceType.HOST),
@@ -134,20 +133,30 @@ def test_get_parsed_section(node_sections: AgentHostSections, expected_result: M
 
 def _get_parser() -> SectionsParser:
     return SectionsParser(
-        AgentHostSections(sections={
-            SectionName("one"): NODE_1,
-            SectionName("four"): NODE_1,
-        }),)
+        AgentHostSections(
+            sections={
+                SectionName("one"): NODE_1,
+                SectionName("four"): NODE_1,
+            }
+        ),
+    )
 
 
 def test_parse_sections_unsuperseded(monkeypatch: MonkeyPatch) -> None:
 
-    assert ParsedSectionsResolver(section_plugins=(SECTION_ONE, SECTION_THREE),).resolve(
-        _get_parser(), ParsedSectionName("parsed")) is not None
+    assert (
+        ParsedSectionsResolver(
+            section_plugins=(SECTION_ONE, SECTION_THREE),
+        ).resolve(_get_parser(), ParsedSectionName("parsed"))
+        is not None
+    )
 
 
 def test_parse_sections_superseded(monkeypatch: MonkeyPatch) -> None:
 
-    assert ParsedSectionsResolver(
-        section_plugins=(SECTION_ONE, SECTION_THREE, SECTION_FOUR),).resolve(
-            _get_parser(), ParsedSectionName("parsed")) is None
+    assert (
+        ParsedSectionsResolver(
+            section_plugins=(SECTION_ONE, SECTION_THREE, SECTION_FOUR),
+        ).resolve(_get_parser(), ParsedSectionName("parsed"))
+        is None
+    )

@@ -20,8 +20,8 @@ def test_cpu_threads():
     params: Dict[str, Any] = {}
     result = set(check_cpu_threads(params, section))
     assert result == {
-        Metric('threads', 1234.0),
-        Result(state=State.OK, summary='1234'),
+        Metric("threads", 1234.0),
+        Result(state=State.OK, summary="1234"),
     }
 
 
@@ -30,28 +30,37 @@ def test_cpu_threads_max_threads():
     params: Dict[str, Any] = {}
     result = set(check_cpu_threads(params, section))
     assert result == {
-        Metric('thread_usage', 50.0),
-        Metric('threads', 1234.0),
-        Result(state=State.OK, summary='1234'),
-        Result(state=State.OK, summary='Usage: 50.00%')
+        Metric("thread_usage", 50.0),
+        Metric("threads", 1234.0),
+        Result(state=State.OK, summary="1234"),
+        Result(state=State.OK, summary="Usage: 50.00%"),
     }
 
 
-@pytest.mark.parametrize('info, check_result', [
-    ([[u'0.88', u'0.83', u'0.87', u'2/2148', u'21050', u'8']], {
-        Metric('threads', 2148.0, levels=(2000.0, 4000.0)),
-        Result(state=State.WARN, summary='2148 (warn/crit at 2000/4000)'),
-    }),
-    ([[u'0.88', u'0.83', u'0.87', u'2/1748', u'21050', u'8'], [u'124069']], {
-        Metric('threads', 1748.0, levels=(2000.0, 4000.0)),
-        Result(state=State.OK, summary='1748'),
-        Metric('thread_usage', 1.408893438328672),
-        Result(state=State.OK, summary='Usage: 1.41%')
-    }),
-])
+@pytest.mark.parametrize(
+    "info, check_result",
+    [
+        (
+            [["0.88", "0.83", "0.87", "2/2148", "21050", "8"]],
+            {
+                Metric("threads", 2148.0, levels=(2000.0, 4000.0)),
+                Result(state=State.WARN, summary="2148 (warn/crit at 2000/4000)"),
+            },
+        ),
+        (
+            [["0.88", "0.83", "0.87", "2/1748", "21050", "8"], ["124069"]],
+            {
+                Metric("threads", 1748.0, levels=(2000.0, 4000.0)),
+                Result(state=State.OK, summary="1748"),
+                Metric("thread_usage", 1.408893438328672),
+                Result(state=State.OK, summary="Usage: 1.41%"),
+            },
+        ),
+    ],
+)
 def test_cpu_threads_regression(info, check_result):
     section = parse_cpu(info)
     assert section is not None
-    params = {'levels': (2000, 4000)}
+    params = {"levels": (2000, 4000)}
     assert list(discover_cpu_threads(section)) == [Service()]
     assert set(check_cpu_threads(params, section)) == check_result

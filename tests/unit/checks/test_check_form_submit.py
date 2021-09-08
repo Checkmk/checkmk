@@ -11,12 +11,13 @@ from tests.testlib import ActiveCheck
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("params,expected_args", [
-    (["foo", {}], ["-I", "$HOSTADDRESS$"]),
-    (["foo", {
-        "port": 80
-    }], ["-p", 80, "-I", "$HOSTADDRESS$"]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        (["foo", {}], ["-I", "$HOSTADDRESS$"]),
+        (["foo", {"port": 80}], ["-p", 80, "-I", "$HOSTADDRESS$"]),
+    ],
+)
 def test_check_form_submit_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_form_submit")

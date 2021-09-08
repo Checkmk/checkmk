@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 
 @pytest.mark.parametrize(
-    'info, params, inventory_data',
+    "info, params, inventory_data",
     [
         (
             [],
@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
         ),
         (
             [
-                ['abi.vsyscall32', '=', '1'],
+                ["abi.vsyscall32", "=", "1"],
             ],
             {},
             [],
@@ -29,108 +29,120 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
         (
             [],
             {
-                'include_patterns': ['.*'],
+                "include_patterns": [".*"],
             },
             [],
         ),
         (
             [
-                ['abi.vsyscall32', '=', '1'],
+                ["abi.vsyscall32", "=", "1"],
                 [
-                    'dev.cdrom.info', '=', 'CD-ROM', 'information,', 'Id:', 'cdrom.c', '3.20',
-                    '2003/12/17'
+                    "dev.cdrom.info",
+                    "=",
+                    "CD-ROM",
+                    "information,",
+                    "Id:",
+                    "cdrom.c",
+                    "3.20",
+                    "2003/12/17",
                 ],
-                ['dev.cdrom.info', '='],
-                ['dev.cdrom.info', '=', 'drive', 'name:'],
-                ['dev.cdrom.info', '=', 'drive', 'speed:'],
-                ['dev.cdrom.info', '=', 'drive', '#', 'of', 'slots:'],
-                ['dev.cdrom.info', '='],
-                ['dev.cdrom.info', '='],
-                ['dev.hpet.max-user-freq', '=', '64'],
-                ['kernel.hotplug', '='],
-                ['kernel.hung_task_check_count', '=', '4194304'],
+                ["dev.cdrom.info", "="],
+                ["dev.cdrom.info", "=", "drive", "name:"],
+                ["dev.cdrom.info", "=", "drive", "speed:"],
+                ["dev.cdrom.info", "=", "drive", "#", "of", "slots:"],
+                ["dev.cdrom.info", "="],
+                ["dev.cdrom.info", "="],
+                ["dev.hpet.max-user-freq", "=", "64"],
+                ["kernel.hotplug", "="],
+                ["kernel.hung_task_check_count", "=", "4194304"],
             ],
             {
-                'include_patterns': ['.*'],
-                'exclude_patterns': ['kernel.hotplug'],
+                "include_patterns": [".*"],
+                "exclude_patterns": ["kernel.hotplug"],
             },
             [
                 TableRow(
-                    path=['software', 'kernel_config'],
+                    path=["software", "kernel_config"],
                     key_columns={
-                        'parameter': 'abi.vsyscall32',
-                        'value': '1',
+                        "parameter": "abi.vsyscall32",
+                        "value": "1",
                     },
                 ),
                 TableRow(
-                    path=['software', 'kernel_config'],
+                    path=["software", "kernel_config"],
                     key_columns={
-                        'parameter': 'dev.cdrom.info',
-                        'value': 'CD-ROM information, Id: cdrom.c 3.20 2003/12/17',
+                        "parameter": "dev.cdrom.info",
+                        "value": "CD-ROM information, Id: cdrom.c 3.20 2003/12/17",
                     },
                 ),
                 TableRow(
-                    path=['software', 'kernel_config'],
+                    path=["software", "kernel_config"],
                     key_columns={
-                        'parameter': 'dev.cdrom.info',
-                        'value': 'drive name:',
+                        "parameter": "dev.cdrom.info",
+                        "value": "drive name:",
                     },
                 ),
                 TableRow(
-                    path=['software', 'kernel_config'],
+                    path=["software", "kernel_config"],
                     key_columns={
-                        'parameter': 'dev.cdrom.info',
-                        'value': 'drive speed:',
+                        "parameter": "dev.cdrom.info",
+                        "value": "drive speed:",
                     },
                 ),
                 TableRow(
-                    path=['software', 'kernel_config'],
+                    path=["software", "kernel_config"],
                     key_columns={
-                        'parameter': 'dev.cdrom.info',
-                        'value': 'drive # of slots:',
+                        "parameter": "dev.cdrom.info",
+                        "value": "drive # of slots:",
                     },
                 ),
                 TableRow(
-                    path=['software', 'kernel_config'],
+                    path=["software", "kernel_config"],
                     key_columns={
-                        'parameter': 'dev.hpet.max-user-freq',
-                        'value': '64',
+                        "parameter": "dev.hpet.max-user-freq",
+                        "value": "64",
                     },
                 ),
                 TableRow(
-                    path=['software', 'kernel_config'],
+                    path=["software", "kernel_config"],
                     key_columns={
-                        'parameter': 'kernel.hung_task_check_count',
-                        'value': '4194304',
+                        "parameter": "kernel.hung_task_check_count",
+                        "value": "4194304",
                     },
                 ),
             ],
         ),
         (
             [
-                ['abi.vsyscall32', '=', '1'],
+                ["abi.vsyscall32", "=", "1"],
                 [
-                    'dev.cdrom.info', '=', 'CD-ROM', 'information,', 'Id:', 'cdrom.c', '3.20',
-                    '2003/12/17'
+                    "dev.cdrom.info",
+                    "=",
+                    "CD-ROM",
+                    "information,",
+                    "Id:",
+                    "cdrom.c",
+                    "3.20",
+                    "2003/12/17",
                 ],
-                ['dev.cdrom.info', '='],
-                ['dev.cdrom.info', '=', 'drive', 'name:'],
-                ['dev.cdrom.info', '=', 'drive', 'speed:'],
-                ['dev.cdrom.info', '=', 'drive', '#', 'of', 'slots:'],
-                ['dev.cdrom.info', '='],
-                ['dev.cdrom.info', '='],
-                ['dev.hpet.max-user-freq', '=', '64'],
-                ['kernel.hotplug', '='],
-                ['kernel.hung_task_check_count', '=', '4194304'],
+                ["dev.cdrom.info", "="],
+                ["dev.cdrom.info", "=", "drive", "name:"],
+                ["dev.cdrom.info", "=", "drive", "speed:"],
+                ["dev.cdrom.info", "=", "drive", "#", "of", "slots:"],
+                ["dev.cdrom.info", "="],
+                ["dev.cdrom.info", "="],
+                ["dev.hpet.max-user-freq", "=", "64"],
+                ["kernel.hotplug", "="],
+                ["kernel.hung_task_check_count", "=", "4194304"],
             ],
             {
-                'include_patterns': ['.*'],
-                'exclude_patterns': ['.*'],
+                "include_patterns": [".*"],
+                "exclude_patterns": [".*"],
             },
             [],
         ),
     ],
 )
 def test_inv_oracle_systemparameter(fix_register, info, params, inventory_data):
-    plugin = fix_register.inventory_plugins[InventoryPluginName('lnx_sysctl')]
+    plugin = fix_register.inventory_plugins[InventoryPluginName("lnx_sysctl")]
     assert list(plugin.inventory_function(params, info)) == inventory_data

@@ -92,6 +92,6 @@ def test_run_omd_sites_bare(site):
 # omd backup     [SITE] [-|ARCHIVE_PATH] Create a backup tarball of a site, writing it to a file or stdout
 # omd restore    [SITE] [-|ARCHIVE_PATH] Restores the backup of a site to an existing site or creates a new site
 #
-#General Options:
+# General Options:
 # -V <version>                    set specific version, useful in combination with update/create
 # omd COMMAND -h, --help          show available options of COMMAND

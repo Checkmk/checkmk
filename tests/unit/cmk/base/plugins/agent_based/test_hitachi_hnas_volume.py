@@ -17,8 +17,9 @@ from cmk.base.plugins.agent_based.hitachi_hnas_volume import (
     Section,
 )
 
-LAST_TIME_EPOCH = (datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") -
-                   datetime(1970, 1, 1)).total_seconds()
+LAST_TIME_EPOCH = (
+    datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") - datetime(1970, 1, 1)
+).total_seconds()
 
 RAW_DATA = [
     [

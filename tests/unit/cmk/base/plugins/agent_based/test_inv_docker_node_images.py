@@ -12,25 +12,26 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 AGENT_OUTPUT = (
     '@docker_version_info\0{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}\n'
-    '[[[images]]]\n'
+    "[[[images]]]\n"
     '{"RepoDigests": [], "Id": "sha256:b2bf42ca5d8f3245e58832a1d67d5ce9cfbfe754e9b552b5e5f0e6d26dea4aa5", '
     '"RepoTags": ["hello:world"], "Created": "2021-02-12T11:29:33.063968737Z", "VirtualSize": 1231733, '
     '"Config": {"Labels": {"image_label_command_line": "1", "image_label_dockerfile": "2"}}}\n'
-    '[[[containers]]]\n'
+    "[[[containers]]]\n"
     '{"Id": "891a6f6a1c2807c544b0342d79fa79da05cc7f8d40927d72fe7b2513622b91d1", "Created": '
     '"2021-02-12T12:15:28.230110819Z", "Name": "/relaxed_shaw", "State": {"Status": "running", '
     '"Running": true, "Paused": false, "Restarting": false, "OOMKilled": false, "Dead": false, '
     '"Pid": 3436979, "ExitCode": 0, "Error": "", "StartedAt": "2021-02-12T12:15:28.592056523Z", '
     '"FinishedAt": "0001-01-01T00:00:00Z"}, "Config": {"Labels": {"another_container_label": "2", '
     '"container": "label", "image_label_command_line": "1", "image_label_dockerfile": "2"}}, '
-    '"Image": "sha256:b2bf42ca5d8f3245e58832a1d67d5ce9cfbfe754e9b552b5e5f0e6d26dea4aa5"}')
+    '"Image": "sha256:b2bf42ca5d8f3245e58832a1d67d5ce9cfbfe754e9b552b5e5f0e6d26dea4aa5"}'
+)
 
 AGENT_OUTPUT_NULL_LABELS_ST = [
     [
-        '@docker_version_info',
-        '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}'
+        "@docker_version_info",
+        '{"PluginVersion": "0.1", "DockerPyVersion": "4.1.0", "ApiVersion": "1.41"}',
     ],
-    ['[[[images]]]'],
+    ["[[[images]]]"],
     [
         '{"Id": "sha256:666620a54926240737e6619b0246917892f8ea99f8f80eb3cf8a5f0d77a91c55", "RepoTags": ["plan'
         'tuml:latest"], "RepoDigests": [], "Parent": "sha256:3d69b34c9f0fc8debed7d47e1bb87b20192c642a515ddc93'
@@ -54,52 +55,61 @@ AGENT_OUTPUT_NULL_LABELS_ST = [
 
 def test_inv_docker_node_images(fix_register):
     parsed = [line.split("\0") for line in AGENT_OUTPUT.split("\n")]
-    plugin = fix_register.inventory_plugins[InventoryPluginName('docker_node_images')]
+    plugin = fix_register.inventory_plugins[InventoryPluginName("docker_node_images")]
     assert list(plugin.inventory_function(parsed)) == [
         TableRow(
-            path=['software', 'applications', 'docker', 'containers'],
+            path=["software", "applications", "docker", "containers"],
             key_columns={
-                'id': '891a6f6a1c28',
-                'image': 'b2bf42ca5d8f',
-                'name': '/relaxed_shaw',
-                'creation': '2021-02-12T12:15:28.230110819Z',
-                'labels': 'another_container_label: 2, container: label, image_label_command_line: 1, image_label_dockerfile: 2',
-                'status': 'running'
+                "id": "891a6f6a1c28",
+                "image": "b2bf42ca5d8f",
+                "name": "/relaxed_shaw",
+                "creation": "2021-02-12T12:15:28.230110819Z",
+                "labels": "another_container_label: 2, container: label, image_label_command_line: 1, image_label_dockerfile: 2",
+                "status": "running",
             },
             inventory_columns={},
-            status_columns={}),
-        TableRow(path=['software', 'applications', 'docker', 'images'],
-                 key_columns={'id': 'b2bf42ca5d8f'},
-                 inventory_columns={
-                     'repotags': 'hello:world',
-                     'repodigests': '',
-                     'creation': '2021-02-12T11:29:33.063968737Z',
-                     'size': 1231733,
-                     'labels': 'image_label_command_line: 1, image_label_dockerfile: 2'
-                 },
-                 status_columns={}),
-        TableRow(path=['software', 'applications', 'docker', 'images'],
-                 key_columns={'id': 'b2bf42ca5d8f'},
-                 inventory_columns={},
-                 status_columns={'amount_containers': 1}),
+            status_columns={},
+        ),
+        TableRow(
+            path=["software", "applications", "docker", "images"],
+            key_columns={"id": "b2bf42ca5d8f"},
+            inventory_columns={
+                "repotags": "hello:world",
+                "repodigests": "",
+                "creation": "2021-02-12T11:29:33.063968737Z",
+                "size": 1231733,
+                "labels": "image_label_command_line: 1, image_label_dockerfile: 2",
+            },
+            status_columns={},
+        ),
+        TableRow(
+            path=["software", "applications", "docker", "images"],
+            key_columns={"id": "b2bf42ca5d8f"},
+            inventory_columns={},
+            status_columns={"amount_containers": 1},
+        ),
     ]
 
 
 def test_inv_docker_node_images_labels_null(fix_register):
-    plugin = fix_register.inventory_plugins[InventoryPluginName('docker_node_images')]
+    plugin = fix_register.inventory_plugins[InventoryPluginName("docker_node_images")]
     assert list(plugin.inventory_function(AGENT_OUTPUT_NULL_LABELS_ST)) == [
-        TableRow(path=['software', 'applications', 'docker', 'images'],
-                 key_columns={'id': '666620a54926'},
-                 inventory_columns={
-                     'repotags': 'plantuml:latest',
-                     'repodigests': '',
-                     'creation': '2021-02-25T08:42:22.47977742Z',
-                     'size': 389770065,
-                     'labels': ''
-                 },
-                 status_columns={}),
-        TableRow(path=['software', 'applications', 'docker', 'images'],
-                 key_columns={'id': '666620a54926'},
-                 inventory_columns={},
-                 status_columns={'amount_containers': 0}),
+        TableRow(
+            path=["software", "applications", "docker", "images"],
+            key_columns={"id": "666620a54926"},
+            inventory_columns={
+                "repotags": "plantuml:latest",
+                "repodigests": "",
+                "creation": "2021-02-25T08:42:22.47977742Z",
+                "size": 389770065,
+                "labels": "",
+            },
+            status_columns={},
+        ),
+        TableRow(
+            path=["software", "applications", "docker", "images"],
+            key_columns={"id": "666620a54926"},
+            inventory_columns={},
+            status_columns={"amount_containers": 0},
+        ),
     ]

@@ -30,7 +30,7 @@ from tests.testlib.site import get_site_factory
 from tests.testlib.utils import cmk_path, is_running_as_site_user
 from tests.testlib.version import CMKVersion
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)-15s %(filename)s %(message)s')
+logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(filename)s %(message)s")
 logger = logging.getLogger()
 
 
@@ -43,9 +43,9 @@ def main(args):
     logger.info("===============================================")
 
     version = os.environ.get("VERSION", CMKVersion.DAILY)
-    sf = get_site_factory(prefix="int_",
-                          update_from_git=version == "git",
-                          install_test_python_modules=True)
+    sf = get_site_factory(
+        prefix="int_", update_from_git=version == "git", install_test_python_modules=True
+    )
 
     site = sf.get_existing_site("test")
 
@@ -84,8 +84,12 @@ def _execute_as_site_user(site, args):
         "BRANCH": site.version._branch,
     }
     for varname in [
-            "WORKSPACE", "PYTEST_ADDOPTS", "BANDIT_OUTPUT_ARGS", "SHELLCHECK_OUTPUT_ARGS",
-            "PYLINT_ARGS", "CI"
+        "WORKSPACE",
+        "PYTEST_ADDOPTS",
+        "BANDIT_OUTPUT_ARGS",
+        "SHELLCHECK_OUTPUT_ARGS",
+        "PYLINT_ARGS",
+        "CI",
     ]:
         if varname in os.environ:
             env_vars[varname] = os.environ[varname]

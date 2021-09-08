@@ -17,7 +17,7 @@ def test_find_debug_code():
         with path.open(encoding="utf-8") as f:
             for line in f:
                 l = line.lstrip()
-                assert not l.startswith("html.debug("), "Found \"html.debug(...)\" call"
+                assert not l.startswith("html.debug("), 'Found "html.debug(...)" call'
 
 
 def _files_to_scan():

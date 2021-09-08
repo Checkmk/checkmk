@@ -73,26 +73,29 @@ def _get_files_to_check(pylint_test_dir):
 
     for fname in stdout.splitlines():
         # Thin out these excludes some day...
-        rel_path = fname[len(repo_path()) + 1:]
+        rel_path = fname[len(repo_path()) + 1 :]
 
         # Can currently not be checked alone. Are compiled together below
-        if rel_path.startswith("checks/") or \
-           rel_path.startswith("inventory/"):
+        if rel_path.startswith("checks/") or rel_path.startswith("inventory/"):
             continue
 
         # TODO: We should also test them...
-        if rel_path == "werk" \
-            or rel_path.startswith("tests/") \
-            or rel_path.startswith("scripts/") \
-            or rel_path.startswith("agents/wnx/integration/"):
+        if (
+            rel_path == "werk"
+            or rel_path.startswith("tests/")
+            or rel_path.startswith("scripts/")
+            or rel_path.startswith("agents/wnx/integration/")
+        ):
             continue
 
         # TODO: disable random, not that important stuff
-        if rel_path.startswith("agents/windows/it/") \
-            or rel_path.startswith("agents/windows/msibuild/") \
-            or rel_path.startswith("doc/") \
-            or rel_path.startswith("livestatus/api/python/example") \
-            or rel_path.startswith("livestatus/api/python/make_"):
+        if (
+            rel_path.startswith("agents/windows/it/")
+            or rel_path.startswith("agents/windows/msibuild/")
+            or rel_path.startswith("doc/")
+            or rel_path.startswith("livestatus/api/python/example")
+            or rel_path.startswith("livestatus/api/python/make_")
+        ):
             continue
 
         files.append(fname)
@@ -106,7 +109,8 @@ def stand_alone_template(file_name):
     with open(file_name, "w") as file_handle:
 
         # Fake data structures where checks register (See cmk/base/checks.py)
-        file_handle.write("""
+        file_handle.write(
+            """
 # -*- encoding: utf-8 -*-
 
 from cmk.base.check_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
@@ -135,31 +139,32 @@ def inv_tree(path, default_value=None):
     else:
         node = {}
     return node
-""")
+"""
+        )
 
         disable_pylint = [
-            'chained-comparison',
-            'consider-iterating-dictionary',
-            'consider-using-dict-comprehension',
-            'consider-using-in',
-            'function-redefined',
-            'no-else-break',
-            'no-else-continue',
-            'no-else-return',
-            'pointless-string-statement',
-            'redefined-outer-name',
-            'reimported',
-            'simplifiable-if-expression',
-            'ungrouped-imports',
-            'unnecessary-comprehension',
-            'unused-variable',
-            'useless-object-inheritance',
-            'wrong-import-order',
-            'wrong-import-position',
+            "chained-comparison",
+            "consider-iterating-dictionary",
+            "consider-using-dict-comprehension",
+            "consider-using-in",
+            "function-redefined",
+            "no-else-break",
+            "no-else-continue",
+            "no-else-return",
+            "pointless-string-statement",
+            "redefined-outer-name",
+            "reimported",
+            "simplifiable-if-expression",
+            "ungrouped-imports",
+            "unnecessary-comprehension",
+            "unused-variable",
+            "useless-object-inheritance",
+            "wrong-import-order",
+            "wrong-import-position",
         ]
 
         # These pylint warnings are incompatible with our "concatenation technology".
-        file_handle.write("# pylint: disable=%s\n" % ','.join(disable_pylint))
+        file_handle.write("# pylint: disable=%s\n" % ",".join(disable_pylint))
 
         yield file_handle
 

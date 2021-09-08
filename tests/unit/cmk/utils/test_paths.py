@@ -51,11 +51,16 @@ pathlib_paths = [
 
 def _check_paths(root, module):
     for var, value in module.__dict__.items():
-        if not var.startswith("_") and not var.startswith("make_") and var not in (
-                'Path',
-                'os',
-                'sys',
-                'Union',
+        if (
+            not var.startswith("_")
+            and not var.startswith("make_")
+            and var
+            not in (
+                "Path",
+                "os",
+                "sys",
+                "Union",
+            )
         ):
             if var in pathlib_paths:
                 assert isinstance(value, Path)
@@ -71,8 +76,8 @@ def _check_paths(root, module):
 
 def test_paths_in_omd_and_opt_root(monkeypatch):
 
-    omd_root = '/omd/sites/dingeling'
+    omd_root = "/omd/sites/dingeling"
     with monkeypatch.context() as m:
-        m.setitem(os.environ, 'OMD_ROOT', omd_root)
+        m.setitem(os.environ, "OMD_ROOT", omd_root)
         test_paths = import_module("%s/cmk/utils/paths.py" % repo_path())
         _check_paths(omd_root, test_paths)

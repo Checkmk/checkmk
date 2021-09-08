@@ -53,20 +53,23 @@ class MockLoggedInUser(LoggedInUser):
         return []
 
 
-@pytest.mark.parametrize("transid,ignore_transids,result,is_existing", [
-    (None, False, False, False),
-    (None, True, False, False),
-    ("", False, False, False),
-    ("", True, True, False),
-    ("abc", False, False, False),
-    ("abc", True, False, False),
-    ("-1", False, False, False),
-    ("-1", True, True, False),
-    ("123/abc", False, False, False),
-    ("123/abc", True, False, False),
-    ("%d/abc" % time.time(), False, False, False),
-    ("%d/abc" % time.time(), False, True, True),
-])
+@pytest.mark.parametrize(
+    "transid,ignore_transids,result,is_existing",
+    [
+        (None, False, False, False),
+        (None, True, False, False),
+        ("", False, False, False),
+        ("", True, True, False),
+        ("abc", False, False, False),
+        ("abc", True, False, False),
+        ("-1", False, False, False),
+        ("-1", True, True, False),
+        ("123/abc", False, False, False),
+        ("123/abc", True, False, False),
+        ("%d/abc" % time.time(), False, False, False),
+        ("%d/abc" % time.time(), False, True, True),
+    ],
+)
 def test_transaction_valid(tm, transid, ignore_transids, result, mocker, is_existing):
     assert tm._ignore_transids is False
     if ignore_transids:

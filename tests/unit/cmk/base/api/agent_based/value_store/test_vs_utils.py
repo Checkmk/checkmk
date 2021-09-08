@@ -79,8 +79,10 @@ class Test_DynamicDiskSyncedMapping:
 
 class Test_StaticDiskSyncedMapping:
     def _mock_load(self, mocker):
-        stored_item_states = ('{("check1", None, "stored-user-key-1"): 23,'
-                              ' ("check2", "item", "stored-user-key-2"): 42}')
+        stored_item_states = (
+            '{("check1", None, "stored-user-key-1"): 23,'
+            ' ("check2", "item", "stored-user-key-2"): 42}'
+        )
 
         mocker.patch.object(
             store,
@@ -97,7 +99,8 @@ class Test_StaticDiskSyncedMapping:
 
     @staticmethod
     def _get_sdsm(
-            tmp_path: Path) -> _StaticDiskSyncedMapping[Tuple[str, Optional[str], str], object]:
+        tmp_path: Path,
+    ) -> _StaticDiskSyncedMapping[Tuple[str, Optional[str], str], object]:
         return _StaticDiskSyncedMapping(
             path=tmp_path / "test-host",
             log_debug=lambda msg: None,
@@ -147,14 +150,15 @@ class Test_DiskSyncedMapping:
     @staticmethod
     def _get_dsm() -> _DiskSyncedMapping:
         dynstore: _DynamicDiskSyncedMapping[Tuple[str, str, str], str] = _DynamicDiskSyncedMapping()
-        dynstore.update({
-            ("dyn", "key", "1"): "dyn-val-1",
-            ("dyn", "key", "2"): "dyn-val-2",
-        })
+        dynstore.update(
+            {
+                ("dyn", "key", "1"): "dyn-val-1",
+                ("dyn", "key", "2"): "dyn-val-2",
+            }
+        )
         return _DiskSyncedMapping(
             dynamic=dynstore,
-            static=
-            {  # type: ignore[arg-type]
+            static={  # type: ignore[arg-type]
                 ("stat", "key", "1"): "stat-val-1",
                 ("stat", "key", "2"): "stat-val-2",
             },
@@ -196,8 +200,12 @@ class Test_DiskSyncedMapping:
 
     def test_iter(self):
         dsm = self._get_dsm()
-        assert sorted(dsm) == [("dyn", "key", "1"), ("dyn", "key", "2"), ("stat", "key", "1"),
-                               ("stat", "key", "2")]
+        assert sorted(dsm) == [
+            ("dyn", "key", "1"),
+            ("dyn", "key", "2"),
+            ("stat", "key", "1"),
+            ("stat", "key", "2"),
+        ]
 
         dsm.pop(("stat", "key", "1"))
         assert sorted(dsm) == [("dyn", "key", "1"), ("dyn", "key", "2"), ("stat", "key", "2")]

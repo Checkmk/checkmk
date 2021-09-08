@@ -22,31 +22,34 @@ def _build_id(lun_id):
 
 VALID_LUN_ID = "12344a12345b4b0000333a4b00000320"
 VALID_PATH = "aaaaa1:AA:AA:AA"
-MULTIPATH_PROPSET = ('<id>%s</id>'
-                     '<path>'
-                     f'<key>key-vim.host.MultipathInfo.Path-{VALID_PATH}</key>'
-                     f'<name>{VALID_PATH}</name>'
-                     '<pathState>active</pathState>'
-                     '<state>active</state>'
-                     '<isWorkingPath>true</isWorkingPath>'
-                     '<adapter>key-vim.host.BlockHba-vmhba2</adapter>'
-                     '<lun>key-vim.host.MultipathInfo.LogicalUnit-123456789</lun>'
-                     '<transport xsi:type="HostBlockAdapterTargetTransport"></transport>'
-                     '</path>')
+MULTIPATH_PROPSET = (
+    "<id>%s</id>"
+    "<path>"
+    f"<key>key-vim.host.MultipathInfo.Path-{VALID_PATH}</key>"
+    f"<name>{VALID_PATH}</name>"
+    "<pathState>active</pathState>"
+    "<state>active</state>"
+    "<isWorkingPath>true</isWorkingPath>"
+    "<adapter>key-vim.host.BlockHba-vmhba2</adapter>"
+    "<lun>key-vim.host.MultipathInfo.LogicalUnit-123456789</lun>"
+    '<transport xsi:type="HostBlockAdapterTargetTransport"></transport>'
+    "</path>"
+)
 PROP_NAME = "foo"
 
 
-@pytest.mark.parametrize("propset, expected", [
-    (
-        MULTIPATH_PROPSET % _build_id(VALID_LUN_ID),
-        ({
-            PROP_NAME: [f'{VALID_LUN_ID} {VALID_PATH} active']
-        }, {}),
-    ),
-    (
-        MULTIPATH_PROPSET % _build_id(""),
-        ({}, {}),
-    ),
-])
+@pytest.mark.parametrize(
+    "propset, expected",
+    [
+        (
+            MULTIPATH_PROPSET % _build_id(VALID_LUN_ID),
+            ({PROP_NAME: [f"{VALID_LUN_ID} {VALID_PATH} active"]}, {}),
+        ),
+        (
+            MULTIPATH_PROPSET % _build_id(""),
+            ({}, {}),
+        ),
+    ],
+)
 def test_eval_multipath_info(propset, expected):
     assert eval_multipath_info("", PROP_NAME, propset) == expected

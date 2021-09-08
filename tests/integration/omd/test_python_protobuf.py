@@ -13,6 +13,7 @@ from tests.testlib import import_module
 
 def test_protobuf_api_implementation_is_cpp():
     from google.protobuf.internal import api_implementation  # type: ignore[attr-defined]
+
     assert api_implementation.Type() == "cpp"
 
 
@@ -20,14 +21,15 @@ def test_protobuf_api_implementation_is_cpp():
 def fixture_test_dir(site):
     site.makedirs("protobuf")
     yield Path(site.path("protobuf"))
-    #site.delete_dir("protobuf")
+    # site.delete_dir("protobuf")
 
 
 @pytest.fixture(name="proto_source_file")
 def fixture_proto_source_file(test_dir, site):
     proto_path = test_dir / "test.proto"
     with proto_path.open("w") as f:
-        f.write("""syntax = "proto2";
+        f.write(
+            """syntax = "proto2";
 
 package tutorial;
 
@@ -52,17 +54,16 @@ message Person {
 
 message AddressBook {
   repeated Person people = 1;
-}""")
+}"""
+        )
     return proto_path
 
 
 @pytest.fixture(name="protobuf_py")
 def fixture_protobuf_py(site, test_dir, proto_source_file):
     p = site.execute(
-        ["protoc",
-         "-I=%s" % test_dir,
-         "--python_out=%s" % test_dir,
-         str(proto_source_file)])
+        ["protoc", "-I=%s" % test_dir, "--python_out=%s" % test_dir, str(proto_source_file)]
+    )
     assert p.wait() == 0
 
     py_file = test_dir / "test_pb2.py"

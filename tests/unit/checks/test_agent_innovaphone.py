@@ -11,17 +11,23 @@ from tests.testlib import SpecialAgent
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('params,expected_args', [
-    ({
-        'auth_basic': {
-            'username': 'user123',
-            'password': ('password', 'passwordABC'),
-        },
-        'protocol': 'https',
-    }, ["host", "user123", "passwordABC", '--protocol', 'https']),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        (
+            {
+                "auth_basic": {
+                    "username": "user123",
+                    "password": ("password", "passwordABC"),
+                },
+                "protocol": "https",
+            },
+            ["host", "user123", "passwordABC", "--protocol", "https"],
+        ),
+    ],
+)
 def test_innovaphone_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_innovaphone')
+    agent = SpecialAgent("agent_innovaphone")
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

@@ -79,8 +79,8 @@ class TestWatoMode:
         main_module_registry,
     ):
         assert list(SomeWatoMode().breadcrumb()) == [
-            BreadcrumbItem(title='Hosts', url=None),
-            BreadcrumbItem(title='(Untitled module)', url='wato.py?mode=some_wato_mode'),
+            BreadcrumbItem(title="Hosts", url=None),
+            BreadcrumbItem(title="(Untitled module)", url="wato.py?mode=some_wato_mode"),
         ]
 
     def test_breadcrumb_with_additions(
@@ -91,11 +91,11 @@ class TestWatoMode:
     ):
         def additional_breadcrumb_items() -> Iterable[BreadcrumbItem]:
             yield BreadcrumbItem(
-                title='In between 1',
+                title="In between 1",
                 url=None,
             )
             yield BreadcrumbItem(
-                title='In between 2',
+                title="In between 2",
                 url="123",
             )
 
@@ -105,8 +105,8 @@ class TestWatoMode:
             additional_breadcrumb_items,
         )
         assert list(SomeWatoMode().breadcrumb()) == [
-            BreadcrumbItem(title='Hosts', url=None),
-            BreadcrumbItem(title='In between 1', url=None),
-            BreadcrumbItem(title='In between 2', url='123'),
-            BreadcrumbItem(title='(Untitled module)', url='wato.py?mode=some_wato_mode'),
+            BreadcrumbItem(title="Hosts", url=None),
+            BreadcrumbItem(title="In between 1", url=None),
+            BreadcrumbItem(title="In between 2", url="123"),
+            BreadcrumbItem(title="(Untitled module)", url="wato.py?mode=some_wato_mode"),
         ]

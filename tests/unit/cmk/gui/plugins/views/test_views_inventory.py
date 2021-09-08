@@ -11,33 +11,21 @@ import cmk.gui.inventory
 import cmk.gui.plugins.views.inventory as inventory
 from cmk.gui.views import View
 
-RAW_ROWS = [('this_site', 'this_hostname')]
-RAW_ROWS2 = [('this_site', 'this_hostname', 'foobar')]
+RAW_ROWS = [("this_site", "this_hostname")]
+RAW_ROWS2 = [("this_site", "this_hostname", "foobar")]
 
 INV_ROWS = [
-    {
-        'sid': 'A',
-        'value1': 1,
-        'value2': 4
-    },
-    {
-        'sid': 'B',
-        'value1': 2,
-        'value2': 5
-    },
-    {
-        'sid': 'C',
-        'value1': 3,
-        'value2': 6
-    },
+    {"sid": "A", "value1": 1, "value2": 4},
+    {"sid": "B", "value1": 2, "value2": 5},
+    {"sid": "C", "value1": 3, "value2": 6},
 ]
 
 EXPECTED_INV_KEYS = [
-    'site',
-    'host_name',
-    'invtesttable_sid',
-    'invtesttable_value1',
-    'invtesttable_value2',
+    "site",
+    "host_name",
+    "invtesttable_sid",
+    "invtesttable_value1",
+    "invtesttable_value2",
 ]
 
 INV_HIST_ROWS = [
@@ -47,8 +35,8 @@ INV_HIST_ROWS = [
 ]
 
 EXPECTED_INV_HIST_KEYS = [
-    'site',
-    'host_name',
+    "site",
+    "host_name",
     "invhist_time",
     "invhist_delta",
     "invhist_removed",
@@ -57,43 +45,49 @@ EXPECTED_INV_HIST_KEYS = [
 ]
 
 INV_ROWS_MULTI = [
-    ('invtesttable1', [
-        {
-            'sid': 'A',
-            'value1': 1,
-        },
-        {
-            'sid': 'B',
-            'value1': 2,
-        },
-        {
-            'sid': 'C',
-            'value1': 3,
-        },
-    ]),
-    ('invtesttable2', [
-        {
-            'sid': 'A',
-            'value2': 4,
-        },
-        {
-            'sid': 'B',
-            'value2': 5,
-        },
-        {
-            'sid': 'C',
-            'value2': 6,
-        },
-    ]),
+    (
+        "invtesttable1",
+        [
+            {
+                "sid": "A",
+                "value1": 1,
+            },
+            {
+                "sid": "B",
+                "value1": 2,
+            },
+            {
+                "sid": "C",
+                "value1": 3,
+            },
+        ],
+    ),
+    (
+        "invtesttable2",
+        [
+            {
+                "sid": "A",
+                "value2": 4,
+            },
+            {
+                "sid": "B",
+                "value2": 5,
+            },
+            {
+                "sid": "C",
+                "value2": 6,
+            },
+        ],
+    ),
 ]
 
 EXPECTED_INV_MULTI_KEYS = [
-    'site',
-    'host_name',
-    'invtesttable1_sid',
-    'invtesttable1_value1',
-    'invtesttable2_sid',
-    'invtesttable2_value2',
+    "site",
+    "host_name",
+    "invtesttable1_sid",
+    "invtesttable1_value1",
+    "invtesttable2_sid",
+    "invtesttable2_value2",
 ]
 
 
@@ -114,7 +108,7 @@ def test_query_row_table_inventory_unknown_columns(monkeypatch):
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
-    rows, _len_rows = row_table.query(view, ['foo'], "", None, None, [])
+    rows, _len_rows = row_table.query(view, ["foo"], "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_KEYS)
 
@@ -125,9 +119,9 @@ def test_query_row_table_inventory_add_columns(monkeypatch):
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS)
-    rows, _len_rows = row_table.query(view, ['host_foo'], "", None, None, [])
+    rows, _len_rows = row_table.query(view, ["host_foo"], "", None, None, [])
     for row in rows:
-        assert set(row) == set(EXPECTED_INV_KEYS + ['host_foo'])
+        assert set(row) == set(EXPECTED_INV_KEYS + ["host_foo"])
 
 
 @pytest.mark.usefixtures("request_context")
@@ -147,7 +141,7 @@ def test_query_row_table_inventory_history_unknown_columns(monkeypatch):
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
-    rows, _len_rows = row_table.query(view, ['foo'], "", None, None, [])
+    rows, _len_rows = row_table.query(view, ["foo"], "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_HIST_KEYS)
 
@@ -158,9 +152,9 @@ def test_query_row_table_inventory_history_add_columns(monkeypatch):
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_HIST_ROWS)
-    rows, _len_rows = row_table.query(view, ['host_foo'], "", None, None, [])
+    rows, _len_rows = row_table.query(view, ["host_foo"], "", None, None, [])
     for row in rows:
-        assert set(row) == set(EXPECTED_INV_HIST_KEYS + ['host_foo'])
+        assert set(row) == set(EXPECTED_INV_HIST_KEYS + ["host_foo"])
 
 
 @pytest.mark.usefixtures("request_context")
@@ -182,7 +176,7 @@ def test_query_row_multi_table_inventory_unknown_columns(monkeypatch):
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
-    rows, _len_rows = row_table.query(view, ['foo'], "", None, None, [])
+    rows, _len_rows = row_table.query(view, ["foo"], "", None, None, [])
     for row in rows:
         assert set(row) == set(EXPECTED_INV_MULTI_KEYS)
 
@@ -194,20 +188,27 @@ def test_query_row_multi_table_inventory_add_columns(monkeypatch):
     view = View("", {}, {})
     monkeypatch.setattr(row_table, "_get_raw_data", lambda only_sites, query: RAW_ROWS2)
     monkeypatch.setattr(row_table, "_get_inv_data", lambda hostrow: INV_ROWS_MULTI)
-    rows, _len_rows = row_table.query(view, ['host_foo'], "", None, None, [])
+    rows, _len_rows = row_table.query(view, ["host_foo"], "", None, None, [])
     for row in rows:
-        assert set(row) == set(EXPECTED_INV_MULTI_KEYS + ['host_foo'])
+        assert set(row) == set(EXPECTED_INV_MULTI_KEYS + ["host_foo"])
 
 
-@pytest.mark.parametrize("val_a, val_b, result", [
-    (None, None, 0),
-    (None, 0, -1),
-    (0, None, 1),
-    (0, 0, 0),
-    (1, 0, 1),
-    (0, 1, -1),
-])
+@pytest.mark.parametrize(
+    "val_a, val_b, result",
+    [
+        (None, None, 0),
+        (None, 0, -1),
+        (0, None, 1),
+        (0, 0, 0),
+        (1, 0, 1),
+        (0, 1, -1),
+    ],
+)
 def test__cmp_inventory_node(monkeypatch, val_a, val_b, result):
     monkeypatch.setattr(cmk.gui.inventory, "get_inventory_attribute", lambda val, path: val)
-    assert inventory._cmp_inventory_node({"host_inventory": val_a}, {"host_inventory": val_b},
-                                         "any-path") == result
+    assert (
+        inventory._cmp_inventory_node(
+            {"host_inventory": val_a}, {"host_inventory": val_b}, "any-path"
+        )
+        == result
+    )

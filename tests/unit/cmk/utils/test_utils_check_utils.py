@@ -14,13 +14,14 @@ from cmk.utils.check_utils import (
 )
 
 
-@pytest.mark.parametrize("params", [
-    "foo_levels",
-    (1, 2),
-    {
-        "levels": (1, 2)
-    },
-])
+@pytest.mark.parametrize(
+    "params",
+    [
+        "foo_levels",
+        (1, 2),
+        {"levels": (1, 2)},
+    ],
+)
 def test_un_wrap_parameters(params):
     wrapped = wrap_parameters(params)
     assert isinstance(wrapped, dict)
@@ -63,5 +64,6 @@ def test_active_check_result():
     assert ActiveCheckResult.from_subresults(
         ActiveCheckResult(0, ("Ok",), ("We're good",), ("metric1",)),
         ActiveCheckResult(2, ("Critical",), ("We're doomed",), ("metric2",)),
-    ) == ActiveCheckResult(2, ["Ok", "Critical"], ["We're good", "We're doomed"],
-                           ["metric1", "metric2"])
+    ) == ActiveCheckResult(
+        2, ["Ok", "Critical"], ["We're good", "We're doomed"], ["metric1", "metric2"]
+    )

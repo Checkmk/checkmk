@@ -11,15 +11,21 @@ from tests.testlib import ActiveCheck
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize("params,expected_args", [
-    ({
-        "base_url": "some/path",
-        "aggregation_name": "foo",
-        "username": "bar",
-        "credentials": "automation",
-        "optional": {}
-    }, ["-b", "some/path", "-a", "foo", "--use-automation-user"]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        (
+            {
+                "base_url": "some/path",
+                "aggregation_name": "foo",
+                "username": "bar",
+                "credentials": "automation",
+                "optional": {},
+            },
+            ["-b", "some/path", "-a", "foo", "--use-automation-user"],
+        ),
+    ],
+)
 def test_check_bi_aggr_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
     active_check = ActiveCheck("check_bi_aggr")

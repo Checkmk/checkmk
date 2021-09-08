@@ -14,25 +14,58 @@ from cmk.base.plugins.agent_based.iis_app_pool_state import (
 )
 
 
-@pytest.mark.parametrize("item,section,params,results", [
-    ("app", dict(app=IisAppPoolState.Initialized), DefaultCheckParameters, [
-        Result(state=State.WARN, summary='State: Initialized'),
-    ]),
-    ("app", dict(app=IisAppPoolState.ShutdownPending), DefaultCheckParameters, [
-        Result(state=State.CRIT, summary='State: ShutdownPending'),
-    ]),
-    ("app", dict(), DefaultCheckParameters, [
-        Result(state=State.UNKNOWN, summary='app is unknown'),
-    ]),
-    ("app", dict(app=IisAppPoolState.Running), dict(state_mapping={"Running": State.CRIT.value}), [
-        Result(state=State.CRIT, summary='State: Running'),
-    ]),
-    ("app", dict(app=IisAppPoolState.Running), dict(state_mapping=dict()), [
-        Result(state=State.CRIT, summary='State: Running'),
-    ]),
-    ("app", dict(app=IisAppPoolState.Running), dict(), [
-        Result(state=State.CRIT, summary='State: Running'),
-    ]),
-])
+@pytest.mark.parametrize(
+    "item,section,params,results",
+    [
+        (
+            "app",
+            dict(app=IisAppPoolState.Initialized),
+            DefaultCheckParameters,
+            [
+                Result(state=State.WARN, summary="State: Initialized"),
+            ],
+        ),
+        (
+            "app",
+            dict(app=IisAppPoolState.ShutdownPending),
+            DefaultCheckParameters,
+            [
+                Result(state=State.CRIT, summary="State: ShutdownPending"),
+            ],
+        ),
+        (
+            "app",
+            dict(),
+            DefaultCheckParameters,
+            [
+                Result(state=State.UNKNOWN, summary="app is unknown"),
+            ],
+        ),
+        (
+            "app",
+            dict(app=IisAppPoolState.Running),
+            dict(state_mapping={"Running": State.CRIT.value}),
+            [
+                Result(state=State.CRIT, summary="State: Running"),
+            ],
+        ),
+        (
+            "app",
+            dict(app=IisAppPoolState.Running),
+            dict(state_mapping=dict()),
+            [
+                Result(state=State.CRIT, summary="State: Running"),
+            ],
+        ),
+        (
+            "app",
+            dict(app=IisAppPoolState.Running),
+            dict(),
+            [
+                Result(state=State.CRIT, summary="State: Running"),
+            ],
+        ),
+    ],
+)
 def test_check_iis_app_pool_state(item, section, params, results):
     assert list(check_iis_app_pool_state(item, params, section)) == results

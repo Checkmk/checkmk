@@ -9,17 +9,16 @@ import pytest
 from tests.testlib import SpecialAgent
 
 
-@pytest.mark.parametrize("params,result", [
-    ({
-        'username': 'user',
-        'password': 'test'
-    }, ['address', '8008', 'user', 'test']),
-    ({
-        'username': 'user',
-        'password': 'test',
-        'port': 8090
-    }, ['address', '8090', 'user', 'test']),
-])
+@pytest.mark.parametrize(
+    "params,result",
+    [
+        ({"username": "user", "password": "test"}, ["address", "8008", "user", "test"]),
+        (
+            {"username": "user", "password": "test", "port": 8090},
+            ["address", "8090", "user", "test"],
+        ),
+    ],
+)
 def test_ddn_s2a(params, result):
     agent = SpecialAgent("agent_ddn_s2a")
     arguments = agent.argument_func(params, "host", "address")

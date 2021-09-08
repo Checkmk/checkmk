@@ -15,13 +15,19 @@ from cmk.gui.plugins.views.utils import (
 )
 
 
-@pytest.mark.parametrize("url, sorters", [
-    ('-svcoutput,svc_perf_val01,svc_metrics_hist', [('svcoutput', True), ('svc_perf_val01', False),
-                                                    ('svc_metrics_hist', False)]),
-    ('sitealias,perfometer~CPU utilization,site', [('sitealias', False),
-                                                   ('perfometer', False, 'CPU utilization'),
-                                                   ('site', False)]),
-])
+@pytest.mark.parametrize(
+    "url, sorters",
+    [
+        (
+            "-svcoutput,svc_perf_val01,svc_metrics_hist",
+            [("svcoutput", True), ("svc_perf_val01", False), ("svc_metrics_hist", False)],
+        ),
+        (
+            "sitealias,perfometer~CPU utilization,site",
+            [("sitealias", False), ("perfometer", False, "CPU utilization"), ("site", False)],
+        ),
+    ],
+)
 def test_url_sorters_parse_encode(url, sorters):
     sorters = [SorterSpec(*s) for s in sorters]
     assert _parse_url_sorters(url) == sorters

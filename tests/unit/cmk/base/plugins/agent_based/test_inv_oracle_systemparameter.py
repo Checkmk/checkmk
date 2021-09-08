@@ -11,31 +11,40 @@ from cmk.utils.type_defs import InventoryPluginName
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
 
 
-@pytest.mark.parametrize('info, expected', [
-    ([["", "", ""]], []),
-    ([['XE', 'lock_name_space', '', 'TRUE']], [
-        TableRow(
-            path=['software', 'applications', 'oracle', 'systemparameter'],
-            key_columns={
-                'sid': 'XE',
-                'name': 'lock_name_space',
-                'value': '',
-                'isdefault': 'TRUE',
-            },
-        )
-    ]),
-    ([['XE', 'TRUE'], ["XI", 'init', '123', 'TRUE']], [
-        TableRow(
-            path=['software', 'applications', 'oracle', 'systemparameter'],
-            key_columns={
-                'sid': 'XI',
-                'name': 'init',
-                'value': '123',
-                'isdefault': 'TRUE',
-            },
+@pytest.mark.parametrize(
+    "info, expected",
+    [
+        ([["", "", ""]], []),
+        (
+            [["XE", "lock_name_space", "", "TRUE"]],
+            [
+                TableRow(
+                    path=["software", "applications", "oracle", "systemparameter"],
+                    key_columns={
+                        "sid": "XE",
+                        "name": "lock_name_space",
+                        "value": "",
+                        "isdefault": "TRUE",
+                    },
+                )
+            ],
         ),
-    ]),
-])
+        (
+            [["XE", "TRUE"], ["XI", "init", "123", "TRUE"]],
+            [
+                TableRow(
+                    path=["software", "applications", "oracle", "systemparameter"],
+                    key_columns={
+                        "sid": "XI",
+                        "name": "init",
+                        "value": "123",
+                        "isdefault": "TRUE",
+                    },
+                ),
+            ],
+        ),
+    ],
+)
 def test_inv_oracle_systemparameter(fix_register, info, expected):
-    plugin = fix_register.inventory_plugins[InventoryPluginName('oracle_systemparameter')]
+    plugin = fix_register.inventory_plugins[InventoryPluginName("oracle_systemparameter")]
     assert list(plugin.inventory_function(info)) == expected

@@ -13,8 +13,7 @@ import cmk.gui.crash_reporting as crash_reporting
 
 
 def test_gui_crash_report_registry():
-    assert cmk.utils.crash_reporting.crash_report_registry["gui"] \
-            == crash_reporting.GUICrashReport
+    assert cmk.utils.crash_reporting.crash_report_registry["gui"] == crash_reporting.GUICrashReport
 
 
 def test_gui_crash_report_get_packed(request_context):

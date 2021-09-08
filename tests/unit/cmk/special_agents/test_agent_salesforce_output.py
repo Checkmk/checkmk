@@ -17,7 +17,7 @@ URL = "https://api.status.salesforce.com/v1/instances/5/status"
 def test_wrong_arguments(capsys):
     with pytest.raises(SystemExit):
         main()
-    assert capsys.readouterr().out == ''
+    assert capsys.readouterr().out == ""
 
 
 @responses.activate
@@ -25,13 +25,14 @@ def test_agent_output(capsys, monkeypatch):
     responses.add(
         responses.GET,
         URL,
-        json={'random_answer': 'foo-bar'},
+        json={"random_answer": "foo-bar"},
         status=200,
     )
-    monkeypatch.setattr("sys.argv",
-                        ["agent_salesforce", "--section_url", f"salesforce_instances,{URL}"])
+    monkeypatch.setattr(
+        "sys.argv", ["agent_salesforce", "--section_url", f"salesforce_instances,{URL}"]
+    )
     main()
     assert capsys.readouterr() == (
         '<<<salesforce_instances>>>\n{"random_answer": "foo-bar"}\n\n',
-        '',
+        "",
     )

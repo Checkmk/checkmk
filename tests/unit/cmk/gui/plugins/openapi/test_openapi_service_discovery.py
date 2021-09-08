@@ -641,7 +641,7 @@ def test_service_discovery(
     username, secret = with_automation_user
     suppress_automation_calls.local_automation.return_value = mock_discovery_result
     suppress_automation_calls.automation.return_value = mock_discovery_result
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
 
 def test_openapi_discovery(
@@ -655,19 +655,19 @@ def test_openapi_discovery(
     username, secret = with_automation_user
     suppress_automation_calls.local_automation.return_value = mock_discovery_result
     suppress_automation_calls.automation.return_value = mock_discovery_result
-    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
 
-    base = '/NO_SITE/check_mk/api/1.0'
+    base = "/NO_SITE/check_mk/api/1.0"
 
     _resp = wsgi_app.call_method(
-        'post',
+        "post",
         base + "/objects/host/example.com/actions/discover_services/invoke",
         params='{"mode": "foo"}',
         status=415,
     )
 
     _resp = wsgi_app.call_method(
-        'post',
+        "post",
         base + "/objects/host/example.com/actions/discover_services/invoke",
         params='{"mode": "foo"}',
         content_type="application/json",
@@ -675,7 +675,7 @@ def test_openapi_discovery(
     )
 
     _resp = wsgi_app.call_method(
-        'post',
+        "post",
         base + "/objects/host/example.com/actions/discover_services/invoke",
         params='{"mode": "refresh"}',
         content_type="application/json",
@@ -683,13 +683,17 @@ def test_openapi_discovery(
     )
 
     with mock_livestatus(expect_status_query=True):
-        wsgi_app.follow_link(_resp,
-                             'cmk/service.move-ignored',
-                             json_data=_resp.json['members']['df-/boot'],
-                             status=204)
+        wsgi_app.follow_link(
+            _resp,
+            "cmk/service.move-ignored",
+            json_data=_resp.json["members"]["df-/boot"],
+            status=204,
+        )
 
     with mock_livestatus(expect_status_query=True):
-        wsgi_app.follow_link(_resp,
-                             'cmk/service.move-monitored',
-                             json_data=_resp.json['members']['df-/boot'],
-                             status=204)
+        wsgi_app.follow_link(
+            _resp,
+            "cmk/service.move-monitored",
+            json_data=_resp.json["members"]["df-/boot"],
+            status=204,
+        )

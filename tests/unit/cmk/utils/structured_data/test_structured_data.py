@@ -63,30 +63,22 @@ def _create_filled_tree():
     ta = root.setdefault_node(["path", "to", "nta", "ta"])
 
     nt.table.add_key_columns(["nt0"])
-    nt.table.add_rows([
-        {
-            "nt0": "NT 00",
-            "nt1": "NT 01"
-        },
-        {
-            "nt0": "NT 10",
-            "nt1": "NT 11"
-        },
-    ])
+    nt.table.add_rows(
+        [
+            {"nt0": "NT 00", "nt1": "NT 01"},
+            {"nt0": "NT 10", "nt1": "NT 11"},
+        ]
+    )
 
     na.attributes.add_pairs({"na0": "NA 0", "na1": "NA 1"})
 
     ta.table.add_key_columns(["ta0"])
-    ta.table.add_rows([
-        {
-            "ta0": "TA 00",
-            "ta1": "TA 01"
-        },
-        {
-            "ta0": "TA 10",
-            "ta1": "TA 11"
-        },
-    ])
+    ta.table.add_rows(
+        [
+            {"ta0": "TA 00", "ta1": "TA 01"},
+            {"ta0": "TA 10", "ta1": "TA 11"},
+        ]
+    )
     ta.attributes.add_pairs({"ta0": "TA 0", "ta1": "TA 1"})
 
     return root
@@ -161,8 +153,14 @@ def test_set_path_sub_nodes():
 
     path_to_sub_node = root.get_node(["path", "to", "nta", "node", "sub-path-to", "sub-node"])
     assert path_to_sub_node is not None
-    assert path_to_sub_node.attributes.path == ("path", "to", "nta", "node", "sub-path-to",
-                                                "sub-node")
+    assert path_to_sub_node.attributes.path == (
+        "path",
+        "to",
+        "nta",
+        "node",
+        "sub-path-to",
+        "sub-node",
+    )
     assert path_to_sub_node.table.path == ("path", "to", "nta", "node", "sub-path-to", "sub-node")
     assert path_to_sub_node.path == ("path", "to", "nta", "node", "sub-path-to", "sub-node")
 
@@ -207,24 +205,12 @@ def test_not_empty():
     assert nt.attributes.pairs == {}
     assert nt.attributes.is_empty()
     assert nt.table._rows == {
-        ("NT 00",): {
-            "nt0": "NT 00",
-            "nt1": "NT 01"
-        },
-        ("NT 10",): {
-            "nt0": "NT 10",
-            "nt1": "NT 11"
-        },
+        ("NT 00",): {"nt0": "NT 00", "nt1": "NT 01"},
+        ("NT 10",): {"nt0": "NT 10", "nt1": "NT 11"},
     }
     assert nt.table.rows == [
-        {
-            "nt0": "NT 00",
-            "nt1": "NT 01"
-        },
-        {
-            "nt0": "NT 10",
-            "nt1": "NT 11"
-        },
+        {"nt0": "NT 00", "nt1": "NT 01"},
+        {"nt0": "NT 10", "nt1": "NT 11"},
     ]
     assert not nt.table.is_empty()
 
@@ -237,24 +223,12 @@ def test_not_empty():
     assert ta.attributes.pairs == {"ta0": "TA 0", "ta1": "TA 1"}
     assert not ta.attributes.is_empty()
     assert ta.table._rows == {
-        ("TA 00",): {
-            "ta0": "TA 00",
-            "ta1": "TA 01"
-        },
-        ("TA 10",): {
-            "ta0": "TA 10",
-            "ta1": "TA 11"
-        },
+        ("TA 00",): {"ta0": "TA 00", "ta1": "TA 01"},
+        ("TA 10",): {"ta0": "TA 10", "ta1": "TA 11"},
     }
     assert ta.table.rows == [
-        {
-            "ta0": "TA 00",
-            "ta1": "TA 01"
-        },
-        {
-            "ta0": "TA 10",
-            "ta1": "TA 11"
-        },
+        {"ta0": "TA 00", "ta1": "TA 01"},
+        {"ta0": "TA 10", "ta1": "TA 11"},
     ]
     assert not ta.table.is_empty()
 
@@ -269,16 +243,12 @@ def test_add_node():
     sub_node.attributes.add_pairs({"sn0": "SN 0", "sn1": "SN 1"})
 
     sub_node.table.add_key_columns(["sn0"])
-    sub_node.table.add_rows([
-        {
-            "sn0": "SN 00",
-            "sn1": "SN 01"
-        },
-        {
-            "sn0": "SN 10",
-            "sn1": "SN 11"
-        },
-    ])
+    sub_node.table.add_rows(
+        [
+            {"sn0": "SN 00", "sn1": "SN 01"},
+            {"sn0": "SN 10", "sn1": "SN 11"},
+        ]
+    )
 
     node = root.get_node(["path", "to", "nta"]).add_node(sub_node)
 
@@ -300,16 +270,16 @@ def test_add_node():
 def test_compare_with_self():
     empty_root = _create_empty_tree()
     delta_result0 = empty_root.compare_with(empty_root)
-    assert delta_result0.counter['new'] == 0
-    assert delta_result0.counter['changed'] == 0
-    assert delta_result0.counter['removed'] == 0
+    assert delta_result0.counter["new"] == 0
+    assert delta_result0.counter["changed"] == 0
+    assert delta_result0.counter["removed"] == 0
     assert delta_result0.delta.is_empty()
 
     filled_root = _create_filled_tree()
     delta_result1 = filled_root.compare_with(filled_root)
-    assert delta_result1.counter['new'] == 0
-    assert delta_result1.counter['changed'] == 0
-    assert delta_result1.counter['removed'] == 0
+    assert delta_result1.counter["new"] == 0
+    assert delta_result1.counter["changed"] == 0
+    assert delta_result1.counter["removed"] == 0
     assert delta_result1.delta.is_empty()
 
 
@@ -319,54 +289,53 @@ def test_compare_with():
     filled_root = _create_filled_tree()
 
     delta_result0 = empty_root.compare_with(filled_root)
-    assert delta_result0.counter['new'] == 0
-    assert delta_result0.counter['changed'] == 0
-    assert delta_result0.counter['removed'] == 12
+    assert delta_result0.counter["new"] == 0
+    assert delta_result0.counter["changed"] == 0
+    assert delta_result0.counter["removed"] == 12
 
     delta_result1 = filled_root.compare_with(empty_root)
-    assert delta_result1.counter['new'] == 12
-    assert delta_result1.counter['changed'] == 0
-    assert delta_result1.counter['removed'] == 0
+    assert delta_result1.counter["new"] == 12
+    assert delta_result1.counter["changed"] == 0
+    assert delta_result1.counter["removed"] == 0
 
 
-@pytest.mark.parametrize("old_attributes_data, new_attributes_data, result", [
-    ({}, {}, (0, 0, 0)),
-    ({
-        "k0": "v0"
-    }, {
-        "k0": "v0"
-    }, (0, 0, 0)),
-    ({
-        "k0": "v0"
-    }, {}, (0, 0, 1)),
-    ({}, {
-        "k0": "v0"
-    }, (1, 0, 0)),
-    ({
-        "k0": "v00"
-    }, {
-        "k0": "v01"
-    }, (0, 1, 0)),
-    ({
-        "k0": "v0",
-        "k1": "v1",
-    }, {
-        "k1": "v1"
-    }, (0, 0, 1)),
-    ({
-        "k1": "v1"
-    }, {
-        "k0": "v0",
-        "k1": "v1",
-    }, (1, 0, 0)),
-    ({
-        "k0": "v00",
-        "k1": "v1",
-    }, {
-        "k0": "v01",
-        "k1": "v1",
-    }, (0, 1, 0)),
-])
+@pytest.mark.parametrize(
+    "old_attributes_data, new_attributes_data, result",
+    [
+        ({}, {}, (0, 0, 0)),
+        ({"k0": "v0"}, {"k0": "v0"}, (0, 0, 0)),
+        ({"k0": "v0"}, {}, (0, 0, 1)),
+        ({}, {"k0": "v0"}, (1, 0, 0)),
+        ({"k0": "v00"}, {"k0": "v01"}, (0, 1, 0)),
+        (
+            {
+                "k0": "v0",
+                "k1": "v1",
+            },
+            {"k1": "v1"},
+            (0, 0, 1),
+        ),
+        (
+            {"k1": "v1"},
+            {
+                "k0": "v0",
+                "k1": "v1",
+            },
+            (1, 0, 0),
+        ),
+        (
+            {
+                "k0": "v00",
+                "k1": "v1",
+            },
+            {
+                "k0": "v01",
+                "k1": "v1",
+            },
+            (0, 1, 0),
+        ),
+    ],
+)
 def test_attributes_compare_with(old_attributes_data, new_attributes_data, result):
     old_attributes = Attributes()
     old_attributes.add_pairs(old_attributes_data)
@@ -375,184 +344,73 @@ def test_attributes_compare_with(old_attributes_data, new_attributes_data, resul
     new_attributes.add_pairs(new_attributes_data)
 
     delta_result = new_attributes.compare_with(old_attributes)
-    assert (delta_result.counter['new'], delta_result.counter['changed'],
-            delta_result.counter['removed']) == result
+    assert (
+        delta_result.counter["new"],
+        delta_result.counter["changed"],
+        delta_result.counter["removed"],
+    ) == result
 
 
-@pytest.mark.parametrize("old_table_data, new_table_data, result", [
-    ([], [], (0, 0, 0)),
-    ([{
-        "id": "1",
-        "val": 0
-    }], [], (0, 0, 2)),
-    ([], [{
-        "id": "1",
-        "val": 0
-    }], (2, 0, 0)),
-    ([{
-        "id": "1",
-        "val": 0
-    }], [{
-        "id": "1",
-        "val": 0
-    }], (0, 0, 0)),
-    ([{
-        "id": "1",
-        "val": 0
-    }, {
-        "id": "2",
-        "val": 1
-    }], [{
-        "id": "1",
-        "val": 0
-    }], (0, 0, 2)),
-    ([{
-        "id": "1",
-        "val": 0
-    }], [{
-        "id": "1",
-        "val": 0
-    }, {
-        "id": "2",
-        "val": 1
-    }], (2, 0, 0)),
-    ([{
-        "id": "1",
-        "val1": 1
-    }], [{
-        "id": "1",
-        "val1": 1,
-        "val2": 1
-    }], (1, 0, 0)),
-    ([{
-        "id": "1",
-        "val": 0
-    }], [{
-        "id": "1",
-        "val": 1
-    }], (0, 1, 0)),
-    ([{
-        "id": "1",
-        "val1": 1,
-        "val2": -1
-    }], [{
-        "id": "1",
-        "val1": 1
-    }], (0, 0, 1)),
-    ([{
-        "id": "1",
-        "val1": 0
-    }, {
-        "id": "2",
-        "val1": 0,
-        "val2": 0
-    }, {
-        "id": "3",
-        "val1": 0
-    }], [{
-        "id": "1",
-        "val1": 1
-    }, {
-        "id": "2",
-        "val1": 0
-    }, {
-        "id": "3",
-        "val1": 0,
-        "val2": 1
-    }], (1, 1, 1)),
-    ([{
-        "id": "1",
-        "val1": 1
-    }, {
-        "id": "2",
-        "val1": 1
-    }], [{
-        "id": "1",
-        "val1": 1,
-        "val2": -1
-    }, {
-        "id": "2",
-        "val1": 1,
-        "val2": -1
-    }], (2, 0, 0)),
-    ([{
-        "id": "1",
-        "val": 1
-    }, {
-        "id": "2",
-        "val": 3
-    }], [{
-        "id": "1",
-        "val": 2
-    }, {
-        "id": "2",
-        "val": 4
-    }], (0, 2, 0)),
-    ([{
-        "id": "1",
-        "val1": 1,
-        "val2": -1
-    }, {
-        "id": "2",
-        "val1": 1,
-        "val2": -1
-    }], [{
-        "id": "1",
-        "val1": 1
-    }, {
-        "id": "2",
-        "val1": 1
-    }], (0, 0, 2)),
-    ([{
-        "id": "2",
-        "val": 1
-    }, {
-        "id": "3",
-        "val": 3
-    }, {
-        "id": "1",
-        "val": 0
-    }], [{
-        "id": "2",
-        "val": 2
-    }, {
-        "id": "1",
-        "val": 0
-    }, {
-        "id": "3",
-        "val": 4
-    }], (0, 2, 0)),
-    ([{
-        "id": "1",
-        "val": 1
-    }, {
-        "id": "2",
-        "val": 3
-    }, {
-        "id": "3",
-        "val": 0
-    }], [{
-        "id": "0",
-        "val": 2
-    }, {
-        "id": "1",
-        "val": 0
-    }, {
-        "id": "2",
-        "val": 4
-    }, {
-        "id": "3",
-        "val": 1
-    }], (2, 3, 0)),
-])
+@pytest.mark.parametrize(
+    "old_table_data, new_table_data, result",
+    [
+        ([], [], (0, 0, 0)),
+        ([{"id": "1", "val": 0}], [], (0, 0, 2)),
+        ([], [{"id": "1", "val": 0}], (2, 0, 0)),
+        ([{"id": "1", "val": 0}], [{"id": "1", "val": 0}], (0, 0, 0)),
+        ([{"id": "1", "val": 0}, {"id": "2", "val": 1}], [{"id": "1", "val": 0}], (0, 0, 2)),
+        ([{"id": "1", "val": 0}], [{"id": "1", "val": 0}, {"id": "2", "val": 1}], (2, 0, 0)),
+        ([{"id": "1", "val1": 1}], [{"id": "1", "val1": 1, "val2": 1}], (1, 0, 0)),
+        ([{"id": "1", "val": 0}], [{"id": "1", "val": 1}], (0, 1, 0)),
+        ([{"id": "1", "val1": 1, "val2": -1}], [{"id": "1", "val1": 1}], (0, 0, 1)),
+        (
+            [{"id": "1", "val1": 0}, {"id": "2", "val1": 0, "val2": 0}, {"id": "3", "val1": 0}],
+            [{"id": "1", "val1": 1}, {"id": "2", "val1": 0}, {"id": "3", "val1": 0, "val2": 1}],
+            (1, 1, 1),
+        ),
+        (
+            [{"id": "1", "val1": 1}, {"id": "2", "val1": 1}],
+            [{"id": "1", "val1": 1, "val2": -1}, {"id": "2", "val1": 1, "val2": -1}],
+            (2, 0, 0),
+        ),
+        (
+            [{"id": "1", "val": 1}, {"id": "2", "val": 3}],
+            [{"id": "1", "val": 2}, {"id": "2", "val": 4}],
+            (0, 2, 0),
+        ),
+        (
+            [{"id": "1", "val1": 1, "val2": -1}, {"id": "2", "val1": 1, "val2": -1}],
+            [{"id": "1", "val1": 1}, {"id": "2", "val1": 1}],
+            (0, 0, 2),
+        ),
+        (
+            [{"id": "2", "val": 1}, {"id": "3", "val": 3}, {"id": "1", "val": 0}],
+            [{"id": "2", "val": 2}, {"id": "1", "val": 0}, {"id": "3", "val": 4}],
+            (0, 2, 0),
+        ),
+        (
+            [{"id": "1", "val": 1}, {"id": "2", "val": 3}, {"id": "3", "val": 0}],
+            [
+                {"id": "0", "val": 2},
+                {"id": "1", "val": 0},
+                {"id": "2", "val": 4},
+                {"id": "3", "val": 1},
+            ],
+            (2, 3, 0),
+        ),
+    ],
+)
 def test_table_compare_with(old_table_data, new_table_data, result):
     old_table = Table(key_columns=["id"])
     old_table.add_rows(old_table_data)
     new_table = Table(key_columns=["id"])
     new_table.add_rows(new_table_data)
     delta_result = new_table.compare_with(old_table)
-    assert (delta_result.counter['new'], delta_result.counter['changed'],
-            delta_result.counter['removed']) == result
+    assert (
+        delta_result.counter["new"],
+        delta_result.counter["changed"],
+        delta_result.counter["removed"],
+    ) == result
 
 
 def test_filtering_node_no_paths():
@@ -579,24 +437,12 @@ def test_filtering_node_paths_no_keys():
 
     assert not filtered_node.table.is_empty()
     assert filtered_node.table._rows == {
-        ("TA 00",): {
-            "ta0": "TA 00",
-            "ta1": "TA 01"
-        },
-        ("TA 10",): {
-            "ta0": "TA 10",
-            "ta1": "TA 11"
-        },
+        ("TA 00",): {"ta0": "TA 00", "ta1": "TA 01"},
+        ("TA 10",): {"ta0": "TA 10", "ta1": "TA 11"},
     }
     assert filtered_node.table.rows == [
-        {
-            "ta0": "TA 00",
-            "ta1": "TA 01"
-        },
-        {
-            "ta0": "TA 10",
-            "ta1": "TA 11"
-        },
+        {"ta0": "TA 00", "ta1": "TA 01"},
+        {"ta0": "TA 10", "ta1": "TA 11"},
     ]
 
 
@@ -635,21 +481,25 @@ def test_filtering_node_mixed():
 
     another_node2 = filled_root.setdefault_node(["path", "to", "another", "node2"])
     another_node2.table.add_key_columns(["ak21"])
-    another_node2.table.add_rows([
-        {
-            "ak21": "Another value 211",
-            "ak22": "Another value 212",
-        },
-        {
-            "ak21": "Another value 221",
-            "ak22": "Another value 222",
-        },
-    ])
+    another_node2.table.add_rows(
+        [
+            {
+                "ak21": "Another value 211",
+                "ak22": "Another value 212",
+            },
+            {
+                "ak21": "Another value 221",
+                "ak22": "Another value 222",
+            },
+        ]
+    )
 
-    filters = _make_filters([
-        (["path", "to", "another"], None),
-        (["path", "to", "nta", "ta"], ["ta0"]),
-    ])
+    filters = _make_filters(
+        [
+            (["path", "to", "another"], None),
+            (["path", "to", "nta", "ta"], ["ta0"]),
+        ]
+    )
     filtered_node = filled_root.get_filtered_node(filters)
 
     # TODO 'serialize' only contains 8 entries because:
@@ -722,15 +572,16 @@ def test_real_save_gzip(tmp_path):
 
     assert target.exists()
 
-    gzip_filepath = target.with_suffix('.gz')
+    gzip_filepath = target.with_suffix(".gz")
     assert gzip_filepath.exists()
 
-    with gzip.open(str(gzip_filepath), 'rb') as f:
+    with gzip.open(str(gzip_filepath), "rb") as f:
         f.read()
 
 
 tree_old_addresses_arrays_memory = TEST_DATA_STORE.load(
-    host_name=HostName("tree_old_addresses_arrays_memory"))
+    host_name=HostName("tree_old_addresses_arrays_memory")
+)
 tree_old_addresses = TEST_DATA_STORE.load(host_name=HostName("tree_old_addresses"))
 tree_old_arrays = TEST_DATA_STORE.load(host_name=HostName("tree_old_arrays"))
 tree_old_interfaces = TEST_DATA_STORE.load(host_name=HostName("tree_old_interfaces"))
@@ -738,7 +589,8 @@ tree_old_memory = TEST_DATA_STORE.load(host_name=HostName("tree_old_memory"))
 tree_old_heute = TEST_DATA_STORE.load(host_name=HostName("tree_old_heute"))
 
 tree_new_addresses_arrays_memory = TEST_DATA_STORE.load(
-    host_name=HostName("tree_new_addresses_arrays_memory"))
+    host_name=HostName("tree_new_addresses_arrays_memory")
+)
 tree_new_addresses = TEST_DATA_STORE.load(host_name=HostName("tree_new_addresses"))
 tree_new_arrays = TEST_DATA_STORE.load(host_name=HostName("tree_new_arrays"))
 tree_new_interfaces = TEST_DATA_STORE.load(host_name=HostName("tree_new_interfaces"))
@@ -805,21 +657,28 @@ def test_real_is_equal_save_and_load(tree, tmp_path):
         shutil.rmtree(str(tmp_path))
 
 
-@pytest.mark.parametrize("tree,result",
-                         list(zip(trees, [
-                             21,
-                             9,
-                             10,
-                             6284,
-                             2,
-                             16654,
-                             23,
-                             8,
-                             10,
-                             6185,
-                             2,
-                             16653,
-                         ])))
+@pytest.mark.parametrize(
+    "tree,result",
+    list(
+        zip(
+            trees,
+            [
+                21,
+                9,
+                10,
+                6284,
+                2,
+                16654,
+                23,
+                8,
+                10,
+                6185,
+                2,
+                16653,
+            ],
+        )
+    ),
+)
 def test_real_count_entries(tree, result):
     assert tree.count_entries() == result
 
@@ -827,49 +686,69 @@ def test_real_count_entries(tree, result):
 @pytest.mark.parametrize("tree", trees)
 def test_real_compare_with_self(tree):
     delta_result = tree.compare_with(tree)
-    assert (delta_result.counter['new'], delta_result.counter['changed'],
-            delta_result.counter['removed']) == (0, 0, 0)
+    assert (
+        delta_result.counter["new"],
+        delta_result.counter["changed"],
+        delta_result.counter["removed"],
+    ) == (0, 0, 0)
 
 
-@pytest.mark.parametrize("tree_old,tree_new,result",
-                         list(
-                             zip(trees_old, trees_new, [
-                                 (3, 2, 1),
-                                 (5, 0, 6),
-                                 (2, 0, 2),
-                                 (17, 0, 116),
-                                 (1, 1, 1),
-                                 (1, 1, 2),
-                             ])))
+@pytest.mark.parametrize(
+    "tree_old,tree_new,result",
+    list(
+        zip(
+            trees_old,
+            trees_new,
+            [
+                (3, 2, 1),
+                (5, 0, 6),
+                (2, 0, 2),
+                (17, 0, 116),
+                (1, 1, 1),
+                (1, 1, 2),
+            ],
+        )
+    ),
+)
 def test_real_compare_with(tree_old, tree_new, result):
     delta_result = tree_new.compare_with(tree_old)
-    assert (delta_result.counter['new'], delta_result.counter['changed'],
-            delta_result.counter['removed']) == result
+    assert (
+        delta_result.counter["new"],
+        delta_result.counter["changed"],
+        delta_result.counter["removed"],
+    ) == result
 
 
-@pytest.mark.parametrize("tree,edges_t,edges_f",
-                         list(
-                             zip(trees_old, [
-                                 ["hardware", "networking"],
-                                 ["networking"],
-                                 ["hardware"],
-                                 ["hardware", "software", "networking"],
-                                 ["hardware"],
-                                 ["hardware", "software", "networking"],
-                             ], [
-                                 ["", "foobar", "software"],
-                                 ["", "foobar", "hardware", "software"],
-                                 ["", "foobar", "software", "networking"],
-                                 [
-                                     "",
-                                     "foobar",
-                                 ],
-                                 ["", "foobar", "software", "networking"],
-                                 [
-                                     "",
-                                     "foobar",
-                                 ],
-                             ])))
+@pytest.mark.parametrize(
+    "tree,edges_t,edges_f",
+    list(
+        zip(
+            trees_old,
+            [
+                ["hardware", "networking"],
+                ["networking"],
+                ["hardware"],
+                ["hardware", "software", "networking"],
+                ["hardware"],
+                ["hardware", "software", "networking"],
+            ],
+            [
+                ["", "foobar", "software"],
+                ["", "foobar", "hardware", "software"],
+                ["", "foobar", "software", "networking"],
+                [
+                    "",
+                    "foobar",
+                ],
+                ["", "foobar", "software", "networking"],
+                [
+                    "",
+                    "foobar",
+                ],
+            ],
+        )
+    ),
+)
 def test_real_get_node(tree, edges_t, edges_f):
     for edge_t in edges_t:
         assert tree.get_node([edge_t]) is not None
@@ -877,40 +756,63 @@ def test_real_get_node(tree, edges_t, edges_f):
         assert tree.get_node([edge_f]) is None
 
 
-@pytest.mark.parametrize("tree,len_children", list(zip(
-    trees_old,
-    [2, 1, 1, 3, 1, 3],
-)))
+@pytest.mark.parametrize(
+    "tree,len_children",
+    list(
+        zip(
+            trees_old,
+            [2, 1, 1, 3, 1, 3],
+        )
+    ),
+)
 def test_real_get_children(tree, len_children):
     tree_children = tree._nodes
     assert len(tree_children) == len_children
 
 
-@pytest.mark.parametrize("tree_start,tree_edges", [
-    (tree_old_addresses, [
-        (tree_old_arrays, ["hardware", "networking"], [
-            ("get_attributes", ["hardware", "memory", "arrays", "0"]),
-            ("get_table", ["hardware", "memory", "arrays", "0", "devices"]),
-            ("get_table", ["hardware", "memory", "arrays", "1", "others"]),
-        ]),
-        (tree_new_memory, ["hardware", "networking"], [
-            ("get_attributes", ["hardware", "memory"]),
-        ]),
-        (tree_new_interfaces, ["hardware", "networking", "software"], [
-            ("get_table", ["hardware", "components", "backplanes"]),
-            ("get_table", ["hardware", "components", "chassis"]),
-            ("get_table", ["hardware", "components", "containers"]),
-            ("get_table", ["hardware", "components", "fans"]),
-            ("get_table", ["hardware", "components", "modules"]),
-            ("get_table", ["hardware", "components", "others"]),
-            ("get_table", ["hardware", "components", "psus"]),
-            ("get_table", ["hardware", "components", "sensors"]),
-            ("get_attributes", ["hardware", "system"]),
-            ("get_attributes", ["software", "applications", "check_mk", "cluster"]),
-            ("get_attributes", ["software", "os"]),
-        ])
-    ]),
-])
+@pytest.mark.parametrize(
+    "tree_start,tree_edges",
+    [
+        (
+            tree_old_addresses,
+            [
+                (
+                    tree_old_arrays,
+                    ["hardware", "networking"],
+                    [
+                        ("get_attributes", ["hardware", "memory", "arrays", "0"]),
+                        ("get_table", ["hardware", "memory", "arrays", "0", "devices"]),
+                        ("get_table", ["hardware", "memory", "arrays", "1", "others"]),
+                    ],
+                ),
+                (
+                    tree_new_memory,
+                    ["hardware", "networking"],
+                    [
+                        ("get_attributes", ["hardware", "memory"]),
+                    ],
+                ),
+                (
+                    tree_new_interfaces,
+                    ["hardware", "networking", "software"],
+                    [
+                        ("get_table", ["hardware", "components", "backplanes"]),
+                        ("get_table", ["hardware", "components", "chassis"]),
+                        ("get_table", ["hardware", "components", "containers"]),
+                        ("get_table", ["hardware", "components", "fans"]),
+                        ("get_table", ["hardware", "components", "modules"]),
+                        ("get_table", ["hardware", "components", "others"]),
+                        ("get_table", ["hardware", "components", "psus"]),
+                        ("get_table", ["hardware", "components", "sensors"]),
+                        ("get_attributes", ["hardware", "system"]),
+                        ("get_attributes", ["software", "applications", "check_mk", "cluster"]),
+                        ("get_attributes", ["software", "os"]),
+                    ],
+                ),
+            ],
+        ),
+    ],
+)
 def test_real_merge_with_get_children(tree_start, tree_edges):
     for tree, edges, sub_children in tree_edges:
         the_tree = tree_start.merge_with(tree)
@@ -928,13 +830,16 @@ TREE_INV = TEST_DATA_STORE.load(host_name=HostName("tree_inv"))
 TREE_STATUS = TEST_DATA_STORE.load(host_name=HostName("tree_status"))
 
 
-@pytest.mark.parametrize("tree_inv,tree_status", [
-    (TREE_INV, TREE_STATUS),
-])
+@pytest.mark.parametrize(
+    "tree_inv,tree_status",
+    [
+        (TREE_INV, TREE_STATUS),
+    ],
+)
 def test_real_merge_with_table(tree_inv, tree_status):
     tree = tree_inv.merge_with(tree_status)
-    assert 'foobar' in tree.serialize()["Nodes"]
-    assert len(tree.get_table(['foobar']).rows) == 5
+    assert "foobar" in tree.serialize()["Nodes"]
+    assert len(tree.get_table(["foobar"]).rows) == 5
 
 
 @pytest.mark.parametrize(
@@ -943,10 +848,15 @@ def test_real_merge_with_table(tree_inv, tree_status):
         (
             tree_new_interfaces,
             # container                   table                    attributes
-            [(["hardware", "components"], None), (["networking", "interfaces"], None),
-             (["software", "os"], None)],
-            [["hardware", "system"], ["software", "applications"]]),
-    ])
+            [
+                (["hardware", "components"], None),
+                (["networking", "interfaces"], None),
+                (["software", "os"], None),
+            ],
+            [["hardware", "system"], ["software", "applications"]],
+        ),
+    ],
+)
 def test_real_filtered_tree(tree, paths, unavail):
     filtered = tree.get_filtered_node(_make_filters(paths))
     assert id(tree) != id(filtered)
@@ -955,45 +865,87 @@ def test_real_filtered_tree(tree, paths, unavail):
         assert filtered.get_node(path) is None
 
 
-@pytest.mark.parametrize("tree,paths,amount_if_entries", [
-    (tree_new_interfaces, [
-        (['networking'], None),
-    ], 3178),
-    (tree_new_interfaces, [
-        (['networking'], []),
-    ], None),
-    (tree_new_interfaces, [
-        (['networking'], ['total_interfaces', 'total_ethernet_ports', 'available_ethernet_ports']),
-    ], None),
-    (tree_new_interfaces, [
-        (['networking', 'interfaces'], None),
-    ], 3178),
-    (tree_new_interfaces, [
-        (['networking', 'interfaces'], []),
-    ], 3178),
-    (tree_new_interfaces, [
-        (['networking', 'interfaces'], ['admin_status']),
-    ], 326),
-    (tree_new_interfaces, [
-        (['networking', 'interfaces'], ['admin_status', 'FOOBAR']),
-    ], 326),
-    (tree_new_interfaces, [
-        (['networking', 'interfaces'], ['admin_status', 'oper_status']),
-    ], 652),
-    (tree_new_interfaces, [
-        (['networking', 'interfaces'], ['admin_status', 'oper_status', 'FOOBAR']),
-    ], 652),
-])
+@pytest.mark.parametrize(
+    "tree,paths,amount_if_entries",
+    [
+        (
+            tree_new_interfaces,
+            [
+                (["networking"], None),
+            ],
+            3178,
+        ),
+        (
+            tree_new_interfaces,
+            [
+                (["networking"], []),
+            ],
+            None,
+        ),
+        (
+            tree_new_interfaces,
+            [
+                (
+                    ["networking"],
+                    ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"],
+                ),
+            ],
+            None,
+        ),
+        (
+            tree_new_interfaces,
+            [
+                (["networking", "interfaces"], None),
+            ],
+            3178,
+        ),
+        (
+            tree_new_interfaces,
+            [
+                (["networking", "interfaces"], []),
+            ],
+            3178,
+        ),
+        (
+            tree_new_interfaces,
+            [
+                (["networking", "interfaces"], ["admin_status"]),
+            ],
+            326,
+        ),
+        (
+            tree_new_interfaces,
+            [
+                (["networking", "interfaces"], ["admin_status", "FOOBAR"]),
+            ],
+            326,
+        ),
+        (
+            tree_new_interfaces,
+            [
+                (["networking", "interfaces"], ["admin_status", "oper_status"]),
+            ],
+            652,
+        ),
+        (
+            tree_new_interfaces,
+            [
+                (["networking", "interfaces"], ["admin_status", "oper_status", "FOOBAR"]),
+            ],
+            652,
+        ),
+    ],
+)
 def test_real_filtered_tree_networking(tree, paths, amount_if_entries):
     the_paths = list(paths)
     filtered = tree.get_filtered_node(_make_filters(paths))
     assert the_paths == paths
-    assert filtered.get_node(['networking']) is not None
-    assert filtered.get_node(['hardware']) is None
-    assert filtered.get_node(['software']) is None
+    assert filtered.get_node(["networking"]) is not None
+    assert filtered.get_node(["hardware"]) is None
+    assert filtered.get_node(["software"]) is None
 
     if amount_if_entries is not None:
-        interfaces = filtered.get_table(['networking', 'interfaces'])
+        interfaces = filtered.get_table(["networking", "interfaces"])
         assert interfaces.count_entries() == amount_if_entries
 
 
@@ -1028,118 +980,146 @@ class ExpectedFilterResults(NamedTuple):
     "entry, expected_path, expected_filter_results",
     [
         # Tuple format
-        ((["path", "to", "node"], None), ["path", "to", "node"],
-         ExpectedFilterResults(
-             nodes=True,
-             restricted_nodes=True,
-             attributes=True,
-             restricted_attributes=True,
-             columns=True,
-             restricted_columns=True,
-         )),
-        ((["path", "to", "node"], []), ["path", "to", "node"],
-         ExpectedFilterResults(
-             nodes=False,
-             restricted_nodes=False,
-             attributes=True,
-             restricted_attributes=True,
-             columns=True,
-             restricted_columns=True,
-         )),
-        ((["path", "to", "node"], ["key"]), ["path", "to", "node"],
-         ExpectedFilterResults(
-             nodes=False,
-             restricted_nodes=False,
-             attributes=True,
-             restricted_attributes=False,
-             columns=True,
-             restricted_columns=False,
-         )),
+        (
+            (["path", "to", "node"], None),
+            ["path", "to", "node"],
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            (["path", "to", "node"], []),
+            ["path", "to", "node"],
+            ExpectedFilterResults(
+                nodes=False,
+                restricted_nodes=False,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            (["path", "to", "node"], ["key"]),
+            ["path", "to", "node"],
+            ExpectedFilterResults(
+                nodes=False,
+                restricted_nodes=False,
+                attributes=True,
+                restricted_attributes=False,
+                columns=True,
+                restricted_columns=False,
+            ),
+        ),
         # Dict format
-        ({
-            "visible_raw_path": "path.to.node",
-        }, ["path", "to", "node"],
-         ExpectedFilterResults(
-             nodes=True,
-             restricted_nodes=True,
-             attributes=True,
-             restricted_attributes=True,
-             columns=True,
-             restricted_columns=True,
-         )),
-        ({
-            "visible_raw_path": "path.to.node",
-            "nodes": ("choices", ["node"]),
-        }, ["path", "to", "node"],
-         ExpectedFilterResults(
-             nodes=True,
-             restricted_nodes=False,
-             attributes=True,
-             restricted_attributes=True,
-             columns=True,
-             restricted_columns=True,
-         )),
-        ({
-            "visible_raw_path": "path.to.node",
-            "attributes": ("choices", ["key"]),
-        }, ["path", "to", "node"],
-         ExpectedFilterResults(
-             nodes=True,
-             restricted_nodes=True,
-             attributes=True,
-             restricted_attributes=False,
-             columns=True,
-             restricted_columns=True,
-         )),
-        ({
-            "visible_raw_path": "path.to.node",
-            "columns": ("choices", ["key"]),
-        }, ["path", "to", "node"],
-         ExpectedFilterResults(
-             nodes=True,
-             restricted_nodes=True,
-             attributes=True,
-             restricted_attributes=True,
-             columns=True,
-             restricted_columns=False,
-         )),
-        ({
-            "visible_raw_path": "path.to.node",
-            "nodes": "nothing"
-        }, ["path", "to", "node"],
-         ExpectedFilterResults(
-             nodes=False,
-             restricted_nodes=False,
-             attributes=True,
-             restricted_attributes=True,
-             columns=True,
-             restricted_columns=True,
-         )),
-        ({
-            "visible_raw_path": "path.to.node",
-            "attributes": "nothing",
-        }, ["path", "to", "node"],
-         ExpectedFilterResults(
-             nodes=True,
-             restricted_nodes=True,
-             attributes=False,
-             restricted_attributes=False,
-             columns=True,
-             restricted_columns=True,
-         )),
-        ({
-            "visible_raw_path": "path.to.node",
-            "columns": "nothing",
-        }, ["path", "to", "node"],
-         ExpectedFilterResults(
-             nodes=True,
-             restricted_nodes=True,
-             attributes=True,
-             restricted_attributes=True,
-             columns=False,
-             restricted_columns=False,
-         )),
-    ])
+        (
+            {
+                "visible_raw_path": "path.to.node",
+            },
+            ["path", "to", "node"],
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "nodes": ("choices", ["node"]),
+            },
+            ["path", "to", "node"],
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=False,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "attributes": ("choices", ["key"]),
+            },
+            ["path", "to", "node"],
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=False,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "columns": ("choices", ["key"]),
+            },
+            ["path", "to", "node"],
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=False,
+            ),
+        ),
+        (
+            {"visible_raw_path": "path.to.node", "nodes": "nothing"},
+            ["path", "to", "node"],
+            ExpectedFilterResults(
+                nodes=False,
+                restricted_nodes=False,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "attributes": "nothing",
+            },
+            ["path", "to", "node"],
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=False,
+                restricted_attributes=False,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "columns": "nothing",
+            },
+            ["path", "to", "node"],
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=False,
+                restricted_columns=False,
+            ),
+        ),
+    ],
+)
 def test_make_filter(entry, expected_path, expected_filter_results):
     f = make_filter(entry)
 
@@ -1158,10 +1138,13 @@ def test_make_filter(entry, expected_path, expected_filter_results):
 # Test helper
 
 
-@pytest.mark.parametrize("raw_path, expected_path", [
-    ("", []),
-    ("path.to.node_1", ["path", "to", "node_1"]),
-])
+@pytest.mark.parametrize(
+    "raw_path, expected_path",
+    [
+        ("", []),
+        ("path.to.node_1", ["path", "to", "node_1"]),
+    ],
+)
 def test_parse_visible_tree_path(raw_path, expected_path):
     assert parse_visible_raw_path(raw_path) == expected_path
 
@@ -1169,28 +1152,26 @@ def test_parse_visible_tree_path(raw_path, expected_path):
 def test__is_table():
     raw_tree = {
         "path-to": {
-            "idx-node": [{
-                "idx-attr": "value",
-                "idx-table": [{
-                    "idx-col": "value"
-                }],
-                "idx-sub-node": {
-                    "foo-node": {
-                        "foo-attr": "value",
+            "idx-node": [
+                {
+                    "idx-attr": "value",
+                    "idx-table": [{"idx-col": "value"}],
+                    "idx-sub-node": {
+                        "foo-node": {
+                            "foo-attr": "value",
+                        },
                     },
+                    "idx-sub-idx-node": [
+                        {
+                            "bar-node": {
+                                "bar-attr": "value",
+                            },
+                        },
+                    ],
                 },
-                "idx-sub-idx-node": [{
-                    "bar-node": {
-                        "bar-attr": "value",
-                    },
-                },]
-            },],
-            "node": {
-                "attr": "value"
-            },
-            "table": [{
-                "col": "value"
-            }],
+            ],
+            "node": {"attr": "value"},
+            "table": [{"col": "value"}],
         },
     }
     # Object structure:
@@ -1229,28 +1210,29 @@ def test__is_table():
 
     idx_node_attr = tree.get_node(["path-to", "idx-node", "0"])
     assert idx_node_attr is not None
-    assert idx_node_attr.attributes.pairs == {'idx-attr': 'value'}
+    assert idx_node_attr.attributes.pairs == {"idx-attr": "value"}
     assert idx_node_attr.table._rows == {}
     assert idx_node_attr.table.rows == []
 
     idx_sub_idx_node_attr = tree.get_node(
-        ["path-to", "idx-node", "0", "idx-sub-idx-node", "0", "bar-node"])
+        ["path-to", "idx-node", "0", "idx-sub-idx-node", "0", "bar-node"]
+    )
     assert idx_sub_idx_node_attr is not None
-    assert idx_sub_idx_node_attr.attributes.pairs == {'bar-attr': 'value'}
+    assert idx_sub_idx_node_attr.attributes.pairs == {"bar-attr": "value"}
     assert idx_sub_idx_node_attr.table._rows == {}
     assert idx_sub_idx_node_attr.table.rows == []
 
     idx_sub_node_attr = tree.get_node(["path-to", "idx-node", "0", "idx-sub-node", "foo-node"])
     assert idx_sub_node_attr is not None
-    assert idx_sub_node_attr.attributes.pairs == {'foo-attr': 'value'}
+    assert idx_sub_node_attr.attributes.pairs == {"foo-attr": "value"}
     assert idx_sub_node_attr.table._rows == {}
     assert idx_sub_node_attr.table.rows == []
 
     idx_table = tree.get_node(["path-to", "idx-node", "0", "idx-table"])
     assert idx_table is not None
     assert idx_table.attributes.pairs == {}
-    assert idx_table.table._rows == {("value",): {'idx-col': 'value'}}
-    assert idx_table.table.rows == [{'idx-col': 'value'}]
+    assert idx_table.table._rows == {("value",): {"idx-col": "value"}}
+    assert idx_table.table.rows == [{"idx-col": "value"}]
 
     attr_node = tree.get_node(["path-to", "node"])
     assert attr_node is not None
@@ -1281,9 +1263,7 @@ def test_add_table():
     path = ("path-to", "node")
     key_columns = ["key-0"]
     retentions: TableRetentions = {
-        ('Value 0',): {
-            "key-1": RetentionIntervals(1, 2, 3)
-        },
+        ("Value 0",): {"key-1": RetentionIntervals(1, 2, 3)},
     }
 
     node = StructuredDataNode(name="node", path=path)

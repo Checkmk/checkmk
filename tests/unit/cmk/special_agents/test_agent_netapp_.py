@@ -8,10 +8,12 @@ from cmk.special_agents.agent_netapp import parse_arguments
 
 
 def test_parse_arguments() -> None:
-    parse_arguments([
-        "address",
-        "user",
-        "password",
-        "--no_counters",
-        "volumes",
-    ])
+    parse_arguments(
+        [
+            "address",
+            "user",
+            "password",
+            "--no_counters",
+            "volumes",
+        ]
+    )

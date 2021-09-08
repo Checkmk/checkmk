@@ -21,33 +21,35 @@ from cmk.base.plugins.agent_based.wlc_clients import check_wlc_clients
 # .1.3.6.1.4.1.14823.2.2.1.5.2.1.8.1.2.5.87.105.76.65.78 37 --> WLSX-WLAN-MIB::wlanESSIDNumStations."WiLAN"
 # .1.3.6.1.4.1.14823.2.2.1.5.2.1.8.1.2.7.77.45.87.105.76.65.78 44 --> WLSX-WLAN-MIB::wlanESSIDNumStations."M-WiLAN"
 
-INFO: List[StringTable] = [[
-    ["0", "0"],
-    ["4.86.111.73.80", "0"],
-    ["5.87.105.76.65.78", "37"],
-    ["7.77.45.87.105.76.65.78", "44"],
-]]
+INFO: List[StringTable] = [
+    [
+        ["0", "0"],
+        ["4.86.111.73.80", "0"],
+        ["5.87.105.76.65.78", "37"],
+        ["7.77.45.87.105.76.65.78", "44"],
+    ]
+]
 
 ITEM_RESULT = [
     [
         "Summary",
         [
-            Result(state=State.OK, summary='Connections: 81'),
-            Metric('connections', 81.0),
+            Result(state=State.OK, summary="Connections: 81"),
+            Metric("connections", 81.0),
         ],
     ],
     [
         "VoIP",
         [
-            Result(state=State.OK, summary='Connections: 0'),
-            Metric('connections', 0.0),
+            Result(state=State.OK, summary="Connections: 0"),
+            Metric("connections", 0.0),
         ],
     ],
     [
         "WiLAN",
         [
-            Result(state=State.OK, summary='Connections: 37'),
-            Metric('connections', 37.0),
+            Result(state=State.OK, summary="Connections: 37"),
+            Metric("connections", 37.0),
         ],
     ],
 ]
@@ -75,8 +77,8 @@ def test_parse_aruba_wlc_clients():
     assert result == WlcClientsSection(
         total_clients=81,
         clients_per_ssid={
-            'VoIP': ClientsTotal(total=0),
-            'WiLAN': ClientsTotal(total=37),
-            'M-WiLAN': ClientsTotal(total=44),
+            "VoIP": ClientsTotal(total=0),
+            "WiLAN": ClientsTotal(total=37),
+            "M-WiLAN": ClientsTotal(total=44),
         },
     )

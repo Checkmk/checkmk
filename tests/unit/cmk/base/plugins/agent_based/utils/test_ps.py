@@ -13,21 +13,22 @@ pytestmark = pytest.mark.checks
 
 
 def test_host_labels_ps_no_match_attr():
-    section = (1, [
-        (
-            ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
-            ["/usr/lib/ssh/sshd"],
-        ),
-    ])
+    section = (
+        1,
+        [
+            (
+                ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
+                ["/usr/lib/ssh/sshd"],
+            ),
+        ],
+    )
     params = [
         {
             "default_params": {},
             "descr": "SSH",
             "match": "~.*ssh?",
             "user": "flynn",
-            "label": {
-                'marco': 'polo'
-            },
+            "label": {"marco": "polo"},
         },
         {},
     ]
@@ -35,20 +36,21 @@ def test_host_labels_ps_no_match_attr():
 
 
 def test_host_labels_ps_no_match_pattern():
-    section = (1, [
-        (
-            ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
-            ["/usr/lib/ssh/sshd"],
-        ),
-    ])
+    section = (
+        1,
+        [
+            (
+                ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
+                ["/usr/lib/ssh/sshd"],
+            ),
+        ],
+    )
     params = [
         {
             "default_params": {},
             "descr": "SSH",
             "match": "~wat?",
-            "label": {
-                'marco': 'polo'
-            },
+            "label": {"marco": "polo"},
         },
         {},
     ]
@@ -56,37 +58,41 @@ def test_host_labels_ps_no_match_pattern():
 
 
 def test_host_labels_ps_match():
-    section = (1, [
-        (
-            ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
-            ["/usr/lib/ssh/sshd"],
-        ),
-    ])
+    section = (
+        1,
+        [
+            (
+                ps.PsInfo.from_raw("(root,4056,1512,0.0/52-04:56:05,5689)"),
+                ["/usr/lib/ssh/sshd"],
+            ),
+        ],
+    )
     params = [
         {
             "default_params": {},
             "descr": "SSH",
             "match": "~.*ssh?",
-            "label": {
-                'marco': 'polo'
-            },
+            "label": {"marco": "polo"},
         },
         {},
     ]
     assert list(ps.host_labels_ps(params, section)) == [  # type: ignore[arg-type]
-        HostLabel('marco', 'polo')
+        HostLabel("marco", "polo")
     ]
 
 
-@pytest.mark.parametrize("ps_line, ps_pattern, user_pattern, result", [
-    (["test", "ps"], "", None, True),
-    (["test", "ps"], "ps", None, True),
-    (["test", "ps"], "ps", "root", False),
-    (["test", "ps"], "ps", "~.*y$", False),
-    (["test", "ps"], "ps", "~.*t$", True),
-    (["test", "ps"], "sp", "~.*t$", False),
-    (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
-])
+@pytest.mark.parametrize(
+    "ps_line, ps_pattern, user_pattern, result",
+    [
+        (["test", "ps"], "", None, True),
+        (["test", "ps"], "ps", None, True),
+        (["test", "ps"], "ps", "root", False),
+        (["test", "ps"], "ps", "~.*y$", False),
+        (["test", "ps"], "ps", "~.*t$", True),
+        (["test", "ps"], "sp", "~.*t$", False),
+        (["root", "/sbin/init", "splash"], "/sbin/init", None, True),
+    ],
+)
 def test_process_matches(ps_line, ps_pattern, user_pattern, result):
     psi = ps.PsInfo(ps_line[0])
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
@@ -95,13 +101,16 @@ def test_process_matches(ps_line, ps_pattern, user_pattern, result):
     assert (matches_attr and matches_proc) == result
 
 
-@pytest.mark.parametrize("ps_line, ps_pattern, user_pattern, match_groups, result", [
-    (["test", "ps"], "", None, None, True),
-    (["test", "123_foo"], "~.*/(.*)_foo", None, ['123'], False),
-    (["test", "/a/b/123_foo"], "~.*/(.*)_foo", None, ['123'], True),
-    (["test", "123_foo"], "~.*\\\\(.*)_foo", None, ['123'], False),
-    (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ['123'], True),
-])
+@pytest.mark.parametrize(
+    "ps_line, ps_pattern, user_pattern, match_groups, result",
+    [
+        (["test", "ps"], "", None, None, True),
+        (["test", "123_foo"], "~.*/(.*)_foo", None, ["123"], False),
+        (["test", "/a/b/123_foo"], "~.*/(.*)_foo", None, ["123"], True),
+        (["test", "123_foo"], "~.*\\\\(.*)_foo", None, ["123"], False),
+        (["test", "c:\\a\\b\\123_foo"], "~.*\\\\(.*)_foo", None, ["123"], True),
+    ],
+)
 def test_process_matches_match_groups(ps_line, ps_pattern, user_pattern, match_groups, result):
     psi = ps.PsInfo(ps_line[0])  # type: ignore[call-arg]
     matches_attr = ps.process_attributes_match(psi, user_pattern, (None, False))
@@ -110,16 +119,19 @@ def test_process_matches_match_groups(ps_line, ps_pattern, user_pattern, match_g
     assert (matches_attr and matches_proc) == result
 
 
-@pytest.mark.parametrize("attribute, pattern, result", [
-    ("user", "~user", True),
-    ("user", "user", True),
-    ("user", "~foo", False),
-    ("user", "foo", False),
-    ("user", "~u.er", True),
-    ("user", "u.er", False),
-    ("users", "~user", True),
-    ("users", "user", False),
-])
+@pytest.mark.parametrize(
+    "attribute, pattern, result",
+    [
+        ("user", "~user", True),
+        ("user", "user", True),
+        ("user", "~foo", False),
+        ("user", "foo", False),
+        ("user", "~u.er", True),
+        ("user", "u.er", False),
+        ("users", "~user", True),
+        ("users", "user", False),
+    ],
+)
 def test_ps_match_user(attribute, pattern, result):
     assert ps.match_attribute(attribute, pattern) == result
 
@@ -138,8 +150,9 @@ def test_ps_match_user(attribute, pattern, result):
         # the following is not very sensible, and not allowed by WATO configuration since 1.7.0i1.
         # Make sure we know what's happening, though
         ("PS %2 %s", ["service", "rename"], "PS rename rename"),
-        ("%s %2 %s %1", ("one", "two", "three", "four"), "three two four one")
-    ])
+        ("%s %2 %s %1", ("one", "two", "three", "four"), "three two four one"),
+    ],
+)
 def test_replace_service_description(service_description, matches, result):
     assert ps.replace_service_description(service_description, matches, "") == result
 
@@ -149,21 +162,38 @@ def test_replace_service_description_exception():
         ps.replace_service_description("%s", [], "")
 
 
-PROCESSES = [[
-    ("name", ("/bin/sh", "")),
-    ("user", ("root", "")),
-    ("virtual size", (1234, "kB")),
-    ("arguments", ("--feen-gibt-es-nicht quark --invert", "")),
-]]
+PROCESSES = [
+    [
+        ("name", ("/bin/sh", "")),
+        ("user", ("root", "")),
+        ("virtual size", (1234, "kB")),
+        ("arguments", ("--feen-gibt-es-nicht quark --invert", "")),
+    ]
+]
 
 
-@pytest.mark.parametrize("processes, formatted_list, html_flag", [
-    (PROCESSES, ("name /bin/sh, user root, virtual size 1234kB,"
-                 " arguments --feen-gibt-es-nicht quark --invert\r\n"), False),
-    (PROCESSES, ("<table><tr><th>name</th><th>user</th><th>virtual size</th><th>arguments</th></tr>"
-                 "<tr><td>/bin/sh</td><td>root</td><td>1234kB</td>"
-                 "<td>--feen-gibt-es-nicht quark --invert</td></tr></table>"), True),
-])
+@pytest.mark.parametrize(
+    "processes, formatted_list, html_flag",
+    [
+        (
+            PROCESSES,
+            (
+                "name /bin/sh, user root, virtual size 1234kB,"
+                " arguments --feen-gibt-es-nicht quark --invert\r\n"
+            ),
+            False,
+        ),
+        (
+            PROCESSES,
+            (
+                "<table><tr><th>name</th><th>user</th><th>virtual size</th><th>arguments</th></tr>"
+                "<tr><td>/bin/sh</td><td>root</td><td>1234kB</td>"
+                "<td>--feen-gibt-es-nicht quark --invert</td></tr></table>"
+            ),
+            True,
+        ),
+    ],
+)
 def test_format_process_list(processes, formatted_list, html_flag):
     assert ps.format_process_list(processes, html_flag) == formatted_list
 
@@ -172,8 +202,8 @@ def test_unused_value_remover():
 
     value_store_test = {
         "test": {
-            "unused": (23., 23.),
-            "updated": (42., 42.),
+            "unused": (23.0, 23.0),
+            "updated": (42.0, 42.0),
         },
     }
 
@@ -197,7 +227,8 @@ def test_memory_perc_check_noop_no_resident_size():
             procs,
             {"resident_levels_perc": None},  # we just need the key here
             {},
-        ))
+        )
+    )
 
 
 def test_memory_perc_check_noop_no_rule():
@@ -221,13 +252,16 @@ def test_memory_perc_check_missing_mem_total():
     procs = ps.ProcessAggregator(1, {})
     procs.resident_size = 42
 
-    assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None},
-                                     {})) == missing_mem_result
+    assert (
+        list(ps.memory_perc_check(procs, {"resident_levels_perc": None}, {})) == missing_mem_result
+    )
 
     procs.running_on_nodes = {"A", "B"}
     mem_map = {"A": 102400.0}
-    assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None},
-                                     mem_map)) == missing_mem_result
+    assert (
+        list(ps.memory_perc_check(procs, {"resident_levels_perc": None}, mem_map))
+        == missing_mem_result
+    )
 
 
 def test_memory_perc_check_realnode():
@@ -235,13 +269,14 @@ def test_memory_perc_check_realnode():
     procs = ps.ProcessAggregator(1, {})
     procs.resident_size = 42
 
-    assert list(ps.memory_perc_check(procs, {"resident_levels_perc":
-        (10.0, 20.0)}, {"": 102400.0})) == [
-            Result(
-                state=State.CRIT,
-                summary='Percentage of total RAM: 42.00% (warn/crit at 10.00%/20.00%)',
-            ),
-        ]
+    assert list(
+        ps.memory_perc_check(procs, {"resident_levels_perc": (10.0, 20.0)}, {"": 102400.0})
+    ) == [
+        Result(
+            state=State.CRIT,
+            summary="Percentage of total RAM: 42.00% (warn/crit at 10.00%/20.00%)",
+        ),
+    ]
 
 
 def test_memory_perc_check_cluster():
@@ -252,5 +287,5 @@ def test_memory_perc_check_cluster():
 
     mem_map = {"A": 102400.0, "B": 102400.0, "C": 102400.0}
     assert list(ps.memory_perc_check(procs, {"resident_levels_perc": None}, mem_map)) == [
-        Result(state=State.OK, summary='Percentage of total RAM: 21.00%')
+        Result(state=State.OK, summary="Percentage of total RAM: 21.00%")
     ]

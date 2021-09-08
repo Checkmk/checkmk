@@ -16,20 +16,21 @@ from cmk.base.plugins.agent_based.utils.cpu_load import check_cpu_load
 def test_cpu_loads_fixed_levels() -> None:
     assert list(
         check_cpu_load(
-            {'levels': (2.0, 4.0)},
+            {"levels": (2.0, 4.0)},
             Section(
                 load=Load(0.5, 1.0, 1.5),
                 num_cpus=4,
                 num_threads=123,
                 type=ProcessorType.physical,
             ),
-        )) == [
-            Result(state=State.OK, summary='15 min load: 1.50'),
-            Metric('load15', 1.5, levels=(8.0, 16.0)),  # levels multiplied by num_cpus
-            Result(state=State.OK, summary='15 min load per core: 0.38 (4 physical cores)'),
-            Metric('load1', 0.5, boundaries=(0, 4.0)),
-            Metric('load5', 1.0, boundaries=(0, 4.0)),
-        ]
+        )
+    ) == [
+        Result(state=State.OK, summary="15 min load: 1.50"),
+        Metric("load15", 1.5, levels=(8.0, 16.0)),  # levels multiplied by num_cpus
+        Result(state=State.OK, summary="15 min load per core: 0.38 (4 physical cores)"),
+        Metric("load1", 0.5, boundaries=(0, 4.0)),
+        Metric("load5", 1.0, boundaries=(0, 4.0)),
+    ]
 
 
 def test_cpu_loads_predictive(mocker: Mock) -> None:
@@ -39,19 +40,20 @@ def test_cpu_loads_predictive(mocker: Mock) -> None:
         return_value=(None, (2.2, 4.2, None, None)),
     )
     with current_host("unittest"), current_service(
-            Service(
-                CheckPluginName("cpu_loads"),
-                "item",
-                "unittest-sd",
-                {},
-            )):
+        Service(
+            CheckPluginName("cpu_loads"),
+            "item",
+            "unittest-sd",
+            {},
+        )
+    ):
         assert list(
             check_cpu_load(
                 {
-                    'levels': {
-                        'period': 'minute',
-                        'horizon': 1,
-                        'levels_upper': ('absolute', (2.0, 4.0))
+                    "levels": {
+                        "period": "minute",
+                        "horizon": 1,
+                        "levels_upper": ("absolute", (2.0, 4.0)),
                     }
                 },
                 Section(
@@ -59,11 +61,11 @@ def test_cpu_loads_predictive(mocker: Mock) -> None:
                     num_cpus=4,
                     num_threads=123,
                 ),
-            )) == [
-                Result(state=State.OK,
-                       summary='15 min load: 1.50 (no reference for prediction yet)'),
-                Metric('load15', 1.5, levels=(2.2, 4.2)),  # those are the predicted values
-                Result(state=State.OK, summary='15 min load per core: 0.38 (4 cores)'),
-                Metric('load1', 0.5, boundaries=(0, 4.0)),
-                Metric('load5', 1.0, boundaries=(0, 4.0)),
-            ]
+            )
+        ) == [
+            Result(state=State.OK, summary="15 min load: 1.50 (no reference for prediction yet)"),
+            Metric("load15", 1.5, levels=(2.2, 4.2)),  # those are the predicted values
+            Result(state=State.OK, summary="15 min load per core: 0.38 (4 cores)"),
+            Metric("load1", 0.5, boundaries=(0, 4.0)),
+            Metric("load5", 1.0, boundaries=(0, 4.0)),
+        ]

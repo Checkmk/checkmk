@@ -17,22 +17,31 @@ from cmk.gui.plugins.views.utils import render_cache_info
 NOW_SIMULATED = "2021-06-08 17:02:00.000000"
 
 
-@pytest.mark.parametrize("cached_at,interval", [(
-    1623171600,
-    300,
-)])
+@pytest.mark.parametrize(
+    "cached_at,interval",
+    [
+        (
+            1623171600,
+            300,
+        )
+    ],
+)
 @freeze_time(NOW_SIMULATED)
 def test_gui_vs_base_render_cache_info(cached_at, interval):
-    cache_info_gui = render_cache_info("", {
-        "service_cached_at": cached_at,
-        "service_cache_interval": interval,
-    })
+    cache_info_gui = render_cache_info(
+        "",
+        {
+            "service_cached_at": cached_at,
+            "service_cache_interval": interval,
+        },
+    )
     age = time.time() - cached_at
     cache_info_base = cache_helper.render_cache_info(
         cache_helper.CacheInfo(
             age=age,
             cache_interval=interval,
-        ))
+        )
+    )
 
     for rendered in (cache_info_gui, cache_info_base):
         assert bool(
@@ -42,4 +51,5 @@ def test_gui_vs_base_render_cache_info(cached_at, interval):
             re.match(
                 r"Cache generated *(.*), cache interval: *(.*), elapsed cache lifespan: *(.*)",
                 rendered,
-            ))
+            )
+        )

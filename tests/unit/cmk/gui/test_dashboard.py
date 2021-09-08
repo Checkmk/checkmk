@@ -37,40 +37,40 @@ class DummyDashlet(dashboard.Dashlet):
 
 def test_dashlet_registry_plugins():
     expected_plugins = [
-        'hoststats',
-        'servicestats',
-        'eventstats',
-        'notify_failed_notifications',
-        'mk_logo',
-        'url',
-        'overview',
-        'pnpgraph',
-        'view',
-        'linked_view',
-        'notify_users',
-        'nodata',
-        'snapin',
+        "hoststats",
+        "servicestats",
+        "eventstats",
+        "notify_failed_notifications",
+        "mk_logo",
+        "url",
+        "overview",
+        "pnpgraph",
+        "view",
+        "linked_view",
+        "notify_users",
+        "nodata",
+        "snapin",
     ]
 
     if not cmk_version.is_raw_edition():
         expected_plugins += [
-            'alerts_bar_chart',
-            'alert_statistics',
-            'average_scatterplot',
-            'barplot',
-            'gauge',
-            'notifications_bar_chart',
-            'problem_graph',
-            'single_metric',
-            'site_overview',
-            'custom_graph',
-            'combined_graph',
-            'ntop_alerts',
-            'ntop_flows',
-            'ntop_top_talkers',
-            'single_timeseries',
-            'state_service',
-            'state_host',
+            "alerts_bar_chart",
+            "alert_statistics",
+            "average_scatterplot",
+            "barplot",
+            "gauge",
+            "notifications_bar_chart",
+            "problem_graph",
+            "single_metric",
+            "site_overview",
+            "custom_graph",
+            "combined_graph",
+            "ntop_alerts",
+            "ntop_flows",
+            "ntop_top_talkers",
+            "single_timeseries",
+            "state_service",
+            "state_host",
         ]
 
     dashboard._transform_old_dict_based_dashlets()
@@ -79,31 +79,32 @@ def test_dashlet_registry_plugins():
 
 def _expected_intervals():
     expected = [
-        ('hoststats', False),
-        ('mk_logo', False),
-        ('nodata', False),
-        ('notify_failed_notifications', 60),
-        ('notify_users', False),
-        ('overview', False),
-        ('pnpgraph', 60),
-        ('servicestats', False),
-        ('snapin', 30),
-        ('url', False),
-        ('view', False),
-        ('linked_view', False),
+        ("hoststats", False),
+        ("mk_logo", False),
+        ("nodata", False),
+        ("notify_failed_notifications", 60),
+        ("notify_users", False),
+        ("overview", False),
+        ("pnpgraph", 60),
+        ("servicestats", False),
+        ("snapin", 30),
+        ("url", False),
+        ("view", False),
+        ("linked_view", False),
     ]
 
     if not cmk_version.is_raw_edition():
         expected += [
-            ('custom_graph', 60),
+            ("custom_graph", 60),
         ]
 
     return expected
 
 
 @pytest.mark.parametrize("type_name,expected_refresh_interval", _expected_intervals())
-def test_dashlet_refresh_intervals(request_context, type_name, expected_refresh_interval,
-                                   monkeypatch):
+def test_dashlet_refresh_intervals(
+    request_context, type_name, expected_refresh_interval, monkeypatch
+):
     dashlet_type = dashboard.dashlet_registry[type_name]
     assert dashlet_type.initial_refresh_interval() == expected_refresh_interval
 
@@ -114,17 +115,19 @@ def test_dashlet_refresh_intervals(request_context, type_name, expected_refresh_
         dashlet_spec["context"] = {}
     if type_name in ["pnpgraph", "custom_graph"]:
         monkeypatch.setattr(dashlet_type, "graph_identification", lambda s, c: ("template", {}))
-        monkeypatch.setattr("cmk.gui.plugins.metrics.html_render.resolve_graph_recipe",
-                            lambda g, d: [{
-                                "title": '1'
-                            }])
+        monkeypatch.setattr(
+            "cmk.gui.plugins.metrics.html_render.resolve_graph_recipe",
+            lambda g, d: [{"title": "1"}],
+        )
 
     monkeypatch.setattr(dashboard.Dashlet, "_get_context", lambda s: {})
 
-    dashlet = dashlet_type(dashboard_name="main",
-                           dashboard=dashboard._add_context_to_dashboard({}),
-                           dashlet_id=1,
-                           dashlet=dashlet_spec)
+    dashlet = dashlet_type(
+        dashboard_name="main",
+        dashboard=dashboard._add_context_to_dashboard({}),
+        dashlet_id=1,
+        dashlet=dashlet_spec,
+    )
 
     assert dashlet.refresh_interval() == expected_refresh_interval
 
@@ -189,9 +192,11 @@ def test_old_dashlet_defaults(registry_reset, reset_dashlet_types):
 
 @pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
 def test_old_dashlet_title_func(registry_reset, reset_dashlet_types):
-    dashlet_type = _legacy_dashlet_type({
-        "title_func": lambda d: "xyz",
-    })
+    dashlet_type = _legacy_dashlet_type(
+        {
+            "title_func": lambda d: "xyz",
+        }
+    )
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
 
     assert dashlet.title() == "Test dashlet"
@@ -200,9 +205,11 @@ def test_old_dashlet_title_func(registry_reset, reset_dashlet_types):
 
 @pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
 def test_old_dashlet_on_resize(registry_reset, reset_dashlet_types):
-    dashlet_type = _legacy_dashlet_type({
-        "on_resize": lambda x, y: "xyz",
-    })
+    dashlet_type = _legacy_dashlet_type(
+        {
+            "on_resize": lambda x, y: "xyz",
+        }
+    )
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
 
     assert dashlet.on_resize() == "xyz"
@@ -210,9 +217,11 @@ def test_old_dashlet_on_resize(registry_reset, reset_dashlet_types):
 
 @pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
 def test_old_dashlet_on_refresh(registry_reset, reset_dashlet_types):
-    dashlet_type = _legacy_dashlet_type({
-        "on_refresh": lambda nr, the_dashlet: "xyz",
-    })
+    dashlet_type = _legacy_dashlet_type(
+        {
+            "on_refresh": lambda nr, the_dashlet: "xyz",
+        }
+    )
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
 
     assert dashlet.on_refresh() == "xyz"
@@ -222,44 +231,49 @@ def test_old_dashlet_on_refresh(registry_reset, reset_dashlet_types):
 def test_old_dashlet_iframe_render(mocker, request_context, reset_dashlet_types, registry_reset):
     iframe_render_mock = mocker.Mock()
 
-    dashlet_type = _legacy_dashlet_type({
-        "iframe_render": iframe_render_mock.method,
-    })
-    dashlet = dashlet_type(dashboard_name="main",
-                           dashboard=dashboard._add_context_to_dashboard({"mtime": 123}),
-                           dashlet_id=1,
-                           dashlet={"type": "url"})
+    dashlet_type = _legacy_dashlet_type(
+        {
+            "iframe_render": iframe_render_mock.method,
+        }
+    )
+    dashlet = dashlet_type(
+        dashboard_name="main",
+        dashboard=dashboard._add_context_to_dashboard({"mtime": 123}),
+        dashlet_id=1,
+        dashlet={"type": "url"},
+    )
 
     assert dashlet.is_iframe_dashlet()
     dashlet.show()
     assert iframe_render_mock.called_once()
 
-    assert dashlet._get_iframe_url() \
-        == "dashboard_dashlet.py?id=1&mtime=123&name=main"
+    assert dashlet._get_iframe_url() == "dashboard_dashlet.py?id=1&mtime=123&name=main"
 
 
 @pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
 def test_old_dashlet_iframe_urlfunc(mocker, request_context, registry_reset, reset_dashlet_types):
-    dashlet_type = _legacy_dashlet_type({
-        "iframe_urlfunc": lambda x: "blaurl",
-    })
+    dashlet_type = _legacy_dashlet_type(
+        {
+            "iframe_urlfunc": lambda x: "blaurl",
+        }
+    )
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
 
-    assert dashlet._get_iframe_url() \
-        == "blaurl"
+    assert dashlet._get_iframe_url() == "blaurl"
 
 
 @pytest.mark.registry_reset(cmk.gui.dashboard.dashlet_registry)
 def test_old_dashlet_render(mocker, request_context, registry_reset, reset_dashlet_types):
     render_mock = mocker.Mock()
 
-    dashlet_type = _legacy_dashlet_type({
-        "render": render_mock,
-    })
-    dashlet = dashlet_type(dashboard_name="main",
-                           dashboard={"mtime": 1},
-                           dashlet_id=0,
-                           dashlet={"type": "url"})
+    dashlet_type = _legacy_dashlet_type(
+        {
+            "render": render_mock,
+        }
+    )
+    dashlet = dashlet_type(
+        dashboard_name="main", dashboard={"mtime": 1}, dashlet_id=0, dashlet={"type": "url"}
+    )
 
     assert not dashlet.is_iframe_dashlet()
     dashlet.show()
@@ -281,10 +295,9 @@ def test_old_dashlet_position(mocker, registry_reset, reset_dashlet_types):
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
     assert dashlet.position() == (1, 1)
 
-    dashlet = dashlet_type(dashboard_name="main",
-                           dashboard={},
-                           dashlet_id=0,
-                           dashlet={"position": (10, 12)})
+    dashlet = dashlet_type(
+        dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={"position": (10, 12)}
+    )
     assert dashlet.position() == (10, 12)
 
 
@@ -299,10 +312,9 @@ def test_old_dashlet_size(mocker, registry_reset, reset_dashlet_types):
     dashlet = dashlet_type(dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={})
     assert dashlet.size() == (25, 10)
 
-    dashlet = dashlet_type(dashboard_name="main",
-                           dashboard={},
-                           dashlet_id=0,
-                           dashlet={"size": (30, 20)})
+    dashlet = dashlet_type(
+        dashboard_name="main", dashboard={}, dashlet_id=0, dashlet={"size": (30, 20)}
+    )
     assert dashlet.size() == (30, 20)
 
 
@@ -338,10 +350,9 @@ def test_dashlet_type_defaults(request_context):
 
 
 def test_dashlet_defaults():
-    dashlet = DummyDashlet(dashboard_name="main",
-                           dashboard={},
-                           dashlet_id=1,
-                           dashlet={"xyz": "abc"})
+    dashlet = DummyDashlet(
+        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={"xyz": "abc"}
+    )
     assert dashlet.infos() == []
     assert dashlet.dashlet_id == 1
     assert dashlet.dashlet_spec == {"xyz": "abc"}
@@ -349,10 +360,9 @@ def test_dashlet_defaults():
 
 
 def test_dashlet_title():
-    dashlet = DummyDashlet(dashboard_name="main",
-                           dashboard={},
-                           dashlet_id=1,
-                           dashlet={"title": "abc"})
+    dashlet = DummyDashlet(
+        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={"title": "abc"}
+    )
     assert dashlet.display_title() == "abc"
 
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
@@ -363,10 +373,9 @@ def test_show_title():
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.show_title() is True
 
-    dashlet = DummyDashlet(dashboard_name="main",
-                           dashboard={},
-                           dashlet_id=1,
-                           dashlet={"show_title": False})
+    dashlet = DummyDashlet(
+        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={"show_title": False}
+    )
     assert dashlet.show_title() is False
 
 
@@ -374,10 +383,12 @@ def test_title_url():
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.title_url() is None
 
-    dashlet = DummyDashlet(dashboard_name="main",
-                           dashboard={},
-                           dashlet_id=1,
-                           dashlet={"title_url": "index.py?bla=blub"})
+    dashlet = DummyDashlet(
+        dashboard_name="main",
+        dashboard={},
+        dashlet_id=1,
+        dashlet={"title_url": "index.py?bla=blub"},
+    )
     assert dashlet.title_url() == "index.py?bla=blub"
 
 
@@ -385,10 +396,9 @@ def test_show_background():
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.show_background() is True
 
-    dashlet = DummyDashlet(dashboard_name="main",
-                           dashboard={},
-                           dashlet_id=1,
-                           dashlet={"background": False})
+    dashlet = DummyDashlet(
+        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={"background": False}
+    )
     assert dashlet.show_background() is False
 
 
@@ -406,10 +416,9 @@ def test_size():
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.size() == DummyDashlet.initial_size()
 
-    dashlet = DummyDashlet(dashboard_name="main",
-                           dashboard={},
-                           dashlet_id=1,
-                           dashlet={"size": (22, 33)})
+    dashlet = DummyDashlet(
+        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={"size": (22, 33)}
+    )
     assert dashlet.size() == (22, 33)
 
     class NotResizable(DummyDashlet):
@@ -417,10 +426,9 @@ def test_size():
         def is_resizable(cls):
             return False
 
-    dashlet = NotResizable(dashboard_name="main",
-                           dashboard={},
-                           dashlet_id=1,
-                           dashlet={"size": (22, 33)})
+    dashlet = NotResizable(
+        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={"size": (22, 33)}
+    )
     assert dashlet.size() == NotResizable.initial_size()
 
 
@@ -428,10 +436,9 @@ def test_position():
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.position() == DummyDashlet.initial_position()
 
-    dashlet = DummyDashlet(dashboard_name="main",
-                           dashboard={},
-                           dashlet_id=1,
-                           dashlet={"position": (4, 4)})
+    dashlet = DummyDashlet(
+        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={"position": (4, 4)}
+    )
     assert dashlet.position() == (4, 4)
 
 
@@ -439,58 +446,45 @@ def test_refresh_interval():
     dashlet = DummyDashlet(dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={})
     assert dashlet.refresh_interval() == DummyDashlet.initial_refresh_interval()
 
-    dashlet = DummyDashlet(dashboard_name="main",
-                           dashboard={},
-                           dashlet_id=1,
-                           dashlet={"refresh": 22})
+    dashlet = DummyDashlet(
+        dashboard_name="main", dashboard={}, dashlet_id=1, dashlet={"refresh": 22}
+    )
     assert dashlet.refresh_interval() == 22
 
 
 def test_dashlet_context_inheritance():
-    dashboard_spec = dashboard._add_context_to_dashboard({
-        'context': {
-            'wato_folder': {
-                'wato_folder': '/aaa/eee'
-            },
-            'host': {
-                'host': 'bla',
-                'neg_host': ''
-            },
+    dashboard_spec = dashboard._add_context_to_dashboard(
+        {
+            "context": {
+                "wato_folder": {"wato_folder": "/aaa/eee"},
+                "host": {"host": "bla", "neg_host": ""},
+            }
         }
-    })
+    )
 
     dashlet_spec = {
-        'type': 'hoststats',
-        'context': {
-            'wato_folder': {
-                'wato_folder': ''
-            }
-        },
-        'single_infos': [],
-        'show_title': True,
-        'title': u'Host Statistics',
-        'refresh': 60,
-        'add_context_to_title': True,
-        'link_from': {},
-        'position': (61, 1),
-        'size': (30, 18),
+        "type": "hoststats",
+        "context": {"wato_folder": {"wato_folder": ""}},
+        "single_infos": [],
+        "show_title": True,
+        "title": "Host Statistics",
+        "refresh": 60,
+        "add_context_to_title": True,
+        "link_from": {},
+        "position": (61, 1),
+        "size": (30, 18),
     }
 
     HostStats = dashboard.dashlet_registry["hoststats"]
-    dashlet = HostStats(dashboard_name="bla",
-                        dashboard=dashboard_spec,
-                        dashlet_id=1,
-                        dashlet=dashlet_spec)
+    dashlet = HostStats(
+        dashboard_name="bla", dashboard=dashboard_spec, dashlet_id=1, dashlet=dashlet_spec
+    )
 
     assert dashlet.context == {
-        'host': {
-            'host': 'bla',
-            'neg_host': ''
-        },
-        'wato_folder': {
-            'wato_folder': ''
-        },
+        "host": {"host": "bla", "neg_host": ""},
+        "wato_folder": {"wato_folder": ""},
     }
 
-    assert sorted(dashlet._dashlet_context_vars()) == sorted([('host', 'bla'), ('neg_host', ''),
-                                                              ('wato_folder', '')])
+    assert sorted(dashlet._dashlet_context_vars()) == sorted(
+        [("host", "bla"), ("neg_host", ""), ("wato_folder", "")]
+    )

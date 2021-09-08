@@ -52,16 +52,6 @@ preamble_1() { # TODO: split these up more meaningful
     # Optionally set a tempdir for all subsequent calls
     #export TMPDIR=
 
-    # Provide information about the remote host. That helps when data
-    # is being sent only once to each remote host.
-    if [ "$REMOTE_HOST" ]; then
-        export REMOTE=$REMOTE_HOST
-    elif [ "$REMOTE_ADDR" ]; then
-        export REMOTE=$REMOTE_ADDR
-    elif [ "$SSH_CLIENT" ]; then
-        export REMOTE=${SSH_CLIENT%% *}
-    fi
-
     # The package name gets patched for baked agents to either
     # "check-mk-agent" or the name set by the "name of agent packages" rule
     XINETD_SERVICE_NAME=check_mk
@@ -79,6 +69,14 @@ preamble_1() { # TODO: split these up more meaningful
     # All files in SPOOLDIR will simply appended to the agent
     # output if they are not outdated (see below)
     SPOOLDIR=$MK_VARDIR/spool
+}
+
+set_up_remote() {
+    # Provide information about the remote host. That helps when data
+    # is being sent only once to each remote host.
+    REMOTE="${REMOTE_HOST:-"${REMOTE_ADDR:-"${SSH_CLIENT%% *}"}"}"
+
+    export REMOTE
 }
 
 preamble_2_arguments() {
@@ -1828,6 +1826,7 @@ main_setup() {
     set_variable_defaults
 
     preamble_1
+    set_up_remote
     preamble_2_arguments "$@"
     preamble_3
     set_up_profiling

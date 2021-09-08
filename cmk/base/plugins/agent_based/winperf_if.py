@@ -12,6 +12,7 @@ from typing import (
     Iterator,
     List,
     Mapping,
+    MutableMapping,
     NamedTuple,
     Optional,
     Sequence,
@@ -389,7 +390,7 @@ def _parse_winperf_if_nic_attrs(
     return nic_attrs
 
 
-def parse_winperf_if(string_table: StringTable) -> Section:
+def parse_winperf_if_(string_table: StringTable) -> Section:
     (
         agent_timestamp,
         raw_nic_names,
@@ -411,9 +412,155 @@ def parse_winperf_if(string_table: StringTable) -> Section:
     return agent_timestamp, if_table, dhcp_info
 
 
+class SectionCounters(NamedTuple):
+    timestamp: Optional[float]
+    interfaces: Mapping[str, Interface]
+    found_windows_if: bool
+    found_mk_dhcp_enabled: bool
+
+
+def _parse_timestamp_and_instance_names(
+    line: Line,
+    lines: Lines,
+) -> Tuple[Optional[float], Sequence[str]]:
+    # The lines containing timestamp and nic names are consecutive:
+    # [u'1418225545.73', u'510']
+    # [u'8', u'instances:', 'NAME', ...]
+    agent_timestamp = None
+    try:
+        # There may be other lines with same length but different
+        # format. Thus we have to check if the current one is the
+        # right one containing the agent timestamp.
+        # In second place there's another integer which is a strong
+        # hint for the 'agent timestamp'-line.
+        agent_timestamp = float(line[0])
+        int(line[1])
+    except ValueError:
+        pass
+
+    try:
+        line = next(lines)
+    except StopIteration:
+        instances: Sequence[str] = []
+    else:
+        instances = line[2:]
+    return agent_timestamp, instances
+
+
+def _parse_counters(
+    raw_nic_names: Sequence[str],
+    agent_section: Mapping[str, Line],
+) -> Mapping[str, Interface]:
+    interfaces: MutableMapping[str, Interface] = {}
+    for idx, raw_nic_name in enumerate(raw_nic_names):
+        name = _canonize_name(raw_nic_name)
+        counters = {counter: int(line[idx]) for counter, line in agent_section.items()}
+        interfaces.setdefault(
+            name,
+            Interface(
+                index=str(idx + 1),
+                descr=name,
+                alias=name,
+                type="loopback" in name.lower() and "24" or "6",
+                speed=counters["10"],
+                oper_status="1",
+                in_octets=counters["-246"],
+                in_ucast=counters["14"],
+                in_bcast=counters["16"],
+                in_discards=counters["18"],
+                in_errors=counters["20"],
+                out_octets=counters["-4"],
+                out_ucast=counters["26"],
+                out_bcast=counters["28"],
+                out_discards=counters["30"],
+                out_errors=counters["32"],
+                out_qlen=counters["34"],
+                oper_status_name="Connected",
+            ),
+        )
+    return interfaces
+
+
+def _filter_out_deprecated_plugin_lines(
+    string_table: StringTable,
+) -> Tuple[StringTable, bool, bool]:
+    native_agent_data: StringTable = []
+    found_windows_if = False
+    found_mk_dhcp_enabled = False
+
+    for line in (lines := iter(string_table)):
+
+        # from mk_dhcp_enabled.bat
+        if line[0].startswith("[dhcp_start]"):
+            found_mk_dhcp_enabled = True
+            for l in lines:
+                if l[0].startswith("[dhcp_end]"):
+                    break
+            continue
+
+        # from windows_if.ps1 or wmic_if.bat
+        if line[0].startswith("[teaming_start]"):
+            found_windows_if = True
+            for l in lines:
+                if l[0].startswith("[teaming_end]"):
+                    break
+            continue
+
+        # from windows_if.ps1 or wmic_if.bat
+        if {"Node", "MACAddress", "Name", "NetConnectionID", "NetConnectionStatus"}.issubset(line):
+            found_windows_if = True
+            for l in lines:
+                if len(l) < 4:
+                    native_agent_data.append(l)
+                    break
+            continue
+
+        native_agent_data.append(line)
+
+    return native_agent_data, found_windows_if, found_mk_dhcp_enabled
+
+
+def parse_winperf_if(string_table: StringTable) -> SectionCounters:
+    agent_timestamp = None
+    raw_nic_names: Sequence[str] = []
+    agent_section: MutableMapping[str, Line] = {}
+
+    # There used to be only a single winperf_if-section which contained both the native agent data
+    # and plugin data which is now located in the sections winperf_if_... For compatibily reasons,
+    # we still handle this case by filtering out the plugin data and advising the user to update
+    # the agent.
+    (
+        string_table_filtered,
+        found_windows_if,
+        found_mk_dhcp_enabled,
+    ) = _filter_out_deprecated_plugin_lines(string_table)
+
+    for line in (lines := iter(string_table_filtered)):  # pylint:disable=superfluous-parens
+        if len(line) in (2, 3) and not line[-1].endswith("count"):
+            # Do not consider lines containing counters:
+            # ['-122', '38840302775', 'bulk_count']
+            # ['10', '10000000000', 'large_rawcount']
+            agent_timestamp, raw_nic_names = _parse_timestamp_and_instance_names(
+                line,
+                lines,
+            )
+        else:
+            agent_section.setdefault(line[0], line[1:])
+
+    return SectionCounters(
+        timestamp=agent_timestamp,
+        interfaces=_parse_counters(
+            raw_nic_names,
+            agent_section,
+        ),
+        found_windows_if=found_windows_if,
+        found_mk_dhcp_enabled=found_mk_dhcp_enabled,
+    )
+
+
 register.agent_section(
     name="winperf_if",
-    parse_function=parse_winperf_if,
+    parse_function=parse_winperf_if_,
     supersedes=["if", "if64"],
 )
 
@@ -614,6 +761,23 @@ def check_if_dhcp(
             summary="DHCP: %s" % dhcp_enabled,
         )
     return None
+
+
+def _check_deprecated_plugins(
+    windows_if: bool,
+    mk_dhcp_enabled: bool,
+) -> CheckResult:
+    if windows_if:
+        yield Result(
+            state=State.CRIT,
+            summary="Detected deprecated version of plugin 'windows_if.ps1' or 'wmic_if.bat' "
+            "(bakery ruleset 'Network interfaces on Windows'). Please update agent.",
+        )
+    if mk_dhcp_enabled:
+        yield Result(
+            state=State.CRIT,
+            summary="Detected deprecated version of plugin 'mk_dhcp_enabled.bat'. Please update agent.",
+        )
 
 
 register.check_plugin(

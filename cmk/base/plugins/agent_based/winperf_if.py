@@ -533,6 +533,33 @@ def parse_winperf_if_win32_networkadapter(string_table: StringTable) -> SectionE
 #     parsed_section_name='winperf_if_extended',
 # )
 
+SectionDHPC = Collection[Mapping[str, str]]
+
+
+def parse_winperf_if_dhcp(string_table: StringTable) -> SectionDHPC:
+    # wmic is bugged on some windows versions such that we can't use proper csv output, only
+    # visual tables. Those aren't properly split up by the check_mk parser.
+    # Try to fix that mess
+    return [
+        _line_to_mapping(
+            # assumption 1: the two header fields contain no spaces
+            string_table[0],
+            [
+                # assumption 2: only the description contains spaces
+                " ".join(line[:-1]),
+                line[-1],
+            ],
+        )
+        for line in string_table[1:]
+    ]
+
+
+# TODO: register once restructuring is complete, otherwise a unit test for non-used sections fails
+# register.agent_section(
+#     name='winperf_if_dhcp',
+#     parse_function=parse_winperf_if_dhcp,
+# )
+
 
 def discover_winperf_if(
     params: Sequence[Mapping[str, Any]],

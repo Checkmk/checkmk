@@ -16,6 +16,7 @@ from cmk.base.plugins.agent_based.winperf_if import (
     check_if_dhcp,
     inventory_winperf_if,
     parse_winperf_if,
+    parse_winperf_if_dhcp,
     parse_winperf_if_teaming,
     parse_winperf_if_win32_networkadapter,
     Section,
@@ -2816,6 +2817,65 @@ def test_parse_winperf_if_win32_networkadapter(
     section: SectionExtended,
 ) -> None:
     assert parse_winperf_if_win32_networkadapter(string_table) == section
+
+
+def test_parse_winperf_if_dhcp() -> None:
+    assert parse_winperf_if_dhcp(
+        [
+            ["Description", "DHCPEnabled"],
+            ["Microsoft", "Kernel", "Debug", "Network", "Adapter", "TRUE"],
+            ["Intel(R)", "PRO/1000", "MT", "Desktop", "Adapter", "TRUE"],
+            ["WAN", "Miniport", "(SSTP)", "FALSE"],
+            ["WAN", "Miniport", "(IKEv2)", "FALSE"],
+            ["WAN", "Miniport", "(L2TP)", "FALSE"],
+            ["WAN", "Miniport", "(PPTP)", "FALSE"],
+            ["WAN", "Miniport", "(PPPOE)", "FALSE"],
+            ["WAN", "Miniport", "(IP)", "FALSE"],
+            ["WAN", "Miniport", "(IPv6)", "FALSE"],
+            ["WAN", "Miniport", "(Network", "Monitor)", "FALSE"],
+        ]
+    ) == [
+        {
+            "DHCPEnabled": "TRUE",
+            "Description": "Microsoft Kernel Debug Network Adapter",
+        },
+        {
+            "DHCPEnabled": "TRUE",
+            "Description": "Intel(R) PRO/1000 MT Desktop Adapter",
+        },
+        {
+            "DHCPEnabled": "FALSE",
+            "Description": "WAN Miniport (SSTP)",
+        },
+        {
+            "DHCPEnabled": "FALSE",
+            "Description": "WAN Miniport (IKEv2)",
+        },
+        {
+            "DHCPEnabled": "FALSE",
+            "Description": "WAN Miniport (L2TP)",
+        },
+        {
+            "DHCPEnabled": "FALSE",
+            "Description": "WAN Miniport (PPTP)",
+        },
+        {
+            "DHCPEnabled": "FALSE",
+            "Description": "WAN Miniport (PPPOE)",
+        },
+        {
+            "DHCPEnabled": "FALSE",
+            "Description": "WAN Miniport (IP)",
+        },
+        {
+            "DHCPEnabled": "FALSE",
+            "Description": "WAN Miniport (IPv6)",
+        },
+        {
+            "DHCPEnabled": "FALSE",
+            "Description": "WAN Miniport (Network Monitor)",
+        },
+    ]
 
 
 _DHCP_INFO: SubSection = {

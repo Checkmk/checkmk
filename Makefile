@@ -551,7 +551,7 @@ format-c:
 	$(CLANG_FORMAT) -style=file -i $(FILES_TO_FORMAT_LINUX)
 
 
-format-python: format-python-yapf format-python-isort
+format-python: format-python-isort
 
 format-python-yapf:
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories

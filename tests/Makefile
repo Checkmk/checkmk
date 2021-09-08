@@ -161,7 +161,7 @@ test-docker:
 	$(MAKE) -C ../docker test-lint-dockerfile test-lint-entrypoint
 	$(PYTEST) -T docker docker
 
-test-format-python: test-format-python-yapf test-format-python-isort
+test-format-python: test-format-python-isort
 
 test-format-python-yapf: ../.style.yapf
 # Explicitly specify --style [FILE] to prevent costly searching in parent directories

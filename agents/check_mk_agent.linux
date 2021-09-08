@@ -1291,16 +1291,24 @@ section_ntp() {
 run_real_time_checks() {
     [ -e "${MK_CONFDIR}/real_time_checks.cfg" ] || return
 
-    if [ -z "${RTC_SECRET}" ] && [ -z "${PASSPHRASE}" ] && [ "${ENCRYPTED_RT}" != "no" ]; then
-        echo "ERROR: Missing secret for encryping Real-Time Check data,  while encryption is requested. Not starting Real-Time Checks." >&2
-    elif ! inpath openssl; then
-        echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
+    # new mechanism to set the passphrase has priority
+    secret="${PASSPHRASE:-"${RTC_SECRET}"}"
+
+    if [ "${ENCRYPTED_RT}" != "no" ]; then
+        [ -n "${secret}" ] || {
+            echo "ERROR: Missing secret, but encryption is requested. Not sending real-time data." >&2
+            return
+        }
+        inpath openssl || {
+            echo "ERROR: openssl command is missing, but encryption is requested. Not sending real-time data." >&2
+            return
+        }
+    fi
+
+    if [ -z "${REMOTE}" ]; then
+        echo "ERROR: \$REMOTE not specified. Not sending real-time data." >&2
     else
-        if [ -z "${REMOTE}" ]; then
-            echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
-        else
-            run_real_time_checks_for_remote "${REMOTE}" >/dev/null &
-        fi
+        run_real_time_checks_for_remote "${REMOTE}" "${secret}" >/dev/null &
     fi
 }
 
@@ -1315,11 +1323,6 @@ run_real_time_checks_for_remote() {
     PIDFILE=$MK_VARDIR/real_time_checks.pid
 
     echo $$ >"$PIDFILE"
-
-    if [ "$PASSPHRASE" != "" ]; then
-        # new mechanism to set the passphrase has priority
-        RTC_SECRET=$PASSPHRASE
-    fi
 
     if [ "$ENCRYPTED_RT" != "no" ]; then
         PROTOCOL=00
@@ -1342,7 +1345,7 @@ run_real_time_checks_for_remote() {
                 printf "%s" "${PROTOCOL}"
                 date +%s | tr -d '\n'
                 if [ "$ENCRYPTED_RT" != "no" ]; then
-                    section_"$SECTION" | RTC_SECRET="${RTC_SECRET}" openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
+                    section_"$SECTION" | RTC_SECRET="${2}" openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
                 else
                     section_"$SECTION"
                 fi
@@ -1365,7 +1368,7 @@ run_real_time_checks_for_remote() {
                     date +%s | tr -d '\n'
                     if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
                         if [ "$ENCRYPTED_RT" != "no" ]; then
-                            _log_section_time "${plugin_interpreter}" "${PLUGIN}" | RTC_SECRET="${RTC_SECRET}" openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
+                            _log_section_time "${plugin_interpreter}" "${PLUGIN}" | RTC_SECRET="${2}" openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
                         else
                             _log_section_time "${plugin_interpreter}" "${PLUGIN}"
                         fi

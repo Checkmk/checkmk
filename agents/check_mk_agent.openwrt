@@ -891,9 +891,9 @@ run_real_time_checks() {
     # max. 1 sec.
     if [ -e $MK_CONFDIR/real_time_checks.cfg ]; then
         if [ -z $REMOTE ]; then
-            echo "ERROR: \$REMOTE not specified. Not starting Real-Time Checks." >&2
+            echo "ERROR: \$REMOTE not specified. Not sending real-time data." >&2
         elif ! inpath openssl; then
-            echo "ERROR: openssl command is missing. Not starting Real-Time Checks." >&2
+            echo "ERROR: openssl command is missing. Not sending real-time data." >&2
         else
             run_real_time_checks_for_remote >/dev/null &
         fi

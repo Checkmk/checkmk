@@ -1592,11 +1592,16 @@ run_mrpe() {
 
 export -f run_mrpe
 
+_pidfile_is_mine() {
+    [ "$(cat "${1}" 2>/dev/null)" = "$$" ]
+}
+
 # Implements Real-Time Check feature of the Checkmk agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
 run_real_time_checks_for_remote() {
     PIDFILE=$MK_VARDIR/real_time_checks.pid
+
     echo $$ >"$PIDFILE"
 
     if [ "$PASSPHRASE" != "" ]; then
@@ -1612,7 +1617,7 @@ run_real_time_checks_for_remote() {
 
     while true; do
         # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
-        if [ ! -e "$PIDFILE" ] || [ "$(<"$PIDFILE")" -ne $$ ] || [ "$RTC_TIMEOUT" -eq 0 ]; then
+        if ! _pidfile_is_mine "${PIDFILE}" || [ "${RTC_TIMEOUT}" -eq 0 ]; then
             exit 1
         fi
 

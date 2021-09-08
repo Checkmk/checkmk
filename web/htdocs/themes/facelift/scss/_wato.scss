@@ -615,17 +615,23 @@ span.tagify__tag-text {
   white-space: pre;
 }
 
-.wato table.data.ruleset tr.disabled td {
-  * {
-    color: $font-color-dimmed;
+.wato table.data.ruleset {
+  td:not(.buttons) {
+    min-width: 30%;
   }
 
-  .tagify__tag-text {
-    color: inherit;
-  }
+  tr.disabled td {
+    * {
+      color: $font-color-dimmed;
+    }
 
-  tag > div {
-    opacity: 0.5;
+    .tagify__tag-text {
+      color: inherit;
+    }
+
+    tag > div {
+      opacity: 0.5;
+    }
   }
 }
 

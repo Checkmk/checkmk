@@ -413,11 +413,11 @@ def fixture_make_folder(mocker):
 
 
 def only_root(folder):
-    return folder("", title="Main directory")
+    return folder("", title="Main")
 
 
 def three_levels(folder):
-    return folder("", title="Main directory").add_subfolders(
+    return folder("", title="Main").add_subfolders(
         [
             folder("a", title="A").add_subfolders(
                 [
@@ -439,7 +439,7 @@ def three_levels(folder):
 
 
 def three_levels_leaf_permissions(folder):
-    return folder("", title="Main directory", may_see=False).add_subfolders(
+    return folder("", title="Main", may_see=False).add_subfolders(
         [
             folder("a", title="A", may_see=False).add_subfolders(
                 [
@@ -463,11 +463,11 @@ def three_levels_leaf_permissions(folder):
 @pytest.mark.parametrize(
     "actual_builder,expected",
     [
-        (only_root, [("", "Main directory")]),
+        (only_root, [("", "Main")]),
         (
             three_levels,
             [
-                ("", "Main directory"),
+                ("", "Main"),
                 ("a", "_A"),
                 ("a/c", "__C"),
                 ("a/d", "__D"),
@@ -479,7 +479,7 @@ def three_levels_leaf_permissions(folder):
         (
             three_levels_leaf_permissions,
             [
-                ("", "Main directory"),
+                ("", "Main"),
                 ("a", "_A"),
                 ("a/d", "__D"),
                 ("b", "_B"),

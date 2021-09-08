@@ -1095,7 +1095,7 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
 
     def _fallback_title(self):
         if self.is_root():
-            return _("Main directory")
+            return _("Main")
         return self.name()
 
     def load_subfolders(self):
@@ -2073,8 +2073,8 @@ class CREFolder(WithPermissions, WithAttributes, WithUniqueIdentifier, BaseFolde
             target_folder._add_host(host)
 
             affected_sites = list(set(affected_sites + [host.site_id()]))
-            old_folder_text = self.path() or _("Main directory")
-            new_folder_text = target_folder.path() or _("Main directory")
+            old_folder_text = self.path() or self.root_folder().title()
+            new_folder_text = target_folder.path() or self.root_folder().title()
             add_change(
                 "move-host",
                 _('Moved host from "%s" to "%s"') % (old_folder_text, new_folder_text),
@@ -3225,7 +3225,7 @@ def make_action_link(vars_: HTTPVariables) -> str:
 
 def get_folder_title_path(path, with_links=False):
     """Return a list with all the titles of the paths'
-    components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]"""
+    components, e.g. "muc/north" -> [ "Main", "Munich", "North" ]"""
     # In order to speed this up, we work with a per HTML-request cache
     cache_name = "wato_folder_titles" + (with_links and "_linked" or "")
     cache = g.setdefault(cache_name, {})

@@ -212,6 +212,8 @@ class UpdateConfig:
 
     def _rewrite_wato_host_and_folder_config(self):
         root_folder = cmk.gui.watolib.hosts_and_folders.Folder.root_folder()
+        if root_folder.title() == "Main directory":
+            root_folder.edit(new_title="Main", new_attributes=root_folder.attributes())
         root_folder.rewrite_folders()
         root_folder.rewrite_hosts_files()
 

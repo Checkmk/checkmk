@@ -36,7 +36,7 @@ def _write_hosts_mk(content: str) -> Path:
 def test_rewrite_folder_explicit_site():
     _write_folder_attributes(
         {
-            "title": "Main directory",
+            "title": "Main",
             "attributes": {
                 "site": "stable",
                 "meta_data": {
@@ -93,7 +93,7 @@ host_attributes.update(
 def test_rewrite_tags_no_explicit_site_set(monkeypatch):
     _write_folder_attributes(
         {
-            "title": "Main directory",
+            "title": "Main",
             "attributes": {
                 "meta_data": {
                     "created_at": 1627991988.6232662,

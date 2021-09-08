@@ -920,7 +920,7 @@ class ModeEditRuleset(WatoMode):
                 title="%s %s (%d)"
                 % (
                     _("Rules in folder"),
-                    folder.alias_path(show_main=False),
+                    folder.alias_path(),
                     ruleset.num_rules_in_folder(folder),
                 ),
                 css="ruleset",

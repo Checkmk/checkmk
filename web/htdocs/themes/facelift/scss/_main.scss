@@ -348,12 +348,24 @@ div.foldable_wrapper {
     margin-bottom: 2 * $spacing;
   }
 
-  img.treeangle {
-    margin-left: $spacing;
-  }
+  div.foldable_header {
+    &[onclick] {
+      cursor: pointer;
+    }
 
-  h3 {
-    margin-top: 0;
+    img.treeangle {
+      float: left;
+      margin: $spacing $spacing 0;
+    }
+
+    b.treeangle.title {
+      margin: 6px 0;
+    }
+
+    h3 {
+      padding-left: 0;
+      margin-top: 0;
+    }
   }
 
   ul.treeangle {

@@ -5,7 +5,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import dataclasses
-from typing import Any, Dict, Iterator, List, Mapping, NamedTuple, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Collection,
+    Dict,
+    Iterator,
+    List,
+    Mapping,
+    NamedTuple,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 from .agent_based_api.v1 import Attributes, register, Result, State, TableRow
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
@@ -438,6 +450,87 @@ def parse_winperf_if_teaming(string_table: StringTable) -> SectionTeaming:
 # register.agent_section(
 #     name='winperf_if_teaming',
 #     parse_function=parse_winperf_if_teaming,
+# )
+
+
+class AdditionalIfData(NamedTuple):
+    name: str
+    alias: str
+    speed: int
+    oper_status: str
+    oper_status_name: str
+    mac_address: str
+    guid: Optional[str]  # wmic_if.bat does not produce this
+
+
+SectionExtended = Collection[AdditionalIfData]
+
+# Windows NetConnectionStatus Table to ifOperStatus Table
+# 1 up
+# 2 down
+# 3 testing
+# 4 unknown
+# 5 dormant
+# 6 notPresent
+# 7 lowerLayerDown
+_NetConnectionStatus_TO_OPER_STATUS: Mapping[str, Tuple[str, str]] = {
+    "0": ("2", "Disconnected"),
+    "1": ("2", "Connecting"),
+    "2": ("1", "Connected"),
+    "3": ("2", "Disconnecting"),
+    "4": ("2", "Hardware not present"),
+    "5": ("2", "Hardware disabled"),
+    "6": ("2", "Hardware malfunction"),
+    "7": ("7", "Media disconnected"),
+    "8": ("2", "Authenticating"),
+    "9": ("2", "Authentication succeeded"),
+    "10": ("2", "Authentication failed"),
+    "11": ("2", "Invalid address"),
+    "12": ("2", "Credentials required"),
+}
+
+
+def parse_winperf_if_win32_networkadapter(string_table: StringTable) -> SectionExtended:
+    return [
+        AdditionalIfData(
+            name=_canonize_name(line_dict["Name"]),
+            alias=line_dict["NetConnectionID"],
+            # Some interfaces report several exabyte as bandwidth when down ...
+            speed=speed
+            if "Speed" in line_dict and (speed := saveint(line_dict["Speed"])) <= 1024 ** 5
+            else 0,
+            oper_status=oper_status,
+            oper_status_name=oper_status_name,
+            mac_address=line_dict["MACAddress"],
+            guid=line_dict.get("GUID"),
+        )
+        for line_dict in (
+            _line_to_mapping(
+                string_table[0],
+                line,
+            )
+            for line in string_table[1:]
+        )
+        for oper_status, oper_status_name in [
+            _NetConnectionStatus_TO_OPER_STATUS.get(
+                line_dict["NetConnectionStatus"],
+                ("2", "Disconnected"),
+            )
+        ]
+        # we need to ignore data on interfaces in the optional
+        # wmic section which are marked as non-existing, since
+        # it may happen that there are non-existing interfaces
+        # with the same nic_name as an active one (at least on HP
+        # hardware)
+        if line_dict["NetConnectionStatus"] != "4"
+    ]
+
+
+# TODO: register once restructuring is complete, otherwise a unit test for non-used sections fails
+# register.agent_section(
+#     name='winperf_if_win32_networkadapter',
+#     parse_function=parse_winperf_if_win32_networkadapter,
+#     parsed_section_name='winperf_if_extended',
 # )
 
 

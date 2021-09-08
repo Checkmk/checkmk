@@ -4872,9 +4872,6 @@ msgstr ""
 msgid "An alias or description of this group."
 msgstr "O descriere sau comentariu despre acest element"
 
-msgid "An arbitrary comment of this rule for you."
-msgstr ""
-
 msgid "An empty value is not allowed here."
 msgstr ""
 

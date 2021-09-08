@@ -4942,9 +4942,6 @@ msgstr "期間のエイリアスまたは説明"
 msgid "An alias or description of this group."
 msgstr "このグループのエイリアスまたは説明。"
 
-msgid "An arbitrary comment of this rule for you."
-msgstr "このルールの任意のコメント。"
-
 msgid "An empty value is not allowed here."
 msgstr "ここでは空の値は許可されていません。"
 
@@ -61500,6 +61497,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "An arbitrary comment of this rule for you."
+#~ msgstr "このルールの任意のコメント。"
 
 #~ msgid "Default Value"
 #~ msgstr "デフォルト値"

@@ -5106,9 +5106,6 @@ msgstr "Alias/Beschreibung der Zeitperiode"
 msgid "An alias or description of this group."
 msgstr "Alias/Beschreibung der Gruppe."
 
-msgid "An arbitrary comment of this rule for you."
-msgstr "Ein beliebiger Kommentar für diese Regel"
-
 msgid "An empty value is not allowed here."
 msgstr "Leerer Wert ist hier nicht erlaubt."
 
@@ -64423,6 +64420,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "An arbitrary comment of this rule for you."
+#~ msgstr "Ein beliebiger Kommentar für diese Regel"
 
 #~ msgid "Default Value"
 #~ msgstr "Standardwert"

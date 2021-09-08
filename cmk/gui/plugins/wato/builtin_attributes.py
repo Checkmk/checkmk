@@ -66,6 +66,10 @@ from cmk.utils.type_defs import (
 
 @host_attribute_registry.register
 class HostAttributeAlias(ABCHostAttributeNagiosText):
+    @property
+    def _size(self):
+        return 64
+
     def topic(self):
         return HostAttributeTopicBasicSettings
 

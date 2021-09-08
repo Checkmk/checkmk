@@ -145,308 +145,239 @@ def test_services_split(services, blacklist, expected):
     assert actual == expected
 
 
-@pytest.mark.parametrize(
-    'string_table, section',
-    [
-        (
+@pytest.mark.parametrize('string_table, section', [
+    pytest.param(
+        [
+            ['[all]'],
+            ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
+            ['0', 'unit', 'files', 'listed.'],
+        ],
+        {},
+        id='No systemd units returns empty parsed section',
+    ),
+    pytest.param(
+        [],
+        {},
+        id='Empty agent section returns empty parsed section',
+    ),
+    pytest.param(
+        [
+            ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
             [
-                ['[list-unit-files]'],
-                ['[all]'],
-                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
-                [
-                    'virtualbox.service',
-                    'loaded',
-                    'active',
-                    'exited',
-                    'LSB:',
-                    'VirtualBox',
-                    'Linux',
-                    'kernel',
-                    'module',
-                ],
+                'virtualbox.service',
+                'loaded',
+                'active',
+                'exited',
+                'LSB:',
+                'VirtualBox',
+                'Linux',
+                'kernel',
+                'module',
             ],
-            {
-                'service': {
-                    'virtualbox': UnitEntry(name='virtualbox',
-                                            unit_type='service',
-                                            loaded_status='loaded',
-                                            active_status='active',
-                                            current_state='exited',
-                                            description='LSB: VirtualBox Linux kernel module',
-                                            enabled_status='unknown')
-                },
-            },
-        ),
-        (
+            ['1', 'unit', 'files', 'listed.'],
+        ],
+        {},
+        id='Missing "[all]" header in agent section leads to empty parsed section',
+    ),
+    pytest.param(
+        [
+            ['[all]'],
+            ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
             [
-                ['[list-unit-files]'],
-                ['[all]'],
-                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
-                [
-                    'dev-disk-by\\x2did-ata\\x2dAPPLE_SSD_SM0256G_S29CNYDG865465.device',
-                    'loaded',
-                    'active',
-                    'plugged',
-                    'APPLE_SSD_SM0256G',
-                ],
+                'virtualbox.service',
+                'loaded',
+                'active',
+                'exited',
+                'LSB:',
+                'VirtualBox',
+                'Linux',
+                'kernel',
+                'module',
             ],
-            {
-                'device': {
-                    'dev-disk-by\\x2did-ata\\x2dAPPLE_SSD_SM0256G_S29CNYDG865465': UnitEntry(
-                        name='dev-disk-by\\x2did-ata\\x2dAPPLE_SSD_SM0256G_S29CNYDG865465',
-                        unit_type='device',
-                        loaded_status='loaded',
-                        active_status='active',
-                        current_state='plugged',
-                        description='APPLE_SSD_SM0256G',
-                        enabled_status='unknown')
-                },
+            ['1', 'unit', 'files', 'listed.'],
+        ],
+        {
+            'service': {
+                'virtualbox': UnitEntry(name='virtualbox',
+                                        unit_type='service',
+                                        loaded_status='loaded',
+                                        active_status='active',
+                                        current_state='exited',
+                                        description='LSB: VirtualBox Linux kernel module',
+                                        enabled_status='unknown')
             },
-        ),
-        (
+        },
+        id='Simple agent section parsed correctly',
+    ),
+    pytest.param(
+        [
+            ['[all]'],
+            ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
             [
-                ['[list-unit-files]'],
-                ['[all]'],
-                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
-                [
-                    'cups.path',
-                    'loaded',
-                    'active',
-                    'running',
-                    'CUPS',
-                    'Scheduler',
-                ],
+                '*',
+                'virtualbox.service',
+                'loaded',
+                'active',
+                'exited',
+                'LSB:',
+                'VirtualBox',
+                'Linux',
+                'kernel',
+                'module',
             ],
-            {
-                'path': {
-                    'cups': UnitEntry(name='cups',
-                                      unit_type='path',
-                                      loaded_status='loaded',
-                                      active_status='active',
-                                      current_state='running',
-                                      description='CUPS Scheduler',
-                                      enabled_status='unknown')
-                },
+            ['1', 'unit', 'files', 'listed.'],
+        ],
+        {
+            'service': {
+                'virtualbox': UnitEntry(name='virtualbox',
+                                        unit_type='service',
+                                        loaded_status='loaded',
+                                        active_status='active',
+                                        current_state='exited',
+                                        description='LSB: VirtualBox Linux kernel module',
+                                        enabled_status='unknown')
             },
-        ),
-        (
+        },
+        id='Leading "*" in systemd status line is ignored',
+    ),
+    pytest.param(
+        [
+            ['[all]'],
+            ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
             [
-                ['[list-unit-files]'],
-                ['[all]'],
-                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
-                [
-                    'init.scope',
-                    'loaded',
-                    'active',
-                    'running',
-                    'System',
-                    'and',
-                    'Service',
-                    'Manager',
-                ],
+                'active',
+                'plugged',
+                '',
             ],
-            {
-                'scope': {
-                    'init': UnitEntry(name='init',
-                                      unit_type='scope',
-                                      loaded_status='loaded',
-                                      active_status='active',
-                                      current_state='running',
-                                      description='System and Service Manager',
-                                      enabled_status='unknown')
-                },
-            },
-        ),
-        (
+            ['1', 'unit', 'files', 'listed.'],
+        ],
+        {},
+        id='Invalid systemd status lines are skipped',
+    ),
+    pytest.param(
+        [
+            ['[all]'],
+            ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
             [
-                ['[list-unit-files]'],
-                ['[all]'],
-                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
-                [
-                    'system-getty.slice',
-                    'loaded',
-                    'active',
-                    'active',
-                    'system-getty.slice',
-                ],
+                'dev-disk-by@did-ata@dAPPLE_SSD_SM0256G_S29CNYDG865465.device.device',
+                'loaded',
+                'active',
+                'plugged',
+                'APPLE_SSD_SM0256G',
             ],
-            {
-                'slice': {
-                    'system-getty': UnitEntry(name='system-getty',
-                                              unit_type='slice',
-                                              loaded_status='loaded',
-                                              active_status='active',
-                                              current_state='active',
-                                              description='system-getty.slice',
-                                              enabled_status='unknown')
-                },
+            ['1', 'unit', 'files', 'listed.'],
+        ],
+        {
+            'device': {
+                'dev-disk-by@did-ata@dAPPLE_SSD_SM0256G_S29CNYDG865465.device': UnitEntry(
+                    name='dev-disk-by@did-ata@dAPPLE_SSD_SM0256G_S29CNYDG865465.device',
+                    unit_type='device',
+                    loaded_status='loaded',
+                    active_status='active',
+                    current_state='plugged',
+                    description='APPLE_SSD_SM0256G',
+                    enabled_status='unknown')
             },
-        ),
-        (
+        },
+        id='Unit type and name parsed correctly from full name',
+    ),
+    pytest.param(
+        [
+            ['[list-unit-files]'],
+            ['UNIT', 'FILE', 'STATE'],
+            ['virtualbox.service', 'enabled'],
+            ['[all]'],
+            ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
             [
-                ['[list-unit-files]'],
-                ['[all]'],
-                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
-                [
-                    'systemd-journald.socket',
-                    'loaded',
-                    'active',
-                    'running',
-                    'Journal',
-                    'Socket',
-                ],
+                'virtualbox.service',
+                'loaded',
+                'active',
+                'exited',
+                'LSB:',
+                'VirtualBox',
+                'Linux',
+                'kernel',
+                'module',
             ],
-            {
-                'socket': {
-                    'systemd-journald': UnitEntry(name='systemd-journald',
-                                                  unit_type='socket',
-                                                  loaded_status='loaded',
-                                                  active_status='active',
-                                                  current_state='running',
-                                                  description='Journal Socket',
-                                                  enabled_status='unknown')
-                },
+            ['1', 'unit', 'files', 'listed.'],
+        ],
+        {
+            'service': {
+                'virtualbox': UnitEntry(name='virtualbox',
+                                        unit_type='service',
+                                        loaded_status='loaded',
+                                        active_status='active',
+                                        current_state='exited',
+                                        description='LSB: VirtualBox Linux kernel module',
+                                        enabled_status='enabled')
             },
-        ),
-        (
+        },
+        id='Systemd unit status found in list-unit-files mapping',
+    ),
+    pytest.param(
+        [
+            ['[list-unit-files]'],
+            ['UNIT', 'FILE', 'STATE'],
+            ['someother.service', 'enabled'],
+            ['[all]'],
+            ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
             [
-                ['[list-unit-files]'],
-                ['[all]'],
-                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
-                [
-                    'swapfile.swap',
-                    'loaded',
-                    'failed',
-                    'failed',
-                    '/swapfile',
-                ],
+                'virtualbox.service',
+                'loaded',
+                'active',
+                'exited',
+                'LSB:',
+                'VirtualBox',
+                'Linux',
+                'kernel',
+                'module',
             ],
-            {
-                'swap': {
-                    'swapfile': UnitEntry(name='swapfile',
-                                          unit_type='swap',
-                                          loaded_status='loaded',
-                                          active_status='failed',
-                                          current_state='failed',
-                                          description='/swapfile',
-                                          enabled_status='unknown')
-                },
+            ['1', 'unit', 'files', 'listed.'],
+        ],
+        {
+            'service': {
+                'virtualbox': UnitEntry(name='virtualbox',
+                                        unit_type='service',
+                                        loaded_status='loaded',
+                                        active_status='active',
+                                        current_state='exited',
+                                        description='LSB: VirtualBox Linux kernel module',
+                                        enabled_status='unknown')
             },
-        ),
-        (
+        },
+        id='Systemd unit status not available in list-unit-files mapping, use "unknown" instead',
+    ),
+    pytest.param(
+        [
+            ['[list-unit-files]'],
+            ['UNIT', 'FILE', 'STATE'],
+            ['dev-disk-by@.device', 'enabled'],
+            ['[all]'],
+            ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
             [
-                ['[list-unit-files]'],
-                ['[all]'],
-                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
-                [
-                    'apt-daily-upgrade.timer',
-                    'loaded',
-                    'active',
-                    'waiting',
-                    'Daily',
-                    'apt',
-                    'upgrade',
-                    'and',
-                    'clean',
-                    'activities',
-                ],
+                'dev-disk-by@APPLE_SSD_SM0256G_S29CNYDG865465.device',
+                'loaded',
+                'active',
+                'plugged',
+                'APPLE_SSD_SM0256G',
             ],
-            {
-                'timer': {
-                    'apt-daily-upgrade': UnitEntry(
-                        name='apt-daily-upgrade',
-                        unit_type='timer',
-                        loaded_status='loaded',
-                        active_status='active',
-                        current_state='waiting',
-                        description='Daily apt upgrade and clean activities',
-                        enabled_status='unknown')
-                },
+            ['1', 'unit', 'files', 'listed.'],
+        ],
+        {
+            'device': {
+                'dev-disk-by@APPLE_SSD_SM0256G_S29CNYDG865465': UnitEntry(
+                    name='dev-disk-by@APPLE_SSD_SM0256G_S29CNYDG865465',
+                    unit_type='device',
+                    loaded_status='loaded',
+                    active_status='active',
+                    current_state='plugged',
+                    description='APPLE_SSD_SM0256G',
+                    enabled_status='enabled')
             },
-        ),
-        (
-            [
-                ['[list-unit-files]'],
-                ['[all]'],
-                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
-                [
-                    'proc-sys-fs-.service.binfmt_misc.automount',  # <- nasty ".service."!
-                    'loaded',
-                    'active',
-                    'running',
-                    'Arbitrary',
-                    'Executable',
-                    'File',
-                    'Formats',
-                    'File',
-                    'System',
-                    'Automount',
-                    'Point',
-                ],
-            ],
-            {
-                'automount': {
-                    'proc-sys-fs-.service.binfmt_misc': UnitEntry(
-                        name='proc-sys-fs-.service.binfmt_misc',
-                        unit_type='automount',
-                        loaded_status='loaded',
-                        active_status='active',
-                        current_state='running',
-                        description='Arbitrary Executable File Formats File System Automount Point',
-                        enabled_status='unknown')
-                },
-            },
-        ),
-        (
-            [
-                ['[list-unit-files]'],
-                ['[all]'],
-                ['UNIT', 'LOAD', 'ACTIVE', 'SUB', 'DESCRIPTION'],
-                [
-                    'foo.service',
-                    'loaded',
-                    'failed',
-                    'failed',
-                    'Arbitrary',
-                    'Executable',
-                    'File',
-                    'Formats',
-                    'File',
-                    'System',
-                    'Automount',
-                    'Point',
-                ],
-                [
-                    'bar.service',
-                    'loaded',
-                    'failed',
-                    'failed',
-                    'a',
-                    'bar',
-                    'service',
-                ],
-            ],
-            {
-                'service': {
-                    'bar': UnitEntry(name='bar',
-                                     unit_type='service',
-                                     loaded_status='loaded',
-                                     active_status='failed',
-                                     current_state='failed',
-                                     description='a bar service',
-                                     enabled_status='unknown'),
-                    'foo': UnitEntry(
-                        name='foo',
-                        unit_type='service',
-                        loaded_status='loaded',
-                        active_status='failed',
-                        current_state='failed',
-                        description='Arbitrary Executable File Formats File System Automount Point',
-                        enabled_status='unknown')
-                },
-            },
-        ),
-    ])
+        },
+        id='Unit status found in list-unit-files mapping even though unit names are diverging',
+    ),
+])
 def test_parse_systemd_units(string_table, section):
     check = Check('systemd_units')
     assert check.run_parse(string_table) == section

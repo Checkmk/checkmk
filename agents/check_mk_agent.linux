@@ -1625,8 +1625,7 @@ run_real_time_checks_for_remote() {
                 printf "%s" "${PROTOCOL}"
                 date +%s | tr -d '\n'
                 if [ "$ENCRYPTED_RT" != "no" ]; then
-                    export RTC_SECRET=$RTC_SECRET
-                    section_"$SECTION" | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
+                    section_"$SECTION" | RTC_SECRET="${RTC_SECRET}" openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
                 else
                     section_"$SECTION"
                 fi
@@ -1649,8 +1648,7 @@ run_real_time_checks_for_remote() {
                     date +%s | tr -d '\n'
                     if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
                         if [ "$ENCRYPTED_RT" != "no" ]; then
-                            export RTC_SECRET=$RTC_SECRET
-                            _log_section_time "${plugin_interpreter}" "${PLUGIN}" | openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
+                            _log_section_time "${plugin_interpreter}" "${PLUGIN}" | RTC_SECRET="${RTC_SECRET}" openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
                         else
                             _log_section_time "${plugin_interpreter}" "${PLUGIN}"
                         fi

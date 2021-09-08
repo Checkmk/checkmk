@@ -7,19 +7,24 @@ set -e -o pipefail
 
 case "$DISTRO" in
 centos-7 | centos-8)
-    echo "Installing for CentOS 7, 8"
+    echo "Installing for CentOS 7, 8 (nodejs12)"
     curl -sL https://rpm.nodesource.com/setup_12.x | bash -
     yum -y install nodejs
     exit 0
     ;;
 debian-* | ubuntu-* | cma)
-    echo "Installing for Debian / Ubuntu"
+    echo "Installing for Debian / Ubuntu (nodejs12)"
     curl -sL https://deb.nodesource.com/setup_12.x | bash -
     apt-get install -y nodejs
     exit 0
     ;;
-sles-*)
-    echo "Installing for SLES"
+sles-15sp3)
+    echo "Installing for SLES-15SP3 (nodejs14)"
+    zypper -n --no-gpg-checks in --replacefiles --force-resolution nodejs14 npm14
+    exit 0
+    ;;
+sles-15* | sles-12*)
+    echo "Installing for SLES-* (nodejs10)"
     zypper -n --no-gpg-checks in --replacefiles --force-resolution nodejs10 npm10
     if [ ! -e /usr/bin/npx ]; then
         ln -s /usr/bin/npx10 /usr/bin/npx

@@ -8,13 +8,12 @@ from typing import Optional
 
 import pytest
 
-from cmk.utils.type_defs import InventoryPluginName
-
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, Result, State, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.interfaces import Interface
 from cmk.base.plugins.agent_based.winperf_if import (
     check_if_dhcp,
+    inventory_winperf_if,
     parse_winperf_if,
     Section,
     SubSection,
@@ -2270,11 +2269,9 @@ def test_check_if_dhcp(
     )
 
 
-def test_inventory_winperf_if(fix_register) -> None:
-    plugin = fix_register.inventory_plugins.get(InventoryPluginName("winperf_if"))
+def test_inventory_winperf_if() -> None:
     assert list(
-        plugin.inventory_function(
-            {},
+        inventory_winperf_if(
             (
                 1425370325.75,
                 [
@@ -2451,15 +2448,6 @@ def test_inventory_winperf_if(fix_register) -> None:
             ),
         )
     ) == [
-        Attributes(
-            path=["networking"],
-            inventory_attributes={
-                "available_ethernet_ports": 0,
-                "total_ethernet_ports": 4,
-                "total_interfaces": 6,
-            },
-            status_attributes={},
-        ),
         TableRow(
             path=["networking", "interfaces"],
             key_columns={
@@ -2519,5 +2507,14 @@ def test_inventory_winperf_if(fix_register) -> None:
             },
             inventory_columns={},
             status_columns={},
+        ),
+        Attributes(
+            path=["networking"],
+            inventory_attributes={
+                "available_ethernet_ports": 0,
+                "total_ethernet_ports": 4,
+                "total_interfaces": 6,
+            },
+            status_attributes={},
         ),
     ]

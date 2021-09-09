@@ -7,15 +7,17 @@
 import dataclasses
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence, Tuple, Union
 
-from .agent_based_api.v1 import register, Result, State
-from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .agent_based_api.v1 import Attributes, register, Result, State, TableRow
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, InventoryResult, StringTable
 from .utils.interfaces import (
     CHECK_DEFAULT_PARAMETERS,
     check_multiple_interfaces,
     discover_interfaces,
     DISCOVERY_DEFAULT_PARAMETERS,
     Interface,
+    InventoryParams,
     mac_address_from_hexstring,
+    render_mac_address,
     saveint,
 )
 from .utils.interfaces import Section as SectionInterfaces
@@ -449,4 +451,70 @@ register.check_plugin(
     check_ruleset_name="if",
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_function=check_winperf_if,
+)
+
+
+def inventory_winperf_if(section: Section) -> InventoryResult:
+    params: InventoryParams = {
+        "usage_port_types": [
+            "6",
+            "32",
+            "62",
+            "117",
+            "127",
+            "128",
+            "129",
+            "180",
+            "181",
+            "182",
+            "205",
+            "229",
+        ],
+    }
+    total_ethernet_ports = 0
+    available_ethernet_ports = 0
+
+    for interface in sorted(
+        section[1],
+        key=lambda iface: int(iface.index[-1]),
+    ):
+
+        if interface.type in ("231", "232") or not interface.speed:
+            continue  # Useless entries for "TenGigabitEthernet2/1/21--Uncontrolled"
+            # Ignore useless half-empty tables (e.g. Viprinet-Router)
+
+        if_available = None
+        if interface.type in params["usage_port_types"]:
+            total_ethernet_ports += 1
+            if if_available := interface.oper_status == "2":
+                available_ethernet_ports += 1
+
+        yield TableRow(
+            path=["networking", "interfaces"],
+            key_columns={
+                "index": int(interface.index[-1]),
+                "description": interface.descr,
+                "alias": interface.alias,
+                "speed": int(interface.speed),
+                "phys_address": render_mac_address(interface.phys_address),
+                "oper_status": int(interface.oper_status[0]),
+                "port_type": int(interface.type),
+                "available": if_available,
+            },
+        )
+
+    yield Attributes(
+        path=["networking"],
+        inventory_attributes={
+            "available_ethernet_ports": available_ethernet_ports,
+            "total_ethernet_ports": total_ethernet_ports,
+            "total_interfaces": len(section[1]),
+        },
+    )
+
+
+# TODO: make this plugin use the inventory ruleset inv_if
+register.inventory_plugin(
+    name="winperf_if",
+    inventory_function=inventory_winperf_if,
 )

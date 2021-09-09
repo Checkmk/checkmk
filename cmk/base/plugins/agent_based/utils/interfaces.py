@@ -98,6 +98,11 @@ CHECK_DEFAULT_PARAMETERS = {
 }
 
 
+class InventoryParams(TypedDict, total=False):
+    unused_duration: int
+    usage_port_types: Container[str]
+
+
 @dataclass
 class Interface:
     index: str

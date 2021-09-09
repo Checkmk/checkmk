@@ -6,12 +6,12 @@
 
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Union
+from typing import Dict, Iterable, List, Optional, Sequence, Union
 
 from .agent_based_api.v1 import Attributes, exists, OIDBytes, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringByteTable
 from .utils import uptime
-from .utils.interfaces import render_mac_address
+from .utils.interfaces import InventoryParams, render_mac_address
 
 
 @dataclass
@@ -147,7 +147,7 @@ def round_to_day(ts):
 
 # TODO unify with other if inventory plugins
 def inventory_if(
-    params: Mapping[str, Any],
+    params: InventoryParams,
     section_inv_if: Optional[SectionInvIf],
     section_uptime: Optional[uptime.Section],
 ) -> InventoryResult:

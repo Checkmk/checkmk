@@ -375,7 +375,6 @@ class ErrorReporter:
         ("inventory", "solaris_routes", "solaris_routes"),
         ("inventory", "statgrab_net", "statgrab_net"),
         ("inventory", "suseconnect", "suseconnect"),
-        ("inventory", "winperf_if", "winperf_if"),
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # type # plugin # wato

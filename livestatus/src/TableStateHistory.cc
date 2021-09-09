@@ -5,7 +5,6 @@
 
 #include "TableStateHistory.h"
 
-#include <cstdint>
 #include <mutex>
 #include <optional>
 #include <ratio>
@@ -311,17 +310,19 @@ void TableStateHistory::answerQuery(Query *query) {
     // be a time range in form of one or two filter expressions over time. We
     // use that to limit the number of logfiles we need to scan and to find the
     // optimal entry point into the logfile
-    if (auto glb = query->greatestLowerBoundFor("time")) {
-        _since = std::chrono::system_clock::from_time_t(*glb);
-    } else {
+    auto glb = query->greatestLowerBoundFor("time");
+    if (!glb) {
         query->invalidRequest(
             "Start of timeframe required. e.g. Filter: time > 1234567890");
         return;
     }
-    auto now =
-        std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-    _until = std::chrono::system_clock::from_time_t(
-        query->leastUpperBoundFor("time").value_or(now) + 1);
+    _since = std::chrono::system_clock::from_time_t(*glb);
+
+    auto lub = query->leastUpperBoundFor("time");
+    _until = (lub ? std::chrono::system_clock::from_time_t(*lub)
+                  : std::chrono::system_clock::now()) +
+             1s;
+
     if (_until - _since <= 1s) {
         return;
     }

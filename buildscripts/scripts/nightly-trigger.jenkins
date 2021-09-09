@@ -1,5 +1,5 @@
 BRANCH_NAME = scm.branches[0].name
-FOLDER_ID = currentBuild.fullProjectName.split('/')[0]
+FOLDER_ID = currentBuild.fullProjectName.split('/')[0..-2].join('/')
 
 def DISTRO_LIST_DEFAULT = ''
 def NODE = ''

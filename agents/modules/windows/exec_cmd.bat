@@ -28,7 +28,7 @@ set p_full_name=python-%PY_VER%.%PY_SUBVER%
 set cur_dir=%cd%
 
 :: msiexec doesn't understand relative paths, we have to normalize
-call :NORMALIZEPATH "%cur_dir%\..\..\..\omd\packages\Python\windows\python-3.4.4.msi"
+call :NORMALIZEPATH "%cur_dir%\..\..\..\omd\packages\Python3\windows\python-3.4.4.msi"
 set legacy_msi=%RETVAL%
 
 set my_tmp=%cd%\tmp\%PY_VER%

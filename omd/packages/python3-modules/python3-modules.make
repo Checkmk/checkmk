@@ -31,16 +31,16 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(OPENSSL_INTERMEDIATE_IN
 	set -e ; cd $(PYTHON3_MODULES_BUILD_DIR) ; \
 	    unset DESTDIR MAKEFLAGS ; \
 	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_MODULES_PYTHONPATH)" ; \
-	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON_PYTHONPATH)" ; \
+	    export PYTHONPATH="$$PYTHONPATH:$(PACKAGE_PYTHON3_PYTHONPATH)" ; \
 	    export CPATH="$(PACKAGE_FREETDS_DESTDIR)/include:$(PACKAGE_OPENSSL_INCLUDE_PATH):$(PACKAGE_POSTGRESQL_INCLUDE_PATH)" ; \
-	    export LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_PYTHON_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS) $(PACKAGE_OPENSSL_LDFLAGS)" ; \
-	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH):$(PACKAGE_POSTGRESQL_LD_LIBRARY_PATH)" ; \
-	    export PATH="$(PACKAGE_PYTHON_BIN):$(PACKAGE_POSTGRESQL_BIN):$$PATH" ; \
+	    export LDFLAGS="-Wl,--rpath,/omd/versions/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx/lib $(PACKAGE_PYTHON3_LDFLAGS) $(PACKAGE_FREETDS_LDFLAGS) $(PACKAGE_OPENSSL_LDFLAGS)" ; \
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH):$(PACKAGE_POSTGRESQL_LD_LIBRARY_PATH)" ; \
+	    export PATH="$(PACKAGE_PYTHON3_BIN):$(PACKAGE_POSTGRESQL_BIN):$$PATH" ; \
 	    PIPENV_PIPFILE="$(REPO_PATH)/Pipfile" \
 	    `: rrdtool module is built with rrdtool omd package` \
 	    `: protobuf module is built with protobuf omd package` \
 		pipenv lock -r | grep -Ev '(protobuf|rrdtool)' > requirements-dist.txt ; \
-	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
+	    $(PACKAGE_PYTHON3_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \
 		--no-deps \

@@ -24,7 +24,7 @@ PACKAGES := \
     libgsf \
     postgresql \
     perl-modules \
-    Python3 \
+    Python \
     freetds \
     re2 \
     protobuf \

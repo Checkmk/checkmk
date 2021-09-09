@@ -9,7 +9,7 @@ PYTHON 3.4.4, downloaded as msi installer from the python.org
 
 ### Changing or Updating the Python
 
-1. _mandatory_   Add new file in omd/packages/Python3 with a name Python-Version.Subversion.tar.xz
+1. _mandatory_   Add new file in omd/packages/Python with a name Python-Version.Subversion.tar.xz
 2. _mandatory_   Update build_the_module.cmd script to set new version
 3. _recommended_ Update documentation
 4. _optional_    Update root Makefile(for default parameters)
@@ -107,10 +107,10 @@ In latter case the git_hash is replaced with string "latest".
 
 #### Steps 3.4.4
 
-1. Uninstall omd/packages/Python3/windows/python-3.4.4.msi
-2. install omd/packages/Python3/windows/python-3.4.4.msi to the *to_install*
+1. Uninstall omd/packages/Python/windows/python-3.4.4.msi
+2. install omd/packages/Python/windows/python-3.4.4.msi to the *to_install*
 3. Build virtual environment and copy files into *to_save*
-4. Uninstall omd/packages/Python3/windows/python-3.4.4.msi
+4. Uninstall omd/packages/Python/windows/python-3.4.4.msi
 5. Upgradepip and install packages
 6. Copy correct *pyvenv.cfg* into *tO-save/.venv*
 7. Clean virtual environemtn *to_save*

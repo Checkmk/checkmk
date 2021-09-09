@@ -41,7 +41,7 @@ $(PROTOBUF_BUILD_LIBRARY): $(PROTOBUF_PATCHING)
 	    export LDFLAGS="-static-libgcc -static-libstdc++ -s" \
 		`: -fPIC is needed for python static linking ` \
 		   CXXFLAGS="-fPIC" \
-		   LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" && \
+		   LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
 	    ./configure --disable-shared && \
 	    make -j6 && \
 	    `: Hack needed for protoc to be linked statically. Tried a lot of different things to make it ` \
@@ -63,9 +63,9 @@ $(PROTOBUF_BUILD): $(PYTHON3_CACHE_PKG_PROCESS) $(PROTOBUF_BUILD_LIBRARY)
 	cd $(PROTOBUF_BUILD_DIR)/python && \
 	    export LDFLAGS="-static-libgcc -static-libstdc++ -s" \
 		   CXXFLAGS="-fPIC" \
-		   LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" \
-		   PATH="$(PACKAGE_PYTHON3_BIN):$$PATH" && \
-	    $(PACKAGE_PYTHON3_EXECUTABLE) setup.py build --cpp_implementation --compile_static_extension
+		   LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" \
+		   PATH="$(PACKAGE_PYTHON_BIN):$$PATH" && \
+	    $(PACKAGE_PYTHON_EXECUTABLE) setup.py build --cpp_implementation --compile_static_extension
 	$(TOUCH) $@
 
 PROTOBUF_CACHE_PKG_PATH := $(call cache_pkg_path,$(PROTOBUF_DIR),$(PROTOBUF_BUILD_ID))
@@ -84,8 +84,8 @@ $(PROTOBUF_INTERMEDIATE_INSTALL): $(PROTOBUF_BUILD)
 	mkdir -p $(PROTOBUF_INSTALL_DIR)/bin
 	install -m 0750 $(PROTOBUF_BUILD_DIR)/src/protoc $(PACKAGE_PROTOBUF_PROTOC_BIN)
 	cd $(PROTOBUF_BUILD_DIR)/python && \
-	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" && \
-	    $(PACKAGE_PYTHON3_EXECUTABLE) setup.py install \
+	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" && \
+	    $(PACKAGE_PYTHON_EXECUTABLE) setup.py install \
 	    --cpp_implementation \
 	    --root=$(PROTOBUF_INSTALL_DIR) \
 	    --prefix=''

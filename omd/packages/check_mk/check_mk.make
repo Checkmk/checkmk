@@ -80,8 +80,8 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON3_CACHE_PKG_PROCESS)
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py
-	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
-	    $(PACKAGE_PYTHON3_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
+	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
+	    $(PACKAGE_PYTHON_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
 
 	# Provide the externally documented paths for Checkmk plugins
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib

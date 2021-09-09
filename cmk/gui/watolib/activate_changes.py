@@ -2166,6 +2166,7 @@ def _get_config_sync_file_infos(replication_paths: List[ReplicationPath],
     are not added to the dictionary.
     """
     infos = {}
+    general_dir_excludes = ["__pycache__"]
 
     for replication_path in replication_paths:
         path = base_dir.joinpath(replication_path.site_path)
@@ -2180,6 +2181,9 @@ def _get_config_sync_file_infos(replication_paths: List[ReplicationPath],
             for entry in path.glob("**/*"):
                 if entry.is_dir() and not entry.is_symlink():
                     continue  # Do not add directories at all
+
+                if entry.parent.name in general_dir_excludes:
+                    continue
 
                 entry_site_path = entry.relative_to(base_dir)
                 infos[str(entry_site_path)] = _get_config_sync_file_info(entry)

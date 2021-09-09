@@ -27,7 +27,7 @@ PYTHON_SAVE_DIR    := $(PYTHON_TMP_DIR)\to_save
 
 # external paths
 ROOT_CMK_PATH      := ..\..\..
-OMD_PACKAGES_DIR   := $(ROOT_CMK_PATH)\omd\packages\Python3
+OMD_PACKAGES_DIR   := $(ROOT_CMK_PATH)\omd\packages\Python
 ARTEFACTS_DIR      := $(ROOT_CMK_PATH)\artefacts
 SRC_PIPFILE_DIR    := $(ROOT_CMK_PATH)\virtual-envs\windows\$(PY_VER)
 

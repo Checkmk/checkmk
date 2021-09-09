@@ -23,6 +23,7 @@ export DOXYGEN     := doxygen
 export IWYU_TOOL   := python3 $(realpath scripts/iwyu_tool.py)
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 PIPENV             := scripts/run-pipenv
+BLACK              := scripts/run-black
 
 M4_DEPS            := $(wildcard m4/*) configure.ac
 CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
@@ -565,6 +566,10 @@ format-python-yapf:
 format-python-isort:
 	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
 	xargs -n 1500 $(PIPENV) run isort --settings-path pyproject.toml
+
+format-python-black:
+	if test -z "$$PYTHON_FILES"; then ./scripts/find-python-files; else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(BLACK)
 
 format-shell:
 	$(MAKE)	-C tests format-shell

@@ -30,13 +30,11 @@ repos:
       hooks:
           - id: isort
             name: isort (python)
-    - repo: local
+    - repo: https://github.com/psf/black
+      rev: 21.8b0
       hooks:
-          - id: yapf
-            name: Check yapf
-            entry: scripts/check-yapf -i
-            language: script
-            types: [file, python]
+          - id: black
+    - repo: local
           - id: omd-python-modules
             name: Check Python modules in OMD
             entry: scripts/check-omd-python-modules

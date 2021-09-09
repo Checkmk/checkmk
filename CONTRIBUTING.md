@@ -239,10 +239,10 @@ $ make -C tests test-mypy-raw
 Some of these commands take several minutes, for example the command
 `test-format-python` because it tests the formatting of the whole code base.
 Normally you only change a small set of files in your commits. If you execute
-`yapf -i [filename]` to format the changed code, this should be enough and you
+`black [filename]` to format the changed code, this should be enough and you
 don't need to execute the formatting test at all.
 
-> We highly recommend to integrate yapf, isort, pylint and mypy into the editor you
+> We highly recommend to integrate black, isort, pylint and mypy into the editor you
 > work with. Most editors will notify you about issues in the moment you edit
 > the code.
 
@@ -469,7 +469,7 @@ understand which names are really available and needed in the current namespace.
   your editor to adhere to the most basic formatting style, like indents or
   line-lengths. If your editor doesn't already come with Editorconfig support,
   install [one of the available plugins](https://editorconfig.org/#download).
-* We use YAPF for automatic formatting of the Python code.
+* We use Black for automatic formatting of the Python code.
   Have a look [below](#automatic-formatting) for further information.
 * We use isort for automatic sorting of imports in Python code.
 * Multi line imports: Use braces instead of continuation character
@@ -490,21 +490,21 @@ understand which names are really available and needed in the current namespace.
     )
     ```
 
-### Automatic formatting with yapf and isort
+### Automatic formatting with black and isort
 
-The style definition file, `.style.yapf`, lives in the root directory of the
-project repository, where YAPF picks it up automatically. YAPF itself lives in
+The black configuration file, `pyproject.toml`, lives in the root directory of the
+project repository, where Black picks it up automatically. Black itself lives in
 a virtualenv managed by pipenv in `check_mk/.venv`, you can run it with
-`make format-python-yapf` or `scripts/run-pipenv run yapf`.
+`make format-python-black` or `scripts/run-pipenv run black`.
 
 The imports are also sorted with isort. Configuration is in `pyproject.toml`
 file in the root directory of the project repository. If you have isort installed
 in you virtualenv you can run it with `make format-python-isort`
 
-#### Manual yapf invocation: Single file
+#### Manual black invocation: Single file
 
 ```console
-$ yapf -i [the_file.py]
+$ black [the_file.py]
 ```
 
 #### Manual isort invocation: Single file
@@ -516,12 +516,12 @@ $ isort [the_file.py]
 $ pre-commit run isort
 ```
 
-#### Manual yapf invocation: Whole code base
+#### Manual black invocation: Whole code base
 
-If you want to yapf format all Python files in the repository, you can run:
+If you want to black format all Python files in the repository, you can run:
 
 ```console
-$ make format-python-yapf
+$ make format-python-black
 ```
 
 #### Manual isort invocation: Whole code base
@@ -534,7 +534,7 @@ $ make format-python-isort
 
 #### Integration with CI
 
-Our CI executes yapf and isort formatting test on the whole code base:
+Our CI executes black and isort formatting test on the whole code base:
 
 ```console
 $ make -C tests test-format-python
@@ -543,30 +543,9 @@ $ make -C tests test-format-python
 Our review tests jobs prevent un-formatted code from being added to the
 repository.
 
-#### Editor integration: *macs
+#### Editor integration with black:
 
-* plugins for vim and emacs with installation instructions can be found here:
-  <https://github.com/google/yapf/tree/master/plugins>
-* in Spacemacs yapfify-buffer is available in the Python layer; formatting on
-  save can be enabled by setting ''python-enable-yapf-format-on-save'' to
-  ''t''
-* In Emacs with elpy call the function 'elpy-yapf-fix-code'. Because there
-  are many large files you may want to increase the timeout for rpc calls by
-  setting ''elpy-rpc-timeout'' to ''20''
-
-#### Editor integration: vim
-
-* It is recommended to use yapf as fixer for [ALE](https://github.com/dense-analysis/ale)
-
-Configure YAPF as fixer in your `~/vimrc`. This way the file gets fixed on every save:
-
-```vim
-let g:ale_fixers = {'python': ['isort', 'yapf']}
-let g:ale_python_yapf_executable = 'YOUR_REPO_PATH/check_mk/.venv/bin/yapf'
-let g:ale_fix_on_save = 1
-```
-
-* for vim formatting on save should work with [autocmds](http://learnvimscriptthehardway.stevelosh.com/chapters/12.html)
+[Black editor integration](https://black.readthedocs.io/en/stable/integrations/editors.html)
 
 ### Type checking: mypy
 

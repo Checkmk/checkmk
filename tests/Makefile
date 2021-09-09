@@ -8,6 +8,7 @@ FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run py.test -vv $(PYTEST_ARGS)
 YAPF := $(PIPENV) run yapf
+BLACK  := $(SCRIPTS)/run-black
 THREE_TO_TWO := $(PIPENV) run 3to2
 BANDIT := $(PIPENV) run bandit
 FIND_INVALID_TEST_FILES := $(SCRIPTS)/find-invalid-autogen-files
@@ -180,6 +181,11 @@ test-format-python-yapf: ../.style.yapf
 test-format-python-isort: ../pyproject.toml
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
 	xargs -n 1500 $(PIPENV) run isort --settings-path ../pyproject.toml --check-only --diff \
+	exit $${PIPESTATUS[1]}
+
+test-format-python-black: ../pyproject.toml
+	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
+	xargs -n 1500 $(BLACK) --check --diff ;\
 	exit $${PIPESTATUS[1]}
 
 test-format-python-docker:

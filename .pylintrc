@@ -113,9 +113,7 @@ disable=
     # them might be a good idea some day...
     fixme,
     #---------------------------------------------------------------------------
-    # The warnigns below will probably fixed by YAPF.
-    bad-continuation,
-    bad-whitespace,
+    # The the warnings below will be fixed by black
     line-too-long,
     #---------------------------------------------------------------------------
     # We are light years away from enabling this...

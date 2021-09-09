@@ -8,6 +8,7 @@ name = "pypi"
 [dev-packages]
 astroid = "*"  # used by testlib.pylint_checker_localization
 bandit = "*"  # used by test/Makefile's test-bandit target
+black = "*"  # used in our CI and in the LSP-integration
 "beautifulsoup4" = "*"  # used by the GUI crawler and various tests
 bson = "*"  # used by test_mk_mongodb unit test
 compiledb = "*"  # used by the Livestatus/CMC Makefiles for building compile_command.json
@@ -56,6 +57,7 @@ sphinxcontrib-spelling = "*"
 3to2 = "*"  # used for converting agent plugins from py3 to 2
 fakeredis = {version = "==1.5.2", extras = ["lua"]}  # used for testing code which uses Redis (freeze version due to some kwargs bug(???, see https://github.com/jamesls/fakeredis/pull/304/files#r680503761, lua is needed for faking features like "lock")
 python-lsp-server = "*"  # Note: There are extras, but the default seems sensible.
+python-lsp-black = "*"  # black plugin for python-lsp-server
 pyls-isort = "*"  # isort plugin for python-lsp-server
 pylsp-mypy = "*"  # mypy plugin for python-lsp-server
 mypy-protobuf = "*" # for mypy

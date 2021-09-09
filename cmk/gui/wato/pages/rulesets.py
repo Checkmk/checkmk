@@ -2058,29 +2058,20 @@ class RuleConditionRenderer:
         if tag and tag.title:
             if isinstance(tag, GroupedTag):
                 if negate:
-                    return HTML(
-                        _("Host tag: %s is <b>not</b> <b>%s</b>") % (
-                            escape_html_permissive(tag.group.title),
-                            escape_html_permissive(tag.title),
-                        ))
-                return HTML(
-                    _("Host tag: %s is <b>%s</b>") % (
-                        escape_html_permissive(tag.group.title),
-                        escape_html_permissive(tag.title),
-                    ))
+                    return escape_html_permissive(
+                        _("Host tag: %s is <b>not</b> <b>%s</b>") % (tag.group.title, tag.title))
+                return escape_html_permissive(
+                    _("Host tag: %s is <b>%s</b>") % (tag.group.title, tag.title))
 
             if negate:
-                return HTML(
-                    _("Host does not have tag <b>%s</b>") % escape_html_permissive(tag.title))
-            return HTML(_("Host has tag <b>%s</b>") % escape_html_permissive(tag.title))
+                return escape_html_permissive(_("Host does not have tag <b>%s</b>") % tag.title)
+            return escape_html_permissive(_("Host has tag <b>%s</b>") % tag.title)
 
         if negate:
-            return HTML(
-                _("Unknown tag: Host has <b>not</b> the tag <tt>%s</tt>") %
-                escape_html_permissive(str(tag_id)))
+            return escape_html_permissive(
+                _("Unknown tag: Host has <b>not</b> the tag <tt>%s</tt>") % str(tag_id))
 
-        return HTML(
-            _("Unknown tag: Host has the tag <tt>%s</tt>") % escape_html_permissive(str(tag_id)))
+        return escape_html_permissive(_("Unknown tag: Host has the tag <tt>%s</tt>") % str(tag_id))
 
     def _host_label_conditions(self, conditions: RuleConditions) -> Iterable[HTML]:
         return self._label_conditions(conditions.host_labels, "host", _("Host"))

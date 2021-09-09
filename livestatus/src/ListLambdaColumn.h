@@ -141,41 +141,6 @@ private:
         throw std::runtime_error("unreachable");
     }
 
-    [[nodiscard]] std::vector<U> getRawValue(Row row,
-                                             const contact* auth_user) const {
-        const T* data = columnData<T>(row);
-        if (data == nullptr) {
-            return Default;
-        }
-        if (std::holds_alternative<f0_t>(f_)) {
-            return std::get<f0_t>(f_)(*data);
-        }
-        if (std::holds_alternative<f1_t>(f_)) {
-            return std::get<f1_t>(f_)(*data, *this);
-        }
-        if (std::holds_alternative<f2_t>(f_)) {
-            return std::get<f2_t>(f_)(*data, auth_user);
-        }
-        throw std::runtime_error("unreachable");
-    }
-
-    [[nodiscard]] std::vector<U> getRawValue(Row row) const {
-        const T* data = columnData<T>(row);
-        if (data == nullptr) {
-            return Default;
-        }
-        if (std::holds_alternative<f0_t>(f_)) {
-            return std::get<f0_t>(f_)(*data);
-        }
-        if (std::holds_alternative<f1_t>(f_)) {
-            return std::get<f1_t>(f_)(*data, *this);
-        }
-        if (std::holds_alternative<f2_t>(f_)) {
-            throw std::runtime_error("wrong lambda/overload");
-        }
-        throw std::runtime_error("unreachable");
-    }
-
     const std::vector<U> Default{};
     std::unique_ptr<ListColumnRenderer<U>> renderer_;
     function_type f_;

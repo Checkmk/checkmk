@@ -52,9 +52,6 @@ private:
     // madness is not necessary, we should just pass down all the information
     // needed per query.
 
-    // Notification periods information, name: active(1)/inactive(0)
-    std::map<std::string, int> _notification_periods;
-
     // Helper functions to traverse through logfiles
     LogCache::const_iterator _it_logs;
     const Logfile::map_type *_entries;
@@ -68,7 +65,8 @@ private:
                  HostServiceState *hs_state);
     int updateHostServiceState(
         Query *query, std::chrono::system_clock::duration query_timeframe,
-        const LogEntry *entry, HostServiceState *hs_state, bool only_update);
+        const LogEntry *entry, HostServiceState *hs_state, bool only_update,
+        const std::map<std::string, int> &notification_periods);
 };
 
 #endif  // TableStateHistory_h

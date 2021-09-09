@@ -367,6 +367,9 @@ void TableStateHistory::answerQuery(Query *query) {
     bool only_update = true;
     bool in_nagios_initial_states = false;
 
+    // Notification periods information, name: active(1)/inactive(0)
+    std::map<std::string, int> notification_periods;
+
     while (LogEntry *entry = getNextLogentry()) {
         if (_abort_query) {
             break;
@@ -535,8 +538,8 @@ void TableStateHistory::answerQuery(Query *query) {
 
                     // Determine initial in_notification_period status
                     auto tmp_period =
-                        _notification_periods.find(state->_notification_period);
-                    if (tmp_period != _notification_periods.end()) {
+                        notification_periods.find(state->_notification_period);
+                    if (tmp_period != notification_periods.end()) {
                         state->_in_notification_period = tmp_period->second;
                     } else {
                         state->_in_notification_period = 1;
@@ -544,8 +547,8 @@ void TableStateHistory::answerQuery(Query *query) {
 
                     // Same for service period
                     tmp_period =
-                        _notification_periods.find(state->_service_period);
-                    if (tmp_period != _notification_periods.end()) {
+                        notification_periods.find(state->_service_period);
+                    if (tmp_period != notification_periods.end()) {
                         state->_in_service_period = tmp_period->second;
                     } else {
                         state->_in_service_period = 1;
@@ -573,8 +576,9 @@ void TableStateHistory::answerQuery(Query *query) {
                     state = it_hst->second;
                 }
 
-                int state_changed = updateHostServiceState(
-                    query, query_timeframe, entry, state, only_update);
+                int state_changed =
+                    updateHostServiceState(query, query_timeframe, entry, state,
+                                           only_update, notification_periods);
                 // Host downtime or state changes also affect its services
                 if (entry->kind() == LogEntryKind::alert_host ||
                     entry->kind() == LogEntryKind::state_host ||
@@ -582,7 +586,8 @@ void TableStateHistory::answerQuery(Query *query) {
                     if (state_changed != 0) {
                         for (auto &svc : state->_services) {
                             updateHostServiceState(query, query_timeframe,
-                                                   entry, svc, only_update);
+                                                   entry, svc, only_update,
+                                                   notification_periods);
                         }
                     }
                 }
@@ -591,10 +596,11 @@ void TableStateHistory::answerQuery(Query *query) {
             case LogEntryKind::timeperiod_transition: {
                 try {
                     TimeperiodTransition tpt(entry->options());
-                    _notification_periods[tpt.name()] = tpt.to();
+                    notification_periods[tpt.name()] = tpt.to();
                     for (auto &it_hst : state_info) {
                         updateHostServiceState(query, query_timeframe, entry,
-                                               it_hst.second, only_update);
+                                               it_hst.second, only_update,
+                                               notification_periods);
                     }
                 } catch (const std::logic_error &e) {
                     Warning(logger())
@@ -663,7 +669,8 @@ void TableStateHistory::answerQuery(Query *query) {
 
 int TableStateHistory::updateHostServiceState(
     Query *query, std::chrono::system_clock::duration query_timeframe,
-    const LogEntry *entry, HostServiceState *hs_state, bool only_update) {
+    const LogEntry *entry, HostServiceState *hs_state, bool only_update,
+    const std::map<std::string, int> &notification_periods) {
     int state_changed = 1;
 
     // Revive host / service if it was unmonitored
@@ -690,8 +697,8 @@ int TableStateHistory::updateHostServiceState(
         // Apply latest notification period information and set the host_state
         // to unmonitored
         auto it_status =
-            _notification_periods.find(hs_state->_notification_period);
-        if (it_status != _notification_periods.end()) {
+            notification_periods.find(hs_state->_notification_period);
+        if (it_status != notification_periods.end()) {
             hs_state->_in_notification_period = it_status->second;
         } else {
             // No notification period information available -> within
@@ -700,8 +707,8 @@ int TableStateHistory::updateHostServiceState(
         }
 
         // Same for service period
-        it_status = _notification_periods.find(hs_state->_service_period);
-        if (it_status != _notification_periods.end()) {
+        it_status = notification_periods.find(hs_state->_service_period);
+        if (it_status != notification_periods.end()) {
             hs_state->_in_service_period = it_status->second;
         } else {
             // No service period information available -> within service period

@@ -41758,9 +41758,6 @@ msgstr "Dezactiveaza Notificarile"
 msgid "Sophos Memory utilization"
 msgstr "Dezactiveaza Notificarile"
 
-msgid "Sorry"
-msgstr ""
-
 msgid "Sorry, I will not display more than 900 hosts."
 msgstr ""
 
@@ -47302,6 +47299,10 @@ msgid ""
 "agent plugins like the agent updater, mk_logwatch or mk_jolokia on such "
 "windows hosts, you have to select the option \"Deploy legacy environment\" "
 "here."
+msgstr ""
+
+msgid ""
+"The start of a recurring downtime can only be set for days 1-28 of a month."
 msgstr ""
 
 msgid ""

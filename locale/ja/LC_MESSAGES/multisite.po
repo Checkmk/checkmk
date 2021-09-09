@@ -41492,9 +41492,6 @@ msgstr "ソフォスのディスク使用率"
 msgid "Sophos Memory utilization"
 msgstr "Sophosのメモリ使用率"
 
-msgid "Sorry"
-msgstr "ごめんなさい"
-
 msgid "Sorry, I will not display more than 900 hosts."
 msgstr "申し訳ありませんが、900を超えるホストは表示されません。"
 
@@ -47573,6 +47570,10 @@ msgstr ""
 "mk_jolokiaなどのエージェントプラグインをそのようなWindowsホストにデプロイする"
 "場合は、ここで[レガシー環境をデプロイする]オプションを選択する必要がありま"
 "す。"
+
+msgid ""
+"The start of a recurring downtime can only be set for days 1-28 of a month."
+msgstr ""
 
 msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
@@ -61497,6 +61498,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Sorry"
+#~ msgstr "ごめんなさい"
 
 #~ msgid "An arbitrary comment of this rule for you."
 #~ msgstr "このルールの任意のコメント。"

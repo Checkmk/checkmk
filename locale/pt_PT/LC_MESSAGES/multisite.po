@@ -42950,9 +42950,6 @@ msgstr "Utilização do disco Sophos"
 msgid "Sophos Memory utilization"
 msgstr "Utilização da Memória Sophos"
 
-msgid "Sorry"
-msgstr "Desculpe"
-
 msgid "Sorry, I will not display more than 900 hosts."
 msgstr "Desculpe, não vou mostrar mais de 900 hospedeiros."
 
@@ -49475,6 +49472,10 @@ msgstr ""
 "implantar plugins de agente como o atualizador de agente, mk_logwatch ou "
 "mk_jolokia em tais hosts Windows, você tem que selecionar a opção "
 "\"Implantar ambiente legado\" aqui."
+
+msgid ""
+"The start of a recurring downtime can only be set for days 1-28 of a month."
+msgstr ""
 
 msgid ""
 "The state of the event is reset back to \"open\" in this case. This behavior "
@@ -64384,6 +64385,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Todos os direitos reservados."
+
+#~ msgid "Sorry"
+#~ msgstr "Desculpe"
 
 #~ msgid "An arbitrary comment of this rule for you."
 #~ msgstr "Um comentário arbitrário desta regra para si."

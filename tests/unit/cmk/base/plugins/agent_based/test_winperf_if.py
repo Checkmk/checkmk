@@ -12,6 +12,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, Result, 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.interfaces import Interface
 from cmk.base.plugins.agent_based.winperf_if import (
+    _check_dhcp,
     _merge_sections,
     AdditionalIfData,
     check_if_dhcp,
@@ -5752,6 +5753,63 @@ def test_check_if_dhcp(
         check_if_dhcp(
             item,
             _DHCP_INFO,
+        )
+        == result
+    )
+
+
+@pytest.mark.parametrize(
+    "item, result",
+    [
+        pytest.param(
+            "Intel[R] PRO 1000 MT Desktop Adapter",
+            Result(
+                state=State.WARN,
+                summary="DHCP: enabled",
+            ),
+            id="dhcp on",
+        ),
+        pytest.param(
+            "WAN Miniport [SSTP]",
+            Result(
+                state=State.OK,
+                summary="DHCP: disabled",
+            ),
+            id="dhcp off",
+        ),
+        pytest.param(
+            "wrong",
+            None,
+            id="no item match",
+        ),
+    ],
+)
+def test_check_dhcp(item: str, result: Optional[Result]) -> None:
+    assert (
+        _check_dhcp(
+            item,
+            [
+                "Intel[R] PRO 1000 MT Desktop Adapter",
+                "WAN Miniport [SSTP]",
+            ],
+            [
+                {
+                    "DHCPEnabled": "TRUE",
+                    "Description": "Microsoft Kernel Debug Network Adapter",
+                },
+                {
+                    "DHCPEnabled": "TRUE",
+                    "Description": "Intel(R) PRO/1000 MT Desktop Adapter",
+                },
+                {
+                    "DHCPEnabled": "FALSE",
+                    "Description": "WAN Miniport (SSTP)",
+                },
+                {
+                    "DHCPEnabled": "FALSE",
+                    "Description": "WAN Miniport (IKEv2)",
+                },
+            ],
         )
         == result
     )

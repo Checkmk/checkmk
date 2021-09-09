@@ -867,6 +867,38 @@ def check_if_dhcp(
     return None
 
 
+def _check_dhcp(
+    item: str,
+    interface_names: Collection[str],
+    section_dhcp: SectionDHPC,
+) -> Optional[Result]:
+    for dhcp_data in section_dhcp:
+        try:
+            match = int(dhcp_data["index"]) == int(item)
+        except (KeyError, ValueError):
+            match = (
+                _normalize_name(
+                    dhcp_data["Description"],
+                    interface_names,
+                )
+                == item
+            )
+
+        if not match:
+            continue
+
+        if dhcp_data["DHCPEnabled"] == "TRUE":
+            return Result(
+                state=State.WARN,
+                summary="DHCP: enabled",
+            )
+        return Result(
+            state=State.OK,
+            summary="DHCP: disabled",
+        )
+    return None
+
+
 def _check_deprecated_plugins(
     windows_if: bool,
     mk_dhcp_enabled: bool,

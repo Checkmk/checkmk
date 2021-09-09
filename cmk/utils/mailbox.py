@@ -305,13 +305,12 @@ class Mailbox:
                 ))
         else:
             ids = verified_result(self._connection.search(None, "ALL"))
-
         return [
             date  #
             for mail_id in ids[0].split()
             for date in (fetch_timestamp(mail_id),)
             if before is None or date <= before
-        ]
+        ] if ids and ids[0] else []
 
     def delete_mails(self, mails: Iterable[int]) -> None:
         assert self._connection is not None

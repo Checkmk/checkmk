@@ -185,8 +185,7 @@ def _start(request, client, version=None, is_update=False, **kwargs):
 
         request.addfinalizer(lambda: c.remove(force=True))
 
-        testlib.wait_until(lambda: _exec_run(c, ["omd", "status"], user=site_id)[0] == 0,
-                           timeout=120)
+        testlib.wait_until(lambda: "### CONTAINER STARTED" in c.logs().decode("utf-8"), timeout=120)
         output = c.logs().decode("utf-8")
 
         if not is_update:
@@ -197,7 +196,7 @@ def _start(request, client, version=None, is_update=False, **kwargs):
             assert "cmkadmin with password:" not in output
 
         assert "STARTING SITE" in output
-        assert "### CONTAINER STARTED" in output
+        assert _exec_run(c, ["omd", "status"], user=site_id)[0] == 0
     finally:
         sys.stdout.write("Log so far: %s\n" % c.logs().decode("utf-8"))
 

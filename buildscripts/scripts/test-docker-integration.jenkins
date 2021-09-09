@@ -7,6 +7,14 @@ withFolderProperties{
     NODE = env.BUILD_NODE
 }
 
+properties([
+  buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '', daysToKeepStr: '7', numToKeepStr: '14')),
+  parameters([
+    string(name: 'EDITION', defaultValue: 'enterprise', description: 'Edition: raw, enterprise or managed' ),
+    string(name: 'VERSION', defaultValue: 'daily', description: 'Version: "daily" builds current git state of the branch. You also can specify a git tag here.' ),
+  ])
+])
+
 timeout(time: 12, unit: 'HOURS') {
     node (NODE) {
         stage('checkout sources') {
@@ -26,7 +34,8 @@ timeout(time: 12, unit: 'HOURS') {
                     """
                 }
                 dir ('tests') {
-                    sh "bash -c \"make test-docker\""
+                    def CMK_VERSION = versioning.get_cmk_version(scm, VERSION)
+                    sh "make test-docker EDITION='$EDITION' VERSION='$CMK_VERSION'"
                 }
             }
         }

@@ -30,8 +30,8 @@ branch_name = os.environ.get("BRANCH", "master")
 
 def build_version():
     return testlib.CMKVersion(
-        version_spec=testlib.CMKVersion.DAILY,
-        edition=testlib.CMKVersion.CEE,
+        version_spec=os.environ.get("VERSION", testlib.CMKVersion.DAILY),
+        edition=os.environ.get("EDITION", testlib.CMKVersion.CEE),
         branch=branch_name,
     )
 
@@ -207,16 +207,7 @@ def _exec_run(c, *args, **kwargs):
     return exit_code, output.decode("utf-8")
 
 
-# TODO: Test with all editions (daily for enterprise + last stable for raw/managed)
-@pytest.mark.parametrize(
-    "edition",
-    [
-        #    "raw",
-        "enterprise",
-        #    "managed",
-    ],
-)
-def test_start_simple(request, client, edition):
+def test_start_simple(request, client, version):
     c = _start(request, client)
 
     cmds = [p[-1] for p in c.top()["Processes"]]
@@ -233,10 +224,10 @@ def test_start_simple(request, client, edition):
     assert "APACHE_TCP_PORT: 5000" in output
     assert "MKEVENTD: on" in output
 
-    if edition != "raw":
-        assert "CORE: cmc" in output
-    else:
+    if version.is_raw_edition():
         assert "CORE: nagios" in output
+    else:
+        assert "CORE: cmc" in output
 
     # check sites uid/gid
     assert _exec_run(c, ["id", "-u", "cmk"])[1].rstrip() == "1000"

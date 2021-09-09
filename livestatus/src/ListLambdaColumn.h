@@ -84,9 +84,10 @@ class ListColumn::Callback : public ListColumn {
     using f0_t = std::function<std::vector<U>(const T&)>;
     using f1_t = std::function<std::vector<U>(const T&, const Column&)>;
     using f2_t = std::function<std::vector<U>(const T&, const contact*)>;
+    using f3_t = std::function<std::vector<U>(const T&, std::chrono::seconds)>;
 
 protected:
-    using function_type = std::variant<f0_t, f1_t, f2_t>;
+    using function_type = std::variant<f0_t, f1_t, f2_t, f3_t>;
 
 public:
     Callback(const std::string& name, const std::string& description,
@@ -124,7 +125,7 @@ public:
 private:
     [[nodiscard]] std::vector<U> getRawValue(
         Row row, const contact* auth_user,
-        std::chrono::seconds /*timezone_offset*/) const {
+        std::chrono::seconds timezone_offset) const {
         const T* data = columnData<T>(row);
         if (data == nullptr) {
             return Default;
@@ -137,6 +138,9 @@ private:
         }
         if (std::holds_alternative<f2_t>(f_)) {
             return std::get<f2_t>(f_)(*data, auth_user);
+        }
+        if (std::holds_alternative<f3_t>(f_)) {
+            return std::get<f3_t>(f_)(*data, timezone_offset);
         }
         throw std::runtime_error("unreachable");
     }

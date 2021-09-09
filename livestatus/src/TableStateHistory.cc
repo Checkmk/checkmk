@@ -316,14 +316,19 @@ void TableStateHistory::answerQuery(Query *query) {
             "Start of timeframe required. e.g. Filter: time > 1234567890");
         return;
     }
-    _since = std::chrono::system_clock::from_time_t(*glb);
+    // NOTE: Both time points are *inclusive*, i.e. we have a closed interval,
+    // which is quite awkward: Half-open intervals are the way to go!
+    auto since = std::chrono::system_clock::from_time_t(*glb);
 
     auto lub = query->leastUpperBoundFor("time");
-    _until = (lub ? std::chrono::system_clock::from_time_t(*lub)
-                  : std::chrono::system_clock::now()) +
-             1s;
+    auto until = (lub ? std::chrono::system_clock::from_time_t(*lub)
+                      : std::chrono::system_clock::now()) +
+                 1s;
 
-    if (_until - _since <= 1s) {
+    // NOTE: We have a closed interval with a resolution of 1s, so we have
+    // to subtract 1s to get the duration. Silly representation...
+    auto query_timeframe = until - since - 1s;
+    if (query_timeframe <= 0s) {
         return;
     }
 
@@ -333,12 +338,12 @@ void TableStateHistory::answerQuery(Query *query) {
     auto newest_log = _it_logs;
 
     // Now find the log where 'since' starts.
-    while (_it_logs != _log_cache->begin() && _it_logs->first >= _since) {
+    while (_it_logs != _log_cache->begin() && _it_logs->first >= since) {
         --_it_logs;  // go back in history
     }
 
     // Check if 'until' is within these logfiles
-    if (_it_logs->first > _until) {
+    if (_it_logs->first > until) {
         // All logfiles are too new, invalid timeframe
         // -> No data available. Return empty result.
         return;
@@ -350,7 +355,7 @@ void TableStateHistory::answerQuery(Query *query) {
         _it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too
         if (--_it_entries != _entries->begin()) {
-            if (_it_entries->second->time() >= _since) {
+            if (_it_entries->second->time() >= since) {
                 _it_entries = _entries->begin();
             }
         }
@@ -367,16 +372,16 @@ void TableStateHistory::answerQuery(Query *query) {
             break;
         }
 
-        if (entry->time() >= _until) {
+        if (entry->time() >= until) {
             getPreviousLogentry();
             break;
         }
-        if (only_update && entry->time() >= _since) {
+        if (only_update && entry->time() >= since) {
             // Reached start of query timeframe. From now on let's produce real
             // output. Update _from time of every state entry
             for (auto &it_hst : state_info) {
-                it_hst.second->_from = _since;
-                it_hst.second->_until = _since;
+                it_hst.second->_from = since;
+                it_hst.second->_until = since;
             }
             only_update = false;
         }
@@ -478,7 +483,7 @@ void TableStateHistory::answerQuery(Query *query) {
 
                     // Store this state object for tracking state transitions
                     state_info.emplace(key, state);
-                    state->_from = _since;
+                    state->_from = since;
 
                     // Get notification period of host/service
                     // If this host/service is no longer availabe in nagios ->
@@ -560,7 +565,7 @@ void TableStateHistory::answerQuery(Query *query) {
                     // Log UNMONITORED state if this host or service just
                     // appeared within the query timeframe
                     // It gets a grace period of ten minutes (nagios startup)
-                    if (!only_update && entry->time() - _since > 10min) {
+                    if (!only_update && entry->time() - since > 10min) {
                         state->_debug_info = "UNMONITORED ";
                         state->_state = -1;
                     }
@@ -568,16 +573,16 @@ void TableStateHistory::answerQuery(Query *query) {
                     state = it_hst->second;
                 }
 
-                int state_changed =
-                    updateHostServiceState(query, entry, state, only_update);
+                int state_changed = updateHostServiceState(
+                    query, query_timeframe, entry, state, only_update);
                 // Host downtime or state changes also affect its services
                 if (entry->kind() == LogEntryKind::alert_host ||
                     entry->kind() == LogEntryKind::state_host ||
                     entry->kind() == LogEntryKind::downtime_alert_host) {
                     if (state_changed != 0) {
                         for (auto &svc : state->_services) {
-                            updateHostServiceState(query, entry, svc,
-                                                   only_update);
+                            updateHostServiceState(query, query_timeframe,
+                                                   entry, svc, only_update);
                         }
                     }
                 }
@@ -588,8 +593,8 @@ void TableStateHistory::answerQuery(Query *query) {
                     TimeperiodTransition tpt(entry->options());
                     _notification_periods[tpt.name()] = tpt.to();
                     for (auto &it_hst : state_info) {
-                        updateHostServiceState(query, entry, it_hst.second,
-                                               only_update);
+                        updateHostServiceState(query, query_timeframe, entry,
+                                               it_hst.second, only_update);
                     }
                 } catch (const std::logic_error &e) {
                     Warning(logger())
@@ -629,7 +634,7 @@ void TableStateHistory::answerQuery(Query *query) {
                 // Log last known state up to nagios restart
                 hst->_time = hst->_last_known_time;
                 hst->_until = hst->_last_known_time;
-                process(query, hst);
+                process(query, query_timeframe, hst);
 
                 // Set absent state
                 hst->_state = -1;
@@ -638,10 +643,10 @@ void TableStateHistory::answerQuery(Query *query) {
                 hst->_long_log_output = "";
             }
 
-            hst->_time = _until - 1s;
+            hst->_time = until - 1s;
             hst->_until = hst->_time;
 
-            process(query, hst);
+            process(query, query_timeframe, hst);
             ++it_hst;
         }
     }
@@ -656,10 +661,9 @@ void TableStateHistory::answerQuery(Query *query) {
     object_blacklist.clear();
 }
 
-int TableStateHistory::updateHostServiceState(Query *query,
-                                              const LogEntry *entry,
-                                              HostServiceState *hs_state,
-                                              bool only_update) {
+int TableStateHistory::updateHostServiceState(
+    Query *query, std::chrono::system_clock::duration query_timeframe,
+    const LogEntry *entry, HostServiceState *hs_state, bool only_update) {
     int state_changed = 1;
 
     // Revive host / service if it was unmonitored
@@ -668,7 +672,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         hs_state->_time = hs_state->_last_known_time;
         hs_state->_until = hs_state->_last_known_time;
         if (!only_update) {
-            process(query, hs_state);
+            process(query, query_timeframe, hs_state);
         }
 
         hs_state->_may_no_longer_exist = false;
@@ -731,7 +735,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
             if (hs_state->_is_host) {
                 if (hs_state->_state != entry->state()) {
                     if (!only_update) {
-                        process(query, hs_state);
+                        process(query, query_timeframe, hs_state);
                     }
                     hs_state->_state = entry->state();
                     hs_state->_host_down = static_cast<int>(entry->state() > 0);
@@ -742,7 +746,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
             } else if (hs_state->_host_down !=
                        static_cast<int>(entry->state() > 0)) {
                 if (!only_update) {
-                    process(query, hs_state);
+                    process(query, query_timeframe, hs_state);
                 }
                 hs_state->_host_down = static_cast<int>(entry->state() > 0);
                 hs_state->_debug_info = "SVC HOST STATE";
@@ -754,7 +758,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
         case LogEntryKind::alert_service: {
             if (hs_state->_state != entry->state()) {
                 if (!only_update) {
-                    process(query, hs_state);
+                    process(query, query_timeframe, hs_state);
                 }
                 hs_state->_debug_info = "SVC ALERT";
                 hs_state->_state = entry->state();
@@ -767,7 +771,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
 
             if (hs_state->_in_host_downtime != downtime_active) {
                 if (!only_update) {
-                    process(query, hs_state);
+                    process(query, query_timeframe, hs_state);
                 }
                 hs_state->_debug_info =
                     hs_state->_is_host ? "HOST DOWNTIME" : "SVC HOST DOWNTIME";
@@ -785,7 +789,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
                 mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
             if (hs_state->_in_downtime != downtime_active) {
                 if (!only_update) {
-                    process(query, hs_state);
+                    process(query, query_timeframe, hs_state);
                 }
                 hs_state->_debug_info = "DOWNTIME SERVICE";
                 hs_state->_in_downtime = downtime_active;
@@ -798,7 +802,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
                 mk::starts_with(entry->state_type(), "STARTED") ? 1 : 0;
             if (hs_state->_is_flapping != flapping_active) {
                 if (!only_update) {
-                    process(query, hs_state);
+                    process(query, query_timeframe, hs_state);
                 }
                 hs_state->_debug_info = "FLAPPING ";
                 hs_state->_is_flapping = flapping_active;
@@ -816,7 +820,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
                     tpt.name() == hs_state->_notification_period) {
                     if (tpt.to() != hs_state->_in_notification_period) {
                         if (!only_update) {
-                            process(query, hs_state);
+                            process(query, query_timeframe, hs_state);
                         }
                         hs_state->_debug_info = "TIMEPERIOD ";
                         hs_state->_in_notification_period = tpt.to();
@@ -827,7 +831,7 @@ int TableStateHistory::updateHostServiceState(Query *query,
                     tpt.name() == hs_state->_service_period) {
                     if (tpt.to() != hs_state->_in_service_period) {
                         if (!only_update) {
-                            process(query, hs_state);
+                            process(query, query_timeframe, hs_state);
                         }
                         hs_state->_debug_info = "TIMEPERIOD ";
                         hs_state->_in_service_period = tpt.to();
@@ -853,14 +857,14 @@ int TableStateHistory::updateHostServiceState(Query *query,
     return state_changed;
 }
 
-void TableStateHistory::process(Query *query, HostServiceState *hs_state) {
+void TableStateHistory::process(
+    Query *query, std::chrono::system_clock::duration query_timeframe,
+    HostServiceState *hs_state) {
     hs_state->_duration = hs_state->_until - hs_state->_from;
     auto duration_secs =
         std::chrono::duration<double>(hs_state->_duration).count();
-    // NOTE: We have a closed interval with a resolution of 1s, so we have
-    // to subtract 1s to get the duration. Silly representation...
     auto query_timeframe_secs =
-        std::chrono::duration<double>{_until - _since - 1s}.count();
+        std::chrono::duration<double>{query_timeframe}.count();
     hs_state->_duration_part = duration_secs / query_timeframe_secs;
 
     hs_state->_duration_unmonitored = 0s;

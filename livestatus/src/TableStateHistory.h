@@ -52,11 +52,6 @@ private:
     // madness is not necessary, we should just pass down all the information
     // needed per query.
 
-    // NOTE: Both time points are *inclusive*, i.e. we have a closed interval,
-    // which is quite awkward: Half-open intervals are the way to go!
-    std::chrono::system_clock::time_point _since;
-    std::chrono::system_clock::time_point _until;
-
     // Notification periods information, name: active(1)/inactive(0)
     std::map<std::string, int> _notification_periods;
 
@@ -68,9 +63,12 @@ private:
     const Logfile::map_type *getEntries(Logfile *logfile);
     void getPreviousLogentry();
     LogEntry *getNextLogentry();
-    void process(Query *query, HostServiceState *hs_state);
-    int updateHostServiceState(Query *query, const LogEntry *entry,
-                               HostServiceState *hs_state, bool only_update);
+    void process(Query *query,
+                 std::chrono::system_clock::duration query_timeframe,
+                 HostServiceState *hs_state);
+    int updateHostServiceState(
+        Query *query, std::chrono::system_clock::duration query_timeframe,
+        const LogEntry *entry, HostServiceState *hs_state, bool only_update);
 };
 
 #endif  // TableStateHistory_h

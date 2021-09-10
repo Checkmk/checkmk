@@ -67,15 +67,15 @@ from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import user_sync_default_config
 from cmk.gui.plugins.watolib import ABCConfigDomain
 from cmk.gui.plugins.watolib.utils import wato_fileheader
-from cmk.gui.sites import SiteStatus, activation_sites, allsites
+from cmk.gui.sites import activation_sites, allsites
 from cmk.gui.sites import disconnect as sites_disconnect
-from cmk.gui.sites import get_site_config, is_single_local_site, site_is_local
+from cmk.gui.sites import get_site_config, is_single_local_site, site_is_local, SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.type_defs import ConfigDomainName, HTTPVariables
 from cmk.gui.utils.ntop import is_ntop_configured
-from cmk.gui.watolib.automation_commands import AutomationCommand, automation_command_registry
-from cmk.gui.watolib.changes import SiteChanges, log_audit
-from cmk.gui.watolib.config_sync import ReplicationPath, SnapshotCreator, extract_from_buffer
+from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.changes import log_audit, SiteChanges
+from cmk.gui.watolib.config_sync import extract_from_buffer, ReplicationPath, SnapshotCreator
 from cmk.gui.watolib.global_settings import save_site_global_settings
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 

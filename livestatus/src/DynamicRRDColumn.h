@@ -35,8 +35,9 @@ public:
 
     std::unique_ptr<Column> createColumn(
         const std::string &name, const std::string &arguments) override {
-        return std::make_unique<T>(name, "dynamic column", _offsets, _mc,
-                                   RRDColumnArgs{arguments, _name});
+        return std::make_unique<T>(
+            name, "dynamic column", _offsets, std::make_unique<RRDRenderer>(),
+            RRDDataMaker{_mc, RRDColumnArgs{arguments, _name}});
     }
 
 private:

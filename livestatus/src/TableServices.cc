@@ -682,7 +682,8 @@ void TableServices::addColumns(Table *table, const std::string &prefix,
             return metrics;
         }));
     table->addDynamicColumn(std::make_unique<
-                            DynamicRRDColumn<RRDColumn<service>>>(
+                            DynamicRRDColumn<ListColumn::Callback<
+                                service, RRDDataMaker::value_type>>>(
         prefix + "rrddata",
         "RRD metrics data of this object. This is a column with parameters: rrddata:COLUMN_TITLE:VARNAME:FROM_TIME:UNTIL_TIME:RESOLUTION",
         table->core(), offsets));

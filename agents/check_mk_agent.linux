@@ -283,7 +283,7 @@ set_up_encryption() {
             optionally_encrypt() { printf "00%s" "$(openssl enc -aes-256-cbc -md md5 -k "${PASSPHRASE}" -nosalt)"; }
         fi
     else
-        alias optionally_encrypt=cat
+        optionally_encrypt() { cat; }
     fi
 
 }

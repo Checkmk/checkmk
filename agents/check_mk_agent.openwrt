@@ -93,7 +93,7 @@ preamble_1() {
 }
 
 # encryption not implemented
-alias optionally_encrypt=cat
+optionally_encrypt() { cat; }
 
 #
 # BEGIN COMMON AGENT CODE

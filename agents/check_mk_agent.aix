@@ -209,7 +209,7 @@ preamble_3() {
 }
 
 # encryption not available for aix
-alias optionally_encrypt=cat
+optionally_encrypt() { cat; }
 
 # Shell version of the waitmax utility, that limits the runtime of
 # commands. This version does not conserve the original exit code

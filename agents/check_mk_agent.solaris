@@ -200,7 +200,7 @@ file_age() {
 }
 
 # encryption not implemented
-alias optionally_encrypt=cat
+optionally_encrypt() { cat; }
 
 preamble_4() {
     if [ -f "$MK_CONFDIR/exclude_sections.cfg" ]; then

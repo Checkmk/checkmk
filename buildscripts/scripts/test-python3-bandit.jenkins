@@ -14,7 +14,7 @@ timeout(activity: true, time: 15, unit: 'MINUTES') {
             checkout(scm)
             notify = load 'buildscripts/scripts/lib/notify.groovy'
         }
-    
+
         docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
             def TEST_IMAGE = docker.build("test-image:${env.BUILD_ID}", "--pull buildscripts/docker_image_aliases/IMAGE_TESTING")
             // The commands are executed with the 1001:1000 UID:GID (non-root).
@@ -28,12 +28,11 @@ timeout(activity: true, time: 15, unit: 'MINUTES') {
                         dir ('tests') {
                             def EXIT_CODE = sh(
                                 script: "BANDIT_OUTPUT_ARGS=\"-f xml -o '$WORKSPACE/bandit_results.xml'\" make test-bandit",
-                                returnStatus: true
                             )
                             println("Exit code was: " + EXIT_CODE)
                         }
                     }
-    
+
                     stage('process results') {
                         archiveArtifacts("bandit_results.xml")
                         xunit([Custom(

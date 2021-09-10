@@ -178,11 +178,14 @@ class Discovery:
                     add_disabled_rule.add(descr)
 
             elif table_source == DiscoveryState.VANISHED:
-                if table_target != DiscoveryState.REMOVED:
+                if table_target == DiscoveryState.REMOVED:
+                    pass
+                elif table_target == DiscoveryState.IGNORED:
+                    add_disabled_rule.add(descr)
+                    autochecks_to_save[key] = value
+                else:
                     autochecks_to_save[key] = value
                     saved_services.add(descr)
-                if table_target == DiscoveryState.IGNORED:
-                    add_disabled_rule.add(descr)
 
             elif table_source == DiscoveryState.MONITORED:
                 if table_target in [

@@ -10,12 +10,12 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.mtr import (
-    CheckParams,
-    Hop,
-    Section,
     check_mtr,
+    CheckParams,
     discover_mtr,
+    Hop,
     parse_mtr,
+    Section,
 )
 
 SECTION: Section = {

@@ -8,10 +8,10 @@ import pytest
 
 from cmk.base.plugins.agent_based.utils.aws import (
     CloudwatchInsightsSection,
+    extract_aws_metrics_by_labels,
     LambdaFunctionConfiguration,
     LambdaInsightMetrics,
     LambdaSummarySection,
-    extract_aws_metrics_by_labels,
     parse_aws,
 )
 

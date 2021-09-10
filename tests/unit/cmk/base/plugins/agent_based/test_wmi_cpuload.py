@@ -13,7 +13,7 @@ from cmk.base.plugins.agent_based import wmi_cpuload
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.cpu import ProcessorType
-from cmk.base.plugins.agent_based.wmi_cpuload import Section, check_wmi_cpuload, parse_wmi_cpuload
+from cmk.base.plugins.agent_based.wmi_cpuload import check_wmi_cpuload, parse_wmi_cpuload, Section
 
 
 @pytest.mark.parametrize(

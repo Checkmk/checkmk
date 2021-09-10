@@ -15,9 +15,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.aws_lambda_memory import (
     _DEFAULT_PARAMETERS,
-    LambdaMemoryParameters,
     check_aws_lambda_memory,
     discover_lambda_memory,
+    LambdaMemoryParameters,
     parse_aws_lambda_cloudwatch_insights,
 )
 from cmk.base.plugins.agent_based.utils.aws import (

@@ -21,7 +21,7 @@ from bs4 import BeautifulSoup  # type: ignore[import]
 from lxml import etree
 from playwright.async_api import async_playwright
 
-from tests.testlib.site import Site, get_site_factory
+from tests.testlib.site import get_site_factory, Site
 from tests.testlib.version import CMKVersion
 from tests.testlib.web_session import CMKWebSession
 

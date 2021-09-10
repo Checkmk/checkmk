@@ -14,9 +14,13 @@ from cmk.utils.type_defs import CheckPluginName
 from cmk.base import plugin_contexts
 from cmk.base.check_utils import Service
 from cmk.base.plugins.agent_based import diskstat
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Metric, Result
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_value_store,
+    IgnoreResultsError,
+    Metric,
+    Result,
+)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
 
 def test_parse_diskstat_minimum():

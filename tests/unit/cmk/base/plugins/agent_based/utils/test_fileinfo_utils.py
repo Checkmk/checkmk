@@ -15,9 +15,6 @@ from cmk.utils.type_defs import CheckPluginName
 from cmk.base.check_api import get_age_human_readable, get_filesize_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils.fileinfo import (
-    Fileinfo,
-    FileinfoItem,
-    MetricInfo,
     _cast_value,
     _define_fileinfo_group_check,
     _fileinfo_check_conjunctions,
@@ -27,8 +24,11 @@ from cmk.base.plugins.agent_based.utils.fileinfo import (
     _parse_single_legacy_row,
     check_fileinfo_data,
     check_fileinfo_groups_data,
+    Fileinfo,
     fileinfo_check_timeranges,
     fileinfo_groups_get_group_name,
+    FileinfoItem,
+    MetricInfo,
     parse_fileinfo,
 )
 

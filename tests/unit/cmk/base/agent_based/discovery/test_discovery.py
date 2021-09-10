@@ -17,9 +17,9 @@ from tests.testlib.debug_utils import cmk_debug_enabled
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import (
-    EVERYTHING,
     CheckPluginName,
     DiscoveryResult,
+    EVERYTHING,
     HostAddress,
     HostKey,
     HostName,

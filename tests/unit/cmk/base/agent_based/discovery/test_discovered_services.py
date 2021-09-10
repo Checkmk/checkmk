@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.type_defs import EVERYTHING, CheckPluginName
+from cmk.utils.type_defs import CheckPluginName, EVERYTHING
 
 from cmk.base.agent_based.discovery._discovered_services import _analyse_discovered_services
 from cmk.base.check_utils import Service

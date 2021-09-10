@@ -9,13 +9,14 @@ from typing import Any, Dict
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
     IgnoreResultsError,
     Metric,
     Result,
     Service,
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1 import State as state
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, type_defs
+from cmk.base.plugins.agent_based.agent_based_api.v1 import type_defs
 from cmk.base.plugins.agent_based.utils import diskstat
 
 

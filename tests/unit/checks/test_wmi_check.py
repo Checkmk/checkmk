@@ -10,7 +10,7 @@ from tests.testlib import Check
 
 from cmk.base.check_api import MKCounterWrapped
 
-from .checktestlib import CheckResult, DiscoveryResult, assertDiscoveryResultsEqual
+from .checktestlib import assertDiscoveryResultsEqual, CheckResult, DiscoveryResult
 
 pytestmark = pytest.mark.checks
 

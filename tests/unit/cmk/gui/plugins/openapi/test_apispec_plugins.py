@@ -6,7 +6,7 @@
 
 import pytest
 from apispec import APISpec  # type: ignore[import]
-from marshmallow import Schema, fields, post_load
+from marshmallow import fields, post_load, Schema
 
 from cmk.gui.plugins.openapi.plugins import ValueTypedDictMarshmallowPlugin, ValueTypedDictSchema
 

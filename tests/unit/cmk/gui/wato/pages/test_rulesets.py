@@ -13,7 +13,7 @@ from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import TagConditionNE, TaggroupID, TagID
 
 from cmk.gui.htmllib import HTML
-from cmk.gui.wato.pages.rulesets import RuleConditionRenderer, config
+from cmk.gui.wato.pages.rulesets import config, RuleConditionRenderer
 
 
 @pytest.fixture(name="tag_config")

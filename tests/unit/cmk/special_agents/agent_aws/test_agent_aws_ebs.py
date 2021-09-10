@@ -9,8 +9,8 @@
 import pytest
 
 from cmk.special_agents.agent_aws import (
-    EBS,
     AWSConfig,
+    EBS,
     EBSLimits,
     EBSSummary,
     EC2Summary,

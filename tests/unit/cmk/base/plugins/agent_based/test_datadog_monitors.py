@@ -9,9 +9,9 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.datadog_monitors import (
     _DEFAULT_DATADOG_AND_CHECKMK_STATES,
-    Monitor,
     check_datadog_monitors,
     discover_datadog_monitors,
+    Monitor,
     parse_datadog_monitors,
 )
 

@@ -20,10 +20,10 @@ from tests.testlib import import_module, wait_until
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.store.host_storage import (
-    StandardStorageLoader,
-    StorageFormat,
     get_hosts_file_variables,
     get_standard_hosts_storage,
+    StandardStorageLoader,
+    StorageFormat,
 )
 
 

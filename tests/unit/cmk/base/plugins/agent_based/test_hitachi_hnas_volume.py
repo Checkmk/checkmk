@@ -11,10 +11,10 @@ from tests.testlib import on_time
 from cmk.base.plugins.agent_based import hitachi_hnas_volume
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.hitachi_hnas_volume import (
-    Section,
     check_hitachi_hnas_virtual_volume,
     check_hitachi_hnas_volume,
     parse_hitachi_hnas_volume,
+    Section,
 )
 
 LAST_TIME_EPOCH = (datetime.strptime("1988-06-08 16:00:00.000000", "%Y-%m-%d %H:%M:%S.%f") -

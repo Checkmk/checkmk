@@ -16,11 +16,11 @@ from cmk.utils.type_defs import UserId
 from cmk.gui.htmllib import HTML
 from cmk.gui.watolib.changes import (
     AuditLogStore,
+    log_audit,
+    make_diff_text,
     ObjectRef,
     ObjectRefType,
     SiteChanges,
-    log_audit,
-    make_diff_text,
 )
 
 

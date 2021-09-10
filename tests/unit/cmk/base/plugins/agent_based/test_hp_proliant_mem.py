@@ -6,9 +6,9 @@
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.hp_proliant_mem import (
-    Module,
     check_hp_proliant_mem,
     discovery_hp_proliant_mem,
+    Module,
 )
 
 SECTION = {

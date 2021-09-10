@@ -8,10 +8,10 @@ import pytest
 
 from cmk.gui.globals import user
 from cmk.gui.plugins.views.utils import (
-    SorterSpec,
     _encode_sorter_url,
     _parse_url_sorters,
     replace_action_url_macros,
+    SorterSpec,
 )
 
 

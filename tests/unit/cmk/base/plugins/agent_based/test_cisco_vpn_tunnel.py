@@ -18,12 +18,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
 )
 from cmk.base.plugins.agent_based.cisco_vpn_tunnel import (
-    CheckParameters,
-    Phase,
-    VPNTunnel,
     check_cisco_vpn_tunnel,
+    CheckParameters,
     discover_cisco_vpn_tunnel,
     parse_cisco_vpn_tunnel,
+    Phase,
+    VPNTunnel,
 )
 
 _STRING_TABLE = [

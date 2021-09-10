@@ -12,7 +12,7 @@ import pytest
 
 import cmk.utils.paths
 
-from cmk.core_helpers.config_path import LATEST_CONFIG, ConfigPath, VersionedConfigPath
+from cmk.core_helpers.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
 
 
 class TestVersionedConfigPath:

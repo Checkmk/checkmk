@@ -8,7 +8,7 @@ from typing import Dict, Tuple
 
 import pytest
 
-from cmk.base.api.agent_based.utils import GetRateError, get_average, get_rate
+from cmk.base.api.agent_based.utils import get_average, get_rate, GetRateError
 
 
 @pytest.mark.parametrize("pre_state,time,value,raise_of,errmsg", [

@@ -10,10 +10,10 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_cpu_usage import (
-    EsxVsphereHostsystemCpuSection,
     check_esx_vsphere_hostsystem_cpu_usage,
     cluster_check_esx_vsphere_hostsystem_cpu_usage,
     discover_esx_vsphere_hostsystem_cpu_usage,
+    EsxVsphereHostsystemCpuSection,
     extract_esx_vsphere_hostsystem_cpu_usage,
 )
 

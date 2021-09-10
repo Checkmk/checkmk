@@ -8,10 +8,10 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.mssql_mirroring import (
-    MirroringConfig,
     check_mssql_mirroring,
     cluster_check_mssql_mirroring,
     discover_mssql_mirroring,
+    MirroringConfig,
     parse_mssql_mirroring,
 )
 

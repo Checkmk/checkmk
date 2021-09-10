@@ -8,9 +8,9 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.iis_app_pool_state import (
+    check_iis_app_pool_state,
     DefaultCheckParameters,
     IisAppPoolState,
-    check_iis_app_pool_state,
 )
 
 

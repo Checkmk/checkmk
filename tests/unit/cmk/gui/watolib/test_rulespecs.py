@@ -14,25 +14,25 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.rulespecs
 from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.globals import request
-from cmk.gui.plugins.wato.utils import TimeperiodValuespec, register_check_parameters
+from cmk.gui.plugins.wato.utils import register_check_parameters, TimeperiodValuespec
 from cmk.gui.plugins.wato.utils.main_menu import ABCMainModule, MainModuleTopicHosts
 from cmk.gui.utils.urls import makeuri_contextless_rulespec_group
 from cmk.gui.valuespec import Dictionary, FixedValue, TextInput, Tuple, ValueSpec
-from cmk.gui.watolib.main_menu import ModuleRegistry, main_module_registry
+from cmk.gui.watolib.main_menu import main_module_registry, ModuleRegistry
 from cmk.gui.watolib.rulespecs import (
     CheckParameterRulespecWithoutItem,
     CheckTypeGroupSelection,
     HostRulespec,
+    main_module_from_rulespec_group_name,
     ManualCheckParameterRulespec,
     MatchItemGeneratorRules,
+    rulespec_group_registry,
+    rulespec_registry,
     RulespecGroup,
     RulespecGroupEnforcedServices,
     RulespecGroupRegistry,
     RulespecRegistry,
     RulespecSubGroup,
-    main_module_from_rulespec_group_name,
-    rulespec_group_registry,
-    rulespec_registry,
 )
 from cmk.gui.watolib.search import MatchItem
 

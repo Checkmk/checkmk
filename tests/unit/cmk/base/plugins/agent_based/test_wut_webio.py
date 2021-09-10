@@ -9,13 +9,13 @@ import pytest
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.wut_webio import (
     AS_DISCOVERED,
-    DEFAULT_STATE_EVALUATION,
-    STATE_EVAL_KEY,
-    STATES_DURING_DISC_KEY,
-    Section,
     check_wut_webio,
+    DEFAULT_STATE_EVALUATION,
     discover_wut_webio,
     parse_wut_webio,
+    Section,
+    STATE_EVAL_KEY,
+    STATES_DURING_DISC_KEY,
 )
 
 STRING_TABLE = [

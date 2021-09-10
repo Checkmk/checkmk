@@ -12,12 +12,12 @@ import pytest
 
 from tests.testlib.pylint_checker_cmk_module_layers import (
     _COMPONENTS,
+    _get_absolute_importee,
+    _in_component,
     CMKModuleLayerChecker,
     Component,
     ModuleName,
     ModulePath,
-    _get_absolute_importee,
-    _in_component,
 )
 
 CHECKER = CMKModuleLayerChecker()

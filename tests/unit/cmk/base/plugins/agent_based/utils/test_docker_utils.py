@@ -9,8 +9,8 @@ import typing
 import pytest
 
 from cmk.base.plugins.agent_based.utils.docker import (
-    MemorySection,
     _cleanup_oci_error_message,
+    MemorySection,
     parse,
     parse_multiline,
 )

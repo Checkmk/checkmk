@@ -7,7 +7,7 @@
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
-from cmk.base.plugins.agent_based.inv_if import Interface, SectionInvIf, inventory_if, parse_inv_if
+from cmk.base.plugins.agent_based.inv_if import Interface, inventory_if, parse_inv_if, SectionInvIf
 from cmk.base.plugins.agent_based.utils import uptime
 
 SECTION_INV_IF = SectionInvIf(

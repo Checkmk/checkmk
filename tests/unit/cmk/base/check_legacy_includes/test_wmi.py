@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.base.check_legacy_includes.wmi import WMITableLegacy, parse_wmi_table, scale_counter
+from cmk.base.check_legacy_includes.wmi import parse_wmi_table, scale_counter, WMITableLegacy
 
 
 def test_parse_wmi_table() -> None:

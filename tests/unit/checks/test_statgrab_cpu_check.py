@@ -9,9 +9,9 @@ import pytest
 from tests.testlib import Check
 
 from .checktestlib import (
-    CheckResult,
     assertCheckResultsEqual,
     assertMKCounterWrapped,
+    CheckResult,
     mock_item_state,
 )
 

@@ -1,7 +1,7 @@
 from collections import namedtuple
+from freezegun import freeze_time
 
 import pytest
-from freezegun import freeze_time
 
 from cmk.base.plugins.agent_based import fileinfo as fileinfo_plugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State

@@ -9,10 +9,10 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from cmk.special_agents import agent_datadog
 from cmk.special_agents.agent_datadog import (
+    _to_syslog_message,
     DatadogAPI,
     EventsQuerier,
     MonitorsQuerier,
-    _to_syslog_message,
     parse_arguments,
 )
 

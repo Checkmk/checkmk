@@ -6,12 +6,12 @@
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
 from cmk.base.plugins.agent_based.ntp import (
-    Peer,
-    Section,
     _ntp_fmt_time,
     check_ntp,
     check_ntp_summary,
     parse_ntp,
+    Peer,
+    Section,
 )
 
 

@@ -9,8 +9,8 @@
 import pytest
 
 from cmk.special_agents.agent_aws import (
-    EC2,
     AWSConfig,
+    EC2,
     EC2Labels,
     EC2Limits,
     EC2SecurityGroups,

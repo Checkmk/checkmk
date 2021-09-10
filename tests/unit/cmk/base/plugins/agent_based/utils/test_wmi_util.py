@@ -7,7 +7,7 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.utils.wmi import WMISection, WMITable, parse_wmi_table
+from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table, WMISection, WMITable
 
 
 class TestWMITable:

@@ -11,7 +11,7 @@ from _pytest.monkeypatch import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, matches_tag_condition
+from cmk.utils.rulesets.ruleset_matcher import matches_tag_condition, RulesetMatchObject
 from cmk.utils.tags import TagConfig
 from cmk.utils.type_defs import (
     CheckPluginName,

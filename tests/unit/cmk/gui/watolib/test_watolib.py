@@ -11,10 +11,10 @@ import cmk.utils.version as cmk_version
 import cmk.gui.watolib as watolib
 from cmk.gui.plugins.watolib.utils import (
     ABCConfigDomain,
+    ConfigVariableGroup,
     config_variable_group_registry,
     config_variable_registry,
     configvar_order,
-    ConfigVariableGroup,
 )
 from cmk.gui.valuespec import ValueSpec
 

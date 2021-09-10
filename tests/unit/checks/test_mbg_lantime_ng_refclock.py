@@ -9,11 +9,11 @@ import pytest
 from tests.testlib import Check
 
 from .checktestlib import (
-    assertCheckResultsEqual,
-    assertDiscoveryResultsEqual,
     BasicCheckResult,
     CheckResult,
     DiscoveryResult,
+    assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
 )
 
 pytestmark = pytest.mark.checks

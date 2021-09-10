@@ -2,7 +2,7 @@ import pytest
 
 from tests.testlib import Check
 
-from .checktestlib import assertCheckResultsEqual, BasicCheckResult, CheckResult, PerfValue
+from .checktestlib import BasicCheckResult, CheckResult, PerfValue, assertCheckResultsEqual
 
 pytestmark = pytest.mark.checks
 

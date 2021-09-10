@@ -16,12 +16,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 from cmk.base.plugins.agent_based.aws_lambda_performance import (
     _DEFAULT_PARAMETERS,
     _MORE_THAN_ONE_PER_HOUR,
-    check_aws_lambda_performance,
-    discover_aws_lambda,
     LambdaCloudwatchMetrics,
     LambdaCloudwatchSection,
     LambdaPerformanceParameters,
     LambdaSummarySection,
+    check_aws_lambda_performance,
+    discover_aws_lambda,
     parse_aws_lambda,
 )
 from cmk.base.plugins.agent_based.utils.aws import CloudwatchInsightsSection

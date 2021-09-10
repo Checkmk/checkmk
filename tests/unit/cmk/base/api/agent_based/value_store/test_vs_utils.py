@@ -15,11 +15,11 @@ from cmk.utils import store
 from cmk.utils.type_defs import CheckPluginName
 
 from cmk.base.api.agent_based.value_store._utils import (
+    ValueStoreManager,
     _DiskSyncedMapping,
     _DynamicDiskSyncedMapping,
     _StaticDiskSyncedMapping,
     _ValueStore,
-    ValueStoreManager,
 )
 
 _TEST_KEY = ("check", "item", "user-key")

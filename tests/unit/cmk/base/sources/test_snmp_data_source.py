@@ -11,9 +11,9 @@ import pytest
 from tests.testlib.base import Scenario
 
 from cmk.utils.exceptions import MKIPAddressLookupError, OnError
-from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, result, SourceType
+from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, SourceType, result
 
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION
+from cmk.core_helpers.type_defs import NO_SELECTION, Mode
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

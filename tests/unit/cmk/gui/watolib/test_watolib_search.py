@@ -19,7 +19,7 @@ from cmk.gui.plugins.wato.omd_configuration import (
     ConfigDomainRRDCached,
 )
 from cmk.gui.type_defs import SearchResult
-from cmk.gui.utils.logged_in import _UserContext, LoggedInNobody
+from cmk.gui.utils.logged_in import LoggedInNobody, _UserContext
 from cmk.gui.watolib import search
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import Folder
@@ -28,12 +28,12 @@ from cmk.gui.watolib.search import (
     IndexBuilder,
     IndexNotFoundException,
     IndexSearcher,
-    localize,
     MatchItem,
     MatchItemGeneratorRegistry,
     MatchItems,
     PermissionsHandler,
     URLChecker,
+    localize,
 )
 
 from cmk.gui.watolib.search import (  # isort: skip

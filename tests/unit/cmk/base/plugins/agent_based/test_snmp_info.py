@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.base.plugins.agent_based.snmp_info import parse_snmp_info, SNMPInfo
+from cmk.base.plugins.agent_based.snmp_info import SNMPInfo, parse_snmp_info
 
 
 @pytest.mark.parametrize("string_table, expected_result", [

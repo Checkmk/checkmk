@@ -11,7 +11,7 @@ from typing import Optional
 
 import pytest
 
-from tests.testlib import wait_until, WatchLog, web  # noqa: F401 # pylint: disable=unused-import
+from tests.testlib import WatchLog, wait_until, web  # noqa: F401 # pylint: disable=unused-import
 
 STATE_UP = 0
 STATE_DOWN = 1

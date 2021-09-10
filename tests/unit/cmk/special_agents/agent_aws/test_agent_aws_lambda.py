@@ -15,12 +15,12 @@ from _pytest.monkeypatch import (
 
 from cmk.special_agents.agent_aws import (
     AWSConfig,
-    create_lamdba_sections,
     LambdaCloudwatch,
     LambdaCloudwatchInsights,
     LambdaProvisionedConcurrency,
     LambdaRegionLimits,
     LambdaSummary,
+    create_lamdba_sections,
 )
 
 from .agent_aws_fake_clients import (

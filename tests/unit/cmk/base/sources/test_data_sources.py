@@ -8,7 +8,7 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import result, SectionName
+from cmk.utils.type_defs import SectionName, result
 
 from cmk.base import config
 from cmk.base.sources import make_sources

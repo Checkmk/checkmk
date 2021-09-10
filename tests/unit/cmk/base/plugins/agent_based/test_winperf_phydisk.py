@@ -8,9 +8,9 @@ import pytest
 
 from cmk.base.plugins.agent_based import winperf_phydisk
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
-    get_value_store,
     IgnoreResultsError,
     Metric,
+    get_value_store,
 )
 
 STRING_TABLE = [

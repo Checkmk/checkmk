@@ -15,7 +15,7 @@ from tests.testlib import is_enterprise_repo
 from livestatus import SiteId
 
 from cmk.post_rename_site import main
-from cmk.post_rename_site.registry import rename_action_registry, RenameAction, RenameActionRegistry
+from cmk.post_rename_site.registry import RenameAction, RenameActionRegistry, rename_action_registry
 
 
 @pytest.fixture(autouse=True)

@@ -6,7 +6,7 @@
 
 import pytest
 
-from cmk.base.events import add_to_event_context, EventContext, raw_context_from_string
+from cmk.base.events import EventContext, add_to_event_context, raw_context_from_string
 
 
 @pytest.mark.parametrize("context,expected", [

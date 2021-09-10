@@ -13,9 +13,9 @@ import pytest
 # Needed to monkeypatch agent_aws.NOW
 from cmk.special_agents import agent_aws
 from cmk.special_agents.agent_aws import (
+    S3,
     AWSConfig,
     ResultDistributor,
-    S3,
     S3Limits,
     S3Requests,
     S3Summary,

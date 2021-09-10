@@ -11,11 +11,11 @@ from tests.testlib import Check
 from cmk.base.plugins.agent_based.df_section import parse_df
 
 from .checktestlib import (
-    assertCheckResultsEqual,
-    assertDiscoveryResultsEqual,
     CheckResult,
     DiscoveryResult,
     MockHostExtraConf,
+    assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
 )
 
 pytestmark = pytest.mark.checks

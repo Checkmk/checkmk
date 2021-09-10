@@ -13,7 +13,7 @@ from tests.testlib.base import Scenario
 import cmk.utils.piggyback
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import AgentRawData, HostKey, HostName, result, SectionName, SourceType
+from cmk.utils.type_defs import AgentRawData, HostKey, HostName, SectionName, SourceType, result
 
 import cmk.core_helpers.cache as file_cache
 from cmk.core_helpers import (
@@ -26,11 +26,11 @@ from cmk.core_helpers import (
 )
 from cmk.core_helpers.host_sections import HostSections
 from cmk.core_helpers.protocol import FetcherMessage
-from cmk.core_helpers.type_defs import Mode, NO_SELECTION
+from cmk.core_helpers.type_defs import NO_SELECTION, Mode
 
 import cmk.base.config as config
 from cmk.base.agent_based.data_provider import _collect_host_sections
-from cmk.base.sources import make_nodes, make_sources, Source
+from cmk.base.sources import Source, make_nodes, make_sources
 from cmk.base.sources.agent import AgentHostSections
 from cmk.base.sources.piggyback import PiggybackSource
 from cmk.base.sources.programs import ProgramSource

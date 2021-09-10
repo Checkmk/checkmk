@@ -11,12 +11,12 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.haproxy import (
+    Section,
     check_haproxy_frontend,
     check_haproxy_server,
     discover_haproxy_frontend,
     discover_haproxy_server,
     parse_haproxy,
-    Section,
 )
 
 

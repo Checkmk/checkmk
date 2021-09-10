@@ -10,7 +10,7 @@ import pytest
 
 from tests.testlib import Check
 
-from .checktestlib import assertCheckResultsEqual, CheckResult
+from .checktestlib import CheckResult, assertCheckResultsEqual
 
 # Mark all tests in this file as check related tests
 pytestmark = pytest.mark.checks

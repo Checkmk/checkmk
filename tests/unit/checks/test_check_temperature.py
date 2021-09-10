@@ -14,7 +14,7 @@ import pytest
 
 from tests.testlib import Check
 
-from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
+from .checktestlib import CheckResult, assertCheckResultsEqual, mock_item_state
 
 
 @pytest.mark.parametrize(

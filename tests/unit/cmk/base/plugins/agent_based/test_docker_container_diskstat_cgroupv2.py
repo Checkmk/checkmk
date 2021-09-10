@@ -12,8 +12,8 @@ from cmk.base.api.agent_based.checking_classes import IgnoreResultsError
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.docker_container_diskstat_cgroupv2 import (
-    _check_docker_container_diskstat_cgroupv2,
     Device,
+    _check_docker_container_diskstat_cgroupv2,
     parse_docker_container_diskstat_cgroupv2,
 )
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS

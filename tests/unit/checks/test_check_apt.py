@@ -10,7 +10,7 @@ import pytest
 
 from tests.testlib import Check
 
-from cmk.base.plugins.agent_based.apt import parse_apt, Section
+from cmk.base.plugins.agent_based.apt import Section, parse_apt
 
 _SECTION_UPDATES_AV = [
     ["Remv default-java-plugin [2:1.8-58]"],

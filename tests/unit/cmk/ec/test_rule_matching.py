@@ -10,7 +10,7 @@ from typing import Dict
 import pytest
 
 from cmk.ec.defaults import default_config
-from cmk.ec.main import EventServer, make_config, MatchPriority, MatchSuccess, RuleMatcher
+from cmk.ec.main import EventServer, MatchPriority, MatchSuccess, RuleMatcher, make_config
 
 
 @pytest.fixture(name="m")

@@ -8,7 +8,7 @@ import pytest
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import HostName, result, SourceType
+from cmk.utils.type_defs import HostName, SourceType, result
 
 from cmk.core_helpers.ipmi import IPMISummarizer
 from cmk.core_helpers.type_defs import Mode

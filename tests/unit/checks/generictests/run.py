@@ -19,14 +19,14 @@ from cmk.base.check_utils import Service
 from cmk.base.plugin_contexts import current_host, current_service
 
 from ..checktestlib import (
-    assertCheckResultsEqual,
-    assertDiscoveryResultsEqual,
-    assertEqual,
     CheckResult,
     DiscoveryResult,
     Immutables,
-    mock_item_state,
     MockHostExtraConf,
+    assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
+    assertEqual,
+    mock_item_state,
 )
 from .checkhandler import checkhandler
 

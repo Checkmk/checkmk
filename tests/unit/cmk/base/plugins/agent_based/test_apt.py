@@ -9,7 +9,7 @@ from typing import Optional
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-from cmk.base.plugins.agent_based.apt import _data_is_valid, parse_apt, Section
+from cmk.base.plugins.agent_based.apt import Section, _data_is_valid, parse_apt
 
 _SECTION_UPDATES_AV = [
     ["Remv default-java-plugin [2:1.8-58]"],

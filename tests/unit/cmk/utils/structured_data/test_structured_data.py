@@ -15,13 +15,13 @@ from tests.testlib import cmk_path
 
 from cmk.utils.structured_data import (
     Attributes,
-    make_filter,
-    parse_visible_raw_path,
     RetentionIntervals,
     StructuredDataNode,
     StructuredDataStore,
     Table,
     TableRetentions,
+    make_filter,
+    parse_visible_raw_path,
 )
 from cmk.utils.type_defs import HostName
 

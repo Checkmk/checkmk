@@ -10,8 +10,8 @@ import pytest
 
 from cmk.base.api.agent_based.inventory_classes import TableRow
 from cmk.base.api.agent_based.register.inventory_plugins_legacy import (
-    _generate_table_rows,
     MockStructuredDataNode,
+    _generate_table_rows,
 )
 
 

@@ -11,11 +11,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.aws_lambda_concurrency import (
     _DEFAULT_PARAMETERS,
+    LambdaCloudwatchSection,
+    SectionProvisionedConcurrencyAliases,
     check_aws_lambda_concurrency,
     discover_aws_lambda_concurrency,
-    LambdaCloudwatchSection,
     parse_aws_lambda_provisioned_concurrency,
-    SectionProvisionedConcurrencyAliases,
 )
 from cmk.base.plugins.agent_based.aws_lambda_performance import parse_aws_lambda
 from cmk.base.plugins.agent_based.aws_lambda_summary import parse_aws_lambda_region_limits

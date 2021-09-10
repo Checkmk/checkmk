@@ -10,7 +10,7 @@ from tests.testlib import Check
 
 from cmk.base.plugins.agent_based.utils.k8s import parse_json
 
-from .checktestlib import assertCheckResultsEqual, CheckResult
+from .checktestlib import CheckResult, assertCheckResultsEqual
 
 pytestmark = pytest.mark.checks
 

@@ -8,7 +8,7 @@ import pytest
 
 from tests.testlib import Check
 
-from .checktestlib import assertCheckResultsEqual, CheckResult
+from .checktestlib import CheckResult, assertCheckResultsEqual
 
 pytestmark = pytest.mark.checks
 

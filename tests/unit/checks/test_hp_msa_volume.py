@@ -11,7 +11,7 @@ import pytest
 
 from tests.testlib import Check
 
-from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
+from .checktestlib import CheckResult, assertCheckResultsEqual, mock_item_state
 
 # all tests in this file are hp_msa_volume check related
 pytestmark = pytest.mark.checks

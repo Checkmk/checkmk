@@ -7,9 +7,9 @@
 import pytest
 
 from cmk.gui.plugins.wato.datasource_programs import (
+    MultisiteBiDatasource,
     _special_agents_innovaphone_transform,
     _special_agents_kubernetes_transform,
-    MultisiteBiDatasource,
 )
 
 

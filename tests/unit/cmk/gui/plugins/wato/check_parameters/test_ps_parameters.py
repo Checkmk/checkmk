@@ -9,8 +9,8 @@ import pytest
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.wato.check_parameters.cpu_utilization import transform_cpu_iowait
 from cmk.gui.plugins.wato.check_parameters.ps import (
-    convert_inventory_processes,
     CPU_RESCALE_MAX_UNSPEC,
+    convert_inventory_processes,
     forbid_re_delimiters_inside_groups,
     ps_cleanup_params,
     validate_process_discovery_descr_option,

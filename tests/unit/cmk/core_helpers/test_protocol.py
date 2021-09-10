@@ -21,7 +21,7 @@ from cmk.utils.exceptions import (
     MKTerminate,
     MKTimeout,
 )
-from cmk.utils.type_defs import AgentRawData, result, SectionName
+from cmk.utils.type_defs import AgentRawData, SectionName, result
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPTable
 

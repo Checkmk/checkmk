@@ -8,10 +8,10 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.printer_supply import (
+    PrinterSupply,
     check_printer_supply,
     discovery_printer_supply,
     parse_printer_supply,
-    PrinterSupply,
 )
 
 

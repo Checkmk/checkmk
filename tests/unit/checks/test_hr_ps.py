@@ -8,7 +8,7 @@ import pytest
 
 from tests.testlib import Check
 
-from .checktestlib import assertDiscoveryResultsEqual, DiscoveryResult, MockHostExtraConf
+from .checktestlib import DiscoveryResult, MockHostExtraConf, assertDiscoveryResultsEqual
 
 pytestmark = pytest.mark.checks
 

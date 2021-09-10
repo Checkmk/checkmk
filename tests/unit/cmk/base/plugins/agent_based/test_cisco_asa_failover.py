@@ -8,10 +8,10 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.cisco_asa_failover import (
+    Section,
     check_cisco_asa_failover,
     discovery_cisco_asa_failover,
     parse_cisco_asa_failover,
-    Section,
 )
 
 _CHECK_PARAMS = {

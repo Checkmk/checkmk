@@ -11,12 +11,12 @@ import pytest
 from tests.testlib import Check
 
 from .checktestlib import (
-    assertCheckResultsEqual,
-    assertDiscoveryResultsEqual,
     BasicCheckResult,
     CheckResult,
     DiscoveryResult,
     PerfValue,
+    assertCheckResultsEqual,
+    assertDiscoveryResultsEqual,
 )
 
 # since both nfsmounts and cifsmounts use the parse, inventory

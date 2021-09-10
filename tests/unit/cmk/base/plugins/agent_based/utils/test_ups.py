@@ -10,11 +10,11 @@ import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State, type_defs
 from cmk.base.plugins.agent_based.utils.ups import (
-    Battery,
     CHECK_DEFAULT_PARAMETERS,
+    Battery,
+    UpsParameters,
     check_ups_battery_state,
     check_ups_capacity,
-    UpsParameters,
 )
 
 SECTION_BATTERY_CAPACITY_DEFAULT = Battery(

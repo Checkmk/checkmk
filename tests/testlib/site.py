@@ -663,9 +663,9 @@ class Site:
 
         for file_name in ["py.test", "pytest"]:
             assert (
-                os.system(
+                os.system(  # nosec
                     "sudo rsync -a --chown %s:%s %s %s/local/bin"
-                    % (self.id, self.id, bin_dir / file_name, self.root)  # nosec
+                    % (self.id, self.id, bin_dir / file_name, self.root)
                 )
                 >> 8
                 == 0

@@ -23,8 +23,8 @@ jobs:
         include:
         - name: Bandit tests
           target: test-bandit
-        - name: Python formatting
-          target: test-format-python
+        # - name: Python formatting
+        #   target: test-format-python
         - name: Pylint tests
           target: test-pylint
         - name: Python unit tests

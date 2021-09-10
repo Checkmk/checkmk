@@ -43,22 +43,12 @@ protected:
 private:
     LogCache *_log_cache;
 
-    // ATTENTION! All those fields below are pure evil! They are set in
-    // answerQuery(), just to transport the values down the call hierarchy. The
-    // really, really bad part: answerQuery() is used in a multi-threaded way
-    // from the Livestatus threads, but we DO NOT have a lock/mutex to protect
-    // those fields! We rely on using LogCache's mutex to protect *us*, which is
-    // completely the wrong way round and highly fragile. Furthermore: All this
-    // madness is not necessary, we should just pass down all the information
-    // needed per query.
-
-    // Helper functions to traverse through logfiles
-    const Logfile::map_type *_entries;
-
     const Logfile::map_type *getEntries(Logfile *logfile);
     void getPreviousLogentry(LogCache::const_iterator &it_logs,
+                             const Logfile::map_type *&entries,
                              Logfile::const_iterator &it_entries);
     LogEntry *getNextLogentry(LogCache::const_iterator &it_logs,
+                              const Logfile::map_type *&entries,
                               Logfile::const_iterator &it_entries);
     void process(Query *query,
                  std::chrono::system_clock::duration query_timeframe,

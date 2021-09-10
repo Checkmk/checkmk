@@ -222,33 +222,35 @@ const Logfile::map_type *TableStateHistory::getEntries(Logfile *logfile) {
 }
 
 void TableStateHistory::getPreviousLogentry(
-    LogCache::const_iterator &it_logs, Logfile::const_iterator &it_entries) {
-    while (it_entries == _entries->begin()) {
+    LogCache::const_iterator &it_logs, const Logfile::map_type *&entries,
+    Logfile::const_iterator &it_entries) {
+    while (it_entries == entries->begin()) {
         // open previous logfile
         if (it_logs == _log_cache->begin()) {
             return;
         }
         --it_logs;
-        _entries = getEntries(it_logs->second.get());
-        it_entries = _entries->end();
+        entries = getEntries(it_logs->second.get());
+        it_entries = entries->end();
     }
     --it_entries;
 }
 
 LogEntry *TableStateHistory::getNextLogentry(
-    LogCache::const_iterator &it_logs, Logfile::const_iterator &it_entries) {
-    if (it_entries != _entries->end()) {
+    LogCache::const_iterator &it_logs, const Logfile::map_type *&entries,
+    Logfile::const_iterator &it_entries) {
+    if (it_entries != entries->end()) {
         ++it_entries;
     }
 
-    while (it_entries == _entries->end()) {
+    while (it_entries == entries->end()) {
         auto it_logs_cpy = it_logs;
         if (++it_logs_cpy == _log_cache->end()) {
             return nullptr;
         }
         ++it_logs;
-        _entries = getEntries(it_logs->second.get());
-        it_entries = _entries->begin();
+        entries = getEntries(it_logs->second.get());
+        it_entries = entries->begin();
     }
     return it_entries->second.get();
 }
@@ -352,18 +354,18 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     // Determine initial logentry
+    const auto *entries = getEntries(it_logs->second.get());
     Logfile::const_iterator it_entries;
-    _entries = getEntries(it_logs->second.get());
-    if (!_entries->empty() && it_logs != newest_log) {
-        it_entries = _entries->end();
+    if (!entries->empty() && it_logs != newest_log) {
+        it_entries = entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too
-        if (--it_entries != _entries->begin()) {
+        if (--it_entries != entries->begin()) {
             if (it_entries->second->time() >= since) {
-                it_entries = _entries->begin();
+                it_entries = entries->begin();
             }
         }
     } else {
-        it_entries = _entries->begin();
+        it_entries = entries->begin();
     }
 
     // From now on use getPreviousLogentry() / getNextLogentry()
@@ -373,13 +375,13 @@ void TableStateHistory::answerQuery(Query *query) {
     // Notification periods information, name: active(1)/inactive(0)
     std::map<std::string, int> notification_periods;
 
-    while (LogEntry *entry = getNextLogentry(it_logs, it_entries)) {
+    while (LogEntry *entry = getNextLogentry(it_logs, entries, it_entries)) {
         if (_abort_query) {
             break;
         }
 
         if (entry->time() >= until) {
-            getPreviousLogentry(it_logs, it_entries);
+            getPreviousLogentry(it_logs, entries, it_entries);
             break;
         }
         if (only_update && entry->time() >= since) {

@@ -12,6 +12,8 @@ properties([
   ])
 ])
 
+// Cancel job when there is nothing logged to the console for 15 minutes
+timeout(activity: true, time: 15, unit: 'MINUTES') {
 node (NODE) {
     docker.withRegistry(DOCKER_REGISTRY, 'nexus') {
         def COMMON_IMAGE = docker.image('nexus3-cli')
@@ -29,4 +31,5 @@ node (NODE) {
             }
         }
     }
+}
 }

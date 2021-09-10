@@ -64,6 +64,9 @@ def DOCKER_GROUP_ID = ''
 //
 // MAIN
 //
+
+// Cancel job when there is nothing logged to the console for 15 minutes
+timeout(activity: true, time: 15, unit: 'MINUTES') {
 node(NODE) {
     stage('Prepare version directory') {
         sh('rm -rf "${WORKSPACE}/versions/"*')
@@ -250,6 +253,7 @@ node(NODE) {
             }
         }
     }
+}
 }
 
 //

@@ -5,6 +5,8 @@ properties([
   pipelineTriggers([upstream('pylint3')]),
 ])
 
+// Cancel job when there is nothing logged to the console for 15 minutes
+timeout(activity: true, time: 15, unit: 'MINUTES') {
 node (NODE) {
     stage('checkout sources') {
         checkout(scm)
@@ -21,4 +23,5 @@ node (NODE) {
     } catch(Exception e) {
         notify.notify_error(e)
     }
+}
 }

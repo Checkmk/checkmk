@@ -55,11 +55,10 @@ private:
     // Helper functions to traverse through logfiles
     LogCache::const_iterator _it_logs;
     const Logfile::map_type *_entries;
-    Logfile::const_iterator _it_entries;
 
     const Logfile::map_type *getEntries(Logfile *logfile);
-    void getPreviousLogentry();
-    LogEntry *getNextLogentry();
+    void getPreviousLogentry(Logfile::const_iterator &it_entries);
+    LogEntry *getNextLogentry(Logfile::const_iterator &it_entries);
     void process(Query *query,
                  std::chrono::system_clock::duration query_timeframe,
                  HostServiceState *hs_state);

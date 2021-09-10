@@ -25,6 +25,7 @@ from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.watolib.changes import ObjectRef, ObjectRefType
+import cmk.gui.watolib.read_only as read_only
 import cmk.gui.watolib.snapshots
 import cmk.gui.watolib.changes
 import cmk.gui.watolib.activate_changes
@@ -131,6 +132,9 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         )
 
     def _page_menu_entries_selected_sites(self) -> Iterator[PageMenuEntry]:
+        if not self._may_activate_changes():
+            return
+
         if self._may_activate_changes():
             yield PageMenuEntry(
                 title=_("Activate on selected sites"),
@@ -159,6 +163,9 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return False
 
         if not config.user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
+            return False
+
+        if read_only.is_enabled() and not read_only.may_override():
             return False
 
         return True

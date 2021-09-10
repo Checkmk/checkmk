@@ -20,6 +20,7 @@ import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.activate_changes
 import cmk.gui.watolib.changes
+import cmk.gui.watolib.read_only as read_only
 import cmk.gui.watolib.snapshots
 import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb
@@ -130,6 +131,9 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
         )
 
     def _page_menu_entries_selected_sites(self) -> Iterator[PageMenuEntry]:
+        if not self._may_activate_changes():
+            return
+
         if self._may_activate_changes():
             yield PageMenuEntry(
                 title=_("Activate on selected sites"),
@@ -158,6 +162,9 @@ class ModeActivateChanges(WatoMode, watolib.ActivateChanges):
             return False
 
         if not user.may("wato.activateforeign") and self._has_foreign_changes_on_any_site():
+            return False
+
+        if read_only.is_enabled() and not read_only.may_override():
             return False
 
         return True

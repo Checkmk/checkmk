@@ -1,0 +1,16 @@
+Title: real-time-checks: fix deployment via bakery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1631258970
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.0.0p10
+
+Since Checkmk 2.0.0p4 the real-time-checks based on sections
+could not be configured via bakery. While the agents could
+be baked and deployed successfully, the hosts ended up with
+an empty list of sections to send.
+
+Plugins configured to send real-time data where not affected.

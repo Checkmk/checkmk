@@ -222,32 +222,32 @@ const Logfile::map_type *TableStateHistory::getEntries(Logfile *logfile) {
 }
 
 void TableStateHistory::getPreviousLogentry(
-    Logfile::const_iterator &it_entries) {
+    LogCache::const_iterator &it_logs, Logfile::const_iterator &it_entries) {
     while (it_entries == _entries->begin()) {
         // open previous logfile
-        if (_it_logs == _log_cache->begin()) {
+        if (it_logs == _log_cache->begin()) {
             return;
         }
-        --_it_logs;
-        _entries = getEntries(_it_logs->second.get());
+        --it_logs;
+        _entries = getEntries(it_logs->second.get());
         it_entries = _entries->end();
     }
     --it_entries;
 }
 
 LogEntry *TableStateHistory::getNextLogentry(
-    Logfile::const_iterator &it_entries) {
+    LogCache::const_iterator &it_logs, Logfile::const_iterator &it_entries) {
     if (it_entries != _entries->end()) {
         ++it_entries;
     }
 
     while (it_entries == _entries->end()) {
-        auto it_logs_cpy = _it_logs;
+        auto it_logs_cpy = it_logs;
         if (++it_logs_cpy == _log_cache->end()) {
             return nullptr;
         }
-        ++_it_logs;
-        _entries = getEntries(_it_logs->second.get());
+        ++it_logs;
+        _entries = getEntries(it_logs->second.get());
         it_entries = _entries->begin();
     }
     return it_entries->second.get();
@@ -335,17 +335,17 @@ void TableStateHistory::answerQuery(Query *query) {
     }
 
     // Switch to last logfile (we have at least one)
-    _it_logs = _log_cache->end();
-    --_it_logs;
-    auto newest_log = _it_logs;
+    LogCache::const_iterator it_logs{_log_cache->end()};
+    --it_logs;
+    auto newest_log = it_logs;
 
     // Now find the log where 'since' starts.
-    while (_it_logs != _log_cache->begin() && _it_logs->first >= since) {
-        --_it_logs;  // go back in history
+    while (it_logs != _log_cache->begin() && it_logs->first >= since) {
+        --it_logs;  // go back in history
     }
 
     // Check if 'until' is within these logfiles
-    if (_it_logs->first > until) {
+    if (it_logs->first > until) {
         // All logfiles are too new, invalid timeframe
         // -> No data available. Return empty result.
         return;
@@ -353,8 +353,8 @@ void TableStateHistory::answerQuery(Query *query) {
 
     // Determine initial logentry
     Logfile::const_iterator it_entries;
-    _entries = getEntries(_it_logs->second.get());
-    if (!_entries->empty() && _it_logs != newest_log) {
+    _entries = getEntries(it_logs->second.get());
+    if (!_entries->empty() && it_logs != newest_log) {
         it_entries = _entries->end();
         // Check last entry. If it's younger than _since -> use this logfile too
         if (--it_entries != _entries->begin()) {
@@ -373,13 +373,13 @@ void TableStateHistory::answerQuery(Query *query) {
     // Notification periods information, name: active(1)/inactive(0)
     std::map<std::string, int> notification_periods;
 
-    while (LogEntry *entry = getNextLogentry(it_entries)) {
+    while (LogEntry *entry = getNextLogentry(it_logs, it_entries)) {
         if (_abort_query) {
             break;
         }
 
         if (entry->time() >= until) {
-            getPreviousLogentry(it_entries);
+            getPreviousLogentry(it_logs, it_entries);
             break;
         }
         if (only_update && entry->time() >= since) {

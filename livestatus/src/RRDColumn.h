@@ -17,7 +17,6 @@
 #include <variant>
 #include <vector>
 
-#include "DynamicRRDColumn.h"
 #include "ListLambdaColumn.h"
 #include "Renderer.h"
 #include "Row.h"
@@ -29,6 +28,15 @@
 #endif
 class MonitoringCore;
 class ColumnOffsets;
+
+struct RRDColumnArgs {
+    RRDColumnArgs(const std::string &arguments, const std::string &column_name);
+    std::string rpn;
+    long int start_time;
+    long int end_time;
+    int resolution;
+    int max_entries;
+};
 
 namespace detail {
 struct Data {

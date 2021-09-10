@@ -30,23 +30,6 @@ struct RRDColumnArgs {
     int max_entries;
 };
 
-namespace detail {
-struct Data {
-    using time_point = std::chrono::system_clock::time_point;
-    Data() : start{}, end{}, step{0}, values{} {}
-    Data(time_point s, time_point e, unsigned long d, std::vector<double> v)
-        : start{s}, end{e}, step{d}, values{std::move(v)} {}
-    time_point start;
-    time_point end;
-    unsigned long step;
-    std::vector<double> values;
-
-    [[nodiscard]] auto size() const { return values.size() + 3; }
-    [[nodiscard]] auto cbegin() const { return values.begin(); }
-    [[nodiscard]] auto cend() const { return values.end(); }
-};
-}  // namespace detail
-
 class RRDDataMaker {
     using C = std::chrono::system_clock;
 
@@ -58,19 +41,7 @@ public:
     template <class T>
     [[nodiscard]] std::vector<value_type> operator()(
         const T &row, std::chrono::seconds timezone_offset) const {
-        const auto data = make(getHostNameServiceDesc(row));
-
-        // We output meta data as first elements in the list. Note: In Python or
-        // JSON we could output nested lists. In CSV mode this is not possible
-        // and we rather stay compatible with CSV mode.
-        std::vector<value_type> v;
-        v.reserve(data.size());
-        v.emplace_back(data.start + timezone_offset);
-        v.emplace_back(data.end + timezone_offset);
-        v.emplace_back(data.step);
-        v.insert(v.end(), data.cbegin(), data.cend());
-
-        return v;
+        return make(getHostNameServiceDesc(row), timezone_offset);
     }
 
 private:
@@ -81,9 +52,10 @@ private:
     [[nodiscard]] static std::pair<std::string, std::string>
     getHostNameServiceDesc(const T &row);
 
-    [[nodiscard]] detail::Data make(
+    [[nodiscard]] std::vector<value_type> make(
         const std::pair<std::string, std::string>
-            & /*host_name_service_description*/) const;
+            & /*host_name_service_description*/,
+        std::chrono::seconds /*timezone_offset*/) const;
 };
 
 struct RRDRenderer : ListColumnRenderer<RRDDataMaker::value_type> {

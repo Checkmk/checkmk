@@ -10617,6 +10617,16 @@ msgstr ""
 "Regel keine Wirkung haben würde."
 
 msgid ""
+"Configure the discovery of single systemd services. To be discovered, a "
+"service must match at least one description condition, one name condition "
+"and one state condition, if configured. To simply discover all systemd "
+"services, do not configure any restrictions. Note that independently of this "
+"ruleset, some systemd service units which are used by the Checkmk agent "
+"('check-mk-agent@...') will never be discovered because they appear and "
+"disappear frequently."
+msgstr ""
+
+msgid ""
 "Configure the hosts for this notification. Without prefix, only exact, case "
 "sensitive matches, <tt>!</tt> for negation and <tt>~</tt> for regex matches."
 msgstr ""
@@ -32073,6 +32083,10 @@ msgstr "Es gibt keinen Bericht mit dem Namen '%s'."
 msgid "No response from update thread"
 msgstr "Keine Antwort vom Update-Thread"
 
+#, fuzzy
+msgid "No restrictions (discover all systemd service units)"
+msgstr "Service-Erkennung: Deaktivierte Dienste"
+
 msgid "No restrictions to specific objects"
 msgstr "Keine Einschränkung auf bestimmte Objekte"
 
@@ -38977,7 +38991,19 @@ msgid "Restrict by custom macros"
 msgstr "Anhand von Benutzermakros einschränken"
 
 #, fuzzy
+msgid "Restrict by description"
+msgstr "Service-Beschreibung"
+
+#, fuzzy
 msgid "Restrict by monitor tags"
+msgstr "Anhand von Kontaktgruppe einschränken"
+
+#, fuzzy
+msgid "Restrict by service unit name"
+msgstr "Unit Name des Service"
+
+#, fuzzy
+msgid "Restrict by state"
 msgstr "Anhand von Kontaktgruppe einschränken"
 
 #, fuzzy
@@ -39037,6 +39063,13 @@ msgstr "Die folgenden Schwellwerte benutzen"
 
 msgid "Restrict the length of the lines"
 msgstr "Länge der Zeilen begrenzen"
+
+#, fuzzy
+msgid "Restrict the systemd services by description."
+msgstr "Item (wird im Servicenamen verwendet)"
+
+msgid "Restrict the systemd services by unit name."
+msgstr ""
 
 msgid "Restrict to a single host"
 msgstr "Auf einen einzelnen Host beschränken"
@@ -41168,9 +41201,6 @@ msgstr "Service-Tags"
 #, fuzzy
 msgid "Service tags (with titles)"
 msgstr "Hostmerkmake (mit Titeln)"
-
-msgid "Service unit names"
-msgstr "Unit Name des Service"
 
 msgid "Service whose state changed in the last 60 minutes"
 msgstr "Services, deren Zustand sich binnen der letzen 60 Minuten geändert hat"
@@ -52521,16 +52551,6 @@ msgstr ""
 #, python-format
 msgid "This rule attaches contact group(s) to the events: %s"
 msgstr "Diese Regel ordnet Kontaktgruppen einem Event zu: %s"
-
-msgid ""
-"This rule can be used to configure the discovery of the Linux services "
-"check. You can configure specific Linux services to be monitored by the "
-"Linux check by selecting them by description, unit name, or current state "
-"during the discovery."
-msgstr ""
-"<p>Mit dieser Regel wird die Erkennung von Linux Services gesteuert. Sie "
-"können spezifische Linux Services für die Erkennung festlegen. Die Auswahl "
-"erfolgt über Name, Beschreibung, oder Status während der Erkennung."
 
 msgid ""
 "This rule can be used to configure the discovery of the Solaris services "
@@ -64422,6 +64442,17 @@ msgstr "z/OS"
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
+#~ msgid ""
+#~ "This rule can be used to configure the discovery of the Linux services "
+#~ "check. You can configure specific Linux services to be monitored by the "
+#~ "Linux check by selecting them by description, unit name, or current state "
+#~ "during the discovery."
+#~ msgstr ""
+#~ "<p>Mit dieser Regel wird die Erkennung von Linux Services gesteuert. Sie "
+#~ "können spezifische Linux Services für die Erkennung festlegen. Die "
+#~ "Auswahl erfolgt über Name, Beschreibung, oder Status während der "
+#~ "Erkennung."
+
 #~ msgid "Sorry"
 #~ msgstr "Es tut uns leid"
 
@@ -68147,9 +68178,6 @@ msgstr "© 2020 tribe29 GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "Service Level at most"
 #~ msgstr "Servicelevel (höchstens)"
-
-#~ msgid "Service discovery: Disabled services"
-#~ msgstr "Service-Erkennung: Deaktivierte Dienste"
 
 #~ msgid "Service discovery: Move to monitored services"
 #~ msgstr "Service-Erkennung: Zu den überwachten Services bewegen"

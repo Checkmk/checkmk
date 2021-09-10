@@ -10222,6 +10222,16 @@ msgstr ""
 "うなルールは効果がないからです。"
 
 msgid ""
+"Configure the discovery of single systemd services. To be discovered, a "
+"service must match at least one description condition, one name condition "
+"and one state condition, if configured. To simply discover all systemd "
+"services, do not configure any restrictions. Note that independently of this "
+"ruleset, some systemd service units which are used by the Checkmk agent "
+"('check-mk-agent@...') will never be discovered because they appear and "
+"disappear frequently."
+msgstr ""
+
+msgid ""
 "Configure the hosts for this notification. Without prefix, only exact, case "
 "sensitive matches, <tt>!</tt> for negation and <tt>~</tt> for regex matches."
 msgstr ""
@@ -30957,6 +30967,9 @@ msgstr "%s' という名前で定義されたレポートはありません"
 msgid "No response from update thread"
 msgstr "更新スレッドからの応答がありません"
 
+msgid "No restrictions (discover all systemd service units)"
+msgstr ""
+
 msgid "No restrictions to specific objects"
 msgstr "特定のオブジェクトに制限はありません"
 
@@ -37653,7 +37666,19 @@ msgid "Restrict by custom macros"
 msgstr "カスタムマクロによる制限"
 
 #, fuzzy
+msgid "Restrict by description"
+msgstr "サービスの説明"
+
+#, fuzzy
 msgid "Restrict by monitor tags"
+msgstr "連絡先グループによる制限"
+
+#, fuzzy
+msgid "Restrict by service unit name"
+msgstr "サービスユニット名"
+
+#, fuzzy
+msgid "Restrict by state"
 msgstr "連絡先グループによる制限"
 
 #, fuzzy
@@ -37712,6 +37737,13 @@ msgstr "次のレベルを使用します"
 
 msgid "Restrict the length of the lines"
 msgstr "行の長さを制限する"
+
+#, fuzzy
+msgid "Restrict the systemd services by description."
+msgstr "アイテム(サービスの説明で使用)"
+
+msgid "Restrict the systemd services by unit name."
+msgstr ""
 
 msgid "Restrict to a single host"
 msgstr "単一のホストに制限する"
@@ -39787,9 +39819,6 @@ msgstr "サービスタグ"
 
 msgid "Service tags (with titles)"
 msgstr ""
-
-msgid "Service unit names"
-msgstr "サービスユニット名"
 
 msgid "Service whose state changed in the last 60 minutes"
 msgstr "過去60分間に状態が変化したサービス"
@@ -50311,13 +50340,6 @@ msgstr ""
 
 #, python-format
 msgid "This rule attaches contact group(s) to the events: %s"
-msgstr ""
-
-msgid ""
-"This rule can be used to configure the discovery of the Linux services "
-"check. You can configure specific Linux services to be monitored by the "
-"Linux check by selecting them by description, unit name, or current state "
-"during the discovery."
 msgstr ""
 
 msgid ""

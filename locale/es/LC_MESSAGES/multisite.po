@@ -10722,6 +10722,16 @@ msgstr ""
 "dicha regla no tendría ningún efecto."
 
 msgid ""
+"Configure the discovery of single systemd services. To be discovered, a "
+"service must match at least one description condition, one name condition "
+"and one state condition, if configured. To simply discover all systemd "
+"services, do not configure any restrictions. Note that independently of this "
+"ruleset, some systemd service units which are used by the Checkmk agent "
+"('check-mk-agent@...') will never be discovered because they appear and "
+"disappear frequently."
+msgstr ""
+
+msgid ""
 "Configure the hosts for this notification. Without prefix, only exact, case "
 "sensitive matches, <tt>!</tt> for negation and <tt>~</tt> for regex matches."
 msgstr ""
@@ -32309,6 +32319,9 @@ msgstr "No se ha definido ningún informe con el nombre '%s'."
 msgid "No response from update thread"
 msgstr "No hay respuesta en el hilo de actualización"
 
+msgid "No restrictions (discover all systemd service units)"
+msgstr ""
+
 msgid "No restrictions to specific objects"
 msgstr "No hay restricciones para objetos específicos"
 
@@ -39265,7 +39278,19 @@ msgid "Restrict by custom macros"
 msgstr "Restringir mediante macros personalizadas"
 
 #, fuzzy
+msgid "Restrict by description"
+msgstr "Descripción del servicio"
+
+#, fuzzy
 msgid "Restrict by monitor tags"
+msgstr "Restringir por grupos de contacto"
+
+#, fuzzy
+msgid "Restrict by service unit name"
+msgstr "Nombres de unidades de servicio"
+
+#, fuzzy
+msgid "Restrict by state"
 msgstr "Restringir por grupos de contacto"
 
 #, fuzzy
@@ -39326,6 +39351,13 @@ msgstr "Utilice los siguientes niveles"
 
 msgid "Restrict the length of the lines"
 msgstr "Restringir la longitud de las líneas"
+
+#, fuzzy
+msgid "Restrict the systemd services by description."
+msgstr "Artículo (utilizado en la descripción del servicio)"
+
+msgid "Restrict the systemd services by unit name."
+msgstr ""
 
 msgid "Restrict to a single host"
 msgstr "Restringir a un solo host"
@@ -41472,9 +41504,6 @@ msgstr "Etiquetas de servicio"
 
 msgid "Service tags (with titles)"
 msgstr "Etiquetas de servicio (con títulos)"
-
-msgid "Service unit names"
-msgstr "Nombres de unidades de servicio"
 
 msgid "Service whose state changed in the last 60 minutes"
 msgstr "Servicio cuyo estado ha cambiado en los últimos 60 minutos"
@@ -52986,18 +53015,6 @@ msgstr ""
 #, python-format
 msgid "This rule attaches contact group(s) to the events: %s"
 msgstr "Esta regla adjunta grupo(s) de contactos a los eventos: %s"
-
-msgid ""
-"This rule can be used to configure the discovery of the Linux services "
-"check. You can configure specific Linux services to be monitored by the "
-"Linux check by selecting them by description, unit name, or current state "
-"during the discovery."
-msgstr ""
-"Esta regla se puede utilizar para configurar el descubrimiento de la "
-"comprobación de los servicios Linux. Puede configurar servicios Linux "
-"específicos para que sean supervisados por la comprobación de Linux "
-"seleccionándolos por descripción, nombre de la unidad o estado actual "
-"durante la detección."
 
 msgid ""
 "This rule can be used to configure the discovery of the Solaris services "
@@ -64971,6 +64988,18 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "2020 tribe29 GmbH. Todos los derechos reservados."
+
+#~ msgid ""
+#~ "This rule can be used to configure the discovery of the Linux services "
+#~ "check. You can configure specific Linux services to be monitored by the "
+#~ "Linux check by selecting them by description, unit name, or current state "
+#~ "during the discovery."
+#~ msgstr ""
+#~ "Esta regla se puede utilizar para configurar el descubrimiento de la "
+#~ "comprobación de los servicios Linux. Puede configurar servicios Linux "
+#~ "específicos para que sean supervisados por la comprobación de Linux "
+#~ "seleccionándolos por descripción, nombre de la unidad o estado actual "
+#~ "durante la detección."
 
 #~ msgid "Sorry"
 #~ msgstr "Lo siento"

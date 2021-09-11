@@ -62,7 +62,8 @@ def parse_wut_webio(string_table: List[type_defs.StringTable]) -> Optional[Secti
         f"{webio_data[0][0]} {port_name}": Input(
             state=STATE_TRANSLATION[state],
             idx=idx,
-        ) for _, idx, port_name, state in webio_data[1:]
+        )
+        for _, idx, port_name, state in webio_data[1:]
     }
 
 
@@ -70,15 +71,9 @@ register.snmp_section(
     name="wut_webio",
     parse_function=parse_wut_webio,
     fetch=[
-        SNMPTree(
-            base=_EA12x6_BASE,  # wtWebio577xxEA12x6
-            oids=_OIDS_TO_FETCH),
-        SNMPTree(
-            base=_EA2x2_BASE,  # wtWebio577xxEA2x2
-            oids=_OIDS_TO_FETCH),
-        SNMPTree(
-            base=_EA12x12_BASE,  # wtWebioEA12x12
-            oids=_OIDS_TO_FETCH),
+        SNMPTree(base=_EA12x6_BASE, oids=_OIDS_TO_FETCH),  # wtWebio577xxEA12x6
+        SNMPTree(base=_EA2x2_BASE, oids=_OIDS_TO_FETCH),  # wtWebio577xxEA2x2
+        SNMPTree(base=_EA12x12_BASE, oids=_OIDS_TO_FETCH),  # wtWebioEA12x12
     ],
     detect=any_of(
         contains(".1.3.6.1.2.1.1.2.0", _EA12x6_BASE),

@@ -39,9 +39,9 @@ from cmk.base.check_utils import ServiceID
 
 _Kwargs = Mapping[str, Any]
 
-_NON_SECTION_KEYS: Final = {'item', 'params'}
+_NON_SECTION_KEYS: Final = {"item", "params"}
 
-_INF = float('inf')
+_INF = float("inf")
 
 
 class Selector(Protocol):
@@ -53,9 +53,11 @@ def _unfit_for_clustering(**_kw) -> CheckResult:
     """A cluster_check_function that displays a generic warning"""
     yield Result(
         state=State.UNKNOWN,
-        summary=("This service does not implement a native cluster mode. Please change your "
-                 "configuration using the rule 'Aggregation options for clustered services', "
-                 "and select one of the other available aggregation modes."),
+        summary=(
+            "This service does not implement a native cluster mode. Please change your "
+            "configuration using the rule 'Aggregation options for clustered services', "
+            "and select one of the other available aggregation modes."
+        ),
     )
 
 
@@ -67,7 +69,7 @@ def get_cluster_check_function(
     plugin: CheckPlugin,
     persist_value_store_changes: bool,
 ) -> CheckFunction:
-    if mode == 'native':
+    if mode == "native":
         return plugin.cluster_check_function or _unfit_for_clustering
 
     executor = NodeCheckExecutor(
@@ -130,7 +132,7 @@ def _cluster_check(
         node_results=executor(check_function, cluster_kwargs),
         label=label,
         selector=selector,
-        preferred=clusterization_parameters.get('primary_node'),
+        preferred=clusterization_parameters.get("primary_node"),
         unpreferred_node_state=unpreferred_node_state,
     )
     if summarizer.is_empty():
@@ -139,9 +141,10 @@ def _cluster_check(
     yield from summarizer.primary_results()
 
     yield from summarizer.secondary_results(
-        levels_additional_nodes_count=levels_additional_nodes_count)
+        levels_additional_nodes_count=levels_additional_nodes_count
+    )
 
-    yield from summarizer.metrics(clusterization_parameters.get('metrics_node'))
+    yield from summarizer.metrics(clusterization_parameters.get("metrics_node"))
 
 
 class NodeResults(NamedTuple):
@@ -186,11 +189,11 @@ class Summarizer:
         return not any(self._node_results.results.values())
 
     def raise_for_ignores(self) -> None:
-        if (msgs := [
-                f"[{node}] {', '.join(str(i) for i in ign)}"
-                for node, ign in self._node_results.ignore_results.items()
-                if ign
-        ]):
+        if msgs := [
+            f"[{node}] {', '.join(str(i) for i in ign)}"
+            for node, ign in self._node_results.ignore_results.items()
+            if ign
+        ]:
             raise IgnoreResultsError(", ".join(msgs))
 
     def primary_results(self) -> Iterable[Result]:
@@ -217,11 +220,15 @@ class Summarizer:
             state=self._secondary_nodes_state(secondary_nodes, levels_additional_nodes_count),
             summary=f"Additional results from: {', '.join(f'[{n}]' for n in secondary_nodes)}",
         )
-        yield from (Result(
-            state=State.OK,
-            notice=r.summary,
-            details=f"{r.details}{state_markers[int(r.state)]}",
-        ) for node in secondary_nodes for r in self._node_results.results[node])
+        yield from (
+            Result(
+                state=State.OK,
+                notice=r.summary,
+                details=f"{r.details}{state_markers[int(r.state)]}",
+            )
+            for node in secondary_nodes
+            for r in self._node_results.results[node]
+        )
 
     @staticmethod
     def _secondary_nodes_state(
@@ -274,18 +281,21 @@ class NodeCheckExecutor:
         all_nodes: Set[str] = {
             node for section_name in section_names for node in cluster_kwargs[section_name]
         }
-        yield from ((node, kwargs)
-                    for node, kwargs in self._extract_node_kwargs(sorted(all_nodes), cluster_kwargs)
-                    if self._contains_data(kwargs))
+        yield from (
+            (node, kwargs)
+            for node, kwargs in self._extract_node_kwargs(sorted(all_nodes), cluster_kwargs)
+            if self._contains_data(kwargs)
+        )
 
     @staticmethod
     def _extract_node_kwargs(
         nodes: Iterable[str],
         cluster_kwargs: _Kwargs,
     ) -> Iterable[Tuple[str, _Kwargs]]:
-        yield from ((n, {
-            k: v if k in _NON_SECTION_KEYS else v.get(n) for k, v in cluster_kwargs.items()
-        }) for n in nodes)
+        yield from (
+            (n, {k: v if k in _NON_SECTION_KEYS else v.get(n) for k, v in cluster_kwargs.items()})
+            for n in nodes
+        )
 
     @staticmethod
     def _contains_data(node_kwargs: _Kwargs) -> bool:
@@ -297,8 +307,8 @@ class NodeCheckExecutor:
         result_generator: CheckResult,
     ) -> Sequence[Union[Result, Metric, IgnoreResults]]:
         with load_host_value_store(
-                node,
-                store_changes=self._persist_value_store_changes,
+            node,
+            store_changes=self._persist_value_store_changes,
         ) as value_store_manager:
             with value_store_manager.namespace(self._service_id):
                 try:
@@ -311,5 +321,5 @@ class NodeCheckExecutor:
         return Result(
             state=result.state,
             summary=result.summary,
-            details='\n'.join(f"[{node_name}]: {line}" for line in result.details.splitlines()),
+            details="\n".join(f"[{node_name}]: {line}" for line in result.details.splitlines()),
         )

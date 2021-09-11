@@ -29,7 +29,7 @@ def parse_liebert_system(string_table: List[StringTable]) -> ParsedSection:
 
 
 def discover_liebert_system(section: ParsedSection) -> DiscoveryResult:
-    model = section.get('System Model Number')
+    model = section.get("System Model Number")
     if model:
         yield Service(item=model)
 
@@ -51,23 +51,24 @@ register.snmp_section(
     parse_function=parse_liebert_system,
     fetch=[
         SNMPTree(
-            base='.1.3.6.1.4.1.476.1.42.3.9.20.1',
+            base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
             oids=[
-                '10.1.2.1.4123',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                '20.1.2.1.4123',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-                '10.1.2.1.4240',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                '20.1.2.1.4240',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-                '10.1.2.1.4706',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                '20.1.2.1.4706',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-                '10.1.2.1.5074',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                '20.1.2.1.5074',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-            ]),
+                "10.1.2.1.4123",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+                "20.1.2.1.4123",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+                "10.1.2.1.4240",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+                "20.1.2.1.4240",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+                "10.1.2.1.4706",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+                "20.1.2.1.4706",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+                "10.1.2.1.5074",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+                "20.1.2.1.5074",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            ],
+        ),
     ],
 )
 
 register.check_plugin(
-    name='liebert_system',
-    service_name='Status %s',
+    name="liebert_system",
+    service_name="Status %s",
     discovery_function=discover_liebert_system,
     check_function=check_liebert_system,
 )

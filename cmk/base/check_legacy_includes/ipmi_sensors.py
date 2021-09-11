@@ -91,7 +91,7 @@ from .ipmi_common import check_ipmi_common, ipmi_ignore_entry
 # 3  | Power Supply 2  | Power Supply | Nominal  | N/A        | N/A   | N/A        | N/A        | N/A        | N/A        | N/A        | N/A        | 'Presence detected'
 # 4  | Power Supplies  | Power Supply | Nominal  | N/A        | N/A   | N/A        | N/A        | N/A        | N/A        | N/A        | N/A        | 'Fully Redundant'
 
-#.
+# .
 
 
 def parse_freeipmi(info):
@@ -102,7 +102,7 @@ def parse_freeipmi(info):
 
     parsed = {}
     for line in info:
-        stripped_line = [x.strip(u' \n\t\x00') for x in line]
+        stripped_line = [x.strip(" \n\t\x00") for x in line]
         status_txt = stripped_line[-1]
         if status_txt.startswith("[") or status_txt.startswith("'"):
             status_txt = status_txt[1:]
@@ -117,7 +117,8 @@ def parse_freeipmi(info):
 
         sensorname = stripped_line[1].replace(" ", "_")
         instance = parsed.setdefault(
-            sensorname, {
+            sensorname,
+            {
                 "value": None,
                 "unit": None,
                 "status_txt": status_txt,
@@ -127,7 +128,8 @@ def parse_freeipmi(info):
                 "warn_high": None,
                 "crit_high": None,
                 "unrec_high": None,
-            })
+            },
+        )
 
         if len(stripped_line) == 4:
             if "(" in stripped_line[2]:
@@ -143,19 +145,44 @@ def parse_freeipmi(info):
             if len(cparts) > 1:
                 unit = cparts[1]
 
-            add_valid_values([("value", cparts[0], float), ("unit", unit, str),
-                              ("crit_low", lower, float), ("crit_high", upper, float)])
+            add_valid_values(
+                [
+                    ("value", cparts[0], float),
+                    ("unit", unit, str),
+                    ("crit_low", lower, float),
+                    ("crit_high", upper, float),
+                ]
+            )
 
         elif len(stripped_line) == 6:
             _sid, _name, _sensortype, reading_str, unit = stripped_line[:-1]
             add_valid_values([("value", reading_str, float), ("unit", unit, str)])
 
         elif len(stripped_line) == 13:
-            _sid, _name, _stype, _sstate, reading_str, unit, _lower_nr, lower_c, \
-                lower_nc, upper_nc, upper_c, _upper_nr = stripped_line[:-1]
-            add_valid_values([("value", reading_str, float), ("unit", unit, str),
-                              ("crit_low", lower_c, float), ("warn_low", lower_nc, float),
-                              ("warn_high", upper_nc, float), ("crit_high", upper_c, float)])
+            (
+                _sid,
+                _name,
+                _stype,
+                _sstate,
+                reading_str,
+                unit,
+                _lower_nr,
+                lower_c,
+                lower_nc,
+                upper_nc,
+                upper_c,
+                _upper_nr,
+            ) = stripped_line[:-1]
+            add_valid_values(
+                [
+                    ("value", reading_str, float),
+                    ("unit", unit, str),
+                    ("crit_low", lower_c, float),
+                    ("warn_low", lower_nc, float),
+                    ("warn_high", upper_nc, float),
+                    ("crit_high", upper_c, float),
+                ]
+            )
 
     return parsed
 
@@ -168,7 +195,7 @@ def inventory_freeipmi(parsed):
     if rules:
         mode, ignore_params = ipmi.transform_discovery_ruleset(rules[0])
     else:
-        mode, ignore_params = 'single', {}
+        mode, ignore_params = "single", {}
 
     if mode == "summarize":
         yield "Summary FreeIPMI", {}
@@ -195,16 +222,24 @@ def freeipmi_status_txt_mapping(status_txt):
     if "non-critical" in status_txt.lower():
         return 1
 
-    if status_txt.lower() in [
-        "entity present", "battery presence detected",
-        "drive presence", "transition to running", "device enabled",
-        "system full operational, working", "system restart", "present",
-        "transition to ok",
-        ] or \
-       status_txt.startswith("Fully Redundant") or \
-       status_txt.endswith("is connected") or \
-       status_txt.endswith("Presence detected") or \
-       status_txt.endswith("Device Present"):
+    if (
+        status_txt.lower()
+        in [
+            "entity present",
+            "battery presence detected",
+            "drive presence",
+            "transition to running",
+            "device enabled",
+            "system full operational, working",
+            "system restart",
+            "present",
+            "transition to ok",
+        ]
+        or status_txt.startswith("Fully Redundant")
+        or status_txt.endswith("is connected")
+        or status_txt.endswith("Presence detected")
+        or status_txt.endswith("Device Present")
+    ):
         return 0
     return 2
 

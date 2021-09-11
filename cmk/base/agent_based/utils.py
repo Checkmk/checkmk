@@ -26,8 +26,11 @@ def get_section_kwargs(
     It returns a dictionary containing one entry (may be None) for each
     of the required sections, or an empty dictionary if no data was found at all.
     """
-    keys = (["section"]
-            if len(parsed_section_names) == 1 else ["section_%s" % s for s in parsed_section_names])
+    keys = (
+        ["section"]
+        if len(parsed_section_names) == 1
+        else ["section_%s" % s for s in parsed_section_names]
+    )
 
     kwargs = {
         key: parsed_sections_broker.get_parsed_section(host_key, parsed_section_name)
@@ -74,7 +77,10 @@ def check_sources(
         if include_ok_results or state != 0:
             yield ActiveCheckResult(
                 state if override_non_ok_state is None else override_non_ok_state,
-                (f"[{source.id}] {output}",), (), ())
+                (f"[{source.id}] {output}",),
+                (),
+                (),
+            )
 
 
 def check_parsing_errors(
@@ -83,6 +89,6 @@ def check_parsing_errors(
     error_state: ServiceState = 1,
 ) -> ActiveCheckResult:
     state = error_state if errors else 0
-    return ActiveCheckResult(state,
-                             [f"{msg.split(' - ')[0]}{state_markers[state]}" for msg in errors],
-                             errors, ())
+    return ActiveCheckResult(
+        state, [f"{msg.split(' - ')[0]}{state_markers[state]}" for msg in errors], errors, ()
+    )

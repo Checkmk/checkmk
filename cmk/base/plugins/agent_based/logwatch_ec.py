@@ -23,32 +23,36 @@ from typing import Any, Counter, Dict, Iterable, List, Mapping, Optional, Sequen
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.type_defs import (  # pylint: disable=cmk-module-layer-violation
+    CheckPluginName,
+    HostName,
+)
 
 # from cmk.base.config import logwatch_rules will NOT work!
 import cmk.base.config  # pylint: disable=cmk-module-layer-violation
+
+# import from legacy API until we come up with something better
+from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
+    host_name,
+    service_extra_conf,
+)
+
+from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
+    SyslogForwarderUnixSocket,
+    SyslogMessage,
+)
 
 from .agent_based_api.v1 import Metric, register, Result, Service
 from .agent_based_api.v1 import State as state
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils import logwatch
 
-from cmk.utils.type_defs import (  # pylint: disable=cmk-module-layer-violation # isort: skip
-    CheckPluginName, HostName,
-)
-
-# import from legacy API until we come up with something better
-from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation # isort: skip
-    host_name, service_extra_conf,
-)
-
-from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation # isort: skip
-    SyslogForwarderUnixSocket, SyslogMessage,
-)
-
 ClusterSection = Dict[Optional[str], logwatch.Section]
 
 
-def discover_group(section: logwatch.Section,) -> DiscoveryResult:
+def discover_group(
+    section: logwatch.Section,
+) -> DiscoveryResult:
     yield from discover_logwatch_ec_common(section, logwatch.get_ec_rule_params(), "groups")
 
 
@@ -83,7 +87,9 @@ register.check_plugin(
 )
 
 
-def discover_single(section: logwatch.Section,) -> DiscoveryResult:
+def discover_single(
+    section: logwatch.Section,
+) -> DiscoveryResult:
     yield from discover_logwatch_ec_common(section, logwatch.get_ec_rule_params(), "single")
 
 
@@ -149,13 +155,13 @@ def _get_effective_service_level(
 # context -> priority 6 (info)
 # u = Uknown
 def logwatch_to_prio(level: str) -> int:
-    if level == 'W':
+    if level == "W":
         return 4
-    if level == 'C':
+    if level == "C":
         return 2
-    if level == 'O':
+    if level == "O":
         return 5
-    if level == '.':
+    if level == ".":
         return 6
     return 4
 
@@ -204,10 +210,10 @@ def discover_logwatch_ec_common(
 def _filter_accumulated_lines(cluster_section: ClusterSection, item: str) -> Iterable[str]:
     # node info ignored (only used in regular logwatch check)
     for node_data in cluster_section.values():
-        for line in node_data.logfiles[item]['lines']:
+        for line in node_data.logfiles[item]["lines"]:
             # skip context lines and ignore lines
             # skip context lines, ignore lines and empty lines
-            if line[0] not in ['.', 'I'] and len(line) > 1:
+            if line[0] not in [".", "I"] and len(line) > 1:
                 yield line
 
 
@@ -222,27 +228,32 @@ def check_logwatch_ec_common(
 
     if item:
         # If this check has an item (logwatch.ec_single), only forward the information from this log
-        if (not any(item in node_data.logfiles for node_data in parsed.values()) or
-                not logwatch.ec_forwarding_enabled(params, item)):
+        if not any(
+            item in node_data.logfiles for node_data in parsed.values()
+        ) or not logwatch.ec_forwarding_enabled(params, item):
             return
         used_logfiles = [item]
     else:
         # Filter logfiles if some should be excluded
         used_logfiles = [
-            name for node_data in parsed.values() for name in node_data.logfiles
+            name
+            for node_data in parsed.values()
+            for name in node_data.logfiles
             if logwatch.ec_forwarding_enabled(params, name)
         ]
 
     # Check if the number of expected files matches the actual one
-    if params.get('monitor_logfilelist'):
-        if 'expected_logfiles' not in params:
+    if params.get("monitor_logfilelist"):
+        if "expected_logfiles" not in params:
             yield Result(
                 state=state.WARN,
-                summary=("You enabled monitoring the list of forwarded logfiles. "
-                         "You need to redo service discovery."),
+                summary=(
+                    "You enabled monitoring the list of forwarded logfiles. "
+                    "You need to redo service discovery."
+                ),
             )
         else:
-            expected = params['expected_logfiles']
+            expected = params["expected_logfiles"]
             missing = [f for f in expected if f not in used_logfiles]
             if missing:
                 yield Result(
@@ -260,7 +271,7 @@ def check_logwatch_ec_common(
     # 3. create syslog message of each line
     # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasas
     # <facility+priority> timestamp hostname logfile: message
-    facility = params.get('facility', 17)  # default to "local1"
+    facility = params.get("facility", 17)  # default to "local1"
     syslog_messages = []
     cur_time = int(time.time())
 
@@ -275,7 +286,8 @@ def check_logwatch_ec_common(
     def add_reclassify_settings(settings):
         if isinstance(settings, dict):
             logfile_reclassify_settings["reclassify_patterns"].extend(
-                settings.get("reclassify_patterns", []))
+                settings.get("reclassify_patterns", [])
+            )
             if "reclassify_states" in settings:
                 logfile_reclassify_settings["reclassify_states"] = settings["reclassify_states"]
         else:  # legacy configuration
@@ -301,8 +313,9 @@ def check_logwatch_ec_common(
             rclfd_level = None
             if logfile_reclassify_settings:
                 old_level, _text = line.split(" ", 1)
-                level = logwatch.reclassify(Counter(), logfile_reclassify_settings, line[2:],
-                                            old_level)
+                level = logwatch.reclassify(
+                    Counter(), logfile_reclassify_settings, line[2:], old_level
+                )
                 if level != old_level:
                     rclfd_total += 1
                     rclfd_level = level
@@ -319,7 +332,8 @@ def check_logwatch_ec_common(
                     application=logfile,
                     text=line[2:],
                     service_level=service_level,
-                ))
+                )
+            )
             forwarded_logfiles.add(logfile)
 
     try:
@@ -334,7 +348,7 @@ def check_logwatch_ec_common(
             state=state.OK,
             summary="Forwarded %d messages%s" % (result.num_forwarded, logfile_info),
         )
-        yield Metric('messages', result.num_forwarded)
+        yield Metric("messages", result.num_forwarded)
 
         exc_txt = " (%s)" % result.exception if result.exception else ""
 
@@ -355,15 +369,15 @@ def check_logwatch_ec_common(
             raise
         yield Result(
             state=state.CRIT,
-            summary='Failed to forward messages (%s). Lost %d messages.' %
-            (exc, len(syslog_messages)),
+            summary="Failed to forward messages (%s). Lost %d messages."
+            % (exc, len(syslog_messages)),
         )
 
     if rclfd_total:
         yield Result(
             state=state.OK,
-            summary='Reclassified %d messages through logwatch patterns (%d to IGNORE)' %
-            (rclfd_total, rclfd_to_ignore),
+            summary="Reclassified %d messages through logwatch patterns (%d to IGNORE)"
+            % (rclfd_total, rclfd_to_ignore),
         )
 
 
@@ -387,13 +401,13 @@ def logwatch_forward_messages(
 ) -> LogwatchFordwardResult:
     if not method:
         method = cmk.utils.paths.omd_root + "/tmp/run/mkeventd/eventsocket"
-    elif isinstance(method, str) and method == 'spool:':
+    elif isinstance(method, str) and method == "spool:":
         method += cmk.utils.paths.omd_root + "/var/mkeventd/spool"
 
     if isinstance(method, tuple):
         return logwatch_forward_tcp(method, syslog_messages, logwatch_spool_path())
 
-    if not method.startswith('spool:'):
+    if not method.startswith("spool:"):
         return logwatch_forward_pipe(
             Path(method),
             syslog_messages,
@@ -430,15 +444,18 @@ def logwatch_forward_spool_directory(
         return LogwatchFordwardResult()
 
     spool_file = Path(
-        method[6:], '.%s_%s%d' % (
+        method[6:],
+        ".%s_%s%d"
+        % (
             host_name(),
-            (item.replace('/', '\\') + '_') if item else '',
+            (item.replace("/", "\\") + "_") if item else "",
             time.time(),
-        ))
+        ),
+    )
 
     spool_file.parent.mkdir(parents=True, exist_ok=True)
 
-    spool_file.write_text('\n'.join(map(repr, syslog_messages)) + '\n')
+    spool_file.write_text("\n".join(map(repr, syslog_messages)) + "\n")
     spool_file.rename(spool_file.parent / spool_file.name[1:])
 
     return LogwatchFordwardResult(num_forwarded=len(syslog_messages))
@@ -482,8 +499,12 @@ def logwatch_forward_tcp(
 
 
 def logwatch_shall_spool_messages(method):
-    return isinstance(method, tuple) and method[0] == "tcp" \
-            and isinstance(method[1], dict) and "spool" in method[1]
+    return (
+        isinstance(method, tuple)
+        and method[0] == "tcp"
+        and isinstance(method[1], dict)
+        and "spool" in method[1]
+    )
 
 
 def logwatch_forward_send_tcp(
@@ -493,9 +514,9 @@ def logwatch_forward_send_tcp(
 ):
     protocol, method_params = method
 
-    if protocol == 'udp':
+    if protocol == "udp":
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    elif protocol == 'tcp':
+    elif protocol == "tcp":
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     else:
         raise NotImplementedError()

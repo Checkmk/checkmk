@@ -43,9 +43,9 @@ def host_label_esx_vshpere_systeminfo(section):
     """
     name = section.get("name", "")
     if "vCenter" in name:
-        yield HostLabel(u"cmk/vsphere_object", u"vcenter")
+        yield HostLabel("cmk/vsphere_object", "vcenter")
     elif "ESXi" in name:
-        yield HostLabel(u"cmk/vsphere_object", u"server")
+        yield HostLabel("cmk/vsphere_object", "server")
 
 
 register.agent_section(

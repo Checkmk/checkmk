@@ -35,7 +35,7 @@ def parse_domino_tasks(string_table: List[StringTable]) -> ps.Section:
 
 
 register.snmp_section(
-    name='domino_tasks',
+    name="domino_tasks",
     parse_function=parse_domino_tasks,
     fetch=[
         SNMPTree(
@@ -85,12 +85,16 @@ def cluster_check_domino_tasks(
     section_mem: Dict[str, Optional[memory.SectionMem]],
 ) -> CheckResult:
 
-    iter_non_trivial_sections = ((node_name, node_section)
-                                 for node_name, node_section in section_domino_tasks.items()
-                                 if node_section is not None)
-    process_lines: ProcessLines = [(node_name, psi, cmd_line)
-                                   for node_name, node_section in iter_non_trivial_sections
-                                   for (psi, cmd_line) in node_section[1]]
+    iter_non_trivial_sections = (
+        (node_name, node_section)
+        for node_name, node_section in section_domino_tasks.items()
+        if node_section is not None
+    )
+    process_lines: ProcessLines = [
+        (node_name, psi, cmd_line)
+        for node_name, node_section in iter_non_trivial_sections
+        for (psi, cmd_line) in node_section[1]
+    ]
 
     yield from ps.check_ps_common(
         label="Tasks",
@@ -107,7 +111,7 @@ def cluster_check_domino_tasks(
 
 
 register.check_plugin(
-    name='domino_tasks',
+    name="domino_tasks",
     service_name="Domino Task %s",
     sections=["domino_tasks", "mem"],
     discovery_function=discover_domino_tasks,

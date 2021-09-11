@@ -74,10 +74,10 @@ def parse_docker_container_diskstat_cgroupv2(string_table: StringTable) -> Secti
     for device_number, stats in parsed.stat.items():
         device_name = parsed.names[device_number]
         section[device_name] = Device(
-            read_ios=int(stats['rios']),
-            write_ios=int(stats['wios']),
-            read_throughput=int(stats['rbytes']),
-            write_throughput=int(stats['wbytes']),
+            read_ios=int(stats["rios"]),
+            write_ios=int(stats["wios"]),
+            read_throughput=int(stats["rbytes"]),
+            write_throughput=int(stats["wbytes"]),
         )
 
     return section
@@ -98,7 +98,7 @@ def _check_docker_container_diskstat_cgroupv2(
     section: Section,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-    if item == 'SUMMARY':
+    if item == "SUMMARY":
 
         def _compute_rates_single_disk(
             disk_absolute: diskstat.Disk,
@@ -144,7 +144,7 @@ register.check_plugin(
     name="docker_container_diskstat_cgroupv2",
     service_name="Disk IO %s",
     discovery_function=discover_docker_container_diskstat_cgroupv2,
-    discovery_default_parameters={'summary': True},
+    discovery_default_parameters={"summary": True},
     discovery_ruleset_name="diskstat_inventory",
     discovery_ruleset_type=register.RuleSetType.ALL,
     check_function=check_docker_container_diskstat_cgroupv2,

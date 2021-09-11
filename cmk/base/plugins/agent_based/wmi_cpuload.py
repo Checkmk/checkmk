@@ -24,7 +24,7 @@ class Section(NamedTuple):
 def parse_wmi_cpuload(string_table: StringTable) -> Optional[Section]:
     wmi_tables = parse_wmi_table(string_table)
     if required_tables_missing(
-            wmi_tables,
+        wmi_tables,
         [
             "computer_system",
             "system_perf",

@@ -35,8 +35,10 @@ def parse_mtr(string_table: StringTable) -> Section:
                 rtmin=float(rest[5 + 8 * hopnum]) / 1000,
                 rtmax=float(rest[6 + 8 * hopnum]) / 1000,
                 rtstddev=float(rest[7 + 8 * hopnum]) / 1000,
-            ) for hopnum in range(hopcount)
-        ] for line in string_table
+            )
+            for hopnum in range(hopcount)
+        ]
+        for line in string_table
         for hostname, hopcount, rest in [(line[0], int(float(line[2])), line[3:])]
         if line and not line[0].startswith("**ERROR**")
     }
@@ -60,8 +62,8 @@ def discover_mtr(section) -> DiscoveryResult:
 
 def _metrics_nonlast_hops(hops: Iterable[Hop]) -> Iterable[Metric]:
     for idx, hop in enumerate(
-            hops,
-            start=1,
+        hops,
+        start=1,
     ):
         yield Metric("hop_%d_rta" % idx, hop.rta)
         yield Metric("hop_%d_rtmin" % idx, hop.rtmin)
@@ -124,10 +126,14 @@ def check_mtr(
     yield Result(
         state=State.OK,
         summary="Number of Hops: %d" % len(hops),
-        details="\n".join("Hop %d: %s" % (
-            idx + 1,
-            hop.name,
-        ) for idx, hop in enumerate(hops)),
+        details="\n".join(
+            "Hop %d: %s"
+            % (
+                idx + 1,
+                hop.name,
+            )
+            for idx, hop in enumerate(hops)
+        ),
     )
     yield Metric("hops", len(hops))
 

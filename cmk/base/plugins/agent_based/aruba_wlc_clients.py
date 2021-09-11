@@ -14,7 +14,7 @@ from .utils.wlc_clients import ClientsTotal, WlcClientsSection
 def parse_aruba_wlc_clients(string_table: List[StringTable]) -> WlcClientsSection[ClientsTotal]:
     section: WlcClientsSection[ClientsTotal] = WlcClientsSection()
     for oid_fragment, num_clients_str in string_table[0]:
-        ssid_name = bytes(int(x) for x in oid_fragment.split(".")[1:]).decode('ascii')
+        ssid_name = bytes(int(x) for x in oid_fragment.split(".")[1:]).decode("ascii")
         if ssid_name == "":
             continue
         num_clients = int(num_clients_str)
@@ -26,7 +26,7 @@ def parse_aruba_wlc_clients(string_table: List[StringTable]) -> WlcClientsSectio
 register.snmp_section(
     name="aruba_wlc_clients",
     parsed_section_name="wlc_clients",
-    detect=startswith('.1.3.6.1.2.1.1.2.0', ".1.3.6.1.4.1.14823.1.1"),
+    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14823.1.1"),
     parse_function=parse_aruba_wlc_clients,
     fetch=[
         SNMPTree(
@@ -34,6 +34,7 @@ register.snmp_section(
             oids=[
                 OIDEnd(),
                 "2",  # wlanESSIDNumStations
-            ])
+            ],
+        )
     ],
 )

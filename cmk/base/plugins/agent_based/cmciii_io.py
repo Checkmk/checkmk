@@ -53,7 +53,7 @@ def check_cmciii_io(item: str, params: CheckParams, section: Section) -> type_de
 
 register.check_plugin(
     name="cmciii_io",
-    sections=['cmciii'],
+    sections=["cmciii"],
     service_name="%s",
     discovery_function=discover_cmciii_io,
     check_function=check_cmciii_io,

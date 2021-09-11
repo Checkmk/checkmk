@@ -10,9 +10,9 @@ from .agent_based_api.v1.type_defs import StringTable
 from .utils.printer import check_printer_pages_types, DETECT_RICOH, discovery_printer_pages, Section
 
 METRIC_NAMES = {
-    'Counter: Machine Total': 'pages_total',
-    'Total Prints: Color': 'pages_color',
-    'Total Prints: Black & White': 'pages_bw',
+    "Counter: Machine Total": "pages_total",
+    "Total Prints: Color": "pages_color",
+    "Total Prints: Black & White": "pages_bw",
 }
 
 

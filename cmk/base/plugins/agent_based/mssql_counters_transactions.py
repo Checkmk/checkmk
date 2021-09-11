@@ -25,7 +25,8 @@ def discovery_mssql_counters_transactions(section: Section) -> DiscoveryResult:
     Service(item='MSSQL_VEEAMSQL2012 tempdb')
     """
     yield from discovery_mssql_counters_generic(
-        section, {'transactions/sec', 'write_transactions/sec', 'tracked_transactions/sec'})
+        section, {"transactions/sec", "write_transactions/sec", "tracked_transactions/sec"}
+    )
 
 
 def _check_common(
@@ -39,9 +40,9 @@ def _check_common(
     counters, _counter = get_item(item, section)
     now = counters.get("utc_time", time_point)
     for counter_key, title in (
-        ('transactions/sec', 'Transactions'),
-        ('write_transactions/sec', 'Write Transactions'),
-        ('tracked_transactions/sec', 'Tracked Transactions'),
+        ("transactions/sec", "Transactions"),
+        ("write_transactions/sec", "Write Transactions"),
+        ("tracked_transactions/sec", "Tracked Transactions"),
     ):
         if counter_key not in counters:
             continue
@@ -103,7 +104,7 @@ def check_mssql_counters_transactions(
 
 register.check_plugin(
     name="mssql_counters_transactions",
-    sections=['mssql_counters'],
+    sections=["mssql_counters"],
     service_name="MSSQL %s Transactions",
     discovery_function=discovery_mssql_counters_transactions,
     check_default_parameters={},

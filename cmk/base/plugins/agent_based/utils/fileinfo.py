@@ -180,8 +180,11 @@ def parse_fileinfo(string_table: StringTable) -> Fileinfo:
 
 
 def _match(name: str, pattern: str) -> Union[bool, Match, None]:
-    return (regex(pattern[1:]).match(name) if pattern.startswith("~") else  #
-            fnmatch.fnmatch(name, pattern))
+    return (
+        regex(pattern[1:]).match(name)
+        if pattern.startswith("~")
+        else fnmatch.fnmatch(name, pattern)  #
+    )
 
 
 def fileinfo_process_date(pattern: str, reftime: int) -> str:
@@ -213,8 +216,11 @@ def fileinfo_groups_get_group_name(
         if _match(filename, exclusion):
             continue
 
-        inclusion = (("~" + fileinfo_process_date(inclusion[1:], reftime))
-                     if inclusion.startswith("~") else fileinfo_process_date(inclusion, reftime))
+        inclusion = (
+            ("~" + fileinfo_process_date(inclusion[1:], reftime))
+            if inclusion.startswith("~")
+            else fileinfo_process_date(inclusion, reftime)
+        )
 
         incl_match = _match(filename, inclusion)
         if not incl_match:
@@ -230,8 +236,9 @@ def fileinfo_groups_get_group_name(
                 raise RuntimeError(
                     "Invalid entry in inventory_fileinfo_groups: "
                     "group name '%s' contains %d times '%%s', but regular expression "
-                    "'%s' contains only %d subexpression(s)." %
-                    (group_name, num_perc_s, inclusion, len(matches)))
+                    "'%s' contains only %d subexpression(s)."
+                    % (group_name, num_perc_s, inclusion, len(matches))
+                )
 
         this_pattern: Union[str, Tuple[str, str]] = ""
         if matches:
@@ -425,10 +432,10 @@ def _check_individual_files(
     file_age: int,
     skip_ok_files: bool,
 ) -> CheckResult:
-    '''
-        This function checks individual files against levels defined for the file group.
-        This is done to generate information for the long output.
-    '''
+    """
+    This function checks individual files against levels defined for the file group.
+    This is done to generate information for the long output.
+    """
 
     for key, value in [
         ("age_oldest", file_age),
@@ -458,7 +465,9 @@ def _check_individual_files(
     )
 
 
-def _define_fileinfo_group_check(files_matching: Dict[str, Any],) -> List[MetricInfo]:
+def _define_fileinfo_group_check(
+    files_matching: Dict[str, Any],
+) -> List[MetricInfo]:
     size_smallest, size_largest = files_matching["size_minmax"] or (None, None)
     age_newest, age_oldest = files_matching["age_minmax"] or (None, None)
     return [
@@ -540,8 +549,9 @@ def check_fileinfo_groups_data(
 
         for inclusion, exclusion in group_patterns:
 
-            filename_matches, date_inclusion = _filename_matches(file_stat.name, reftime, inclusion,
-                                                                 exclusion)
+            filename_matches, date_inclusion = _filename_matches(
+                file_stat.name, reftime, inclusion, exclusion
+            )
             if not filename_matches:
                 continue
             if file_stat.failed:
@@ -554,14 +564,16 @@ def check_fileinfo_groups_data(
             files_matching["size_all"] += file_stat.size
             files_matching["count_all"] += 1
 
-            files_matching["size_minmax"] = _update_minmax(file_stat.size,
-                                                           files_matching["size_minmax"])
+            files_matching["size_minmax"] = _update_minmax(
+                file_stat.size, files_matching["size_minmax"]
+            )
 
             age = reftime - file_stat.time
             files_matching["age_minmax"] = _update_minmax(age, files_matching["age_minmax"])
 
-            yield from _check_individual_files(params, file_stat.name, file_stat.size, age,
-                                               skip_ok_files)
+            yield from _check_individual_files(
+                params, file_stat.name, file_stat.size, age, skip_ok_files
+            )
 
             break
 
@@ -572,8 +584,9 @@ def check_fileinfo_groups_data(
     check_definition = _define_fileinfo_group_check(files_matching)
 
     if files_stat_failed:
-        yield Result(state=State.WARN,
-                     summary="Files with unknown stat: %s" % ", ".join(files_stat_failed))
+        yield Result(
+            state=State.WARN, summary="Files with unknown stat: %s" % ", ".join(files_stat_failed)
+        )
 
     yield from _fileinfo_check_function(check_definition, params)
 

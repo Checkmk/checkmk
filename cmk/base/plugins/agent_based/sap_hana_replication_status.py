@@ -46,23 +46,27 @@ register.agent_section(
 
 def discovery_sap_hana_replication_status(section: sap_hana.ParsedSection) -> DiscoveryResult:
     for sid_instance, data in section.items():
-        if data["sys_repl_status"] != "10" and (data.get("mode", "").lower() == "primary" or
-                                                data.get("mode", "").lower() == "sync"):
+        if data["sys_repl_status"] != "10" and (
+            data.get("mode", "").lower() == "primary" or data.get("mode", "").lower() == "sync"
+        ):
             yield Service(item=sid_instance)
 
 
-def check_sap_hana_replication_status(item: str, params: Mapping[str, Any],
-                                      section: sap_hana.ParsedSection) -> CheckResult:
+def check_sap_hana_replication_status(
+    item: str, params: Mapping[str, Any], section: sap_hana.ParsedSection
+) -> CheckResult:
     data = section.get(item)
     if not data:
         raise IgnoreResultsError("Login into database failed.")
 
     sys_repl_status = data["sys_repl_status"]
     state, state_readable, param_key = SAP_HANA_REPL_STATUS_MAP.get(
-        sys_repl_status, (State.UNKNOWN, "unknown[%s]" % sys_repl_status, "state_unknown"))
+        sys_repl_status, (State.UNKNOWN, "unknown[%s]" % sys_repl_status, "state_unknown")
+    )
 
-    yield Result(state=params.get(param_key, state),
-                 summary="System replication: %s" % state_readable)
+    yield Result(
+        state=params.get(param_key, state), summary="System replication: %s" % state_readable
+    )
 
 
 register.check_plugin(

@@ -27,8 +27,11 @@ def discover_k8s_stats_fs(section: Section) -> DiscoveryResult:
         Service(item=device)
         for device in section["filesystem"]
         if device not in {"tmpfs", "rootfs", "/dev/shm"}
-        if not (isinstance(device, str) and (device.startswith("/var/lib/docker/") or  #
-                                             device.startswith("overlay"))))
+        if not (
+            isinstance(device, str)
+            and (device.startswith("/var/lib/docker/") or device.startswith("overlay"))  #
+        )
+    )
 
 
 def _check__k8s_stats_fs__core(
@@ -53,17 +56,20 @@ def _check__k8s_stats_fs__core(
     Result(state=<State.OK: 0>, summary='trend per 1 day 0 hours: +0%')
     Metric('trend', 0.0, boundaries=(0.0, 687.1832682291666))
     """
-    now = section['timestamp']
+    now = section["timestamp"]
     disk: Filesystem = to_filesystem(
-        sum((collections.Counter(interface) for interface in section["filesystem"][item]),
-            collections.Counter()))
+        sum(
+            (collections.Counter(interface) for interface in section["filesystem"][item]),
+            collections.Counter(),
+        )
+    )
 
     with suppress(GetRateError):
         yield from df_check_filesystem_single(
             value_store=value_store,
             mountpoint=item,
-            size_mb=disk["capacity"] / 1024**2,
-            avail_mb=disk["available"] / 1024**2,
+            size_mb=disk["capacity"] / 1024 ** 2,
+            avail_mb=disk["available"] / 1024 ** 2,
             reserved_mb=0,
             inodes_total=disk["inodes"],
             inodes_avail=disk["inodes_free"],

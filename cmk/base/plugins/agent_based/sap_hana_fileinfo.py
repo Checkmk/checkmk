@@ -31,8 +31,9 @@ def check_sap_hana_fileinfo(item: str, params: Mapping[str, Any], section: Filei
     yield from check_fileinfo_data(file_info_item, reftime, params)
 
 
-def check_sap_hana_fileinfo_groups(item: str, params: Mapping[str, Any],
-                                   section: Fileinfo) -> CheckResult:
+def check_sap_hana_fileinfo_groups(
+    item: str, params: Mapping[str, Any], section: Fileinfo
+) -> CheckResult:
     reftime = section.reftime
     if reftime is None:
         yield Result(state=State.UNKNOWN, summary="Missing reference timestamp")

@@ -19,7 +19,7 @@ def parse_esx_vsphere_vm(string_table: StringTable) -> SectionVM:
 
 
 def host_label_esx_vshpere_vm(section):
-    if 'runtime.host' in section:
+    if "runtime.host" in section:
         yield HostLabel("cmk/vsphere_object", "vm")
 
 

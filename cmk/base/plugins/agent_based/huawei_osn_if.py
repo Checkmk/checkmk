@@ -28,8 +28,8 @@ def parse_huawei_osn_if(string_table: List[StringTable]) -> Section:
             index=name,
             descr=name,
             alias=name,
-            type='39',
-            oper_status='1',
+            type="39",
+            oper_status="1",
             in_octets=interfaces.saveint(line[7]),
             in_ucast=interfaces.saveint(line[1]),
             in_mcast=interfaces.saveint(line[2]),
@@ -40,7 +40,9 @@ def parse_huawei_osn_if(string_table: List[StringTable]) -> Section:
             out_mcast=interfaces.saveint(line[5]),
             out_bcast=interfaces.saveint(line[6]),
             out_errors=interfaces.saveint(line[10]),
-        ) for line in string_table[0] for name in [line[0]]
+        )
+        for line in string_table[0]
+        for name in [line[0]]
     }
 
 
@@ -66,7 +68,7 @@ register.snmp_section(
         ),
     ],
     detect=huawei_osn.SNMP_DETECT,
-    supersedes=['if', 'if64'],
+    supersedes=["if", "if64"],
 )
 
 

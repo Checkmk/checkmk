@@ -90,10 +90,12 @@ def parse_zpool_status(string_table: type_defs.StringTable) -> Section:
         elif multiline:
             pool_messages[last_pool].append(" ".join(line))
 
-    return Section(state_messages=state_messages,
-                   error_pools=error_pools,
-                   warning_pools=warning_pools,
-                   pool_messages=pool_messages)
+    return Section(
+        state_messages=state_messages,
+        error_pools=error_pools,
+        warning_pools=warning_pools,
+        pool_messages=pool_messages,
+    )
 
 
 def discover_zpool_status(section: Section) -> type_defs.DiscoveryResult:

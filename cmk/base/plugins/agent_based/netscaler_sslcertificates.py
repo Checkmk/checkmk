@@ -63,11 +63,11 @@ def check_netscaler_sslcertificates(
 ) -> CheckResult:
     if item not in section:
         return
-    label = 'certificate valid for'
+    label = "certificate valid for"
     yield from check_levels(
         section[item],
-        levels_lower=params['age_levels'],
-        metric_name='daysleft',
+        levels_lower=params["age_levels"],
+        metric_name="daysleft",
         render_func=lambda d: str(d) + " days",
         label=label,
     )

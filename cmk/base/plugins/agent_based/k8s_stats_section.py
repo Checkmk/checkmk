@@ -43,6 +43,7 @@ def parse_k8s(string_table: StringTable) -> Section:
     interfaces: {'eth1': [{'rx_packets': 573200, 'tx_packets': 544397, 'rx_errors': 0, 'tx_errors': 0, 'rx_bytes': 371123972, 'tx_bytes': 1358359683, 'rx_dropped': 0, 'tx_dropped': 0}], 'eth0': [{'rx_packets': 465930, 'tx_packets': 184527, 'rx_errors': 0, 'tx_errors': 0, 'rx_bytes': 468641826, 'tx_bytes': 11076147, 'rx_dropped': 0, 'tx_dropped': 0}], 'sit0': [{'rx_packets': 0, 'tx_packets': 0, 'rx_errors': 0, 'tx_errors': 0, 'rx_bytes': 0, 'tx_bytes': 0, 'rx_dropped': 0, 'tx_dropped': 0}]}
     timestamp: 1553765630.0
     """
+
     def to_interfaces(data: Any) -> Dict[str, List[Interface]]:
         assert isinstance(data, list)
         result: Dict[str, List[Interface]] = {}

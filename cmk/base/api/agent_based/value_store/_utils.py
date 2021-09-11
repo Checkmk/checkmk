@@ -48,6 +48,7 @@ class _DynamicDiskSyncedMapping(Dict[_TKey, _TValue]):
     removed (having been removed is not the same as just not
     being in the dict at the moment!)
     """
+
     def __init__(self):
         super().__init__()
         self._removed_keys: Set[_TKey] = set()
@@ -77,6 +78,7 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
 
     The only way to modify the values is the disksync method.
     """
+
     def __init__(
         self,
         *,
@@ -103,10 +105,10 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
         return len(self._data)
 
     def disksync(
-            self,
-            *,
-            removed: Container[_TKey] = (),
-            updated: Iterable[Tuple[_TKey, _TValue]] = (),
+        self,
+        *,
+        removed: Container[_TKey] = (),
+        updated: Iterable[Tuple[_TKey, _TValue]] = (),
     ) -> None:
         """Re-load and write the changes of the stored values
 
@@ -128,7 +130,8 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
             else:
                 self._log_debug("loading from disk")
                 self._data = self._deserializer(
-                    store.load_text_from_file(self._path, default='{}', lock=False))
+                    store.load_text_from_file(self._path, default="{}", lock=False)
+                )
 
             if removed or updated:
                 data = {k: v for k, v in self._data.items() if k not in removed}
@@ -146,6 +149,7 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
 
 class _DiskSyncedMapping(MutableMapping[_TKey, _TValue]):  # pylint: disable=too-many-ancestors
     """Implements the overlay logic between dynamic and static value store"""
+
     @classmethod
     def make(
         cls,
@@ -176,7 +180,8 @@ class _DiskSyncedMapping(MutableMapping[_TKey, _TValue]):  # pylint: disable=too
 
     def _keys(self) -> Set[_TKey]:
         return {
-            k for k in (set(self._dynamic) | set(self.static))
+            k
+            for k in (set(self._dynamic) | set(self.static))
             if k not in self._dynamic.removed_keys
         }
 
@@ -228,6 +233,7 @@ class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-an
     persisted values, by adding the service ID (check plugin name and item) to
     the user supplied keys.
     """
+
     def __init__(
         self,
         *,
@@ -252,8 +258,11 @@ class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-an
         return self._data.__delitem__(self._map_key(key))
 
     def __iter__(self) -> Iterator[_UserKey]:
-        return (user_key for (check_name, item, user_key) in self._data
-                if (check_name, item) == self._prefix)
+        return (
+            user_key
+            for (check_name, item, user_key) in self._data
+            if (check_name, item) == self._prefix
+        )
 
     def __len__(self) -> int:
         return sum(1 for _ in self)
@@ -271,6 +280,7 @@ class ValueStoreManager:
     .. automethod:: ValueStoreManager.save
 
     """
+
     STORAGE_PATH = Path(cmk.utils.paths.counters_dir)
 
     def __init__(self, host_name: HostName) -> None:

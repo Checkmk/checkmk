@@ -28,18 +28,20 @@ def parse_lsi(string_table: StringTable) -> Section:
     section: Section = {"arrays": {}, "disks": {}}
     iter_st = iter(string_table)
     for (id_type, id_), (_key, state) in zip(iter_st, iter_st):
-        if id_type == 'VolumeID':
+        if id_type == "VolumeID":
             section["arrays"][id_] = state
         else:
-            state = state.split('(')[-1][:-1]
+            state = state.split("(")[-1][:-1]
             section["disks"][id_] = state
     return section
 
 
 def discover_lsi_disk(section: Section) -> DiscoveryResult:
     # Set the discovered state as desired/expected state
-    yield from (Service(item=item, parameters={"expected_state": value})
-                for item, value in section["disks"].items())
+    yield from (
+        Service(item=item, parameters={"expected_state": value})
+        for item, value in section["disks"].items()
+    )
 
 
 def discover_lsi_array(section) -> DiscoveryResult:
@@ -51,8 +53,9 @@ def check_lsi_array(item: str, params: Mapping[str, Any], section: Section) -> C
     if state is None:
         yield Result(state=State.CRIT, summary="RAID volume %s not existing" % item)
     else:
-        yield Result(state=State.OK if state == "Okay(OKY)" else State.CRIT,
-                     summary=f"Status is '{state}'")
+        yield Result(
+            state=State.OK if state == "Okay(OKY)" else State.CRIT, summary=f"Status is '{state}'"
+        )
 
 
 def check_lsi_disk(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
@@ -63,8 +66,9 @@ def check_lsi_disk(item: str, params: Mapping[str, Any], section: Section) -> Ch
     elif state == expected_state:
         yield Result(state=State.OK, summary=f"Disk has state '{state}'")
     else:
-        yield Result(state=State.CRIT,
-                     summary=f"Disk has state '{state}' (should be '{expected_state}')")
+        yield Result(
+            state=State.CRIT, summary=f"Disk has state '{state}' (should be '{expected_state}')"
+        )
 
 
 register.agent_section(

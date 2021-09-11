@@ -62,36 +62,36 @@ def parse_cisco_fp_entity_sensors(string_table: List[StringTable]) -> EntitySens
     # do not add undefined and temperature (duplicate with cisco_temperature) sensors
     return utils.parse_entity_sensors(
         string_table,
-        sensor_types_ignore={'0', '8'},
+        sensor_types_ignore={"0", "8"},
     )
 
 
 register.snmp_section(
-    name='cisco_fp_entity_sensors',
-    supersedes=['entity_sensors'],
+    name="cisco_fp_entity_sensors",
+    supersedes=["entity_sensors"],
     detect=all_of(
-        startswith(OIDSysDescr, 'Cisco Firepower'),
-        contains(OIDSysDescr, 'security appliance'),
+        startswith(OIDSysDescr, "Cisco Firepower"),
+        contains(OIDSysDescr, "security appliance"),
     ),
-    parsed_section_name='entity_sensors',
+    parsed_section_name="entity_sensors",
     parse_function=parse_cisco_fp_entity_sensors,
     fetch=[
         SNMPTree(
-            base='.1.3.6.1.2.1.47.1.1.1.1',  # ENTITY-MIB
+            base=".1.3.6.1.2.1.47.1.1.1.1",  # ENTITY-MIB
             oids=[
                 OIDEnd(),
-                '7',  # ENTITY-MIB::entPhysicalName
+                "7",  # ENTITY-MIB::entPhysicalName
             ],
         ),
         SNMPTree(
-            base='.1.3.6.1.4.1.9.9.91.1.1.1.1',  # CISCO-ENTITY-SENSOR-MIB
+            base=".1.3.6.1.4.1.9.9.91.1.1.1.1",  # CISCO-ENTITY-SENSOR-MIB
             oids=[
                 OIDEnd(),
-                '1',  # entPhySensorType
-                '2',  # entPhySensorScale
-                '4',  # entPhySensorValue
-                '5',  # entPhySensorOperStatus
-                '6',  # entPhySensorUnitsDisplay
+                "1",  # entPhySensorType
+                "2",  # entPhySensorScale
+                "4",  # entPhySensorValue
+                "5",  # entPhySensorOperStatus
+                "6",  # entPhySensorUnitsDisplay
             ],
         ),
     ],

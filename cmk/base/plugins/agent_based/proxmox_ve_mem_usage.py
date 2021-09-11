@@ -57,5 +57,5 @@ register.check_plugin(
     discovery_function=discover_single,
     check_function=check_proxmox_ve_mem_usage,
     check_ruleset_name="proxmox_ve_mem_usage",
-    check_default_parameters={"levels": (80., 90.)},
+    check_default_parameters={"levels": (80.0, 90.0)},
 )

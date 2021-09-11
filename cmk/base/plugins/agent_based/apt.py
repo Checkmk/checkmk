@@ -45,7 +45,7 @@ def _data_is_valid(string_table: StringTable) -> bool:
 
     action = parts[0]
     version = parts[2]
-    return action in ('Inst', 'Remv') and version.startswith("[") and version.endswith("]")
+    return action in ("Inst", "Remv") and version.startswith("[") and version.endswith("]")
 
 
 def parse_apt(string_table: StringTable) -> Optional[Section]:

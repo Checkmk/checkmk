@@ -41,8 +41,9 @@ def discovery_sap_hana_memrate(section: sap_hana.ParsedSection) -> DiscoveryResu
         yield Service(item=item)
 
 
-def check_sap_hana_memrate(item: str, params: Mapping[str, Any],
-                           section: sap_hana.ParsedSection) -> CheckResult:
+def check_sap_hana_memrate(
+    item: str, params: Mapping[str, Any], section: sap_hana.ParsedSection
+) -> CheckResult:
     data = section.get(item)
     if not data:
         raise IgnoreResultsError("Login into database failed.")

@@ -25,7 +25,7 @@ def discover_cmciii_temp(params: DiscoveryParams, section: Section) -> type_defs
         # In any case, the "Setup" entries contain setpoints and
         # cannot report a temperature to the user.
         if "Value" in entry:
-            yield Service(item=get_item(id_, params, entry), parameters={'_item_key': id_})
+            yield Service(item=get_item(id_, params, entry), parameters={"_item_key": id_})
 
 
 def _device_levels(entry: Sensor, key_warn: str, key_crit: str) -> Optional[Tuple[float, float]]:
@@ -63,7 +63,7 @@ def check_cmciii_temp(item: str, params: TempParamDict, section: Section) -> typ
 
 register.check_plugin(
     name="cmciii_temp",
-    sections=['cmciii'],
+    sections=["cmciii"],
     service_name="Temperature %s",
     discovery_function=discover_cmciii_temp,
     check_function=check_cmciii_temp,

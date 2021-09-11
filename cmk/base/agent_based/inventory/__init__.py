@@ -129,7 +129,7 @@ def _commandline_inventory_on_host(
     section.section_success(f"Sucessfully ran {count} export hooks")
 
 
-#.
+# .
 #   .--Inventory Check-----------------------------------------------------.
 #   |            ___                      _                                |
 #   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
@@ -178,9 +178,9 @@ def active_check_inventory(hostname: HostName, options: Dict[str, int]) -> Activ
         update_result = ActiveCheckResult(0, (), (), ())
     else:
         old_tree, sources_state = None, 1
-        update_result = ActiveCheckResult(sources_state,
-                                          (f"Cannot update tree{state_markers[sources_state]}",),
-                                          (), ())
+        update_result = ActiveCheckResult(
+            sources_state, (f"Cannot update tree{state_markers[sources_state]}",), (), ()
+        )
 
     _run_inventory_export_hooks(host_config, trees.inventory)
 
@@ -214,7 +214,7 @@ def _check_inventory_tree(
     status = 0
     infotexts = [f"Found {trees.inventory.count_entries()} inventory entries"]
 
-    swp_table = trees.inventory.get_table(['software', 'packages'])
+    swp_table = trees.inventory.get_table(["software", "packages"])
     if swp_table is not None and swp_table.is_empty() and sw_missing:
         infotexts.append("software packages information is missing" + state_markers[sw_missing])
         status = max(status, sw_missing)
@@ -295,15 +295,17 @@ def _inventorize_host(
         source_results=results,
         parsing_errors=parsing_errors,
         safe_to_write=(
-            _safe_to_write_tree(results) and  #
-            selected_sections is NO_SELECTION and  #
-            run_plugin_names is EVERYTHING and  #
-            not parsing_errors),
+            _safe_to_write_tree(results)
+            and selected_sections is NO_SELECTION  #
+            and run_plugin_names is EVERYTHING  #
+            and not parsing_errors  #
+        ),
     )
 
 
 def _safe_to_write_tree(
-    results: Sequence[Tuple[Source, result.Result[HostSections, Exception]]],) -> bool:
+    results: Sequence[Tuple[Source, result.Result[HostSections, Exception]]],
+) -> bool:
     """Check if data sources of a host failed
 
     If a data source failed, we may have incomlete data. In that case we
@@ -348,7 +350,8 @@ def _do_inv_for_cluster(host_config: config.HostConfig) -> InventoryTrees:
         return InventoryTrees(inventory_tree, StructuredDataNode())
 
     node = inventory_tree.setdefault_node(
-        ["software", "applications", "check_mk", "cluster", "nodes"])
+        ["software", "applications", "check_mk", "cluster", "nodes"]
+    )
     node.table.add_key_columns(["name"])
     node.table.add_rows([{"name": node_name} for node_name in host_config.nodes])
 
@@ -379,8 +382,13 @@ def _do_inv_for_realhost(
                 inventory_plugin.sections,
             )
             if not kwargs:
-                console.vverbose(" %s%s%s%s: skipped (no data)\n", tty.yellow, tty.bold,
-                                 inventory_plugin.name, tty.normal)
+                console.vverbose(
+                    " %s%s%s%s: skipped (no data)\n",
+                    tty.yellow,
+                    tty.bold,
+                    inventory_plugin.name,
+                    tty.normal,
+                )
                 continue
 
             # Inventory functions can optionally have a second argument: parameters.
@@ -389,7 +397,8 @@ def _do_inv_for_realhost(
                 kwargs = {
                     **kwargs,
                     "params": host_config.inventory_parameters(
-                        inventory_plugin.inventory_ruleset_name),
+                        inventory_plugin.inventory_ruleset_name
+                    ),
                 }
 
             exception = tree_aggregator.aggregate_results(
@@ -400,8 +409,14 @@ def _do_inv_for_realhost(
             )
 
             if exception:
-                console.warning(" %s%s%s%s: failed: %s", tty.red, tty.bold, inventory_plugin.name,
-                                tty.normal, exception)
+                console.warning(
+                    " %s%s%s%s: failed: %s",
+                    tty.red,
+                    tty.bold,
+                    inventory_plugin.name,
+                    tty.normal,
+                    exception,
+                )
             else:
                 console.verbose(" %s%s%s%s", tty.green, tty.bold, inventory_plugin.name, tty.normal)
                 console.vverbose(": ok\n")
@@ -445,23 +460,30 @@ def _save_inventory_tree(
         )
 
     elif update_result.save_tree:
-        console.verbose("Update inventory tree%s.\n" %
-                        (" (%s)" % update_result.reason if update_result.reason else ""))
+        console.verbose(
+            "Update inventory tree%s.\n"
+            % (" (%s)" % update_result.reason if update_result.reason else "")
+        )
     else:
-        console.verbose("Inventory tree not updated%s.\n" %
-                        (" (%s)" % update_result.reason if update_result.reason else ""))
+        console.verbose(
+            "Inventory tree not updated%s.\n"
+            % (" (%s)" % update_result.reason if update_result.reason else "")
+        )
         return None
 
     inventory_store.save(host_name=hostname, tree=inventory_tree)
     return old_tree
 
 
-def _run_inventory_export_hooks(host_config: config.HostConfig,
-                                inventory_tree: StructuredDataNode) -> None:
+def _run_inventory_export_hooks(
+    host_config: config.HostConfig, inventory_tree: StructuredDataNode
+) -> None:
     import cmk.base.inventory_plugins as inventory_plugins  # pylint: disable=import-outside-toplevel
+
     for hookname, params in host_config.inventory_export_hooks:
-        console.verbose("Execute export hook: %s%s%s%s" %
-                        (tty.blue, tty.bold, hookname, tty.normal))
+        console.verbose(
+            "Execute export hook: %s%s%s%s" % (tty.blue, tty.bold, hookname, tty.normal)
+        )
         try:
             func = inventory_plugins.inv_export[hookname]["export_function"]
             func(host_config.hostname, params, inventory_tree.serialize())

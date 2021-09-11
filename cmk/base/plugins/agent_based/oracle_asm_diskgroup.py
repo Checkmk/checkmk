@@ -50,7 +50,7 @@ def parse_oracle_asm_diskgroup(string_table: StringTable):
     for line in string_table:
         # Filuregroups are usually REGULAR.
         # Other types are possible from Version 11.2 onwards
-        fg_type = 'REGULAR'
+        fg_type = "REGULAR"
 
         try:
             dgstate = line[0]
@@ -77,18 +77,51 @@ def parse_oracle_asm_diskgroup(string_table: StringTable):
         stripped_line = line[index:]
 
         if len(stripped_line) == 10:
-            _rebal, _sector, _block, _au, total_mb, free_mb, req_mir_free_mb, \
-                _usable_file_mb, offline_disks, dgname = stripped_line
+            (
+                _rebal,
+                _sector,
+                _block,
+                _au,
+                total_mb,
+                free_mb,
+                req_mir_free_mb,
+                _usable_file_mb,
+                offline_disks,
+                dgname,
+            ) = stripped_line
             voting_files = "N"
 
         elif len(stripped_line) == 11:
-            _rebal, _sector, _block, _au, total_mb, free_mb, req_mir_free_mb, \
-                _usable_file_mb, offline_disks, voting_files, dgname = stripped_line
+            (
+                _rebal,
+                _sector,
+                _block,
+                _au,
+                total_mb,
+                free_mb,
+                req_mir_free_mb,
+                _usable_file_mb,
+                offline_disks,
+                voting_files,
+                dgname,
+            ) = stripped_line
 
         elif len(stripped_line) == 12:
             # new format with Failuregroup details
-            dgname, _block, _au, req_mir_free_mb, total_mb, free_mb, \
-                fg_name, voting_files, fg_type, offline_disks, fg_min_repair_time, fg_disks = stripped_line
+            (
+                dgname,
+                _block,
+                _au,
+                req_mir_free_mb,
+                total_mb,
+                free_mb,
+                fg_name,
+                voting_files,
+                fg_type,
+                offline_disks,
+                fg_min_repair_time,
+                fg_disks,
+            ) = stripped_line
 
         else:
             continue
@@ -99,7 +132,8 @@ def parse_oracle_asm_diskgroup(string_table: StringTable):
 
             # old format without fg data
             section.setdefault(
-                dgname, {
+                dgname,
+                {
                     "dgstate": dgstate,
                     "dgtype": dgtype,
                     "total_mb": total_mb,
@@ -107,7 +141,8 @@ def parse_oracle_asm_diskgroup(string_table: StringTable):
                     "req_mir_free_mb": req_mir_free_mb,
                     "offline_disks": offline_disks,
                     "voting_files": voting_files,
-                })
+                },
+            )
 
         else:
 
@@ -143,7 +178,8 @@ def parse_oracle_asm_diskgroup(string_table: StringTable):
                 failgroups.append(this_failgroup)
 
             section.setdefault(
-                dgname, {
+                dgname,
+                {
                     "dgstate": dgstate,
                     "dgtype": dgtype,
                     "total_mb": total_mb,
@@ -152,7 +188,8 @@ def parse_oracle_asm_diskgroup(string_table: StringTable):
                     "offline_disks": offline_disks,
                     "voting_files": voting_files,
                     "failgroups": failgroups,
-                })
+                },
+            )
     return section
 
 
@@ -168,8 +205,9 @@ def discovery_oracle_asm_diskgroup(section: Dict[str, Any]) -> DiscoveryResult:
             yield Service(item=asm_diskgroup_name)
 
 
-def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
-                               section: Dict[str, Any]) -> CheckResult:
+def check_oracle_asm_diskgroup(
+    item: str, params: Mapping[str, Any], section: Dict[str, Any]
+) -> CheckResult:
     if item not in section:
         # In case of missing information we assume that the ASM-Instance is
         # checked at a later time.
@@ -201,10 +239,10 @@ def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
 
         # dg_sizefactor depends on dg_type and fg_count
 
-        if dgtype == 'EXTERN':
+        if dgtype == "EXTERN":
             dg_sizefactor = 1
 
-        elif dgtype == 'NORMAL':
+        elif dgtype == "NORMAL":
 
             if fg_count == 1:
 
@@ -215,7 +253,7 @@ def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
             else:
                 dg_sizefactor = 2
 
-        elif dgtype == 'HIGH':
+        elif dgtype == "HIGH":
 
             if fg_count <= 3:
 
@@ -240,10 +278,10 @@ def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
             # count number of disks over all fgs
             dg_disks += fgitem["fg_disks"]
 
-            if fgitem['fg_voting_files'] == 'Y':
+            if fgitem["fg_voting_files"] == "Y":
                 dg_votecount += 1
 
-            dg_min_repair = min(dg_min_repair, fgitem['fg_min_repair_time'])
+            dg_min_repair = min(dg_min_repair, fgitem["fg_min_repair_time"])
 
             # this is the size without the dg_sizefactor
             free_mb += fgitem["fg_free_mb"]
@@ -256,8 +294,11 @@ def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
             # ignore failure-groups with Voting-Files
             # => exadata use special failure-groups for Voting with different size
             # => Ignore QUORUM failure-groups. They cannot store regular data!
-            elif fgitem['fg_type'] == 'REGULAR' and fgitem['fg_voting_files'] == 'N' \
-                   and fgitem["fg_total_mb"]*0.95 <= last_total >= fgitem["fg_total_mb"]*1.05:
+            elif (
+                fgitem["fg_type"] == "REGULAR"
+                and fgitem["fg_voting_files"] == "N"
+                and fgitem["fg_total_mb"] * 0.95 <= last_total >= fgitem["fg_total_mb"] * 1.05
+            ):
                 fg_uniform_size = False
 
     else:
@@ -268,23 +309,23 @@ def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
         free_mb = data["free_mb"]
 
         # => some estimates with possible errors are expected. Use new agentformat for correct results
-        if dgtype == 'EXTERN':
+        if dgtype == "EXTERN":
             dg_sizefactor = 1
 
-        elif dgtype in ('NORMAL', 'HIGH'):
+        elif dgtype in ("NORMAL", "HIGH"):
 
             # old plugin format has limitations when NORMAL or HIGH redundancy is found
-            add_text += ', old plugin data, possible wrong used and free space'
+            add_text += ", old plugin data, possible wrong used and free space"
 
-            if dgtype == 'NORMAL':
-                if voting_files == 'Y':
+            if dgtype == "NORMAL":
+                if voting_files == "Y":
                     # NORMAL Redundancy Disk-Groups with Voting requires 3 Failgroups
                     dg_sizefactor = 3
                 else:
                     dg_sizefactor = 2
 
-            elif dgtype == 'HIGH':
-                if voting_files == 'Y':
+            elif dgtype == "HIGH":
+                if voting_files == "Y":
                     # HIGH Redundancy Disk-Groups with Voting requires 5 Failgroups
                     dg_sizefactor = 5
                 else:
@@ -293,10 +334,11 @@ def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
     total_mb = int(total_mb) // dg_sizefactor
     free_space_mb = int(free_mb) // dg_sizefactor
 
-    if params.get('req_mir_free'):
-        req_mir_free_mb = max(int(req_mir_free_mb),
-                              0)  # required mirror free space could be negative!
-        add_text = ', required mirror free space used'
+    if params.get("req_mir_free"):
+        req_mir_free_mb = max(
+            int(req_mir_free_mb), 0
+        )  # required mirror free space could be negative!
+        add_text = ", required mirror free space used"
 
     result_list = list(
         df_check_filesystem_single(
@@ -308,65 +350,70 @@ def check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
             inodes_total=None,
             inodes_avail=None,
             params=params,
-        ),)
+        ),
+    )
     yield from result_list
     aggregated_state = state.worst(
-        *[elem.state for elem in result_list if isinstance(elem, Result)])
+        *[elem.state for elem in result_list if isinstance(elem, Result)]
+    )
 
     infotext = ""
     if dgtype is not None:
-        infotext += '%s redundancy' % dgtype.lower()
+        infotext += "%s redundancy" % dgtype.lower()
 
         if "failgroups" in data:
 
             # => New agentformat!
 
-            infotext += ', %i disks' % dg_disks
+            infotext += ", %i disks" % dg_disks
 
-            if dgtype != 'EXTERN':
+            if dgtype != "EXTERN":
 
                 # EXTERN Redundancy has only 1 FG. => useless information
-                infotext += ' in %i failgroups' % fg_count
+                infotext += " in %i failgroups" % fg_count
 
             if not fg_uniform_size:
 
-                infotext += ', failgroups with unequal size'
+                infotext += ", failgroups with unequal size"
 
             if dg_votecount > 0:
-                votemarker = ''
-                if (dgtype == 'HIGH' and dg_votecount < 5):
+                votemarker = ""
+                if dgtype == "HIGH" and dg_votecount < 5:
 
                     # HIGH redundancy allows a loss of 2 votes. => 1 is only a WARN
                     aggregated_state = state.best(aggregated_state, state.WARN)
-                    votemarker = ', not enough votings, 5 expected (!)'
+                    votemarker = ", not enough votings, 5 expected (!)"
 
-                elif (dgtype == 'NORMAL' and dg_votecount < 3) \
-                  or (dgtype == 'HIGH' and dg_votecount < 4):
+                elif (dgtype == "NORMAL" and dg_votecount < 3) or (
+                    dgtype == "HIGH" and dg_votecount < 4
+                ):
 
                     aggregated_state = state.CRIT
-                    votemarker = ', not enough votings, 3 expected (!!)'
+                    votemarker = ", not enough votings, 3 expected (!!)"
 
-                infotext += ', %i votings' % dg_votecount
+                infotext += ", %i votings" % dg_votecount
                 infotext += votemarker
 
             if dg_min_repair < 8640000:
 
                 # no need to set a state due to offline disks
-                infotext += ', disk repair timer for offline disks at %s (!)' % render.timespan(
-                    dg_min_repair)
+                infotext += ", disk repair timer for offline disks at %s (!)" % render.timespan(
+                    dg_min_repair
+                )
 
     infotext += add_text
 
     offline_disks = int(offline_disks)
     if offline_disks > 0:
         aggregated_state = state.CRIT
-        infotext += ', %d Offline disks found(!!)' % offline_disks
+        infotext += ", %d Offline disks found(!!)" % offline_disks
 
     yield Result(state=aggregated_state, summary=infotext)
 
 
-def cluster_check_oracle_asm_diskgroup(item: str, params: Mapping[str, Any],
-                                       section: Mapping[str, Dict[str, Any]]) -> CheckResult:
+def cluster_check_oracle_asm_diskgroup(
+    item: str, params: Mapping[str, Any], section: Mapping[str, Dict[str, Any]]
+) -> CheckResult:
 
     # only use data from 1. node in agent output
     # => later calculation of DG size is much easier

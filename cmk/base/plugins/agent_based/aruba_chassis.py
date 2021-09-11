@@ -61,7 +61,8 @@ def parse_aruba_chassis(string_table: StringTable) -> Section:
             threshold_temp=_string_to_celsius(entry[5]),
             avg_temp=_string_to_celsius(entry[6]) if entry[6] else None,
             dev_unit=entry[2][-1].lower(),
-        ) for entry in string_table
+        )
+        for entry in string_table
     }
 
 
@@ -82,7 +83,8 @@ register.snmp_section(
             "5",  # hpicfChassis::hpSystemAirMinTemp
             "7",  # hpicfChassis::hpSystemAirThresholdTemp
             "8",  # hpicfChassis::hpSystemAirAvgTemp
-        ]),
+        ],
+    ),
 )
 
 
@@ -110,21 +112,18 @@ def check_aruba_chassis_temp(
 
     yield Result(
         state=State.OK,
-        summary=
-        f"Min temperature: {render_temp(chassis.min_temp, chassis.dev_unit) + temp_unitsym[chassis.dev_unit]}"
+        summary=f"Min temperature: {render_temp(chassis.min_temp, chassis.dev_unit) + temp_unitsym[chassis.dev_unit]}",
     )
 
     yield Result(
         state=State.OK,
-        summary=
-        f"Max temperature: {render_temp(chassis.max_temp, chassis.dev_unit) + temp_unitsym[chassis.dev_unit]}"
+        summary=f"Max temperature: {render_temp(chassis.max_temp, chassis.dev_unit) + temp_unitsym[chassis.dev_unit]}",
     )
 
     if chassis.avg_temp:
         yield Result(
             state=State.OK,
-            summary=
-            f"Average temperature: {render_temp(chassis.avg_temp, chassis.dev_unit) + temp_unitsym[chassis.dev_unit]}",
+            summary=f"Average temperature: {render_temp(chassis.avg_temp, chassis.dev_unit) + temp_unitsym[chassis.dev_unit]}",
         )
 
 

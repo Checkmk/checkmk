@@ -20,7 +20,7 @@ def parse_sap_hana_status(string_table: StringTable) -> sap_hana.ParsedSection:
 
         for line in lines:
             if line[0].lower() == "all started":
-                item_name = 'Status'
+                item_name = "Status"
                 item_data = {
                     "instance": sid_instance,
                     "state_name": line[1],
@@ -30,7 +30,7 @@ def parse_sap_hana_status(string_table: StringTable) -> sap_hana.ParsedSection:
                 item_name = line[0]
                 item_data = {
                     "instance": sid_instance,
-                    'version': line[2],
+                    "version": line[2],
                 }
             section["%s %s" % (item_name, sid_instance)] = item_data
 
@@ -44,7 +44,7 @@ register.agent_section(
 
 
 def _check_sap_hana_status_data(data):
-    state_name = data['state_name']
+    state_name = data["state_name"]
     if state_name.lower() == "ok":
         cur_state = state.OK
     elif state_name.lower() == "unknown":
@@ -65,11 +65,11 @@ def check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckRe
     if not data:
         raise IgnoreResultsError("Login into database failed.")
 
-    if 'Status' in item:
+    if "Status" in item:
         cur_state, infotext = _check_sap_hana_status_data(data)
         yield Result(state=cur_state, summary=infotext)
     else:
-        yield Result(state=state.OK, summary="Version: %s" % data['version'])
+        yield Result(state=state.OK, summary="Version: %s" % data["version"])
 
 
 def cluster_check_sap_hana_status(
@@ -77,7 +77,7 @@ def cluster_check_sap_hana_status(
     section: Dict[str, sap_hana.ParsedSection],
 ) -> CheckResult:
 
-    yield Result(state=state.OK, summary='Nodes: %s' % ', '.join(section.keys()))
+    yield Result(state=state.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():
         if item in node_section:
             yield from check_sap_hana_status(item, node_section)

@@ -43,7 +43,8 @@ register.snmp_section(
             oids=[
                 "1",  # sysVcmpStatVcmpName
                 "17",  # sysVcmpStatPrompt
-            ]),
+            ],
+        ),
     ],
 )
 

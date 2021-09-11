@@ -106,9 +106,15 @@ class WMITable:
 
         headers = [name for name, index in sorted(iter(self.__headers.items()), key=lambda x: x[1])]
 
-        return "%s(%r, %r, %r, %r, %r, %r)" % (self.__class__.__name__, self.__name, headers,
-                                               key_field, self.__timestamp, self.__frequency,
-                                               self.__rows)
+        return "%s(%r, %r, %r, %r, %r, %r)" % (
+            self.__class__.__name__,
+            self.__name,
+            headers,
+            key_field,
+            self.__timestamp,
+            self.__frequency,
+            self.__rows,
+        )
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, self.__class__):
@@ -121,7 +127,7 @@ class WMITable:
     def add_row(self, row: Sequence[str]) -> None:
         row_mutable: MutableSequence[Optional[str]] = [*row]
         if self.__key_index is not None:
-            key: Optional[str] = row[self.__key_index].strip("\"")
+            key: Optional[str] = row[self.__key_index].strip('"')
             # there are multiple names to denote the "total" line, normalize that
             if key in WMITable.TOTAL_NAMES:
                 key = row_mutable[self.__key_index] = None
@@ -132,9 +138,9 @@ class WMITable:
             # Check if there's a timeout in the last added line
             # ie. row (index) == -1, column 'WMIStatus'
             try:
-                wmi_status = self._get_row_col_value(-1, 'WMIStatus')
+                wmi_status = self._get_row_col_value(-1, "WMIStatus")
             except IndexError:
-                #TODO Why does the agent send data with different length?
+                # TODO Why does the agent send data with different length?
                 # Eg. skype
                 # tablename = [LS:WEB - EventChannel]
                 # header = [
@@ -158,7 +164,7 @@ class WMITable:
         silently_skip_timed_out: bool = False,
     ) -> Optional[str]:
         if not silently_skip_timed_out and self.timed_out:
-            raise WMIQueryTimeoutError('WMI query timed out')
+            raise WMIQueryTimeoutError("WMI query timed out")
         return self._get_row_col_value(row, column)
 
     def _get_row_col_value(
@@ -259,7 +265,7 @@ def parse_wmi_table(
             # read table content
             line = next(info_iter)
             while not line[0].startswith("["):
-                current_table.add_row(line + ['OK'] * bool(missing_wmi_status))
+                current_table.add_row(line + ["OK"] * bool(missing_wmi_status))
                 line = next(info_iter)
     except (StopIteration, ValueError):
         # regular end of block
@@ -306,16 +312,16 @@ def _prepare_wmi_table(
     # DEF,...,
     if line[0].lower() == "wmitimeout":
         old_timed_out = True
-        header: Iterable[str] = ['WMIStatus']
+        header: Iterable[str] = ["WMIStatus"]
         key = None
     else:
         old_timed_out = False
         header = line
 
     missing_wmi_status = False
-    if 'WMIStatus' not in header:
+    if "WMIStatus" not in header:
         missing_wmi_status = True
-        header = [*header, 'WMIStatus']
+        header = [*header, "WMIStatus"]
 
     current_table = parsed.setdefault(
         tablename,
@@ -328,7 +334,7 @@ def _prepare_wmi_table(
         ),
     )
     if old_timed_out:
-        current_table.add_row(['Timeout'])
+        current_table.add_row(["Timeout"])
     return missing_wmi_status, current_table
 
 

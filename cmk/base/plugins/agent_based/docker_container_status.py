@@ -27,7 +27,7 @@ HEALTH_STATUS_MAP = {
 
 
 def _is_active_container(section: Dict[str, Any]) -> bool:
-    '''return wether container is or should be running'''
+    """return wether container is or should be running"""
     if section.get("Status") in ("running", "exited"):
         return True
     restart_policy_name = section.get("RestartPolicy", {}).get("Name")
@@ -35,13 +35,13 @@ def _is_active_container(section: Dict[str, Any]) -> bool:
 
 
 def parse_docker_container_status(string_table: StringTable) -> Dict[str, Any]:
-    '''process the first line to a JSON object
+    """process the first line to a JSON object
 
     In case there are multiple lines of output sent by the agent only process the first
     line. We assume that this a full JSON object. The rest of the section is skipped.
     When a container got piggyback data from multiple hosts (e.g. a cluster) this results
     in multiple JSON objects handed over to this check.
-    '''
+    """
     return docker.parse(string_table, strict=False).data
 
 
@@ -100,12 +100,12 @@ def host_labels_docker_container_status(section) -> HostLabelGenerator:
 
     image = image_tags[-1]
     yield HostLabel("cmk/docker_image", "%s" % image)
-    if '/' in image:
-        __, image = image.rsplit('/', 1)
-    if ':' in image:
-        image_name, image_version = image.rsplit(':', 1)
+    if "/" in image:
+        __, image = image.rsplit("/", 1)
+    if ":" in image:
+        image_name, image_version = image.rsplit(":", 1)
         yield HostLabel("cmk/docker_image_name", "%s" % image_name)
-        yield HostLabel(u"cmk/docker_image_version", "%s" % image_version)
+        yield HostLabel("cmk/docker_image_version", "%s" % image_version)
     else:
         yield HostLabel("cmk/docker_image_name", "%s" % image)
 
@@ -116,7 +116,7 @@ register.agent_section(
     host_label_function=host_labels_docker_container_status,
 )
 
-#.
+# .
 #   .--Health--------------------------------------------------------------.
 #   |                    _   _            _ _   _                          |
 #   |                   | | | | ___  __ _| | |_| |__                       |
@@ -156,8 +156,10 @@ def check_docker_container_status_health(section: Dict[str, Any]) -> CheckResult
     # This was observed e.g. for the docker_container_status output of check-mk-enterprise:1.6.0p8
     health_report = last_log.get("Output", "no output").strip().replace("\n", ", ")
     if health_report:
-        yield Result(state=state(int(last_log.get("ExitCode") != 0)),
-                     summary="Last health report: %s" % health_report)
+        yield Result(
+            state=state(int(last_log.get("ExitCode") != 0)),
+            summary="Last health report: %s" % health_report,
+        )
 
     if cur_state == state.CRIT:
         failing_streak = section.get("Health", {}).get("FailingStreak", "not found")
@@ -165,7 +167,7 @@ def check_docker_container_status_health(section: Dict[str, Any]) -> CheckResult
 
     health_test = section.get("Healthcheck", {}).get("Test")
     if health_test:
-        yield Result(state=state.OK, summary="Health test: %s" % ' '.join(health_test))
+        yield Result(state=state.OK, summary="Health test: %s" % " ".join(health_test))
 
 
 register.check_plugin(
@@ -227,7 +229,7 @@ register.check_plugin(
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-#.
+# .
 
 
 def discover_docker_container_status_uptime(
@@ -241,8 +243,10 @@ def discover_docker_container_status_uptime(
             return
     if not section_docker_container_status:
         return
-    if _is_active_container(
-            section_docker_container_status) and "StartedAt" in section_docker_container_status:
+    if (
+        _is_active_container(section_docker_container_status)
+        and "StartedAt" in section_docker_container_status
+    ):
         yield Service()
 
 
@@ -258,7 +262,7 @@ def check_docker_container_status_uptime(
         return
 
     # assumed format: 2019-06-05T08:58:06.893459004Z
-    utc_start = datetime.datetime.strptime(started_str[:-4] + 'UTC', '%Y-%m-%dT%H:%M:%S.%f%Z')
+    utc_start = datetime.datetime.strptime(started_str[:-4] + "UTC", "%Y-%m-%dT%H:%M:%S.%f%Z")
 
     op_status = section_docker_container_status["Status"]
     if op_status == "running":

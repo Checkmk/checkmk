@@ -20,14 +20,14 @@ def huawei_entity_specific_snmp_info(snmp_info):
     """
     return [
         (
-            '.1.3.6.1.2.1.47.1.1.1.1',
+            ".1.3.6.1.2.1.47.1.1.1.1",
             [OID_END, "7"],
         ),  # retrieve list of [entPhysicalIndex, entPhysicalName]
         snmp_info,
     ]
 
 
-huawei_mpu_board_name_start = 'mpu board'
+huawei_mpu_board_name_start = "mpu board"
 
 
 class HuaweiPhysicalEntityValue(NamedTuple):
@@ -112,9 +112,10 @@ def parse_huawei_physical_entity_values(info, entity_name_start=huawei_mpu_board
                     physical_index=ent_physical_index,
                     stack_member=stack_member_number,
                     value=value,
-                ))
+                )
+            )
 
-    multiple_entities_per_member = (entity_name_start != huawei_mpu_board_name_start)
+    multiple_entities_per_member = entity_name_start != huawei_mpu_board_name_start
     return huawei_item_dict_from_entities(entities_per_member, multiple_entities_per_member)
 
 

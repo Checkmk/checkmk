@@ -39,45 +39,53 @@ def parse_bluecat(string_table: type_defs.StringTable) -> Optional[Section]:
     >>> parse_bluecat([['3']])
     {'oper_state': 3}
     """
-    return {key: int(str_val) for key, str_val in zip(
-        ['oper_state', 'leases'],
-        string_table[0],
-    )} if string_table else None
+    return (
+        {
+            key: int(str_val)
+            for key, str_val in zip(
+                ["oper_state", "leases"],
+                string_table[0],
+            )
+        }
+        if string_table
+        else None
+    )
 
 
 def _get_service_name(section: Section) -> str:
-    return 'DHCP' if 'leases' in section else 'DNS'
+    return "DHCP" if "leases" in section else "DNS"
 
 
 def check_bluecat_operational_state(
     params: Mapping[str, Any],
     section: Section,
 ) -> type_defs.CheckResult:
-    oper_state = section['oper_state']
+    oper_state = section["oper_state"]
     service_name = _get_service_name(section)
 
     mon_state = state.OK
-    if oper_state in params['oper_states']['warning']:
+    if oper_state in params["oper_states"]["warning"]:
         mon_state = state.WARN
-    elif oper_state in params['oper_states']['critical']:
+    elif oper_state in params["oper_states"]["critical"]:
         mon_state = state.CRIT
 
     yield Result(
         state=mon_state,
-        summary='%s is %s' % (
+        summary="%s is %s"
+        % (
             service_name,
             _OPER_STATE_MAP[oper_state],
         ),
     )
 
-    if service_name == 'DHCP':
-        leases = section['leases']
+    if service_name == "DHCP":
+        leases = section["leases"]
         yield Result(
             state=state.OK,
             summary="%s lease%s per second" % (leases, "" if leases == 1 else "s"),
         )
         yield Metric(
-            'leases',
+            "leases",
             leases,
         )
 
@@ -98,10 +106,14 @@ def cluster_check_bluecat_operational_state(
 
     for node_name, node_section in section.items():
         node_results = results.setdefault(
-            node_name, tuple(check_bluecat_operational_state(
-                params,
-                node_section,
-            )))
+            node_name,
+            tuple(
+                check_bluecat_operational_state(
+                    params,
+                    node_section,
+                )
+            ),
+        )
 
         monitoring_state_result = node_results[0]
         assert isinstance(monitoring_state_result, Result)
@@ -133,5 +145,8 @@ def cluster_check_bluecat_operational_state(
     else:
         yield Result(
             state=overall_state,
-            summary="No node with OK %s state" % _get_service_name(next(iter(section.values()))),  # pylint: disable=stop-iteration-return
+            summary="No node with OK %s state"
+            % _get_service_name(
+                next(iter(section.values()))  # pylint: disable=stop-iteration-return
+            ),
         )

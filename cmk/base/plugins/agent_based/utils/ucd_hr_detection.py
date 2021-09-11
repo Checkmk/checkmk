@@ -52,7 +52,8 @@ UCD = any_of(
     all_of(
         equals(".1.3.6.1.2.1.1.1.0", ""),
         exists(".1.3.6.1.4.1.2021.*"),
-    ))
+    ),
+)
 
 _NOT_UCD = all_of(
     # This is an explicit negation of the constant above.
@@ -73,7 +74,8 @@ _NOT_UCD = all_of(
         not_equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072.3.2.10"),
         not_contains(".1.3.6.1.2.1.1.1.0", "version"),
         not_contains(".1.3.6.1.2.1.1.1.0", "serial"),
-    ))
+    ),
+)
 
 PREFER_HR_ELSE_UCD = all_of(UCD, _NOT_HR)
 

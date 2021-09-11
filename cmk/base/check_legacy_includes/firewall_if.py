@@ -26,17 +26,20 @@ def check_firewall_if(item, params, data):
 
         if params.get("averaging"):
             backlog_minutes = params["averaging"]
-            avgrate = get_average("firewall_if-%s.%s" % (what, item), this_time, rate,
-                                  backlog_minutes)
+            avgrate = get_average(
+                "firewall_if-%s.%s" % (what, item), this_time, rate, backlog_minutes
+            )
             check_against = avgrate
         else:
             check_against = rate
 
-        status, infotext, extraperf = check_levels(check_against,
-                                                   what,
-                                                   params.get(what),
-                                                   human_readable_func=lambda x: "%.2f pkts/s" % x,
-                                                   infoname=infotext_names[what])
+        status, infotext, extraperf = check_levels(
+            check_against,
+            what,
+            params.get(what),
+            human_readable_func=lambda x: "%.2f pkts/s" % x,
+            infoname=infotext_names[what],
+        )
 
         perfdata: List[Any]
         perfdata = [(what, rate)] + extraperf[:1]  # type: ignore[operator]

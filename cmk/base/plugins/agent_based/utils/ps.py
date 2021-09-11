@@ -54,18 +54,30 @@ class PsInfo:
     uptime: Optional[str] = None
     cgroup: Optional[str] = None
 
-    _FIELDS = ('user', 'virtual', 'physical', 'cputime', 'process_id', 'pagefile', 'usermode_time',
-               'kernelmode_time', 'handles', 'threads', 'uptime', 'cgroup')
+    _FIELDS = (
+        "user",
+        "virtual",
+        "physical",
+        "cputime",
+        "process_id",
+        "pagefile",
+        "usermode_time",
+        "kernelmode_time",
+        "handles",
+        "threads",
+        "uptime",
+        "cgroup",
+    )
 
     @classmethod
-    def from_raw(cls, raw: str) -> 'PsInfo':
-        match = regex(r'^\((.*)\)$').match(raw)
+    def from_raw(cls, raw: str) -> "PsInfo":
+        match = regex(r"^\((.*)\)$").match(raw)
         if match is None:
             raise ValueError(raw)
 
-        kwargs = dict(zip(cls._FIELDS, match.group(1).split(',')))
-        virt = kwargs.pop('virtual', '')
-        phys = kwargs.pop('physical', '')
+        kwargs = dict(zip(cls._FIELDS, match.group(1).split(",")))
+        virt = kwargs.pop("virtual", "")
+        phys = kwargs.pop("physical", "")
 
         return cls(
             virtual=int(virt) if virt else None,
@@ -80,14 +92,16 @@ Section = Tuple[int, List[Tuple[PsInfo, List[str]]]]
 def get_discovery_specs(params: Sequence[Mapping[str, Any]]):
     inventory_specs = []
     for value in params[:-1]:  # skip empty default parameters
-        inventory_specs.append((
-            value['descr'],
-            value.get('match'),
-            value.get('user'),
-            value.get('cgroup', (None, False)),
-            value.get('label', {}),
-            value['default_params'],
-        ))
+        inventory_specs.append(
+            (
+                value["descr"],
+                value.get("match"),
+                value.get("user"),
+                value.get("cgroup", (None, False)),
+                value.get("label", {}),
+                value["default_params"],
+            )
+        )
     return inventory_specs
 
 
@@ -134,11 +148,11 @@ def replace_service_description(service_description, match_groups, pattern):
     # New in 1.2.2b4: All %1, %2, etc. to be replaced with first, second, ...
     # group. This allows a reordering of the matched groups
     # replace all %1:
-    description_template, count = re.subn(r'%(\d+)', r'{\1}', service_description)
+    description_template, count = re.subn(r"%(\d+)", r"{\1}", service_description)
     # replace plain %s:
-    total_replacements_count = count + description_template.count('%s')
+    total_replacements_count = count + description_template.count("%s")
     for number in range(count + 1, total_replacements_count + 1):
-        description_template = description_template.replace('%s', '{%d}' % number, 1)
+        description_template = description_template.replace("%s", "{%d}" % number, 1)
 
     # It is allowed (1.1.4) that the pattern contains more subexpressions
     # then the service description. In that case only the first
@@ -149,15 +163,16 @@ def replace_service_description(service_description, match_groups, pattern):
     except IndexError:
         raise ValueError(
             "Invalid entry in inventory_processes_rules: service description '%s' contains %d "
-            "replaceable elements, but regular expression %r contains only %d subexpression(s)." %
-            (service_description, total_replacements_count, pattern, len(match_groups)))
+            "replaceable elements, but regular expression %r contains only %d subexpression(s)."
+            % (service_description, total_replacements_count, pattern, len(match_groups))
+        )
 
 
 def match_attribute(attribute, pattern):
     if not pattern:
         return True
 
-    if pattern.startswith('~'):
+    if pattern.startswith("~"):
         return bool(regex(pattern[1:]).match(attribute))
 
     return pattern == attribute
@@ -210,7 +225,7 @@ def format_process_list(processes, html_output):
         return "%s%s" % (value, unit)
 
     # keys to output and default values:
-    headers = dict.fromkeys((key for process in processes for key, _value in process), '')
+    headers = dict.fromkeys((key for process in processes for key, _value in process), "")
 
     if html_output:
         table_bracket = "<table>%s</table>"
@@ -229,24 +244,35 @@ def format_process_list(processes, html_output):
         cell_seperator = ", "
         header_line = ""
 
-    return table_bracket % (header_line + "".join([
-        line_bracket % cell_seperator.join([
-            cell_bracket % (key, format_value(value)) for key, value in process if key in headers
-        ]) for process in processes
-    ]))
+    return table_bracket % (
+        header_line
+        + "".join(
+            [
+                line_bracket
+                % cell_seperator.join(
+                    [
+                        cell_bracket % (key, format_value(value))
+                        for key, value in process
+                        if key in headers
+                    ]
+                )
+                for process in processes
+            ]
+        )
+    )
 
 
 def parse_ps_time(text):
     """Parse time as output by ps into seconds
 
-        >>> parse_ps_time("12:17")
-        737
-        >>> parse_ps_time("55:12:17")
-        198737
-        >>> parse_ps_time("7-12:34:59")
-        650099
-        >>> parse_ps_time("650099")
-        650099
+    >>> parse_ps_time("12:17")
+    737
+    >>> parse_ps_time("55:12:17")
+    198737
+    >>> parse_ps_time("7-12:34:59")
+    650099
+    >>> parse_ps_time("650099")
+    650099
 
     """
     if "-" in text:
@@ -257,7 +283,8 @@ def parse_ps_time(text):
         days = 0
 
     day_secs = sum(
-        [factor * int(v or 0) for factor, v in zip([1, 60, 3600], reversed(text.split(":")))])
+        [factor * int(v or 0) for factor, v in zip([1, 60, 3600], reversed(text.split(":")))]
+    )
 
     return 86400 * days + day_secs
 
@@ -271,6 +298,7 @@ def cpu_rate(value_store, counter, now, lifetime):
 
 class ProcessAggregator:
     """Collects information about all instances of monitored processes"""
+
     def __init__(self, cpu_cores, params):
         self.cpu_cores = cpu_cores
         self.params = params
@@ -294,16 +322,18 @@ class ProcessAggregator:
         self.processes.append(process)
 
     def core_weight(self, is_win):
-        cpu_rescale_max = self.params.get('cpu_rescale_max')
+        cpu_rescale_max = self.params.get("cpu_rescale_max")
 
-        if any((
+        if any(
+            (
                 # Rule not set up, only windows scaled
-                cpu_rescale_max == 'cpu_rescale_max_unspecified' and not is_win,
+                cpu_rescale_max == "cpu_rescale_max_unspecified" and not is_win,
                 # Current rule is set. Explicitly ask not to divide
                 cpu_rescale_max is False,
                 # Domino tasks counter
                 cpu_rescale_max is None,
-        )):
+            )
+        ):
             return 1.0
 
         # Use default of division
@@ -313,8 +343,8 @@ class ProcessAggregator:
         # process_info.cputime contains the used CPU time and possibly,
         # separated by /, also the total elapsed time since the birth of the
         # process.
-        if '/' in process_info.cputime:
-            elapsed_text = process_info.cputime.split('/')[1]
+        if "/" in process_info.cputime:
+            elapsed_text = process_info.cputime.split("/")[1]
         else:
             # uptime is a windows only value, introduced in Werk 4029. For
             # future consistency should be moved to the cputime entry and
@@ -332,16 +362,18 @@ class ProcessAggregator:
             now = time.time()
             creation_time_unix = int(now - elapsed)
             if creation_time_unix != 0:
-                process.append((
-                    "creation time",
-                    (render.datetime(creation_time_unix), ""),
-                ))
+                process.append(
+                    (
+                        "creation time",
+                        (render.datetime(creation_time_unix), ""),
+                    )
+                )
 
     def cpu_usage(self, value_store, process_info, process):
 
         now = time.time()
 
-        pcpu_text = process_info.cputime.split('/')[0]
+        pcpu_text = process_info.cputime.split("/")[0]
 
         if ":" in pcpu_text:  # In linux is a time
             total_seconds = parse_ps_time(pcpu_text)
@@ -355,10 +387,12 @@ class ProcessAggregator:
         elif process_info.usermode_time and process_info.kernelmode_time:
             pid = process_info.process_id
 
-            user_per_sec = cpu_rate(value_store, "user.%s" % pid, now,
-                                    int(process_info.usermode_time))
-            kernel_per_sec = cpu_rate(value_store, "kernel.%s" % pid, now,
-                                      int(process_info.kernelmode_time))
+            user_per_sec = cpu_rate(
+                value_store, "user.%s" % pid, now, int(process_info.usermode_time)
+            )
+            kernel_per_sec = cpu_rate(
+                value_store, "kernel.%s" % pid, now, int(process_info.kernelmode_time)
+            )
 
             if not all([user_per_sec, kernel_per_sec]):
                 user_per_sec = 0
@@ -373,7 +407,7 @@ class ProcessAggregator:
             process.append(("pid", (pid, "")))
 
         else:  # Solaris, BSD, aix cpu times
-            if pcpu_text == '-':  # Solaris defunct
+            if pcpu_text == "-":  # Solaris defunct
                 pcpu_text = 0.0
             pcpu = float(pcpu_text) * self.core_weight(is_win=False)
 
@@ -406,7 +440,7 @@ def process_capture(
         if not process_attributes_match(process_info, userspec, cgroupspec):
             continue
 
-        if not process_matches(command_line, params.get("process"), params.get('match_groups')):
+        if not process_matches(command_line, params.get("process"), params.get("match_groups")):
             continue
 
         # typing: nothing intentional, just adapt to sad reality
@@ -419,8 +453,11 @@ def process_capture(
             process.append(("name", (command_line[0], "")))
 
         # extended performance data: virtualsize, residentsize, %cpu
-        if (process_info.user is not None and process_info.virtual is not None and
-                process_info.physical is not None):
+        if (
+            process_info.user is not None
+            and process_info.virtual is not None
+            and process_info.physical is not None
+        ):
 
             process.append(("user", (process_info.user, "")))  # type: ignore[args-type]
             process.append(("virtual size", (process_info.virtual, "kB")))
@@ -434,7 +471,7 @@ def process_capture(
 
         include_args = params.get("process_info_arguments", 0)
         if include_args:
-            process.append(("args", (' '.join(command_line[1:])[:include_args], "")))
+            process.append(("args", (" ".join(command_line[1:])[:include_args], "")))
 
         ps_aggregator.append(process)
 
@@ -470,7 +507,7 @@ def discover_ps(
             i_servicedesc = servicedesc.replace("%u", i_userspec or "")
 
             # Process capture
-            match_groups = matches.groups() if hasattr(matches, 'groups') else ()
+            match_groups = matches.groups() if hasattr(matches, "groups") else ()
 
             i_servicedesc = replace_service_description(i_servicedesc, match_groups, pattern)
 
@@ -636,10 +673,9 @@ def cpu_check(percent_cpu: float, params: Mapping[str, Any]) -> CheckResult:
             params["cpu_average"],
         )
         infotext = "CPU: %s, %d min average" % (render.percent(percent_cpu), params["cpu_average"])
-        yield Metric("pcpuavg",
-                     avg_cpu,
-                     levels=(warn_cpu, crit_cpu),
-                     boundaries=(0, params["cpu_average"]))  # wat?
+        yield Metric(
+            "pcpuavg", avg_cpu, levels=(warn_cpu, crit_cpu), boundaries=(0, params["cpu_average"])
+        )  # wat?
         percent_cpu = avg_cpu  # use this for level comparison
     else:
         infotext = "CPU"
@@ -674,7 +710,8 @@ def individual_process_check(
                 levels_upper=levels,
                 render_func=render.percent,
                 label=str(name) + (" with PID %s CPU" % pid if pid else ""),
-            ))[0]
+            )
+        )[0]
         assert isinstance(result, Result)
         yield Result(
             state=result.state,

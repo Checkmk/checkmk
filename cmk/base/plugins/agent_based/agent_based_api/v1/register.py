@@ -16,9 +16,9 @@ from cmk.base.api.agent_based.register.export import (
 )
 
 __all__ = [
-    'RuleSetType',
-    'agent_section',
-    'check_plugin',
-    'inventory_plugin',
-    'snmp_section',
+    "RuleSetType",
+    "agent_section",
+    "check_plugin",
+    "inventory_plugin",
+    "snmp_section",
 ]

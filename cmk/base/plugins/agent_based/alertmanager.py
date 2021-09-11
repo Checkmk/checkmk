@@ -74,25 +74,24 @@ class CheckParams(TypedDict, total=False):
 
 
 default_discovery_parameters = DiscoveryParams(
-    group_services=(True, GroupServices(
-        min_amount_rules=3,
-        no_group_services=[],
-    )),
+    group_services=(
+        True,
+        GroupServices(
+            min_amount_rules=3,
+            no_group_services=[],
+        ),
+    ),
     summary_service=True,
 )
 
-default_check_parameters = CheckParams(alert_remapping=[
-    AlertRemapping(
-        rule_names=["Watchdog"],
-        map={
-            'inactive': 2,
-            'pending': 2,
-            'firing': 0,
-            'none': 2,
-            'n/a': 2
-        },
-    )
-])
+default_check_parameters = CheckParams(
+    alert_remapping=[
+        AlertRemapping(
+            rule_names=["Watchdog"],
+            map={"inactive": 2, "pending": 2, "firing": 0, "none": 2, "n/a": 2},
+        )
+    ]
+)
 
 default_state_mapping = {
     RuleState.INACTIVE: state.OK,
@@ -119,8 +118,10 @@ def _create_group_service(group_name: str, group: Group, params: DiscoveryParams
     use_groups, group_config = params["group_services"]
     if not use_groups:
         return False
-    return group_name not in group_config["no_group_services"] and len(
-        group) >= group_config["min_amount_rules"]
+    return (
+        group_name not in group_config["no_group_services"]
+        and len(group) >= group_config["min_amount_rules"]
+    )
 
 
 def _get_rule_state(rule: Rule, params: CheckParams) -> state:
@@ -234,8 +235,8 @@ def check_alertmanager_groups(item: str, params: CheckParams, section: Section) 
                 yield Result(
                     state=status,
                     summary="Active alert: %s" % rule.rule_name,
-                    details="%s: %s" %
-                    (rule.rule_name, rule.message if rule.message else "No message"),
+                    details="%s: %s"
+                    % (rule.rule_name, rule.message if rule.message else "No message"),
                 )
 
 
@@ -276,8 +277,8 @@ def check_alertmanager_summary(params: CheckParams, section: Section) -> CheckRe
                 yield Result(
                     state=status,
                     summary="Active alert: %s" % rule.rule_name,
-                    details="%s: %s" %
-                    (rule.rule_name, rule.message if rule.message else "No message"),
+                    details="%s: %s"
+                    % (rule.rule_name, rule.message if rule.message else "No message"),
                 )
 
 

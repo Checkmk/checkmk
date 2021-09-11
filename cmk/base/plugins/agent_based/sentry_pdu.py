@@ -40,7 +40,8 @@ def parse_sentry_pdu(string_table: StringTable) -> Section:
                 "unknown",
             ),
             int(power_str) if power_str else None,
-        ) for name, state, power_str in string_table
+        )
+        for name, state, power_str in string_table
     }
 
 

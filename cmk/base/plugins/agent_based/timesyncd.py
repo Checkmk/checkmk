@@ -64,8 +64,8 @@ def parse_timesyncd(string_table: StringTable) -> Section:
             section["synctime"] = float(line[0][3:-3])
             continue
 
-        key = line[0].replace(':', '').lower()
-        raw_str = line[1].replace('(', '').replace(')', '')
+        key = line[0].replace(":", "").lower()
+        raw_str = line[1].replace("(", "").replace(")", "")
 
         if key == "server":
             section["server"] = raw_str

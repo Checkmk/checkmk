@@ -110,6 +110,16 @@ import cmk.utils.render as render
 # check context.
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
+from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
+    get_rule_options,
+    hosttags_match_taglist,
+    in_extraconf_hostlist,
+)
+
+# The class 'as_float' has been moved; import it here under the old name
+from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import
+    EvalableFloat as as_float,
+)
 from cmk.utils.type_defs import HostName, MetricName
 from cmk.utils.type_defs import Ruleset as _Ruleset
 from cmk.utils.type_defs import SectionName as _SectionName
@@ -131,18 +141,11 @@ from cmk.base.api.agent_based.section_classes import OIDBytes as _OIDBytes
 from cmk.base.api.agent_based.section_classes import OIDCached as _OIDCached
 from cmk.base.discovered_labels import DiscoveredServiceLabels as ServiceLabels
 from cmk.base.discovered_labels import ServiceLabel  # noqa: F401 # pylint: disable=unused-import
-
-# The class 'as_float' has been moved; import it here under the old name
-from cmk.utils.type_defs import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    EvalableFloat as as_float,)
-
-from cmk.utils.rulesets.tuple_rulesets import (  # noqa: F401 # pylint: disable=unused-import # isort: skip # TODO: Only used by logwatch check. Can we clean this up?; These functions were used in some specific checks until 1.6. Don't add it to; the future check API. It's kept here for compatibility reasons for now.
-    get_rule_options, hosttags_match_taglist, in_extraconf_hostlist,
+from cmk.base.plugin_contexts import check_type
+from cmk.base.plugin_contexts import (  # noqa: F401 # pylint: disable=unused-import
+    host_name as _internal_host_name,
 )
-
-from cmk.base.plugin_contexts import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    check_type, host_name as _internal_host_name, service_description,
-)
+from cmk.base.plugin_contexts import service_description
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]
@@ -150,7 +153,9 @@ Levels = Tuple  # Has length 2 or 4
 
 # These 3 are no longer used, but we keep the names around, so old plugins won't crash.
 MGMT_ONLY = "mgmt_only"  # Use host address/credentials when it's a SNMP HOST
-HOST_PRECEDENCE = "host_precedence"  # Check is only executed for mgmt board (e.g. Managegment Uptime)
+HOST_PRECEDENCE = (
+    "host_precedence"  # Check is only executed for mgmt board (e.g. Managegment Uptime)
+)
 HOST_ONLY = "host_only"  # Check is only executed for real SNMP host (e.g. interfaces)
 
 
@@ -161,8 +166,10 @@ def host_name() -> str:
 
 
 def HostLabel(*_a, **_kw):
-    raise NotImplementedError("Creation of HostLabels in legacy plugins is no longer supported"
-                              " (see https://checkmk.de/check_mk-werks.php?werk_id=11117).")
+    raise NotImplementedError(
+        "Creation of HostLabels in legacy plugins is no longer supported"
+        " (see https://checkmk.de/check_mk-werks.php?werk_id=11117)."
+    )
 
 
 HostLabels = HostLabel
@@ -174,7 +181,7 @@ def get_check_api_context() -> _config.CheckContext:
     return {k: v for k, v in globals().items() if not k.startswith("_")}
 
 
-#.
+# .
 #   .--Check API-----------------------------------------------------------.
 #   |             ____ _               _         _    ____ ___             |
 #   |            / ___| |__   ___  ___| | __    / \  |  _ \_ _|            |
@@ -250,7 +257,8 @@ def host_extra_conf_merged(hostname: str, conf: _config.Ruleset) -> Dict[str, An
 # the future check API. It's kept here for compatibility reasons for now.
 def all_matching_hosts(condition: Dict[str, Any], with_foreign_hosts: bool) -> Set[HostName]:
     return _config.get_config_cache().ruleset_matcher.ruleset_optimizer._all_matching_hosts(
-        condition, with_foreign_hosts)
+        condition, with_foreign_hosts
+    )
 
 
 # These functions were used in some specific checks until 1.6. Don't add it to
@@ -347,8 +355,9 @@ def _normalize_levels(levels: Levels) -> Levels:
     return warn_upper, crit_upper, warn_lower, crit_lower
 
 
-def _do_check_levels(value: Union[int, float], levels: Levels, human_readable_func: Callable,
-                     unit_info: str) -> Tuple[ServiceState, ServiceDetails]:
+def _do_check_levels(
+    value: Union[int, float], levels: Levels, human_readable_func: Callable, unit_info: str
+) -> Tuple[ServiceState, ServiceDetails]:
     warn_upper, crit_upper, warn_lower, crit_lower = _normalize_levels(levels)
     # Critical cases
     if crit_upper is not None and value >= crit_upper:
@@ -364,19 +373,22 @@ def _do_check_levels(value: Union[int, float], levels: Levels, human_readable_fu
     return 0, ""
 
 
-def _levelsinfo_ty(ty: str, warn: Warn, crit: Crit, human_readable_func: Callable,
-                   unit_info: str) -> str:
+def _levelsinfo_ty(
+    ty: str, warn: Warn, crit: Crit, human_readable_func: Callable, unit_info: str
+) -> str:
     warn_str = "never" if warn is None else "%s%s" % (human_readable_func(warn), unit_info)
     crit_str = "never" if crit is None else "%s%s" % (human_readable_func(crit), unit_info)
     return " (warn/crit %s %s/%s)" % (ty, warn_str, crit_str)
 
 
-def _build_perfdata(dsname: Union[None, MetricName],
-                    value: Union[int, float],
-                    scale_value: Callable,
-                    levels: Levels,
-                    boundaries: Optional[Tuple],
-                    ref_value: Union[None, int, float] = None) -> List:
+def _build_perfdata(
+    dsname: Union[None, MetricName],
+    value: Union[int, float],
+    scale_value: Callable,
+    levels: Levels,
+    boundaries: Optional[Tuple],
+    ref_value: Union[None, int, float] = None,
+) -> List:
     if not dsname:
         return []
 
@@ -385,20 +397,22 @@ def _build_perfdata(dsname: Union[None, MetricName],
         perf_list.extend([scale_value(v) for v in boundaries])
     perfdata = [tuple(perf_list)]
     if ref_value:
-        perfdata.append(('predict_' + dsname, ref_value))
+        perfdata.append(("predict_" + dsname, ref_value))
     return perfdata
 
 
-def check_levels(value: Union[int, float],
-                 dsname: Union[None, MetricName],
-                 params: Any,
-                 unit: str = "",
-                 factor: Union[int, float] = 1.0,
-                 scale: Union[int, float] = 1.0,
-                 statemarkers: bool = False,
-                 human_readable_func: Optional[Callable] = None,
-                 infoname: Optional[str] = None,
-                 boundaries: Optional[Tuple] = None) -> ServiceCheckResult:
+def check_levels(
+    value: Union[int, float],
+    dsname: Union[None, MetricName],
+    params: Any,
+    unit: str = "",
+    factor: Union[int, float] = 1.0,
+    scale: Union[int, float] = 1.0,
+    statemarkers: bool = False,
+    human_readable_func: Optional[Callable] = None,
+    infoname: Optional[str] = None,
+    boundaries: Optional[Tuple] = None,
+) -> ServiceCheckResult:
     """Generic function for checking a value against levels
 
     This also supports predictive levels.
@@ -443,7 +457,7 @@ def check_levels(value: Union[int, float],
     infoname: Perf value name for infotext like a title.
     boundaries: Add minimum and maximum to performance data.
     """
-    if unit.startswith('/'):
+    if unit.startswith("/"):
         unit_info: str = unit
     elif unit:
         unit_info = " %s" % unit
@@ -480,12 +494,14 @@ def check_levels(value: Union[int, float],
             raise TypeError("Metric name is empty/None")
 
         try:
-            ref_value, levels = _prediction.get_levels(_internal_host_name(),
-                                                       service_description(),
-                                                       dsname,
-                                                       params,
-                                                       "MAX",
-                                                       levels_factor=factor * scale)
+            ref_value, levels = _prediction.get_levels(
+                _internal_host_name(),
+                service_description(),
+                dsname,
+                params,
+                "MAX",
+                levels_factor=factor * scale,
+            )
             if ref_value:
                 predictive_levels_msg = "predicted reference: %s" % human_readable_func(ref_value)
             else:
@@ -624,7 +640,10 @@ def get_parsed_item_data(check_function: Callable) -> Callable:
     def wrapped_check_function(item: str, params: Any, parsed: Any) -> Any:
         # TODO
         if not isinstance(parsed, dict):
-            return 3, "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict"
+            return (
+                3,
+                "Wrong usage of decorator function 'get_parsed_item_data': parsed is not a dict",
+            )
         if item not in parsed or not parsed[item]:
             return
         return check_function(item, params, parsed[item])
@@ -645,12 +664,14 @@ def validate_filter(filter_function: Any) -> Callable:
         return filter_function
     if filter_function is None:
         return lambda *entry: entry[0]
-    raise ValueError("Filtering function is not a callable, a {} has been given.".format(
-        type(filter_function)))
+    raise ValueError(
+        "Filtering function is not a callable, a {} has been given.".format(type(filter_function))
+    )
 
 
-def discover(selector: Optional[Callable] = None,
-             default_params: Union[None, Dict[Any, Any], str] = None) -> Callable:
+def discover(
+    selector: Optional[Callable] = None, default_params: Union[None, Dict[Any, Any], str] = None
+) -> Callable:
     """Helper function to assist with service discoveries
 
     The discovery function is in many cases just a boilerplate function to
@@ -709,6 +730,7 @@ def discover(selector: Optional[Callable] = None,
 
             check_info["chk"] = {'inventory_function': inventory_thecheck}
     """
+
     def _discovery(filter_function: Callable) -> Callable:
         @functools.wraps(filter_function)
         def discoverer(
@@ -719,22 +741,24 @@ def discover(selector: Optional[Callable] = None,
                 filterer = validate_filter(filter_function)
                 for key, value in parsed.items():
                     for n in _get_discovery_iter(
-                            filterer(key, value),
-                            lambda: key,  # pylint: disable=cell-var-from-loop
+                        filterer(key, value),
+                        lambda: key,  # pylint: disable=cell-var-from-loop
                     ):
                         yield (n, params)
             elif isinstance(parsed, (list, tuple)):
                 filterer = validate_filter(filter_function)
                 for entry in parsed:
                     for n in _get_discovery_iter(
-                            filterer(entry),
-                            lambda: entry[0],  # pylint: disable=cell-var-from-loop
+                        filterer(entry),
+                        lambda: entry[0],  # pylint: disable=cell-var-from-loop
                     ):
                         yield (n, params)
             else:
                 raise ValueError(
-                    "Discovery function only works with dictionaries, lists, and tuples you gave a {}"
-                    .format(type(parsed)))
+                    "Discovery function only works with dictionaries, lists, and tuples you gave a {}".format(
+                        type(parsed)
+                    )
+                )
 
         return discoverer
 
@@ -761,6 +785,7 @@ def _get_discovery_iter(name: Any, get_name: Callable[[], str]) -> Iterable[str]
 # Obsolete! Do not confuse with the Service object exposed by the new API.
 class Service:
     """Can be used to by the discovery function to tell Checkmk about a new service"""
+
     def __init__(
         self,
         item: Optional[str],

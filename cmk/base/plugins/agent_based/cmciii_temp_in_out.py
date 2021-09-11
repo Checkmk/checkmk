@@ -15,13 +15,15 @@ from .utils.cmciii import (
 from .utils.temperature import check_temperature, TempParamDict
 
 
-def discover_cmciii_temp_in_out(params: DiscoveryParams,
-                                section: Section) -> type_defs.DiscoveryResult:
+def discover_cmciii_temp_in_out(
+    params: DiscoveryParams, section: Section
+) -> type_defs.DiscoveryResult:
     yield from discover_cmciii_sensors("temp_in_out", params, section)
 
 
-def check_cmciii_temp_in_out(item: str, params: TempParamDict,
-                             section: Section) -> type_defs.CheckResult:
+def check_cmciii_temp_in_out(
+    item: str, params: TempParamDict, section: Section
+) -> type_defs.CheckResult:
     entry = get_sensor(item, params, section["temp_in_out"])
     if not entry:
         return
@@ -35,7 +37,7 @@ def check_cmciii_temp_in_out(item: str, params: TempParamDict,
 
 register.check_plugin(
     name="cmciii_temp_in_out",
-    sections=['cmciii'],
+    sections=["cmciii"],
     service_name="Temperature %s",
     discovery_function=discover_cmciii_temp_in_out,
     check_function=check_cmciii_temp_in_out,

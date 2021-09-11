@@ -22,7 +22,7 @@ NodeState = int
 
 STATE_NAMES = {
     True: ("unknown", "offline", "forced offline", "standby", "active"),
-    False: ("standby", "active 1", "active 2", "active")
+    False: ("standby", "active 1", "active 2", "active"),
 }
 
 
@@ -54,7 +54,8 @@ def _node_result(
     state_mapping = {**{0: 3, 1: 2, 2: 2, 3: 0, 4: 0}, **state_mapping_from_params}
     return Result(
         state=state(state_mapping[node_state] if is_gt_v11_2 else 0),
-        summary="Node %sis %s" % (
+        summary="Node %sis %s"
+        % (
             ("[%s] " % node_name) if node_name else "",
             STATE_NAMES[is_gt_v11_2][node_state],
         ),
@@ -177,7 +178,7 @@ register.check_plugin(
 )
 
 #
-#F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
+# F5-BIGIP-Cluster Config Sync - SNMP sections and Checks
 
 
 def parse_f5_bigip_vcmpfailover(string_table: List[StringTable]) -> Optional[NodeState]:
@@ -206,7 +207,8 @@ register.snmp_section(
             oids=[
                 "13.1.1.0",  # sysVcmpNumber
                 "14.3.1.0",  # sysCmFailoverStatusId
-            ]),
+            ],
+        ),
     ],
 )
 

@@ -54,7 +54,7 @@ CacheInfo = Optional[Tuple[int, int]]
 
 ParsedSectionContent = object  # the parse function may return *anything*.
 
-SourceResults = Sequence[Tuple['Source', result.Result[HostSections, Exception]]]
+SourceResults = Sequence[Tuple["Source", result.Result[HostSections, Exception]]]
 
 
 class ParsingResult(NamedTuple):
@@ -68,8 +68,8 @@ class ResolvedResult(NamedTuple):
 
 
 class SectionsParser:
-    """Call the sections parse function and return the parsing result.
-    """
+    """Call the sections parse function and return the parsing result."""
+
     def __init__(
         self,
         host_sections: HostSections,
@@ -92,7 +92,9 @@ class SectionsParser:
 
         return self._memoized_results.setdefault(
             section.name,
-            None if (parsed := self._parse_raw_data(section)) is None else ParsingResult(
+            None
+            if (parsed := self._parse_raw_data(section)) is None
+            else ParsingResult(
                 data=parsed,
                 cache_info=self._get_cache_info(section.name),
             ),
@@ -118,7 +120,8 @@ class SectionsParser:
                     operation="parsing",
                     section_name=section.name,
                     section_content=raw_data,
-                ))
+                )
+            )
             return None
 
     def _get_cache_info(self, section_name: SectionName) -> CacheInfo:
@@ -130,6 +133,7 @@ class ParsedSectionsResolver:
 
     This class resolves ParsedSectionNames while respecting supersedes.
     """
+
     def __init__(
         self,
         *,
@@ -174,17 +178,21 @@ class ParsedSectionsResolver:
 
             if (parsing_result := parser.parse(producer)) is not None:
                 return self._memoized_results.setdefault(
-                    parsed_section_name, ResolvedResult(
+                    parsed_section_name,
+                    ResolvedResult(
                         parsed=parsing_result,
                         section=producer,
-                    ))
+                    ),
+                )
 
         return self._memoized_results.setdefault(parsed_section_name, None)
 
     def resolve_all(self, parser: SectionsParser) -> Iterator[ResolvedResult]:
         return iter(
-            result for psn in {section.parsed_section_name for section in self._section_plugins}
-            if (result := self.resolve(parser, psn)) is not None)
+            result
+            for psn in {section.parsed_section_name for section in self._section_plugins}
+            if (result := self.resolve(parser, psn)) is not None
+        )
 
 
 class ParsedSectionsBroker:
@@ -195,6 +203,7 @@ class ParsedSectionsBroker:
     'parsed_section_name' and 'supersedes' to all plugin functions that require this kind
     of data (inventory, discovery, checking, host_labels).
     """
+
     def __init__(
         self,
         providers: Mapping[HostKey, Tuple[ParsedSectionsResolver, SectionsParser]],
@@ -216,15 +225,21 @@ class ParsedSectionsBroker:
         """
         cache_infos = [
             resolved.parsed.cache_info
-            for resolved in (resolver.resolve(parser, parsed_section_name)
-                             for resolver, parser in self._providers.values()
-                             for parsed_section_name in parsed_section_names)
+            for resolved in (
+                resolver.resolve(parser, parsed_section_name)
+                for resolver, parser in self._providers.values()
+                for parsed_section_name in parsed_section_names
+            )
             if resolved is not None and resolved.parsed.cache_info is not None
         ]
         return (
-            min(ats for ats, _intervals in cache_infos),
-            max(intervals for _ats, intervals in cache_infos),
-        ) if cache_infos else None
+            (
+                min(ats for ats, _intervals in cache_infos),
+                max(intervals for _ats, intervals in cache_infos),
+            )
+            if cache_infos
+            else None
+        )
 
     def get_parsed_section(
         self,
@@ -236,9 +251,12 @@ class ParsedSectionsBroker:
         except KeyError:
             return None
 
-        return None if (  #
-            (resolved := resolver.resolve(parser, parsed_section_name)) is None  #
-        ) else resolved.parsed.data
+        # pylint: disable=superfluous-parens
+        return (
+            None
+            if ((resolved := resolver.resolve(parser, parsed_section_name)) is None)
+            else resolved.parsed.data
+        )
 
     def filter_available(
         self,
@@ -246,10 +264,13 @@ class ParsedSectionsBroker:
         source_type: SourceType,
     ) -> Set[ParsedSectionName]:
         return {
-            parsed_section_name for host_key, (resolver, parser) in self._providers.items()
+            parsed_section_name
+            for host_key, (resolver, parser) in self._providers.items()
             for parsed_section_name in parsed_section_names
-            if (host_key.source_type is source_type and
-                resolver.resolve(parser, parsed_section_name) is not None)
+            if (
+                host_key.source_type is source_type
+                and resolver.resolve(parser, parsed_section_name) is not None
+            )
         }
 
     def all_parsing_results(self, host_key: HostKey) -> Iterable[ResolvedResult]:
@@ -269,13 +290,13 @@ class ParsedSectionsBroker:
 
 def _collect_host_sections(
     *,
-    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence['Source']]],
+    nodes: Iterable[Tuple[HostName, Optional[HostAddress], Sequence["Source"]]],
     file_cache_max_age: cache.MaxAge,
-    fetcher_messages: Sequence['FetcherMessage'],
-    selected_sections: 'SectionNameCollection',
+    fetcher_messages: Sequence["FetcherMessage"],
+    selected_sections: "SectionNameCollection",
 ) -> Tuple[  #
-        Mapping[HostKey, HostSections],  #
-        Sequence[Tuple['Source', result.Result[HostSections, Exception]]]  #
+    Mapping[HostKey, HostSections],  #
+    Sequence[Tuple["Source", result.Result[HostSections, Exception]]],  #
 ]:
     """Gather ALL host info data for any host (hosts, nodes, clusters) in Checkmk.
 
@@ -296,7 +317,7 @@ def _collect_host_sections(
         raise LookupError("Checker and fetcher missmatch")
 
     collected_host_sections: Dict[HostKey, HostSections] = {}
-    results: List[Tuple['Source', result.Result[HostSections, Exception]]] = []
+    results: List[Tuple["Source", result.Result[HostSections, Exception]]] = []
     # Special agents can produce data for the same check_plugin_name on the same host, in this case
     # the section lines need to be extended
     for fetcher_message, (hostname, ipaddress, source) in zip(fetcher_messages, flat_node_sources):
@@ -313,8 +334,10 @@ def _collect_host_sections(
         source_result = source.parse(fetcher_message.raw_data, selection=selected_sections)
         results.append((source, source_result))
         if source_result.is_ok():
-            console.vverbose("  -> Add sections: %s\n" %
-                             sorted([str(s) for s in source_result.ok.sections.keys()]))
+            console.vverbose(
+                "  -> Add sections: %s\n"
+                % sorted([str(s) for s in source_result.ok.sections.keys()])
+            )
             collected_host_sections[host_key] += source_result.ok
         else:
             console.vverbose("  -> Not adding sections: %s\n" % source_result.error)
@@ -335,13 +358,13 @@ def _collect_host_sections(
 
 def make_broker(
     *,
-    config_cache: 'ConfigCache',
-    host_config: 'HostConfig',
+    config_cache: "ConfigCache",
+    host_config: "HostConfig",
     ip_address: Optional[HostAddress],
-    mode: 'Mode',
-    selected_sections: 'SectionNameCollection',
+    mode: "Mode",
+    selected_sections: "SectionNameCollection",
     file_cache_max_age: cache.MaxAge,
-    fetcher_messages: Sequence['FetcherMessage'],
+    fetcher_messages: Sequence["FetcherMessage"],
     force_snmp_cache_refresh: bool,
     on_scan_error: OnError,
 ) -> Tuple[ParsedSectionsBroker, SourceResults]:
@@ -370,7 +393,8 @@ def make_broker(
                 nodes=nodes,
                 file_cache_max_age=file_cache_max_age,
                 mode=mode,
-            ))
+            )
+        )
 
     collected_host_sections, results = _collect_host_sections(
         nodes=nodes,
@@ -378,12 +402,20 @@ def make_broker(
         fetcher_messages=fetcher_messages,
         selected_sections=selected_sections,
     )
-    return ParsedSectionsBroker({
-        host_key: (
-            ParsedSectionsResolver(section_plugins=[
-                agent_based_register.get_section_plugin(section_name)
-                for section_name in host_sections.sections
-            ],),
-            SectionsParser(host_sections=host_sections),
-        ) for host_key, host_sections in collected_host_sections.items()
-    }), results
+    return (
+        ParsedSectionsBroker(
+            {
+                host_key: (
+                    ParsedSectionsResolver(
+                        section_plugins=[
+                            agent_based_register.get_section_plugin(section_name)
+                            for section_name in host_sections.sections
+                        ],
+                    ),
+                    SectionsParser(host_sections=host_sections),
+                )
+                for host_key, host_sections in collected_host_sections.items()
+            }
+        ),
+        results,
+    )

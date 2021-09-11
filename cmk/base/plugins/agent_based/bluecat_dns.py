@@ -17,7 +17,7 @@ from .utils.bluecat import (
 )
 
 register.snmp_section(
-    name='bluecat_dns',
+    name="bluecat_dns",
     parse_function=parse_bluecat,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.2.2.1",
@@ -58,10 +58,10 @@ def cluster_check_bluecat_dns(
 
 
 register.check_plugin(
-    name='bluecat_dns',
-    service_name='DNS',
+    name="bluecat_dns",
+    service_name="DNS",
     discovery_function=discover_bluecat_dns,
-    check_ruleset_name='bluecat_dns',
+    check_ruleset_name="bluecat_dns",
     check_default_parameters=CHECK_DEFAULT_PARAMETERS,
     check_function=check_bluecat_dns,
     cluster_check_function=cluster_check_bluecat_dns,

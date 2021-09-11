@@ -48,6 +48,7 @@ class Source(Generic[TRawData, THostSections], abc.ABC):
     attribute is final.
 
     """
+
     use_outdated_persisted_sections: bool = False
 
     def __init__(

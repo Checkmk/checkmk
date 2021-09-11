@@ -180,7 +180,8 @@ class DSProgramSource(ProgramSource):
                     config_cache,
                     host_config,
                     parents_list,
-                ))
+                )
+            )
 
         macros = core_config.get_host_macros_from_attributes(host_config.hostname, attrs)
         return core_config.replace_macros(cmd, macros)

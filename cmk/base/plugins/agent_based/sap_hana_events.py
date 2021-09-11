@@ -52,7 +52,8 @@ def check_sap_hana_events(item: str, section: sap_hana.ParsedSection) -> CheckRe
 
     for event_key, event_count in data.items():
         event_state, event_state_readable = SAP_HANA_EVENTS_MAP.get(
-            event_key, (State.UNKNOWN, "unknown[%s]" % event_key))
+            event_key, (State.UNKNOWN, "unknown[%s]" % event_key)
+        )
         state = State.OK
         if event_count > 0:
             state = event_state

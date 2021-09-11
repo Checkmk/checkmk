@@ -60,22 +60,23 @@ def parse_apc_rackpdu_power(string_table: List[type_defs.StringTable]) -> Option
 
     parsed.setdefault(device_name, {"power": float(power_str)})
 
-    if n_phases[0][0] == '1':
+    if n_phases[0][0] == "1":
         parsed[device_name]["current"] = get_status_info(*phase_bank_info[0][:2])
         phase_bank_info = phase_bank_info[1:]
 
     for amperage_str, device_state, phase_num, bank_num in phase_bank_info:
-        if bank_num != '0':
+        if bank_num != "0":
             name_part = "Bank"
             num = bank_num
-        elif phase_num != '0':
+        elif phase_num != "0":
             name_part = "Phase"
             num = phase_num
         else:
             continue
 
-        parsed.setdefault("%s %s" % (name_part, num),
-                          {"current": get_status_info(amperage_str, device_state)})
+        parsed.setdefault(
+            "%s %s" % (name_part, num), {"current": get_status_info(amperage_str, device_state)}
+        )
     return parsed
 
 
@@ -86,28 +87,28 @@ register.snmp_section(
         SNMPTree(
             base=".1.3.6.1.4.1.318.1.1.12.1",
             oids=[
-                '1',  # rPDUIdentName
-                '16',  # rPDUIdentDevicePowerWatts
+                "1",  # rPDUIdentName
+                "16",  # rPDUIdentDevicePowerWatts
             ],
         ),
         SNMPTree(
             base=".1.3.6.1.4.1.318.1.1.12.2.1",
             oids=[
-                '2',  # rPDULoadDevNumPhases
+                "2",  # rPDULoadDevNumPhases
             ],
         ),
         SNMPTree(
             base=".1.3.6.1.4.1.318.1.1.12.2.3.1.1",
             oids=[
-                '2',  # rPDULoadStatusLoad
-                '3',  # rPDULoadStatusLoadState
-                '4',  # rPDULoadStatusPhaseNumber
-                '5',  # rPDULoadStatusBankNumber
+                "2",  # rPDULoadStatusLoad
+                "3",  # rPDULoadStatusLoadState
+                "4",  # rPDULoadStatusPhaseNumber
+                "5",  # rPDULoadStatusBankNumber
             ],
         ),
     ],
     detect=all_of(
-        startswith(".1.3.6.1.2.1.1.1.0", 'apc web/snmp'),
+        startswith(".1.3.6.1.2.1.1.1.0", "apc web/snmp"),
         exists(".1.3.6.1.4.1.318.1.1.12.1.*"),
     ),
 )

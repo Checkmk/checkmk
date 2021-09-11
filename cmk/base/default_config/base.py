@@ -15,8 +15,8 @@ from cmk.utils.type_defs import TagsOfHosts
 # variables are preset in checks/* as well.
 
 # TODO: Remove the duplication with cmk.base.config
-_ALL_HOSTS = ['@all']  # physical and cluster hosts
-_NEGATE = '@negate'  # negation in boolean lists
+_ALL_HOSTS = ["@all"]  # physical and cluster hosts
+_NEGATE = "@negate"  # negation in boolean lists
 
 monitoring_core = "nagios"  # other option: "cmc"
 mkeventd_enabled = False  # Set by OMD hook
@@ -35,7 +35,7 @@ delay_precompile = False  # delay Python compilation to Nagios execution
 restart_locking = "abort"  # also possible: "wait", None
 check_submission = "file"  # alternative: "pipe"
 agent_min_version = 0  # warn, if plugin has not at least version
-default_host_group = 'check_mk'
+default_host_group = "check_mk"
 
 check_max_cachefile_age = 0  # per default do not use cache files when checking
 cluster_max_cachefile_age = 90  # secs.
@@ -53,7 +53,7 @@ check_mk_perfdata_with_times = True
 debug_log = False  # deprecated
 monitoring_host = None  # deprecated
 max_num_processes = 50
-fallback_agent_output_encoding = 'latin-1'
+fallback_agent_output_encoding = "latin-1"
 stored_passwords: _Dict = {}
 # Collection of predefined rule conditions. For the moment this setting is only stored
 # in this config domain but not used by the base code. The WATO logic for writing out
@@ -78,7 +78,7 @@ non_inline_snmp_hosts: _List = []
 snmp_limit_oid_range: _List = []
 # Ruleset to customize bulk size
 snmp_bulk_size: _List = []
-snmp_default_community = 'public'
+snmp_default_community = "public"
 snmp_communities: _List = []
 # override the rule based configuration
 explicit_snmp_communities: _Dict = {}
@@ -121,20 +121,20 @@ periodic_discovery: _List = []
 # Nagios templates and other settings concerning generation
 # of Nagios configuration files. No need to change these values.
 # Better adopt the content of the templates
-host_template = 'check_mk_host'
-cluster_template = 'check_mk_cluster'
-pingonly_template = 'check_mk_pingonly'
-active_service_template = 'check_mk_active'
-inventory_check_template = 'check_mk_inventory'
-passive_service_template = 'check_mk_passive'
-passive_service_template_perf = 'check_mk_passive_perf'
-summary_service_template = 'check_mk_summarized'
-service_dependency_template = 'check_mk'
+host_template = "check_mk_host"
+cluster_template = "check_mk_cluster"
+pingonly_template = "check_mk_pingonly"
+active_service_template = "check_mk_active"
+inventory_check_template = "check_mk_inventory"
+passive_service_template = "check_mk_passive"
+passive_service_template_perf = "check_mk_passive_perf"
+summary_service_template = "check_mk_summarized"
+service_dependency_template = "check_mk"
 generate_hostconf = True
 generate_dummy_commands = True
 dummy_check_commandline = 'echo "ERROR - you did an active check on this service - please disable active checks" && exit 1'
-nagios_illegal_chars = '`;~!$%^&*|\'"<>?,='
-cmc_illegal_chars = '\t'  # Tab is an illegal character for CMC
+nagios_illegal_chars = "`;~!$%^&*|'\"<>?,="
+cmc_illegal_chars = "\t"  # Tab is an illegal character for CMC
 
 # Data to be defined in main.mk
 tag_config: _Dict[str, _List] = {
@@ -167,13 +167,13 @@ service_label_rules: _List = []
 # Map of hostnames to .mk files declaring the hosts (e.g. /wato/hosts.mk)
 host_paths: _Dict = {}
 snmp_hosts: _List = [
-    (['snmp'], _ALL_HOSTS),
+    (["snmp"], _ALL_HOSTS),
 ]
 tcp_hosts: _List = [
-    (['tcp'], _ALL_HOSTS),
-    (_NEGATE, ['snmp'], _ALL_HOSTS),
+    (["tcp"], _ALL_HOSTS),
+    (_NEGATE, ["snmp"], _ALL_HOSTS),
     # Match all those that don't have ping and don't have no-agent set
-    (['!ping', '!no-agent'], _ALL_HOSTS),
+    (["!ping", "!no-agent"], _ALL_HOSTS),
 ]
 cmk_agent_connection: _Dict = {}
 bulkwalk_hosts: _List = []

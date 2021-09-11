@@ -42,7 +42,7 @@ def parse_aix_if(string_table: type_defs.StringTable) -> interfaces.Section:
     flags = {}
     index = 0
     for line in string_table:
-        if line[0].startswith('['):
+        if line[0].startswith("["):
             nic = line[0][1:-1]
             index += 1
             ifaces[nic] = iface = interfaces.Interface(

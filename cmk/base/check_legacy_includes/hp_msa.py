@@ -12,7 +12,7 @@ from cmk.base.check_api import get_rate
 
 from .diskstat import check_diskstat_dict, inventory_diskstat_generic
 
-#TODO
+# TODO
 # Use 'status-numeric' instead of 'status' field regardless of language.
 # See for state mapping: https://support.hpe.com/hpsc/doc/public/display?docId=emr_na-a00017709en_us
 
@@ -56,8 +56,13 @@ def check_hp_msa_health(item, _no_params, parsed):
         elif parsed[item]["item_type"] == "drives":
             for disk_info in ["serial-number", "vendor", "model", "description", "size"]:
                 if parsed[item].get(disk_info, ""):
-                    infotexts.append("%s: %s" % \
-                        (disk_info.replace("-", " "), parsed[item][disk_info].replace("GB", " GB") ))
+                    infotexts.append(
+                        "%s: %s"
+                        % (
+                            disk_info.replace("-", " "),
+                            parsed[item][disk_info].replace("GB", " GB"),
+                        )
+                    )
 
             if parsed[item].get("rpm", ""):
                 infotexts.append("speed: %s RPM" % (parsed[item]["rpm"]))

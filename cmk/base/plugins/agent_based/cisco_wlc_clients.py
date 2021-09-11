@@ -13,7 +13,8 @@ from .utils.wlc_clients import ClientsPerInterface, ClientsTotal, WlcClientsSect
 
 OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
 CISCO_WLC_CLIENTS_PATTERN = "|".join(
-    re.escape(oid) for oid in (
+    re.escape(oid)
+    for oid in (
         ".1.3.6.1.4.1.14179.1.1.4.3",
         ".1.3.6.1.4.1.9.1.1069",
         ".1.3.6.1.4.1.9.1.1615",
@@ -26,11 +27,13 @@ CISCO_WLC_CLIENTS_PATTERN = "|".join(
         ".1.3.6.1.4.1.9.1.2370",  # Cisco Aironet 2800
         ".1.3.6.1.4.1.9.1.2371",
         ".1.3.6.1.4.1.9.1.2489",
-    ))
+    )
+)
 
 
 def parse_cisco_wlc_clients(
-        string_table: List[StringTable]) -> WlcClientsSection[ClientsPerInterface]:
+    string_table: List[StringTable],
+) -> WlcClientsSection[ClientsPerInterface]:
     section: WlcClientsSection[ClientsPerInterface] = WlcClientsSection()
     for ssid_name, interface_name, num_clients_str in string_table[0]:
         num_clients = int(num_clients_str)
@@ -53,13 +56,15 @@ register.snmp_section(
                 "2",  # AIRESPACE-WIRELESS-MIB::bsnDot11EssSsid
                 "42",  # AIRESPACE-WIRELESS-MIB::bsnDot11EssInterfaceName
                 "38",  # AIRESPACE-WIRELESS-MIB::bsnDot11EssNumberOfMobileStations
-            ])
+            ],
+        )
     ],
 )
 
 
 def parse_cisco_wlc_9800_clients(
-        string_table: List[StringTable]) -> WlcClientsSection[ClientsTotal]:
+    string_table: List[StringTable],
+) -> WlcClientsSection[ClientsTotal]:
     section: WlcClientsSection[ClientsTotal] = WlcClientsSection()
     for (ssid_name,), (num_clients_str,) in zip(string_table[0], string_table[1]):
         num_clients = int(num_clients_str)
@@ -80,11 +85,13 @@ register.snmp_section(
             base=".1.3.6.1.4.1.9.9.512.1.1.1.1",
             oids=[
                 "4",  # CISCO-LWAPP-WLAN-MIB::cLWlanSsid
-            ]),
+            ],
+        ),
         SNMPTree(
             base=".1.3.6.1.4.1.14179.2.1.1.1",
             oids=[
                 "38",  # AIRESPACE-WIRELESS-MIB::bsnDot11EssNumberOfMobileStations
-            ]),
+            ],
+        ),
     ],
 )

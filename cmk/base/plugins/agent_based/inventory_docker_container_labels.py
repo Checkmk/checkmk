@@ -24,8 +24,10 @@ register.agent_section(
 
 
 def inventory_docker_container_labels(section: Section) -> InventoryResult:
-    yield Attributes(path=docker.INVENTORY_BASE_PATH + ["container"],
-                     inventory_attributes={"labels": docker.format_labels(section)})
+    yield Attributes(
+        path=docker.INVENTORY_BASE_PATH + ["container"],
+        inventory_attributes={"labels": docker.format_labels(section)},
+    )
 
 
 register.inventory_plugin(

@@ -31,9 +31,9 @@ def parse_graylog_agent_data(info):
 
 def handle_iso_utc_to_localtimestamp(iso_8601_time):
     if len(iso_8601_time) == 20:
-        time_format = '%Y-%m-%dT%H:%M:%SZ'
+        time_format = "%Y-%m-%dT%H:%M:%SZ"
     else:
-        time_format = '%Y-%m-%dT%H:%M:%S.%fZ'
+        time_format = "%Y-%m-%dT%H:%M:%S.%fZ"
     struc_time = time.strptime(iso_8601_time, time_format)
     local_timestamp = calendar.timegm(struc_time)
 
@@ -41,34 +41,37 @@ def handle_iso_utc_to_localtimestamp(iso_8601_time):
 
 
 def handle_graylog_messages(messages, params):
-    msgs_levels_upper = params.get('msgs_upper', (None, None))
-    msgs_levels_lower = params.get('msgs_lower', (None, None))
+    msgs_levels_upper = params.get("msgs_upper", (None, None))
+    msgs_levels_lower = params.get("msgs_lower", (None, None))
 
-    yield check_levels(messages,
-                       "messages",
-                       msgs_levels_upper + msgs_levels_lower,
-                       human_readable_func=int,
-                       infoname="Total number of messages")
+    yield check_levels(
+        messages,
+        "messages",
+        msgs_levels_upper + msgs_levels_lower,
+        human_readable_func=int,
+        infoname="Total number of messages",
+    )
 
     avg_key = "msgs_avg"
     avg = params.get(avg_key, 30)
-    msgs_avg_levels_upper = params.get('msgs_avg_upper', (None, None))
-    msgs_avg_levels_lower = params.get('msgs_avg_lower', (None, None))
+    msgs_avg_levels_upper = params.get("msgs_avg_upper", (None, None))
+    msgs_avg_levels_lower = params.get("msgs_avg_lower", (None, None))
     this_time = time.time()
 
     rate = get_rate("graylog_%s.rate" % avg_key, this_time, messages)
     avg_rate = get_average("graylog_%s.avg" % avg_key, this_time, rate, avg)
 
-    yield check_levels(avg_rate,
-                       avg_key,
-                       msgs_avg_levels_upper + msgs_avg_levels_lower,
-                       infoname="Average number of messages (%s)" %
-                       get_age_human_readable(avg * 60))
+    yield check_levels(
+        avg_rate,
+        avg_key,
+        msgs_avg_levels_upper + msgs_avg_levels_lower,
+        infoname="Average number of messages (%s)" % get_age_human_readable(avg * 60),
+    )
 
     diff_key = "msgs_diff"
     timespan = params.get(diff_key, 1800)
-    diff_levels_upper = params.get('%s_upper' % diff_key, (None, None))
-    diff_levels_lower = params.get('%s_lower' % diff_key, (None, None))
+    diff_levels_upper = params.get("%s_upper" % diff_key, (None, None))
+    diff_levels_lower = params.get("%s_lower" % diff_key, (None, None))
 
     diff = _get_value_diff("graylog_%s" % diff_key, messages, timespan)
 

@@ -62,8 +62,10 @@ register.check_plugin(
     discovery_function=discover_single,
     check_function=check_proxmox_ve_snapshot_age,
     check_ruleset_name="proxmox_ve_vm_snapshot_age",
-    check_default_parameters={"oldest_levels": (
-        60 * 60 * 24 * 1,
-        60 * 60 * 24 * 2,
-    )},
+    check_default_parameters={
+        "oldest_levels": (
+            60 * 60 * 24 * 1,
+            60 * 60 * 24 * 2,
+        )
+    },
 )

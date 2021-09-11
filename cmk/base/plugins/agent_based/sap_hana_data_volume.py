@@ -15,7 +15,7 @@ from .utils import df, sap_hana
 def parse_sap_hana_data_volume(string_table: StringTable) -> sap_hana.ParsedSection:
     section: sap_hana.ParsedSection = {}
 
-    MB = 1024**2
+    MB = 1024 ** 2
 
     for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         for line in lines:
@@ -23,16 +23,13 @@ def parse_sap_hana_data_volume(string_table: StringTable) -> sap_hana.ParsedSect
                 continue
 
             for key_name, custom_dict, indexes in (
-                ("%s - %s %s", {
-                    "service": line[1],
-                    "path": line[3]
-                }, (7, 6)),
+                ("%s - %s %s", {"service": line[1], "path": line[3]}, (7, 6)),
                 ("%s - %s %s Disk", {}, (5, 4)),
                 ("%s - %s %s Disk Net Data", {}, (5, 6)),
             ):
-
-                inst = section.setdefault(key_name % (sid_instance, line[0], line[2]),
-                                          custom_dict)  #  type: ignore
+                inst = section.setdefault(
+                    key_name % (sid_instance, line[0], line[2]), custom_dict  # type: ignore
+                )
                 for key, index in [
                     ("size", indexes[0]),
                     ("used", indexes[1]),
@@ -53,13 +50,14 @@ def discovery_sap_hana_data_volume(section: sap_hana.ParsedSection) -> Discovery
         yield Service(item=item)
 
 
-def check_sap_hana_data_volume(item: str, params: Mapping[str, Any],
-                               section: sap_hana.ParsedSection) -> CheckResult:
+def check_sap_hana_data_volume(
+    item: str, params: Mapping[str, Any], section: sap_hana.ParsedSection
+) -> CheckResult:
     item_data = section.get(item)
     if not item_data:
         raise IgnoreResultsError("Login into database failed.")
-    size = item_data['size']
-    used = item_data['used']
+    size = item_data["size"]
+    used = item_data["used"]
     avail = size - used
 
     yield from df.df_check_filesystem_list(
@@ -69,16 +67,16 @@ def check_sap_hana_data_volume(item: str, params: Mapping[str, Any],
         [(item, size, avail, 0)],
     )
 
-    service = item_data.get('service')
+    service = item_data.get("service")
     if service:
-        yield Result(state=state.OK, summary='Service: %s' % service)
-    path = item_data.get('path')
+        yield Result(state=state.OK, summary="Service: %s" % service)
+    path = item_data.get("path")
     if path:
-        yield Result(state=state.OK, summary='Path: %s' % path)
+        yield Result(state=state.OK, summary="Path: %s" % path)
 
 
 def cluster_check_sap_hana_data_volume(item, params, section):
-    yield Result(state=state.OK, summary='Nodes: %s' % ', '.join(section.keys()))
+    yield Result(state=state.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():
         if item in node_section:
             yield from check_sap_hana_data_volume(item, params, node_section)

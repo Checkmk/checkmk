@@ -116,8 +116,10 @@ def check_ups_capacity(
 def _assemble_battery(*sections: Optional[Battery]) -> Battery:
     merged_dict = {
         key: value  #
-        for section in sections if section is not None  #
-        for key, value in asdict(section).items() if value is not None  #
+        for section in sections
+        if section is not None  #
+        for key, value in asdict(section).items()
+        if value is not None  #
     }
     return Battery(**merged_dict)
 

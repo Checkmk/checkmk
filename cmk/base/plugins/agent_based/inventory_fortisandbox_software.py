@@ -14,34 +14,39 @@ Section = Sequence[Tuple[str, str]]
 
 
 def parse_fortisandbox_software(string_table: StringTable) -> Optional[Section]:
-    return list(
-        zip(
-            [
-                "Tracer engine",
-                "Rating engine",
-                "System tools",
-                "Sniffer",
-                "Network alerts signature database",
-                "Android analytic engine",
-                "Android rating engine",
-            ],
-            string_table[0],
-        )) if string_table else None
+    return (
+        list(
+            zip(
+                [
+                    "Tracer engine",
+                    "Rating engine",
+                    "System tools",
+                    "Sniffer",
+                    "Network alerts signature database",
+                    "Android analytic engine",
+                    "Android rating engine",
+                ],
+                string_table[0],
+            )
+        )
+        if string_table
+        else None
+    )
 
 
 register.snmp_section(
     name="fortisandbox_software",
     parse_function=parse_fortisandbox_software,
     fetch=SNMPTree(
-        base='.1.3.6.1.4.1.12356.118.3.2',
+        base=".1.3.6.1.4.1.12356.118.3.2",
         oids=[
-            '1',  # fsaSysTracer
-            '2',  # fsaSysRating
-            '3',  # fsaSysTool
-            '4',  # fsaSysSniffer
-            '5',  # fsaSysIPS
-            '6',  # fsaSysAndroidA
-            '7',  # fsaSysAndroidR
+            "1",  # fsaSysTracer
+            "2",  # fsaSysRating
+            "3",  # fsaSysTool
+            "4",  # fsaSysSniffer
+            "5",  # fsaSysIPS
+            "6",  # fsaSysAndroidA
+            "7",  # fsaSysAndroidR
         ],
     ),
     detect=DETECT_FORTISANDBOX,
@@ -49,16 +54,20 @@ register.snmp_section(
 
 
 def inventory_fortisandbox_software(section: Section) -> InventoryResult:
-    yield from (TableRow(
-        path=["software", "applications", "fortinet", "fortisandbox"],
-        key_columns={"name": name},
-        inventory_columns={
-            "version": version,
-        },
-    ) for name, version in section if version)
+    yield from (
+        TableRow(
+            path=["software", "applications", "fortinet", "fortisandbox"],
+            key_columns={"name": name},
+            inventory_columns={
+                "version": version,
+            },
+        )
+        for name, version in section
+        if version
+    )
 
 
 register.inventory_plugin(
-    name='fortisandbox_software',
+    name="fortisandbox_software",
     inventory_function=inventory_fortisandbox_software,
 )

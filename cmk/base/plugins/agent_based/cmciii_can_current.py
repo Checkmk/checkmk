@@ -15,13 +15,15 @@ from .utils.cmciii import (
 )
 
 
-def discover_cmciii_can_current(params: DiscoveryParams,
-                                section: Section) -> type_defs.DiscoveryResult:
+def discover_cmciii_can_current(
+    params: DiscoveryParams, section: Section
+) -> type_defs.DiscoveryResult:
     yield from discover_cmciii_sensors("can_current", params, section)
 
 
-def check_cmciii_can_current(item: str, params: CheckParams,
-                             section: Section) -> type_defs.CheckResult:
+def check_cmciii_can_current(
+    item: str, params: CheckParams, section: Section
+) -> type_defs.CheckResult:
     entry = get_sensor(item, params, section["can_current"])
     if not entry:
         return
@@ -32,15 +34,17 @@ def check_cmciii_can_current(item: str, params: CheckParams,
     crit = entry["SetPtHighAlarm"]
 
     state = State.OK if state_readable == "OK" else State.CRIT
-    yield Result(state=state,
-                 summary="Status: %s, Current: %s mA (warn/crit at %s/%s mA)" %
-                 (state_readable, value, warn, crit))
+    yield Result(
+        state=state,
+        summary="Status: %s, Current: %s mA (warn/crit at %s/%s mA)"
+        % (state_readable, value, warn, crit),
+    )
     yield Metric("current", value / 1000.0, levels=(warn / 1000.0, crit / 1000.0))
 
 
 register.check_plugin(
     name="cmciii_can_current",
-    sections=['cmciii'],
+    sections=["cmciii"],
     service_name="%s",
     discovery_function=discover_cmciii_can_current,
     check_function=check_cmciii_can_current,

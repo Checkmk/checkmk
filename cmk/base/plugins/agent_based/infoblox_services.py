@@ -163,7 +163,8 @@ register.snmp_section(
                 "1",  # IB-PLATFORMONE-MIB::ibServiceName
                 "2",  # IB-PLATFORMONE-MIB::ibServiceStatus
                 "3",  # IB-PLATFORMONE-MIB::ibServiceDesc
-            ]),
+            ],
+        ),
     ],
 )
 
@@ -185,7 +186,8 @@ register.snmp_section(
                 "1",  # IB-PLATFORMONE-MIB::ibNodeServiceName
                 "2",  # IB-PLATFORMONE-MIB::ibNodeServiceStatus
                 "3",  # IB-PLATFORMONE-MIB::ibNodeServiceDesc
-            ]),
+            ],
+        ),
     ],
 )
 

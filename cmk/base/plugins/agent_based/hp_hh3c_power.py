@@ -25,8 +25,10 @@ register.snmp_section(
             ],
         ),
     ],
-    detect=all_of(startswith(OID_SysObjectID, ".1.3.6.1.4.1.25506"),
-                  any_of(contains(OID_SysDesc, "H3C"), contains(OID_SysDesc, "HPE"))),
+    detect=all_of(
+        startswith(OID_SysObjectID, ".1.3.6.1.4.1.25506"),
+        any_of(contains(OID_SysDesc, "H3C"), contains(OID_SysDesc, "HPE")),
+    ),
 )
 
 register.check_plugin(

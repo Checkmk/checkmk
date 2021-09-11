@@ -19,7 +19,7 @@ def clean_v6_address(chunks: Sequence[Union[int, str]]) -> str:
     >>> clean_v6_address([32,1,7,40,0,0,0,0,255,255,0,0,0,0,14,249])
     '[2001:728::ffff:0:0:ef9]'
     """
-    ichunks = iter('%02x' % int(i) for i in chunks)
+    ichunks = iter("%02x" % int(i) for i in chunks)
     raw_address = ":".join("%s%s" % pair for pair in zip(ichunks, ichunks))
 
     return f"[{str(IPv6Address(raw_address))}]"

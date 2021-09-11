@@ -29,10 +29,9 @@ from .utils.esx_vsphere import Section
 FIRST_ELEMENT: Final = lambda v: v[0]
 FIRST_ELEMENT_AS_FLOAT: Final = lambda v: float(v[0])
 JOIN_LIST: Final = " ".join
-SUB_SECTION = TypedDict("SUB_SECTION", {
-    "path": List[str],
-    "translation": Dict[str, Tuple[str, Callable]]
-})
+SUB_SECTION = TypedDict(
+    "SUB_SECTION", {"path": List[str], "translation": Dict[str, Tuple[str, Callable]]}
+)
 
 # This giant dict describes how the section translates into the different nodes of the inventory
 SECTION_TO_INVENTORY: Dict[str, SUB_SECTION] = {
@@ -61,15 +60,13 @@ SECTION_TO_INVENTORY: Dict[str, SUB_SECTION] = {
             "hardware.systemInfo.model": ("product", JOIN_LIST),
             "hardware.systemInfo.vendor": ("vendor", FIRST_ELEMENT),
             "hardware.systemInfo.uuid": ("uuid", FIRST_ELEMENT),
-            "hardware.systemInfo.0.ServiceTag": ("serial", FIRST_ELEMENT)
+            "hardware.systemInfo.0.ServiceTag": ("serial", FIRST_ELEMENT),
         },
     },
     "mem": {
         "path": ["hardware", "memory"],
-        "translation": {
-            "hardware.memorySize": ("total_ram_usable", FIRST_ELEMENT_AS_FLOAT)
-        },
-    }
+        "translation": {"hardware.memorySize": ("total_ram_usable", FIRST_ELEMENT_AS_FLOAT)},
+    },
 }
 
 
@@ -101,7 +98,8 @@ def inv_esx_vsphere_hostsystem(section: Section) -> type_defs.InventoryResult:
                 # ...but it is missing in some cases
                 try:
                     data["serial"] = section[
-                        "hardware.systemInfo.otherIdentifyingInfo.ServiceTag.0"][0]
+                        "hardware.systemInfo.otherIdentifyingInfo.ServiceTag.0"
+                    ][0]
                 except KeyError:
                     pass
 

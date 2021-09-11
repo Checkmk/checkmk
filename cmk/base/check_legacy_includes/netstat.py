@@ -39,7 +39,10 @@ def check_netstat_generic(item, params, connections):
 
     warn_lower, crit_lower = params.get("min_states", (None, None))
     warn_upper, crit_upper = params.get("max_states", (None, None))
-    yield check_levels(found,
-                       "connections", (warn_upper, crit_upper, warn_lower, crit_lower),
-                       infoname="Matching entries found",
-                       human_readable_func=lambda x: "%d" % x)
+    yield check_levels(
+        found,
+        "connections",
+        (warn_upper, crit_upper, warn_lower, crit_lower),
+        infoname="Matching entries found",
+        human_readable_func=lambda x: "%d" % x,
+    )

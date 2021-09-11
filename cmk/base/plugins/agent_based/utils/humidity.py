@@ -8,8 +8,9 @@ from typing import Any, List, Mapping, Optional, Tuple, Union
 
 from ..agent_based_api.v1 import check_levels, render, type_defs
 
-CheckParams = Union[None, Mapping[str, Any], Optional[List[float]], Tuple[float, float, float,
-                                                                          float]]
+CheckParams = Union[
+    None, Mapping[str, Any], Optional[List[float]], Tuple[float, float, float, float]
+]
 
 
 def check_humidity(humidity: float, params: CheckParams) -> type_defs.CheckResult:

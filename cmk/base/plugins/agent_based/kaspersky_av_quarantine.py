@@ -24,7 +24,7 @@ def parse_kaspersky_av_quarantine(string_table: StringTable) -> Section:
     >>> parse_kaspersky_av_quarantine([["Objects", " 1"]])
     {'Objects': ' 1'}
     """
-    return {l[0]: ' '.join(l[1:]) for l in string_table}
+    return {l[0]: " ".join(l[1:]) for l in string_table}
 
 
 register.agent_section(
@@ -43,11 +43,12 @@ def check_kaspersky_av_quarantine(section: Section) -> CheckResult:
     >>> list(check_kaspersky_av_quarantine({"Objects": " 0"}))
     [Result(state=<State.OK: 0>, summary='No objects in Quarantine'), Metric('Objects', 0.0)]
     """
-    objects = int(section['Objects'])
+    objects = int(section["Objects"])
     if objects > 0:
         yield Result(
             state=State.CRIT if objects > 0 else State.OK,
-            summary=f"{objects} Objects in Quarantine, Last added: {section['Last added'].strip()}")
+            summary=f"{objects} Objects in Quarantine, Last added: {section['Last added'].strip()}",
+        )
     else:
         yield Result(state=State.OK, summary="No objects in Quarantine")
     yield Metric(name="Objects", value=objects)

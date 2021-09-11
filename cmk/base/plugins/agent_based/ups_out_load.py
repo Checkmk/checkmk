@@ -37,11 +37,14 @@ register.snmp_section(
     detect=DETECT_UPS_GENERIC,
     parse_function=parse_ups_load,
     fetch=[
-        SNMPTree(base=".1.3.6.1.2.1.33.1.4.4.1", oids=[
-            "2",
-            "5",
-            OIDEnd(),
-        ]),
+        SNMPTree(
+            base=".1.3.6.1.2.1.33.1.4.4.1",
+            oids=[
+                "2",
+                "5",
+                OIDEnd(),
+            ],
+        ),
     ],
 )
 
@@ -58,16 +61,20 @@ def check_ups_out_load(item: str, params: Mapping[str, Any], section: Section) -
         yield Result(state=State.UNKNOWN, summary=f"Phase {item} not found in SNMP output")
         return
 
-    yield from check_levels(value=ups.power,
-                            levels_upper=params["levels"],
-                            metric_name="out_load",
-                            render_func=render.percent,
-                            label="load")
+    yield from check_levels(
+        value=ups.power,
+        levels_upper=params["levels"],
+        metric_name="out_load",
+        render_func=render.percent,
+        label="load",
+    )
 
 
-register.check_plugin(name="ups_out_load",
-                      service_name="OUT load phase %s",
-                      discovery_function=discovery_ups,
-                      check_function=check_ups_out_load,
-                      check_default_parameters={"levels": (85, 90)},
-                      check_ruleset_name="ups_out_load")
+register.check_plugin(
+    name="ups_out_load",
+    service_name="OUT load phase %s",
+    discovery_function=discovery_ups,
+    check_function=check_ups_out_load,
+    check_default_parameters={"levels": (85, 90)},
+    check_ruleset_name="ups_out_load",
+)

@@ -157,13 +157,16 @@ register.snmp_section(
     detect=DETECT_PRINTER,
     parse_function=parse_printer_alerts,
     fetch=[
-        SNMPTree(base=".1.3.6.1.2.1.43.18.1.1", oids=[
-            "2",
-            "4",
-            "5",
-            "7",
-            "8",
-        ]),
+        SNMPTree(
+            base=".1.3.6.1.2.1.43.18.1.1",
+            oids=[
+                "2",
+                "4",
+                "5",
+                "7",
+                "8",
+            ],
+        ),
     ],
 )
 

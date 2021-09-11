@@ -40,12 +40,12 @@ def check_ps(
 
 
 def cluster_check_ps(
-        item: str,
-        params: Mapping[str, Any],
-        section_ps: Dict[str, Optional[ps.Section]],
-        section_mem: Dict[str, Optional[memory.SectionMem]],
-        section_mem_used: Dict[str, Optional[memory.SectionMem]],
-        section_cpu: Dict[str, Optional[cpu.Section]],  # unused
+    item: str,
+    params: Mapping[str, Any],
+    section_ps: Dict[str, Optional[ps.Section]],
+    section_mem: Dict[str, Optional[memory.SectionMem]],
+    section_mem_used: Dict[str, Optional[memory.SectionMem]],
+    section_cpu: Dict[str, Optional[cpu.Section]],  # unused
 ) -> CheckResult:
     # introduce node name
     process_lines: List[Tuple[Optional[str], ps.PsInfo, List[str]]] = [
@@ -55,7 +55,8 @@ def cluster_check_ps(
     ]
 
     core_counts = set(
-        node_section[0] for node_section in section_ps.values() if node_section is not None)
+        node_section[0] for node_section in section_ps.values() if node_section is not None
+    )
     if len(core_counts) == 1:
         cpu_cores = core_counts.pop()
     else:
@@ -70,10 +71,14 @@ def cluster_check_ps(
         cpu_cores=cpu_cores,
         total_ram_map={
             **{
-                node: section["MemTotal"] for node, section in section_mem.items() if section and "MemTotal" in section
+                node: section["MemTotal"]
+                for node, section in section_mem.items()
+                if section and "MemTotal" in section
             },
             **{
-                node: v for node, section in section_mem_used.items() if section and (v := section.get("MemTotal")) is not None
+                node: v
+                for node, section in section_mem_used.items()
+                if section and (v := section.get("MemTotal")) is not None
             },
         },
     )

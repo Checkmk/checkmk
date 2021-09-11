@@ -20,7 +20,7 @@ def parse_printer_pages(string_table: List[StringTable]) -> Optional[Section]:
     >>> parse_printer_pages([[['585']]])
     {'pages_total': 585}
     """
-    return {'pages_total': int(string_table[0][0][0])} if string_table[0] else None
+    return {"pages_total": int(string_table[0][0][0])} if string_table[0] else None
 
 
 register.snmp_section(

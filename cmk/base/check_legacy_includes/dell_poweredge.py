@@ -51,7 +51,7 @@ def check_dell_poweredge_cpu(item, _no_params, info):
             return state, infotext
 
 
-#.
+# .
 #   .--memory--------------------------------------------------------------.
 #   |                                                                      |
 #   |              _ __ ___   ___ _ __ ___   ___  _ __ _   _               |
@@ -73,9 +73,9 @@ def inventory_dell_poweredge_mem(info):
 
 def check_dell_poweredge_mem(item, _no_params, info):
     di = dict()
-    for status, location, size, di['Speed'], di['MFR'], di['P/N'], di['S/N'] in info:
+    for status, location, size, di["Speed"], di["MFR"], di["P/N"], di["S/N"] in info:
 
-        di['Size'] = str(int((saveint(size) / 1024.0) / 1024.0)) + "GB"
+        di["Size"] = str(int((saveint(size) / 1024.0) / 1024.0)) + "GB"
         if item == location:
             state_table = {
                 "1": ("other", 1),
@@ -96,7 +96,7 @@ def check_dell_poweredge_mem(item, _no_params, info):
     return 3, "Memory Device not found"
 
 
-#.
+# .
 #   .--netdev--------------------------------------------------------------.
 #   |                              _      _                                |
 #   |                   _ __   ___| |_ __| | _____   __                    |
@@ -117,9 +117,9 @@ def inventory_dell_poweredge_netdev(info):
 
 def check_dell_poweredge_netdev(item, _no_params, info):
     di = dict()
-    for status, connection_status, di['Product'], cur_mac, fqdd in info:
+    for status, connection_status, di["Product"], cur_mac, fqdd in info:
         if item == fqdd:
-            di['MAC'] = '-'.join(["%02X" % ord(c) for c in cur_mac]).strip()
+            di["MAC"] = "-".join(["%02X" % ord(c) for c in cur_mac]).strip()
             state_table = {
                 "1": ("other,", 1),
                 "2": ("unknown,", 1),
@@ -151,7 +151,7 @@ def check_dell_poweredge_netdev(item, _no_params, info):
     return 3, "network device not found"
 
 
-#.
+# .
 #   .--PCI-----------------------------------------------------------------.
 #   |                           ____   ____ ___                            |
 #   |                          |  _ \ / ___|_ _|                           |
@@ -173,7 +173,7 @@ def inventory_dell_poweredge_pci(info):
 
 def check_dell_poweredge_pci(item, _no_params, info):
     di = dict()
-    for status, di['BusWidth'], di['MFR'], di['Desc.'], fqdd in info:
+    for status, di["BusWidth"], di["MFR"], di["Desc."], fqdd in info:
 
         if item == fqdd:
             state_table = {
@@ -195,7 +195,7 @@ def check_dell_poweredge_pci(item, _no_params, info):
     return 3, "Memory Device not found"
 
 
-#.
+# .
 #   .--status--------------------------------------------------------------.
 #   |                         _        _                                   |
 #   |                     ___| |_ __ _| |_ _   _ ___                       |
@@ -213,8 +213,15 @@ def inventory_dell_poweredge_status(info):
 
 def check_dell_poweredge_status(item, _no_params, info):
     di = dict()
-    di['racURL'], di['Chassis'], di['Slot'], di['Model'], status, di['ServiceTag'], di[
-        'ExpressServiceCode'] = info[0]
+    (
+        di["racURL"],
+        di["Chassis"],
+        di["Slot"],
+        di["Model"],
+        status,
+        di["ServiceTag"],
+        di["ExpressServiceCode"],
+    ) = info[0]
 
     state_table = {
         "1": ("other, ", 1),
@@ -232,7 +239,7 @@ def check_dell_poweredge_status(item, _no_params, info):
     return state, infotext
 
 
-#.
+# .
 #   .--power---------------------------------------------------------------.
 #   |                                                                      |
 #   |                    _ __   _____      _____ _ __                      |
@@ -260,11 +267,20 @@ def inventory_dell_poweredge_amperage_current(info):
 
 
 def check_dell_poweredge_amperage(item, _no_params, info):
-    for _chassisIndex, _Index, StateSettings, Status, Reading, ProbeType, LocationName, \
-        UpperCritical, UpperNonCritical in info:
+    for (
+        _chassisIndex,
+        _Index,
+        StateSettings,
+        Status,
+        Reading,
+        ProbeType,
+        LocationName,
+        UpperCritical,
+        UpperNonCritical,
+    ) in info:
 
         if item == LocationName:
-            if StateSettings == '1':  # unknown
+            if StateSettings == "1":  # unknown
                 return 3, "Object's state is unknown"
             state_table = {
                 "1": ("other", 1),
@@ -303,7 +319,7 @@ def check_dell_poweredge_amperage(item, _no_params, info):
     return 3, "Amperage Device not found"
 
 
-#.
+# .
 #   .--temperature---------------------------------------------------------.
 #   |      _                                      _                        |
 #   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -326,14 +342,24 @@ def dell_poweredge_temp_makeitem(chassisIndex, Index, LocationName):
 
 def inventory_dell_poweredge_temp(info):
     for line in info:
-        if line[2] != '1':  # StateSettings not 'unknown'
+        if line[2] != "1":  # StateSettings not 'unknown'
             item = dell_poweredge_temp_makeitem(line[0], line[1], line[5])
             yield item, {}
 
 
 def check_dell_poweredge_temp(item, params, info):
-    for chassisIndex, Index, _StateSettings, Status, Reading, LocationName, \
-        UpperCritical, UpperNonCritical, LowerNonCritical, LowerCritical in info:
+    for (
+        chassisIndex,
+        Index,
+        _StateSettings,
+        Status,
+        Reading,
+        LocationName,
+        UpperCritical,
+        UpperNonCritical,
+        LowerNonCritical,
+        LowerCritical,
+    ) in info:
         if not Reading:
             continue
         if item == dell_poweredge_temp_makeitem(chassisIndex, Index, LocationName):
@@ -363,8 +389,10 @@ def check_dell_poweredge_temp(item, params, info):
             state_txt, state = state_table.get(Status, ("unknown state", 3))
             if state:
                 yield state, state_txt
-            yield check_temperature(temp,
-                                    params,
-                                    "dell_poweredge_temp_%s" % item,
-                                    dev_levels=levels,
-                                    dev_levels_lower=lower_levels)
+            yield check_temperature(
+                temp,
+                params,
+                "dell_poweredge_temp_%s" % item,
+                dev_levels=levels,
+                dev_levels_lower=lower_levels,
+            )

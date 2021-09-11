@@ -12,8 +12,8 @@ from .utils import k8s
 
 def host_labels(section: Dict) -> HostLabelGenerator:
     if section:
-        yield HostLabel(u'cmk/kubernetes_object', u'job')
-        yield HostLabel('cmk/kubernetes', 'yes')
+        yield HostLabel("cmk/kubernetes_object", "job")
+        yield HostLabel("cmk/kubernetes", "yes")
 
 
 register.agent_section(

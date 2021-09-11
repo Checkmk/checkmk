@@ -36,7 +36,7 @@ def check_cmciii_leakage(item: str, params: CheckParams, section: Section) -> ty
 
 register.check_plugin(
     name="cmciii_leakage",
-    sections=['cmciii'],
+    sections=["cmciii"],
     service_name="%s",
     discovery_function=discover_cmciii_leakage,
     check_function=check_cmciii_leakage,

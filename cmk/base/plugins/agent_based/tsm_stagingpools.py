@@ -107,8 +107,10 @@ def check_tsm_stagingpools(
         levels_lower=params.get("levels", (None, None)),
         metric_name="free",
         render_func=lambda v: "%d" % v,
-        label=(f"Total tapes: {num_tapes}, Utilization: {utilization:.1f} tapes, "
-               f"Tapes less then {params['free_below']}% full"),
+        label=(
+            f"Total tapes: {num_tapes}, Utilization: {utilization:.1f} tapes, "
+            f"Tapes less then {params['free_below']}% full"
+        ),
         boundaries=(0, num_tapes),
     )
 

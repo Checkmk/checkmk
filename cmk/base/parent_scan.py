@@ -23,8 +23,9 @@ from cmk.utils.type_defs import HostAddress, HostName
 import cmk.base.config as config
 import cmk.base.obsolete_output as out
 
-Gateways = List[Tuple[Optional[Tuple[Optional[HostName], HostAddress, Optional[HostName]]], str,
-                      int, str]]
+Gateways = List[
+    Tuple[Optional[Tuple[Optional[HostName], HostAddress, Optional[HostName]]], str, int, str]
+]
 
 
 def do_scan_parents(hosts: List[HostName]) -> None:
@@ -44,17 +45,21 @@ def do_scan_parents(hosts: List[HostName]) -> None:
     outfilename = cmk.utils.paths.check_mk_config_dir + "/parents.mk"
 
     if not traceroute_available():
-        raise MKGeneralException('The program "traceroute" was not found.\n'
-                                 'The parent scan needs this program.\n'
-                                 'Please install it and try again.')
+        raise MKGeneralException(
+            'The program "traceroute" was not found.\n'
+            "The parent scan needs this program.\n"
+            "Please install it and try again."
+        )
 
     if os.path.exists(outfilename):
         first_line = open(outfilename, "r").readline()
-        if not first_line.startswith('# Automatically created by --scan-parents at'):
-            raise MKGeneralException("conf.d/parents.mk seems to be created manually.\n\n"
-                                     "The --scan-parents function would overwrite this file.\n"
-                                     "Please rename it to keep the configuration or delete "
-                                     "the file and try again.")
+        if not first_line.startswith("# Automatically created by --scan-parents at"):
+            raise MKGeneralException(
+                "conf.d/parents.mk seems to be created manually.\n\n"
+                "The --scan-parents function would overwrite this file.\n"
+                "Please rename it to keep the configuration or delete "
+                "the file and try again."
+            )
 
     out.output("Scanning for parents (%d processes)..." % config.max_num_processes)
     while hosts:
@@ -86,7 +91,8 @@ def do_scan_parents(hosts: List[HostName]) -> None:
                         parent_ips[gateway] = gateway_ip
                         if config.monitoring_host:
                             parent_rules.append(
-                                (config.monitoring_host, [gateway]))  # make Nagios a parent of gw
+                                (config.monitoring_host, [gateway])
+                            )  # make Nagios a parent of gw
                 parent_rules.append((gateway, [host]))
             elif host != config.monitoring_host and config.monitoring_host:
                 # make monitoring host the parent of all hosts without real parent
@@ -110,17 +116,19 @@ def do_scan_parents(hosts: List[HostName]) -> None:
 
 
 def traceroute_available() -> Optional[str]:
-    for path in os.environ['PATH'].split(os.pathsep):
-        f = path + '/traceroute'
+    for path in os.environ["PATH"].split(os.pathsep):
+        f = path + "/traceroute"
         if os.path.exists(f) and os.access(f, os.X_OK):
             return f
     return None
 
 
-def scan_parents_of(config_cache: config.ConfigCache,
-                    hosts: List[HostName],
-                    silent: bool = False,
-                    settings: Optional[Dict[str, int]] = None) -> Gateways:
+def scan_parents_of(
+    config_cache: config.ConfigCache,
+    hosts: List[HostName],
+    silent: bool = False,
+    settings: Optional[Dict[str, int]] = None,
+) -> Gateways:
     if settings is None:
         settings = {}
 
@@ -143,26 +151,38 @@ def scan_parents_of(config_cache: config.ConfigCache,
             if ip is None:
                 raise RuntimeError()
             command = [
-                "traceroute", "-w",
-                "%d" % settings.get("timeout", 8), "-q",
-                "%d" % settings.get("probes", 2), "-m",
-                "%d" % settings.get("max_ttl", 10), "-n", ip
+                "traceroute",
+                "-w",
+                "%d" % settings.get("timeout", 8),
+                "-q",
+                "%d" % settings.get("probes", 2),
+                "-m",
+                "%d" % settings.get("max_ttl", 10),
+                "-n",
+                ip,
             ]
             console.vverbose("Running '%s'\n" % subprocess.list2cmdline(command))
 
-            procs.append((host, ip,
-                          subprocess.Popen(command,
-                                           stdout=subprocess.PIPE,
-                                           stderr=subprocess.STDOUT,
-                                           close_fds=True,
-                                           encoding="utf-8")))
+            procs.append(
+                (
+                    host,
+                    ip,
+                    subprocess.Popen(
+                        command,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.STDOUT,
+                        close_fds=True,
+                        encoding="utf-8",
+                    ),
+                )
+            )
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
             procs.append((host, None, "ERROR: %s" % e))
 
     # Output marks with status of each single scan
-    def dot(color: str, dot: str = 'o') -> None:
+    def dot(color: str, dot: str = "o") -> None:
         if not silent:
             out.output(tty.bold + color + dot + tty.normal)
 
@@ -180,9 +200,10 @@ def scan_parents_of(config_cache: config.ConfigCache,
             lines = [l.strip() for l in proc_or_error.stdout.readlines()]
 
         if exitstatus:
-            dot(tty.red, '*')
+            dot(tty.red, "*")
             gateways.append(
-                (None, "failed", 0, "Traceroute failed with exit code %d" % (exitstatus & 255)))
+                (None, "failed", 0, "Traceroute failed with exit code %d" % (exitstatus & 255))
+            )
             continue
 
         if len(lines) == 1 and lines[0].startswith("ERROR:"):
@@ -195,15 +216,22 @@ def scan_parents_of(config_cache: config.ConfigCache,
         if len(lines) == 0:
             if cmk.utils.debug.enabled():
                 raise MKGeneralException(
-                    "Cannot execute %s. Is traceroute installed? Are you root?" % command)
-            dot(tty.red, '!')
+                    "Cannot execute %s. Is traceroute installed? Are you root?" % command
+                )
+            dot(tty.red, "!")
             continue
 
         if len(lines) < 2:
             if not silent:
-                console.error("%s: %s\n" % (host, ' '.join(lines)))
-            gateways.append((None, "garbled", 0,
-                             "The output of traceroute seem truncated:\n%s" % ("".join(lines))))
+                console.error("%s: %s\n" % (host, " ".join(lines)))
+            gateways.append(
+                (
+                    None,
+                    "garbled",
+                    0,
+                    "The output of traceroute seem truncated:\n%s" % ("".join(lines)),
+                )
+            )
             dot(tty.blue)
             continue
 
@@ -225,9 +253,9 @@ def scan_parents_of(config_cache: config.ConfigCache,
         for line in lines[1:]:
             parts = line.split()
             route = parts[1]
-            if route.count('.') == 3:
+            if route.count(".") == 3:
                 routes.append(route)
-            elif route == '*':
+            elif route == "*":
                 routes.append(None)  # No answer from this router
             else:
                 if not silent:
@@ -247,10 +275,10 @@ def scan_parents_of(config_cache: config.ConfigCache,
         if len(routes) == 1:
             if ip == nagios_ip:
                 gateways.append((None, "root", 0, ""))  # We are the root-monitoring host
-                dot(tty.white, 'N')
+                dot(tty.white, "N")
             elif config.monitoring_host:
                 gateways.append(((config.monitoring_host, nagios_ip, None), "direct", 0, ""))
-                dot(tty.cyan, 'L')
+                dot(tty.cyan, "L")
             else:
                 gateways.append((None, "direct", 0, ""))
             continue
@@ -290,25 +318,29 @@ def scan_parents_of(config_cache: config.ConfigCache,
         # Try to find DNS name of host via reverse DNS lookup
         dns_name = _ip_to_dnsname(gateway_ip)
         gateways.append(((gateway, gateway_ip, dns_name), "gateway", skipped_gateways, ""))
-        dot(tty.green, 'G')
+        dot(tty.green, "G")
     return gateways
 
 
 def gateway_reachable_via_ping(ip: HostAddress, probes: int) -> bool:
-    return subprocess.call(
-        ["ping", "-q", "-i", "0.2", "-l", "3", "-c",
-         "%d" % probes, "-W", "5", ip],
-        stdout=open(os.devnull, "w"),
-        stderr=subprocess.STDOUT,
-        close_fds=True) == 0
+    return (
+        subprocess.call(
+            ["ping", "-q", "-i", "0.2", "-l", "3", "-c", "%d" % probes, "-W", "5", ip],
+            stdout=open(os.devnull, "w"),
+            stderr=subprocess.STDOUT,
+            close_fds=True,
+        )
+        == 0
+    )
 
 
 # find hostname belonging to an ip address. We must not use
 # reverse DNS but the Checkmk mechanisms, since we do not
 # want to find the DNS name but the name of a matching host
 # from all_hosts
-def _ip_to_hostname(config_cache: config.ConfigCache,
-                    ip: Optional[HostAddress]) -> Optional[HostName]:
+def _ip_to_hostname(
+    config_cache: config.ConfigCache, ip: Optional[HostAddress]
+) -> Optional[HostName]:
     if "ip_to_hostname" not in _config_cache:
         cache = _config_cache.get("ip_to_hostname")
 

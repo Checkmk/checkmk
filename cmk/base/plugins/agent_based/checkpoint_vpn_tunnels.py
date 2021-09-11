@@ -23,7 +23,7 @@ register.snmp_section(
                 "7",  # tunnelSourceIpAddr
                 "2",  # tunnelPeerObjName
                 "6",  # tunnelInterface
-                "8"  # tunnelLinkPriority
+                "8",  # tunnelLinkPriority
             ],
         ),
     ],

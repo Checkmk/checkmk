@@ -29,7 +29,7 @@ import cmk.base.nagios_utils
 import cmk.base.obsolete_output as out
 from cmk.base.core_config import HostsToUpdate, MonitoringCore
 
-#.
+# .
 #   .--Control-------------------------------------------------------------.
 #   |                   ____            _             _                    |
 #   |                  / ___|___  _ __ | |_ _ __ ___ | |                   |
@@ -53,9 +53,11 @@ def do_reload(core: MonitoringCore) -> None:
     do_restart(core, action=CoreAction.RELOAD)
 
 
-def do_restart(core: MonitoringCore,
-               action: CoreAction = CoreAction.RESTART,
-               hosts_to_update: HostsToUpdate = None) -> None:
+def do_restart(
+    core: MonitoringCore,
+    action: CoreAction = CoreAction.RESTART,
+    hosts_to_update: HostsToUpdate = None,
+) -> None:
     try:
         with activation_lock(mode=config.restart_locking):
             core_config.do_create_config(core, hosts_to_update=hosts_to_update)
@@ -118,7 +120,7 @@ def do_core_action(action: CoreAction, quiet: bool = False) -> None:
         out.output(tty.ok + "\n")
 
 
-#.
+# .
 #   .--Timeperiods---------------------------------------------------------.
 #   |      _____ _                                _           _            |
 #   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |

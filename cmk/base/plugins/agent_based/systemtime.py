@@ -19,7 +19,7 @@ def parse_systemtime(string_table: type_defs.StringTable) -> Dict[str, float]:
     {}
     """
     parsed = {}
-    for idx, key in enumerate(['foreign_systemtime', 'our_systemtime']):
+    for idx, key in enumerate(["foreign_systemtime", "our_systemtime"]):
         try:
             parsed[key] = float(string_table[0][idx])
         except IndexError:

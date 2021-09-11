@@ -86,8 +86,8 @@ def normalize_levels(
     if warn is None or crit is None:
         return None, None, ""
 
-    mode_split = mode.split('_', 1)
-    if mode_split[0] not in ('perc', 'abs') or mode_split[-1] not in ('used', 'free'):
+    mode_split = mode.split("_", 1)
+    if mode_split[0] not in ("perc", "abs") or mode_split[-1] not in ("used", "free"):
         raise NotImplementedError("unknown levels mode: %r" % (mode,))
 
     # normalize percent -> absolute
@@ -114,8 +114,8 @@ def normalize_levels(
 def compute_state(value: float, warn: Optional[float], crit: Optional[float]) -> state:
     """get state according to levels
 
-        >>> print(compute_state(23., 12, 42))
-        State.WARN
+    >>> print(compute_state(23., 12, 42))
+    State.WARN
 
     """
     if crit is not None and value >= crit:
@@ -138,19 +138,19 @@ def check_element(
 ) -> CheckResult:
     """Yield a check result and metric for one memory element
 
-        >>> result, metric = check_element(
-        ...     label="Short term memory",
-        ...     used=46,
-        ...     total=200.,
-        ...     levels=("perc_used", (12, 42)),
-        ...     create_percent_metric=True,
-        ... )
-        >>> print(result.summary)
-        Short term memory: 23.00% - 46 B of 200 B (warn/crit at 12.00%/42.00% used)
-        >>> print(result.state)
-        State.WARN
-        >>> print(metric)
-        Metric('mem_used_percent', 23.0, levels=(12.0, 42.0), boundaries=(0.0, None))
+    >>> result, metric = check_element(
+    ...     label="Short term memory",
+    ...     used=46,
+    ...     total=200.,
+    ...     levels=("perc_used", (12, 42)),
+    ...     create_percent_metric=True,
+    ... )
+    >>> print(result.summary)
+    Short term memory: 23.00% - 46 B of 200 B (warn/crit at 12.00%/42.00% used)
+    >>> print(result.state)
+    State.WARN
+    >>> print(metric)
+    Metric('mem_used_percent', 23.0, levels=(12.0, 42.0), boundaries=(0.0, None))
 
     """
     if show_free:

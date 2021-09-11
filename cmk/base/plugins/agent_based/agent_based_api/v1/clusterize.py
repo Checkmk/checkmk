@@ -7,5 +7,5 @@
 from cmk.base.api.agent_based.clusterize import make_node_notice_results
 
 __all__ = [
-    'make_node_notice_results',
+    "make_node_notice_results",
 ]

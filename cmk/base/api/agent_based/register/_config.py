@@ -37,8 +37,9 @@ stored_rulesets: Dict[RuleSetName, List[Dict[str, Any]]] = {}
 # Lookup table for optimizing validate_check_ruleset_item_consistency()
 _check_plugins_by_ruleset_name: Dict[Optional[RuleSetName], List[CheckPlugin]] = defaultdict(list)
 
-_sections_by_parsed_name: Dict[ParsedSectionName, Dict[SectionName,
-                                                       SectionPlugin]] = defaultdict(dict)
+_sections_by_parsed_name: Dict[ParsedSectionName, Dict[SectionName, SectionPlugin]] = defaultdict(
+    dict
+)
 
 
 def add_check_plugin(check_plugin: CheckPlugin) -> None:
@@ -61,7 +62,8 @@ def add_inventory_plugin(inventory_plugin: InventoryPlugin) -> None:
 
 def add_section_plugin(section_plugin: SectionPlugin) -> None:
     _sections_by_parsed_name[section_plugin.parsed_section_name][
-        section_plugin.name] = section_plugin
+        section_plugin.name
+    ] = section_plugin
     if isinstance(section_plugin, AgentSectionPlugin):
         registered_agent_sections[section_plugin.name] = section_plugin
     else:
@@ -98,8 +100,7 @@ def get_host_label_ruleset(ruleset_name: RuleSetName) -> List[Dict[str, Any]]:
 
 
 def get_inventory_plugin(plugin_name: InventoryPluginName) -> Optional[InventoryPlugin]:
-    """Returns the registered inventory plugin
-    """
+    """Returns the registered inventory plugin"""
     return registered_inventory_plugins.get(plugin_name)
 
 
@@ -122,14 +123,18 @@ def get_relevant_raw_sections(
             parsed_section_names.update(inventory_plugin.sections)
 
     return {
-        section_name: section for parsed_name in parsed_section_names
+        section_name: section
+        for parsed_name in parsed_section_names
         for section_name, section in _sections_by_parsed_name[parsed_name].items()
     }
 
 
 def get_section_plugin(section_name: SectionName) -> SectionPlugin:
-    return (registered_agent_sections.get(section_name) or
-            registered_snmp_sections.get(section_name) or trivial_section_factory(section_name))
+    return (
+        registered_agent_sections.get(section_name)
+        or registered_snmp_sections.get(section_name)
+        or trivial_section_factory(section_name)
+    )
 
 
 def get_section_producers(parsed_section_name: ParsedSectionName) -> Set[SectionName]:

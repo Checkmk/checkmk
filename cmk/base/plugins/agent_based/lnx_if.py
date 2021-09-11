@@ -58,7 +58,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
     ip_stats: SectionInventory = {}
     iface = None
     for line in lines:
-        if line == ['[end_iplink]']:
+        if line == ["[end_iplink]"]:
             break
 
         if line[0].endswith(":") and line[1].endswith(":"):
@@ -73,7 +73,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
         if not iface:
             continue
 
-        if line[0].startswith('link/'):
+        if line[0].startswith("link/"):
             # link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
             # link/none
             try:
@@ -82,7 +82,7 @@ def _parse_lnx_if_ipaddress(lines: Iterable[Sequence[str]]) -> SectionInventory:
             except IndexError:
                 pass
 
-        elif line[0].startswith('inet'):
+        elif line[0].startswith("inet"):
             if "temporary" in line and "dynamic" in line:
                 continue
             # inet 127.0.0.1/8 scope host lo
@@ -111,7 +111,7 @@ def _parse_lnx_if_sections(string_table: type_defs.StringTable):
             iface.update({"counters": list(map(int, line[1].strip().split()))})
             continue
 
-        elif line[0].startswith('[') and line[0].endswith(']'):
+        elif line[0].startswith("[") and line[0].endswith("]"):
             # Parse 'ethtool' output
             # [IF_NAME]
             #       KEY: VAL
@@ -157,7 +157,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
         if speed_text is None:
             ifSpeed = 0
         else:
-            if speed_text == '65535Mb/s':  # unknown
+            if speed_text == "65535Mb/s":  # unknown
                 ifSpeed = 0
             elif speed_text.endswith("Kb/s"):
                 ifSpeed = int(float(speed_text[:-4])) * 1000
@@ -194,7 +194,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
             # No information from ethtool. We consider interfaces up
             # if they have been used at least some time since the
             # system boot.
-            state_infos = attr.get('state_infos')
+            state_infos = attr.get("state_infos")
             if state_infos is None:
                 if ifInOctets > 0:
                     ifOperStatus = 1  # assume up
@@ -216,7 +216,7 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
             # is an integer, eg. '1910236'; especially on OpenBSD.
             ifPhysAddress = interfaces.mac_address_from_hexstring(raw_phys_address)
         else:
-            ifPhysAddress = ''
+            ifPhysAddress = ""
 
         if_table.append(
             interfaces.Interface(
@@ -240,7 +240,8 @@ def parse_lnx_if(string_table: type_defs.StringTable) -> Section:
                 out_qlen=ifOutQLen,
                 alias=ifAlias,
                 phys_address=ifPhysAddress,
-            ))
+            )
+        )
 
     return if_table, ip_stats
 

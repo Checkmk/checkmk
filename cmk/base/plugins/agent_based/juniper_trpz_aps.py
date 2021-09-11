@@ -27,8 +27,8 @@ def discovery_juniper_trpz_aps(section: Section) -> DiscoveryResult:
 def _check_common_juniper_trpz_aps(node_name: str, section: Section) -> CheckResult:
     yield Result(
         state=state.OK,
-        summary="%sOnline access points: %d, Sessions: %d" %
-        (node_name and "[%s] " % node_name, section[0], section[1]),
+        summary="%sOnline access points: %d, Sessions: %d"
+        % (node_name and "[%s] " % node_name, section[0], section[1]),
     )
 
 
@@ -40,8 +40,8 @@ def check_juniper_trpz_aps(section: Section) -> CheckResult:
     Metric('total_sessions', 0.0)
     Result(state=<State.OK: 0>, summary='Online access points: 1, Sessions: 0')
     """
-    yield Metric('ap_devices_total', section[0])
-    yield Metric('total_sessions', section[1])
+    yield Metric("ap_devices_total", section[0])
+    yield Metric("total_sessions", section[1])
     yield from _check_common_juniper_trpz_aps("", section)
 
 
@@ -63,8 +63,8 @@ def cluster_check_juniper_trpz_aps(section: Mapping[str, Section]) -> CheckResul
             state=state.OK,
             summary="Total: %d access points, Sessions: %d" % (total_aps, total_sessions),
         )
-    yield Metric('ap_devices_total', total_aps)
-    yield Metric('total_sessions', total_sessions)
+    yield Metric("ap_devices_total", total_aps)
+    yield Metric("total_sessions", total_sessions)
 
     for node_name, node_section in section.items():
         yield from _check_common_juniper_trpz_aps(node_name, node_section)
@@ -72,8 +72,10 @@ def cluster_check_juniper_trpz_aps(section: Mapping[str, Section]) -> CheckResul
 
 register.snmp_section(
     name="juniper_trpz_aps",
-    detect=any_of(startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.1"),
-                  startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.3")),
+    detect=any_of(
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.1"),
+        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14525.3.3"),
+    ),
     parse_function=parse_juniper_trpz_aps,
     fetch=[
         SNMPTree(
@@ -81,7 +83,8 @@ register.snmp_section(
             oids=[
                 "5.1.1.1",  # number of active access points
                 "4.1.1.4",  # number of sessions on active access points
-            ]),
+            ],
+        ),
     ],
 )
 

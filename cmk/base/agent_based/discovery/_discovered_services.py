@@ -73,7 +73,8 @@ def _analyse_discovered_services(
 
     return QualifiedDiscovery(
         preexisting=existing_services,
-        current=discovered_services + _services_to_keep(
+        current=discovered_services
+        + _services_to_keep(
             choose_from=existing_services,
             run_plugin_names=run_plugin_names,
             only_new=only_new,
@@ -95,9 +96,9 @@ def _services_to_keep(
     if not only_new:
         if run_plugin_names is EVERYTHING:
             return []
-    # 2. -II with --plugins=
-    #        check_plugin_names is not empty, only_new is False
-    #    --> keep all services of other plugins
+        # 2. -II with --plugins=
+        #        check_plugin_names is not empty, only_new is False
+        #    --> keep all services of other plugins
         return [s for s in choose_from if s.check_plugin_name not in run_plugin_names]
     # 3. -I
     #    --> just add new services
@@ -150,15 +151,18 @@ def _discover_services(
         with plugin_contexts.current_host(host_name):
             for check_plugin_name in plugin_candidates:
                 try:
-                    service_table.update({
-                        service.id(): service for service in _discover_plugins_services(
-                            check_plugin_name=check_plugin_name,
-                            host_name=host_name,
-                            ipaddress=ipaddress,
-                            parsed_sections_broker=parsed_sections_broker,
-                            on_error=on_error,
-                        )
-                    })
+                    service_table.update(
+                        {
+                            service.id(): service
+                            for service in _discover_plugins_services(
+                                check_plugin_name=check_plugin_name,
+                                host_name=host_name,
+                                ipaddress=ipaddress,
+                                parsed_sections_broker=parsed_sections_broker,
+                                on_error=on_error,
+                            )
+                        }
+                    )
                 except (KeyboardInterrupt, MKTimeout):
                     raise
                 except Exception as e:
@@ -200,12 +204,14 @@ def _find_candidates(
         ]
 
     parsed_sections_of_interest = {
-        parsed_section_name for plugin in preliminary_candidates
+        parsed_section_name
+        for plugin in preliminary_candidates
         for parsed_section_name in plugin.sections
     }
 
-    return (_find_host_candidates(broker, preliminary_candidates, parsed_sections_of_interest) |
-            _find_mgmt_candidates(broker, preliminary_candidates, parsed_sections_of_interest))
+    return _find_host_candidates(
+        broker, preliminary_candidates, parsed_sections_of_interest
+    ) | _find_mgmt_candidates(broker, preliminary_candidates, parsed_sections_of_interest)
 
 
 def _find_host_candidates(
@@ -223,8 +229,8 @@ def _find_host_candidates(
         plugin.name
         for plugin in preliminary_candidates
         # *filter out* all names of management only check plugins
-        if not plugin.name.is_management_name() and any(
-            section in available_parsed_sections for section in plugin.sections)
+        if not plugin.name.is_management_name()
+        and any(section in available_parsed_sections for section in plugin.sections)
     }
 
 
@@ -294,8 +300,10 @@ def _discover_plugins_services(
         if on_error is OnError.RAISE:
             raise
         if on_error is OnError.WARN:
-            console.warning("  Exception in discovery function of check plugin '%s': %s" %
-                            (check_plugin.name, e))
+            console.warning(
+                "  Exception in discovery function of check plugin '%s': %s"
+                % (check_plugin.name, e)
+            )
 
 
 def _enriched_discovered_services(

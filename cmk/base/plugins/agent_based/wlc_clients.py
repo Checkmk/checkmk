@@ -35,17 +35,21 @@ def check_wlc_clients(
             total_number_of_clients = clients_ssid.total
         else:
             total_number_of_clients = sum(clients_ssid.per_interface.values())
-            description = "({})".format(", ".join(  #
-                f"{interface}: {number_of_clients}"  #
-                for interface, number_of_clients  #
-                in clients_ssid.per_interface.items()))
+            description = "({})".format(
+                ", ".join(  #
+                    f"{interface}: {number_of_clients}"  #
+                    for interface, number_of_clients in clients_ssid.per_interface.items()  #
+                )
+            )
 
-    yield from check_levels(total_number_of_clients,
-                            levels_upper=params.get("levels"),
-                            levels_lower=params.get("levels_lower"),
-                            metric_name="connections",
-                            label="Connections",
-                            render_func=lambda value: str(int(value)))
+    yield from check_levels(
+        total_number_of_clients,
+        levels_upper=params.get("levels"),
+        levels_lower=params.get("levels_lower"),
+        metric_name="connections",
+        label="Connections",
+        render_func=lambda value: str(int(value)),
+    )
     if description:
         yield Result(state=State.OK, summary=description)
 

@@ -15,21 +15,21 @@ SectionDatabases = Dict[str, Dict[str, str]]
 
 def parse_mssql_databases(string_table: StringTable) -> SectionDatabases:
     """
-        >>> from pprint import pprint
-        >>> pprint(parse_mssql_databases([
-        ...     ['MSSQL_MSSQL46', 'CorreLog_Report_T', 'ONLINE', 'FULL', '0', '0'],
-        ... ]))
-        {'MSSQL_MSSQL46 CorreLog_Report_T': {'DBname': 'CorreLog_Report_T',
-                                             'Instance': 'MSSQL_MSSQL46',
-                                             'Recovery': 'FULL',
-                                             'Status': 'ONLINE',
-                                             'auto_close': '0',
-                                             'auto_shrink': '0'}}
+    >>> from pprint import pprint
+    >>> pprint(parse_mssql_databases([
+    ...     ['MSSQL_MSSQL46', 'CorreLog_Report_T', 'ONLINE', 'FULL', '0', '0'],
+    ... ]))
+    {'MSSQL_MSSQL46 CorreLog_Report_T': {'DBname': 'CorreLog_Report_T',
+                                         'Instance': 'MSSQL_MSSQL46',
+                                         'Recovery': 'FULL',
+                                         'Status': 'ONLINE',
+                                         'auto_close': '0',
+                                         'auto_shrink': '0'}}
 
     """
 
     parsed: SectionDatabases = {}
-    headers = ['Instance', 'DBname', 'Status', 'Recovery', 'auto_close', 'auto_shrink']
+    headers = ["Instance", "DBname", "Status", "Recovery", "auto_close", "auto_shrink"]
 
     for line in string_table:
         if line == headers:
@@ -77,13 +77,13 @@ def check_mssql_databases(
         yield Result(state=state.CRIT, summary=db_state[7:])
         return
     state_int = params.get("map_db_states", {}).get(db_state.replace(" ", "_").upper(), 0)
-    yield Result(state=state(state_int), summary='Status: %s' % db_state)
-    yield Result(state=state.OK, summary='Recovery: %s' % data["Recovery"])
+    yield Result(state=state(state_int), summary="Status: %s" % db_state)
+    yield Result(state=state.OK, summary="Recovery: %s" % data["Recovery"])
 
     for what in ["close", "shrink"]:
         state_int, state_readable = map_states[data["auto_%s" % what]]
         state_int = params.get("map_auto_%s_state" % what, {}).get(state_readable, state_int)
-        yield Result(state=state(state_int), summary='Auto %s: %s' % (what, state_readable))
+        yield Result(state=state(state_int), summary="Auto %s: %s" % (what, state_readable))
 
 
 def cluster_check_mssql_databases(
@@ -99,11 +99,11 @@ def cluster_check_mssql_databases(
 
 
 register.check_plugin(
-    name='mssql_databases',
-    service_name='MSSQL %s Database',
+    name="mssql_databases",
+    service_name="MSSQL %s Database",
     discovery_function=discover_mssql_databases,
     check_function=check_mssql_databases,
     check_default_parameters={},
-    check_ruleset_name='mssql_databases',
+    check_ruleset_name="mssql_databases",
     cluster_check_function=cluster_check_mssql_databases,
 )

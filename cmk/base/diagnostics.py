@@ -99,7 +99,7 @@ def _format_error(error):
     return "%s%s - %s" % (2 * _GAP, tty.error, error)
 
 
-#.
+# .
 #   .--dump----------------------------------------------------------------.
 #   |                         _                                            |
 #   |                      __| |_   _ _ __ ___  _ __                       |
@@ -112,6 +112,7 @@ def _format_error(error):
 
 class DiagnosticsDump:
     """Caring about the persistance of diagnostics dumps in the local site"""
+
     _keep_num_dumps = 5
 
     def __init__(self, parameters: Optional[DiagnosticsOptionalParameters] = None) -> None:
@@ -124,14 +125,14 @@ class DiagnosticsDump:
         self.tarfile_path = dump_folder.joinpath(str(uuid.uuid4())).with_suffix(SUFFIX)
         self.tarfile_created = False
 
-    def _get_fixed_elements(self) -> 'List[ABCDiagnosticsElement]':
+    def _get_fixed_elements(self) -> "List[ABCDiagnosticsElement]":
         return [
             GeneralDiagnosticsElement(),
         ]
 
     def _get_optional_elements(
-            self,
-            parameters: Optional[DiagnosticsOptionalParameters]) -> 'List[ABCDiagnosticsElement]':
+        self, parameters: Optional[DiagnosticsOptionalParameters]
+    ) -> "List[ABCDiagnosticsElement]":
         if parameters is None:
             return []
 
@@ -169,8 +170,9 @@ class DiagnosticsDump:
         self.dump_folder.mkdir(parents=True, exist_ok=True)
 
     def _create_tarfile(self) -> None:
-        with tarfile.open(name=self.tarfile_path, mode='w:gz') as tar,\
-             tempfile.TemporaryDirectory(dir=self.dump_folder) as tmp_dump_folder:
+        with tarfile.open(name=self.tarfile_path, mode="w:gz") as tar, tempfile.TemporaryDirectory(
+            dir=self.dump_folder
+        ) as tmp_dump_folder:
             for filepath in self._get_filepaths(Path(tmp_dump_folder)):
                 tar.add(str(filepath), arcname=filepath.name)
                 self.tarfile_created = True
@@ -206,10 +208,12 @@ class DiagnosticsDump:
 
         dumps = sorted(
             [(dump.stat().st_mtime, dump) for dump in self.dump_folder.glob("*%s" % SUFFIX)],
-            key=lambda t: t[0])[:-self._keep_num_dumps]
+            key=lambda t: t[0],
+        )[: -self._keep_num_dumps]
 
-        section.section_step("Cleanup dump folder",
-                             add_info="keep last %d dumps" % self._keep_num_dumps)
+        section.section_step(
+            "Cleanup dump folder", add_info="keep last %d dumps" % self._keep_num_dumps
+        )
         for _mtime, filepath in dumps:
             console.verbose("%s\n", _format_filepath(filepath))
             self._remove_file(filepath)
@@ -222,7 +226,7 @@ class DiagnosticsDump:
                 raise
 
 
-#.
+# .
 #   .--collectors----------------------------------------------------------.
 #   |                        _ _           _                               |
 #   |               ___ ___ | | | ___  ___| |_ ___  _ __ ___               |
@@ -247,6 +251,7 @@ class Collectors:
 
 class ABCCollector(abc.ABC):
     """Collects information which are used by several elements"""
+
     def __init__(self):
         self._has_collected = False
         self._infos = None
@@ -269,8 +274,9 @@ class OMDConfigCollector(ABCCollector):
 
 class CheckmkServerNameCollector(ABCCollector):
     def _collect_infos(self) -> Optional[HostName]:
-        query = ("GET hosts\nColumns: host_name\n"
-                 "Filter: host_labels = 'cmk/check_mk_server' 'yes'\n")
+        query = (
+            "GET hosts\nColumns: host_name\nFilter: host_labels = 'cmk/check_mk_server' 'yes'\n"
+        )
         result = livestatus.LocalConnection().query(query)
         try:
             return HostName(result[0][0])
@@ -278,7 +284,7 @@ class CheckmkServerNameCollector(ABCCollector):
             return None
 
 
-#.
+# .
 #   .--elements------------------------------------------------------------.
 #   |                   _                           _                      |
 #   |               ___| | ___ _ __ ___   ___ _ __ | |_ ___                |
@@ -310,8 +316,9 @@ class ABCDiagnosticsElement(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def add_or_get_files(self, tmp_dump_folder: Path,
-                         collectors: Collectors) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(
+        self, tmp_dump_folder: Path, collectors: Collectors
+    ) -> DiagnosticsElementFilepaths:
         # Please note the case if there are more than one filepath results. A Python generator
         # is executed until the first raise. Then it will be stopped and all generator states
         # are gone. Correctly calculated filepaths till then are yielded.
@@ -320,8 +327,9 @@ class ABCDiagnosticsElement(abc.ABC):
 
 
 class ABCDiagnosticsElementJSONDump(ABCDiagnosticsElement):
-    def add_or_get_files(self, tmp_dump_folder: Path,
-                         collectors: Collectors) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(
+        self, tmp_dump_folder: Path, collectors: Collectors
+    ) -> DiagnosticsElementFilepaths:
         infos = self._collect_infos(collectors)
         if not infos:
             raise DiagnosticsElementError("No information")
@@ -349,8 +357,9 @@ class GeneralDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     @property
     def description(self) -> str:
-        return _("OS, Checkmk version and edition, Time, Core, "
-                 "Python version and paths, Architecture")
+        return _(
+            "OS, Checkmk version and edition, Time, Core, " "Python version and paths, Architecture"
+        )
 
     def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
         version_infos = cmk_version.get_general_version_infos()
@@ -371,8 +380,10 @@ class LocalFilesDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     @property
     def description(self) -> str:
-        return _("List of installed, unpacked, optional files below $OMD_ROOT/local. "
-                 "This also includes information about installed MKPs.")
+        return _(
+            "List of installed, unpacked, optional files below $OMD_ROOT/local. "
+            "This also includes information about installed MKPs."
+        )
 
     def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
         return packaging.get_all_package_infos()
@@ -389,10 +400,12 @@ class OMDConfigDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     @property
     def description(self) -> str:
-        return _("Apache mode and TCP address and port, Core, "
-                 "Liveproxy daemon and livestatus TCP mode, "
-                 "Event daemon config, Multiste authorisation, "
-                 "NSCA mode, TMP filesystem mode")
+        return _(
+            "Apache mode and TCP address and port, Core, "
+            "Liveproxy daemon and livestatus TCP mode, "
+            "Event daemon config, Multiste authorisation, "
+            "NSCA mode, TMP filesystem mode"
+        )
 
     def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
         return collectors.get_omd_config()
@@ -409,11 +422,13 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     @property
     def description(self) -> str:
-        return _("Checkmk Agent, Number, version and edition of sites, Cluster host; "
-                 "Number of hosts, services, CMK Helper, Live Helper, "
-                 "Helper usage; State of daemons: Apache, Core, Crontag, "
-                 "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-                 "(Agent plugin mk_inventory needs to be installed)")
+        return _(
+            "Checkmk Agent, Number, version and edition of sites, Cluster host; "
+            "Number of hosts, services, CMK Helper, Live Helper, "
+            "Helper usage; State of daemons: Apache, Core, Crontag, "
+            "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
+            "(Agent plugin mk_inventory needs to be installed)"
+        )
 
     def _collect_infos(self, collectors: Collectors) -> DiagnosticsElementJSONResult:
         checkmk_server_name = collectors.get_checkmk_server_name()
@@ -424,8 +439,9 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
         try:
             tree = inventory_store.load(host_name=checkmk_server_name)
         except FileNotFoundError:
-            raise DiagnosticsElementError("No HW/SW inventory tree of '%s' found" %
-                                          checkmk_server_name)
+            raise DiagnosticsElementError(
+                "No HW/SW inventory tree of '%s' found" % checkmk_server_name
+            )
 
         infos = {}
         attrs = tree.get_attributes(["software", "applications", "check_mk"])
@@ -438,7 +454,8 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
         if not infos:
             raise DiagnosticsElementError(
-                "No HW/SW inventory node 'Software > Applications > Checkmk'")
+                "No HW/SW inventory node 'Software > Applications > Checkmk'"
+            )
         return infos
 
 
@@ -454,8 +471,9 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
     def _checkmk_files_map(self) -> CheckmkFilesMap:
         raise NotImplementedError
 
-    def add_or_get_files(self, tmp_dump_folder: Path,
-                         collectors: Collectors) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(
+        self, tmp_dump_folder: Path, collectors: Collectors
+    ) -> DiagnosticsElementFilepaths:
         checkmk_files_map = self._checkmk_files_map
         unknown_files = []
         for rel_filepath in self.rel_checkmk_files:
@@ -497,7 +515,8 @@ class CheckmkConfigFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @property
     def description(self) -> str:
         return _("Configuration files ('*.mk' or '*.conf') from etc/checkmk: %s") % ", ".join(
-            self.rel_checkmk_files)
+            self.rel_checkmk_files
+        )
 
     @property
     def _checkmk_files_map(self) -> CheckmkFilesMap:
@@ -517,7 +536,8 @@ class CheckmkLogFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
     @property
     def description(self) -> str:
         return _("Log files ('*.log' or '*.state') from var/log: %s") % ", ".join(
-            self.rel_checkmk_files)
+            self.rel_checkmk_files
+        )
 
     @property
     def _checkmk_files_map(self) -> CheckmkFilesMap:
@@ -538,12 +558,15 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
 
     @property
     def description(self) -> str:
-        return _("CPU load and utilization, Number of threads, Kernel Performance, "
-                 "OMD, Filesystem, Apache Status, TCP Connections of the time ranges "
-                 "25 hours and 35 days")
+        return _(
+            "CPU load and utilization, Number of threads, Kernel Performance, "
+            "OMD, Filesystem, Apache Status, TCP Connections of the time ranges "
+            "25 hours and 35 days"
+        )
 
-    def add_or_get_files(self, tmp_dump_folder: Path,
-                         collectors: Collectors) -> DiagnosticsElementFilepaths:
+    def add_or_get_files(
+        self, tmp_dump_folder: Path, collectors: Collectors
+    ) -> DiagnosticsElementFilepaths:
         checkmk_server_name = collectors.get_checkmk_server_name()
         if checkmk_server_name is None:
             raise DiagnosticsElementError("No Checkmk server found")
@@ -551,8 +574,9 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
         response = self._get_response(checkmk_server_name, collectors)
 
         if response.status_code != 200:
-            raise DiagnosticsElementError("HTTP error - %d (%s)" %
-                                          (response.status_code, response.text))
+            raise DiagnosticsElementError(
+                "HTTP error - %d (%s)" % (response.status_code, response.text)
+            )
 
         if "<html>" in response.text.lower():
             raise DiagnosticsElementError("Login failed - Invalid automation user or secret")
@@ -576,17 +600,20 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             omd_config["CONFIG_APACHE_TCP_ADDR"],
             omd_config["CONFIG_APACHE_TCP_PORT"],
             omd_site(),
-        ) + urllib.parse.urlencode([
-            ("_username", "automation"),
-            ("_secret", automation_secret),
-            ("host", checkmk_server_name),
-            ("name", "host_performance_graphs"),
-        ])
+        ) + urllib.parse.urlencode(
+            [
+                ("_username", "automation"),
+                ("_secret", automation_secret),
+                ("host", checkmk_server_name),
+                ("name", "host_performance_graphs"),
+            ]
+        )
 
         return requests.post(url, verify=False)  # nosec
 
     def _get_automation_secret(self) -> str:
-        automation_secret_filepath = Path(
-            cmk.utils.paths.var_dir).joinpath("web/automation/automation.secret")
+        automation_secret_filepath = Path(cmk.utils.paths.var_dir).joinpath(
+            "web/automation/automation.secret"
+        )
         with automation_secret_filepath.open("r", encoding="utf-8") as f:
             return f.read().strip()

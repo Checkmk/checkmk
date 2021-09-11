@@ -26,7 +26,7 @@ register.snmp_section(
         ),
     ],
     detect=if64.HAS_ifHCInOctets,
-    supersedes=['if', 'statgrab_net'],
+    supersedes=["if", "statgrab_net"],
 )
 
 # Note: This section is by default deactivated (hard-coded in
@@ -107,7 +107,7 @@ def cluster_check_if64(
 
 register.check_plugin(
     name="if64",
-    sections=['if64', 'if64adm'],
+    sections=["if64", "if64adm"],
     service_name="Interface %s",
     discovery_ruleset_name="inventory_if_rules",
     discovery_ruleset_type=register.RuleSetType.ALL,

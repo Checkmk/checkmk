@@ -37,8 +37,9 @@ from cmk.base.check_api import (
 Levels = Tuple[float, float]
 
 
-def _check_shrinking(trend: float, levels: Optional[Levels], range_hours: float,
-                     renderer: Callable[..., str]) -> Tuple[int, str]:
+def _check_shrinking(
+    trend: float, levels: Optional[Levels], range_hours: float, renderer: Callable[..., str]
+) -> Tuple[int, str]:
     """test for negative trend
     >>> _check_shrinking(5, (1, 2), 7, lambda _: "foo")
     (0, '')
@@ -111,10 +112,13 @@ def size_trend(
       returned.
     """
 
-    perfdata: List[Union[  #
-        Tuple[str, float],  #
-        Tuple[str, float, Optional[float], Optional[float], Optional[float], Optional[float]]]]
-    state, infotext, perfdata, problems = 0, '', [], []
+    perfdata: List[
+        Union[  #
+            Tuple[str, float],  #
+            Tuple[str, float, Optional[float], Optional[float], Optional[float], Optional[float]],
+        ]
+    ]
+    state, infotext, perfdata, problems = 0, "", [], []
 
     MB = 1024.0 * 1024.0
     H24 = 60 * 60 * 24
@@ -126,14 +130,12 @@ def size_trend(
 
     # compute current rate in MB/s by computing delta since last check
     try:
-        rate = get_rate("%s.%s.delta" % (check, item),
-                        timestamp,
-                        used_mb,
-                        allow_negative=True,
-                        onwrap=RAISE)
+        rate = get_rate(
+            "%s.%s.delta" % (check, item), timestamp, used_mb, allow_negative=True, onwrap=RAISE
+        )
     except MKCounterWrapped:
         # need more data for computing a trend
-        return 0, '', []
+        return 0, "", []
 
     if levels.get("trend_perfdata"):
         perfdata.append(("growth", rate * H24))
@@ -142,9 +144,12 @@ def size_trend(
     rate_avg = get_average("%s.%s.trend" % (check, item), timestamp, rate, range_sec / 60.0)
 
     trend = rate_avg * range_sec
-    sign = '+' if trend > 0 else ""
-    infotext += ", trend: %s%s / %g hours" % \
-        (sign, get_bytes_human_readable(trend * MB), range_hours)
+    sign = "+" if trend > 0 else ""
+    infotext += ", trend: %s%s / %g hours" % (
+        sign,
+        get_bytes_human_readable(trend * MB),
+        range_hours,
+    )
 
     # levels for performance data
     warn_perf: Optional[float] = None
@@ -156,11 +161,14 @@ def size_trend(
         wa, cr = trend_bytes
         warn_perf, crit_perf = wa / MB, cr / MB
         if trend * MB >= wa:
-            problems.append("growing too fast (warn/crit at %s/%s per %.1f h)(!" % (
-                get_bytes_human_readable(wa),
-                get_bytes_human_readable(cr),
-                range_hours,
-            ))
+            problems.append(
+                "growing too fast (warn/crit at %s/%s per %.1f h)(!"
+                % (
+                    get_bytes_human_readable(wa),
+                    get_bytes_human_readable(cr),
+                    range_hours,
+                )
+            )
             state = max(1, state)
             if trend * MB >= cr:
                 state = 2
@@ -190,11 +198,14 @@ def size_trend(
         else:
             warn_perf, crit_perf = wa, cr
         if trend >= wa:
-            problems.append("growing too fast (warn/crit at %s/%s per %.1f h)(!" % (
-                get_percent_human_readable(wa_perc),
-                get_percent_human_readable(cr_perc),
-                range_hours,
-            ))
+            problems.append(
+                "growing too fast (warn/crit at %s/%s per %.1f h)(!"
+                % (
+                    get_percent_human_readable(wa_perc),
+                    get_percent_human_readable(cr_perc),
+                    range_hours,
+                )
+            )
             state = max(1, state)
             if trend >= cr:
                 state = 2
@@ -249,14 +260,16 @@ def size_trend(
             problems.append("time left until %s full: %s" % (resource, hours_txt))
 
     if levels.get("trend_perfdata"):
-        perfdata.append((
-            "trend",
-            rate_avg * H24,
-            (warn_perf / range_sec * H24) if warn_perf is not None else None,
-            (crit_perf / range_sec * H24) if crit_perf is not None else None,
-            0,
-            1.0 * size_mb / range_hours,
-        ))
+        perfdata.append(
+            (
+                "trend",
+                rate_avg * H24,
+                (warn_perf / range_sec * H24) if warn_perf is not None else None,
+                (crit_perf / range_sec * H24) if crit_perf is not None else None,
+                0,
+                1.0 * size_mb / range_hours,
+            )
+        )
 
     if levels.get("trend_showtimeleft"):
         perfdata.append(("trend_hoursleft", hours_left))

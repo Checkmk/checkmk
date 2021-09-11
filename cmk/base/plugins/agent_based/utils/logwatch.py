@@ -29,18 +29,20 @@ from typing import (
     TypedDict,
 )
 
+from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
+    get_checkgroup_parameters,
+    host_extra_conf,
+    host_name,
+)
+
 from ..agent_based_api.v1 import regex, Result
 from ..agent_based_api.v1 import State as state
-
-from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation # isort: skip
-    get_checkgroup_parameters, host_extra_conf, host_name,
-)
 
 ItemData = TypedDict(
     "ItemData",
     {
-        'attr': str,
-        'lines': List[str],
+        "attr": str,
+        "lines": List[str],
     },
     total=True,
 )
@@ -55,24 +57,28 @@ def get_ec_rule_params():
     """Isolate the remaining API violation w.r.t. parameters"""
     return host_extra_conf(
         host_name(),
-        get_checkgroup_parameters('logwatch_ec', []),
+        get_checkgroup_parameters("logwatch_ec", []),
     )
 
 
 def discoverable_items(*sections: Section) -> List[str]:
     """only consider files which are 'ok' on at least one node"""
-    return sorted({
-        item for node_data in sections for item, item_data in node_data.logfiles.items()
-        if item_data['attr'] == 'ok'
-    })
+    return sorted(
+        {
+            item
+            for node_data in sections
+            for item, item_data in node_data.logfiles.items()
+            if item_data["attr"] == "ok"
+        }
+    )
 
 
 def ec_forwarding_enabled(params: Mapping[str, Any], item: str) -> bool:
-    if 'restrict_logfiles' not in params:
+    if "restrict_logfiles" not in params:
         return True  # matches all logs on this host
 
     # only logs which match the specified patterns
-    return any(re.match(pattern, item) for pattern in params['restrict_logfiles'])
+    return any(re.match(pattern, item) for pattern in params["restrict_logfiles"])
 
 
 def select_forwarded(
@@ -111,8 +117,8 @@ def reclassify(
                 newcount = counts[id(pattern)] + 1
                 counts[id(pattern)] = newcount
                 if newcount >= crit:
-                    return 'C'
-                return 'W' if newcount >= warn else 'I'
+                    return "C"
+                return "W" if newcount >= warn else "I"
             return level
 
     # Reclassify state to another state
@@ -122,14 +128,14 @@ def reclassify(
 
 def check_errors(cluster_section: Mapping[Optional[str], Section]) -> Iterable[Result]:
     """
-        >>> cluster_section = {
-        ...     None: Section(errors=["error w/o node info"], logfiles={}),
-        ...     "node": Section(errors=["some error"], logfiles={}),
-        ... }
-        >>> for r in check_errors(cluster_section):
-        ...     print((r.state, r.summary))
-        (<State.UNKNOWN: 3>, 'error w/o node info')
-        (<State.UNKNOWN: 3>, '[node] some error')
+    >>> cluster_section = {
+    ...     None: Section(errors=["error w/o node info"], logfiles={}),
+    ...     "node": Section(errors=["some error"], logfiles={}),
+    ... }
+    >>> for r in check_errors(cluster_section):
+    ...     print((r.state, r.summary))
+    (<State.UNKNOWN: 3>, 'error w/o node info')
+    (<State.UNKNOWN: 3>, '[node] some error')
     """
     for node, node_data in cluster_section.items():
         for error_msg in node_data.errors:

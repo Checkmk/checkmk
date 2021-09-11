@@ -34,8 +34,12 @@ def _reformat_line(line: List[str]) -> List[str]:
     # Handle known cases, where the file system contains spaces
     for index, entry in enumerate(line):
         if entry == "NTFS":
-            line = [" ".join(line[:index])
-                   ] + [line[index]] + line[index + 1:index + 5] + [" ".join(line[index + 5:])]
+            line = (
+                [" ".join(line[:index])]
+                + [line[index]]
+                + line[index + 1 : index + 5]
+                + [" ".join(line[index + 5 :])]
+            )
             break
 
     if line[2] == "File" and line[3] == "System":
@@ -59,7 +63,7 @@ def _processed(
         mountpoint = ""
     else:
         # Windows \ is replaced with /
-        mountpoint = " ".join(rest).replace('\\', '/')
+        mountpoint = " ".join(rest).replace("\\", "/")
 
     # Beware: the 6th column of df ("used perc") may includes 5% which are reserved
     # for the superuser, whereas the 4th colum ("used MB") does *not* include that.
@@ -86,22 +90,26 @@ def _processed(
     )
 
 
-def _parse_blocks_subsection(blocks_subsection: StringTable,
-                             device_to_uuid: LsblkMap) -> Tuple[BlocksSubsection, MpToDevice]:
+def _parse_blocks_subsection(
+    blocks_subsection: StringTable, device_to_uuid: LsblkMap
+) -> Tuple[BlocksSubsection, MpToDevice]:
     seen_btrfs_devices: Set[str] = set()
     df_blocks = tuple(
         item  #
         for line in blocks_subsection
         for item in (
-            _processed(_reformat_line(_padded_line(line)), seen_btrfs_devices, device_to_uuid),)
-        if item is not None)
+            _processed(_reformat_line(_padded_line(line)), seen_btrfs_devices, device_to_uuid),
+        )
+        if item is not None
+    )
 
     # Be aware regarding 'mp_to_device': The first entry wins
     return df_blocks, {df_block.mountpoint: df_block.device for df_block in df_blocks}
 
 
-def _parse_inodes_subsection(inodes_subsection: StringTable, mp_to_device: MpToDevice,
-                             device_to_uuid: LsblkMap) -> InodesSubsection:
+def _parse_inodes_subsection(
+    inodes_subsection: StringTable, mp_to_device: MpToDevice, device_to_uuid: LsblkMap
+) -> InodesSubsection:
     def _to_entry(line: Sequence[str]) -> Optional[DfInode]:
         with suppress(ValueError):
             mountpoint = line[-1]
@@ -116,7 +124,8 @@ def _parse_inodes_subsection(inodes_subsection: StringTable, mp_to_device: MpToD
         return None
 
     return tuple(
-        entry for l in inodes_subsection for entry in (_to_entry(_padded_line(l)),) if entry)
+        entry for l in inodes_subsection for entry in (_to_entry(_padded_line(l)),) if entry
+    )
 
 
 def _parse_lsblk_subsection(lsblk_subsection: StringTable) -> LsblkMap:
@@ -191,16 +200,16 @@ def parse_df(string_table: StringTable) -> Tuple[BlocksSubsection, InodesSubsect
     lsblk_subsection: StringTable = []
     current_list = blocks_subsection
     for line in string_table:
-        if line[-1] == '[df_inodes_start]':
+        if line[-1] == "[df_inodes_start]":
             current_list = inodes_subsection
             continue
-        if line[-1] == '[df_inodes_end]':
+        if line[-1] == "[df_inodes_end]":
             current_list = blocks_subsection
             continue
-        if line[-1] == '[df_lsblk_start]':
+        if line[-1] == "[df_lsblk_start]":
             current_list = lsblk_subsection
             continue
-        if line[-1] == '[df_lsblk_end]':
+        if line[-1] == "[df_lsblk_end]":
             current_list = blocks_subsection
             continue
         current_list.append(line)
@@ -213,5 +222,5 @@ def parse_df(string_table: StringTable) -> Tuple[BlocksSubsection, InodesSubsect
 register.agent_section(
     name="df",
     parse_function=parse_df,
-    supersedes=['hr_fs'],
+    supersedes=["hr_fs"],
 )

@@ -55,7 +55,7 @@ class LocalSection(NamedTuple):
 
 
 def float_ignore_uom(value: str) -> float:
-    '''16MB -> 16.0'''
+    """16MB -> 16.0"""
     while value:
         try:
             return float(value)
@@ -83,7 +83,7 @@ def _sanitize_state(raw_state: str) -> Tuple[Union[int, str], str]:
 
 
 def _parse_perfentry(entry: str) -> Perfdata:
-    '''Parse single perfdata entry, syntax is:
+    """Parse single perfdata entry, syntax is:
         NAME=VALUE[;[[WARN_LOWER:]WARN_UPPER][;[[CRIT_LOWER:]CRIT_UPPER][;[MIN][;MAX]]]]
 
     see https://docs.checkmk.com/latest/de/localchecks.html
@@ -111,21 +111,21 @@ def _parse_perfentry(entry: str) -> Perfdata:
     Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=(2.0, 2.0), boundaries=(0.0, None))
     >>> _parse_perfentry("a=5;7;2:8;;20")
     Perfdata(name='a', value=5.0, levels_upper=(7.0, 8.0), levels_lower=(2.0, 2.0), boundaries=(None, 20.0))
-    '''
+    """
     entry = entry.rstrip(";")
-    name, raw_list = entry.split('=', 1)
+    name, raw_list = entry.split("=", 1)
     raw = raw_list.split(";")
     value = float_ignore_uom(raw[0])
 
     # create a check_levels compatible levels quadruple
     levels: List[Optional[float]] = [None] * 4
     if len(raw) >= 2:
-        warn = raw[1].split(':', 1)
+        warn = raw[1].split(":", 1)
         levels[0] = _try_convert_to_float(warn[-1])
         if len(warn) > 1:
             levels[2] = _try_convert_to_float(warn[0])
     if len(raw) >= 3:
-        crit = raw[2].split(':', 1)
+        crit = raw[2].split(":", 1)
         levels[1] = _try_convert_to_float(crit[-1])
         if len(crit) > 1:
             levels[3] = _try_convert_to_float(crit[0])
@@ -138,9 +138,9 @@ def _parse_perfentry(entry: str) -> Perfdata:
 
     # check_levels won't handle crit=None, if warn is present.
     if levels[0] is not None and levels[1] is None:
-        levels[1] = float('inf')
+        levels[1] = float("inf")
     if levels[2] is not None and levels[3] is None:
-        levels[3] = float('-inf')
+        levels[3] = float("-inf")
 
     def optional_tuple(warn: Optional[float], crit: Optional[float]) -> Levels:
         assert (warn is None) == (crit is None)
@@ -161,12 +161,12 @@ def _parse_perfentry(entry: str) -> Perfdata:
 
 
 def _parse_perftxt(string: str) -> Tuple[Iterable[Perfdata], str]:
-    if string == '-':
+    if string == "-":
         return [], ""
 
     perfdata = []
     msg = []
-    for entry in string.split('|'):
+    for entry in string.split("|"):
         try:
             perfdata.append(_parse_perfentry(entry))
         except (ValueError, IndexError):
@@ -198,12 +198,17 @@ def _split_check_result(line: str) -> Optional[Tuple[str, str, str, Optional[str
         r"([^ ]+)"  #                                      - perf data
         r"( +(.*))?"  #                                    - service string
         r"$" % ((forbidden_service_name_characters,) * 3),
-        line)
-    return None if match is None else (
-        match.groups()[0] or "",
-        match.groups()[5] or match.groups()[3] or match.groups()[1] or "",
-        match.groups()[7] or "",
-        match.groups()[9],
+        line,
+    )
+    return (
+        None
+        if match is None
+        else (
+            match.groups()[0] or "",
+            match.groups()[5] or match.groups()[3] or match.groups()[1] or "",
+            match.groups()[7] or "",
+            match.groups()[9],
+        )
     )
 
 
@@ -265,9 +270,12 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
 
         if not raw_result:
             errors.append(
-                LocalError(output=line,
-                           reason="Received empty line. Maybe some of the local checks"
-                           " returns a superfluous newline character."))
+                LocalError(
+                    output=line,
+                    reason="Received empty line. Maybe some of the local checks"
+                    " returns a superfluous newline character.",
+                )
+            )
             continue
 
         raw_components = _split_check_result(raw_result)
@@ -275,10 +283,13 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
             # splitting into raw components didn't work out so the given line must
             # be really crappy
             errors.append(
-                LocalError(output=line,
-                           reason="Received wrong format of local check output. "
-                           "Please read the documentation regarding the correct format: "
-                           "https://docs.checkmk.com/2.0.0/de/localchecks.html"))
+                LocalError(
+                    output=line,
+                    reason="Received wrong format of local check output. "
+                    "Please read the documentation regarding the correct format: "
+                    "https://docs.checkmk.com/2.0.0/de/localchecks.html",
+                )
+            )
             continue
 
         # these are raw components - not checked for validity yet
@@ -304,8 +315,8 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
         parsed_data[item] = LocalResult(
             cache_info=CacheInfo.from_raw(raw_cached, now),
             item=item,
-            state=State.OK if state == 'P' else State(state),
-            apply_levels=state == 'P',
+            state=State.OK if state == "P" else State(state),
+            apply_levels=state == "P",
             text=text,
             perfdata=perfdata,
         )
@@ -343,33 +354,46 @@ def _local_make_metrics(local_result: LocalResult) -> LocalCheckResult:
 
 def _labelify(word: str) -> str:
     """
-        >>> _labelify("weekIncidence")
-        'Week incidence'
-        >>> _labelify("casesPer100k")
-        'Cases per 100 k'
-        >>> _labelify("WHOrecommendation4")
-        'WHO recommendation 4'
-        >>> _labelify("zombie_apocalypse")
-        'Zombie apocalypse'
+    >>> _labelify("weekIncidence")
+    'Week incidence'
+    >>> _labelify("casesPer100k")
+    'Cases per 100 k'
+    >>> _labelify("WHOrecommendation4")
+    'WHO recommendation 4'
+    >>> _labelify("zombie_apocalypse")
+    'Zombie apocalypse'
 
     """
-    label = ''.join("%s%s" % (
-        this if prev.isupper() else this.lower(),
-        ' ' if (  #
-            prev.isupper() and this.isupper() and nxt.islower() or  #
-            this.islower() and nxt.isupper() or  #
-            this.isdigit() is not nxt.isdigit()  #
-        ) else '',
-    ) for prev, this, nxt in zip(' ' + word, word, word[1:] + ' '))
-    return (label[0].upper() + label[1:].replace('_', ' ')).strip()
+    label = "".join(
+        "%s%s"
+        % (
+            this if prev.isupper() else this.lower(),
+            " "
+            if (
+                prev.isupper()
+                and this.isupper()
+                and nxt.islower()
+                or this.islower()
+                and nxt.isupper()
+                or this.isdigit() is not nxt.isdigit()
+            )
+            else "",
+        )
+        for prev, this, nxt in zip(" " + word, word, word[1:] + " ")
+    )
+    return (label[0].upper() + label[1:].replace("_", " ")).strip()
 
 
 def discover_local(section: LocalSection) -> DiscoveryResult:
     if section.errors:
         output = section.errors[0].output
         reason = section.errors[0].reason
-        raise ValueError(("Invalid line in agent section <<<local>>>. "
-                          "Reason: %s First offending line: \"%s\"" % (reason, output)))
+        raise ValueError(
+            (
+                "Invalid line in agent section <<<local>>>. "
+                'Reason: %s First offending line: "%s"' % (reason, output)
+            )
+        )
 
     for key in section.data:
         yield Service(item=key)

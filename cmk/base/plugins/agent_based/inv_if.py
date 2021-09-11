@@ -71,7 +71,8 @@ def _process_sub_table(sub_table: Sequence[Union[str, Sequence[int]]]) -> Iterab
     []
     """
     index, descr, alias, type_, speed, high_speed, oper_status, admin_status = (
-        str(x) for x in sub_table[:-2])
+        str(x) for x in sub_table[:-2]
+    )
     last_change = str(sub_table[-1])
 
     # Ignore useless entries for "TenGigabitEthernet2/1/21--Uncontrolled" (type) or half-empty
@@ -95,7 +96,8 @@ def _process_sub_table(sub_table: Sequence[Union[str, Sequence[int]]]) -> Iterab
 def parse_inv_if(string_table: List[StringByteTable]) -> SectionInvIf:
     return SectionInvIf(
         [
-            iface_and_last_change for interface_data in string_table[0]
+            iface_and_last_change
+            for interface_data in string_table[0]
             for iface_and_last_change in _process_sub_table(interface_data)
         ],
         len(string_table[0]),
@@ -128,8 +130,19 @@ register.snmp_section(
 
 def round_to_day(ts):
     broken = time.localtime(ts)
-    return time.mktime((broken.tm_year, broken.tm_mon, broken.tm_mday, 0, 0, 0, broken.tm_wday,
-                        broken.tm_yday, broken.tm_isdst))
+    return time.mktime(
+        (
+            broken.tm_year,
+            broken.tm_mon,
+            broken.tm_mday,
+            0,
+            0,
+            0,
+            broken.tm_wday,
+            broken.tm_yday,
+            broken.tm_isdst,
+        )
+    )
 
 
 # TODO unify with other if inventory plugins
@@ -138,14 +151,15 @@ def inventory_if(
     section_inv_if: Optional[SectionInvIf],
     section_uptime: Optional[uptime.Section],
 ) -> InventoryResult:
-    if (section_inv_if is None or section_uptime is None or section_uptime.uptime_sec is None):
+    if section_inv_if is None or section_uptime is None or section_uptime.uptime_sec is None:
         return
 
     now = time.time()
 
     usage_port_types = params.get(
         "usage_port_types",
-        ['6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'])
+        ["6", "32", "62", "117", "127", "128", "129", "180", "181", "182", "205", "229"],
+    )
     unused_duration = params.get("unused_duration", 30 * 86400)
 
     total_ethernet_ports = 0
@@ -194,12 +208,14 @@ def inventory_if(
                 available_ethernet_ports += 1
             interface_row["available"] = if_available
 
-        yield TableRow(path=["networking", "interfaces"],
-                       key_columns={"index": if_index_nr},
-                       inventory_columns=interface_row,
-                       status_columns={
-                           "last_change": int(last_change_timestamp),
-                       })
+        yield TableRow(
+            path=["networking", "interfaces"],
+            key_columns={"index": if_index_nr},
+            inventory_columns=interface_row,
+            status_columns={
+                "last_change": int(last_change_timestamp),
+            },
+        )
 
     yield Attributes(
         path=["networking"],
@@ -212,7 +228,7 @@ def inventory_if(
 
 
 register.inventory_plugin(
-    name='inv_if',
+    name="inv_if",
     inventory_function=inventory_if,
     inventory_default_parameters={},
     inventory_ruleset_name="inv_if",

@@ -12,7 +12,7 @@ register.snmp_section(
         SNMPTree(
             base=".1.3.6.1.4.1.2021.100",
             oids=[
-                '6.0',  # versionConfigureOptions
+                "6.0",  # versionConfigureOptions
             ],
         ),
     ],

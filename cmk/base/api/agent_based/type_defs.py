@@ -31,6 +31,7 @@ class PluginSuppliedLabel(NamedTuple("_LabelTuple", [("name", str), ("value", st
     This is a tiny bit redundant, but it helps decoupling API
     code from internal representations.
     """
+
     def __init__(self, name, value):
         super().__init__()
         if not isinstance(name, str):
@@ -58,6 +59,7 @@ ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompa
 
 class Parameters(ParametersTypeAlias):
     """Parameter objects are used to pass parameters to plugin functions"""
+
     def __init__(self, data):
         if not isinstance(data, dict):
             self._data = data  # error handling will try to repr(self).
@@ -84,7 +86,7 @@ class OIDSpecTuple(NamedTuple):
     save_to_cache: bool
 
     # we create a deepcopy in our unit tests, so support it.
-    def __deepcopy__(self, _memo) -> 'OIDSpecTuple':
+    def __deepcopy__(self, _memo) -> "OIDSpecTuple":
         return self
 
 

@@ -53,7 +53,8 @@ def inventory_docker_node_network(section: Section) -> InventoryResult:
         }
         try:
             network_inventory_attributes.update(
-                host_ifname=network["Options"]["com.docker.network.bridge.name"])
+                host_ifname=network["Options"]["com.docker.network.bridge.name"]
+            )
         except KeyError:
             pass
 

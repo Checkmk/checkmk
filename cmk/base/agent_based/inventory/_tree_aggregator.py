@@ -86,11 +86,14 @@ class TreeAggregator:
         attributes = []
         table_rows = []
         for item in intentory_items:
-            expected_class_name = self._class_mutex.setdefault(tuple(item.path),
-                                                               item.__class__.__name__)
+            expected_class_name = self._class_mutex.setdefault(
+                tuple(item.path), item.__class__.__name__
+            )
             if item.__class__.__name__ != expected_class_name:
-                raise TypeError(f"Cannot create {item.__class__.__name__} at path {item.path}:"
-                                f" this is a {expected_class_name} node.")
+                raise TypeError(
+                    f"Cannot create {item.__class__.__name__} at path {item.path}:"
+                    f" this is a {expected_class_name} node."
+                )
             if isinstance(item, Attributes):
                 attributes.append(item)
             elif isinstance(item, TableRow):

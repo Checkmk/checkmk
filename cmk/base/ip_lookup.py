@@ -27,6 +27,7 @@ _enforce_localhost = False
 
 class _HostConfigLike(Protocol):
     """This is what we expect from a HostConfig in *this* module"""
+
     # Importing of the HostConfig class repeatedly lead to import cycles at various places.
     hostname: HostName
     is_ipv4_host: bool
@@ -104,10 +105,14 @@ def lookup_ip_address(
     if is_dyndns_host:
         return host_name
 
-    return None if is_no_ip_host else cached_dns_lookup(
-        host_name,
-        family=family,
-        force_file_cache_renewal=force_file_cache_renewal,
+    return (
+        None
+        if is_no_ip_host
+        else cached_dns_lookup(
+            host_name,
+            family=family,
+            force_file_cache_renewal=force_file_cache_renewal,
+        )
     )
 
 
@@ -206,7 +211,8 @@ def _actual_dns_lookup(
             return fallback
         family_str = {socket.AF_INET: "IPv4", socket.AF_INET6: "IPv6"}[family]
         raise MKIPAddressLookupError(
-            f"Failed to lookup {family_str} address of {host_name} via DNS: {e}")
+            f"Failed to lookup {family_str} address of {host_name} via DNS: {e}"
+        )
 
 
 class IPLookupCacheSerializer:
@@ -214,10 +220,12 @@ class IPLookupCacheSerializer:
         self._dim_serializer = store.DimSerializer()
 
     def serialize(self, data: Mapping[IPLookupCacheId, HostAddress]) -> bytes:
-        return self._dim_serializer.serialize({(str(hn), {
-            socket.AF_INET: 4,
-            socket.AF_INET6: 6
-        }[f]): v for (hn, f), v in data.items()})
+        return self._dim_serializer.serialize(
+            {
+                (str(hn), {socket.AF_INET: 4, socket.AF_INET6: 6}[f]): v
+                for (hn, f), v in data.items()
+            }
+        )
 
     def deserialize(self, raw: bytes) -> Mapping[IPLookupCacheId, HostAddress]:
         loaded_object = self._dim_serializer.deserialize(raw)
@@ -225,10 +233,9 @@ class IPLookupCacheSerializer:
 
         return {
             (HostName(k), socket.AF_INET)  # old pre IPv6 style
-            if isinstance(k, str) else (HostName(k[0]), {
-                4: socket.AF_INET,
-                6: socket.AF_INET6
-            }[k[1]]): HostAddress(v) for k, v in loaded_object.items()
+            if isinstance(k, str)
+            else (HostName(k[0]), {4: socket.AF_INET, 6: socket.AF_INET6}[k[1]]): HostAddress(v)
+            for k, v in loaded_object.items()
         }
 
 
@@ -353,9 +360,11 @@ def update_dns_cache(
                 ip = lookup_ip_address(
                     host_name=host_config.hostname,
                     family=family,
-                    configured_ip_address=(configured_ipv4_addresses if family is socket.AF_INET
-                                           else configured_ipv4_addresses).get(
-                                               host_config.hostname),
+                    configured_ip_address=(
+                        configured_ipv4_addresses
+                        if family is socket.AF_INET
+                        else configured_ipv4_addresses
+                    ).get(host_config.hostname),
                     simulation_mode=simulation_mode,
                     is_snmp_usewalk_host=host_config.is_usewalk_host and host_config.is_snmp_host,
                     override_dns=override_dns,

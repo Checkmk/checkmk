@@ -20,8 +20,10 @@ def discovery_mssql_counters_file_sizes(section: Section) -> DiscoveryResult:
     Service(item='MSSQL_VEEAMSQL2012 tempdb')
     """
     yield from discovery_mssql_counters_generic(
-        section, {'data_file(s)_size_(kb)', 'log_file(s)_size_(kb)', 'log_file(s)_used_size_(kb)'},
-        dflt={})
+        section,
+        {"data_file(s)_size_(kb)", "log_file(s)_size_(kb)", "log_file(s)_used_size_(kb)"},
+        dflt={},
+    )
 
 
 def _check_mssql_file_sizes(
@@ -100,7 +102,7 @@ def check_mssql_counters_file_sizes(
 
 register.check_plugin(
     name="mssql_counters_file_sizes",
-    sections=['mssql_counters'],
+    sections=["mssql_counters"],
     service_name="MSSQL %s File Sizes",
     discovery_function=discovery_mssql_counters_file_sizes,
     check_default_parameters={},

@@ -34,11 +34,14 @@ register.snmp_section(
     detect=startswith(OID_SysObjectID, ".1.3.6.1.4.1.12356.101.1"),
     parse_function=parse_fortigate_node_memory,
     fetch=[
-        SNMPTree(base=".1.3.6.1.4.1.12356.101.13.2.1.1", oids=[
-            "11",
-            "4",
-            OIDEnd(),
-        ]),
+        SNMPTree(
+            base=".1.3.6.1.4.1.12356.101.13.2.1.1",
+            oids=[
+                "11",
+                "4",
+                OIDEnd(),
+            ],
+        ),
     ],
 )
 
@@ -53,12 +56,14 @@ def check_fortigate_node_memory(item, params: Mapping[str, Any], section: Sectio
     if memory is None:
         return
 
-    yield from check_levels(memory,
-                            metric_name="mem_used_percent",
-                            levels_upper=params["levels"],
-                            boundaries=(0.0, 100.0),
-                            render_func=render.percent,
-                            label="Usage")
+    yield from check_levels(
+        memory,
+        metric_name="mem_used_percent",
+        levels_upper=params["levels"],
+        boundaries=(0.0, 100.0),
+        render_func=render.percent,
+        label="Usage",
+    )
 
 
 register.check_plugin(

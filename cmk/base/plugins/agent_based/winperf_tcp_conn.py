@@ -10,19 +10,19 @@ from .utils.tcp_connections import TCPConnections
 
 def parse_winperf_tcp_conn(string_table: StringTable) -> TCPConnections:
     """
-        >>> from pprint import pprint
-        >>> pprint(parse_winperf_tcp_conn([
-        ...     ["1368619819.06", "638"],
-        ...     ["2", "53267", "counter"],
-        ...     ["4", "3", "rawcount"],
-        ...     ["6", "23", "rawcount"],
-        ...     ["8", "1", "rawcount"],
-        ...     ["10", "1", "rawcount"],
-        ...     ["12", "12", "rawcount"],
-        ...     ["14", "34830", "counter"],
-        ...     ["16", "18437", "counter"],
-        ... ]))
-        {'ESTABLISHED': 3}
+    >>> from pprint import pprint
+    >>> pprint(parse_winperf_tcp_conn([
+    ...     ["1368619819.06", "638"],
+    ...     ["2", "53267", "counter"],
+    ...     ["4", "3", "rawcount"],
+    ...     ["6", "23", "rawcount"],
+    ...     ["8", "1", "rawcount"],
+    ...     ["10", "1", "rawcount"],
+    ...     ["12", "12", "rawcount"],
+    ...     ["14", "34830", "counter"],
+    ...     ["16", "18437", "counter"],
+    ... ]))
+    {'ESTABLISHED': 3}
 
     """
     section = {}

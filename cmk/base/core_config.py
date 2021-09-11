@@ -73,17 +73,19 @@ class MonitoringCore(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def create_config(self,
-                      config_path: VersionedConfigPath,
-                      config_cache: ConfigCache,
-                      hosts_to_update: HostsToUpdate = None) -> None:
+    def create_config(
+        self,
+        config_path: VersionedConfigPath,
+        config_cache: ConfigCache,
+        hosts_to_update: HostsToUpdate = None,
+    ) -> None:
         raise NotImplementedError
 
 
 _ignore_ip_lookup_failures = False
 _failed_ip_lookups: List[HostName] = []
 
-#.
+# .
 #   .--Warnings------------------------------------------------------------.
 #   |            __        __               _                              |
 #   |            \ \      / /_ _ _ __ _ __ (_)_ __   __ _ ___              |
@@ -112,8 +114,9 @@ def get_configuration_warnings() -> ConfigurationWarnings:
     adjusted_warnings = list(set(g_configuration_warnings))
 
     if (num_warnings := len(adjusted_warnings)) > 10:
-        warnings = (adjusted_warnings[:10] +
-                    ["%d further warnings have been omitted" % (num_warnings - 10)])
+        warnings = adjusted_warnings[:10] + [
+            "%d further warnings have been omitted" % (num_warnings - 10)
+        ]
     else:
         warnings = adjusted_warnings
 
@@ -128,10 +131,12 @@ def duplicate_service_warning(
     first_occurrence: Tuple[Union[str, CheckPluginName], Optional[str]],
     second_occurrence: Tuple[Union[str, CheckPluginName], Optional[str]],
 ) -> None:
-    return warning("ERROR: Duplicate service description (%s check) '%s' for host '%s'!\n"
-                   " - 1st occurrence: check plugin / item: %s / %r\n"
-                   " - 2nd occurrence: check plugin / item: %s / %r\n" %
-                   (checktype, description, host_name, *first_occurrence, *second_occurrence))
+    return warning(
+        "ERROR: Duplicate service description (%s check) '%s' for host '%s'!\n"
+        " - 1st occurrence: check plugin / item: %s / %r\n"
+        " - 2nd occurrence: check plugin / item: %s / %r\n"
+        % (checktype, description, host_name, *first_occurrence, *second_occurrence)
+    )
 
 
 # TODO: Just for documentation purposes for now.
@@ -146,8 +151,9 @@ def duplicate_service_warning(
 #                                  Tuple[Literal["custom"], TextInput]])
 
 
-def _get_host_check_command(host_config: HostConfig,
-                            default_host_check_command: str) -> HostCheckCommand:
+def _get_host_check_command(
+    host_config: HostConfig, default_host_check_command: str
+) -> HostCheckCommand:
     explicit_command = host_config.explicit_check_command
     if explicit_command is not None:
         return explicit_command
@@ -156,8 +162,9 @@ def _get_host_check_command(host_config: HostConfig,
     return default_host_check_command
 
 
-def _cluster_ping_command(config_cache: ConfigCache, host_config: HostConfig,
-                          ip: HostAddress) -> Optional[CoreCommand]:
+def _cluster_ping_command(
+    config_cache: ConfigCache, host_config: HostConfig, ip: HostAddress
+) -> Optional[CoreCommand]:
     ping_args = check_icmp_arguments_of(config_cache, host_config.hostname)
     if ip:  # Do check cluster IP address if one is there
         return "check-mk-host-ping!%s" % ping_args
@@ -166,10 +173,15 @@ def _cluster_ping_command(config_cache: ConfigCache, host_config: HostConfig,
     return None
 
 
-def host_check_command(config_cache: ConfigCache, host_config: HostConfig, ip: HostAddress,
-                       is_clust: bool, default_host_check_command: str,
-                       host_check_via_service_status: Callable,
-                       host_check_via_custom_check: Callable) -> Optional[CoreCommand]:
+def host_check_command(
+    config_cache: ConfigCache,
+    host_config: HostConfig,
+    ip: HostAddress,
+    is_clust: bool,
+    default_host_check_command: str,
+    host_check_via_service_status: Callable,
+    host_check_via_custom_check: Callable,
+) -> Optional[CoreCommand]:
     value = _get_host_check_command(host_config, default_host_check_command)
 
     if value == "smart":
@@ -202,16 +214,18 @@ def host_check_command(config_cache: ConfigCache, host_config: HostConfig, ip: H
     if isinstance(value, tuple) and value[0] == "custom":
         if not isinstance(value[1], str):
             raise TypeError()
-        return host_check_via_custom_check("check-mk-custom",
-                                           "check-mk-custom!" + autodetect_plugin(value[1]))
+        return host_check_via_custom_check(
+            "check-mk-custom", "check-mk-custom!" + autodetect_plugin(value[1])
+        )
 
-    raise MKGeneralException("Invalid value %r for host_check_command of host %s." %
-                             (value, host_config.hostname))
+    raise MKGeneralException(
+        "Invalid value %r for host_check_command of host %s." % (value, host_config.hostname)
+    )
 
 
 def autodetect_plugin(command_line: str) -> str:
     plugin_name = command_line.split()[0]
-    if command_line[0] in ['$', '/']:
+    if command_line[0] in ["$", "/"]:
         return command_line
 
     for directory in ["/local", ""]:
@@ -223,10 +237,12 @@ def autodetect_plugin(command_line: str) -> str:
     return command_line
 
 
-def check_icmp_arguments_of(config_cache: ConfigCache,
-                            hostname: HostName,
-                            add_defaults: bool = True,
-                            family: Optional[int] = None) -> str:
+def check_icmp_arguments_of(
+    config_cache: ConfigCache,
+    hostname: HostName,
+    add_defaults: bool = True,
+    family: Optional[int] = None,
+) -> str:
     host_config = config_cache.get_host_config(hostname)
     levels = host_config.ping_levels
 
@@ -265,7 +281,7 @@ def check_icmp_arguments_of(config_cache: ConfigCache,
     return " ".join(args)
 
 
-#.
+# .
 #   .--Core Config---------------------------------------------------------.
 #   |          ____                  ____             __ _                 |
 #   |         / ___|___  _ __ ___   / ___|___  _ __  / _(_) __ _           |
@@ -287,8 +303,9 @@ def do_create_config(core: MonitoringCore, hosts_to_update: HostsToUpdate = None
     out.output("Generating configuration for core (type %s)...\n" % core.name())
     if hosts_to_update is not None:
         out.output(
-            "Reuse old configuration, create new configuration for %s and dependant hosts\n" %
-            ", ".join(hosts_to_update))
+            "Reuse old configuration, create new configuration for %s and dependant hosts\n"
+            % ", ".join(hosts_to_update)
+        )
 
     try:
         _create_core_config(core, hosts_to_update=hosts_to_update)
@@ -304,6 +321,7 @@ def _bake_on_restart():
     try:
         # Local import is needed, because this is not available in all environments
         import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
+
         agent_bakery.bake_on_restart()
     except ImportError:
         pass
@@ -329,8 +347,11 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
                 os.rename(backup_path, objects_file)
             raise
 
-        if (config.monitoring_core == "nagios" and
-                Path(cmk.utils.paths.nagios_config_file).exists() and not do_check_nagiosconfig()):
+        if (
+            config.monitoring_core == "nagios"
+            and Path(cmk.utils.paths.nagios_config_file).exists()
+            and not do_check_nagiosconfig()
+        ):
             broken_config_path = Path(cmk.utils.paths.tmp_dir) / "check_mk_objects.cfg.broken"
             shutil.move(cmk.utils.paths.nagios_objects_file, broken_config_path)
 
@@ -339,16 +360,18 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
             elif os.path.exists(objects_file):
                 os.remove(objects_file)
 
-            raise MKGeneralException("Configuration for monitoring core is invalid. Rolling back. "
-                                     "The broken file has been copied to \"%s\" for analysis." %
-                                     broken_config_path)
+            raise MKGeneralException(
+                "Configuration for monitoring core is invalid. Rolling back. "
+                'The broken file has been copied to "%s" for analysis.' % broken_config_path
+            )
     finally:
         if backup_path and os.path.exists(backup_path):
             os.remove(backup_path)
 
 
-def _create_core_config(core: MonitoringCore,
-                        hosts_to_update: HostsToUpdate = None) -> ConfigurationWarnings:
+def _create_core_config(
+    core: MonitoringCore, hosts_to_update: HostsToUpdate = None
+) -> ConfigurationWarnings:
     initialize_warnings()
 
     _verify_non_duplicate_hosts()
@@ -365,8 +388,7 @@ def _create_core_config(core: MonitoringCore,
 
 
 def _verify_non_deprecated_checkgroups() -> None:
-    """Verify that the user has no deprecated check groups configured.
-    """
+    """Verify that the user has no deprecated check groups configured."""
     # 'check_plugin.check_ruleset_name' is of type RuleSetName, which is an ABCName (good),
     # but config.checkgroup_parameters contains strings (todo)
     check_ruleset_names_with_plugin = {
@@ -378,23 +400,26 @@ def _verify_non_deprecated_checkgroups() -> None:
     for checkgroup in config.checkgroup_parameters:
         if checkgroup not in check_ruleset_names_with_plugin:
             warning(
-                "Found configured rules of deprecated check group \"%s\". These rules are not used "
+                'Found configured rules of deprecated check group "%s". These rules are not used '
                 "by any check plugin. Maybe this check group has been renamed during an update, "
                 "in this case you will have to migrate your configuration to the new ruleset manually. "
                 "Please check out the release notes of the involved versions. "
-                "You may use the page \"Deprecated rules\" in the \"Rule search\" to view your rules"
-                "and move them to the new rulesets." % checkgroup)
+                'You may use the page "Deprecated rules" in the "Rule search" to view your rules'
+                "and move them to the new rulesets." % checkgroup
+            )
 
 
 def _verify_non_duplicate_hosts() -> None:
     duplicates = config.duplicate_hosts()
     if duplicates:
-        warning("The following host names have duplicates: %s. "
-                "This might lead to invalid/incomplete monitoring for these hosts." %
-                ", ".join(duplicates))
+        warning(
+            "The following host names have duplicates: %s. "
+            "This might lead to invalid/incomplete monitoring for these hosts."
+            % ", ".join(duplicates)
+        )
 
 
-#.
+# .
 #   .--Active Checks-------------------------------------------------------.
 #   |       _        _   _              ____ _               _             |
 #   |      / \   ___| |_(_)_   _____   / ___| |__   ___  ___| | _____      |
@@ -407,8 +432,11 @@ def _verify_non_duplicate_hosts() -> None:
 #   '----------------------------------------------------------------------'
 
 
-def active_check_arguments(hostname: HostName, description: Optional[ServiceName],
-                           args: config.SpecialAgentInfoFunctionResult) -> str:
+def active_check_arguments(
+    hostname: HostName,
+    description: Optional[ServiceName],
+    args: config.SpecialAgentInfoFunctionResult,
+) -> str:
     if isinstance(args, str):
         return args
 
@@ -421,14 +449,16 @@ def active_check_arguments(hostname: HostName, description: Optional[ServiceName
     if not isinstance(cmd_args, list):
         raise MKGeneralException(
             "The check argument function needs to return either a list of arguments or a "
-            "string of the concatenated arguments (Host: %s, Service: %s)." %
-            (hostname, description))
+            "string of the concatenated arguments (Host: %s, Service: %s)."
+            % (hostname, description)
+        )
 
     return _prepare_check_command(cmd_args, hostname, description)
 
 
-def _prepare_check_command(command_spec: CheckCommandArguments, hostname: HostName,
-                           description: Optional[ServiceName]) -> str:
+def _prepare_check_command(
+    command_spec: CheckCommandArguments, hostname: HostName, description: Optional[ServiceName]
+) -> str:
     """Prepares a check command for execution by Checkmk
 
     In case a list is given it quotes the single elements. It also prepares password store entries
@@ -450,14 +480,15 @@ def _prepare_check_command(command_spec: CheckCommandArguments, hostname: HostNa
                 password = config.stored_passwords[pw_ident]["password"]
             except KeyError:
                 if hostname and description:
-                    descr = " used by service \"%s\" on host \"%s\"" % (description, hostname)
+                    descr = ' used by service "%s" on host "%s"' % (description, hostname)
                 elif hostname:
-                    descr = " used by host host \"%s\"" % (hostname)
+                    descr = ' used by host host "%s"' % (hostname)
                 else:
                     descr = ""
 
-                console.warning("The stored password \"%s\"%s does not exist (anymore)." %
-                                (pw_ident, descr))
+                console.warning(
+                    'The stored password "%s"%s does not exist (anymore).' % (pw_ident, descr)
+                )
                 password = "%%%"
 
             pw_start_index = str(preformated_arg.index("%s"))
@@ -473,7 +504,7 @@ def _prepare_check_command(command_spec: CheckCommandArguments, hostname: HostNa
     return " ".join(formated)
 
 
-#.
+# .
 #   .--ServiceAttrs.-------------------------------------------------------.
 #   |     ____                  _             _   _   _                    |
 #   |    / ___|  ___ _ ____   _(_) ___ ___   / \ | |_| |_ _ __ ___         |
@@ -512,15 +543,19 @@ def get_service_attributes(
     check_plugin_name: Optional[CheckPluginName] = None,
     params: LegacyCheckParameters = None,
 ) -> ObjectAttributes:
-    attrs: ObjectAttributes = _extra_service_attributes(hostname, description, config_cache,
-                                                        check_plugin_name, params)
+    attrs: ObjectAttributes = _extra_service_attributes(
+        hostname, description, config_cache, check_plugin_name, params
+    )
     attrs.update(_get_tag_attributes(config_cache.tags_of_service(hostname, description), "TAG"))
 
-    attrs.update(_get_tag_attributes(config_cache.labels_of_service(hostname, description),
-                                     "LABEL"))
     attrs.update(
-        _get_tag_attributes(config_cache.label_sources_of_service(hostname, description),
-                            "LABELSOURCE"))
+        _get_tag_attributes(config_cache.labels_of_service(hostname, description), "LABEL")
+    )
+    attrs.update(
+        _get_tag_attributes(
+            config_cache.label_sources_of_service(hostname, description), "LABELSOURCE"
+        )
+    )
     return attrs
 
 
@@ -541,19 +576,21 @@ def _extra_service_attributes(
     attrs.update(config_cache.extra_attributes_of_service(hostname, description))
 
     # Add explicit custom_variables
-    for varname, value in config_cache.get_explicit_service_custom_variables(hostname,
-                                                                             description).items():
+    for varname, value in config_cache.get_explicit_service_custom_variables(
+        hostname, description
+    ).items():
         attrs["_%s" % varname.upper()] = value
 
     # Add custom user icons and actions
-    actions = config_cache.icons_and_actions_of_service(hostname, description, check_plugin_name,
-                                                        params)
+    actions = config_cache.icons_and_actions_of_service(
+        hostname, description, check_plugin_name, params
+    )
     if actions:
-        attrs["_ACTIONS"] = ','.join(actions)
+        attrs["_ACTIONS"] = ",".join(actions)
     return attrs
 
 
-#.
+# .
 #   .--ObjectAttributes------------------------------------------------------.
 #   | _   _           _      _   _   _        _ _           _              |
 #   || | | | ___  ___| |_   / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___   |
@@ -639,7 +676,7 @@ def _get_tag_attributes(
     collection: Union[TaggroupIDToTagID, Labels, LabelSources],
     prefix: str,
 ) -> ObjectAttributes:
-    return {u"__%s_%s" % (prefix, k): str(v) for k, v in collection.items()}
+    return {"__%s_%s" % (prefix, k): str(v) for k, v in collection.items()}
 
 
 def get_cluster_attributes(
@@ -695,8 +732,10 @@ def get_cluster_nodes_for_config(
     _verify_cluster_datasource(nodes, config_cache, host_config)
     for node in nodes:
         if node not in config_cache.all_active_realhosts():
-            warning("Node '%s' of cluster '%s' is not a monitored host in this site." %
-                    (node, host_config.hostname))
+            warning(
+                "Node '%s' of cluster '%s' is not a monitored host in this site."
+                % (node, host_config.hostname)
+            )
             nodes.remove(node)
     return nodes
 
@@ -724,8 +763,10 @@ def _verify_cluster_address_family(
             mixed = True
 
     if mixed:
-        warning("Cluster '%s' has different primary address families: %s" %
-                (host_config.hostname, ", ".join(address_families)))
+        warning(
+            "Cluster '%s' has different primary address families: %s"
+            % (host_config.hostname, ", ".join(address_families))
+        )
 
 
 def _verify_cluster_datasource(
@@ -757,8 +798,10 @@ def ip_address_of(host_config: config.HostConfig, family: socket.AddressFamily) 
 
         _failed_ip_lookups.append(host_config.hostname)
         if not _ignore_ip_lookup_failures:
-            warning("Cannot lookup IP address of '%s' (%s). "
-                    "The host will not be monitored correctly." % (host_config.hostname, e))
+            warning(
+                "Cannot lookup IP address of '%s' (%s). "
+                "The host will not be monitored correctly." % (host_config.hostname, e)
+            )
         return ip_lookup.fallback_ip_for(family)
 
 
@@ -774,13 +817,13 @@ def failed_ip_lookups() -> List[HostName]:
 def get_host_macros_from_attributes(hostname: HostName, attrs: ObjectAttributes) -> ObjectMacros:
     macros = {
         "$HOSTNAME$": hostname,
-        "$HOSTADDRESS$": attrs['address'],
-        "$HOSTALIAS$": attrs['alias'],
+        "$HOSTADDRESS$": attrs["address"],
+        "$HOSTALIAS$": attrs["alias"],
     }
 
     # Add custom macros
     for macro_name, value in attrs.items():
-        if macro_name[0] == '_':
+        if macro_name[0] == "_":
             macros["$HOST" + macro_name + "$"] = value
             # Be compatible to nagios making $_HOST<VARNAME>$ out of the config _<VARNAME> configs
             macros["$_HOST" + macro_name[1:] + "$"] = value

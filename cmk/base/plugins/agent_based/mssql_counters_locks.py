@@ -26,7 +26,7 @@ def discovery_mssql_counters_locks(section: Section) -> DiscoveryResult:
     """
     yield from discovery_mssql_counters_generic(
         section,
-        {'number_of_deadlocks/sec', 'lock_requests/sec', 'lock_timeouts/sec', 'lock_waits/sec'},
+        {"number_of_deadlocks/sec", "lock_requests/sec", "lock_timeouts/sec", "lock_waits/sec"},
         dflt={},
     )
 
@@ -43,10 +43,10 @@ def _check_common(
     now = counters.get("utc_time", time_point)
 
     for counter_key, title in (
-        ('lock_requests/sec', 'Requests'),
-        ('lock_timeouts/sec', 'Timeouts'),
-        ('number_of_deadlocks/sec', 'Deadlocks'),
-        ('lock_waits/sec', 'Waits'),
+        ("lock_requests/sec", "Requests"),
+        ("lock_timeouts/sec", "Timeouts"),
+        ("number_of_deadlocks/sec", "Deadlocks"),
+        ("lock_waits/sec", "Waits"),
     ):
         if counter_key not in counters:
             continue
@@ -112,7 +112,7 @@ def check_mssql_counters_locks(
 
 register.check_plugin(
     name="mssql_counters_locks",
-    sections=['mssql_counters'],
+    sections=["mssql_counters"],
     service_name="MSSQL %s Locks",
     discovery_function=discovery_mssql_counters_locks,
     check_default_parameters={},

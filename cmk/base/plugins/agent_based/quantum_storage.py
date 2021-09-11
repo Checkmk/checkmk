@@ -39,12 +39,12 @@ register.snmp_section(
 )
 
 _QUANTUM_DEVICE_STATE: Mapping[str, str] = {
-    '1': 'Unavailable',
-    '2': 'Available',
-    '3': 'Online',
-    '4': 'Offline',
-    '5': 'Going online',
-    '6': 'State not available',
+    "1": "Unavailable",
+    "2": "Available",
+    "3": "Online",
+    "4": "Offline",
+    "5": "Going online",
+    "6": "State not available",
 }
 
 
@@ -55,7 +55,7 @@ def discover_quantum_storage_status(section: Section) -> DiscoveryResult:
 def check_quantum_storage_status(params, section: Section) -> CheckResult:
     state_txt = _QUANTUM_DEVICE_STATE.get(section.state, f"Unknown [{section.state}]")
     yield Result(
-        state=State(params['map_states'].get(state_txt, 3)),
+        state=State(params["map_states"].get(state_txt, 3)),
         summary=state_txt,
     )
 
@@ -68,13 +68,13 @@ register.check_plugin(
     check_function=check_quantum_storage_status,
     check_ruleset_name="quantum_storage_status",
     check_default_parameters={
-        'map_states': {
-            'unavailable': 2,
-            'available': 0,
-            'online': 0,
-            'offline': 2,
-            'going online': 1,
-            'state not available': 3,
+        "map_states": {
+            "unavailable": 2,
+            "available": 0,
+            "online": 0,
+            "offline": 2,
+            "going online": 1,
+            "state not available": 3,
         },
     },
 )

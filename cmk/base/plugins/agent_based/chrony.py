@@ -43,12 +43,12 @@ def parse_chrony(string_table):
             if key == "Reference ID":
                 parsed[key] = value
                 try:
-                    parsed['address'] = value.split(' ')[1]
+                    parsed["address"] = value.split(" ")[1]
                 except IndexError:
                     pass
             elif key == "System time":
                 try:
-                    parsed[key] = float(value.split(' ')[0]) * 1000
+                    parsed[key] = float(value.split(" ")[0]) * 1000
                 except ValueError:
                     pass
             elif key == "Stratum":

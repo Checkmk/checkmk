@@ -30,11 +30,12 @@ class IisAppPoolStateCheckParams(TypedDict):
 
 DefaultCheckParameters: IisAppPoolStateCheckParams = dict(
     state_mapping={
-        app_state.name: {
-            IisAppPoolState.Running: State.OK,
-            IisAppPoolState.Initialized: State.WARN
-        }.get(app_state, State.CRIT).value for app_state in IisAppPoolState
-    })
+        app_state.name: {IisAppPoolState.Running: State.OK, IisAppPoolState.Initialized: State.WARN}
+        .get(app_state, State.CRIT)
+        .value
+        for app_state in IisAppPoolState
+    }
+)
 
 
 def parse_iis_app_pool_state(string_table: StringTable) -> Section:
@@ -63,8 +64,9 @@ def discover_iis_app_pool_state(section: Section) -> DiscoveryResult:
         yield Service(item=app)
 
 
-def check_iis_app_pool_state(item: str, params: IisAppPoolStateCheckParams,
-                             section: Section) -> CheckResult:
+def check_iis_app_pool_state(
+    item: str, params: IisAppPoolStateCheckParams, section: Section
+) -> CheckResult:
     """
     >>> list(check_iis_app_pool_state("app0", DefaultCheckParameters, {"app0": IisAppPoolState.Running}))
     [Result(state=<State.OK: 0>, summary='State: Running')]

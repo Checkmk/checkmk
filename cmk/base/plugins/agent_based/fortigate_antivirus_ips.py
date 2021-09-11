@@ -31,7 +31,8 @@ def parse_fortigate_antivirus_ips(string_table: StringTable) -> Section:
         sub_table[0]: {
             "detected": int(sub_table[1]),
             "blocked": int(sub_table[2]),
-        } for sub_table in string_table
+        }
+        for sub_table in string_table
     }
 
 

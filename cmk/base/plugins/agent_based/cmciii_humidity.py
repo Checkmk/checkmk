@@ -16,13 +16,15 @@ from .utils.cmciii import (
 from .utils.humidity import check_humidity
 
 
-def discover_cmciii_humidity(params: DiscoveryParams,
-                             section: Section) -> type_defs.DiscoveryResult:
+def discover_cmciii_humidity(
+    params: DiscoveryParams, section: Section
+) -> type_defs.DiscoveryResult:
     yield from discover_cmciii_sensors("humidity", params, section)
 
 
-def check_cmciii_humidity(item: str, params: CheckParams,
-                          section: Section) -> type_defs.CheckResult:
+def check_cmciii_humidity(
+    item: str, params: CheckParams, section: Section
+) -> type_defs.CheckResult:
     entry = get_sensor(item, params, section["humidity"])
     if not entry:
         return
@@ -35,7 +37,7 @@ def check_cmciii_humidity(item: str, params: CheckParams,
 
 register.check_plugin(
     name="cmciii_humidity",
-    sections=['cmciii'],
+    sections=["cmciii"],
     service_name="%s",
     discovery_function=discover_cmciii_humidity,
     check_function=check_cmciii_humidity,

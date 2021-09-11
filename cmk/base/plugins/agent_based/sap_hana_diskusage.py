@@ -25,9 +25,12 @@ def parse_sap_hana_diskusage(string_table: StringTable) -> sap_hana.ParsedSectio
         for line in lines:
             if len(line) < 3:
                 continue
-            inst = section.setdefault("%s - %s" % (sid_instance, line[0]), {
-                "state_name": line[1],
-            })
+            inst = section.setdefault(
+                "%s - %s" % (sid_instance, line[0]),
+                {
+                    "state_name": line[1],
+                },
+            )
             inst.update(_extract_size_and_used_from_line(line))
     return section
 
@@ -58,8 +61,9 @@ def discovery_sap_hana_diskusage(section: sap_hana.ParsedSection) -> DiscoveryRe
         yield Service(item=item)
 
 
-def check_sap_hana_diskusage(item: str, params: Mapping[str, Any],
-                             section: sap_hana.ParsedSection) -> CheckResult:
+def check_sap_hana_diskusage(
+    item: str, params: Mapping[str, Any], section: sap_hana.ParsedSection
+) -> CheckResult:
     data = section.get(item)
     if not data:
         raise IgnoreResultsError("Login into database failed.")

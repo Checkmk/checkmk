@@ -153,9 +153,11 @@ def size_trend(
         return levels[0] / 100 * size_mb, levels[1] / 100 * size_mb
 
     def mins(levels1: Optional[Levels], levels2: Optional[Levels]) -> Optional[Levels]:
-        return ((min(levels1[0], levels2[0]),
-                 min(levels1[1], levels2[1])) if levels1 and levels2 else  #
-                levels1 or levels2 or None)
+        return (
+            (min(levels1[0], levels2[0]), min(levels1[1], levels2[1]))
+            if levels1 and levels2
+            else levels1 or levels2 or None  #
+        )
 
     if levels.get("trend_perfdata"):
         yield Metric(

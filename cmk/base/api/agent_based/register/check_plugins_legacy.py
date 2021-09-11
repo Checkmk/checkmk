@@ -61,10 +61,14 @@ def _get_default_parameters(
     # global scope of check context
     gs_parameters = check_context.get(params_variable_name)
 
-    return {
-        **fs_parameters,
-        **gs_parameters,
-    } if isinstance(gs_parameters, dict) else fs_parameters
+    return (
+        {
+            **fs_parameters,
+            **gs_parameters,
+        }
+        if isinstance(gs_parameters, dict)
+        else fs_parameters
+    )
 
 
 def _create_discovery_function(
@@ -134,8 +138,10 @@ def _resolve_string_parameters(
         # files are resolved during cmk-update-config.
         return eval(params_unresolved, context, context)  # pylint: disable=eval-used
     except Exception:
-        raise ValueError("Invalid check parameter string '%s' found in discovered service %r" %
-                         (params_unresolved, check_name))
+        raise ValueError(
+            "Invalid check parameter string '%s' found in discovered service %r"
+            % (params_unresolved, check_name)
+        )
 
 
 def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callable:
@@ -196,8 +202,8 @@ def _create_check_function(name: str, check_info_dict: Dict[str, Any]) -> Callab
 def _get_float(raw_value: Any) -> Optional[float]:
     """Try to convert to float
 
-        >>> _get_float("12.3s")
-        12.3
+    >>> _get_float("12.3s")
+    12.3
 
     """
     with suppress(TypeError, ValueError):
@@ -214,10 +220,10 @@ def _get_float(raw_value: Any) -> Optional[float]:
 
 
 def _create_new_result(
-        is_details: bool,
-        legacy_state: int,
-        legacy_text: str,
-        legacy_metrics: Union[Tuple, List] = (),
+    is_details: bool,
+    legacy_state: int,
+    legacy_text: str,
+    legacy_metrics: Union[Tuple, List] = (),
 ) -> Generator[Union[Metric, Result], None, bool]:
 
     if legacy_state or legacy_text:  # skip "Null"-Result
@@ -241,7 +247,8 @@ def _create_new_result(
             continue
         # fill up with None:
         warn, crit, min_, max_ = (
-            _get_float(v) for v, _ in itertools.zip_longest(metric[2:], range(4)))
+            _get_float(v) for v, _ in itertools.zip_longest(metric[2:], range(4))
+        )
         yield Metric(name, value, levels=(warn, crit), boundaries=(min_, max_))
 
     return ("\n" in legacy_text) or is_details
@@ -256,6 +263,7 @@ def _create_signature_check_function(
 
         def check_migration_wrapper(item, params, section):
             return original_function(item, params, section)
+
     else:
 
         def check_migration_wrapper(params, section):  # type: ignore[misc]
@@ -295,20 +303,24 @@ def create_check_plugin_from_legacy(
 ) -> CheckPlugin:
 
     if extra_sections:
-        raise NotImplementedError("[%s]: cannot auto-migrate plugins with extra sections" %
-                                  check_plugin_name)
+        raise NotImplementedError(
+            "[%s]: cannot auto-migrate plugins with extra sections" % check_plugin_name
+        )
 
     if check_info_dict.get("node_info"):
         # We refuse to tranform these. The requirement of adding the node info
         # makes rewriting of the base code too difficult.
         # Affected Plugins must be migrated manually after CMK-4240 is done.
-        raise NotImplementedError("[%s]: cannot auto-migrate plugins with node info" %
-                                  check_plugin_name)
+        raise NotImplementedError(
+            "[%s]: cannot auto-migrate plugins with node info" % check_plugin_name
+        )
 
     # make sure we haven't missed something important:
     unconsidered_keys = set(check_info_dict) - CONSIDERED_KEYS
-    assert not unconsidered_keys, ("Unconsidered key(s) in check_info[%r]: %r" %
-                                   (check_plugin_name, unconsidered_keys))
+    assert not unconsidered_keys, "Unconsidered key(s) in check_info[%r]: %r" % (
+        check_plugin_name,
+        unconsidered_keys,
+    )
 
     new_check_name = maincheckify(check_plugin_name)
 
@@ -332,8 +344,8 @@ def create_check_plugin_from_legacy(
 
     return create_check_plugin(
         name=new_check_name,
-        sections=[check_plugin_name.split('.', 1)[0]],
-        service_name=check_info_dict['service_description'],
+        sections=[check_plugin_name.split(".", 1)[0]],
+        service_name=check_info_dict["service_description"],
         discovery_function=discovery_function,
         discovery_default_parameters=None,  # legacy madness!
         discovery_ruleset_name=None,

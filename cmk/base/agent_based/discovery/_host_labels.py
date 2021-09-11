@@ -34,20 +34,24 @@ def analyse_host_labels(
     parsed_sections_broker: ParsedSectionsBroker,
     on_error: OnError,
 ) -> QualifiedDiscovery[HostLabel]:
-    return analyse_cluster_labels(
-        host_config=host_config,
-        ipaddress=ipaddress,
-        parsed_sections_broker=parsed_sections_broker,
-        load_labels=load_labels,
-        save_labels=save_labels,
-        on_error=on_error,
-    ) if host_config.is_cluster else analyse_node_labels(
-        host_name=host_config.hostname,
-        ipaddress=ipaddress,
-        parsed_sections_broker=parsed_sections_broker,
-        load_labels=load_labels,
-        save_labels=save_labels,
-        on_error=on_error,
+    return (
+        analyse_cluster_labels(
+            host_config=host_config,
+            ipaddress=ipaddress,
+            parsed_sections_broker=parsed_sections_broker,
+            load_labels=load_labels,
+            save_labels=save_labels,
+            on_error=on_error,
+        )
+        if host_config.is_cluster
+        else analyse_node_labels(
+            host_name=host_config.hostname,
+            ipaddress=ipaddress,
+            parsed_sections_broker=parsed_sections_broker,
+            load_labels=load_labels,
+            save_labels=save_labels,
+            on_error=on_error,
+        )
     )
 
 
@@ -126,19 +130,22 @@ def analyse_cluster_labels(
         )
 
         # keep the latest for every label.name
-        nodes_host_labels.update({
-            # TODO (mo): According to unit tests, this is what was done prior to refactoring.
-            # I'm not sure this is desired. If it is, it should be explained.
-            # Whenever we do not load the host labels, vanished will be empty.
-            **{l.name: l for l in node_result.vanished},
-            **{l.name: l for l in node_result.present},
-        })
+        nodes_host_labels.update(
+            {
+                # TODO (mo): According to unit tests, this is what was done prior to refactoring.
+                # I'm not sure this is desired. If it is, it should be explained.
+                # Whenever we do not load the host labels, vanished will be empty.
+                **{l.name: l for l in node_result.vanished},
+                **{l.name: l for l in node_result.present},
+            }
+        )
 
     return _analyse_host_labels(
         host_name=host_config.hostname,
         discovered_host_labels=list(nodes_host_labels.values()),
-        existing_host_labels=_load_existing_host_labels(host_config.hostname) if load_labels else
-        (),
+        existing_host_labels=_load_existing_host_labels(host_config.hostname)
+        if load_labels
+        else (),
         save_labels=save_labels,
     )
 
@@ -158,12 +165,14 @@ def _analyse_host_labels(
     )
 
     if save_labels:
-        DiscoveredHostLabelsStore(host_name).save({
-            # TODO (mo): I'm not sure this is desired. If it is, it should be explained.
-            # Whenever we do not load the host labels, vanished will be empty.
-            **{l.name: l.to_dict() for l in host_labels.vanished},
-            **{l.name: l.to_dict() for l in host_labels.present},
-        })
+        DiscoveredHostLabelsStore(host_name).save(
+            {
+                # TODO (mo): I'm not sure this is desired. If it is, it should be explained.
+                # Whenever we do not load the host labels, vanished will be empty.
+                **{l.name: l.to_dict() for l in host_labels.vanished},
+                **{l.name: l.to_dict() for l in host_labels.present},
+            }
+        )
 
     if host_labels.new:
         # Some check plugins like 'df' may discover services based on host labels.
@@ -231,11 +240,13 @@ def _discover_host_labels_for_source_type(
     try:
         parsed_results = parsed_sections_broker.all_parsing_results(host_key)
 
-        console.vverbose("Trying host label discovery with: %s\n" %
-                         ", ".join(str(r.section.name) for r in parsed_results))
+        console.vverbose(
+            "Trying host label discovery with: %s\n"
+            % ", ".join(str(r.section.name) for r in parsed_results)
+        )
         for (section_data, _cache_info), section_plugin in parsed_results:
 
-            kwargs = {'section': section_data}
+            kwargs = {"section": section_data}
 
             host_label_params = config.get_host_label_parameters(host_key.hostname, section_plugin)
             if host_label_params is not None:
@@ -256,7 +267,8 @@ def _discover_host_labels_for_source_type(
                     raise
                 if on_error is OnError.WARN:
                     console.error(
-                        f"Host label discovery of '{section_plugin.name}' failed: {exc}\n")
+                        f"Host label discovery of '{section_plugin.name}' failed: {exc}\n"
+                    )
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

@@ -54,9 +54,9 @@ register.snmp_section(
     detect=DETECT_FORTIAUTHENTICATOR,
     fetch=[
         SNMPTree(
-            base='.1.3.6.1.4.1.12356.113.1.202',
+            base=".1.3.6.1.4.1.12356.113.1.202",
             oids=[
-                '23',  # facAuthFailures5Min
+                "23",  # facAuthFailures5Min
             ],
         ),
     ],

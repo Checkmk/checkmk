@@ -26,7 +26,8 @@ LambdaSummarySection = Mapping[str, LambdaFunctionConfiguration]
 
 
 def discover_lambda_functions(
-    section_aws_lambda_summary: Optional[LambdaSummarySection],) -> DiscoveryResult:
+    section_aws_lambda_summary: Optional[LambdaSummarySection],
+) -> DiscoveryResult:
     if section_aws_lambda_summary is None:
         return
     for lambda_function in section_aws_lambda_summary:
@@ -52,13 +53,14 @@ def extract_aws_metrics_by_labels(
         extra_keys = []
     values_by_labels: Dict[str, Dict[str, Any]] = {}
     for row in section:
-        row_id = row['Id'].lower()
-        row_label = row['Label']
-        row_values = row['Values']
+        row_id = row["Id"].lower()
+        row_label = row["Label"]
+        row_values = row["Values"]
         for expected_metric_name in expected_metric_names:
             expected_metric_name_lower = expected_metric_name.lower()
-            if (not row_id.startswith(expected_metric_name_lower) and
-                    not row_id.endswith(expected_metric_name_lower)):
+            if not row_id.startswith(expected_metric_name_lower) and not row_id.endswith(
+                expected_metric_name_lower
+            ):
                 continue
 
             try:
@@ -100,7 +102,7 @@ def discover_aws_generic(
 
 
 def aws_rds_service_item(instance_id: str, region: str) -> str:
-    return f'{instance_id} [{region}]'
+    return f"{instance_id} [{region}]"
 
 
 def function_arn_to_item(function_arn: str) -> str:
@@ -112,9 +114,12 @@ def function_arn_to_item(function_arn: str) -> str:
     >>> function_arn_to_item("arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function:OPTIONAL_ALIAS_OR_VERSION")
     'eu-central-1 my_python_test_function OPTIONAL_ALIAS_OR_VERSION'
     """
-    splitted = function_arn.split(':')
-    return f"{splitted[3]} {splitted[6]} {splitted[7]}" if len(
-        splitted) == 8 else f"{splitted[3]} {splitted[6]}"
+    splitted = function_arn.split(":")
+    return (
+        f"{splitted[3]} {splitted[6]} {splitted[7]}"
+        if len(splitted) == 8
+        else f"{splitted[3]} {splitted[6]}"
+    )
 
 
 def get_region_from_item(item: str) -> str:
@@ -173,7 +178,7 @@ class LambdaInsightMetrics:
     max_init_duration_seconds: Optional[float] = None
 
     @staticmethod
-    def from_metrics(query_stats: LambdaQueryStats) -> 'LambdaInsightMetrics':
+    def from_metrics(query_stats: LambdaQueryStats) -> "LambdaInsightMetrics":
         max_memory_used_bytes: float
         count_cold_starts: int
         count_invocations: int

@@ -33,7 +33,7 @@ def _parse_kaspersky_av_client(string_table: StringTable, now: float) -> Section
     parsed: Section = {}
 
     for line in string_table:
-        if line[1] == 'Missing':
+        if line[1] == "Missing":
             continue
 
         date_text = line[1]
@@ -41,17 +41,17 @@ def _parse_kaspersky_av_client(string_table: StringTable, now: float) -> Section
         # We assume that the timestamp is to be interpreted in the timezone of
         # the Checkmk server. This might be a problem, if e.g. the agent is located
         # in China and the Checkmk server in USA.
-        age = now - time.mktime(time.strptime(f"{date_text} {time_text}", '%d.%m.%Y %H:%M:%S'))
+        age = now - time.mktime(time.strptime(f"{date_text} {time_text}", "%d.%m.%Y %H:%M:%S"))
 
         if line[0] == "Signatures":
-            parsed['signature_age'] = age
+            parsed["signature_age"] = age
 
         elif line[0] == "Fullscan":
-            parsed['fullscan_age'] = age
+            parsed["fullscan_age"] = age
 
             # handle state of last fullscan if provided
             if len(line) == 4:
-                parsed['fullscan_failed'] = line[3] != "0"
+                parsed["fullscan_failed"] = line[3] != "0"
 
     return parsed
 
@@ -67,8 +67,9 @@ def discover_kaspersky_av_client(section: Section) -> Generator[Service, None, N
         yield Service()
 
 
-def check_kaspersky_av_client(params: Dict[str, Tuple[float, float]],
-                              section: Section) -> Generator[Result, None, None]:
+def check_kaspersky_av_client(
+    params: Dict[str, Tuple[float, float]], section: Section
+) -> Generator[Result, None, None]:
     """
     >>> test_params = dict(signature_age=(2, 3), fullscan_age=(2, 3))
     >>> test_section = dict(fullscan_age=1, signature_age=1)
@@ -85,10 +86,12 @@ def check_kaspersky_av_client(params: Dict[str, Tuple[float, float]],
         if age is None:
             yield Result(state=State.UNKNOWN, summary=f"{what} unkown")
         elif isinstance(age, int):  # needed to make mypy happy
-            yield from check_levels(value=age,
-                                    levels_upper=params[key],
-                                    label=what,
-                                    render_func=lambda v: f"{render.timespan(v)} ago")
+            yield from check_levels(
+                value=age,
+                levels_upper=params[key],
+                label=what,
+                render_func=lambda v: f"{render.timespan(v)} ago",
+            )
 
     if section.get("fullscan_failed"):
         yield Result(state=State.CRIT, summary="Last fullscan failed")
@@ -100,8 +103,8 @@ register.check_plugin(
     discovery_function=discover_kaspersky_av_client,
     check_function=check_kaspersky_av_client,
     check_default_parameters={
-        'signature_age': (86400, 7 * 86400),
-        'fullscan_age': (86400, 7 * 86400),
+        "signature_age": (86400, 7 * 86400),
+        "fullscan_age": (86400, 7 * 86400),
     },
     check_ruleset_name="kaspersky_av_client",
 )

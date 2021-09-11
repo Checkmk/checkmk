@@ -12,7 +12,7 @@ from typing import NoReturn, Optional
 
 from cmk.utils.exceptions import MKTerminate
 
-#.
+# .
 #   .--Ctrl-C--------------------------------------------------------------.
 #   |                     ____ _        _        ____                      |
 #   |                    / ___| |_ _ __| |      / ___|                     |

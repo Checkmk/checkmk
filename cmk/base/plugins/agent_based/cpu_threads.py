@@ -18,7 +18,7 @@ def discover_cpu_threads(section: Section) -> DiscoveryResult:
 def check_cpu_threads(params: Mapping[str, Any], section: Section) -> CheckResult:
     yield from check_levels(
         section.num_threads,
-        metric_name='threads',
+        metric_name="threads",
         levels_upper=params.get("levels"),
         render_func="{:}".format,
     )
@@ -26,7 +26,7 @@ def check_cpu_threads(params: Mapping[str, Any], section: Section) -> CheckResul
         thread_usage = 100.0 * section.num_threads / section.max_threads
         yield from check_levels(
             thread_usage,
-            metric_name='thread_usage',
+            metric_name="thread_usage",
             levels_upper=params.get("levels_percent"),
             render_func=render.percent,
             label="Usage",
@@ -38,7 +38,7 @@ register.check_plugin(
     service_name="Number of threads",
     discovery_function=discover_cpu_threads,
     check_function=check_cpu_threads,
-    check_default_parameters={'levels': (2000, 4000)},
+    check_default_parameters={"levels": (2000, 4000)},
     check_ruleset_name="threads",
     sections=["cpu"],
 )

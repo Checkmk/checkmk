@@ -21,8 +21,9 @@ from cmk.utils.type_defs import CheckPluginName, CheckVariables, HostName, Item,
 from cmk.base.check_utils import LegacyCheckParameters, Service
 from cmk.base.discovered_labels import DiscoveredServiceLabels, ServiceLabel
 
-ComputeCheckParameters = Callable[[HostName, CheckPluginName, Item, LegacyCheckParameters],
-                                  Optional[LegacyCheckParameters]]
+ComputeCheckParameters = Callable[
+    [HostName, CheckPluginName, Item, LegacyCheckParameters], Optional[LegacyCheckParameters]
+]
 GetCheckVariables = Callable[[], CheckVariables]
 GetServiceDescription = Callable[[HostName, CheckPluginName, Item], ServiceName]
 HostOfClusteredService = Callable[[HostName, str], str]
@@ -33,7 +34,7 @@ class ServiceWithNodes(NamedTuple):
     nodes: List[HostName]
 
 
-logger = logging.getLogger('cmk.base.autochecks')
+logger = logging.getLogger("cmk.base.autochecks")
 
 
 class AutochecksManager:
@@ -41,6 +42,7 @@ class AutochecksManager:
 
     Autochecks of a host are once read and cached for the whole lifetime of the
     AutochecksManager."""
+
     def __init__(self) -> None:
         super().__init__()
         self._autochecks: Dict[HostName, List[Service]] = {}
@@ -57,7 +59,8 @@ class AutochecksManager:
     ) -> List[Service]:
         if hostname not in self._autochecks:
             self._autochecks[hostname] = self._get_autochecks_of_uncached(
-                hostname, compute_check_parameters, service_description)
+                hostname, compute_check_parameters, service_description
+            )
         return self._autochecks[hostname]
 
     def _get_autochecks_of_uncached(
@@ -79,7 +82,8 @@ class AutochecksManager:
                     service.parameters,
                 ),
                 service_labels=service.service_labels,
-            ) for service in self._read_raw_autochecks(hostname, service_description)
+            )
+            for service in self._read_raw_autochecks(hostname, service_description)
         ]
 
     def discovered_labels_of(
@@ -146,9 +150,10 @@ class AutochecksManager:
                 raise MKGeneralException(
                     "Invalid check entry '%r' of host '%s' (%s) found. This "
                     "entry is in pre Checkmk 1.6 format and needs to be converted. This is "
-                    "normally done by \"cmk-update-config -v\" during \"omd update\". Please "
-                    "execute \"cmk-update-config -v\" for convertig the old configuration." %
-                    (entry, hostname, path))
+                    'normally done by "cmk-update-config -v" during "omd update". Please '
+                    'execute "cmk-update-config -v" for convertig the old configuration.'
+                    % (entry, hostname, path)
+                )
 
             try:
                 plugin_name = CheckPluginName(maincheckify(entry["check_plugin_name"]))
@@ -157,9 +162,10 @@ class AutochecksManager:
                 raise MKGeneralException(
                     "Invalid check entry '%r' of host '%s' (%s) found. This "
                     "entry is in pre Checkmk 2.0 format and needs to be converted. This is "
-                    "normally done by \"cmk-update-config -v\" during \"omd update\". Please "
-                    "execute \"cmk-update-config -v\" for convertig the old configuration." %
-                    (entry, hostname, path))
+                    'normally done by "cmk-update-config -v" during "omd update". Please '
+                    'execute "cmk-update-config -v" for convertig the old configuration.'
+                    % (entry, hostname, path)
+                )
 
             labels = DiscoveredServiceLabels()
             for label_id, label_value in entry["service_labels"].items():
@@ -177,7 +183,8 @@ class AutochecksManager:
                     description=description,
                     parameters=entry["parameters"],
                     service_labels=labels,
-                ))
+                )
+            )
 
         return services
 
@@ -213,14 +220,17 @@ def _load_raw_autochecks(
         # Since Checkmk 2.0 we have a better API and need it only for compatibility. The parameters
         # are resolved now *before* they are written to the autochecks file, and earlier autochecks
         # files are resolved during cmk-update-config.
-        return eval(raw_file_content, check_variables or {}, check_variables or {})  # pylint: disable=eval-used
+        return eval(  # pylint: disable=eval-used
+            raw_file_content, check_variables or {}, check_variables or {}
+        )
     except NameError as exc:
         raise MKGeneralException(
             "%s in an autocheck entry of host '%s' (%s). This entry is in pre Checkmk 1.7 "
             "format and needs to be converted. This is normally done by "
-            "\"cmk-update-config -v\" during \"omd update\". Please execute "
-            "\"cmk-update-config -v\" for converting the old configuration." %
-            (str(exc).capitalize(), path.stem, path))
+            '"cmk-update-config -v" during "omd update". Please execute '
+            '"cmk-update-config -v" for converting the old configuration.'
+            % (str(exc).capitalize(), path.stem, path)
+        )
 
 
 def parse_autochecks_file(
@@ -238,8 +248,9 @@ def parse_autochecks_file(
     except SyntaxError as e:
         if cmk.utils.debug.enabled():
             raise
-        raise MKGeneralException("Unable to parse autochecks of host %s (%s): %s" %
-                                 (hostname, path, e))
+        raise MKGeneralException(
+            "Unable to parse autochecks of host %s (%s): %s" % (hostname, path, e)
+        )
 
     services: List[Service] = []
     for entry in raw_autochecks:
@@ -262,8 +273,9 @@ def _parse_autocheck_entry(
         check_plugin_name, item, parameters = _parse_pre_16_tuple_autocheck_entry(entry)
         dict_service_labels = {}
     elif isinstance(entry, dict):
-        check_plugin_name, item, parameters, dict_service_labels = \
-            _parse_dict_autocheck_entry(entry)
+        check_plugin_name, item, parameters, dict_service_labels = _parse_dict_autocheck_entry(
+            entry
+        )
     else:
         raise Exception("Invalid autocheck: Wrong type: %r" % entry)
 
@@ -319,16 +331,20 @@ def _parse_discovered_service_label_from_dict(dict_service_labels: Dict) -> Disc
         return labels
     for key, value in dict_service_labels.items():
         if key is not None:
-            labels.add_label(ServiceLabel(
-                ensure_str(key),
-                ensure_str(value),
-            ))
+            labels.add_label(
+                ServiceLabel(
+                    ensure_str(key),
+                    ensure_str(value),
+                )
+            )
     return labels
 
 
-def set_autochecks_of_real_hosts(hostname: HostName,
-                                 new_services_with_nodes: Sequence[ServiceWithNodes],
-                                 service_description: GetServiceDescription) -> None:
+def set_autochecks_of_real_hosts(
+    hostname: HostName,
+    new_services_with_nodes: Sequence[ServiceWithNodes],
+    service_description: GetServiceDescription,
+) -> None:
     new_autochecks: List[Service] = []
 
     # write new autochecks file, but take parameters from existing ones
@@ -351,10 +367,13 @@ def set_autochecks_of_real_hosts(hostname: HostName,
     )
 
 
-def set_autochecks_of_cluster(nodes: List[HostName], hostname: HostName,
-                              new_services_with_nodes: Sequence[ServiceWithNodes],
-                              host_of_clustered_service: HostOfClusteredService,
-                              service_description: GetServiceDescription) -> None:
+def set_autochecks_of_cluster(
+    nodes: List[HostName],
+    hostname: HostName,
+    new_services_with_nodes: Sequence[ServiceWithNodes],
+    host_of_clustered_service: HostOfClusteredService,
+    service_description: GetServiceDescription,
+) -> None:
     """A Cluster does not have an autochecks file. All of its services are located
     in the nodes instead. For clusters we cycle through all nodes remove all
     clustered service and add the ones we've got as input."""
@@ -381,7 +400,7 @@ def set_autochecks_of_cluster(nodes: List[HostName], hostname: HostName,
 
 
 def _remove_duplicate_autochecks(autochecks: Sequence[Service]) -> List[Service]:
-    """ Cleanup routine. Earlier versions (<1.6.0p8) may have introduced duplicates in the autochecks file"""
+    """Cleanup routine. Earlier versions (<1.6.0p8) may have introduced duplicates in the autochecks file"""
     seen: Set[Service] = set()
     cleaned_autochecks = []
     for service in autochecks:
@@ -412,9 +431,12 @@ def remove_autochecks_file(hostname: HostName) -> None:
         pass
 
 
-def remove_autochecks_of_host(hostname: HostName, remove_hostname: HostName,
-                              host_of_clustered_service: HostOfClusteredService,
-                              service_description: GetServiceDescription) -> int:
+def remove_autochecks_of_host(
+    hostname: HostName,
+    remove_hostname: HostName,
+    host_of_clustered_service: HostOfClusteredService,
+    service_description: GetServiceDescription,
+) -> int:
     removed = 0
     new_items: List[Service] = []
     for existing_service in parse_autochecks_file(hostname, service_description):

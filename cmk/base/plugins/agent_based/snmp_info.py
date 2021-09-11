@@ -61,17 +61,21 @@ register.check_plugin(
 
 
 def inventory_snmp_info(section: SNMPInfo) -> InventoryResult:
-    yield Attributes(path=["hardware", "system"],
-                     inventory_attributes={
-                         "product": section.description,
-                     })
+    yield Attributes(
+        path=["hardware", "system"],
+        inventory_attributes={
+            "product": section.description,
+        },
+    )
 
-    yield Attributes(path=["software", "configuration", "snmp_info"],
-                     inventory_attributes={
-                         "contact": section.contact,
-                         "name": section.name,
-                         "location": section.location,
-                     })
+    yield Attributes(
+        path=["software", "configuration", "snmp_info"],
+        inventory_attributes={
+            "contact": section.contact,
+            "name": section.name,
+            "location": section.location,
+        },
+    )
 
 
 register.inventory_plugin(

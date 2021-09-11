@@ -39,13 +39,14 @@ class CMKBaseCrashReport(crash_reporting.ABCCrashReport):
 
     @classmethod
     def from_exception(
-            cls,
-            details: Optional[Dict] = None,
-            type_specific_attributes: Optional[Dict] = None) -> crash_reporting.ABCCrashReport:
-        return super().from_exception(details={
-            "argv": sys.argv,
-            "env": dict(os.environ),
-        })
+        cls, details: Optional[Dict] = None, type_specific_attributes: Optional[Dict] = None
+    ) -> crash_reporting.ABCCrashReport:
+        return super().from_exception(
+            details={
+                "argv": sys.argv,
+                "env": dict(os.environ),
+            }
+        )
 
 
 def create_section_crash_dump(
@@ -84,7 +85,7 @@ def create_check_crash_dump(
     of the check. The GUI (cmk.gui.crash_reporting) is able to parse it and send it to
     the Checkmk team.
     """
-    text = u"check failed - please submit a crash report!"
+    text = "check failed - please submit a crash report!"
     try:
         crash = CheckCrashReport.from_exception_and_context(
             hostname=host_name,
@@ -116,10 +117,12 @@ class SectionCrashReport(crash_reporting.ABCCrashReport):
         section_name: SectionName,
         section_content: object,
     ) -> crash_reporting.ABCCrashReport:
-        return cls.from_exception(details={
-            "section_name": str(section_name),
-            "section_content": section_content,
-        },)
+        return cls.from_exception(
+            details={
+                "section_name": str(section_name),
+                "section_content": section_content,
+            },
+        )
 
 
 @crash_reporting.crash_report_registry.register
@@ -151,8 +154,8 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
                 "is_cluster": host_config.is_cluster,
                 "description": description,
                 "check_type": check_plugin_name,
-                "inline_snmp": host_config.snmp_config(hostname).snmp_backend ==
-                               SNMPBackendEnum.INLINE,
+                "inline_snmp": host_config.snmp_config(hostname).snmp_backend
+                == SNMPBackendEnum.INLINE,
                 "manual_check": is_manual_check,
                 **check_plugin_kwargs,
             },
@@ -162,10 +165,12 @@ class CheckCrashReport(crash_reporting.ABCCrashReport):
             },
         )
 
-    def __init__(self,
-                 crash_info: Dict,
-                 snmp_info: Optional[bytes] = None,
-                 agent_output: Optional[bytes] = None) -> None:
+    def __init__(
+        self,
+        crash_info: Dict,
+        snmp_info: Optional[bytes] = None,
+        agent_output: Optional[bytes] = None,
+    ) -> None:
         super().__init__(crash_info)
         self.snmp_info = snmp_info
         self.agent_output = agent_output

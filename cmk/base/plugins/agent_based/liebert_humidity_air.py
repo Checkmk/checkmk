@@ -20,8 +20,8 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 from .utils.liebert import DETECT_LIEBERT, parse_liebert
 
 LIEBERT_HUMIDITY_AIR_DEFAULT_PARAMETERS = {
-    'levels': (50, 55),
-    'levels_lower': (10, 15),
+    "levels": (50, 55),
+    "levels_lower": (10, 15),
 }
 
 ParsedSection = Dict[str, Any]
@@ -72,7 +72,7 @@ def check_liebert_humidity_air(
     if value is None:
         return
 
-    device_state = section_liebert_system.get('Unit Operating State')
+    device_state = section_liebert_system.get("Unit Operating State")
     if "Unavailable" in value and device_state == "standby":
         yield Result(state=state.OK, summary="Unit is in standby (unavailable)")
         return
@@ -84,38 +84,39 @@ def check_liebert_humidity_air(
 
     yield from check_levels(
         value=value,
-        metric_name='humidity',
-        levels_upper=params['levels'],
-        levels_lower=params['levels_lower'],
-        render_func=lambda retval: '%.2f %s' % (retval, unit),
+        metric_name="humidity",
+        levels_upper=params["levels"],
+        levels_lower=params["levels_lower"],
+        render_func=lambda retval: "%.2f %s" % (retval, unit),
         boundaries=(0, None),
     )
 
 
 register.snmp_section(
-    name='liebert_humidity_air',
+    name="liebert_humidity_air",
     detect=DETECT_LIEBERT,
     parse_function=parse_liebert_humidity_air,
     fetch=[
         SNMPTree(
-            base='.1.3.6.1.4.1.476.1.42.3.9.20.1',
+            base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
             oids=[
-                '10.1.2.1.5027',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                '20.1.2.1.5027',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-                '30.1.2.1.5027',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-                '10.1.2.1.5028',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                '20.1.2.1.5028',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-                '30.1.2.1.5028',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-            ]),
+                "10.1.2.1.5027",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+                "20.1.2.1.5027",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+                "30.1.2.1.5027",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+                "10.1.2.1.5028",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+                "20.1.2.1.5028",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+                "30.1.2.1.5028",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+            ],
+        ),
     ],
 )
 
 register.check_plugin(
-    name='liebert_humidity_air',
-    sections=['liebert_humidity_air', 'liebert_system'],
-    service_name='%s Humidity',
+    name="liebert_humidity_air",
+    sections=["liebert_humidity_air", "liebert_system"],
+    service_name="%s Humidity",
     discovery_function=discover_liebert_humidity_air,
     check_function=check_liebert_humidity_air,
     check_default_parameters=LIEBERT_HUMIDITY_AIR_DEFAULT_PARAMETERS,
-    check_ruleset_name='humidity',
+    check_ruleset_name="humidity",
 )

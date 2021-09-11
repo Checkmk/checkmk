@@ -15,7 +15,7 @@ _RENDER_FUNCTION_AND_UNIT = {
     "mA": (
         lambda current: f"{(current * 1000):.1f}",
         "mA",
-    )
+    ),
 }
 
 

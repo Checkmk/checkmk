@@ -11,21 +11,34 @@ from .utils.df import FSBlocks
 
 
 def str_to_mebibyte(value: int) -> float:
-    return value / (1024.0**2)
+    return value / (1024.0 ** 2)
 
 
 def parse_ceph_df_json(string_table: StringTable) -> FSBlocks:
     # string_table[0][0] contains the version string for possible future compatibilitly checks
     ceph_df = json.loads(string_table[1][0])
-    summary = list(ceph_df['stats_by_class'].values())[0]
+    summary = list(ceph_df["stats_by_class"].values())[0]
     mps = []
-    mps.append(("SUMMARY", str_to_mebibyte(summary["total_bytes"]),
-                str_to_mebibyte(summary["total_avail_bytes"]), 0))
-    mps.extend([
-        (pool["name"],
-         str_to_mebibyte(pool["stats"]["max_avail"]) + str_to_mebibyte(pool["stats"]["bytes_used"]),
-         str_to_mebibyte(pool["stats"]["max_avail"]), 0) for pool in ceph_df["pools"]
-    ])
+    mps.append(
+        (
+            "SUMMARY",
+            str_to_mebibyte(summary["total_bytes"]),
+            str_to_mebibyte(summary["total_avail_bytes"]),
+            0,
+        )
+    )
+    mps.extend(
+        [
+            (
+                pool["name"],
+                str_to_mebibyte(pool["stats"]["max_avail"])
+                + str_to_mebibyte(pool["stats"]["bytes_used"]),
+                str_to_mebibyte(pool["stats"]["max_avail"]),
+                0,
+            )
+            for pool in ceph_df["pools"]
+        ]
+    )
     return mps
 
 

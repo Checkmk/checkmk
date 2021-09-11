@@ -4,14 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # Example output from agent:
-#Current AV databases date:     2014-05-27 03:54:00
-#Last AV databases update date: 2014-05-27 09:00:40
-#Current AV databases state:    UpToDate
-#Current AV databases records:  8015301
-#Update attempts:               48616
-#Successful updates:            9791
-#Update manual stops:           0
-#Updates failed:                3333
+# Current AV databases date:     2014-05-27 03:54:00
+# Last AV databases update date: 2014-05-27 09:00:40
+# Current AV databases state:    UpToDate
+# Current AV databases records:  8015301
+# Update attempts:               48616
+# Successful updates:            9791
+# Update manual stops:           0
+# Updates failed:                3333
 
 from typing import Dict
 
@@ -42,8 +42,9 @@ def discover_kaspersky_av_updates(section: Section) -> DiscoveryResult:
 
 def check_kaspersky_av_updates(section: Section) -> CheckResult:
     yield Result(
-        state=State.CRIT if section['Current AV databases state'] != 'UpToDate' else State.OK,
-        summary=f"Database State: {section['Current AV databases state']}")
+        state=State.CRIT if section["Current AV databases state"] != "UpToDate" else State.OK,
+        summary=f"Database State: {section['Current AV databases state']}",
+    )
     yield Result(state=State.OK, summary=f"Database Date: {section['Current AV databases date']}")
     yield Result(state=State.OK, summary=f"Last Update: {section['Last AV databases update date']}")
 

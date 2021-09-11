@@ -84,11 +84,9 @@ def parse_haproxy(string_table: StringTable) -> Section:
             active = parse_int(line[19])
             backup = parse_int(line[20])
 
-            servers[name] = Server(status=status,
-                                   layer_check=layer_check,
-                                   uptime=uptime,
-                                   active=active,
-                                   backup=backup)
+            servers[name] = Server(
+                status=status, layer_check=layer_check, uptime=uptime, active=active, backup=backup
+            )
 
     return Section(frontends=frontends, servers=servers)
 
@@ -116,21 +114,23 @@ def check_haproxy_frontend(item: str, params: Mapping[str, Any], section: Sectio
     if stot is not None:
         value_store = get_value_store()
         session_rate = get_rate(value_store, f"sessions.{item}", time(), stot)
-        yield from check_levels(value=session_rate,
-                                metric_name="session_rate",
-                                label="Session Rate")
+        yield from check_levels(
+            value=session_rate, metric_name="session_rate", label="Session Rate"
+        )
 
 
-register.check_plugin(name="haproxy_frontend",
-                      sections=["haproxy"],
-                      service_name="HAProxy Frontend %s",
-                      discovery_function=discover_haproxy_frontend,
-                      check_function=check_haproxy_frontend,
-                      check_ruleset_name="haproxy_frontend",
-                      check_default_parameters={
-                          HAProxyFrontendStatus.OPEN.value: State.OK.value,
-                          HAProxyFrontendStatus.STOP.value: State.CRIT.value
-                      })
+register.check_plugin(
+    name="haproxy_frontend",
+    sections=["haproxy"],
+    service_name="HAProxy Frontend %s",
+    discovery_function=discover_haproxy_frontend,
+    check_function=check_haproxy_frontend,
+    check_ruleset_name="haproxy_frontend",
+    check_default_parameters={
+        HAProxyFrontendStatus.OPEN.value: State.OK.value,
+        HAProxyFrontendStatus.STOP.value: State.CRIT.value,
+    },
+)
 
 
 def discover_haproxy_server(section: Section) -> DiscoveryResult:
@@ -160,17 +160,19 @@ def check_haproxy_server(item: str, params: Mapping[str, Any], section: Section)
         yield Result(state=State.OK, summary=f"Up since {render.timespan(uptime)}")
 
 
-register.check_plugin(name="haproxy_server",
-                      sections=["haproxy"],
-                      service_name="HAProxy Server %s",
-                      discovery_function=discover_haproxy_server,
-                      check_function=check_haproxy_server,
-                      check_ruleset_name="haproxy_server",
-                      check_default_parameters={
-                          HAProxyServerStatus.UP.value: State.OK.value,
-                          HAProxyServerStatus.DOWN.value: State.CRIT.value,
-                          HAProxyServerStatus.NOLB.value: State.CRIT.value,
-                          HAProxyServerStatus.MAINT.value: State.CRIT.value,
-                          HAProxyServerStatus.DRAIN.value: State.CRIT.value,
-                          HAProxyServerStatus.NO_CHECK.value: State.CRIT.value
-                      })
+register.check_plugin(
+    name="haproxy_server",
+    sections=["haproxy"],
+    service_name="HAProxy Server %s",
+    discovery_function=discover_haproxy_server,
+    check_function=check_haproxy_server,
+    check_ruleset_name="haproxy_server",
+    check_default_parameters={
+        HAProxyServerStatus.UP.value: State.OK.value,
+        HAProxyServerStatus.DOWN.value: State.CRIT.value,
+        HAProxyServerStatus.NOLB.value: State.CRIT.value,
+        HAProxyServerStatus.MAINT.value: State.CRIT.value,
+        HAProxyServerStatus.DRAIN.value: State.CRIT.value,
+        HAProxyServerStatus.NO_CHECK.value: State.CRIT.value,
+    },
+)

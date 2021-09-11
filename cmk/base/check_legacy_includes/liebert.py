@@ -22,7 +22,7 @@ def parse_liebert_without_unit_wrapper(info, type_func=float):
 
 def scan_liebert(oid):
 
-    return oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.476.1.42')
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.476.1.42")
 
 
 def levels_liebert(value, warn, crit, sorting="upper"):

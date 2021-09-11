@@ -81,7 +81,8 @@ IntervalsFromConfig = Dict[RetentionKey, IntervalFromConfig]
 
 
 def _get_intervals_from_config(
-        raw_intervals_from_config: RawIntervalsFromConfig) -> IntervalsFromConfig:
+    raw_intervals_from_config: RawIntervalsFromConfig,
+) -> IntervalsFromConfig:
     intervals: IntervalsFromConfig = {}
 
     for entry in raw_intervals_from_config:
@@ -89,8 +90,9 @@ def _get_intervals_from_config(
         node_path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
 
         if for_attributes := entry.get("attributes"):
-            intervals.setdefault((node_path, ATTRIBUTES_KEY),
-                                 IntervalFromConfig(for_attributes, interval))
+            intervals.setdefault(
+                (node_path, ATTRIBUTES_KEY), IntervalFromConfig(for_attributes, interval)
+            )
 
         if for_table := entry.get("columns"):
             intervals.setdefault((node_path, TABLE_KEY), IntervalFromConfig(for_table, interval))
@@ -98,7 +100,7 @@ def _get_intervals_from_config(
     return intervals
 
 
-#.
+# .
 #   .--Retentions----------------------------------------------------------.
 #   |            ____      _             _   _                             |
 #   |           |  _ \ ___| |_ ___ _ __ | |_(_) ___  _ __  ___             |

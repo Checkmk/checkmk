@@ -88,7 +88,7 @@ STATES_MAP = {
 ALARM_MAP = {
     AlertStatus.NONE: State.OK,
     AlertStatus.NON_CRITICAL: State.WARN,
-    AlertStatus.CRITICAL: State.CRIT
+    AlertStatus.CRITICAL: State.CRIT,
 }
 
 
@@ -149,7 +149,8 @@ register.snmp_section(
                 "8",  # Printer-MIB::prtInputCapacityUnit
                 "9",  # Printer-MIB::prtInputMaxCapacity
                 "10",  # Printer-MIB::prtInputCurrentLevel
-            ]),
+            ],
+        ),
     ],
 )
 
@@ -168,7 +169,8 @@ register.snmp_section(
                 "3",  # Printer-MIB::prtOutputCapacityUnit
                 "4",  # Printer-MIB::prtOutputMaxCapacity
                 "5",  # Printer-MIB::prtOutputRemainingCapacity
-            ]),
+            ],
+        ),
     ],
 )
 
@@ -180,15 +182,16 @@ def discovery_printer_io(section: Section) -> DiscoveryResult:
         if tray.capacity_max == 0:  # useless
             continue
         if tray.states.availability in [
-                AvailabilityStatus.UNAVAILABLE_BECAUSE_BROKEN,
-                AvailabilityStatus.UNKNOWN,
+            AvailabilityStatus.UNAVAILABLE_BECAUSE_BROKEN,
+            AvailabilityStatus.UNKNOWN,
         ]:
             continue
         yield Service(item=tray.name)
 
 
-def check_printer_io(item: str, params: Mapping[str, Any], section: Section,
-                     io_type: IOType) -> CheckResult:
+def check_printer_io(
+    item: str, params: Mapping[str, Any], section: Section, io_type: IOType
+) -> CheckResult:
     tray = section.get(item)
     if tray is None:
         return
@@ -218,8 +221,9 @@ def check_printer_io(item: str, params: Mapping[str, Any], section: Section,
         yield Result(state=State.OK, summary="Capacity: %s%s" % (tray.level, tray.capacity_unit))
         return
 
-    yield Result(state=State.OK,
-                 summary=f"Maximal capacity: {tray.capacity_max}{tray.capacity_unit}")
+    yield Result(
+        state=State.OK, summary=f"Maximal capacity: {tray.capacity_max}{tray.capacity_unit}"
+    )
 
     quantity_message = "remaining" if io_type == IOType.INPUT else "filled"
 
@@ -232,7 +236,8 @@ def check_printer_io(item: str, params: Mapping[str, Any], section: Section,
         levels_upper=None if io_type == IOType.INPUT else params["capacity_levels"],
         levels_lower=params["capacity_levels"] if io_type == IOType.INPUT else None,
         render_func=render.percent,
-        label=quantity_message.capitalize())
+        label=quantity_message.capitalize(),
+    )
 
 
 def check_printer_input(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:

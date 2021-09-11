@@ -43,11 +43,16 @@ def inventory_hr_fs(info):
         # NOTE: These types are defined in the HR-TYPES-MIB.
         #       .1.3.6.1.2.1.25.2.1 +
         #                           +-> .4 "hrStorageFixedDisk"
-        if hrtype in [ ".1.3.6.1.2.1.25.2.1.4",
-                       # This strange value below is needed for VCenter Appliances
-                       ".1.3.6.1.2.1.25.2.3.1.2.4"] and \
-                hrdescr not in inventory_df_exclude_mountpoints and \
-                saveint(hrsize) != 0:
+        if (
+            hrtype
+            in [
+                ".1.3.6.1.2.1.25.2.1.4",
+                # This strange value below is needed for VCenter Appliances
+                ".1.3.6.1.2.1.25.2.3.1.2.4",
+            ]
+            and hrdescr not in inventory_df_exclude_mountpoints
+            and saveint(hrsize) != 0
+        ):
             mplist.append(hrdescr)
     return df_discovery(host_extra_conf(host_name(), filesystem_groups), mplist)
 
@@ -64,11 +69,11 @@ def check_hr_fs(item, params, info):
             unit_size = saveint(hrunits)
             hrsize = saveint(hrsize)
             if hrsize < 0:
-                hrsize = hrsize + 2**32
+                hrsize = hrsize + 2 ** 32
             size = hrsize * unit_size
             hrused = saveint(hrused)
             if hrused < 0:
-                hrused = hrused + 2**32
+                hrused = hrused + 2 ** 32
             used = hrused * unit_size
             size_mb = size / 1048576.0
             used_mb = used / 1048576.0

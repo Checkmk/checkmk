@@ -34,6 +34,6 @@ def inventory_juniper_info(section):
 
 
 register.inventory_plugin(
-    name='juniper_info',
+    name="juniper_info",
     inventory_function=inventory_juniper_info,
 )

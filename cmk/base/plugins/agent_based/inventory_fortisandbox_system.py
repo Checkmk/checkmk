@@ -25,9 +25,9 @@ register.snmp_section(
     name="fortisandbox_system",
     parse_function=parse_fortisandbox_system,
     fetch=SNMPTree(
-        base='.1.3.6.1.4.1.12356.118.3.1',
+        base=".1.3.6.1.4.1.12356.118.3.1",
         oids=[
-            '1',  # fsaSysVersion
+            "1",  # fsaSysVersion
         ],
     ),
     detect=DETECT_FORTISANDBOX,
@@ -36,7 +36,7 @@ register.snmp_section(
 
 def inventory_fortisandbox_system(section: Section) -> InventoryResult:
     yield Attributes(
-        path=['software', 'os'],
+        path=["software", "os"],
         inventory_attributes={
             "Version": section[0],
         },
@@ -44,6 +44,6 @@ def inventory_fortisandbox_system(section: Section) -> InventoryResult:
 
 
 register.inventory_plugin(
-    name='fortisandbox_system',
+    name="fortisandbox_system",
     inventory_function=inventory_fortisandbox_system,
 )

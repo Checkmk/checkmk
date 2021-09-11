@@ -77,11 +77,11 @@ def _extract_wmic_info(info) -> Tuple[int, List]:
     while True:
         try:
             line = next(lines)
-            if line[-1] == '[wmic process]':
+            if line[-1] == "[wmic process]":
                 is_wmic = True
                 wmic_headers = next(lines)
                 continue
-            if line[-1] == '[wmic process end]':
+            if line[-1] == "[wmic process end]":
                 is_wmic = False
                 continue
         except StopIteration:
@@ -125,8 +125,8 @@ def _merge_wmic(ps_result, wmic_info, wmic_headers) -> Tuple[int, List]:
                 handlec = int(psinfo.get("HandleCount", 0))  # Only in newer psperf.bat versions
                 threadc = int(psinfo["ThreadCount"])  # do not resolve counter here!
                 line[0:0] = [
-                    "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d,)" %
-                    (virt, resi, pid, pagefile, userc, kernelc, handlec, threadc)
+                    "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d,)"
+                    % (virt, resi, pid, pagefile, userc, kernelc, handlec, threadc)
                 ]
         info.append(line)
 
@@ -155,7 +155,9 @@ def parse_process_entries(pre_parsed) -> List[Tuple[ps.PsInfo, List[str]]]:
     return parsed
 
 
-def parse_ps(string_table: StringTable,) -> ps.Section:
+def parse_ps(
+    string_table: StringTable,
+) -> ps.Section:
     # Produces a list of Tuples where each sub list is built as follows:
     # [
     #     [(u'root', u'35156', u'4372', u'00:00:05/2-14:14:49', u'1'), u'/sbin/init'],
@@ -177,19 +179,21 @@ register.agent_section(
 )
 
 
-def parse_ps_lnx(string_table: StringTable,) -> Optional[ps.Section]:
+def parse_ps_lnx(
+    string_table: StringTable,
+) -> Optional[ps.Section]:
     """
-        >>> cpu_cores, lines = parse_ps_lnx([
-        ...     ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
-        ...     ["1:name=systemd:/init.scope,", "root", "226036", "9736", "00:00:09", "05:14:30",
-        ...      "1", "/sbin/init", "--ladida"],
-        ... ])
-        >>> print(cpu_cores)
-        1
-        >>> print(lines[0][0])
-        PsInfo(user='root', virtual=226036, physical=9736, cputime='00:00:09/05:14:30', process_id='1', pagefile=None, usermode_time=None, kernelmode_time=None, handles=None, threads=None, uptime=None, cgroup='1:name=systemd:/init.scope,')
-        >>> print(lines[0][1])
-        ['/sbin/init', '--ladida']
+    >>> cpu_cores, lines = parse_ps_lnx([
+    ...     ["[header]", "CGROUP", "USER", "VSZ", "RSS", "TIME", "ELAPSED", "PID", "COMMAND"],
+    ...     ["1:name=systemd:/init.scope,", "root", "226036", "9736", "00:00:09", "05:14:30",
+    ...      "1", "/sbin/init", "--ladida"],
+    ... ])
+    >>> print(cpu_cores)
+    1
+    >>> print(lines[0][0])
+    PsInfo(user='root', virtual=226036, physical=9736, cputime='00:00:09/05:14:30', process_id='1', pagefile=None, usermode_time=None, kernelmode_time=None, handles=None, threads=None, uptime=None, cgroup='1:name=systemd:/init.scope,')
+    >>> print(lines[0][1])
+    ['/sbin/init', '--ladida']
     """
     data = []
     # info[0]: $Node [header] user ... pid command
@@ -197,7 +201,7 @@ def parse_ps_lnx(string_table: StringTable,) -> Optional[ps.Section]:
     attrs = tuple(word.lower() for word in string_table[0][1:-1])
 
     # busybox' ps seems to not provide the columns we need so we abort
-    if not all(att in attrs for att in ('user', 'vsz', 'rss', 'time', 'elapsed', 'pid')):
+    if not all(att in attrs for att in ("user", "vsz", "rss", "time", "elapsed", "pid")):
         return None
 
     cmd_idx = len(attrs)
@@ -206,12 +210,12 @@ def parse_ps_lnx(string_table: StringTable,) -> Optional[ps.Section]:
         # read all but 'command' into dict
         ps_raw = dict(zip(attrs, line))
         ps_info_obj = ps.PsInfo(
-            user=ps_raw['user'],
-            virtual=int(ps_raw['vsz']),
-            physical=int(ps_raw['rss']),
-            cputime="%s/%s" % (ps_raw['time'], ps_raw['elapsed']),
-            process_id=ps_raw['pid'],
-            cgroup=ps_raw.get('cgroup'),
+            user=ps_raw["user"],
+            virtual=int(ps_raw["vsz"]),
+            physical=int(ps_raw["rss"]),
+            cputime="%s/%s" % (ps_raw["time"], ps_raw["elapsed"]),
+            process_id=ps_raw["pid"],
+            cgroup=ps_raw.get("cgroup"),
         )
 
         data.append((ps_info_obj, line[cmd_idx:]))
@@ -228,5 +232,5 @@ register.agent_section(
     host_label_ruleset_name="inventory_processes_rules",
     host_label_default_parameters={},
     host_label_ruleset_type=register.RuleSetType.ALL,
-    supersedes=['ps'],
+    supersedes=["ps"],
 )

@@ -79,7 +79,7 @@ def inventory_oracle_tablespaces(section: SectionTableSpaces) -> InventoryResult
 
 
 register.inventory_plugin(
-    name='inventory_oracle_tablespaces',
+    name="inventory_oracle_tablespaces",
     inventory_function=inventory_oracle_tablespaces,
     sections=["oracle_tablespaces"],
 )

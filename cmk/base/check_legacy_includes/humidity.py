@@ -16,8 +16,9 @@ from cmk.base.check_api import check_levels, get_percent_human_readable
 # ==================================================================================================
 def check_humidity(humidity, params):
     if isinstance(params, dict):
-        levels = ((params.get("levels") or (None, None)) + (params.get("levels_lower") or
-                                                            (None, None)))
+        levels = (params.get("levels") or (None, None)) + (
+            params.get("levels_lower") or (None, None)
+        )
     elif isinstance(params, (list, tuple)):
         # old params = (crit_low , warn_low, warn, crit)
         levels = (params[2], params[3], params[1], params[0])

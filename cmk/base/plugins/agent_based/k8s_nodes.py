@@ -12,8 +12,8 @@ from .utils import k8s
 
 def host_labels(section: Dict) -> HostLabelGenerator:
     if section:
-        yield HostLabel('cmk/kubernetes_object', 'cluster')
-        yield HostLabel('cmk/kubernetes', 'yes')
+        yield HostLabel("cmk/kubernetes_object", "cluster")
+        yield HostLabel("cmk/kubernetes", "yes")
 
 
 register.agent_section(
@@ -30,12 +30,12 @@ def discover_k8s_nodes(section: Dict) -> DiscoveryResult:
 
 def check_k8s_nodes(params: Mapping[str, Any], section: Dict) -> CheckResult:
     yield from check_levels(
-        len(section.get('nodes', [])),
-        metric_name='k8s_nodes',
-        levels_upper=params.get('levels'),
-        levels_lower=params.get('levels_lower'),
+        len(section.get("nodes", [])),
+        metric_name="k8s_nodes",
+        levels_upper=params.get("levels"),
+        levels_lower=params.get("levels_lower"),
         render_func=lambda x: str(int(x)),
-        label='Number of nodes',
+        label="Number of nodes",
         boundaries=(0, None),
     )
 

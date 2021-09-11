@@ -17,14 +17,14 @@ class EsxHostsystemMemory(NamedTuple):
 
 
 def discover_esx_vsphere_hostsystem_mem_usage(section: Section) -> DiscoveryResult:
-    if 'summary.quickStats.overallMemoryUsage' in section and 'hardware.memorySize' in section:
+    if "summary.quickStats.overallMemoryUsage" in section and "hardware.memorySize" in section:
         yield Service()
 
 
 def _parse_mem_values(section: Section) -> Optional[EsxHostsystemMemory]:
     try:
-        memory_usage = float(section['summary.quickStats.overallMemoryUsage'][0]) * 1024 * 1024
-        memory_size = float(section['hardware.memorySize'][0])
+        memory_usage = float(section["summary.quickStats.overallMemoryUsage"][0]) * 1024 * 1024
+        memory_size = float(section["hardware.memorySize"][0])
     except (KeyError, IndexError, ValueError):
         return None
 
@@ -39,10 +39,10 @@ def _check_esx_vsphere_hostsystem_mem_usage_common(
         "Usage",
         memory_section.usage,
         memory_section.size,
-        ('perc_used', params['levels_upper']),
+        ("perc_used", params["levels_upper"]),
         metric_name="mem_used",
     )
-    yield Metric('mem_total', memory_section.size)
+    yield Metric("mem_total", memory_section.size)
 
 
 def check_esx_vsphere_hostsystem_mem_usage(
@@ -50,7 +50,10 @@ def check_esx_vsphere_hostsystem_mem_usage(
     section: Section,
 ) -> CheckResult:
 
-    if "summary.quickStats.overallMemoryUsage" not in section or 'hardware.memorySize' not in section:
+    if (
+        "summary.quickStats.overallMemoryUsage" not in section
+        or "hardware.memorySize" not in section
+    ):
         return
 
     memory_section = _parse_mem_values(section)
@@ -62,10 +65,10 @@ def check_esx_vsphere_hostsystem_mem_usage(
 
 
 def _applicable_params(params: Mapping[str, Any], node_count: int) -> Mapping[str, Any]:
-    if 'cluster' not in params:
+    if "cluster" not in params:
         return params
 
-    for count, applicable_params in sorted(params['cluster'], reverse=True):
+    for count, applicable_params in sorted(params["cluster"], reverse=True):
         if node_count >= count:
             return applicable_params
 
@@ -80,16 +83,19 @@ def cluster_check_esx_vsphere_hostsystem_mem_usage(
     aggregated_section = None
     for node_section in section.values():
         if node_section and (memory := _parse_mem_values(node_section)):
-            aggregated_section = [sum(s) for s in zip(
-                aggregated_section or [0., 0.],
-                memory,
-            )]
+            aggregated_section = [
+                sum(s)
+                for s in zip(
+                    aggregated_section or [0.0, 0.0],
+                    memory,
+                )
+            ]
 
     if not aggregated_section:
         return
 
     node_count = len(section)
-    yield Result(state=State.OK, summary=f'{node_count} nodes')
+    yield Result(state=State.OK, summary=f"{node_count} nodes")
 
     yield from _check_esx_vsphere_hostsystem_mem_usage_common(
         _applicable_params(params, node_count),
@@ -104,6 +110,6 @@ register.check_plugin(
     discovery_function=discover_esx_vsphere_hostsystem_mem_usage,
     check_function=check_esx_vsphere_hostsystem_mem_usage,
     cluster_check_function=cluster_check_esx_vsphere_hostsystem_mem_usage,
-    check_default_parameters={'levels_upper': (80.0, 90.0)},
+    check_default_parameters={"levels_upper": (80.0, 90.0)},
     check_ruleset_name="esx_host_memory",
 )

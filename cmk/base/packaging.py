@@ -37,7 +37,8 @@ PackageName = str
 
 
 def packaging_usage() -> None:
-    sys.stdout.write("""Usage: check_mk [-v] -P|--package COMMAND [ARGS]
+    sys.stdout.write(
+        """Usage: check_mk [-v] -P|--package COMMAND [ARGS]
 
 Available commands are:
    create NAME      ...  Collect unpackaged files into new package NAME
@@ -58,7 +59,9 @@ Available commands are:
    -v  enables verbose output
 
 Package files are located in %s.
-""" % package_dir())
+"""
+        % package_dir()
+    )
 
 
 def do_packaging(args: List[str]) -> None:
@@ -91,8 +94,9 @@ def do_packaging(args: List[str]) -> None:
     else:
         allc = sorted(commands)
         allc = [tty.bold + c + tty.normal for c in allc]
-        logger.error("Invalid packaging command. Allowed are: %s and %s.", ", ".join(allc[:-1]),
-                     allc[-1])
+        logger.error(
+            "Invalid packaging command. Allowed are: %s and %s.", ", ".join(allc[:-1]), allc[-1]
+        )
         sys.exit(1)
 
 
@@ -136,7 +140,7 @@ def show_package(name: PackageName, show_info: bool = False) -> None:
             tar = tarfile.open(name, "r:gz")
             info = tar.extractfile("info")
             if info is None:
-                raise PackageException("Failed to extract \"info\"")
+                raise PackageException('Failed to extract "info"')
             package = parse_package_info(info.read().decode())
         else:
             this_package = read_package_info(name)
@@ -202,8 +206,13 @@ def package_create(args: List[str]) -> None:
 
     write_package_info(package)
     logger.log(VERBOSE, "New package %s created with %d files.", pacname, num_files)
-    logger.log(VERBOSE, "Please edit package details in %s%s%s", tty.bold,
-               package_dir() / pacname, tty.normal)
+    logger.log(
+        VERBOSE,
+        "Please edit package details in %s%s%s",
+        tty.bold,
+        package_dir() / pacname,
+        tty.normal,
+    )
 
 
 def package_find(_no_args: List[str]) -> None:
@@ -214,9 +223,8 @@ def package_find(_no_args: List[str]) -> None:
                 logger.log(VERBOSE, "Unpackaged files:")
 
             found = frozenset(
-                Path(part.path) / f
-                for f in files
-                if (Path(part.path) / f).resolve() not in visited)
+                Path(part.path) / f for f in files if (Path(part.path) / f).resolve() not in visited
+            )
             if found:
                 logger.log(VERBOSE, "  %s%s%s:", tty.bold, part.title, tty.normal)
             for p in found:
@@ -243,13 +251,15 @@ def package_pack(args: List[str]) -> None:
 
     # Make sure, user is not in data directories of Checkmk
     abs_curdir = os.path.abspath(os.curdir)
-    for directory in [cmk.utils.paths.var_dir
-                     ] + [p.path for p in get_package_parts() + get_config_parts()]:
+    for directory in [cmk.utils.paths.var_dir] + [
+        p.path for p in get_package_parts() + get_config_parts()
+    ]:
         if abs_curdir == directory or abs_curdir.startswith(directory + "/"):
             raise PackageException(
                 "You are in %s!\n"
                 "Please leave the directories of Check_MK before creating\n"
-                "a packet file. Foreign files lying around here will mix up things." % abs_curdir)
+                "a packet file. Foreign files lying around here will mix up things." % abs_curdir
+            )
 
     pacname = args[0]
     package = read_package_info(pacname)

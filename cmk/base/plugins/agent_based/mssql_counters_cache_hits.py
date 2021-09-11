@@ -27,13 +27,14 @@ def discovery_mssql_counters_cache_hits(
     Service(item='MSSQL_VEEAMSQL2012:Buffer_Manager None buffer_cache_hit_ratio')
     Service(item='MSSQL_VEEAMSQL2012:Catalog_Metadata tempdb cache_hit_ratio')
     """
-    want_counters = {'cache_hit_ratio', 'log_cache_hit_ratio', 'buffer_cache_hit_ratio'}
+    want_counters = {"cache_hit_ratio", "log_cache_hit_ratio", "buffer_cache_hit_ratio"}
     yield from (
         Service(item="%s %s %s" % (obj, instance, counter))
         for (obj, instance), counters in section.items()
         for counter in counters
         if counter in want_counters
-        if (counters.get('%s_base' % counter, 0.0) != 0.0 or params.get('add_zero_based_services')))
+        if (counters.get("%s_base" % counter, 0.0) != 0.0 or params.get("add_zero_based_services"))
+    )
 
 
 def _check_common(
@@ -71,10 +72,10 @@ def check_mssql_counters_cache_hits(
 
 register.check_plugin(
     name="mssql_counters_cache_hits",
-    sections=['mssql_counters'],
+    sections=["mssql_counters"],
     service_name="MSSQL %s",
     discovery_function=discovery_mssql_counters_cache_hits,
-    discovery_ruleset_name='inventory_mssql_counters_rules',
+    discovery_ruleset_name="inventory_mssql_counters_rules",
     discovery_default_parameters={},
     check_function=check_mssql_counters_cache_hits,
 )

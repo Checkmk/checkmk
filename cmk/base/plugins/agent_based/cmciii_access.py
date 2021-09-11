@@ -39,7 +39,7 @@ def check_cmciii_access(item: str, params: CheckParams, section: Section) -> typ
 
 register.check_plugin(
     name="cmciii_access",
-    sections=['cmciii'],
+    sections=["cmciii"],
     service_name="%s",
     discovery_function=discover_cmciii_access,
     check_function=check_cmciii_access,

@@ -31,14 +31,20 @@ def discovery_mssql_counters_locks_per_batch(section: Section) -> DiscoveryResul
     """
     db_names = (
         db_name  #
-        for (obj, instance), counters in section.items() if ":" in obj
-        for db_name in (obj.split(":")[0],))
+        for (obj, instance), counters in section.items()
+        if ":" in obj
+        for db_name in (obj.split(":")[0],)
+    )
 
     yield from (
-        Service(item=item_name) for item_name in set(  #
-            db_name for db_name in db_names
+        Service(item=item_name)
+        for item_name in set(  #
+            db_name
+            for db_name in db_names
             if "lock_requests/sec" in section.get(("%s:Locks" % db_name, "_Total"), {})
-            if "batch_requests/sec" in section.get(("%s:SQL_Statistics" % db_name, "None"), {})))
+            if "batch_requests/sec" in section.get(("%s:SQL_Statistics" % db_name, "None"), {})
+        )
+    )
 
 
 def _check_common(
@@ -54,7 +60,7 @@ def _check_common(
     if not data_locks and not data_stats:
         raise IgnoreResultsError("Item not found in monitoring data")
 
-    now = data_locks.get('utc_time', data_stats.get('utc_time')) or time.time()
+    now = data_locks.get("utc_time", data_stats.get("utc_time")) or time.time()
     lock_rate_base = get_int(data_locks, "lock_requests/sec")
     batch_rate_base = get_int(data_stats, "batch_requests/sec")
 
@@ -76,7 +82,7 @@ def _check_common(
 
     yield from check_levels(
         lock_rate / batch_rate if batch_rate else 0,
-        levels_upper=params.get('locks_per_batch'),
+        levels_upper=params.get("locks_per_batch"),
         metric_name="locks_per_batch",
         render_func=lambda v: "%s%.1f" % (node_name and "[%s] " % node_name, v),
         boundaries=(0, None),
@@ -116,7 +122,7 @@ def check_mssql_counters_locks_per_batch(
 
 register.check_plugin(
     name="mssql_counters_locks_per_batch",
-    sections=['mssql_counters'],
+    sections=["mssql_counters"],
     service_name="MSSQL %s Locks per Batch",
     discovery_function=discovery_mssql_counters_locks_per_batch,
     check_default_parameters={},

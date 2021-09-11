@@ -48,6 +48,7 @@ class WMITableLegacy(WMITable):
     """
     Needed since WMITable.get raises IgnoreResultsError
     """
+
     def get(
         self,
         row: Union[str, int],
@@ -55,7 +56,7 @@ class WMITableLegacy(WMITable):
         silently_skip_timed_out=False,
     ) -> Optional[str]:
         if not silently_skip_timed_out and self.timed_out:
-            raise MKCounterWrapped('WMI query timed out')
+            raise MKCounterWrapped("WMI query timed out")
         return self._get_row_col_value(row, column)
 
 
@@ -70,7 +71,7 @@ def parse_wmi_table(
     )
 
 
-#.
+# .
 #   .--Filters-------------------------------------------------------------.
 #   |                     _____ _ _ _                                      |
 #   |                    |  ___(_) | |_ ___ _ __ ___                       |
@@ -95,7 +96,7 @@ def wmi_filter_global_only(
     return True
 
 
-#.
+# .
 #   .--Inventory-----------------------------------------------------------.
 #   |            ___                      _                                |
 #   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
@@ -149,14 +150,15 @@ def inventory_wmi_table_total(
         return []
 
     total_present = all(
-        None in tables[required_table].row_labels for required_table in required_tables)
+        None in tables[required_table].row_labels for required_table in required_tables
+    )
 
     if not total_present:
         return []
     return [(None, levels)]
 
 
-#.
+# .
 #   .--Check---------------------------------------------------------------.
 #   |                      ____ _               _                          |
 #   |                     / ___| |__   ___  ___| | __                      |
@@ -174,8 +176,8 @@ def get_levels_quadruple(params):
         return (None, None, None, None)
     if isinstance(params, tuple):
         return (params[0], params[1], None, None)
-    upper = params.get('upper') or (None, None)
-    lower = params.get('lower') or (None, None)
+    upper = params.get("upper") or (None, None)
+    lower = params.get("lower") or (None, None)
     return upper + lower
 
 
@@ -332,11 +334,14 @@ def wmi_yield_raw_average_timer(
 ):
     assert table.frequency
     try:
-        average = wmi_calculate_raw_average_time(
-            table,
-            row,
-            column,
-        ) / table.frequency  # fixed: true-division
+        average = (
+            wmi_calculate_raw_average_time(
+                table,
+                row,
+                column,
+            )
+            / table.frequency
+        )  # fixed: true-division
     except KeyError:
         return 3, "item not present anymore", []
 
@@ -371,4 +376,4 @@ def wmi_yield_raw_fraction(
     )
 
 
-#.
+# .

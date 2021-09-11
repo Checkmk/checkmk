@@ -11,19 +11,19 @@ from .utils.esx_vsphere import Section
 
 def parse_esx_vsphere_hostsystem(string_table: StringTable) -> Section:
     """
-        >>> from pprint import pprint
-        >>> pprint(parse_esx_vsphere_hostsystem([
-        ...     ['hardware.cpuInfo.numCpuCores', '12'],
-        ...     ['hardware.cpuInfo.numCpuPackages', '2'],
-        ...     ['hardware.cpuInfo.numCpuThreads', '24'],
-        ...     ['hardware.cpuInfo.hz', '2933436846'],  # --> In Hz per CPU Core
-        ...     ['summary.quickStats.overallCpuUsage', '7539'],  # --> In MHz
-        ... ]))
-        OrderedDict([('hardware.cpuInfo.numCpuCores', ['12']),
-                     ('hardware.cpuInfo.numCpuPackages', ['2']),
-                     ('hardware.cpuInfo.numCpuThreads', ['24']),
-                     ('hardware.cpuInfo.hz', ['2933436846']),
-                     ('summary.quickStats.overallCpuUsage', ['7539'])])
+    >>> from pprint import pprint
+    >>> pprint(parse_esx_vsphere_hostsystem([
+    ...     ['hardware.cpuInfo.numCpuCores', '12'],
+    ...     ['hardware.cpuInfo.numCpuPackages', '2'],
+    ...     ['hardware.cpuInfo.numCpuThreads', '24'],
+    ...     ['hardware.cpuInfo.hz', '2933436846'],  # --> In Hz per CPU Core
+    ...     ['summary.quickStats.overallCpuUsage', '7539'],  # --> In MHz
+    ... ]))
+    OrderedDict([('hardware.cpuInfo.numCpuCores', ['12']),
+                 ('hardware.cpuInfo.numCpuPackages', ['2']),
+                 ('hardware.cpuInfo.numCpuThreads', ['24']),
+                 ('hardware.cpuInfo.hz', ['2933436846']),
+                 ('summary.quickStats.overallCpuUsage', ['7539'])])
 
     """
     section = Section()

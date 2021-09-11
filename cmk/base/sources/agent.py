@@ -32,6 +32,7 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
             where each data source has it's own set of directories.
 
     """
+
     def __init__(
         self,
         hostname: HostName,
@@ -53,8 +54,9 @@ class AgentSource(Source[AgentRawData, AgentHostSections]):
             default_host_sections=AgentHostSections(),
             id_=id_,
             cache_dir=Path(cmk.utils.paths.tcp_cache_dir) if main_data_source else None,
-            persisted_section_dir=(Path(cmk.utils.paths.var_dir) /
-                                   "persisted") if main_data_source else None,
+            persisted_section_dir=(Path(cmk.utils.paths.var_dir) / "persisted")
+            if main_data_source
+            else None,
         )
         # TODO: We should cleanup these old directories one day.
         #       Then we can remove this special case

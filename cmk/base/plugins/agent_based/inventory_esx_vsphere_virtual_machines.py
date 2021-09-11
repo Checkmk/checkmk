@@ -42,7 +42,7 @@ def inventory_esx_vsphere_virtual_machines(section: Section) -> InventoryResult:
                 "hostsystem": vm["hostsystem"],
                 "vm_name": vm["vm_name"],
                 "guest_os": vm["guest_os"],
-                "compatibility": vm["compatibility"]
+                "compatibility": vm["compatibility"],
             },
         )
 

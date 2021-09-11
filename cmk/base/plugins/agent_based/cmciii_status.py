@@ -30,7 +30,7 @@ def check_cmciii_status(item: str, params: CheckParams, section: Section) -> typ
 
 register.check_plugin(
     name="cmciii_status",
-    sections=['cmciii'],
+    sections=["cmciii"],
     service_name="%s",
     discovery_function=discover_cmciii_status,
     check_function=check_cmciii_status,

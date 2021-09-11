@@ -70,9 +70,11 @@ def discover_kaspersky_av_tasks(section: Section) -> DiscoveryResult:
     ... }))
     [Service(item='System:EventManager'), Service(item='Real-time protection')]
     """
-    yield from (Service(item=item)
-                for item in section.keys()
-                if item in {'Real-time protection', 'System:EventManager'})
+    yield from (
+        Service(item=item)
+        for item in section.keys()
+        if item in {"Real-time protection", "System:EventManager"}
+    )
 
 
 def check_kaspersky_av_tasks(item: str, section: Section) -> CheckResult:
@@ -86,8 +88,9 @@ def check_kaspersky_av_tasks(item: str, section: Section) -> CheckResult:
         return
 
     state = section[item].get("State")
-    yield Result(state=State.OK if state == "Started" else State.CRIT,
-                 summary=f"Current state is {state}")
+    yield Result(
+        state=State.OK if state == "Started" else State.CRIT, summary=f"Current state is {state}"
+    )
 
 
 register.check_plugin(

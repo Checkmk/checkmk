@@ -24,7 +24,7 @@ from typing import (
 from cmk.utils.exceptions import MKException
 from cmk.utils.log import console
 
-_T = TypeVar('_T')
+_T = TypeVar("_T")
 
 
 class DiscoveryMode(enum.Enum):
@@ -37,13 +37,13 @@ class DiscoveryMode(enum.Enum):
     FALLBACK = 5  # not sure why this could happen
 
     @classmethod
-    def _missing_(cls, value: object) -> 'DiscoveryMode':
+    def _missing_(cls, value: object) -> "DiscoveryMode":
         return cls.FALLBACK
 
     @classmethod
-    def from_str(cls, value: str) -> 'DiscoveryMode':
+    def from_str(cls, value: str) -> "DiscoveryMode":
         # NOTE: 'only-host-labels' is sent by an automation call, so we need to deal with that.
-        return cls[value.upper().replace('-', '_')]
+        return cls[value.upper().replace("-", "_")]
 
 
 class _Timeout(MKException):
@@ -70,7 +70,7 @@ class TimeLimitFilter:
         signal.signal(signal.SIGALRM, TimeLimitFilter._raise_timeout)
         signal.alarm(self.limit + grace)
 
-    def __enter__(self) -> 'TimeLimitFilter':
+    def __enter__(self) -> "TimeLimitFilter":
         return self
 
     def __exit__(
@@ -81,8 +81,10 @@ class TimeLimitFilter:
     ) -> bool:
         signal.alarm(0)
         if isinstance(exc_val, _Timeout):
-            console.verbose(f"  Timeout of {self.limit} seconds reached. "
-                            f"Let's do the remaining {self.label} next time.")
+            console.verbose(
+                f"  Timeout of {self.limit} seconds reached. "
+                f"Let's do the remaining {self.label} next time."
+            )
             return True
         return False
 
@@ -97,8 +99,8 @@ _DiscoveredItem = TypeVar("_DiscoveredItem")
 
 
 class QualifiedDiscovery(Generic[_DiscoveredItem]):
-    """Classify items into "new", "old" and "vanished" ones.
-    """
+    """Classify items into "new", "old" and "vanished" ones."""
+
     def __init__(
         self,
         *,
@@ -115,6 +117,6 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
         self.present: Final = self.old + self.new
 
     @classmethod
-    def empty(cls) -> 'QualifiedDiscovery':
+    def empty(cls) -> "QualifiedDiscovery":
         """create an empty instance"""
         return cls(preexisting=(), current=(), key=repr)

@@ -76,13 +76,13 @@ def validate_function_arguments(
 
     expected_params = []
     if has_item:
-        expected_params.append('item')
+        expected_params.append("item")
     if default_params is not None:
-        expected_params.append('params')
+        expected_params.append("params")
     if len(sections) == 1:
-        expected_params.append('section')
+        expected_params.append("section")
     else:
-        expected_params.extend('section_%s' % s for s in sections)
+        expected_params.extend("section_%s" % s for s in sections)
 
     parameters = inspect.signature(function).parameters
     present_params = list(parameters)
@@ -110,7 +110,7 @@ def _raise_appropriate_type_error(
     # We know we must raise. Dispatch for a better error message:
 
     if set(expected_params) == set(present_params):  # not len()!
-        exp_str = ', '.join(expected_params)
+        exp_str = ", ".join(expected_params)
         raise TypeError(f"{type_label}_function: wrong order of arguments. Expected: {exp_str}")
 
     symm_diff = set(expected_params).symmetric_difference(present_params)
@@ -120,13 +120,16 @@ def _raise_appropriate_type_error(
         raise TypeError(f"{type_label}_function: {missing_or_unexpected} 'item' argument")
 
     if "params" in symm_diff:
-        raise TypeError(f"{type_label}_function: 'params' argument expected if "
-                        "and only if default parameters are not None")
+        raise TypeError(
+            f"{type_label}_function: 'params' argument expected if "
+            "and only if default parameters are not None"
+        )
 
-    exp_str = ', '.join(expected_params)
-    act_str = ', '.join(present_params)
+    exp_str = ", ".join(expected_params)
+    act_str = ", ".join(present_params)
     raise TypeError(
-        f"{type_label}_function: expected arguments: '{exp_str}', actual arguments: '{act_str}'")
+        f"{type_label}_function: expected arguments: '{exp_str}', actual arguments: '{act_str}'"
+    )
 
 
 def _validate_optional_section_annotation(
@@ -163,6 +166,7 @@ class RuleSetType(enum.Enum):
     Discovery and host label functions may either use all rules of a rule set matching
     the current host, or the merged rules.
     """
+
     MERGED = enum.auto()
     ALL = enum.auto()
 
@@ -181,13 +185,14 @@ def validate_default_parameters(
     if default_parameters is None:
         if ruleset_name is None:
             return
-        raise TypeError("missing default %s parameters for ruleset %s" %
-                        (params_type, ruleset_name))
+        raise TypeError(
+            "missing default %s parameters for ruleset %s" % (params_type, ruleset_name)
+        )
 
     if not isinstance(default_parameters, dict):
         raise TypeError("default %s parameters must be dict" % (params_type,))
 
-    if ruleset_name is None and params_type != 'check':
+    if ruleset_name is None and params_type != "check":
         raise TypeError("missing ruleset name for default %s parameters" % (params_type))
 
 
@@ -220,4 +225,5 @@ def validate_check_ruleset_item_consistency(
         raise ValueError(
             f"Check ruleset {check_plugin.check_ruleset_name} has checks with and without item! "
             "At least one of the checks in this group needs to be changed "
-            f"(offending plugin: {check_plugin.name}, present_plugins: {present_plugins}).")
+            f"(offending plugin: {check_plugin.name}, present_plugins: {present_plugins})."
+        )

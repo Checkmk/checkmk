@@ -70,7 +70,7 @@ from cmk.base.check_utils import LegacyCheckParameters, Service
 from . import _cluster_modes, _submit_to_core
 from .utils import AggregatedResult, CHECK_NOT_IMPLEMENTED, ITEM_NOT_FOUND, RECEIVED_NO_DATA
 
-#.
+# .
 #   .--Checking------------------------------------------------------------.
 #   |               ____ _               _    _                            |
 #   |              / ___| |__   ___  ___| | _(_)_ __   __ _                |
@@ -205,7 +205,9 @@ def _execute_checkmk_checks(
                     mode=mode,
                     include_ok_results=True,
                 ),
-                check_parsing_errors(errors=broker.parsing_errors(),),
+                check_parsing_errors(
+                    errors=broker.parsing_errors(),
+                ),
                 *_check_plugins_missing_data(
                     plugins_missing_data,
                     exit_spec,
@@ -222,8 +224,9 @@ def _execute_checkmk_checks(
         _submit_to_core.finalize()
 
 
-def _timing_results(tracker: CPUTracker,
-                    fetcher_messages: Sequence[FetcherMessage]) -> ActiveCheckResult:
+def _timing_results(
+    tracker: CPUTracker, fetcher_messages: Sequence[FetcherMessage]
+) -> ActiveCheckResult:
     total_times = tracker.duration
     for msg in fetcher_messages:
         total_times += msg.stats.duration
@@ -231,8 +234,9 @@ def _timing_results(tracker: CPUTracker,
     infotexts = ("execution time %.1f sec" % total_times.process.elapsed,)
 
     if not config.check_mk_perfdata_with_times:
-        return ActiveCheckResult(0, infotexts, (),
-                                 ("execution_time=%.3f" % total_times.process.elapsed,))
+        return ActiveCheckResult(
+            0, infotexts, (), ("execution_time=%.3f" % total_times.process.elapsed,)
+        )
 
     perfdata = [
         "execution_time=%.3f" % total_times.process.elapsed,
@@ -244,17 +248,19 @@ def _timing_results(tracker: CPUTracker,
     summary: DefaultDict[str, Snapshot] = defaultdict(Snapshot.null)
     for msg in fetcher_messages:
         if msg.fetcher_type in (
-                FetcherType.PIGGYBACK,
-                FetcherType.PROGRAM,
-                FetcherType.SNMP,
-                FetcherType.TCP,
+            FetcherType.PIGGYBACK,
+            FetcherType.PROGRAM,
+            FetcherType.SNMP,
+            FetcherType.TCP,
         ):
-            summary[{
-                FetcherType.PIGGYBACK: "agent",
-                FetcherType.PROGRAM: "ds",
-                FetcherType.SNMP: "snmp",
-                FetcherType.TCP: "agent",
-            }[msg.fetcher_type]] += msg.stats.duration
+            summary[
+                {
+                    FetcherType.PIGGYBACK: "agent",
+                    FetcherType.PROGRAM: "ds",
+                    FetcherType.SNMP: "snmp",
+                    FetcherType.TCP: "agent",
+                }[msg.fetcher_type]
+            ] += msg.stats.duration
     for phase, duration in summary.items():
         perfdata.append("cmk_time_%s=%.3f" % (phase, duration.idle))
 
@@ -270,8 +276,9 @@ def _check_plugins_missing_data(
         return
 
     if not some_success:
-        yield ActiveCheckResult(exit_spec.get("empty_output", 2), ("Got no information from host",),
-                                (), ())
+        yield ActiveCheckResult(
+            exit_spec.get("empty_output", 2), ("Got no information from host",), (), ()
+        )
         return
 
     # key is a legacy name, kept for compatibility.
@@ -297,8 +304,10 @@ def _check_plugins_missing_data(
         (),
     )
 
-    yield from (ActiveCheckResult(status, f"{plugin}{state_markers[status]}", (), ())
-                for plugin, status in sorted(specific_plugins))
+    yield from (
+        ActiveCheckResult(status, f"{plugin}{state_markers[status]}", (), ())
+        for plugin, status in sorted(specific_plugins)
+    )
 
 
 def check_host_services(
@@ -314,21 +323,22 @@ def check_host_services(
 ) -> Tuple[int, List[CheckPluginName]]:
     """Compute service state results for all given services on node or cluster
 
-     * Loops over all services,
-     * calls the check
-     * examines the result and sends it to the core (unless `dry_run` is True).
+    * Loops over all services,
+    * calls the check
+    * examines the result and sends it to the core (unless `dry_run` is True).
     """
     num_success = 0
     plugins_missing_data: Set[CheckPluginName] = set()
 
     with plugin_contexts.current_host(host_config.hostname):
-        with value_store.load_host_value_store(host_config.hostname,
-                                               store_changes=not dry_run) as value_store_manager:
+        with value_store.load_host_value_store(
+            host_config.hostname, store_changes=not dry_run
+        ) as value_store_manager:
             for service in _filter_services_to_check(
-                    services=services,
-                    run_plugin_names=run_plugin_names,
-                    config_cache=config_cache,
-                    host_name=host_config.hostname,
+                services=services,
+                run_plugin_names=run_plugin_names,
+                config_cache=config_cache,
+                host_name=host_config.hostname,
             ):
                 success = _execute_check(
                     parsed_sections_broker,
@@ -357,19 +367,23 @@ def _filter_services_to_check(
     """Filter list of services to check"""
     if run_plugin_names is EVERYTHING:
         return [
-            service for service in services
+            service
+            for service in services
             if not service_outside_check_period(config_cache, host_name, service.description)
         ]
 
     # If check types are specified (e.g. via command line), drop all others
     return [
-        service for service in services if service.check_plugin_name in run_plugin_names and
-        not service_outside_check_period(config_cache, host_name, service.description)
+        service
+        for service in services
+        if service.check_plugin_name in run_plugin_names
+        and not service_outside_check_period(config_cache, host_name, service.description)
     ]
 
 
-def service_outside_check_period(config_cache: config.ConfigCache, hostname: HostName,
-                                 description: ServiceName) -> bool:
+def service_outside_check_period(
+    config_cache: config.ConfigCache, hostname: HostName, description: ServiceName
+) -> bool:
     period = config_cache.check_period_of_service(hostname, description)
     if period is None:
         return False
@@ -446,50 +460,65 @@ def get_aggregated_result(
 
     config_cache = config.get_config_cache()
 
-    check_function = _cluster_modes.get_cluster_check_function(
-        *config_cache.get_clustered_service_configuration(
-            host_config.hostname,
-            service.description,
-        ),
-        plugin=plugin,
-        service_id=service.id(),
-        persist_value_store_changes=persist_value_store_changes,
-    ) if host_config.is_cluster else plugin.check_function
+    check_function = (
+        _cluster_modes.get_cluster_check_function(
+            *config_cache.get_clustered_service_configuration(
+                host_config.hostname,
+                service.description,
+            ),
+            plugin=plugin,
+            service_id=service.id(),
+            persist_value_store_changes=persist_value_store_changes,
+        )
+        if host_config.is_cluster
+        else plugin.check_function
+    )
 
-    source_type = (SourceType.MANAGEMENT
-                   if service.check_plugin_name.is_management_name() else SourceType.HOST)
+    source_type = (
+        SourceType.MANAGEMENT if service.check_plugin_name.is_management_name() else SourceType.HOST
+    )
 
     try:
-        kwargs = get_section_cluster_kwargs(
-            parsed_sections_broker,
-            config_cache.get_clustered_service_node_keys(
-                host_config.hostname,
-                source_type,
-                service.description,
-            ) or [],
-            plugin.sections,
-        ) if host_config.is_cluster else get_section_kwargs(
-            parsed_sections_broker,
-            HostKey(host_config.hostname, ipaddress, source_type),
-            plugin.sections,
+        kwargs = (
+            get_section_cluster_kwargs(
+                parsed_sections_broker,
+                config_cache.get_clustered_service_node_keys(
+                    host_config.hostname,
+                    source_type,
+                    service.description,
+                )
+                or [],
+                plugin.sections,
+            )
+            if host_config.is_cluster
+            else get_section_kwargs(
+                parsed_sections_broker,
+                HostKey(host_config.hostname, ipaddress, source_type),
+                plugin.sections,
+            )
         )
 
         if not kwargs and not service.check_plugin_name.is_management_name():
             # in 1.6 some plugins where discovered for management boards, but with
             # the regular host plugins name. In this case retry with the source type
             # forced to MANAGEMENT:
-            kwargs = get_section_cluster_kwargs(
-                parsed_sections_broker,
-                config_cache.get_clustered_service_node_keys(
-                    host_config.hostname,
-                    SourceType.MANAGEMENT,
-                    service.description,
-                ) or [],
-                plugin.sections,
-            ) if host_config.is_cluster else get_section_kwargs(
-                parsed_sections_broker,
-                HostKey(host_config.hostname, ipaddress, SourceType.MANAGEMENT),
-                plugin.sections,
+            kwargs = (
+                get_section_cluster_kwargs(
+                    parsed_sections_broker,
+                    config_cache.get_clustered_service_node_keys(
+                        host_config.hostname,
+                        SourceType.MANAGEMENT,
+                        service.description,
+                    )
+                    or [],
+                    plugin.sections,
+                )
+                if host_config.is_cluster
+                else get_section_kwargs(
+                    parsed_sections_broker,
+                    HostKey(host_config.hostname, ipaddress, SourceType.MANAGEMENT),
+                    plugin.sections,
+                )
             )
 
         if not kwargs:  # no data found
@@ -502,17 +531,13 @@ def get_aggregated_result(
 
         kwargs = {
             **kwargs,
-            **({} if service.item is None else {
-                   "item": service.item
-               }),
-            **({} if plugin.check_default_parameters is None else {
-                   "params": params_function()
-               }),
+            **({} if service.item is None else {"item": service.item}),
+            **({} if plugin.check_default_parameters is None else {"params": params_function()}),
         }
 
-        with plugin_contexts.current_host(host_config.hostname), \
-            plugin_contexts.current_service(service), \
-            value_store_manager.namespace(service.id()):
+        with plugin_contexts.current_host(host_config.hostname), plugin_contexts.current_service(
+            service
+        ), value_store_manager.namespace(service.id()):
             result = _aggregate_results(check_function(**kwargs))
 
     except (item_state.MKCounterWrapped, checking_classes.IgnoreResultsError) as e:
@@ -531,13 +556,17 @@ def get_aggregated_result(
         if cmk.utils.debug.enabled():
             raise
         table = check_table.get_check_table(host_config.hostname, skip_autochecks=True)
-        result = 3, cmk.base.crash_reporting.create_check_crash_dump(
-            host_name=host_config.hostname,
-            service_name=service.description,
-            plugin_name=service.check_plugin_name,
-            plugin_kwargs=globals().get("kwargs", {}),
-            is_manual=service.id() in table,
-        ), []
+        result = (
+            3,
+            cmk.base.crash_reporting.create_check_crash_dump(
+                host_name=host_config.hostname,
+                service_name=service.description,
+                plugin_name=service.check_plugin_name,
+                plugin_kwargs=globals().get("kwargs", {}),
+                is_manual=service.id() in table,
+            ),
+            [],
+        )
 
     return AggregatedResult(
         submit=True,
@@ -548,8 +577,11 @@ def get_aggregated_result(
 
 
 def _final_read_only_check_parameters(entries: LegacyCheckParameters) -> Parameters:
-    raw_parameters = (time_resolved_check_parameters(entries) if isinstance(
-        entries, cmk.base.config.TimespecificParamList) else entries)
+    raw_parameters = (
+        time_resolved_check_parameters(entries)
+        if isinstance(entries, cmk.base.config.TimespecificParamList)
+        else entries
+    )
     # TODO (mo): this needs cleaning up, once we've gotten rid of tuple parameters.
     # wrap_parameters is a no-op for dictionaries.
     # For auto-migrated plugins expecting tuples, they will be
@@ -558,17 +590,20 @@ def _final_read_only_check_parameters(entries: LegacyCheckParameters) -> Paramet
 
 
 def time_resolved_check_parameters(
-    entries: cmk.base.config.TimespecificParamList,) -> LegacyCheckParameters:
+    entries: cmk.base.config.TimespecificParamList,
+) -> LegacyCheckParameters:
 
     # Check if first entry is not dict based or if its dict based
     # check if the tp_default_value is not a dict
-    if not isinstance(entries[0], dict) or not isinstance(entries[0].get("tp_default_value", {}),
-                                                          dict):
+    if not isinstance(entries[0], dict) or not isinstance(
+        entries[0].get("tp_default_value", {}), dict
+    ):
         # This rule is tuple based, means no dict-key merging
         if not isinstance(entries[0], dict):
             return entries[0]  # A tuple rule, simply return first match
         return _evaluate_timespecific_entry(
-            entries[0])  # A timespecific rule, determine the correct tuple
+            entries[0]
+        )  # A timespecific rule, determine the correct tuple
 
     # This rule is dictionary based, evaluate all entries and merge matching keys
     timespecific_entries: Dict[str, Any] = {}
@@ -635,15 +670,19 @@ def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheck
         state_marker = state_markers[int(result.state)] if needs_marker else ""
 
         if result.summary:
-            summaries.append(_add_state_marker(
-                result.summary,
-                state_marker,
-            ))
+            summaries.append(
+                _add_state_marker(
+                    result.summary,
+                    state_marker,
+                )
+            )
 
-        details.append(_add_state_marker(
-            result.details,
-            state_marker,
-        ))
+        details.append(
+            _add_state_marker(
+                result.details,
+                state_marker,
+            )
+        )
 
     # Empty list? Check returned nothing
     if not details:
@@ -651,8 +690,9 @@ def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheck
 
     if not summaries:
         count = len(details)
-        summaries.append("Everything looks OK - %d detail%s available" %
-                         (count, "" if count == 1 else "s"))
+        summaries.append(
+            "Everything looks OK - %d detail%s available" % (count, "" if count == 1 else "s")
+        )
 
     all_text = [", ".join(summaries)] + details
     return int(status), "\n".join(all_text).strip(), perfdata

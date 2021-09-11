@@ -72,30 +72,26 @@ def _group_by_everyhour(t: Timestamp) -> Tuple[Timegroup, Timestamp]:
 
 
 _PREDICTION_PERIODS: Final = {
-    "wday":
-        _PeriodInfo(
-            slice=86400,  # 7 slices
-            groupby=_group_by_wday,
-            valid=7,
-        ),
-    "day":
-        _PeriodInfo(
-            slice=86400,  # 31 slices
-            groupby=_group_by_day_of_month,
-            valid=28,
-        ),
-    "hour":
-        _PeriodInfo(
-            slice=86400,  # 1 slice
-            groupby=_group_by_day,
-            valid=1,
-        ),
-    "minute":
-        _PeriodInfo(
-            slice=3600,  # 1 slice
-            groupby=_group_by_everyhour,
-            valid=24,
-        ),
+    "wday": _PeriodInfo(
+        slice=86400,  # 7 slices
+        groupby=_group_by_wday,
+        valid=7,
+    ),
+    "day": _PeriodInfo(
+        slice=86400,  # 31 slices
+        groupby=_group_by_day_of_month,
+        valid=28,
+    ),
+    "hour": _PeriodInfo(
+        slice=86400,  # 1 slice
+        groupby=_group_by_day,
+        valid=1,
+    ),
+    "minute": _PeriodInfo(
+        slice=3600,  # 1 slice
+        groupby=_group_by_everyhour,
+        valid=24,
+    ),
 }
 
 
@@ -173,12 +169,14 @@ def _data_stats(slices: List[TimeSeriesValues]) -> DataStats:
         point_line = [x for x in time_column if x is not None]
         if point_line:
             average = sum(point_line) / float(len(point_line))
-            descriptors.append([
-                average,
-                min(point_line),
-                max(point_line),
-                _std_dev(point_line, average),
-            ])
+            descriptors.append(
+                [
+                    average,
+                    min(point_line),
+                    max(point_line),
+                    _std_dev(point_line, average),
+                ]
+            )
         else:
             descriptors.append([None, None, None, None])
 
@@ -209,7 +207,9 @@ def _std_dev(point_line: List[float], average: float) -> float:
     # itself as a measure of the dispersion.
     if samples == 1:
         return abs(average)
-    return math.sqrt(abs(sum(p**2 for p in point_line) - average**2 * samples) / float(samples - 1))
+    return math.sqrt(
+        abs(sum(p ** 2 for p in point_line) - average ** 2 * samples) / float(samples - 1)
+    )
 
 
 def _is_prediction_up_to_date(
@@ -263,9 +263,9 @@ def get_levels(
 
     data_for_pred: Optional[PredictionData] = None
     if _is_prediction_up_to_date(
-            last_info=prediction_store.get_info(timegroup),
-            timegroup=timegroup,
-            params=params,
+        last_info=prediction_store.get_info(timegroup),
+        timegroup=timegroup,
+        params=params,
     ):
         data_for_pred = prediction_store.get_data(timegroup)
 
@@ -275,8 +275,9 @@ def get_levels(
 
         time_windows = _time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
 
-        rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(hostname, service_description, dsname,
-                                                            cf)
+        rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(
+            hostname, service_description, dsname, cf
+        )
 
         data_for_pred = _calculate_data_for_prediction(time_windows, rrd_datacolumn)
 

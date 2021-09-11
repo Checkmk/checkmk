@@ -103,15 +103,18 @@ def check_hitachi_hnas_volume(
     section: Section,
 ) -> CheckResult:
 
-    fslist_blocks = [(mount_point, size_mb, avail_mb, 0)
-                     for mount_point, (_, size_mb, avail_mb, _) in section.volumes.items()]
+    fslist_blocks = [
+        (mount_point, size_mb, avail_mb, 0)
+        for mount_point, (_, size_mb, avail_mb, _) in section.volumes.items()
+    ]
 
     blocks_info = {
         mountp: {
             "size_mb": size_mb,
             "avail_mb": avail_mb,
             "reserved_mb": 0,
-        } for mountp, (_, size_mb, avail_mb, _) in section.volumes.items()
+        }
+        for mountp, (_, size_mb, avail_mb, _) in section.volumes.items()
     }
 
     yield from df_check_filesystem_list(
@@ -184,15 +187,18 @@ def check_hitachi_hnas_virtual_volume(
     section: Section,
 ) -> CheckResult:
 
-    fslist_blocks = [(mount_point, size_mb, avail_mb, 0)
-                     for mount_point, (size_mb, avail_mb) in section.virtual_volumes.items()]
+    fslist_blocks = [
+        (mount_point, size_mb, avail_mb, 0)
+        for mount_point, (size_mb, avail_mb) in section.virtual_volumes.items()
+    ]
 
     blocks_info = {
         mountp: {
             "size_mb": size_mb,
             "avail_mb": avail_mb,
             "reserved_mb": 0,
-        } for mountp, (size_mb, avail_mb) in section.virtual_volumes.items()
+        }
+        for mountp, (size_mb, avail_mb) in section.virtual_volumes.items()
     }
 
     yield from df_check_filesystem_list(

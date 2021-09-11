@@ -38,7 +38,8 @@ def get_device_type_label(section: _WithDescription) -> HostLabelGenerator:
     for device_type in SNMPDeviceType:
         if device_type.name in section.description.upper():
             if device_type is SNMPDeviceType.SWITCH and _is_fibrechannel_switch(
-                    section.description):
+                section.description
+            ):
                 yield HostLabel("cmk/device_type", "fcswitch")
             else:
                 yield HostLabel("cmk/device_type", device_type.name.lower())

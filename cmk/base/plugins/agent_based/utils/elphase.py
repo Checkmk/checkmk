@@ -43,8 +43,10 @@ def check_elphase(item: str, params: CheckParams, section: Section) -> type_defs
                 state = 0
         else:
             state = device_state
-        yield Result(state=State(state),
-                     summary="Device status: %s(%s)" % (device_state_readable, device_state))
+        yield Result(
+            state=State(state),
+            summary="Device status: %s(%s)" % (device_state_readable, device_state),
+        )
 
     for quantity, title, render_func, bound, factor in [
         ("voltage", "Voltage", lambda x: f"{x:.1f} V", Bounds.Lower, 1),
@@ -54,10 +56,20 @@ def check_elphase(item: str, params: CheckParams, section: Section) -> type_defs
         ("appower", "Apparent Power", lambda x: f"{x:.1f} VA", Bounds.Upper, 1),
         ("energy", "Energy", lambda x: f"{x:.1f} Wh", Bounds.Upper, 1),
         ("frequency", "Frequency", lambda x: f"{x:.1f} hz", Bounds.Both, 1),
-        ("differential_current_ac", "Differential current AC", lambda x: f"{(x * 1000):.1f} mA",
-         Bounds.Upper, 0.001),
-        ("differential_current_dc", "Differential current DC", lambda x: f"{(x * 1000):.1f} mA",
-         Bounds.Upper, 0.001),
+        (
+            "differential_current_ac",
+            "Differential current AC",
+            lambda x: f"{(x * 1000):.1f} mA",
+            Bounds.Upper,
+            0.001,
+        ),
+        (
+            "differential_current_dc",
+            "Differential current DC",
+            lambda x: f"{(x * 1000):.1f} mA",
+            Bounds.Upper,
+            0.001,
+        ),
     ]:
         if quantity not in section[item]:
             continue

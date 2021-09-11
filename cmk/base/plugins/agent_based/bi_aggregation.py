@@ -39,8 +39,9 @@ def render_bi_infos(infos):
     own_infos, nested_infos = infos
     lines = []
     if "error" in own_infos:
-        lines.append("%s %s" %
-                     (state_markers[own_infos["error"]["state"]], own_infos["error"]["output"]))
+        lines.append(
+            "%s %s" % (state_markers[own_infos["error"]["state"]], own_infos["error"]["output"])
+        )
     if "custom" in own_infos:
         lines.append(own_infos["custom"]["output"])
 
@@ -63,7 +64,7 @@ def check_bi_aggregation(item: str, section: Section) -> CheckResult:
     overall_state = bi_data["state_computed_by_agent"]
     yield Result(
         state=State(overall_state),
-        summary="Aggregation state: %s" % ['Ok', 'Warning', 'Critical', 'Unknown'][overall_state],
+        summary="Aggregation state: %s" % ["Ok", "Warning", "Critical", "Unknown"][overall_state],
     )
 
     yield Result(

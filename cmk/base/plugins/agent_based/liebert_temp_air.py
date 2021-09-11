@@ -72,7 +72,7 @@ def _check_liebert_temp_air(
     if value is None:
         return
 
-    device_state = section_liebert_system.get('Unit Operating State')
+    device_state = section_liebert_system.get("Unit Operating State")
     if "Unavailable" in value and device_state == "standby":
         yield Result(state=state.OK, summary="Unit is in standby (unavailable)")
         return
@@ -82,7 +82,7 @@ def _check_liebert_temp_air(
     except ValueError:
         return
 
-    unit = unit.replace('deg ', '').lower()
+    unit = unit.replace("deg ", "").lower()
     value = to_celsius(value, unit)
     yield from check_temperature(
         value,
@@ -98,24 +98,25 @@ register.snmp_section(
     parse_function=parse_liebert_temp_air,
     fetch=[
         SNMPTree(
-            base='.1.3.6.1.4.1.476.1.42.3.9.20.1',
+            base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
             oids=[
-                '10.1.2.1.4291',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                '20.1.2.1.4291',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-                '30.1.2.1.4291',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-                '10.1.2.1.5002',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-                '20.1.2.1.5002',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-                '30.1.2.1.5002',  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-            ]),
+                "10.1.2.1.4291",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+                "20.1.2.1.4291",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+                "30.1.2.1.4291",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+                "10.1.2.1.5002",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+                "20.1.2.1.5002",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+                "30.1.2.1.5002",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+            ],
+        ),
     ],
 )
 
 register.check_plugin(
-    name='liebert_temp_air',
-    sections=['liebert_temp_air', 'liebert_system'],
-    service_name='%s Temperature',
+    name="liebert_temp_air",
+    sections=["liebert_temp_air", "liebert_system"],
+    service_name="%s Temperature",
     check_default_parameters={},
     discovery_function=discover_liebert_temp_air,
     check_function=check_liebert_temp_air,
-    check_ruleset_name='temperature',
+    check_ruleset_name="temperature",
 )

@@ -69,5 +69,5 @@ register.snmp_section(
         ),
     ],
     detect=all_of(contains(".1.3.6.1.2.1.1.2.0", ".4.1.11863."), if64.HAS_ifHCInOctets),
-    supersedes=['if', 'if64'],
+    supersedes=["if", "if64"],
 )

@@ -25,7 +25,8 @@ def parse_aws_lambda_summary(string_table: StringTable) -> LambdaSummarySection:
             Timeout=float(lambda_function["Timeout"]),
             MemorySize=float(lambda_function["MemorySize"]),
             CodeSize=float(lambda_function["CodeSize"]),
-        ) for lambda_function in parse_aws(string_table)
+        )
+        for lambda_function in parse_aws(string_table)
     }
 
 
@@ -41,7 +42,8 @@ def parse_aws_lambda_region_limits(string_table: StringTable) -> LambdaRegionLim
     for region in parsed:
         region_name = region[0][4]  # region must contain limits
         region_limits[region_name] = LambdaRegionLimits(
-            **{limit[0]: float(limit[3]) for limit in region})
+            **{limit[0]: float(limit[3]) for limit in region}
+        )
     return region_limits
 
 

@@ -37,6 +37,7 @@ __all__ = ["fetch_all", "make_sources", "make_nodes"]
 
 class _Builder:
     """Build a source list from host config and raw sections."""
+
     def __init__(
         self,
         host_config: HostConfig,
@@ -53,7 +54,8 @@ class _Builder:
         self.on_scan_error: Final = on_scan_error
         self.force_snmp_cache_refresh: Final = force_snmp_cache_refresh
         self._fallback_ip: Final = ip_lookup.fallback_ip_for(
-            self.host_config.default_address_family)
+            self.host_config.default_address_family
+        )
         self._elems: Dict[str, Source] = {}
 
         self._initialize()
@@ -82,10 +84,12 @@ class _Builder:
 
     def _initialize_agent_based(self) -> None:
         if self.host_config.is_all_agents_host:
-            self._add(self._get_agent(
-                ignore_special_agents=True,
-                main_data_source=True,
-            ))
+            self._add(
+                self._get_agent(
+                    ignore_special_agents=True,
+                    main_data_source=True,
+                )
+            )
             for elem in self._get_special_agents():
                 self._add(elem)
 
@@ -94,10 +98,12 @@ class _Builder:
                 self._add(elem)
 
         elif self.host_config.is_tcp_host:
-            self._add(self._get_agent(
-                ignore_special_agents=False,
-                main_data_source=True,
-            ))
+            self._add(
+                self._get_agent(
+                    ignore_special_agents=False,
+                    main_data_source=True,
+                )
+            )
 
         if "no-piggyback" not in self.host_config.tags:
             self._add(PiggybackSource(self.hostname, self.ipaddress))
@@ -121,7 +127,8 @@ class _Builder:
                 selected_sections=self.selected_sections,
                 on_scan_error=self.on_scan_error,
                 force_cache_refresh=self.force_snmp_cache_refresh,
-            ))
+            )
+        )
 
     def _initialize_mgmt_boards(self) -> None:
         protocol = self.host_config.management_protocol
@@ -142,12 +149,15 @@ class _Builder:
                     selected_sections=self.selected_sections,
                     on_scan_error=self.on_scan_error,
                     force_cache_refresh=self.force_snmp_cache_refresh,
-                ))
+                )
+            )
         elif protocol == "ipmi":
-            self._add(IPMISource(
-                self.hostname,
-                ip_address,
-            ))
+            self._add(
+                IPMISource(
+                    self.hostname,
+                    ip_address,
+                )
+            )
         else:
             raise LookupError()
 
@@ -191,7 +201,8 @@ class _Builder:
                 self.ipaddress or self._fallback_ip,
                 special_agent_id=agentname,
                 params=params,
-            ) for agentname, params in self.host_config.special_agents
+            )
+            for agentname, params in self.host_config.special_agents
         ]
 
 

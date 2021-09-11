@@ -35,7 +35,8 @@ def parse_hitachi_hnas_fc_if(string_table: List[type_defs.StringTable]) -> inter
             in_discards=interfaces.saveint(line[13]),
             in_errors=sum(map(int, line[6:13])),
             out_octets=interfaces.saveint(line[5]),
-        ) for line in string_table[0]
+        )
+        for line in string_table[0]
     ]
 
 

@@ -12,7 +12,7 @@ def parse_omd_apache(string_table):
     parsed: Dict[str, List[str]] = {}
     site = None
     for line in string_table:
-        if line[0][0] == '[':
+        if line[0][0] == "[":
             site = line[0][1:-1]
             parsed[site] = []
         elif site:

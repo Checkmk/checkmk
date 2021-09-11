@@ -41,7 +41,7 @@ def host_labels_docker_node_info(section: Section) -> HostLabelGenerator:
 
     """
     if section:
-        yield HostLabel(u"cmk/docker_object", u"node")
+        yield HostLabel("cmk/docker_object", "node")
 
 
 register.agent_section(

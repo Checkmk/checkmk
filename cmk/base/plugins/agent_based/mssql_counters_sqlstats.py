@@ -22,10 +22,12 @@ def discovery_mssql_counters_sqlstats(section: Section) -> DiscoveryResult:
     Service(item='MSSQL_VEEAMSQL2012:SQL_Statistics None sql_re-compilations/sec')
     """
     want_counters = {"batch_requests/sec", "sql_compilations/sec", "sql_re-compilations/sec"}
-    yield from (Service(item="%s %s %s" % (obj, instance, counter))
-                for (obj, instance), counters in section.items()
-                for counter in counters
-                if counter in want_counters)
+    yield from (
+        Service(item="%s %s %s" % (obj, instance, counter))
+        for (obj, instance), counters in section.items()
+        for counter in counters
+        if counter in want_counters
+    )
 
 
 def _check_common(
@@ -88,7 +90,7 @@ def check_mssql_counters_sqlstats(
 
 register.check_plugin(
     name="mssql_counters_sqlstats",
-    sections=['mssql_counters'],
+    sections=["mssql_counters"],
     service_name="MSSQL %s",  # todo: strange
     discovery_function=discovery_mssql_counters_sqlstats,
     check_default_parameters={},

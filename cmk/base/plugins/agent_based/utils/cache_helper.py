@@ -9,21 +9,26 @@ from ..agent_based_api.v1.render import percent, timespan
 
 
 class CacheInfo(
-        NamedTuple("_CacheInfo", [
+    NamedTuple(
+        "_CacheInfo",
+        [
             ("age", float),
             ("cache_interval", float),
             ("elapsed_lifetime_percent", float),
-        ])):
+        ],
+    )
+):
     """
     >>> CacheInfo(age=300,cache_interval=600)
     CacheInfo(age=300, cache_interval=600, elapsed_lifetime_percent=50.0)
     """
+
     def __new__(
         cls,
         *,
         age: float,
         cache_interval: float,
-    ) -> 'CacheInfo':
+    ) -> "CacheInfo":
         return super().__new__(
             cls,
             age=age,
@@ -41,7 +46,7 @@ class CacheInfo(
         """
         if not (cache_raw and cache_raw.startswith("cached(")):
             return None
-        creation_time, interval = (float(v) for v in cache_raw[7:-1].split(',', 1))
+        creation_time, interval = (float(v) for v in cache_raw[7:-1].split(",", 1))
         age = now - creation_time
         return cls(age=age, cache_interval=interval)
 
@@ -55,7 +60,7 @@ class CacheInfo(
 
 
 def render_cache_info(cacheinfo: CacheInfo) -> str:
-    """ Renders cache information of local and mrpe services
+    """Renders cache information of local and mrpe services
 
     We try to mimic the behaviour of cached agent sections.
     Problem here: We need this info on a per-service basis, so we cannot use the section header.
@@ -67,8 +72,12 @@ def render_cache_info(cacheinfo: CacheInfo) -> str:
     'Cannot reasonably calculate cache metrics (hosts time is running ahead), cache interval: 40 seconds'
     """
     if cacheinfo.age >= 0:
-        return (f"Cache generated {timespan(cacheinfo.age)} ago, "
-                f"cache interval: {timespan(cacheinfo.cache_interval)}, "
-                f"elapsed cache lifespan: {percent(cacheinfo.elapsed_lifetime_percent)}")
-    return (f"Cannot reasonably calculate cache metrics (hosts time is running ahead), "
-            f"cache interval: {timespan(cacheinfo.cache_interval)}")
+        return (
+            f"Cache generated {timespan(cacheinfo.age)} ago, "
+            f"cache interval: {timespan(cacheinfo.cache_interval)}, "
+            f"elapsed cache lifespan: {percent(cacheinfo.elapsed_lifetime_percent)}"
+        )
+    return (
+        f"Cannot reasonably calculate cache metrics (hosts time is running ahead), "
+        f"cache interval: {timespan(cacheinfo.cache_interval)}"
+    )

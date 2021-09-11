@@ -25,7 +25,7 @@ def parse_ucs_c_rack_server_faultinst(string_table: type_defs.StringTable) -> Di
     {}
     """
     parsed: Dict[str, List[str]] = {}
-    key_translation = {'descr': 'Description', 'affectedDN': 'Affected DN'}
+    key_translation = {"descr": "Description", "affectedDN": "Affected DN"}
 
     for fault_inst_data in string_table:
         for data in fault_inst_data[1:]:
@@ -33,7 +33,7 @@ def parse_ucs_c_rack_server_faultinst(string_table: type_defs.StringTable) -> Di
             key = key_translation.get(key, key.capitalize())
             parsed.setdefault(key, []).append(value)
 
-        parsed['Affected DN'][-1] = parsed['Affected DN'][-1].replace('sys/', '')
+        parsed["Affected DN"][-1] = parsed["Affected DN"][-1].replace("sys/", "")
 
     return parsed
 

@@ -29,7 +29,7 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 
 
 @dataclass
-class Phase():
+class Phase:
     input: float
     output: float
 
@@ -38,7 +38,7 @@ class Phase():
         value_store: MutableMapping[str, Any],
         value_store_key_prefix: str,
         now: float,
-    ) -> Optional['Phase']:
+    ) -> Optional["Phase"]:
         try:
             rate_input: Optional[float] = get_rate(
                 value_store,
@@ -59,9 +59,13 @@ class Phase():
             )
         except GetRateError:
             rate_output = None
-        return None if rate_input is None or rate_output is None else Phase(
-            rate_input,
-            rate_output,
+        return (
+            None
+            if rate_input is None or rate_output is None
+            else Phase(
+                rate_input,
+                rate_output,
+            )
         )
 
 
@@ -74,7 +78,7 @@ class VPNTunnel:
         self,
         value_store: MutableMapping[str, Any],
         now: float,
-    ) -> 'VPNTunnel':
+    ) -> "VPNTunnel":
         rates_phase_1 = self.phase_1.rates(
             value_store,
             "phase_1",
@@ -159,14 +163,14 @@ register.snmp_section(
                 "26",  # cipSecTunInOctets,  phase 2 (throughput)
                 "39",  # cipSecTunOutOctets, phase 2 (throughput)
             ],
-        )
+        ),
     ],
 )
 
 
 class CheckParameters(
-        TypedDict,
-        total=False,
+    TypedDict,
+    total=False,
 ):
     state: int
     tunnels: Sequence[Tuple[str, str, int]]
@@ -180,15 +184,23 @@ def _state_missing_and_aliases(
     item: str,
     params: CheckParameters,
 ) -> Tuple[State, str]:
-    revelant_tunnel_settings = [(
-        alias,
-        state_missing,
-    ) for ip, alias, state_missing in params.get("tunnels", []) if ip == item]
+    revelant_tunnel_settings = [
+        (
+            alias,
+            state_missing,
+        )
+        for ip, alias, state_missing in params.get("tunnels", [])
+        if ip == item
+    ]
     return (
-        State(revelant_tunnel_settings[-1][1] if revelant_tunnel_settings else params.get(
-            "state",
-            2,
-        )),
+        State(
+            revelant_tunnel_settings[-1][1]
+            if revelant_tunnel_settings
+            else params.get(
+                "state",
+                2,
+            )
+        ),
         " ".join(f"[{alias}]" for alias, _state_missing in revelant_tunnel_settings),
     )
 
@@ -218,7 +230,8 @@ def check_cisco_vpn_tunnel(
 
     yield Result(
         state=State.OK,
-        summary="%sPhase 1: in: %s, out: %s" % (
+        summary="%sPhase 1: in: %s, out: %s"
+        % (
             aliases + " " if aliases else "",
             networkbandwidth(rates.phase_1.input),
             networkbandwidth(rates.phase_1.output),
@@ -228,7 +241,8 @@ def check_cisco_vpn_tunnel(
     if rates.phase_2:
         yield Result(
             state=State.OK,
-            summary="Phase 2: in: %s, out: %s" % (
+            summary="Phase 2: in: %s, out: %s"
+            % (
                 networkbandwidth(rates.phase_2.input),
                 networkbandwidth(rates.phase_2.output),
             ),

@@ -11,7 +11,7 @@ from cmk.utils.type_defs import CheckPluginName, Item, LegacyCheckParameters
 from cmk.base.discovered_labels import DiscoveredServiceLabels
 
 ServiceID = Tuple[CheckPluginName, Item]
-CheckTable = Dict[ServiceID, 'Service']
+CheckTable = Dict[ServiceID, "Service"]
 
 
 class Service:
@@ -62,8 +62,10 @@ class Service:
         """
         if not isinstance(other, Service):
             raise TypeError("Can only be compared with other Service objects")
-        return (self.check_plugin_name, self.item or "") < (other.check_plugin_name, other.item or
-                                                            "")
+        return (self.check_plugin_name, self.item or "") < (
+            other.check_plugin_name,
+            other.item or "",
+        )
 
     def __eq__(self, other: Any) -> bool:
         """Is used during service discovery list computation to detect and replace duplicates
@@ -78,9 +80,16 @@ class Service:
         return hash(self.id())
 
     def __repr__(self) -> str:
-        return "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_labels=%r)" % (
-            self._check_plugin_name, self._item, self._description, self._parameters,
-            self._service_labels)
+        return (
+            "Service(check_plugin_name=%r, item=%r, description=%r, parameters=%r, service_labels=%r)"
+            % (
+                self._check_plugin_name,
+                self._item,
+                self._description,
+                self._parameters,
+                self._service_labels,
+            )
+        )
 
     def dump_autocheck(self) -> str:
         return "{'check_plugin_name': %r, 'item': %r, 'parameters': %r, 'service_labels': %r}" % (

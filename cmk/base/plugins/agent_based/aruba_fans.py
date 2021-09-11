@@ -71,7 +71,8 @@ def parse_aruba_fans(string_table: StringTable) -> Section:
             type=FanType(entry[2]),
             state=FanState(entry[3]),
             failures=int(entry[4]),
-        ) for entry in string_table
+        )
+        for entry in string_table
     }
 
 
@@ -90,7 +91,8 @@ register.snmp_section(
             "3",  # hpicfDcFan::hpicfFanType
             "4",  # hpicfDcFan::hpicfFanState
             "6",  # hpicfDcFan::hpicfFanNumFailures
-        ]),
+        ],
+    ),
 )
 
 

@@ -20,13 +20,15 @@ def parse_sap_hana_proc(string_table: StringTable) -> sap_hana.ParsedSection:
                 continue
 
             inst = section.setdefault(
-                "%s - %s" % (sid_instance, line[1]), {
+                "%s - %s" % (sid_instance, line[1]),
+                {
                     "port": line[0],
                     "pid": line[2],
                     "detail": line[3],
                     "acting": line[4],
                     "coordin": line[6],
-                })
+                },
+            )
             try:
                 inst["sql_port"] = int(line[5])
             except ValueError:
@@ -45,8 +47,9 @@ def discovery_sap_hana_proc(section: sap_hana.ParsedSection) -> DiscoveryResult:
         yield Service(item=sid_instance, parameters={"coordin": data["coordin"]})
 
 
-def check_sap_hana_proc(item: str, params: Mapping[str, Any],
-                        section: sap_hana.ParsedSection) -> CheckResult:
+def check_sap_hana_proc(
+    item: str, params: Mapping[str, Any], section: sap_hana.ParsedSection
+) -> CheckResult:
     data = section.get(item)
     if data is None:
         raise IgnoreResultsError("Login into database failed.")

@@ -20,7 +20,7 @@ class ClientsTotal:
     total: int
 
 
-T = TypeVar('T', ClientsPerInterface, ClientsTotal)
+T = TypeVar("T", ClientsPerInterface, ClientsTotal)
 
 
 @dataclass

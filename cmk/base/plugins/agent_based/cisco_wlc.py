@@ -42,24 +42,26 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTa
 Section = Dict[str, str]
 
 OID_sysObjectID = ".1.3.6.1.2.1.1.2.0"
-VERSION_CISCO_WLC_PATTERN = "|".join((
-    ".1.3.6.1.4.1.14179.1.1.4.3",
-    ".1.3.6.1.4.1.9.1.1069",
-    ".1.3.6.1.4.1.9.1.1615",
-    ".1.3.6.1.4.1.9.1.1645",
-    ".1.3.6.1.4.1.9.1.1631",
-    ".1.3.6.1.4.1.9.1.1279",
-    ".1.3.6.1.4.1.9.1.1293",
-    ".1.3.6.1.4.1.9.1.2170",
-    ".1.3.6.1.4.1.9.1.2171",
-    ".1.3.6.1.4.1.9.1.2371",
-    ".1.3.6.1.4.1.9.1.2250",
-    ".1.3.6.1.4.1.9.1.2370",  # Cisco Aironet 2800
-    ".1.3.6.1.4.1.9.1.2391",
-    ".1.3.6.1.4.1.9.1.2427",
-    ".1.3.6.1.4.1.9.1.2489",
-    ".1.3.6.1.4.1.9.1.2530",  # cisco WLC 9800
-)).replace(".", r"\.")
+VERSION_CISCO_WLC_PATTERN = "|".join(
+    (
+        ".1.3.6.1.4.1.14179.1.1.4.3",
+        ".1.3.6.1.4.1.9.1.1069",
+        ".1.3.6.1.4.1.9.1.1615",
+        ".1.3.6.1.4.1.9.1.1645",
+        ".1.3.6.1.4.1.9.1.1631",
+        ".1.3.6.1.4.1.9.1.1279",
+        ".1.3.6.1.4.1.9.1.1293",
+        ".1.3.6.1.4.1.9.1.2170",
+        ".1.3.6.1.4.1.9.1.2171",
+        ".1.3.6.1.4.1.9.1.2371",
+        ".1.3.6.1.4.1.9.1.2250",
+        ".1.3.6.1.4.1.9.1.2370",  # Cisco Aironet 2800
+        ".1.3.6.1.4.1.9.1.2391",
+        ".1.3.6.1.4.1.9.1.2427",
+        ".1.3.6.1.4.1.9.1.2489",
+        ".1.3.6.1.4.1.9.1.2530",  # cisco WLC 9800
+    )
+).replace(".", r"\.")
 
 map_states = {
     "1": (state.OK, "online"),
@@ -96,8 +98,8 @@ def _ap_info(node: Optional[str], wlc_status: str) -> Result:
     status, state_readable = map_states.get(wlc_status, (state.UNKNOWN, "unknown[%s]" % wlc_status))
     return Result(
         state=status,
-        summary="Accesspoint: %s%s" % (state_readable,
-                                       (' (connected to %s)' % node) if node else ""),
+        summary="Accesspoint: %s%s"
+        % (state_readable, (" (connected to %s)" % node) if node else ""),
     )
 
 
@@ -137,10 +139,13 @@ register.snmp_section(
     detect=matches(OID_sysObjectID, VERSION_CISCO_WLC_PATTERN),
     parse_function=parse_cisco_wlc,
     fetch=[
-        SNMPTree(base=".1.3.6.1.4.1.14179.2.2.1.1", oids=[
-            "3",
-            "6",
-        ]),
+        SNMPTree(
+            base=".1.3.6.1.4.1.14179.2.2.1.1",
+            oids=[
+                "3",
+                "6",
+            ],
+        ),
     ],
 )
 

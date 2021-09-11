@@ -29,7 +29,7 @@ def check_cmciii_phase(item: str, params: CheckParams, section: Section) -> type
 
 register.check_plugin(
     name="cmciii_phase",
-    sections=['cmciii'],
+    sections=["cmciii"],
     service_name="Input %s",
     discovery_function=discover_cmciii_phase,
     check_function=check_cmciii_phase,

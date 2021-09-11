@@ -31,7 +31,7 @@ class Automations:
         super().__init__()
         self._automations: Dict[str, Automation] = {}
 
-    def register(self, automation: 'Automation') -> None:
+    def register(self, automation: "Automation") -> None:
         if automation.cmd is None:
             raise TypeError()
         self._automations[automation.cmd] = automation
@@ -69,7 +69,7 @@ class Automations:
             profiling.output_profile()
 
         out.output(python_printer.pformat(result))
-        out.output('\n')
+        out.output("\n")
 
         return 0
 

@@ -18,20 +18,24 @@ def parse_fortiauthenticator_system(string_table: StringTable) -> Optional[Secti
     >>> parse_fortiauthenticator_system([['FACVM', 'FAC-VMTM18000123']])
     {'model': 'FACVM', 'serial': 'FAC-VMTM18000123'}
     """
-    return {
-        'model': string_table[0][0],
-        'serial': string_table[0][1],
-    } if string_table else None
+    return (
+        {
+            "model": string_table[0][0],
+            "serial": string_table[0][1],
+        }
+        if string_table
+        else None
+    )
 
 
 register.snmp_section(
-    name='fortiauthenticator_system',
+    name="fortiauthenticator_system",
     parse_function=parse_fortiauthenticator_system,
     fetch=SNMPTree(
-        base='.1.3.6.1.4.1.12356.113.1',
+        base=".1.3.6.1.4.1.12356.113.1",
         oids=[
-            '1',  # facSysModel
-            '2',  # facSysSerial
+            "1",  # facSysModel
+            "2",  # facSysSerial
         ],
     ),
     detect=DETECT_FORTIAUTHENTICATOR,
@@ -40,15 +44,15 @@ register.snmp_section(
 
 def inventory_fortiauthenticator_system(section: Section) -> InventoryResult:
     yield Attributes(
-        path=['hardware', 'system'],
+        path=["hardware", "system"],
         inventory_attributes={
-            'Model': section['model'],
-            'Serial number': section['serial'],
+            "Model": section["model"],
+            "Serial number": section["serial"],
         },
     )
 
 
 register.inventory_plugin(
-    name='fortiauthenticator_system',
+    name="fortiauthenticator_system",
     inventory_function=inventory_fortiauthenticator_system,
 )

@@ -12,7 +12,7 @@ from ..agent_based_api.v1.type_defs import StringTable
 ParsedStringSection = Dict[str, str]
 ParsedAnySection = Dict[str, Any]
 
-DETECT_LIEBERT = startswith('.1.3.6.1.2.1.1.2.0', '.1.3.6.1.4.1.476.1.42')
+DETECT_LIEBERT = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.476.1.42")
 
 
 def parse_liebert_without_unit(

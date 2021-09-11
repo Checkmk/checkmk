@@ -5,22 +5,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # EXAMPLE DATA FROM: WDC SSC-D0128SC-2100
-#<<<smart>>>
-#/dev/sda ATA WDC_SSC-D0128SC-   1 Raw_Read_Error_Rate     0x000b   100   100   050    Pre-fail  Always       -       16777215
-#/dev/sda ATA WDC_SSC-D0128SC-   3 Spin_Up_Time            0x0007   100   100   050    Pre-fail  Always       -       0
-#/dev/sda ATA WDC_SSC-D0128SC-   5 Reallocated_Sector_Ct   0x0013   100   100   050    Pre-fail  Always       -       0
-#/dev/sda ATA WDC_SSC-D0128SC-   7 Seek_Error_Rate         0x000b   100   100   050    Pre-fail  Always       -       0
-#/dev/sda ATA WDC_SSC-D0128SC-   9 Power_On_Hours          0x0012   100   100   000    Old_age   Always       -       1408
-#/dev/sda ATA WDC_SSC-D0128SC-  10 Spin_Retry_Count        0x0013   100   100   050    Pre-fail  Always       -       0
-#/dev/sda ATA WDC_SSC-D0128SC-  12 Power_Cycle_Count       0x0012   100   100   000    Old_age   Always       -       523
-#/dev/sda ATA WDC_SSC-D0128SC- 168 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       1
-#/dev/sda ATA WDC_SSC-D0128SC- 175 Program_Fail_Count_Chip 0x0003   100   100   010    Pre-fail  Always       -       0
-#/dev/sda ATA WDC_SSC-D0128SC- 192 Power-Off_Retract_Count 0x0012   100   100   000    Old_age   Always       -       0
-#/dev/sda ATA WDC_SSC-D0128SC- 194 Temperature_Celsius     0x0022   040   100   000    Old_age   Always       -       40 (Lifetime Min/Max 30/60)
-#/dev/sda ATA WDC_SSC-D0128SC- 197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
-#/dev/sda ATA WDC_SSC-D0128SC- 240 Head_Flying_Hours       0x0013   100   100   050    Pre-fail  Always       -       0
-#/dev/sda ATA WDC_SSC-D0128SC- 170 Unknown_Attribute       0x0003   100   100   010    Pre-fail  Always       -       1769478
-#/dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
+# <<<smart>>>
+# /dev/sda ATA WDC_SSC-D0128SC-   1 Raw_Read_Error_Rate     0x000b   100   100   050    Pre-fail  Always       -       16777215
+# /dev/sda ATA WDC_SSC-D0128SC-   3 Spin_Up_Time            0x0007   100   100   050    Pre-fail  Always       -       0
+# /dev/sda ATA WDC_SSC-D0128SC-   5 Reallocated_Sector_Ct   0x0013   100   100   050    Pre-fail  Always       -       0
+# /dev/sda ATA WDC_SSC-D0128SC-   7 Seek_Error_Rate         0x000b   100   100   050    Pre-fail  Always       -       0
+# /dev/sda ATA WDC_SSC-D0128SC-   9 Power_On_Hours          0x0012   100   100   000    Old_age   Always       -       1408
+# /dev/sda ATA WDC_SSC-D0128SC-  10 Spin_Retry_Count        0x0013   100   100   050    Pre-fail  Always       -       0
+# /dev/sda ATA WDC_SSC-D0128SC-  12 Power_Cycle_Count       0x0012   100   100   000    Old_age   Always       -       523
+# /dev/sda ATA WDC_SSC-D0128SC- 168 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       1
+# /dev/sda ATA WDC_SSC-D0128SC- 175 Program_Fail_Count_Chip 0x0003   100   100   010    Pre-fail  Always       -       0
+# /dev/sda ATA WDC_SSC-D0128SC- 192 Power-Off_Retract_Count 0x0012   100   100   000    Old_age   Always       -       0
+# /dev/sda ATA WDC_SSC-D0128SC- 194 Temperature_Celsius     0x0022   040   100   000    Old_age   Always       -       40 (Lifetime Min/Max 30/60)
+# /dev/sda ATA WDC_SSC-D0128SC- 197 Current_Pending_Sector  0x0012   100   100   000    Old_age   Always       -       0
+# /dev/sda ATA WDC_SSC-D0128SC- 240 Head_Flying_Hours       0x0013   100   100   050    Pre-fail  Always       -       0
+# /dev/sda ATA WDC_SSC-D0128SC- 170 Unknown_Attribute       0x0003   100   100   010    Pre-fail  Always       -       1769478
+# /dev/sda ATA WDC_SSC-D0128SC- 173 Unknown_Attribute       0x0012   100   100   000    Old_age   Always       -       4217788040605
 import time
 from typing import Any, Callable, Dict, Final, Mapping, Tuple
 
@@ -60,51 +60,51 @@ def _set_int_or_zero(disk: Disk, key: str, value: Any) -> None:
 
 def parse_raw_values(string_table: StringTable) -> Section:
     """
-        >>> from pprint import pprint
-        >>> pprint(parse_raw_values([
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '1', 'Raw_Read_Error_Rate',
-        ...      '0x000b', '100', '100', '050', 'Pre-fail', 'Always', '-', '16777215'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '3', 'Spin_Up_Time',
-        ...      '0x0007', '100', '100', '050', 'Pre-fail', 'Always', '-', '0'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '5', 'Reallocated_Sector_Ct',
-        ...      '0x0013', '100', '100', '050', 'Pre-fail', 'Always', '-', '0'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '7', 'Seek_Error_Rate',
-        ...      '0x000b', '100', '100', '050', 'Pre-fail', 'Always', '-', '0'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '9', 'Power_On_Hours',
-        ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '1408'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '10', 'Spin_Retry_Count',
-        ...      '0x0013', '100', '100', '050', 'Pre-fail', 'Always', '-', '0'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '12', 'Power_Cycle_Count',
-        ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '523'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '168', 'Unknown_Attribute',
-        ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '1'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '175', 'Program_Fail_Count_Chip',
-        ...      '0x0003', '100', '100', '010', 'Pre-fail', 'Always', '-', '0'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '192', 'Power-Off_Retract_Count',
-        ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '0'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '194', 'Temperature_Celsius',
-        ...      '0x0022', '040', '100', '000', 'Old_age', 'Always', '-', '40', '(Lifetime', 'Min/Max', '30/60)'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '197', 'Current_Pending_Sector',
-        ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '0'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '240', 'Head_Flying_Hours',
-        ...      '0x0013', '100', '100', '050', 'Pre-fail', 'Always', '-', '0'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '170', 'Unknown_Attribute',
-        ...      '0x0003', '100', '100', '010', 'Pre-fail', 'Always', '-', '1769478'],
-        ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '173', 'Unknown_Attribute',
-        ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '4217788040605'],
-        ... ]))
-        {'/dev/sda': {'Current_Pending_Sector': 0,
-                      'Head_Flying_Hours': 0,
-                      'Power-Off_Retract_Count': 0,
-                      'Power_Cycle_Count': 523,
-                      'Power_On_Hours': 1408,
-                      'Program_Fail_Count_Chip': 0,
-                      'Raw_Read_Error_Rate': 16777215,
-                      'Reallocated_Sector_Ct': 0,
-                      'Seek_Error_Rate': 0,
-                      'Spin_Retry_Count': 0,
-                      'Spin_Up_Time': 0,
-                      'Temperature_Celsius': 40}}
+    >>> from pprint import pprint
+    >>> pprint(parse_raw_values([
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '1', 'Raw_Read_Error_Rate',
+    ...      '0x000b', '100', '100', '050', 'Pre-fail', 'Always', '-', '16777215'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '3', 'Spin_Up_Time',
+    ...      '0x0007', '100', '100', '050', 'Pre-fail', 'Always', '-', '0'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '5', 'Reallocated_Sector_Ct',
+    ...      '0x0013', '100', '100', '050', 'Pre-fail', 'Always', '-', '0'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '7', 'Seek_Error_Rate',
+    ...      '0x000b', '100', '100', '050', 'Pre-fail', 'Always', '-', '0'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '9', 'Power_On_Hours',
+    ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '1408'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '10', 'Spin_Retry_Count',
+    ...      '0x0013', '100', '100', '050', 'Pre-fail', 'Always', '-', '0'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '12', 'Power_Cycle_Count',
+    ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '523'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '168', 'Unknown_Attribute',
+    ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '1'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '175', 'Program_Fail_Count_Chip',
+    ...      '0x0003', '100', '100', '010', 'Pre-fail', 'Always', '-', '0'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '192', 'Power-Off_Retract_Count',
+    ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '0'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '194', 'Temperature_Celsius',
+    ...      '0x0022', '040', '100', '000', 'Old_age', 'Always', '-', '40', '(Lifetime', 'Min/Max', '30/60)'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '197', 'Current_Pending_Sector',
+    ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '0'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '240', 'Head_Flying_Hours',
+    ...      '0x0013', '100', '100', '050', 'Pre-fail', 'Always', '-', '0'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '170', 'Unknown_Attribute',
+    ...      '0x0003', '100', '100', '010', 'Pre-fail', 'Always', '-', '1769478'],
+    ...     ['/dev/sda', 'ATA', 'WDC_SSC-D0128SC-', '173', 'Unknown_Attribute',
+    ...      '0x0012', '100', '100', '000', 'Old_age', 'Always', '-', '4217788040605'],
+    ... ]))
+    {'/dev/sda': {'Current_Pending_Sector': 0,
+                  'Head_Flying_Hours': 0,
+                  'Power-Off_Retract_Count': 0,
+                  'Power_Cycle_Count': 523,
+                  'Power_On_Hours': 1408,
+                  'Program_Fail_Count_Chip': 0,
+                  'Raw_Read_Error_Rate': 16777215,
+                  'Reallocated_Sector_Ct': 0,
+                  'Seek_Error_Rate': 0,
+                  'Spin_Retry_Count': 0,
+                  'Spin_Up_Time': 0,
+                  'Temperature_Celsius': 40}}
 
     """
     disks: Section = {}
@@ -154,18 +154,18 @@ register.agent_section(
 )
 
 DISCOVERED_PARAMETERS: Final = (
-    'Reallocated_Sector_Ct',
-    'Spin_Retry_Count',
-    'Reallocated_Event_Count',
-    'Current_Pending_Sector',
-    'Command_Timeout',
-    'End-to-End_Error',
-    'Reported_Uncorrect',
-    'Uncorrectable_Error_Cnt',
-    'UDMA_CRC_Error_Count',
-    'CRC_Error_Count',
-    #nvme
-    'Critical_Warning',
+    "Reallocated_Sector_Ct",
+    "Spin_Retry_Count",
+    "Reallocated_Event_Count",
+    "Current_Pending_Sector",
+    "Command_Timeout",
+    "End-to-End_Error",
+    "Reported_Uncorrect",
+    "Uncorrectable_Error_Cnt",
+    "UDMA_CRC_Error_Count",
+    "CRC_Error_Count",
+    # nvme
+    "Critical_Warning",
 )
 
 
@@ -188,27 +188,27 @@ def _summary(state: State, text: str) -> Result:
 
 
 OUTPUT_FIELDS: Tuple[Tuple[Callable[[State, str], Result], str, str, Callable], ...] = (
-    (_summary, 'Power_On_Hours', 'Powered on', lambda h: render.timespan(h * 3600)),
-    (_summary, 'Power_Cycle_Count', 'Power cycles', str),
-    (_summary, 'Reported_Uncorrect', 'Uncorrectable errors', str),
-    (_summary, 'Uncorrectable_Error_Cnt', 'Uncorrectable errors', str),
-    (_summary, 'Reallocated_Sector_Ct', 'Reallocated sectors', str),
-    (_summary, 'Reallocated_Event_Count', 'Reallocated events', str),
-    (_summary, 'Spin_Retry_Count', 'Spin retries', str),
-    (_summary, 'Current_Pending_Sector', 'Pending sectors', str),
-    (_summary, 'Command_Timeout', 'Command timeout counter', str),
-    (_summary, 'End-to-End_Error', 'End-to-End errors', str),
-    (_summary, 'UDMA_CRC_Error_Count', 'UDMA CRC errors', str),
-    (_summary, 'CRC_Error_Count', 'UDMA CRC errors', str),
+    (_summary, "Power_On_Hours", "Powered on", lambda h: render.timespan(h * 3600)),
+    (_summary, "Power_Cycle_Count", "Power cycles", str),
+    (_summary, "Reported_Uncorrect", "Uncorrectable errors", str),
+    (_summary, "Uncorrectable_Error_Cnt", "Uncorrectable errors", str),
+    (_summary, "Reallocated_Sector_Ct", "Reallocated sectors", str),
+    (_summary, "Reallocated_Event_Count", "Reallocated events", str),
+    (_summary, "Spin_Retry_Count", "Spin retries", str),
+    (_summary, "Current_Pending_Sector", "Pending sectors", str),
+    (_summary, "Command_Timeout", "Command timeout counter", str),
+    (_summary, "End-to-End_Error", "End-to-End errors", str),
+    (_summary, "UDMA_CRC_Error_Count", "UDMA CRC errors", str),
+    (_summary, "CRC_Error_Count", "UDMA CRC errors", str),
     # nvme
-    (_summary, 'Power_Cycles', 'Power cycles', str),
-    (_summary, 'Critical_Warning', 'Critical warning', str),
-    (_summary, 'Available_Spare', 'Available spare', render.percent),
-    (_summary, 'Percentage_Used', 'Percentage used', render.percent),
-    (_summary, 'Media_and_Data_Integrity_Errors', 'Media and data integrity errors', str),
-    (_summary, 'Error_Information_Log_Entries', 'Error information log entries', str),
-    (_summary, 'Data_Units_Read', 'Data units read', render.bytes),
-    (_summary, 'Data_Units_Written', 'Data units written', render.bytes),
+    (_summary, "Power_Cycles", "Power cycles", str),
+    (_summary, "Critical_Warning", "Critical warning", str),
+    (_summary, "Available_Spare", "Available spare", render.percent),
+    (_summary, "Percentage_Used", "Percentage used", render.percent),
+    (_summary, "Media_and_Data_Integrity_Errors", "Media and data integrity errors", str),
+    (_summary, "Error_Information_Log_Entries", "Error information log entries", str),
+    (_summary, "Data_Units_Read", "Data units read", render.bytes),
+    (_summary, "Data_Units_Written", "Data units written", render.bytes),
 )
 
 
@@ -261,12 +261,16 @@ def check_smart_stats(item: str, params: Mapping[str, int], section: Section) ->
         if field == "Command_Timeout":
             rate = get_rate(get_value_store(), "cmd_timeout", time.time(), value)
             state = State.OK if rate < MAX_COMMAND_TIMEOUTS_PER_HOUR / (60 * 60) else State.CRIT
-            hints = [] if state == State.OK else [
-                f"counter increased more than {MAX_COMMAND_TIMEOUTS_PER_HOUR} counts / h (!!). "
-                f"Value during discovery was: {ref_value}"
-            ]
+            hints = (
+                []
+                if state == State.OK
+                else [
+                    f"counter increased more than {MAX_COMMAND_TIMEOUTS_PER_HOUR} counts / h (!!). "
+                    f"Value during discovery was: {ref_value}"
+                ]
+            )
 
-        yield make_result(state, infotext + " (%s)" % ', '.join(hints) if hints else infotext)
+        yield make_result(state, infotext + " (%s)" % ", ".join(hints) if hints else infotext)
         yield Metric(field, value)
 
 

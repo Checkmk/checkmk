@@ -89,7 +89,8 @@ def parse_aruba_psu(string_table: StringTable) -> Section:
             wattage_max=int(entry[6]),
             last_call=int(entry[7]),
             model=entry[8],
-        ) for entry in string_table
+        )
+        for entry in string_table
     }
 
 
@@ -112,7 +113,9 @@ register.snmp_section(
             "7",  # hpicfDcPower::hpicfPsWattageMax
             "8",  # hpicfDcPower::hpicfPSLastCall
             "9",  # hpicfDcPower::hpicfPsModel
-        ]))
+        ],
+    ),
+)
 
 
 def discover_aruba_psu(section: Section) -> DiscoveryResult:

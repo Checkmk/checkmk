@@ -42,14 +42,14 @@ def check_cpu_load_generic(params, load, num_cpus=1, processor_type=ProcessorTyp
         # predictive levels
         warn, crit = None, None
 
-    perfdata: Any = [('load' + str(z), l, warn, crit, 0, num_cpus)
-                     for (z, l) in [(1, load[0]), (5, load[1]), (15, load[2])]]
+    perfdata: Any = [
+        ("load" + str(z), l, warn, crit, 0, num_cpus)
+        for (z, l) in [(1, load[0]), (5, load[1]), (15, load[2])]
+    ]
 
-    state, infotext, perf = check_levels(load[2],
-                                         'load15',
-                                         levels,
-                                         factor=num_cpus,
-                                         infoname="15 min load")
+    state, infotext, perf = check_levels(
+        load[2], "load15", levels, factor=num_cpus, infoname="15 min load"
+    )
     perfdata += perf[1:]
     if num_cpus > 1:
         infotext += _format_cores_info(num_cpus, processor_type, load[2] / num_cpus)

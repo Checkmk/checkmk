@@ -65,7 +65,7 @@ def savefloat(raw: Any) -> float:
     try:
         return float(raw)
     except (TypeError, ValueError):
-        return 0.
+        return 0.0
 
 
 def _ungrouped_mountpoints_and_groups(
@@ -153,7 +153,7 @@ def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str
 
         normsize = levels["magic_normsize"]
         hgb_size = size_gb / float(normsize)
-        felt_size = hgb_size**magic
+        felt_size = hgb_size ** magic
         scale = felt_size / hgb_size
         warn_scaled = 100 - ((100 - warn) * scale)
         crit_scaled = 100 - ((100 - crit) * scale)
@@ -180,20 +180,21 @@ def get_filesystem_levels(size_gb: float, params: Mapping[str, Any]) -> Dict[str
     levels["levels_mb"] = (warn_mb, crit_mb)
     if isinstance(warn, float):
         if warn_scaled < 0 and crit_scaled < 0:
-            label = 'warn/crit at free space below'
+            label = "warn/crit at free space below"
             warn_scaled *= -1
             crit_scaled *= -1
         else:
-            label = 'warn/crit at'
-        levels["levels_text"] = (f"({label} "
-                                 f"{render.percent(warn_scaled)}/{render.percent(crit_scaled)})")
+            label = "warn/crit at"
+        levels["levels_text"] = (
+            f"({label} " f"{render.percent(warn_scaled)}/{render.percent(crit_scaled)})"
+        )
     else:
         if warn * mega < 0 and crit * mega < 0:
-            label = 'warn/crit at free space below'
+            label = "warn/crit at free space below"
             warn *= -1
             crit *= -1
         else:
-            label = 'warn/crit at'
+            label = "warn/crit at"
         warn_hr = render.bytes(warn * mega)
         crit_hr = render.bytes(crit * mega)
         levels["levels_text"] = f"({label} {warn_hr}/{crit_hr})"
@@ -234,19 +235,19 @@ def mountpoints_in_group(
     matching_mountpoints = []
     for mountpoint in mplist:
         if any(
-                fnmatch.fnmatch(mountpoint, pattern_exclude)
-                for pattern_exclude in patterns_exclude):
+            fnmatch.fnmatch(mountpoint, pattern_exclude) for pattern_exclude in patterns_exclude
+        ):
             continue
         if any(
-                fnmatch.fnmatch(mountpoint, pattern_include)
-                for pattern_include in patterns_include):
+            fnmatch.fnmatch(mountpoint, pattern_include) for pattern_include in patterns_include
+        ):
             if mountpoint not in matching_mountpoints:
                 matching_mountpoints.append(mountpoint)
     return matching_mountpoints
 
 
 def _render_integer(number: float):
-    return render.filesize(number).strip(' B')
+    return render.filesize(number).strip(" B")
 
 
 def _check_inodes(
@@ -295,7 +296,7 @@ def _check_inodes(
     inode_result, inode_metric = check_levels(
         value=inodes_total - inodes_avail,
         levels_upper=inodes_abs,
-        metric_name='inodes_used',
+        metric_name="inodes_used",
         render_func=human_readable_func,
         boundaries=(0, inodes_total),
         label="Inodes used",
@@ -308,12 +309,15 @@ def _check_inodes(
     inodes_avail_perc = 100.0 * inodes_avail / inodes_total
     inodes_info = (
         f"{inode_result.summary}, "
-        f"Inodes available: {_render_integer(inodes_avail)} ({render.percent(inodes_avail_perc)})")
+        f"Inodes available: {_render_integer(inodes_avail)} ({render.percent(inodes_avail_perc)})"
+    )
 
-    if any((
+    if any(
+        (
             show_inodes == "always",
             show_inodes == "onlow" and inodes_avail_perc < 50,
-    )):
+        )
+    ):
         yield Result(state=inode_result.state, summary=inodes_info)
     else:
         yield Result(state=inode_result.state, notice=inodes_info)
@@ -323,18 +327,18 @@ def df_discovery(params, mplist):
     group_patterns: Dict[str, Tuple[List[str], List[str]]] = {}
     for groups in params:
         for group in groups.get("groups", []):
-            grouping_entry = group_patterns.setdefault(group['group_name'], ([], []))
-            grouping_entry[0].extend(group['patterns_include'])
-            grouping_entry[1].extend(group['patterns_exclude'])
+            grouping_entry = group_patterns.setdefault(group["group_name"], ([], []))
+            grouping_entry[0].extend(group["patterns_include"])
+            grouping_entry[1].extend(group["patterns_exclude"])
 
     ungrouped_mountpoints, groups = _ungrouped_mountpoints_and_groups(mplist, group_patterns)
 
-    ungrouped: List[Tuple[str, Dict[str,
-                                    Tuple[List[str],
-                                          List[str]]]]] = [(mp, {}) for mp in ungrouped_mountpoints]
-    grouped: List[Tuple[str, Dict[str, Tuple[List[str], List[str]]]]] = [(group, {
-        "patterns": group_patterns[group]
-    }) for group in groups]
+    ungrouped: List[Tuple[str, Dict[str, Tuple[List[str], List[str]]]]] = [
+        (mp, {}) for mp in ungrouped_mountpoints
+    ]
+    grouped: List[Tuple[str, Dict[str, Tuple[List[str], List[str]]]]] = [
+        (group, {"patterns": group_patterns[group]}) for group in groups
+    ]
     return ungrouped + grouped
 
 
@@ -358,11 +362,11 @@ def df_check_filesystem_single(
         return
 
     # params might still be a tuple
-    show_levels, subtract_reserved, show_reserved = ((params.get("show_levels", False),
-                                                      params.get("subtract_reserved", False) and
-                                                      reserved_mb > 0,
-                                                      params.get("show_reserved") and
-                                                      reserved_mb > 0))
+    show_levels, subtract_reserved, show_reserved = (
+        params.get("show_levels", False),
+        params.get("subtract_reserved", False) and reserved_mb > 0,
+        params.get("show_reserved") and reserved_mb > 0,
+    )
 
     used_mb = size_mb - avail_mb
     used_max = size_mb
@@ -371,11 +375,11 @@ def df_check_filesystem_single(
         used_max -= reserved_mb
 
     # Get warning and critical levels already with 'magic factor' applied
-    levels = get_filesystem_levels(size_mb / 1024., params)
+    levels = get_filesystem_levels(size_mb / 1024.0, params)
     warn_mb, crit_mb = levels["levels_mb"]
 
-    used_hr = render.bytes(used_mb * 1024**2)
-    used_max_hr = render.bytes(used_max * 1024**2)
+    used_hr = render.bytes(used_mb * 1024 ** 2)
+    used_max_hr = render.bytes(used_max * 1024 ** 2)
     used_perc_hr = render.percent(100.0 * used_mb / used_max)
 
     # If both strings end with the same unit, then drop the first one
@@ -400,20 +404,25 @@ def df_check_filesystem_single(
 
     # Expand infotext according to current params
     infotext = [f"{used_perc_hr} used ({used_hr} of {used_max_hr})"]
-    if (show_levels == "always" or  #
-        (show_levels == "onproblem" and status is not State.OK) or  #
-        (show_levels == "onmagic" and (status is not State.OK or levels.get("magic", 1.0) != 1.0))):
+    if (
+        show_levels == "always"
+        or (show_levels == "onproblem" and status is not State.OK)  #
+        or (  #
+            show_levels == "onmagic" and (status is not State.OK or levels.get("magic", 1.0) != 1.0)
+        )
+    ):
         infotext.append(levels["levels_text"])
-    yield Result(state=status, summary=", ".join(infotext).replace('), (', ', '))
+    yield Result(state=status, summary=", ".join(infotext).replace("), (", ", "))
 
     if show_reserved:
         reserved_perc_hr = render.percent(100.0 * reserved_mb / size_mb)
-        reserved_hr = render.bytes(reserved_mb * 1024**2)
+        reserved_hr = render.bytes(reserved_mb * 1024 ** 2)
         yield Result(
             state=status,
             summary="additionally reserved for root: %s" % reserved_hr  #
-            if subtract_reserved else  #
-            f"therein reserved for root: {reserved_perc_hr} ({reserved_hr})")
+            if subtract_reserved
+            else f"therein reserved for root: {reserved_perc_hr} ({reserved_hr})",  #
+        )
 
     if subtract_reserved:
         yield Metric("fs_free", avail_mb, boundaries=(0, size_mb))
@@ -444,12 +453,15 @@ def df_check_filesystem_list(
     this_time=None,
 ) -> CheckResult:
     """Wrapper for `df_check_filesystem_single` supporting groups"""
+
     def group_sum(metric_name, info, mountpoints_group):
         """Calculate sum of named values for matching mount points"""
         try:
-            return sum(block_info[metric_name]  #
-                       for (mp, block_info) in info.items()  #
-                       if mp in mountpoints_group)
+            return sum(
+                block_info[metric_name]  #
+                for (mp, block_info) in info.items()  #
+                if mp in mountpoints_group
+            )
         except TypeError:
             return None
 
@@ -459,13 +471,15 @@ def df_check_filesystem_list(
             "size_mb": size_mb,
             "avail_mb": avail_mb,
             "reserved_mb": reserved_mb,
-        } for (mountp, size_mb, avail_mb, reserved_mb) in (fslist_blocks or [])
+        }
+        for (mountp, size_mb, avail_mb, reserved_mb) in (fslist_blocks or [])
     }
     inodes_info = {
         mountp: {
             "inodes_total": inodes_total,
             "inodes_avail": inodes_avail,
-        } for (mountp, inodes_total, inodes_avail) in (fslist_inodes or [])
+        }
+        for (mountp, inodes_total, inodes_avail) in (fslist_inodes or [])
     }
 
     if "patterns" not in params:

@@ -19,10 +19,14 @@ def parse_fortisandbox_disk(string_table: StringTable) -> Optional[Section]:
     >>> parse_fortisandbox_disk([["1000", "2000"]])
     {'used': 1000, 'cap': 2000}
     """
-    return {
-        "used": int(string_table[0][0]),
-        "cap": int(string_table[0][1]),
-    } if string_table else None
+    return (
+        {
+            "used": int(string_table[0][0]),
+            "cap": int(string_table[0][1]),
+        }
+        if string_table
+        else None
+    )
 
 
 def discover_fortisandbox_disk(section: Section) -> DiscoveryResult:

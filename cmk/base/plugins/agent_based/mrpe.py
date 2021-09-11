@@ -35,7 +35,7 @@ def parse_mrpe(string_table: StringTable) -> MRPESection:
         # New Linux agent sends (check_name) in first column. Stay
         # compatible with MRPE versions not providing this info
         if line[0].startswith("("):
-            name: Optional[str] = line[0].strip('()')
+            name: Optional[str] = line[0].strip("()")
             line = line[1:]
         else:
             name = None

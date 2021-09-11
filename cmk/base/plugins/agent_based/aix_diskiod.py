@@ -38,8 +38,8 @@ def parse_aix_diskiod(string_table: type_defs.StringTable) -> Optional[diskstat.
     for device, _tm_act, _kbps, _tps, kb_read, kb_written in string_table:
         try:
             section[device] = {
-                'read_throughput': int(kb_read) * 1024,
-                'write_throughput': int(kb_written) * 1024,
+                "read_throughput": int(kb_read) * 1024,
+                "write_throughput": int(kb_written) * 1024,
             }
         except ValueError:
             continue
@@ -58,9 +58,9 @@ def _check_disk(
     disk: diskstat.Disk,
 ) -> type_defs.CheckResult:
     value_store = get_value_store()
-    disk_with_rates = diskstat.compute_rates(disk=disk,
-                                             value_store=value_store,
-                                             this_time=time.time())
+    disk_with_rates = diskstat.compute_rates(
+        disk=disk, value_store=value_store, this_time=time.time()
+    )
     yield from diskstat.check_diskstat_dict(
         params=params,
         disk=disk_with_rates,
@@ -74,7 +74,7 @@ def check_aix_diskiod(
     params: Mapping[str, Any],
     section: diskstat.Section,
 ) -> type_defs.CheckResult:
-    if item == 'SUMMARY':
+    if item == "SUMMARY":
         disk = diskstat.summarize_disks(section.items())
     else:
         try:
@@ -89,12 +89,14 @@ def cluster_check_aix_diskiod(
     params: Mapping[str, Any],
     section: Mapping[str, diskstat.Section],
 ) -> type_defs.CheckResult:
-    if item == 'SUMMARY':
+    if item == "SUMMARY":
         disk = diskstat.summarize_disks(
-            item for node_section in section.values() for item in node_section.items())
+            item for node_section in section.values() for item in node_section.items()
+        )
     else:
         disk = diskstat.combine_disks(
-            node_section[item] for node_section in section.values() if item in node_section)
+            node_section[item] for node_section in section.values() if item in node_section
+        )
     yield from _check_disk(params, disk)
 
 
@@ -102,7 +104,7 @@ register.check_plugin(
     name="aix_diskiod",
     service_name="Disk IO %s",
     discovery_ruleset_type=register.RuleSetType.ALL,
-    discovery_default_parameters={'summary': True},
+    discovery_default_parameters={"summary": True},
     discovery_ruleset_name="diskstat_inventory",
     discovery_function=diskstat.discovery_diskstat_generic,
     check_ruleset_name="diskstat",

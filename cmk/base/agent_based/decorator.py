@@ -34,6 +34,7 @@ def handle_check_mk_check_result(
 ) -> Callable[[ActiveCheckFunction], WrappedActiveCheckFunction]:
     """Decorator function used to wrap all functions used to execute the "Check_MK *" checks
     Main purpose: Equalize the exception handling of all such functions"""
+
     def wrap(check_func: ActiveCheckFunction) -> WrappedActiveCheckFunction:
         def wrapped_check_func(hostname: HostName, *args: Any, **kwargs: Any) -> int:
             host_config = config.get_config_cache().get_host_config(hostname)
@@ -69,6 +70,7 @@ def handle_check_mk_check_result(
 
             if _in_keepalive_mode():
                 import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
+
                 keepalive.add_active_check_result(hostname, output_text)
                 console.verbose(output_text)
             else:
@@ -83,14 +85,17 @@ def handle_check_mk_check_result(
 
 def _combine_texts(result: ActiveCheckResult) -> Tuple[ServiceState, str]:
     state, summaries, details, metrics = result
-    return state, '\n'.join((
-        ' | '.join((', '.join(summaries), ' '.join(metrics))),
-        ''.join(f'{line}\n' for line in details),
-    ))
+    return state, "\n".join(
+        (
+            " | ".join((", ".join(summaries), " ".join(metrics))),
+            "".join(f"{line}\n" for line in details),
+        )
+    )
 
 
 def _in_keepalive_mode() -> bool:
     if cmk_version.is_raw_edition():
         return False
     import cmk.base.cee.keepalive as keepalive  # pylint: disable=no-name-in-module
+
     return keepalive.enabled()

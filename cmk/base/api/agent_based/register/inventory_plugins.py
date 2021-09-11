@@ -23,11 +23,14 @@ from cmk.base.api.agent_based.register.utils import (
 )
 
 
-def _filter_inventory(generator: Callable[..., Iterable],) -> InventoryFunction:
+def _filter_inventory(
+    generator: Callable[..., Iterable],
+) -> InventoryFunction:
     """Only let Attributes and TableRow instances through
 
     This allows for better typing in base code.
     """
+
     @functools.wraps(generator)
     def filtered_generator(*args, **kwargs):
         for element in generator(*args, **kwargs):
@@ -76,7 +79,8 @@ def create_inventory_plugin(
         sections=subscribed_sections,
         inventory_function=_filter_inventory(inventory_function),
         inventory_default_parameters=inventory_default_parameters or {},
-        inventory_ruleset_name=(RuleSetName(inventory_ruleset_name)
-                                if inventory_ruleset_name else None),
+        inventory_ruleset_name=(
+            RuleSetName(inventory_ruleset_name) if inventory_ruleset_name else None
+        ),
         module=module,
     )

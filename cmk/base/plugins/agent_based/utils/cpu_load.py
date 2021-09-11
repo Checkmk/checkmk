@@ -35,7 +35,7 @@ def check_cpu_load(params: CPULoadParams, section: Section) -> CheckResult:
         yield from check_levels_predictive(
             section.load.load15,
             levels=levels,
-            metric_name='load15',
+            metric_name="load15",
             label=label,
         )
     else:
@@ -47,7 +47,7 @@ def check_cpu_load(params: CPULoadParams, section: Section) -> CheckResult:
             levels_upper = (levels[0] * num_cpus, levels[1] * num_cpus)
         yield from check_levels(
             section.load.load15,
-            metric_name='load15',
+            metric_name="load15",
             levels_upper=levels_upper,
             label=label,
         )
@@ -60,7 +60,7 @@ def check_cpu_load(params: CPULoadParams, section: Section) -> CheckResult:
     )
 
     for level_name, level_value in section.load._asdict().items():
-        if level_name == 'load15':
+        if level_name == "load15":
             # we already yielded this metric by check_levels or check_levels_predictive.
             continue
 

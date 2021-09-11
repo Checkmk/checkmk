@@ -42,9 +42,11 @@ def _parse_valid_path(path: List[str]) -> List[str]:
 
 
 def _raise_invalid_attr_dict(kwarg_name: str, dict_: AttrDict) -> NoReturn:
-    value_types = ', '.join(t.__name__ for t in _ATTR_DICT_VAL_TYPES)
-    raise TypeError(f"{kwarg_name} must be a dict with keys of type {_ATTR_DICT_KEY_TYPE.__name__}"
-                    f" and values of type {value_types}. Got {dict_!r}")
+    value_types = ", ".join(t.__name__ for t in _ATTR_DICT_VAL_TYPES)
+    raise TypeError(
+        f"{kwarg_name} must be a dict with keys of type {_ATTR_DICT_KEY_TYPE.__name__}"
+        f" and values of type {value_types}. Got {dict_!r}"
+    )
 
 
 def _parse_valid_dict(kwarg_name: str, dict_: Optional[AttrDict]) -> AttrDict:
@@ -53,19 +55,25 @@ def _parse_valid_dict(kwarg_name: str, dict_: Optional[AttrDict]) -> AttrDict:
     if not isinstance(dict_, dict):
         _raise_invalid_attr_dict(kwarg_name, dict_)
     if not all(
-            isinstance(k, _ATTR_DICT_KEY_TYPE) and isinstance(v, _ATTR_DICT_VAL_TYPES)
-            for k, v in dict_.items()):
+        isinstance(k, _ATTR_DICT_KEY_TYPE) and isinstance(v, _ATTR_DICT_VAL_TYPES)
+        for k, v in dict_.items()
+    ):
         _raise_invalid_attr_dict(kwarg_name, dict_)
     return dict_
 
 
 class Attributes(
-        NamedTuple("_AttributesTuple", [
+    NamedTuple(
+        "_AttributesTuple",
+        [
             ("path", List[str]),
             ("inventory_attributes", AttrDict),
             ("status_attributes", AttrDict),
-        ])):
+        ],
+    )
+):
     """Attributes to be written at a node in the HW/SW inventory"""
+
     def __new__(
         cls,
         *,
@@ -93,8 +101,9 @@ class Attributes(
         status_attributes = _parse_valid_dict("status_attributes", status_attributes)
         common_keys = set(inventory_attributes) & set(status_attributes)
         if common_keys:
-            raise ValueError("keys must be either of type 'status' or 'inventory': %s" %
-                             ', '.join(common_keys))
+            raise ValueError(
+                "keys must be either of type 'status' or 'inventory': %s" % ", ".join(common_keys)
+            )
 
         return super().__new__(
             cls,
@@ -105,13 +114,18 @@ class Attributes(
 
 
 class TableRow(
-        NamedTuple("_TableRowTuple", [
+    NamedTuple(
+        "_TableRowTuple",
+        [
             ("path", List[str]),
             ("key_columns", AttrDict),
             ("inventory_columns", AttrDict),
             ("status_columns", AttrDict),
-        ])):
+        ],
+    )
+):
     """TableRow to be written into a Table at a node in the HW/SW inventory"""
+
     def __new__(
         cls,
         *,
@@ -140,8 +154,9 @@ class TableRow(
 
         """
         if not (isinstance(key_columns, dict) and key_columns):
-            raise TypeError("TableRows 'key_columns' expected non empty Dict[str, Any], got %r" %
-                            (key_columns,))
+            raise TypeError(
+                "TableRows 'key_columns' expected non empty Dict[str, Any], got %r" % (key_columns,)
+            )
 
         key_columns = _parse_valid_dict("key_columns", key_columns)
         inventory_columns = _parse_valid_dict("inventory_columns", inventory_columns)

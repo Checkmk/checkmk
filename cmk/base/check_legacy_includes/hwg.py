@@ -45,12 +45,14 @@ def parse_hwg(info):
         if int(sensorstatus) != 0 and map_units.get(unit, "") == "%":
 
             parsed.setdefault(
-                index, {
+                index,
+                {
                     "descr": descr,
                     "humidity": float(current),
                     "dev_status_name": map_dev_states.get(sensorstatus, "n.a."),
                     "dev_status": sensorstatus,
-                })
+                },
+            )
 
         # Parse Temperature
         else:
@@ -60,13 +62,15 @@ def parse_hwg(info):
                 tempval = None
 
             parsed.setdefault(
-                index, {
+                index,
+                {
                     "descr": descr,
                     "dev_unit": map_units.get(unit),
                     "temperature": tempval,
                     "dev_status_name": map_dev_states.get(sensorstatus, ""),
                     "dev_status": sensorstatus,
-                })
+                },
+            )
 
     return parsed
 
@@ -101,12 +105,14 @@ def check_hwg_temp(item, params, parsed):
     if temp is None:
         return state, "Status: %s" % state_readable
 
-    state, infotext, perfdata = check_temperature(temp,
-                                                  params,
-                                                  "hwg_temp_%s" % item,
-                                                  dev_unit=parsed["dev_unit"],
-                                                  dev_status=state,
-                                                  dev_status_name=state_readable)
+    state, infotext, perfdata = check_temperature(
+        temp,
+        params,
+        "hwg_temp_%s" % item,
+        dev_unit=parsed["dev_unit"],
+        dev_status=state,
+        dev_status_name=state_readable,
+    )
 
     infotext += " (Description: %s, Status: %s)" % (parsed["descr"], parsed["dev_status_name"])
     return state, "%s" % infotext, perfdata

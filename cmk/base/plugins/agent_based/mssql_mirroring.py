@@ -64,26 +64,26 @@ MirroringSection = Mapping[str, MirroringConfig]
 
 
 def _convert_datatypes(raw_configline: Sequence) -> Sequence:
-    '''
+    """
     >>> _convert_datatypes(['', '', '72', '', '20', '', '68', '', '', '', '', '42', ''])
     ['', '', 72, '', 20, '', 68, '', '', '', '', 42, '']
 
-    '''
+    """
     return [int(e[1]) if e[0] in {2, 4, 6, 11} else e[1] for e in enumerate(raw_configline)]
 
 
 def _title_from_header(raw_header: str) -> str:
-    '''
+    """
     >>> _title_from_header('mirroring_state_desc')
     'Mirroring state'
     >>> _title_from_header('database_name')
     'Database name'
-    '''
-    return raw_header.replace('_desc', '').replace('_', ' ').capitalize()
+    """
+    return raw_header.replace("_desc", "").replace("_", " ").capitalize()
 
 
 def _details_text(detail: str, mirroring_config: MirroringConfig) -> str:
-    '''
+    """
     >>> _details_text('mirroring_state_desc', MirroringConfig(
     ... server_name='',
     ... database_name='',
@@ -100,8 +100,8 @@ def _details_text(detail: str, mirroring_config: MirroringConfig) -> str:
     ... mirroring_witness_state_desc='',
     ... ))
     'Mirroring state: This is the interesting bit'
-    '''
-    return f'{_title_from_header(detail)}: {getattr(mirroring_config, detail)}'
+    """
+    return f"{_title_from_header(detail)}: {getattr(mirroring_config, detail)}"
 
 
 def parse_mssql_mirroring(string_table: StringTable) -> MirroringSection:
@@ -110,7 +110,7 @@ def parse_mssql_mirroring(string_table: StringTable) -> MirroringSection:
     for raw_configline in string_table:
         if len(raw_configline) != 13:
             continue
-        if raw_configline[5] != 'PRINCIPAL':
+        if raw_configline[5] != "PRINCIPAL":
             # NOTE: From two hosts (main and failover), we may get the following lines:
 
             # server_name   ... database_name   ... mirroring_state_desc    ... mirroring_role_desc  ... mirroring_parter_name   ...
@@ -130,7 +130,7 @@ def parse_mssql_mirroring(string_table: StringTable) -> MirroringSection:
 
 
 register.agent_section(
-    name='mssql_mirroring',
+    name="mssql_mirroring",
     parse_function=parse_mssql_mirroring,
 )
 
@@ -151,30 +151,30 @@ def check_mssql_mirroring(
 
     yield Result(
         state=State.OK,
-        summary=f'Principal: {mirroring_config.server_name}',
+        summary=f"Principal: {mirroring_config.server_name}",
     )
     yield Result(
         state=State.OK,
-        summary=f'Mirror: {mirroring_config.mirroring_partner_instance}',
+        summary=f"Mirror: {mirroring_config.mirroring_partner_instance}",
     )
 
     # For an explanation of state mappings, see comment at beginning
     for state_to_check, desired_state, criticality in [
-        ('mirroring_state', 4, params['mirroring_state_criticality']),
-        ('mirroring_witness_state', 1, params['mirroring_witness_state_criticality'])
+        ("mirroring_state", 4, params["mirroring_state_criticality"]),
+        ("mirroring_witness_state", 1, params["mirroring_witness_state_criticality"]),
     ]:
         state = State.OK
         if getattr(mirroring_config, state_to_check) != desired_state:
             state = State(criticality)
         yield Result(
             state=state,
-            notice=_details_text(f'{state_to_check}_desc', mirroring_config),
+            notice=_details_text(f"{state_to_check}_desc", mirroring_config),
         )
 
     for detail in [
-            'mirroring_safety_level_desc',
-            'mirroring_partner_name',
-            'mirroring_witness_name',
+        "mirroring_safety_level_desc",
+        "mirroring_partner_name",
+        "mirroring_witness_name",
     ]:
         yield Result(state=State.OK, notice=_details_text(detail, mirroring_config))
 
@@ -203,15 +203,15 @@ def cluster_check_mssql_mirroring(
 
 
 register.check_plugin(
-    name='mssql_mirroring',
-    sections=['mssql_mirroring'],
-    service_name='MSSQL Mirroring Status: %s',
+    name="mssql_mirroring",
+    sections=["mssql_mirroring"],
+    service_name="MSSQL Mirroring Status: %s",
     discovery_function=discover_mssql_mirroring,
     check_function=check_mssql_mirroring,
     cluster_check_function=cluster_check_mssql_mirroring,
-    check_ruleset_name='mssql_mirroring',
+    check_ruleset_name="mssql_mirroring",
     check_default_parameters={
-        'mirroring_state_criticality': 0,
-        'mirroring_witness_state_criticality': 0,
+        "mirroring_state_criticality": 0,
+        "mirroring_witness_state_criticality": 0,
     },
 )

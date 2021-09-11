@@ -19,19 +19,19 @@ from .agent_based_api.v1 import (
 from .utils.cmciii import Devices, Section, Sensors, SensorType, Variable
 
 MAP_STATES = {
-    '1': (State.UNKNOWN, "not available"),
-    '2': (State.OK, "OK"),
-    '3': (State.WARN, "detect"),
-    '4': (State.CRIT, "lost"),
-    '5': (State.WARN, "changed"),
-    '6': (State.CRIT, "error"),
+    "1": (State.UNKNOWN, "not available"),
+    "2": (State.OK, "OK"),
+    "3": (State.WARN, "detect"),
+    "4": (State.CRIT, "lost"),
+    "5": (State.WARN, "changed"),
+    "6": (State.CRIT, "error"),
 }
 
 
 def sanitize_variable(variable: str) -> Variable:
     variable_splitted = variable.split(".")
     start, end = variable_splitted[:-1], variable_splitted[-1]
-    start += max(0, 2 - len(start)) * ['']  # ensures that the sensor type can always be parsed
+    start += max(0, 2 - len(start)) * [""]  # ensures that the sensor type can always be parsed
     return start + [end]
 
 
@@ -48,8 +48,7 @@ def sensor_type(variable: Variable) -> Optional[SensorType]:
         return "humidity"
     if variable[0] == "Air" and variable[1] == "Temperature":
         return "temp_in_out"
-    if ("Temperature" in variable or "Dew Point" in variable or
-            variable[1].endswith("Temperature")):
+    if "Temperature" in variable or "Dew Point" in variable or variable[1].endswith("Temperature"):
         return "temp"
     if "Leakage" in variable:
         return "leakage"
@@ -57,11 +56,17 @@ def sensor_type(variable: Variable) -> Optional[SensorType]:
         return "can_current"
     if variable[0].startswith("Phase") or variable[1].startswith("Phase"):
         return "phase"
-    if (variable[0].startswith('Battery') or variable[0].startswith('Detector') or
-            variable[0].startswith('Door') or variable[0].startswith('External') or
-            variable[0].startswith('Extinguishing') or variable[0].startswith('Mains') or
-            variable[0].startswith('Maintenance') or variable[0].startswith('Manual') or
-            variable[0] in ('Air flow', 'Communication', 'Fire', 'Ignition', 'Pre-Alarm')):
+    if (
+        variable[0].startswith("Battery")
+        or variable[0].startswith("Detector")
+        or variable[0].startswith("Door")
+        or variable[0].startswith("External")
+        or variable[0].startswith("Extinguishing")
+        or variable[0].startswith("Mains")
+        or variable[0].startswith("Maintenance")
+        or variable[0].startswith("Manual")
+        or variable[0] in ("Air flow", "Communication", "Fire", "Ignition", "Pre-Alarm")
+    ):
         return "status"
     return None
 
@@ -110,8 +115,9 @@ def sensor_key(type_: SensorType, var_type: str, variable: Variable):
     return key
 
 
-def sensor_value(value_str: str, value_int: str, scale: str, var_type: str,
-                 var_unit: str) -> Union[str, float]:
+def sensor_value(
+    value_str: str, value_int: str, scale: str, var_type: str, var_unit: str
+) -> Union[str, float]:
     if var_type in ["1", "7", "15", "20", "21", "90", "92", "93"]:
         return value_str
 
@@ -155,16 +161,16 @@ def parse_devices_and_states(device_table: type_defs.StringTable) -> Tuple[Devic
 def split_temp_in_out_sensors(sensors: Sensors) -> Sensors:
     # the manual page of cmciii_temp_in_out explains why the sensors are split
     in_out_sensors = {}
-    in_out_values = {'In-Bot', 'In-Mid', 'In-Top', 'Out-Bot', 'Out-Mid', 'Out-Top'}
+    in_out_values = {"In-Bot", "In-Mid", "In-Top", "Out-Bot", "Out-Mid", "Out-Top"}
     for item, sensor in sensors.items():
         template = {k: v for k, v in sensor.items() if k not in in_out_values}
         for value in in_out_values:
             in_out_item = "%s %s" % (
                 item,
-                value.replace('-', ' ').replace('Bot', 'Bottom').replace('Mid', 'Middle'),
+                value.replace("-", " ").replace("Bot", "Bottom").replace("Mid", "Middle"),
             )
             in_out_sensors[in_out_item] = template.copy()
-            in_out_sensors[in_out_item]['Value'] = sensor[value]
+            in_out_sensors[in_out_item]["Value"] = sensor[value]
     return in_out_sensors
 
 
@@ -205,13 +211,13 @@ def parse_cmciii(string_table: List[type_defs.StringTable]) -> Sensors:
         value = sensor_value(value_str, value_int, scale, var_type, var_unit)
         parsed[type_][id_].setdefault(key, value)
 
-    parsed['temp_in_out'] = split_temp_in_out_sensors(parsed.pop('temp_in_out'))
+    parsed["temp_in_out"] = split_temp_in_out_sensors(parsed.pop("temp_in_out"))
 
     return parsed
 
 
 register.snmp_section(
-    name='cmciii',
+    name="cmciii",
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2606.7"),
     fetch=[
         SNMPTree(

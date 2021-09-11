@@ -57,8 +57,13 @@ def dump_host(hostname: HostName) -> None:
         else:
             addresses += " (Primary: IPv4)"
 
-    out.output(tty.yellow + "Addresses:              " + tty.normal +
-               (addresses if addresses is not None else "No IP") + "\n")
+    out.output(
+        tty.yellow
+        + "Addresses:              "
+        + tty.normal
+        + (addresses if addresses is not None else "No IP")
+        + "\n"
+    )
 
     tag_template = tty.bold + "[" + tty.normal + "%s" + tty.bold + "]" + tty.normal
     tags = [(tag_template % ":".join(t)) for t in sorted(host_config.tag_groups.items())]
@@ -75,17 +80,28 @@ def dump_host(hostname: HostName) -> None:
     else:
         parents_list = host_config.parents
     if len(parents_list) > 0:
-        out.output(tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) +
-                   "\n")
-    out.output(tty.yellow + "Host groups:            " + tty.normal +
-               ", ".join(host_config.hostgroups) + "\n")
-    out.output(tty.yellow + "Contact groups:         " + tty.normal +
-               ", ".join(host_config.contactgroups) + "\n")
+        out.output(
+            tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n"
+        )
+    out.output(
+        tty.yellow
+        + "Host groups:            "
+        + tty.normal
+        + ", ".join(host_config.hostgroups)
+        + "\n"
+    )
+    out.output(
+        tty.yellow
+        + "Contact groups:         "
+        + tty.normal
+        + ", ".join(host_config.contactgroups)
+        + "\n"
+    )
 
     agenttypes = [source.description for source in sources.make_sources(host_config, ipaddress)]
 
     if host_config.is_ping_host:
-        agenttypes.append('PING only')
+        agenttypes.append("PING only")
 
     out.output(tty.yellow + "Agent mode:             " + tty.normal)
     out.output(host_config.agent_description + "\n")
@@ -103,14 +119,18 @@ def dump_host(hostname: HostName) -> None:
     colors = [tty.normal, tty.blue, tty.normal, tty.green, tty.normal]
 
     table_data = []
-    for service in sorted(check_table.get_check_table(hostname).values(),
-                          key=lambda s: s.description):
-        table_data.append([
-            str(service.check_plugin_name),
-            str(service.item),
-            _evaluate_params(service.parameters), service.description,
-            ",".join(config_cache.servicegroups_of_service(hostname, service.description))
-        ])
+    for service in sorted(
+        check_table.get_check_table(hostname).values(), key=lambda s: s.description
+    ):
+        table_data.append(
+            [
+                str(service.check_plugin_name),
+                str(service.item),
+                _evaluate_params(service.parameters),
+                service.description,
+                ",".join(config_cache.servicegroups_of_service(hostname, service.description)),
+            ]
+        )
 
     tty.print_table(headers, colors, table_data, "  ")
 
@@ -120,8 +140,10 @@ def _evaluate_params(params: LegacyCheckParameters) -> str:
         return repr(params)
 
     current_params = checking.time_resolved_check_parameters(params)
-    return "Timespecific parameters at %s: %r" % (cmk.utils.render.date_and_time(
-        time.time()), current_params)
+    return "Timespecific parameters at %s: %r" % (
+        cmk.utils.render.date_and_time(time.time()),
+        current_params,
+    )
 
 
 def _ip_address_for_dump_host(

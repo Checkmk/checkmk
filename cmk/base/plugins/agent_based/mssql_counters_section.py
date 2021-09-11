@@ -51,25 +51,26 @@ def to_timestamp(values: Sequence[str]) -> float:
     >>> to_timestamp(('31/08/2017', '4:13:43', 'p.m.'))  # allow "a.m."/"p.m." instead of "AM/PM"
     1504196023.0
     """
+
     def to_datetime(values: Sequence[str]) -> datetime:
         with suppress(ValueError):
-            return datetime.strptime(' '.join(values).replace(". ", "."), '%d.%m.%Y %H:%M:%S')
+            return datetime.strptime(" ".join(values).replace(". ", "."), "%d.%m.%Y %H:%M:%S")
         with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%m/%d/%Y %I:%M:%S %p')
+            return datetime.strptime(" ".join(values), "%m/%d/%Y %I:%M:%S %p")
         with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%Y/%m/%d %I:%M:%S %p')
+            return datetime.strptime(" ".join(values), "%Y/%m/%d %I:%M:%S %p")
         with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%d/%m/%Y %H:%M:%S')
+            return datetime.strptime(" ".join(values), "%d/%m/%Y %H:%M:%S")
         with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%d-%m-%Y %H:%M:%S')
+            return datetime.strptime(" ".join(values), "%d-%m-%Y %H:%M:%S")
         with suppress(ValueError):
             return datetime.strptime(" ".join(values).split(".", 1)[0], "%Y-%m-%d %H:%M:%S")
         with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%d.%m.%Y %H.%M.%S')
+            return datetime.strptime(" ".join(values), "%d.%m.%Y %H.%M.%S")
         with suppress(ValueError):
             return datetime.strptime(
-                ' '.join(values).replace("a.m.", "AM").replace("p.m.", "PM"),
-                '%d/%m/%Y %I:%M:%S %p',
+                " ".join(values).replace("a.m.", "AM").replace("p.m.", "PM"),
+                "%d/%m/%Y %I:%M:%S %p",
             )
         raise ValueError(f'Time string {" ".join(values)} does not match any known pattern')
 
@@ -94,7 +95,7 @@ def parse_mssql_counters(string_table: StringTable) -> Section:
     parsed: Section = {}
     for obj, counter, instance, *values in valid_rows:
         value = to_timestamp(values) if counter == "utc_time" else int(values[0])
-        obj_id = obj[:-10] if obj.endswith(':Databases') else obj
+        obj_id = obj[:-10] if obj.endswith(":Databases") else obj
         parsed.setdefault((obj_id, instance), {}).setdefault(counter, value)
     return parsed
 

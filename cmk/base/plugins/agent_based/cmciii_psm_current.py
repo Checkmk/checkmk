@@ -15,13 +15,15 @@ from .utils.cmciii import (
 )
 
 
-def discover_cmciii_psm_current(params: DiscoveryParams,
-                                section: Section) -> type_defs.DiscoveryResult:
+def discover_cmciii_psm_current(
+    params: DiscoveryParams, section: Section
+) -> type_defs.DiscoveryResult:
     yield from discover_cmciii_sensors("psm_current", params, section)
 
 
-def check_cmciii_psm_current(item: str, params: CheckParams,
-                             section: Section) -> type_defs.CheckResult:
+def check_cmciii_psm_current(
+    item: str, params: CheckParams, section: Section
+) -> type_defs.CheckResult:
     entry = get_sensor(item, params, section["psm_current"])
     if not entry:
         return
@@ -40,7 +42,7 @@ def check_cmciii_psm_current(item: str, params: CheckParams,
 
 register.check_plugin(
     name="cmciii_psm_current",
-    sections=['cmciii'],
+    sections=["cmciii"],
     service_name="Current %s",
     discovery_function=discover_cmciii_psm_current,
     check_function=check_cmciii_psm_current,

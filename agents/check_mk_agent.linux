@@ -1349,11 +1349,11 @@ _rt_sendudp() {
 run_real_time_checks_for_remote() {
     remote="${1}"
     secret="${2}"
-    PIDFILE=$MK_VARDIR/real_time_checks.pid
+    pidfile="${MK_VARDIR}/real_time_checks.pid"
 
-    echo $$ >"$PIDFILE"
+    echo $$ >"${pidfile}"
 
-    if [ "$ENCRYPTED_RT" != "no" ]; then
+    if [ "${ENCRYPTED_RT}" != "no" ]; then
         _rt_opt_encrypt() {
             printf "00%s" "${2}"
             openssl enc -aes-256-cbc -md md5 -k "${1}" -nosalt
@@ -1366,13 +1366,12 @@ run_real_time_checks_for_remote() {
     fi
 
     while true; do
-        # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
-        if ! _rt_pidfile_is_mine "${PIDFILE}" || [ "${RTC_TIMEOUT}" -eq 0 ]; then
-            exit 1
-        fi
+        _rt_pidfile_is_mine "${pidfile}" || exit 1
+        # terminate after configured timeout
+        [ "${RTC_TIMEOUT}" -ge 0 ] || exit 1
 
-        for SECTION in $RTC_SECTIONS; do
-            section_"$SECTION" |
+        for section in ${RTC_SECTIONS}; do
+            section_"${section}" |
                 _rt_opt_encrypt "${secret}" "$(_rt_timestamp)" |
                 _rt_sendudp "${remote}" "${RTC_PORT}"
         done

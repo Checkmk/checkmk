@@ -275,29 +275,35 @@ fi
 set_up_encryption() {
     # shellcheck source=/dev/null
     [ -f "${MK_CONFDIR}/encryption.cfg" ] && . "${MK_CONFDIR}/encryption.cfg"
+    define_optionally_encrypt "${ENCRYPTED:-"no"}"
+}
 
-    if [ "${ENCRYPTED}" = "yes" ]; then
+define_optionally_encrypt() {
+    if [ "${1}" = "yes" ]; then
         OPENSSL_VERSION=$(openssl version | awk '{print $2}' | awk -F . '{print (($1 * 100) + $2) * 100+ $3}')
         # Depending on the Checkmk version, a key of proper length (256 bits) is provided.
         # However, always use key derivation here (suitable for passwords of all lengths).
         if [ "${OPENSSL_VERSION}" -ge 10101 ]; then
             optionally_encrypt() {
-                printf "03"
-                openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "${PASSPHRASE}"
+                printf "03%s" "${2}"
+                openssl enc -aes-256-cbc -md sha256 -iter 10000 -k "${1}"
             }
         elif [ "${OPENSSL_VERSION}" -ge 10000 ]; then
             optionally_encrypt() {
-                printf "02"
-                openssl enc -aes-256-cbc -md sha256 -k "${PASSPHRASE}" -nosalt
+                printf "02%s" "${2}"
+                openssl enc -aes-256-cbc -md sha256 -k "${1}" -nosalt
             }
         else
             optionally_encrypt() {
-                printf "00"
-                openssl enc -aes-256-cbc -md md5 -k "${PASSPHRASE}" -nosalt
+                printf "00%s" "${2}"
+                openssl enc -aes-256-cbc -md md5 -k "${1}" -nosalt
             }
         fi
     else
-        optionally_encrypt() { cat; }
+        optionally_encrypt() {
+            [ -n "${2}" ] && printf "99%s" "${2}"
+            cat
+        }
     fi
 
 }
@@ -1923,7 +1929,7 @@ main() {
 
             ${MK_RUN_SYNC_PARTS} && main_finalize_sync
 
-        ) | optionally_encrypt
+        ) | optionally_encrypt "${PASSPHRASE}" ""
 
         [ "${MK_LOOP_INTERVAL}" -gt 0 ] 2>/dev/null || return
 

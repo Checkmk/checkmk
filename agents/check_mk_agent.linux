@@ -122,6 +122,9 @@ set_up_remote() {
     # is being sent only once to each remote host.
     REMOTE="${REMOTE_HOST:-"${REMOTE_ADDR:-"${SSH_CLIENT%% *}"}"}"
 
+    # let RTCs know about this remote
+    [ -d "${MK_VARDIR}/rtc_remotes" ] || mkdir "${MK_VARDIR}/rtc_remotes"
+    [ -n "${REMOTE}" ] && touch "${MK_VARDIR}/rtc_remotes/${REMOTE}"
     export REMOTE
 }
 
@@ -1331,15 +1334,18 @@ run_real_time_checks() {
         }
     fi
 
-    if [ -z "${REMOTE}" ]; then
-        echo "ERROR: \$REMOTE not specified. Not sending real-time data." >&2
-    else
-        run_real_time_checks_for_remote "${REMOTE}" "${secret}" >/dev/null &
-    fi
+    for trigger in "${MK_VARDIR}/rtc_remotes/"?*; do
+        # no such file => no expansion of ?* => nothing to do
+        [ -e "${trigger}" ] && run_real_time_checks_for_remote "${trigger}" "${secret}" >/dev/null &
+    done
 }
 
 _rt_pidfile_is_mine() {
     [ "$(cat "${1}" 2>/dev/null)" = "$$" ]
+}
+
+_rt_pidfile_is_alive() {
+    [ "$(("$(date +%s)" - "$(stat -c %X "${1}")"))" -le "${RTC_TIMEOUT}" ]
 }
 
 _rt_timestamp() {
@@ -1359,9 +1365,12 @@ _rt_sendudp() {
 #  rest: encrypted data
 # Be aware of maximum packet size.
 run_real_time_checks_for_remote() {
-    remote="${1}"
+    pidfile="${1}"
     secret="${2}"
-    pidfile="${MK_VARDIR}/real_time_checks.pid"
+    remote="${pidfile##*/rtc_remotes/}"
+
+    # have I already started for this remote?
+    _rt_pidfile_is_mine "${pidfile}" && return
 
     echo $$ >"${pidfile}"
 
@@ -1378,9 +1387,11 @@ run_real_time_checks_for_remote() {
     fi
 
     while true; do
-        _rt_pidfile_is_mine "${pidfile}" || exit 1
-        # terminate after configured timeout
-        [ "${RTC_TIMEOUT}" -ge 0 ] || exit 1
+        _rt_pidfile_is_mine "${pidfile}" || return
+        _rt_pidfile_is_alive "${pidfile}" || {
+            rm "${pidfile}"
+            return
+        }
 
         for section in ${RTC_SECTIONS}; do
             section_"${section}" |
@@ -1401,7 +1412,6 @@ run_real_time_checks_for_remote() {
         done
 
         sleep 1
-        RTC_TIMEOUT=$((RTC_TIMEOUT - 1))
     done
 }
 

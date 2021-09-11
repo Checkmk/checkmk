@@ -8,8 +8,8 @@
 def inventory_innovaphone_priports_l2(info):
     inventory = []
     for line in info:
-        if line[1] != '1':
-            inventory.append((line[0], {'mode': saveint(line[2])}))
+        if line[1] != "1":
+            inventory.append((line[0], {"mode": saveint(line[2])}))
     return inventory
 
 
@@ -34,12 +34,16 @@ def check_innovaphone_priports_l2(item, params, info):
                 state_label = "(!!)"
 
             mode_label = ""
-            if l2mode != params['mode']:
+            if l2mode != params["mode"]:
                 state = 2
                 mode_label = "(!!)"
 
-            return state, "State: %s%s, Mode: %s%s" % \
-            ( states[l2state], state_label,  modes[l2mode], mode_label )
+            return state, "State: %s%s, Mode: %s%s" % (
+                states[l2state],
+                state_label,
+                modes[l2mode],
+                mode_label,
+            )
     return 3, "Output not found"
 
 
@@ -47,12 +51,6 @@ check_info["innovaphone_priports_l2"] = {
     "check_function": check_innovaphone_priports_l2,
     "inventory_function": inventory_innovaphone_priports_l2,
     "service_description": "Port L2 %s",
-    "snmp_info": (
-        ".1.3.6.1.4.1.6666.1.1.1",
-        [
-            1,  #l2Label
-            2,  #l2State
-            3  #l2Mode
-        ]),
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.6666",
+    "snmp_info": (".1.3.6.1.4.1.6666.1.1.1", [1, 2, 3]),  # l2Label  # l2State  # l2Mode
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.6666",
 }

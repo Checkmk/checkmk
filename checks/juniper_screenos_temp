@@ -40,6 +40,7 @@ check_info["juniper_screenos_temp"] = {
         [
             4,  # Name
             3,  # Temperatur
-        ]),
-    "default_levels_variable": "juniper_screenos_temp_default_levels"
+        ],
+    ),
+    "default_levels_variable": "juniper_screenos_temp_default_levels",
 }

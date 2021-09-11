@@ -30,12 +30,12 @@ def check_icmp_arguments(params):
 
     if target == "address":
         if is_ipv6_primary(host_name()):
-            args.append('-6')
+            args.append("-6")
         args.append("$HOSTADDRESS$")
 
     elif target == "alias":
         if is_ipv6_primary(host_name()):
-            args.append('-6')
+            args.append("-6")
         args.append("$HOSTALIAS$")
 
     elif target == "all_ipv4addresses":
@@ -63,7 +63,7 @@ def check_icmp_arguments(params):
     # Otherwise shell quoting will be applied to every element
     # of the list, which will interfere with macro replacements like
     # "$HOST_ADDRESSES_4$" -> "1.2.3.4 5.6.7.8"
-    return ' '.join(args)
+    return " ".join(args)
 
 
 def check_icmp_description(params):
@@ -79,8 +79,8 @@ def check_icmp_description(params):
     return description
 
 
-active_check_info['icmp'] = {
-    "command_line": 'check_icmp $ARG1$',
+active_check_info["icmp"] = {
+    "command_line": "check_icmp $ARG1$",
     "argument_function": check_icmp_arguments,
     "service_description": check_icmp_description,
     "has_perfdata": True,

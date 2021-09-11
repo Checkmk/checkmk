@@ -31,7 +31,7 @@ def check_hitachi_hnas_cpu(item, params, info):
                 rc = 1
             if util > crit:
                 rc = 2
-            perfdata = [('cpu_util', str(util) + '%', warn, crit, 0, 100)]
+            perfdata = [("cpu_util", str(util) + "%", warn, crit, 0, 100)]
             return rc, "CPU utilization is %s%%" % util, perfdata
 
     return 3, "No CPU utilization found"

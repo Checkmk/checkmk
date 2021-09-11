@@ -13,7 +13,7 @@ def inventory_symantec_av_quarantine(info):
 
 
 def check_symantec_av_quarantine(_no_item, _no_params, info):
-    perf = [('objects', len(info))]
+    perf = [("objects", len(info))]
     if len(info) > 0:
         return 2, "%d objects in quarantine" % len(info), perf
     return 0, "No objects in quarantine", perf

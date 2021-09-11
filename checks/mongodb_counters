@@ -47,7 +47,7 @@ def check_mongodb_counters(item, _no_params, parsed):
         yield 0, "%s: %.2f/s" % (what.title(), what_rate), [("%s_ops" % what, what_rate)]
 
 
-check_info['mongodb_counters'] = {
+check_info["mongodb_counters"] = {
     "parse_function": parse_mongodb_counters,
     "inventory_function": inventory_mongodb_counters,
     "check_function": check_mongodb_counters,

@@ -33,19 +33,20 @@ def parse_cadvisor_df(info):
 
 
 def check_cadvisor_df(item, params, parsed):
-    size_mb = parsed["df_size"] / 1024**2
-    avail_mb = size_mb - (parsed["df_used"] / 1024**2)
+    size_mb = parsed["df_size"] / 1024 ** 2
+    avail_mb = size_mb - (parsed["df_used"] / 1024 ** 2)
     reserved_mb = 0
     inodes_total = parsed["inodes_total"]
     inodes_free = parsed["inodes_free"]
-    return df_check_filesystem_single(item, size_mb, avail_mb, reserved_mb, inodes_total,
-                                      inodes_free, params)
+    return df_check_filesystem_single(
+        item, size_mb, avail_mb, reserved_mb, inodes_total, inodes_free, params
+    )
 
 
 check_info["cadvisor_df"] = {
-    'parse_function': parse_cadvisor_df,
-    'inventory_function': discover_single,
-    'check_function': check_cadvisor_df,
-    'service_description': 'Filesystem',
-    'has_perfdata': True,
+    "parse_function": parse_cadvisor_df,
+    "inventory_function": discover_single,
+    "check_function": check_cadvisor_df,
+    "service_description": "Filesystem",
+    "has_perfdata": True,
 }

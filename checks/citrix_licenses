@@ -49,10 +49,10 @@ def check_citrix_licenses(item, params, data):
 
 
 check_info["citrix_licenses"] = {
-    'parse_function': parse_citrix_licenses,
-    'check_function': check_citrix_licenses,
-    'inventory_function': inventory_citrix_licenses,
-    'service_description': 'Citrix Licenses %s',
-    'has_perfdata': True,
-    'group': "citrix_licenses",
+    "parse_function": parse_citrix_licenses,
+    "check_function": check_citrix_licenses,
+    "inventory_function": inventory_citrix_licenses,
+    "service_description": "Citrix Licenses %s",
+    "has_perfdata": True,
+    "group": "citrix_licenses",
 }

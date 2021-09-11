@@ -10,21 +10,22 @@ def inventory_bdtms_tape_info(info):  # pylint: disable=function-redefined
 
 
 def check_bdtms_tape_info(_no_item, _no_params, info):  # pylint: disable=function-redefined
-    for name, value in zip(['Vendor', 'Product ID', 'Serial Number', 'Software Revision'], info[0]):
+    for name, value in zip(["Vendor", "Product ID", "Serial Number", "Software Revision"], info[0]):
         yield 0, "%s: %s" % (name, value)
 
 
-check_info['bdtms_tape_info'] = {
-    'inventory_function': inventory_bdtms_tape_info,
-    'check_function': check_bdtms_tape_info,
-    'service_description': "Tape Library Info",
-    'snmp_scan_function': lambda oid: ('.1.3.6.1.4.1.20884.77.83.1' in oid('.1.3.6.1.2.1.1.2.0')),
-    'snmp_info': (
-        '.1.3.6.1.4.1.20884.1',
+check_info["bdtms_tape_info"] = {
+    "inventory_function": inventory_bdtms_tape_info,
+    "check_function": check_bdtms_tape_info,
+    "service_description": "Tape Library Info",
+    "snmp_scan_function": lambda oid: (".1.3.6.1.4.1.20884.77.83.1" in oid(".1.3.6.1.2.1.1.2.0")),
+    "snmp_info": (
+        ".1.3.6.1.4.1.20884.1",
         [
-            '1',  # bdtDeviceDatVendor
-            '2',  # bdtDeviceDatProductId
-            '3',  # bdtDeviceDatSerialNum
-            '4',  # bdtDeviceDatSWRevision
-        ]),
+            "1",  # bdtDeviceDatVendor
+            "2",  # bdtDeviceDatProductId
+            "3",  # bdtDeviceDatSerialNum
+            "4",  # bdtDeviceDatSWRevision
+        ],
+    ),
 }

@@ -49,7 +49,7 @@ def check_msexch_replhealth(item, _no_params, info):
                 return state, infotxt
 
 
-check_info['msexch_replhealth'] = {
+check_info["msexch_replhealth"] = {
     "inventory_function": inventory_msexch_replhealth,
     "check_function": check_msexch_replhealth,
     "service_description": "Exchange Replication Health %s",

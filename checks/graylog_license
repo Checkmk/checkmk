@@ -36,14 +36,14 @@ def inventory_graylog_license(parsed):
 
 
 factory_settings["graylog_license_default_levels"] = {
-    'no_enterprise': 0,
-    'valid': 2,
-    'cluster_not_covered': 1,
-    'traffic_exceeded': 1,
-    'violated': 2,
-    'nodes_exceeded': 1,
-    'expired': 2,
-    'remote_checks_failed': 1,
+    "no_enterprise": 0,
+    "valid": 2,
+    "cluster_not_covered": 1,
+    "traffic_exceeded": 1,
+    "violated": 2,
+    "nodes_exceeded": 1,
+    "expired": 2,
+    "remote_checks_failed": 1,
 }
 
 
@@ -87,10 +87,13 @@ def check_graylog_license(_no_item, params, parsed):
         timestamp = handle_iso_utc_to_localtimestamp(expires)
         time_to_expiration = int(timestamp) - time.time()
         warn, crit = params.get("expiration", (None, None))
-        yield check_levels(time_to_expiration,
-                           None, (None, None, warn, crit),
-                           human_readable_func=get_age_human_readable,
-                           infoname="Expires in")
+        yield check_levels(
+            time_to_expiration,
+            None,
+            (None, None, warn, crit),
+            human_readable_func=get_age_human_readable,
+            infoname="Expires in",
+        )
 
     for key in [
         ("subject"),

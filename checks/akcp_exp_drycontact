@@ -27,5 +27,6 @@ check_info["akcp_exp_drycontact"] = {
             46,  # SPAGENT-MIB::sensorDryContactCriticalDesc
             48,  # SPAGENT-MIB::sensorDryContactNormalDesc
             8,  # SPAGENT-MIB::sensorDryContactGoOffline
-        ]),
+        ],
+    ),
 }

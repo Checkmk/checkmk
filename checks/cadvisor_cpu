@@ -26,28 +26,30 @@ def check_cadvisor_cpu(_item, params, parsed):
     cpu_system = parsed["cpu_system"]
     cpu_total = cpu_user + cpu_system
 
-    yield check_levels(cpu_user,
-                       'user',
-                       None,
-                       human_readable_func=get_percent_human_readable,
-                       infoname="User")
-    yield check_levels(cpu_system,
-                       'system',
-                       None,
-                       human_readable_func=get_percent_human_readable,
-                       infoname="System")
-    yield check_levels(cpu_total,
-                       "util",
-                       params.get("util"),
-                       human_readable_func=get_percent_human_readable,
-                       infoname="Total CPU")
+    yield check_levels(
+        cpu_user, "user", None, human_readable_func=get_percent_human_readable, infoname="User"
+    )
+    yield check_levels(
+        cpu_system,
+        "system",
+        None,
+        human_readable_func=get_percent_human_readable,
+        infoname="System",
+    )
+    yield check_levels(
+        cpu_total,
+        "util",
+        params.get("util"),
+        human_readable_func=get_percent_human_readable,
+        infoname="Total CPU",
+    )
 
 
 check_info["cadvisor_cpu"] = {
-    'parse_function': parse_cadvisor_cpu,
-    'inventory_function': discover_single,
-    'check_function': check_cadvisor_cpu,
-    'service_description': 'CPU utilization',
-    'has_perfdata': True,
-    'group': 'cpu_utilization',
+    "parse_function": parse_cadvisor_cpu,
+    "inventory_function": discover_single,
+    "check_function": check_cadvisor_cpu,
+    "service_description": "CPU utilization",
+    "has_perfdata": True,
+    "group": "cpu_utilization",
 }

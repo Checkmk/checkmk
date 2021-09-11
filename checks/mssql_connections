@@ -37,18 +37,18 @@ def check_mssql_connections(item, params, parsed):
     return check_levels(
         parsed.get(item, 0),
         "connections",
-        params['levels'],
+        params["levels"],
         human_readable_func=int,
         infoname="Connections",
     )
 
 
-check_info['mssql_connections'] = {
-    'parse_function': parse_mssql_connections,
-    'inventory_function': inventory_mssql_connections,
-    'check_function': check_mssql_connections,
-    'service_description': 'MSSQL Connections %s',
-    'group': 'mssql_connections',
-    'default_levels_variable': "mssql_connections_default_levels",
-    'has_perfdata': True,
+check_info["mssql_connections"] = {
+    "parse_function": parse_mssql_connections,
+    "inventory_function": inventory_mssql_connections,
+    "check_function": check_mssql_connections,
+    "service_description": "MSSQL Connections %s",
+    "group": "mssql_connections",
+    "default_levels_variable": "mssql_connections_default_levels",
+    "has_perfdata": True,
 }

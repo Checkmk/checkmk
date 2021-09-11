@@ -34,7 +34,7 @@ def check_ups_socomec_outphase(item, params, parsed):
     return check_elphase(item, params, parsed)
 
 
-check_info['ups_socomec_outphase'] = {
+check_info["ups_socomec_outphase"] = {
     "parse_function": parse_ups_socomec_outphase,
     "inventory_function": discover(),
     "check_function": check_ups_socomec_outphase,
@@ -43,6 +43,6 @@ check_info['ups_socomec_outphase'] = {
     "has_perfdata": True,
     "group": "ups_outphase",
     # Phase Index, Voltage/dV, Current/dA, Load/%
-    "snmp_info": (".1.3.6.1.4.1.4555.1.1.1.1.4.4.1", ['1', '2', '3', '4']),
+    "snmp_info": (".1.3.6.1.4.1.4555.1.1.1.1.4.4.1", ["1", "2", "3", "4"]),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.4555.1.1.1",
 }

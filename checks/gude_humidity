@@ -31,17 +31,21 @@ def check_gude_humidity(item, params, info):
             return check_humidity(float(reading_str) / 10, params)
 
 
-check_info['gude_humidity'] = {
-    'inventory_function'      : inventory_gude_humidity,
-    'check_function'          : check_gude_humidity,
-    'service_description'     : 'Humidity %s',
-    'has_perfdata'            : True,
-    'snmp_info'               : ('.1.3.6.1.4.1.28507', [ "19", "38", "66" ], [
-                                    OID_END,
-                                    "1.6.1.1.3",    # GUDEADS-EPC****-MIB::epc****HygroSensor
-                                ]),
-    'snmp_scan_function'      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.19") or \
-                                            oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.38") or \
-                                            oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.66"),
-    'group'                   : 'humidity',
+check_info["gude_humidity"] = {
+    "inventory_function": inventory_gude_humidity,
+    "check_function": check_gude_humidity,
+    "service_description": "Humidity %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.28507",
+        ["19", "38", "66"],
+        [
+            OID_END,
+            "1.6.1.1.3",  # GUDEADS-EPC****-MIB::epc****HygroSensor
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.19")
+    or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.38")
+    or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.66"),
+    "group": "humidity",
 }

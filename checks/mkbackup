@@ -67,9 +67,14 @@ def check_mkbackup(job_state):
         duration = time.time() - job_state["started"]
 
         yield (
-            0, "The job is running for %s since %s" %
-            (get_age_human_readable(duration), get_timestamp_human_readable(job_state["started"])),
-            [("backup_duration", duration), ("backup_avgspeed", job_state["bytes_per_second"])])
+            0,
+            "The job is running for %s since %s"
+            % (
+                get_age_human_readable(duration),
+                get_timestamp_human_readable(job_state["started"]),
+            ),
+            [("backup_duration", duration), ("backup_avgspeed", job_state["bytes_per_second"])],
+        )
 
     elif job_state["state"] == "finished":
         if job_state["success"] is False:
@@ -78,16 +83,23 @@ def check_mkbackup(job_state):
             yield 0, "Backup completed"
 
         duration = job_state["finished"] - job_state["started"]
-        yield (0, "it was running for %s from %s till %s" %
-               (get_age_human_readable(duration), get_timestamp_human_readable(
-                   job_state["started"]), get_timestamp_human_readable(job_state["finished"])), [
-                       ("backup_duration", duration),
-                       ("backup_avgspeed", job_state["bytes_per_second"])
-                   ])
+        yield (
+            0,
+            "it was running for %s from %s till %s"
+            % (
+                get_age_human_readable(duration),
+                get_timestamp_human_readable(job_state["started"]),
+                get_timestamp_human_readable(job_state["finished"]),
+            ),
+            [("backup_duration", duration), ("backup_avgspeed", job_state["bytes_per_second"])],
+        )
 
         if "size" in job_state:
-            yield (0, "Size: %s" % get_bytes_human_readable(job_state["size"]),
-                   [("backup_size", job_state["size"])])
+            yield (
+                0,
+                "Size: %s" % get_bytes_human_readable(job_state["size"]),
+                [("backup_size", job_state["size"])],
+            )
 
         next_run = job_state["next_schedule"]
         if next_run == "disabled":

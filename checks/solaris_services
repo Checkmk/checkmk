@@ -24,19 +24,21 @@ def parse_solaris_services(info):
 
     parsed = {}
     for line in info:
-        if len(line) < 3 or line == [u'STATE', u'STIME', u'FMRI']:
+        if len(line) < 3 or line == ["STATE", "STIME", "FMRI"]:
             continue
         svc_descr = line[-1]
         type_, category, name, instance = get_parts_of_descr(svc_descr)
         parsed.setdefault(
-            svc_descr, {
+            svc_descr,
+            {
                 "state": line[0],
                 "stime": line[1],
                 "type": type_,
                 "category": category,
                 "name": name,
                 "instance": instance,
-            })
+            },
+        )
     return parsed
 
 
@@ -87,12 +89,14 @@ def inventory_solaris_services(parsed):
         instances = settings.get("instances", [])
         state = settings.get("state")
         for svc_descr, attrs in parsed.items():
-            if regex_match(descriptions, svc_descr) \
-               and regex_match(categories, attrs["category"]) \
-               and regex_match(names, attrs["name"]) \
-               and regex_match(instances, attrs["instance"]) \
-               and state_match(state, attrs["state"]):
-                if settings.get('outcome') in [None, 'full_descr']:
+            if (
+                regex_match(descriptions, svc_descr)
+                and regex_match(categories, attrs["category"])
+                and regex_match(names, attrs["name"])
+                and regex_match(instances, attrs["instance"])
+                and state_match(state, attrs["state"])
+            ):
+                if settings.get("outcome") in [None, "full_descr"]:
                     name = svc_descr
                 else:
                     name = get_svc_name(attrs)
@@ -101,7 +105,7 @@ def inventory_solaris_services(parsed):
 
 def check_solaris_services(item, params, parsed):
     for svc_name, attrs in parsed.items():
-        if item in svc_name or svc_name in params['additional_servicenames']:
+        if item in svc_name or svc_name in params["additional_servicenames"]:
             svc_state = attrs["state"]
             svc_stime = attrs["stime"]
             if svc_stime.count(":") == 2:
@@ -125,16 +129,16 @@ def check_solaris_services(item, params, parsed):
     return params["else"], "Service not found"
 
 
-check_info['solaris_services'] = {
-    'parse_function': parse_solaris_services,
-    'inventory_function': inventory_solaris_services,
-    'check_function': check_solaris_services,
-    'service_description': 'SMF Service %s',  # Service Management Facility
-    'group': 'solaris_services',
-    'default_levels_variable': 'solaris_services_default_levels',
+check_info["solaris_services"] = {
+    "parse_function": parse_solaris_services,
+    "inventory_function": inventory_solaris_services,
+    "check_function": check_solaris_services,
+    "service_description": "SMF Service %s",  # Service Management Facility
+    "group": "solaris_services",
+    "default_levels_variable": "solaris_services_default_levels",
 }
 
-#.
+# .
 #   .--summary-------------------------------------------------------------.
 #   |                                                                      |
 #   |           ___ _   _ _ __ ___  _ __ ___   __ _ _ __ _   _             |
@@ -167,10 +171,10 @@ def check_solaris_services_summary(_no_item, params, parsed):
         yield state, "%d %s%s" % (len(svc_names), svc_state.replace("_", " "), extra_info)
 
 
-check_info['solaris_services.summary'] = {
-    'parse_function': parse_solaris_services,
-    'inventory_function': inventory_solaris_services_summary,
-    'check_function': check_solaris_services_summary,
-    'service_description': 'SMF Services Summary',  # Service Management Facility
-    'group': 'solaris_services_summary',
+check_info["solaris_services.summary"] = {
+    "parse_function": parse_solaris_services,
+    "inventory_function": inventory_solaris_services_summary,
+    "check_function": check_solaris_services_summary,
+    "service_description": "SMF Services Summary",  # Service Management Facility
+    "group": "solaris_services_summary",
 }

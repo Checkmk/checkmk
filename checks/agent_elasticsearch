@@ -16,7 +16,7 @@ def agent_elasticsearch_arguments(params, hostname, ipaddress):
     args = []
 
     args += ["-P", params["protocol"]]
-    args += ["-m", ' '.join(params["infos"])]
+    args += ["-m", " ".join(params["infos"])]
 
     if "user" in params:
         args += ["-u", params["user"]]
@@ -30,4 +30,4 @@ def agent_elasticsearch_arguments(params, hostname, ipaddress):
     return args
 
 
-special_agent_info['elasticsearch'] = agent_elasticsearch_arguments
+special_agent_info["elasticsearch"] = agent_elasticsearch_arguments

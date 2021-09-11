@@ -28,29 +28,32 @@ def check_dell_idrac_raid(item, _no_params, info):
             yield state, "Status of %s: %s" % (name, state_readable)
 
 
-check_info['dell_idrac_raid'] = {
-    'inventory_function': inventory_dell_idrac_raid,
-    'check_function': check_dell_idrac_raid,
-    'service_description': 'Raid Controller %s',
-    'snmp_info': [
+check_info["dell_idrac_raid"] = {
+    "inventory_function": inventory_dell_idrac_raid,
+    "check_function": check_dell_idrac_raid,
+    "service_description": "Raid Controller %s",
+    "snmp_info": [
         (
-            '.1.3.6.1.4.1.674.10892.5.5.1.20.130.1.1',
+            ".1.3.6.1.4.1.674.10892.5.5.1.20.130.1.1",
             [
                 "1",  # IDRAC-MIB::controllerNumber
                 "2",  # IDRAC-MIB::controllerName
                 "38",  # IDRAC-MIB::controllerComponentStatus
-            ]),
+            ],
+        ),
         (
-            '.1.3.6.1.4.1.674.10892.5.5.1.20.130.15.1',
+            ".1.3.6.1.4.1.674.10892.5.5.1.20.130.15.1",
             [
                 "1",  # IDRAC-MIB::batterNumber
                 "4",  # IDRAC-MIB::batteryState
                 "6",  # IDRAC-MIB::batteryComponentStatus
                 "21",  # IDRAC-MIB::batteryDisplayName
-            ]),
+            ],
+        ),
     ],
-    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith(
-        ".1.3.6.1.4.1.674.10892.5"),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.674.10892.5"
+    ),
 }
 
 
@@ -76,8 +79,8 @@ def check_dell_idrac_raid_bbu(item, params, info):
             yield state, "Battery status: %s" % state_readable
 
 
-check_info['dell_idrac_raid.bbu'] = {
-    'inventory_function': inventory_dell_idrac_raid_bbu,
-    'check_function': check_dell_idrac_raid_bbu,
-    'service_description': 'Raid BBU %s',
+check_info["dell_idrac_raid.bbu"] = {
+    "inventory_function": inventory_dell_idrac_raid_bbu,
+    "check_function": check_dell_idrac_raid_bbu,
+    "service_description": "Raid BBU %s",
 }

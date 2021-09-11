@@ -16,16 +16,16 @@ def inventory_apc_inputs(info):
 
 def check_apc_inputs(item, params, info):
     states = {
-        '1': "closed",
-        '2': "open",
-        '3': "disabled",
-        '4': "not applicable",
+        "1": "closed",
+        "2": "open",
+        "3": "disabled",
+        "4": "not applicable",
     }
     alarm_states = {
-        '1': "normal",
-        '2': "warning",
-        '3': "critical",
-        '4': "not applicable",
+        "1": "normal",
+        "2": "warning",
+        "3": "critical",
+        "4": "not applicable",
     }
     for name, _location, state, alarm_status in info:
         if name == item:
@@ -38,15 +38,16 @@ def check_apc_inputs(item, params, info):
 
             messages = ["State is %s" % alarm_states[alarm_status]]
 
-            if params['state'] != state:
+            if params["state"] != state:
                 check_state = max(check_state, 1)
-                messages.append("Port state Change from %s to %s" % \
-                    ( states[params['state']], states[state] ))
+                messages.append(
+                    "Port state Change from %s to %s" % (states[params["state"]], states[state])
+                )
 
             return check_state, ", ".join(messages)
 
 
-check_info['apc_inputs'] = {
+check_info["apc_inputs"] = {
     "inventory_function": inventory_apc_inputs,
     "check_function": check_apc_inputs,
     "service_description": "Input %s",
@@ -58,5 +59,6 @@ check_info['apc_inputs'] = {
             4,  # Location
             5,  # CurrentState
             6,  # AlarmStatus
-        ])
+        ],
+    ),
 }

@@ -27,12 +27,12 @@ def inventory_prism_cluster(parsed):
 
 
 def check_prism_cluster(_no_item, _no_params, parsed):
-    return 0, "%s, version %s" % (parsed[0]['name'], parsed[0]['version'])
+    return 0, "%s, version %s" % (parsed[0]["name"], parsed[0]["version"])
 
 
-check_info['prism_info'] = {
-    'check_function': check_prism_cluster,
-    'inventory_function': inventory_prism_cluster,
-    'parse_function': parse_prism,
-    'service_description': "Prism Cluster",
+check_info["prism_info"] = {
+    "check_function": check_prism_cluster,
+    "inventory_function": inventory_prism_cluster,
+    "parse_function": parse_prism,
+    "service_description": "Prism Cluster",
 }

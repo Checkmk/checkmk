@@ -47,10 +47,11 @@ def check_cmctc_temp(item, params, info):
             dev_levels=(warn, crit),
             dev_levels_lower=(low, float("-inf")),  # no lower critical level specified
             dev_status=cmctc_translate_status(status),
-            dev_status_name="Unit: %s" % cmctc_translate_status_text(status))
+            dev_status_name="Unit: %s" % cmctc_translate_status_text(status),
+        )
 
 
-check_info['cmctc.temp'] = {
+check_info["cmctc.temp"] = {
     "check_function": check_cmctc_temp,
     "inventory_function": inventory_cmctc_temp,
     "has_perfdata": True,
@@ -79,5 +80,6 @@ check_info['cmctc.temp'] = {
             "5.2.1.8",
             # description (configured by user via admin interface)
             "7.2.1.2",
-        ]),
+        ],
+    ),
 }

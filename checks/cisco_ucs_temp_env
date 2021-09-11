@@ -31,7 +31,7 @@ def parse_cisco_ucs_temp_env(info):
         "Ambient": info[0][0],
         "Front": info[0][1],
         "IO-Hub": info[0][2],
-        "Rear": info[0][3]
+        "Rear": info[0][3],
     }
     return new_info
 
@@ -62,6 +62,7 @@ check_info["cisco_ucs_temp_env"] = {
             "8",  # cucsComputeRackUnitMbTempStatsFrontTemp
             "13",  # cucsComputeRackUnitMbTempStatsIoh1Temp
             "21",  # cucsComputeRackUnitMbTempStatsRearTemp
-        ]),
+        ],
+    ),
     "group": "temperature",
 }

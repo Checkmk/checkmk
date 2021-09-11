@@ -40,9 +40,13 @@ def inventory_apt(section):
 
 
 def _format(action, packages, verbose=False):
-    message = '%d %s' % (len(packages), action)
+    message = "%d %s" % (len(packages), action)
     if verbose and packages:
-        message += ' (%s)' % (', '.join(packages,))
+        message += " (%s)" % (
+            ", ".join(
+                packages,
+            )
+        )
 
     return message
 
@@ -73,7 +77,7 @@ def check_apt(_no_item, params, section):
     )
 
 
-check_info['apt'] = {
+check_info["apt"] = {
     "inventory_function": inventory_apt,
     "check_function": check_apt,
     "service_description": "APT Updates",

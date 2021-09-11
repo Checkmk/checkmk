@@ -39,28 +39,31 @@ def check_netapp_api_temp(item, params, parsed):
         "temp-sensor-hi-critical",
     }
     sensors = (
-        {k: int(values[k])
-         for k in required_keys}
+        {k: int(values[k]) for k in required_keys}
         for name, values in parsed.items()
         if required_keys.issubset(values.keys())  #
         if name.split(".")[0] == item_no  #
         if values.get("temp-sensor-is-not-installed") != "true"  #
-        if values.get("temp-sensor-is-ambient") == is_ambient)
+        if values.get("temp-sensor-is-ambient") == is_ambient
+    )
 
-    sensorlist = [(
-        f"{item_no}/{sensor['temp-sensor-element-no']}",
-        sensor["temp-sensor-current-temperature"],
-        {
-            "dev_levels": (
-                sensor["temp-sensor-hi-warning"],
-                sensor["temp-sensor-hi-critical"],
-            ),
-            "dev_levels_lower": (
-                sensor["temp-sensor-low-warning"],
-                sensor["temp-sensor-low-critical"],
-            ),
-        },
-    ) for sensor in sensors]
+    sensorlist = [
+        (
+            f"{item_no}/{sensor['temp-sensor-element-no']}",
+            sensor["temp-sensor-current-temperature"],
+            {
+                "dev_levels": (
+                    sensor["temp-sensor-hi-warning"],
+                    sensor["temp-sensor-hi-critical"],
+                ),
+                "dev_levels_lower": (
+                    sensor["temp-sensor-low-warning"],
+                    sensor["temp-sensor-low-critical"],
+                ),
+            },
+        )
+        for sensor in sensors
+    ]
 
     if not sensorlist:
         return 0, "No temperature sensors assigned to this filer"
@@ -69,11 +72,12 @@ def check_netapp_api_temp(item, params, parsed):
 
 
 check_info["netapp_api_temp"] = {
-    'check_function': check_netapp_api_temp,
-    'inventory_function': inventory_netapp_api_temp,
-    'parse_function': lambda info: netapp_api_parse_lines(
-        info, custom_keys=["temp-sensor-list", "temp-sensor-element-no"]),
-    'has_perfdata': True,
-    'group': "temperature",
-    'service_description': 'Temperature %s',
+    "check_function": check_netapp_api_temp,
+    "inventory_function": inventory_netapp_api_temp,
+    "parse_function": lambda info: netapp_api_parse_lines(
+        info, custom_keys=["temp-sensor-list", "temp-sensor-element-no"]
+    ),
+    "has_perfdata": True,
+    "group": "temperature",
+    "service_description": "Temperature %s",
 }

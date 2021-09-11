@@ -25,13 +25,13 @@ def parse_docker_container_cpu(info):
         # https://github.com/moby/moby/blob/646072ed6524f159c214f830f0049369db5a9441/docs/api/v1.41.yaml#L6125-L6127
         if (online_cpus := raw.get("online_cpus")) is not None:
             num_cpus = online_cpus
-        elif (percpu_usage_len := len(raw['cpu_usage'].get('percpu_usage', []))) != 0:
+        elif (percpu_usage_len := len(raw["cpu_usage"].get("percpu_usage", []))) != 0:
             num_cpus = percpu_usage_len
         else:
             return {}
         parsed["num_cpus"] = num_cpus
-        parsed["system_ticks"] = raw['system_cpu_usage']
-        parsed["container_ticks"] = raw['cpu_usage']['total_usage']
+        parsed["system_ticks"] = raw["system_cpu_usage"]
+        parsed["container_ticks"] = raw["cpu_usage"]["total_usage"]
         return parsed
     except docker.AgentOutputMalformatted:
         # if agent is run inside docker container, output format differs

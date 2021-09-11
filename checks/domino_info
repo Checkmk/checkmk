@@ -25,11 +25,11 @@ def inventory_domino_info(info):
 
 def check_domino_info(_no_item, _no_params, info):
     translate_status = {
-        '1': (0, 'up'),
-        '2': (2, 'down'),
-        '3': (2, 'not-responding'),
-        '4': (1, 'crashed'),
-        '5': (3, 'unknown'),
+        "1": (0, "up"),
+        "2": (2, "down"),
+        "3": (2, "not-responding"),
+        "4": (1, "crashed"),
+        "5": (3, "unknown"),
     }
     status, domain, name, release = info[0]
 
@@ -42,7 +42,7 @@ def check_domino_info(_no_item, _no_params, info):
     yield 0, "Name: %s, %s" % (name, release)
 
 
-check_info['domino_info'] = {
+check_info["domino_info"] = {
     "check_function": check_domino_info,
     "inventory_function": inventory_domino_info,
     "service_description": "Domino Info",
@@ -54,5 +54,6 @@ check_info['domino_info'] = {
             "1.1.4.8",  # lnMailDomain
             "1.1.6.2.1",  # lnServerName
             "1.1.6.2.4",  # lnServerNotesVersion
-        ]),
+        ],
+    ),
 }

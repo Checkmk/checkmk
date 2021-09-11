@@ -26,6 +26,7 @@ check_info["hitachi_hus_dkc"] = {
             7,  # dkcHWBattery
             8,  # dkcHWFan
             9,  # dkcHWEnvironment
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_hitachi_hus,
 }

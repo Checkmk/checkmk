@@ -22,7 +22,7 @@ factory_settings["arris_cmts_temp_default_levels"] = {"levels": (40, 46)}
 def inventory_arris_cmts_temp(info):
     for line in info:
         # only devices with not default temperature
-        if line[1] != '999':
+        if line[1] != "999":
             yield line[0], {}
 
 
@@ -45,7 +45,8 @@ check_info["arris_cmts_temp"] = {
         [
             3,  # cardName
             29,  # Card Temperature
-        ]),
+        ],
+    ),
     "group": "temperature",
-    "default_levels_variable": "arris_cmts_temp_default_levels"
+    "default_levels_variable": "arris_cmts_temp_default_levels",
 }

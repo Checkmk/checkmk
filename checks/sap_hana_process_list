@@ -13,8 +13,8 @@ def check_sap_hana_process_list(item, params, parsed):
     return 1, "This check is deprecated. Please have a look at werk #7100."
 
 
-check_info['sap_hana_process_list'] = {
-    'inventory_function': inventory_sap_hana_process_list,
-    'check_function': check_sap_hana_process_list,
-    'service_description': 'SAP HANA Process %s',
+check_info["sap_hana_process_list"] = {
+    "inventory_function": inventory_sap_hana_process_list,
+    "check_function": check_sap_hana_process_list,
+    "service_description": "SAP HANA Process %s",
 }

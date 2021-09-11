@@ -38,5 +38,6 @@ check_info["cisco_ucs_system"] = {
             "32",  # cucsComputeRackUnitModel
             "47",  # cucsComputeRackUnitSerial
             "43",  # cucsComputeRackUnitOperability
-        ]),
+        ],
+    ),
 }

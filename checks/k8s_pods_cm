@@ -11,23 +11,23 @@ def check_deprecated(_no_item, _no_params, _no_info):
     return 1, "This check is deprecated. Please rediscover the services of this host."
 
 
-check_info['k8s_pods_memory'] = {
-    'inventory_function': lambda i: None,
-    'check_function': check_deprecated,
-    'service_description': 'Memory usage for Pods in %s namespace',
-    'group': 'k8s_pods_memory',
+check_info["k8s_pods_memory"] = {
+    "inventory_function": lambda i: None,
+    "check_function": check_deprecated,
+    "service_description": "Memory usage for Pods in %s namespace",
+    "group": "k8s_pods_memory",
 }
 
-check_info['k8s_pods_cpu'] = {
-    'inventory_function': lambda i: None,
-    'check_function': check_deprecated,
-    'service_description': 'CPU usage for Pods in %s namespace',
-    'group': 'k8s_pods_cpu',
+check_info["k8s_pods_cpu"] = {
+    "inventory_function": lambda i: None,
+    "check_function": check_deprecated,
+    "service_description": "CPU usage for Pods in %s namespace",
+    "group": "k8s_pods_cpu",
 }
 
-check_info['k8s_pods_fs'] = {
-    'inventory_function': lambda i: None,
-    'check_function': check_deprecated,
-    'service_description': 'FS usage for Pods in %s namespace',
-    'group': 'k8s_pods_fs',
+check_info["k8s_pods_fs"] = {
+    "inventory_function": lambda i: None,
+    "check_function": check_deprecated,
+    "service_description": "FS usage for Pods in %s namespace",
+    "group": "k8s_pods_fs",
 }

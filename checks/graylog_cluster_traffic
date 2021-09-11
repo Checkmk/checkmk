@@ -41,15 +41,17 @@ def check_graylog_cluster_traffic(no_item, params, parsed):
         traffic_value = parsed.get(key, []).get(parsed["to"])
         if traffic_value is not None:
 
-            yield check_levels(traffic_value,
-                               "graylog_%s" % key,
-                               params.get(key),
-                               infoname=infotext,
-                               human_readable_func=get_bytes_human_readable)
+            yield check_levels(
+                traffic_value,
+                "graylog_%s" % key,
+                params.get(key),
+                infoname=infotext,
+                human_readable_func=get_bytes_human_readable,
+            )
 
     last_updated = parsed.get("to")
     if last_updated is not None:
-        local_timestamp = calendar.timegm(time.strptime(last_updated, '%Y-%m-%dT%H:%M:%S.%fZ'))
+        local_timestamp = calendar.timegm(time.strptime(last_updated, "%Y-%m-%dT%H:%M:%S.%fZ"))
 
         yield 0, "Last updated: %s" % get_timestamp_human_readable(local_timestamp)
 

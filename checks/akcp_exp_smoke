@@ -25,5 +25,6 @@ check_info["akcp_exp_smoke"] = {
             2,  # SPAGENT-MIB::sensorSmokeDescription
             6,  # SPAGENT-MIB::sensorSmokeStatus
             8,  # SPAGENT-MIB::sensorSmokeGoOffline
-        ]),
+        ],
+    ),
 }

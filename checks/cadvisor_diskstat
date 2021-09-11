@@ -38,10 +38,10 @@ def check_cadvisor_diskstat(item, params, parsed):
 
 
 check_info["cadvisor_diskstat"] = {
-    'parse_function': parse_cadvisor_diskstat,
-    'inventory_function': discover(),
-    'check_function': check_cadvisor_diskstat,
-    'service_description': 'Disk IO %s',
-    'has_perfdata': True,
-    'group': 'diskstat',
+    "parse_function": parse_cadvisor_diskstat,
+    "inventory_function": discover(),
+    "check_function": check_cadvisor_diskstat,
+    "service_description": "Disk IO %s",
+    "has_perfdata": True,
+    "group": "diskstat",
 }

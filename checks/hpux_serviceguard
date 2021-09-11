@@ -35,8 +35,7 @@ def inventory_hpux_serviceguard(info):
 
 def check_hpux_serviceguard(item, _no_params, info):
     for line in info:
-        if (item == "Total Status" and len(line) == 1) or \
-            (item == line[0] and len(line) == 2):
+        if (item == "Total Status" and len(line) == 1) or (item == line[0] and len(line) == 2):
             status = line[-1].split("=")[-1]
             if status == "ok":
                 code = 0
@@ -50,7 +49,7 @@ def check_hpux_serviceguard(item, _no_params, info):
 
 
 check_info["hpux_serviceguard"] = {
-    'check_function': check_hpux_serviceguard,
-    'inventory_function': inventory_hpux_serviceguard,
-    'service_description': 'Serviceguard %s',
+    "check_function": check_hpux_serviceguard,
+    "inventory_function": inventory_hpux_serviceguard,
+    "service_description": "Serviceguard %s",
 }

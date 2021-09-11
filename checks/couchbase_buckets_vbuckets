@@ -69,20 +69,20 @@ def check_couchbase_buckets_vbuckets_replica(_item, params, data):
         )
 
 
-check_info['couchbase_buckets_vbuckets'] = {
-    'parse_function': parse_couchbase_lines,
-    'inventory_function': discover(lambda _k, v: 'vb_active_resident_items_ratio' in v),
-    'check_function': check_couchbase_buckets_vbuckets,
-    'service_description': 'Couchbase Bucket %s active vBuckets',
-    'group': 'couchbase_vbuckets',
-    'has_perfdata': True
+check_info["couchbase_buckets_vbuckets"] = {
+    "parse_function": parse_couchbase_lines,
+    "inventory_function": discover(lambda _k, v: "vb_active_resident_items_ratio" in v),
+    "check_function": check_couchbase_buckets_vbuckets,
+    "service_description": "Couchbase Bucket %s active vBuckets",
+    "group": "couchbase_vbuckets",
+    "has_perfdata": True,
 }
 
-check_info['couchbase_buckets_vbuckets.replica'] = {
-    'parse_function': parse_couchbase_lines,
-    'inventory_function': discover(lambda _k, v: 'vb_active_resident_items_ratio' in v),
-    'check_function': check_couchbase_buckets_vbuckets_replica,
-    'service_description': 'Couchbase Bucket %s replica vBuckets',
-    'group': 'couchbase_vbuckets',
-    'has_perfdata': True
+check_info["couchbase_buckets_vbuckets.replica"] = {
+    "parse_function": parse_couchbase_lines,
+    "inventory_function": discover(lambda _k, v: "vb_active_resident_items_ratio" in v),
+    "check_function": check_couchbase_buckets_vbuckets_replica,
+    "service_description": "Couchbase Bucket %s replica vBuckets",
+    "group": "couchbase_vbuckets",
+    "has_perfdata": True,
 }

@@ -18,21 +18,21 @@
 
 def parse_fortinet_controller_aps(info):
     map_oper_state = {
-        '0': 'unknown',
-        '1': 'enabled',
-        '2': 'disabled',
-        '3': 'no license',
-        '4': 'enabled WN license',
-        '5': 'power down',
+        "0": "unknown",
+        "1": "enabled",
+        "2": "disabled",
+        "3": "no license",
+        "4": "enabled WN license",
+        "5": "power down",
     }
 
     map_availability = {
-        '1': 'power off',
-        '2': 'offline',
-        '3': 'online',
-        '4': 'failed',
-        '5': 'in test',
-        '6': 'not installed',
+        "1": "power off",
+        "2": "offline",
+        "3": "online",
+        "4": "failed",
+        "5": "in test",
+        "6": "not installed",
     }
 
     parsed = {}
@@ -43,7 +43,8 @@ def parse_fortinet_controller_aps(info):
         except ValueError:
             uptime = None
         parsed.setdefault(
-            id_, {
+            id_,
+            {
                 "descr": descr,
                 "location": location,
                 "uptime": uptime,
@@ -51,15 +52,16 @@ def parse_fortinet_controller_aps(info):
                 "availability": map_availability[availability],
                 "clients_count_24": 0,
                 "clients_count_5": 0,
-            })
+            },
+        )
 
     for client, id_ in client_table:
         inst = parsed.get(id_)
         if inst is None:
             continue
-        if client == '1':
+        if client == "1":
             inst["clients_count_24"] += 1
-        elif client == '2':
+        elif client == "2":
             inst["clients_count_5"] += 1
     return parsed
 
@@ -77,60 +79,61 @@ def check_fortinet_controller_aps(item, params, parsed):
 
     oper_state = data["operational"]
     state = 0
-    if oper_state == 'unknown':
+    if oper_state == "unknown":
         state = 3
-    elif oper_state in ['disabled', 'no license', 'power down']:
+    elif oper_state in ["disabled", "no license", "power down"]:
         state = 1
     yield state, "[%s] Operational: %s" % (data["descr"], oper_state)
 
     avail_state = data["availability"]
     state = 0
-    if avail_state == 'failed':
+    if avail_state == "failed":
         state = 2
-    elif avail_state in ['power off', 'offline', 'in test', 'not installed']:
+    elif avail_state in ["power off", "offline", "in test", "not installed"]:
         state = 1
     yield state, "Availability: %s" % avail_state
 
     client_count_24 = data["clients_count_24"]
     client_count_5 = data["clients_count_5"]
-    yield 0, "Connected clients (2,4 ghz/5 ghz): %s/%s"\
-             % (client_count_24, client_count_5),\
-          [('5ghz_clients', client_count_5),
-           ('24ghz_clients', client_count_24)]
+    yield 0, "Connected clients (2,4 ghz/5 ghz): %s/%s" % (client_count_24, client_count_5), [
+        ("5ghz_clients", client_count_5),
+        ("24ghz_clients", client_count_24),
+    ]
 
-    uptime = data['uptime']
+    uptime = data["uptime"]
     if uptime:
-        yield 0, "Up since %s" % get_timestamp_human_readable(uptime),\
-              [('uptime', uptime)]
+        yield 0, "Up since %s" % get_timestamp_human_readable(uptime), [("uptime", uptime)]
 
-    location = data.get('location')
+    location = data.get("location")
     if location:
         yield 0, "Located at %s" % location
 
 
-check_info['fortinet_controller_aps'] = {
-    'parse_function': parse_fortinet_controller_aps,
-    'inventory_function': inventory_fortinet_controller_aps,
-    'check_function': check_fortinet_controller_aps,
-    'service_description': 'AP %s',
-    'has_perfdata': True,
-    'snmp_info': [
+check_info["fortinet_controller_aps"] = {
+    "parse_function": parse_fortinet_controller_aps,
+    "inventory_function": inventory_fortinet_controller_aps,
+    "check_function": check_fortinet_controller_aps,
+    "service_description": "AP %s",
+    "has_perfdata": True,
+    "snmp_info": [
         (
-            '.1.3.6.1.4.1.15983.1.1.4.2.1.1',
+            ".1.3.6.1.4.1.15983.1.1.4.2.1.1",
             [
-                '2',  # MERU-CONFIG-AP-MIB::mwApDescr
-                '4',  # MERU-CONFIG-AP-MIB::mwApID
-                '8',  # MERU-CONFIG-AP-MIB::mwApLocation
-                '17',  # MERU-CONFIG-AP-MIB::mwApUpTime
-                '26',  # MERU-CONFIG-AP-MIB::mwApOperationalState
-                '27'  # MERU-CONFIG-AP-MIB::mwApAvailabilityStatus
-            ]),
+                "2",  # MERU-CONFIG-AP-MIB::mwApDescr
+                "4",  # MERU-CONFIG-AP-MIB::mwApID
+                "8",  # MERU-CONFIG-AP-MIB::mwApLocation
+                "17",  # MERU-CONFIG-AP-MIB::mwApUpTime
+                "26",  # MERU-CONFIG-AP-MIB::mwApOperationalState
+                "27",  # MERU-CONFIG-AP-MIB::mwApAvailabilityStatus
+            ],
+        ),
         (
-            '.1.3.6.1.4.1.15983.1.1.3.1.7.1',
+            ".1.3.6.1.4.1.15983.1.1.3.1.7.1",
             [
-                '5',  # MERU-GLOBAL-STATISTICS-MIB::mwApStationStatsIfIndex
-                '9',  # MERU-GLOBAL-STATISTICS-MIB::mwApStationStatsNmsApNodeId
-            ])
+                "5",  # MERU-GLOBAL-STATISTICS-MIB::mwApStationStatsIfIndex
+                "9",  # MERU-GLOBAL-STATISTICS-MIB::mwApStationStatsNmsApNodeId
+            ],
+        ),
     ],
-    'snmp_scan_function': lambda oid: '.1.3.6.1.4.1.15983' in oid('.1.3.6.1.2.1.1.2.0').lower(),
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.15983" in oid(".1.3.6.1.2.1.1.2.0").lower(),
 }

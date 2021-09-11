@@ -8,9 +8,9 @@
 # .1.3.6.1.4.1.12356.101.4.2.2.0 6.00689(2015-09-01 00:15)
 
 # signature ages (defaults are 1/2 days)
-factory_settings['fortigate_signature_default_levels'] = {
-    'av_age': (86400, 172800),
-    'ips_age': (86400, 172800),
+factory_settings["fortigate_signature_default_levels"] = {
+    "av_age": (86400, 172800),
+    "ips_age": (86400, 172800),
 }
 
 
@@ -27,9 +27,15 @@ def parse_fortigate_signatures(info):
         return match.group(1), time.time() - ts
 
     parsed = []
-    for (key, title), value in zip([("av_age", "AV"), ("ips_age", "IPS"),
-                                    ("av_ext_age", "AV extended"), ("ips_ext_age", "IPS extended")],
-                                   info[0]):
+    for (key, title), value in zip(
+        [
+            ("av_age", "AV"),
+            ("ips_age", "IPS"),
+            ("av_ext_age", "AV extended"),
+            ("ips_ext_age", "IPS extended"),
+        ],
+        info[0],
+    ):
         version, age = parse_version(value)
         parsed.append((key, title, version, age))
     return parsed
@@ -54,25 +60,28 @@ def check_fortigate_signatures(_no_item, params, parsed):
             elif warn is not None and age >= warn:
                 state = 1
             if state:
-                infotext += " (warn/crit at %s/%s)" % (get_age_human_readable(warn),
-                                                       get_age_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (
+                    get_age_human_readable(warn),
+                    get_age_human_readable(crit),
+                )
         yield state, infotext
 
 
-check_info['fortigate_signatures'] = {
-    'parse_function': parse_fortigate_signatures,
-    'inventory_function': inventory_fortigate_signatures,
-    'check_function': check_fortigate_signatures,
-    'service_description': "Signatures",
-    'snmp_scan_function': lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
-    'snmp_info': (
+check_info["fortigate_signatures"] = {
+    "parse_function": parse_fortigate_signatures,
+    "inventory_function": inventory_fortigate_signatures,
+    "check_function": check_fortigate_signatures,
+    "service_description": "Signatures",
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.12356.101.1" in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_info": (
         ".1.3.6.1.4.1.12356.101.4.2",
         [
             "1",  # FORTINET-FORTIGATE-MIB::fgSysVersionAv
             "2",  # FORTINET-FORTIGATE-MIB::fgSysVersionIps
             "3",  # FORTINET-FORTIGATE-MIB::fgSysVersionAvEt
             "4",  # FORTINET-FORTIGATE-MIB::fgSysVersionIpsEt
-        ]),
-    'default_levels_variable': "fortigate_signature_default_levels",
-    'group': 'fortinet_signatures'
+        ],
+    ),
+    "default_levels_variable": "fortigate_signature_default_levels",
+    "group": "fortinet_signatures",
 }

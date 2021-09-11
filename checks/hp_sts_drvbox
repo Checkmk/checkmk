@@ -7,113 +7,128 @@
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 
 hp_sts_drvbox_type_map = {
-    '1': 'other',
-    '2': 'ProLiant Storage System',
-    '3': 'ProLiant-2 Storage System',
-    '4': 'internal ProLiant-2 Storage System',
-    '5': 'proLiant2DuplexTop',
-    '6': 'proLiant2DuplexBottom',
-    '7': 'proLiant2InternalDuplexTop',
-    '8': 'proLiant2InternalDuplexBottom',
+    "1": "other",
+    "2": "ProLiant Storage System",
+    "3": "ProLiant-2 Storage System",
+    "4": "internal ProLiant-2 Storage System",
+    "5": "proLiant2DuplexTop",
+    "6": "proLiant2DuplexBottom",
+    "7": "proLiant2InternalDuplexTop",
+    "8": "proLiant2InternalDuplexBottom",
 }
 
 hp_sts_drvbox_cond_map = {
-    '1': (3, 'other'),
-    '2': (0, 'ok'),
-    '3': (1, 'degraded'),
-    '4': (2, 'failed'),
+    "1": (3, "other"),
+    "2": (0, "ok"),
+    "3": (1, "degraded"),
+    "4": (2, "failed"),
 }
 
 hp_sts_drvbox_fan_map = {
-    '1': (3, 'other'),
-    '2': (0, 'ok'),
-    '3': (2, 'failed'),
-    '4': (None, 'noFan'),
-    '5': (1, 'degraded'),
+    "1": (3, "other"),
+    "2": (0, "ok"),
+    "3": (2, "failed"),
+    "4": (None, "noFan"),
+    "5": (1, "degraded"),
 }
 
 hp_sts_drvbox_temp_map = {
-    '1': (3, 'other'),
-    '2': (0, 'ok'),
-    '3': (1, 'degraded'),
-    '4': (2, 'failed'),
-    '5': (None, 'noTemp'),
+    "1": (3, "other"),
+    "2": (0, "ok"),
+    "3": (1, "degraded"),
+    "4": (2, "failed"),
+    "5": (None, "noTemp"),
 }
 
 hp_sts_drvbox_sp_map = {
-    '1': (3, 'other'),
-    '2': (0, 'sidePanelInPlace'),
-    '3': (2, 'sidePanelRemoved'),
-    '4': (None, 'noSidePanelStatus'),
+    "1": (3, "other"),
+    "2": (0, "sidePanelInPlace"),
+    "3": (2, "sidePanelRemoved"),
+    "4": (None, "noSidePanelStatus"),
 }
 
 hp_sts_drvbox_power_map = {
-    '1': (3, 'other'),
-    '2': (0, 'ok'),
-    '3': (1, 'degraded'),
-    '4': (2, 'failed'),
-    '5': (None, 'noFltTolPower'),
+    "1": (3, "other"),
+    "2": (0, "ok"),
+    "3": (1, "degraded"),
+    "4": (2, "failed"),
+    "5": (None, "noFltTolPower"),
 }
 
 
 def inventory_hp_sts_drvbox(info):
     if info:
-        return [(line[0] + '/' + line[1], None) for line in info if line[3] != ''
-               ]  # only inventorize rows with "model" set
+        return [
+            (line[0] + "/" + line[1], None) for line in info if line[3] != ""
+        ]  # only inventorize rows with "model" set
 
 
 def check_hp_sts_drvbox(item, _no_params, info):
     for line in info:
-        if line[0] + '/' + line[1] == item:
-            _c_index, _b_index, ty, model, fan_status, cond, \
-              temp_status, sp_status, pwr_status, serial, loc = line
+        if line[0] + "/" + line[1] == item:
+            (
+                _c_index,
+                _b_index,
+                ty,
+                model,
+                fan_status,
+                cond,
+                temp_status,
+                sp_status,
+                pwr_status,
+                serial,
+                loc,
+            ) = line
 
             sum_state = 0
             output = []
 
             for val, label, map_ in [
-                (fan_status, 'Fan-Status', hp_sts_drvbox_fan_map),
-                (cond, 'Condition', hp_sts_drvbox_cond_map),
-                (temp_status, 'Temp-Status', hp_sts_drvbox_temp_map),
-                (sp_status, 'Sidepanel-Status', hp_sts_drvbox_sp_map),
-                (pwr_status, 'Power-Status', hp_sts_drvbox_power_map),
+                (fan_status, "Fan-Status", hp_sts_drvbox_fan_map),
+                (cond, "Condition", hp_sts_drvbox_cond_map),
+                (temp_status, "Temp-Status", hp_sts_drvbox_temp_map),
+                (sp_status, "Sidepanel-Status", hp_sts_drvbox_sp_map),
+                (pwr_status, "Power-Status", hp_sts_drvbox_power_map),
             ]:
                 this_state = map_[val][0]
                 if this_state is None:
                     continue  # skip unsupported checks
-                state_txt = ''
+                state_txt = ""
                 if this_state == 1:
-                    state_txt = ' (!)'
+                    state_txt = " (!)"
                 elif this_state == 2:
-                    state_txt = ' (!!)'
+                    state_txt = " (!!)"
                 sum_state = max(sum_state, this_state)
-                output.append('%s: %s%s' % (label, map_[val][1], state_txt))
+                output.append("%s: %s%s" % (label, map_[val][1], state_txt))
 
-            output.append('(Type: %s, Model: %s, Serial: %s, Location: %s)' %
-                          (hp_sts_drvbox_type_map.get(ty, 'unknown'), model, serial, loc))
+            output.append(
+                "(Type: %s, Model: %s, Serial: %s, Location: %s)"
+                % (hp_sts_drvbox_type_map.get(ty, "unknown"), model, serial, loc)
+            )
 
-            return (sum_state, ', '.join(output))
+            return (sum_state, ", ".join(output))
     return (3, "Controller not found in snmp data")
 
 
 check_info["hp_sts_drvbox"] = {
-    'check_function': check_hp_sts_drvbox,
-    'inventory_function': inventory_hp_sts_drvbox,
-    'service_description': 'Drive Box %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.232.8.2.1.1',
+    "check_function": check_hp_sts_drvbox,
+    "inventory_function": inventory_hp_sts_drvbox,
+    "service_description": "Drive Box %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.232.8.2.1.1",
         [
-            '1',  # cpqSsBoxCntlrIndex
-            '2',  # cpqSsBoxBusIndex
-            '3',  # cpqSsBoxType
-            '4',  # cpqSsBoxModel
-            '7',  # cpqSsBoxFanStatus
-            '8',  # cpqSsBoxCondition
-            '9',  # cpqSsBoxTempStatus
-            '10',  # cpqSsBoxSidePanelStatus
-            '11',  # cpqSsBoxFltTolPwrSupplyStatus
-            '17',  # cpqSsBoxSerialNumber
-            '23',  # cpqSsBoxLocationString
-        ]),
-    'snmp_scan_function': lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
+            "1",  # cpqSsBoxCntlrIndex
+            "2",  # cpqSsBoxBusIndex
+            "3",  # cpqSsBoxType
+            "4",  # cpqSsBoxModel
+            "7",  # cpqSsBoxFanStatus
+            "8",  # cpqSsBoxCondition
+            "9",  # cpqSsBoxTempStatus
+            "10",  # cpqSsBoxSidePanelStatus
+            "11",  # cpqSsBoxFltTolPwrSupplyStatus
+            "17",  # cpqSsBoxSerialNumber
+            "23",  # cpqSsBoxLocationString
+        ],
+    ),
+    "snmp_scan_function": lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower(),
 }

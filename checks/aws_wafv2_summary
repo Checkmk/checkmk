@@ -17,10 +17,10 @@ def check_aws_wafv2_summary(item, params, parsed):
 
     for web_acl in parsed:
         try:
-            region_key = AWSRegions[web_acl['Region']]
+            region_key = AWSRegions[web_acl["Region"]]
         except KeyError:
-            region_key = web_acl['Region']  # CloudFront
-        web_acls_by_region.setdefault(region_key, {})[web_acl['Name']] = web_acl
+            region_key = web_acl["Region"]  # CloudFront
+        web_acls_by_region.setdefault(region_key, {})[web_acl["Name"]] = web_acl
 
     regions_sorted = sorted(web_acls_by_region.keys())
     long_output = []
@@ -37,20 +37,22 @@ def check_aws_wafv2_summary(item, params, parsed):
         for web_acl_name in web_acl_names_sorted:
             web_acl = web_acls_region[web_acl_name]
 
-            description = web_acl['Description']
+            description = web_acl["Description"]
             if not description:
-                description = '[no description]'
+                description = "[no description]"
 
-            long_output.append("%s -- Description: %s, Number of rules and rule groups: %s" %
-                               (web_acl_name, description, len(web_acl['Rules'])))
+            long_output.append(
+                "%s -- Description: %s, Number of rules and rule groups: %s"
+                % (web_acl_name, description, len(web_acl["Rules"]))
+            )
 
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-check_info['aws_wafv2_summary'] = {
-    'parse_function': parse_aws,
-    'inventory_function': discover_single,
-    'check_function': check_aws_wafv2_summary,
-    'service_description': 'AWS/WAFV2 Summary',
+check_info["aws_wafv2_summary"] = {
+    "parse_function": parse_aws,
+    "inventory_function": discover_single,
+    "check_function": check_aws_wafv2_summary,
+    "service_description": "AWS/WAFV2 Summary",
 }

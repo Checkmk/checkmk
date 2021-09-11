@@ -20,18 +20,18 @@ from cmk.base.check_legacy_includes.ibm_svc import *  # pylint: disable=wildcard
 
 def parse_ibm_svc_array(info):
     dflt_header = [
-        'mdisk_id',
-        'mdisk_name',
-        'status',
-        'mdisk_grp_id',
-        'mdisk_grp_name',
-        'capacity',
-        'raid_status',
-        'raid_level',
-        'redundancy',
-        'strip_size',
-        'tier',
-        'encrypt',
+        "mdisk_id",
+        "mdisk_name",
+        "status",
+        "mdisk_grp_id",
+        "mdisk_grp_name",
+        "capacity",
+        "raid_status",
+        "raid_level",
+        "redundancy",
+        "strip_size",
+        "tier",
+        "encrypt",
     ]
     parsed = {}
     for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
@@ -45,9 +45,9 @@ def parse_ibm_svc_array(info):
 
 @get_parsed_item_data
 def check_ibm_svc_array(item, _no_params, data):
-    raid_status = data['raid_status']
-    raid_level = data['raid_level']
-    tier = data['tier']
+    raid_status = data["raid_status"]
+    raid_level = data["raid_level"]
+    tier = data["tier"]
 
     # Check raid_status
     message = "Status: %s" % raid_status

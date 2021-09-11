@@ -42,6 +42,7 @@ check_info["akcp_exp_temp"] = {
             12,  # SPAGENT-MIB::sensorTemperatureHighCritical
             19,  # SPAGENT-MIB::sensorTemperatureRaw
             8,  # SPAGENT-MIB::sensorTemperatureGoOffline
-        ]),
+        ],
+    ),
     "group": "temperature",
 }

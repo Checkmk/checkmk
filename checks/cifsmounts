@@ -27,10 +27,10 @@ from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildc
 # /with spaces ok 217492 123563 112515 524288
 
 check_info["cifsmounts"] = {
-    'parse_function': parse_network_fs_mounts,
-    'inventory_function': discover(),
-    'check_function': check_network_fs_mounts,
-    'service_description': 'CIFS mount %s',
-    'has_perfdata': True,
-    'group': 'network_fs',
+    "parse_function": parse_network_fs_mounts,
+    "inventory_function": discover(),
+    "check_function": check_network_fs_mounts,
+    "service_description": "CIFS mount %s",
+    "has_perfdata": True,
+    "group": "network_fs",
 }

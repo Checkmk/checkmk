@@ -30,16 +30,19 @@ def check_fireeye_temp(item, params, info):
     reading_str, status, health = info[0]
     dev_status = 0
     dev_status_name = ""
-    for text, (state, state_readable) in check_fireeye_states([(status, 'Status'),
-                                                               (health, 'Health')]).items():
+    for text, (state, state_readable) in check_fireeye_states(
+        [(status, "Status"), (health, "Health")]
+    ).items():
         dev_status = max(dev_status, state)
         dev_status_name += "%s: %s" % (text, state_readable)
 
-    yield check_temperature(float(reading_str),
-                            params,
-                            "fireeye_temp_system",
-                            dev_status=dev_status,
-                            dev_status_name=dev_status_name)
+    yield check_temperature(
+        float(reading_str),
+        params,
+        "fireeye_temp_system",
+        dev_status=dev_status,
+        dev_status_name=dev_status_name,
+    )
 
 
 check_info["fireeye_temp"] = {
@@ -53,7 +56,8 @@ check_info["fireeye_temp"] = {
             "4",  # FE-FIREEYE-MIB::feTemperatureValue
             "5",  # FE-FIREEYE-MIB::feTemperatureStatus
             "6",  # FE-FIREEYE-MIB::feTemperatureIsHealthy
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_fireeye,
     "group": "temperature",
 }

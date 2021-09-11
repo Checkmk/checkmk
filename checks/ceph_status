@@ -10,7 +10,7 @@ import json
 def parse_ceph_status(info):
 
     joined_lines = [" ".join(line) for line in info]
-    parsed = json.loads(''.join(joined_lines))
+    parsed = json.loads("".join(joined_lines))
 
     # ceph health' JSON format has changed in luminous
     if "health" in parsed and "status" not in parsed["health"]:
@@ -25,7 +25,7 @@ def ceph_check_epoch(id_, epoch, params):
     epoch_rate = get_rate("%s.epoch.rate" % id_, now, epoch, allow_negative=True)
     epoch_avg = get_average("%s.epoch.avg" % id_, now, epoch_rate, avg_interval_min)
 
-    infoname = 'Epoch rate (%s average)' % get_age_human_readable(avg_interval_min * 60)
+    infoname = "Epoch rate (%s average)" % get_age_human_readable(avg_interval_min * 60)
     return check_levels(
         epoch_avg,
         None,
@@ -44,8 +44,8 @@ def ceph_check_epoch(id_, epoch, params):
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer: 1,3 per 30 min
-factory_settings['ceph_status_default_levels'] = {
-    'epoch': (1, 3, 30),
+factory_settings["ceph_status_default_levels"] = {
+    "epoch": (1, 3, 30),
 }
 
 
@@ -84,19 +84,19 @@ def check_ceph_status(_no_item, params, parsed):
         if error_messages:
             state_readable += " (%s)" % (", ".join(error_messages))
 
-    yield state, 'Health: %s' % state_readable
+    yield state, "Health: %s" % state_readable
     yield ceph_check_epoch("ceph_status", parsed["election_epoch"], params)
 
 
-check_info['ceph_status'] = {
-    'parse_function': parse_ceph_status,
-    'inventory_function': inventory_ceph_status,
-    'check_function': check_ceph_status,
-    'service_description': 'Ceph Status',
-    'default_levels_variable': 'ceph_status_default_levels',
+check_info["ceph_status"] = {
+    "parse_function": parse_ceph_status,
+    "inventory_function": inventory_ceph_status,
+    "check_function": check_ceph_status,
+    "service_description": "Ceph Status",
+    "default_levels_variable": "ceph_status_default_levels",
 }
 
-#.
+# .
 #   .--osds----------------------------------------------------------------.
 #   |                                       _                              |
 #   |                          ___  ___  __| |___                          |
@@ -107,10 +107,10 @@ check_info['ceph_status'] = {
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer: 50, 100 per 15 min
-factory_settings['ceph_osds_default_levels'] = {
-    'epoch': (50, 100, 15),
-    'num_out_osds': (7.0, 5.0),
-    'num_down_osds': (7.0, 5.0),
+factory_settings["ceph_osds_default_levels"] = {
+    "epoch": (50, 100, 15),
+    "num_out_osds": (7.0, 5.0),
+    "num_down_osds": (7.0, 5.0),
 }
 
 
@@ -126,8 +126,8 @@ def check_ceph_status_osds(_no_item, params, parsed):
     yield ceph_check_epoch("ceph_osds", data["epoch"], params)
 
     for ds, title, state in [
-        ('full', 'Full', 2),
-        ('nearfull', 'Near full', 1),
+        ("full", "Full", 2),
+        ("nearfull", "Near full", 1),
     ]:
         if data.get(ds, False):
             # Return false if 'full' or 'nearfull' indicators are not in the datasets (relevant for newer ceph versions after 13.2.7)
@@ -136,8 +136,8 @@ def check_ceph_status_osds(_no_item, params, parsed):
     yield 0, "OSDs: %s, Remapped PGs: %s" % (num_osds, data["num_remapped_pgs"])
 
     for ds, title, param_key in [
-        ('num_in_osds', 'OSDs out', 'num_out_osds'),
-        ('num_up_osds', 'OSDs down', 'num_down_osds'),
+        ("num_in_osds", "OSDs out", "num_out_osds"),
+        ("num_up_osds", "OSDs down", "num_down_osds"),
     ]:
         state = 0
         value = num_osds - data[ds]
@@ -150,22 +150,23 @@ def check_ceph_status_osds(_no_item, params, parsed):
             elif value_perc >= crit:
                 state = 1
             if state > 0:
-                infotext += " (warn/crit at %s/%s)" % \
-                            (get_percent_human_readable(warn),
-                             get_percent_human_readable(crit))
+                infotext += " (warn/crit at %s/%s)" % (
+                    get_percent_human_readable(warn),
+                    get_percent_human_readable(crit),
+                )
 
         yield state, infotext
 
 
-check_info['ceph_status.osds'] = {
-    'inventory_function': inventory_ceph_status_osds,
-    'check_function': check_ceph_status_osds,
-    'service_description': 'Ceph OSDs',
-    'default_levels_variable': 'ceph_osds_default_levels',
-    'group': 'ceph_osds',
+check_info["ceph_status.osds"] = {
+    "inventory_function": inventory_ceph_status_osds,
+    "check_function": check_ceph_status_osds,
+    "service_description": "Ceph OSDs",
+    "default_levels_variable": "ceph_osds_default_levels",
+    "group": "ceph_osds",
 }
 
-#.
+# .
 #   .--pgs-----------------------------------------------------------------.
 #   |                                                                      |
 #   |                           _ __   __ _ ___                            |
@@ -228,13 +229,13 @@ def check_ceph_status_pgs(_no_item, params, parsed):
     return max(states), "%s, %s" % (pgs_info, ", ".join(infotexts))
 
 
-check_info['ceph_status.pgs'] = {
-    'inventory_function': inventory_ceph_status_pgs,
-    'check_function': check_ceph_status_pgs,
-    'service_description': 'Ceph PGs',
+check_info["ceph_status.pgs"] = {
+    "inventory_function": inventory_ceph_status_pgs,
+    "check_function": check_ceph_status_pgs,
+    "service_description": "Ceph PGs",
 }
 
-#.
+# .
 #   .--mgrs----------------------------------------------------------------.
 #   |                                                                      |
 #   |                      _ __ ___   __ _ _ __ ___                        |
@@ -245,8 +246,8 @@ check_info['ceph_status.pgs'] = {
 #   '----------------------------------------------------------------------'
 
 # Suggested by customer: 1, 2 per 5 min
-factory_settings['ceph_mgrs_default_levels'] = {
-    'epoch': (1, 2, 5),
+factory_settings["ceph_mgrs_default_levels"] = {
+    "epoch": (1, 2, 5),
 }
 
 
@@ -262,10 +263,10 @@ def check_ceph_status_mgrs(_no_item, params, parsed):
     yield ceph_check_epoch("ceph_mgrs", epoch, params)
 
 
-check_info['ceph_status.mgrs'] = {
-    'inventory_function': inventory_ceph_status_mgrs,
-    'check_function': check_ceph_status_mgrs,
-    'service_description': 'Ceph MGRs',
-    'default_levels_variable': 'ceph_mgrs_default_levels',
-    'group': 'ceph_mgrs',
+check_info["ceph_status.mgrs"] = {
+    "inventory_function": inventory_ceph_status_mgrs,
+    "check_function": check_ceph_status_mgrs,
+    "service_description": "Ceph MGRs",
+    "default_levels_variable": "ceph_mgrs_default_levels",
+    "group": "ceph_mgrs",
 }

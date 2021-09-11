@@ -6,14 +6,14 @@
 
 
 def agent_tinkerforge_arguments(params, hostname, ipaddress):
-    args = ['--host', ipaddress]
+    args = ["--host", ipaddress]
 
-    for par in ['port', 'segment_display_uid', 'segment_display_brightness']:
+    for par in ["port", "segment_display_uid", "segment_display_brightness"]:
         if par in params:
-            args.append('--%s' % par)
-            args.append('%s' % params[par])
+            args.append("--%s" % par)
+            args.append("%s" % params[par])
 
     return args
 
 
-special_agent_info['tinkerforge'] = agent_tinkerforge_arguments
+special_agent_info["tinkerforge"] = agent_tinkerforge_arguments

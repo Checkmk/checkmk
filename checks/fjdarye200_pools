@@ -61,7 +61,8 @@ check_info["fjdarye200_pools"] = {
             "1",  # fjdaryMgtTpPoolNumber
             "3",  # fjdaryMgtTpPoolTotalCapacity
             "4",  # fjdaryMgtTpPoolUsedCapacity
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
     "default_levels_variable": "filesystem_default_levels",
     "group": "filesystem",

@@ -67,7 +67,7 @@ def check_postgres_locks(item, params, parsed):
             yield 1, "too high (Levels at %d/%d)" % (warn, crit)
 
 
-check_info['postgres_locks'] = {
+check_info["postgres_locks"] = {
     "parse_function": postgres.parse_dbs,
     "check_function": check_postgres_locks,
     "inventory_function": inventory_postgres_locks,

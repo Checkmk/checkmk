@@ -22,7 +22,7 @@ from cmk.base.check_legacy_includes.cisco_ucs import *  # pylint: disable=wildca
 
 def inventory_cisco_ucs_hdd(info):
     for status, ident, _model, _vendor, _size, _serial in info:
-        if status != '6':  # do not discover removed HDDs
+        if status != "6":  # do not discover removed HDDs
             yield ident, None
 
 
@@ -35,9 +35,14 @@ def check_cisco_ucs_hdd(item, _no_params, info):
             )
             # size is returned in MB
             # on migration: check whether to use render.size (MB) or render.bytes (MiB)
-            size_readable = get_bytes_human_readable(int(size or '0') * 1024 * 1024)
-            return state, "Status: %s, Size: %s, Model: %s, Vendor: %s, SN: %s" % \
-                (state_readable, size_readable, model, vendor, serial)
+            size_readable = get_bytes_human_readable(int(size or "0") * 1024 * 1024)
+            return state, "Status: %s, Size: %s, Model: %s, Vendor: %s, SN: %s" % (
+                state_readable,
+                size_readable,
+                model,
+                vendor,
+                serial,
+            )
 
 
 check_info["cisco_ucs_hdd"] = {
@@ -54,5 +59,6 @@ check_info["cisco_ucs_hdd"] = {
             "14",  # cucsStorageLocalDiskVendor
             "13",  # cucsStorageLocalDiskSize
             "12",  # cucsStorageLocalDiskSerial
-        ]),
+        ],
+    ),
 }

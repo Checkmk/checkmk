@@ -29,7 +29,7 @@ def parse_atto_fibrebridge_chassis(info):
     return parsed
 
 
-#.
+# .
 #   .--Temperature---------------------------------------------------------.
 #   |     _____                                   _                        |
 #   |    |_   _|__ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -45,9 +45,9 @@ def inventory_atto_fibrebridge_chassis_temp(parsed):
 
 
 def check_atto_fibrebridge_chassis_temp(item, params, parsed):
-    return check_temperature(params=params,
-                             unique_name="atto_fibrebridge_chassis_temp",
-                             **parsed["temperature"])
+    return check_temperature(
+        params=params, unique_name="atto_fibrebridge_chassis_temp", **parsed["temperature"]
+    )
 
 
 check_info["atto_fibrebridge_chassis.temp"] = {
@@ -58,7 +58,7 @@ check_info["atto_fibrebridge_chassis.temp"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--Throughput Status - Main Check--------------------------------------.
 #   |       _____ _                           _                 _          |
 #   |      |_   _| |__  _ __ ___  _   _  __ _| |__  _ __  _   _| |_        |
@@ -94,5 +94,6 @@ check_info["atto_fibrebridge_chassis"] = {
             "5",  # maximumOperatingTemp
             "8",  # chassisTemperature
             "11",  # chassisThroughputStatus
-        ]),
+        ],
+    ),
 }

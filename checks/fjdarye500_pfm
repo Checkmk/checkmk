@@ -48,25 +48,27 @@ def check_fjdarye500_pfm(item, params, info):
                     state = 1
 
                 if state:
-                    health_info += " (warn/crit below %s/%s)" % \
-                                     (get_percent_human_readable(warn),
-                                      get_percent_human_readable(crit))
+                    health_info += " (warn/crit below %s/%s)" % (
+                        get_percent_human_readable(warn),
+                        get_percent_human_readable(crit),
+                    )
 
             yield state, "Health lifetime: %s" % health_info
 
 
-check_info['fjdarye500_pfm'] = {
-    'inventory_function': inventory_fjdarye500_pfm,
-    'check_function': check_fjdarye500_pfm,
-    'service_description': 'PCIe flash module %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.211.1.21.1.150.2.22.2.1',
+check_info["fjdarye500_pfm"] = {
+    "inventory_function": inventory_fjdarye500_pfm,
+    "check_function": check_fjdarye500_pfm,
+    "service_description": "PCIe flash module %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.211.1.21.1.150.2.22.2.1",
         [
-            '2',  # FJDARY-E150::fjdaryPfmItemId
-            '3',  # FJDARY-E150::fjdaryPfmStatus
-            '5',  # FJDARY-E150::fjdaryPfmHealth
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
-    'default_levels_variable': "fjdarye500_pfm_default_levels",
-    'group': "pfm_health",
+            "2",  # FJDARY-E150::fjdaryPfmItemId
+            "3",  # FJDARY-E150::fjdaryPfmStatus
+            "5",  # FJDARY-E150::fjdaryPfmHealth
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.150",
+    "default_levels_variable": "fjdarye500_pfm_default_levels",
+    "group": "pfm_health",
 }

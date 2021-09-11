@@ -31,9 +31,11 @@ from cmk.base.check_legacy_includes.perle import *  # pylint: disable=wildcard-i
 
 
 def inventory_perle_chassis_slots(info):
-    return [ (index, None)
-             for index, _name, _modelname, _serial, _bootloader, _fw, \
-             _alarms_str, _diagstate, ty, _descr in info if ty != "0" ]
+    return [
+        (index, None)
+        for index, _name, _modelname, _serial, _bootloader, _fw, _alarms_str, _diagstate, ty, _descr in info
+        if ty != "0"
+    ]
 
 
 def check_perle_chassis_slots(item, _no_params, info):
@@ -43,32 +45,43 @@ def check_perle_chassis_slots(item, _no_params, info):
         "2": (1, "firmware download required"),
     }
 
-    for index, name, _modelname, _serial, _bootloader, _fw, \
-        alarms_str, diagstate, _ty, _descr in info:
+    for (
+        index,
+        name,
+        _modelname,
+        _serial,
+        _bootloader,
+        _fw,
+        alarms_str,
+        diagstate,
+        _ty,
+        _descr,
+    ) in info:
         if item == index:
             state, state_readable = map_diagstates[diagstate]
             yield state, "[%s] Diagnostic result: %s" % (name, state_readable)
             yield perle_check_alarms(alarms_str)
 
 
-check_info['perle_chassis_slots'] = {
-    'inventory_function': inventory_perle_chassis_slots,
-    'check_function': check_perle_chassis_slots,
-    'service_description': 'Chassis status slot %s',
+check_info["perle_chassis_slots"] = {
+    "inventory_function": inventory_perle_chassis_slots,
+    "check_function": check_perle_chassis_slots,
+    "service_description": "Chassis status slot %s",
     # If you change snmp info please adapt the related inventory plugin
-    'snmp_info': (
-        '.1.3.6.1.4.1.1966.21.1.1.1.1.3.1',
+    "snmp_info": (
+        ".1.3.6.1.4.1.1966.21.1.1.1.1.3.1",
         [
-            '2',  # PERLE-MCR-MGT-MIB::mcrChassisSlotIndex
-            '3',  # PERLE-MCR-MGT-MIB::mcrDefinedModuleName
-            '4',  # PERLE-MCR-MGT-MIB::mcrModuleModelName
-            '6',  # PERLE-MCR-MGT-MIB::mcrModuleSerialNumber
-            '7',  # PERLE-MCR-MGT-MIB::mcrModuleBootloaderVersion
-            '8',  # PERLE-MCR-MGT-MIB::mcrModuleFirmwareVersion
-            '9',  # PERLE-MCR-MGT-MIB::mcrModuleoOutStandWarnAlarms
-            '10',  # PERLE-MCR-MGT-MIB::mcrModuleDiagStatus
-            '11',  # PERLE-MCR-MGT-MIB::mcrModuleTypeInserted
-            '19',  # PERLE-MCR-MGT-MIB::mcrModuleModelDesc
-        ]),
-    'snmp_scan_function': perle_scan_function,
+            "2",  # PERLE-MCR-MGT-MIB::mcrChassisSlotIndex
+            "3",  # PERLE-MCR-MGT-MIB::mcrDefinedModuleName
+            "4",  # PERLE-MCR-MGT-MIB::mcrModuleModelName
+            "6",  # PERLE-MCR-MGT-MIB::mcrModuleSerialNumber
+            "7",  # PERLE-MCR-MGT-MIB::mcrModuleBootloaderVersion
+            "8",  # PERLE-MCR-MGT-MIB::mcrModuleFirmwareVersion
+            "9",  # PERLE-MCR-MGT-MIB::mcrModuleoOutStandWarnAlarms
+            "10",  # PERLE-MCR-MGT-MIB::mcrModuleDiagStatus
+            "11",  # PERLE-MCR-MGT-MIB::mcrModuleTypeInserted
+            "19",  # PERLE-MCR-MGT-MIB::mcrModuleModelDesc
+        ],
+    ),
+    "snmp_scan_function": perle_scan_function,
 }

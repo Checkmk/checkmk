@@ -13,13 +13,13 @@ from cmk.base.check_legacy_includes.couchbase import *  # pylint: disable=wildca
 
 def discover_couchbase_nodes_services(parsed):
     for key, data in parsed.items():
-        yield key, {'discovered_services': data.get('services', [])}
+        yield key, {"discovered_services": data.get("services", [])}
 
 
 @get_parsed_item_data
 def check_couchbase_nodes_services(_item, params, data):
-    services_present = set(data.get('services', []))
-    services_discovered = set(params['discovered_services'])
+    services_present = set(data.get("services", []))
+    services_discovered = set(params["discovered_services"])
 
     services_appeared = services_present - services_discovered
     services_vanished = services_discovered - services_present
@@ -27,19 +27,19 @@ def check_couchbase_nodes_services(_item, params, data):
 
     if services_vanished:
         srt = sorted(services_vanished)
-        yield 2, '%d services vanished: %s' % (len(srt), ', '.join(srt))
+        yield 2, "%d services vanished: %s" % (len(srt), ", ".join(srt))
     if services_appeared:
         srt = sorted(services_appeared)
-        yield 2, '%d services appeared: %s' % (len(srt), ', '.join(srt))
+        yield 2, "%d services appeared: %s" % (len(srt), ", ".join(srt))
 
     srt = sorted(services_unchanged)
-    yield 0, '%d services unchanged: %s' % (len(srt), ', '.join(srt))
+    yield 0, "%d services unchanged: %s" % (len(srt), ", ".join(srt))
 
 
-check_info['couchbase_nodes_services'] = {
-    'parse_function': parse_couchbase_lines,
-    'inventory_function': discover_couchbase_nodes_services,
-    'check_function': check_couchbase_nodes_services,
-    'service_description': 'Couchbase %s Services',
-    'has_perfdata': False,
+check_info["couchbase_nodes_services"] = {
+    "parse_function": parse_couchbase_lines,
+    "inventory_function": discover_couchbase_nodes_services,
+    "check_function": check_couchbase_nodes_services,
+    "service_description": "Couchbase %s Services",
+    "has_perfdata": False,
 }

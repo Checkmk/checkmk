@@ -30,6 +30,7 @@ check_info["fireeye_sys_status"] = {
             "1",  # FE-FIREEYE-MIB::feSystemStatus
             "2",  # FE-FIREEYE-MIB::feHardwareModel
             "3",  # FE-FIREEYE-MIB::feSerialNumber
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_fireeye,
 }

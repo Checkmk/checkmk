@@ -84,17 +84,19 @@ def check_storeonce_servicesets(item, params, parsed):
             continue
 
         if "ServiceSet Alias" in values:
-            yield 0, "Alias: %s" % values['ServiceSet Alias']
+            yield 0, "Alias: %s" % values["ServiceSet Alias"]
         elif "ServiceSet Name" in values:
-            yield 0, "Name: %s" % values['ServiceSet Name']
+            yield 0, "Name: %s" % values["ServiceSet Name"]
 
-        yield 0, "Overall Status: %s, Overall Health: %s" % \
-                (values['Overall Status'], values['Overall Health'])
+        yield 0, "Overall Status: %s, Overall Health: %s" % (
+            values["Overall Status"],
+            values["Overall Health"],
+        )
 
         for component in [
-                'ServiceSet Health',
-                'Replication Health',
-                'Housekeeping Health',
+            "ServiceSet Health",
+            "Replication Health",
+            "Housekeeping Health",
         ]:
             state = translate_storeonce_status(values["%s Level" % component])
             state_readable = "%s: %s" % (component, values[component])
@@ -102,11 +104,11 @@ def check_storeonce_servicesets(item, params, parsed):
                 yield state, state_readable
 
 
-check_info['storeonce_servicesets'] = {
-    'parse_function': parse_storeonce_servicesets,
-    'inventory_function': inventory_storeonce_servicesets,
-    'check_function': check_storeonce_servicesets,
-    'service_description': 'ServiceSet %s Status',
+check_info["storeonce_servicesets"] = {
+    "parse_function": parse_storeonce_servicesets,
+    "inventory_function": inventory_storeonce_servicesets,
+    "check_function": check_storeonce_servicesets,
+    "service_description": "ServiceSet %s Status",
 }
 
 
@@ -116,10 +118,10 @@ def check_storeonce_servicesets_capacity(item, params, parsed):
             return check_storeonce_space(item, params, values)
 
 
-check_info['storeonce_servicesets.capacity'] = {
-    'inventory_function': inventory_storeonce_servicesets,
-    'check_function': check_storeonce_servicesets_capacity,
-    'service_description': "ServiceSet %s Capacity",
-    'has_perfdata': True,
-    'group': "filesystem",
+check_info["storeonce_servicesets.capacity"] = {
+    "inventory_function": inventory_storeonce_servicesets,
+    "check_function": check_storeonce_servicesets_capacity,
+    "service_description": "ServiceSet %s Capacity",
+    "has_perfdata": True,
+    "group": "filesystem",
 }

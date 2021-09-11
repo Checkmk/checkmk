@@ -57,4 +57,4 @@ def agent_datadog_arguments(params, hostname, ipaddress):
     return args
 
 
-special_agent_info['datadog'] = agent_datadog_arguments
+special_agent_info["datadog"] = agent_datadog_arguments

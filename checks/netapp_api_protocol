@@ -34,14 +34,15 @@ def check_netapp_api_protocol(item, _no_params, parsed):
         for what in ["read", "write"]:
             if key.endswith("%s_ops" % what):
                 per_sec = get_rate(key, now, int(value))
-                yield 0, "%s OPs: %s" % (what.title(), per_sec), [("%s_%s_ios" % (item, what),
-                                                                   per_sec)]
+                yield 0, "%s OPs: %s" % (what.title(), per_sec), [
+                    ("%s_%s_ios" % (item, what), per_sec)
+                ]
 
 
 check_info["netapp_api_protocol"] = {
-    'parse_function': netapp_api_parse_lines,
-    'check_function': check_netapp_api_protocol,
-    'inventory_function': inventory_netapp_api_protocol,
-    'service_description': 'Protocol %s',
-    'has_perfdata': True,
+    "parse_function": netapp_api_parse_lines,
+    "check_function": check_netapp_api_protocol,
+    "inventory_function": inventory_netapp_api_protocol,
+    "service_description": "Protocol %s",
+    "has_perfdata": True,
 }

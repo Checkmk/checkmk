@@ -9,7 +9,7 @@ innovaphone_licenses_default_levels = (90.0, 95.0)
 
 def inventory_innovaphone_licenses(info):
     if info:
-        return [(None, 'innovaphone_licenses_default_levels')]
+        return [(None, "innovaphone_licenses_default_levels")]
 
 
 def check_innovaphone_licenses(_no_item, params, info):
@@ -20,7 +20,7 @@ def check_innovaphone_licenses(_no_item, params, info):
     warn, crit = params
     message = "Used %.0f/%.0f Licences (%.0f%%)" % (used, total, perc_used)
     levels = "Warning/ Critical at (%s/%s)" % (warn, crit)
-    perf = [('licenses', used, None, None, total)]
+    perf = [("licenses", used, None, None, total)]
     if perc_used > crit:
         return 2, message + levels, perf
     if perc_used > warn:

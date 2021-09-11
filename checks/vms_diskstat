@@ -45,7 +45,7 @@ def check_vms_diskstat_fs(item, params, info):
     return (3, "no such disk")
 
 
-check_info['vms_diskstat.df'] = {
+check_info["vms_diskstat.df"] = {
     "check_function": check_vms_diskstat_fs,
     "inventory_function": inventory_vms_diskstat_fs,
     "service_description": "Filesystem %s",

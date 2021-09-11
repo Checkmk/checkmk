@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-fjdarye60_sum_status = {1: 'unknown', 2: 'unused', 3: 'ok', 4: 'warning', 5: 'failed'}
+fjdarye60_sum_status = {1: "unknown", 2: "unused", 3: "ok", 4: "warning", 5: "failed"}
 
 
 def inventory_fjdarye60_sum(info):
-    yield from ((index, {}) for index, _status in info if index != '')
+    yield from ((index, {}) for index, _status in info if index != "")
 
 
 def check_fjdarye60_sum(index, _no_param, info):
@@ -22,10 +22,10 @@ def check_fjdarye60_sum(index, _no_param, info):
 # 1: fjdaryUnitStatus
 
 check_info["fjdarye60_sum"] = {
-    'check_function': check_fjdarye60_sum,
-    'inventory_function': inventory_fjdarye60_sum,
-    'service_description': 'Summary Status %s',
+    "check_function": check_fjdarye60_sum,
+    "inventory_function": inventory_fjdarye60_sum,
+    "service_description": "Summary Status %s",
     # 1: fjdaryUnitStatus
-    'snmp_info': ('.1.3.6.1.4.1.211.1.21.1.60.6', [0, '0']),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60",
+    "snmp_info": (".1.3.6.1.4.1.211.1.21.1.60.6", [0, "0"]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60",
 }

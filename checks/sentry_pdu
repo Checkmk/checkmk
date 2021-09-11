@@ -10,12 +10,13 @@ _STATE_TO_MONSTATE = {
 
 
 def inventory_sentry_pdu(section):
-    yield from ((
-        name,
-        {
-            "discovered_state": pdu.state
-        },
-    ) for name, pdu in section.items())
+    yield from (
+        (
+            name,
+            {"discovered_state": pdu.state},
+        )
+        for name, pdu in section.items()
+    )
 
 
 def check_sentry_pdu(item, params, section):
@@ -24,8 +25,8 @@ def check_sentry_pdu(item, params, section):
 
     infotext = "Status: %s" % pdu.state
     if pdu.state != params.get(
-            "required_state",
-            params["discovered_state"],
+        "required_state",
+        params["discovered_state"],
     ):
         yield 2, infotext
     else:
@@ -36,7 +37,7 @@ def check_sentry_pdu(item, params, section):
 
     if pdu.power:
         infotext = "Power: %s Watt" % pdu.power
-        perfdata = [('power', pdu.power)]
+        perfdata = [("power", pdu.power)]
         yield 0, infotext, perfdata
 
 

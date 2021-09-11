@@ -31,10 +31,12 @@ def parse_pse_poe(info):
     """
     poe_dict = {}
     for oid_end, poe_max, pse_op_status, poe_used in info:
-        poe_dict[str(oid_end)] = PoeValues(poe_max=int(poe_max),
-                                           poe_used=int(poe_used),
-                                           poe_status=int(pse_op_status),
-                                           poe_status_detail=None)
+        poe_dict[str(oid_end)] = PoeValues(
+            poe_max=int(poe_max),
+            poe_used=int(poe_used),
+            poe_status=int(pse_op_status),
+            poe_status_detail=None,
+        )
     return poe_dict
 
 

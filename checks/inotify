@@ -70,11 +70,13 @@ def _check_inotify(item, params, section: Section, last_status, now):
     levels = {mode: (warn, crit) for mode, warn, crit in params.get("age_last_operation", [])}
 
     for mode, timestamp in sorted(last_status.items()):
-        yield check_levels(now - timestamp,
-                           None,
-                           levels.get(mode),
-                           human_readable_func=get_age_human_readable,
-                           infoname=f"Time since last {mode}")
+        yield check_levels(
+            now - timestamp,
+            None,
+            levels.get(mode),
+            human_readable_func=get_age_human_readable,
+            infoname=f"Time since last {mode}",
+        )
 
     for mode in set(levels) - set(last_status):
         yield 3, f"Time since last {mode}: unknown"
@@ -92,5 +94,5 @@ check_info["inotify"] = {
     "inventory_function": discover_inotify,
     "check_function": check_inotify,
     "service_description": "INotify %s",
-    "group": "inotify"
+    "group": "inotify",
 }

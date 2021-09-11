@@ -25,7 +25,7 @@ def check_mysql_ping(_no_item, _no_params, data):
     return 2, message
 
 
-check_info['mysql_ping'] = {
+check_info["mysql_ping"] = {
     "parse_function": mysql_parse_per_item(lambda info: info),
     "inventory_function": discover(),
     "check_function": check_mysql_ping,

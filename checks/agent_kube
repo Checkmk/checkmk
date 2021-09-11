@@ -6,27 +6,30 @@
 
 
 def agent_kube_arguments(params, hostname, ipaddress):
-    args = ['--token', passwordstore_get_cmdline("%s", params["token"])]
+    args = ["--token", passwordstore_get_cmdline("%s", params["token"])]
 
-    if params.get('no-cert-check'):
+    if params.get("no-cert-check"):
         args += ["--no-cert-check"]
 
-    args.append('--api-server-endpoint')
-    configured_endpoint_name, configured_endpoint = params['api-server-endpoint']
-    if configured_endpoint_name == 'url_custom':
+    args.append("--api-server-endpoint")
+    configured_endpoint_name, configured_endpoint = params["api-server-endpoint"]
+    if configured_endpoint_name == "url_custom":
         args.append(configured_endpoint)
         return args
 
-    args.append('https://%s' % {
-        'hostname': hostname,
-        'ipaddress': ipaddress,
-    }[configured_endpoint_name])
+    args.append(
+        "https://%s"
+        % {
+            "hostname": hostname,
+            "ipaddress": ipaddress,
+        }[configured_endpoint_name]
+    )
 
     for arg_name, arg_value in configured_endpoint.items():
-        args.append(f'--{arg_name}')
+        args.append(f"--{arg_name}")
         args.append(str(arg_value))
 
     return args
 
 
-special_agent_info['kube'] = agent_kube_arguments
+special_agent_info["kube"] = agent_kube_arguments

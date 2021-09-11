@@ -11,7 +11,7 @@ def agent_bi_arguments(params, hostname, ipaddress):
     #  aggr_groups / aggr_group_prefix <-> groups
     #  aggr_name_regex / aggr_name <-> names
     for param_set in params:
-        filter_ = param_set.get('filter', {})
+        filter_ = param_set.get("filter", {})
         for replacement, name in (
             ("groups", "aggr_group_prefix"),
             ("names", "aggr_name"),
@@ -21,7 +21,8 @@ def agent_bi_arguments(params, hostname, ipaddress):
 
     # TODO: Cleanup this separation violation. This should be accessed through the check API
     import cmk.base.config
+
     return cmk.base.config.SpecialAgentConfiguration([], repr(params))
 
 
-special_agent_info['bi'] = agent_bi_arguments
+special_agent_info["bi"] = agent_bi_arguments

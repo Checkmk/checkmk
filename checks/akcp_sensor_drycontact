@@ -21,5 +21,6 @@ check_info["akcp_sensor_drycontact"] = {
             1,  # Sensor Name
             3,  # Sensor Status (2 = OK, 4 = Not ok)
             5,  # Sensor Online
-        ]),
+        ],
+    ),
 }

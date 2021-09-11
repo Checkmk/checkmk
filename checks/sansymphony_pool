@@ -17,14 +17,25 @@ def check_sansymphony_pool(item, params, info):
     for poolname, allocated, poolstatus, cachemode, pooltype in info:
         if poolname == item:
             if poolstatus == "Running" and cachemode == "ReadWrite":
-                yield 0, "%s pool %s is running, its cache is in %s mode" % (pooltype, poolname,
-                                                                             cachemode)
+                yield 0, "%s pool %s is running, its cache is in %s mode" % (
+                    pooltype,
+                    poolname,
+                    cachemode,
+                )
             elif poolstatus == "Running" and cachemode != "ReadWrite":
-                yield 1, "%s Pool %s is %s, its cache is %s" % (pooltype, poolname, poolstatus,
-                                                                cachemode)
+                yield 1, "%s Pool %s is %s, its cache is %s" % (
+                    pooltype,
+                    poolname,
+                    poolstatus,
+                    cachemode,
+                )
             else:
-                yield 2, "%s pool %s is %s, its cache is in %s mode" % (pooltype, poolname,
-                                                                        poolstatus, cachemode)
+                yield 2, "%s pool %s is %s, its cache is in %s mode" % (
+                    pooltype,
+                    poolname,
+                    poolstatus,
+                    cachemode,
+                )
 
             allocated = int(allocated)
             infotxt = "Pool allocation: %d%%" % allocated
@@ -39,7 +50,7 @@ def check_sansymphony_pool(item, params, info):
                 yield 0, infotxt, perfdata
 
 
-check_info['sansymphony_pool'] = {
+check_info["sansymphony_pool"] = {
     "check_function": check_sansymphony_pool,
     "inventory_function": inventory_sansymphony_pool,
     "service_description": "sansymphony Pool %s",

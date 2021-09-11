@@ -24,7 +24,7 @@ def check_sansymphony_serverstatus(_no_item, _no_params, info):
     return 2, "SANsymphony is %s" % status
 
 
-check_info['sansymphony_serverstatus'] = {
+check_info["sansymphony_serverstatus"] = {
     "check_function": check_sansymphony_serverstatus,
     "inventory_function": inventory_sansymphony_serverstatus,
     "service_description": "sansymphony Serverstatus",

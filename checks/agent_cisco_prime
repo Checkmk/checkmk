@@ -12,18 +12,15 @@ def agent_cisco_prime_arguments(params, hostname, ipaddress):
         for chunk in (
             ("--hostname", ipaddress),
             ("-u", "%s:%s" % (basic_auth[0], passwordstore_get_cmdline("%s", basic_auth[1])))  #
-            if basic_auth else (),
-            ("--port", params["port"])  #
-            if "port" in params else (),
-            ("--no-tls",)  #
-            if params.get("no-tls") else (),
-            ("--no-cert-check",)  #
-            if params.get("no-cert-check") else (),
-            ("--timeout", params["timeout"])  #
-            if "timeout" in params else (),
+            if basic_auth
+            else (),
+            ("--port", params["port"]) if "port" in params else (),  #
+            ("--no-tls",) if params.get("no-tls") else (),  #
+            ("--no-cert-check",) if params.get("no-cert-check") else (),  #
+            ("--timeout", params["timeout"]) if "timeout" in params else (),  #
         )
         for elem in chunk
     ]
 
 
-special_agent_info['cisco_prime'] = agent_cisco_prime_arguments
+special_agent_info["cisco_prime"] = agent_cisco_prime_arguments

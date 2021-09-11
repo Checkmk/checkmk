@@ -16,7 +16,7 @@ def check_aws_dynamodb_summary(item, params, parsed):
     tables_by_region: Dict[str, Dict] = {}
 
     for table in parsed:
-        tables_by_region.setdefault(AWSRegions[table['Region']], {})[table['TableName']] = table
+        tables_by_region.setdefault(AWSRegions[table["Region"]], {})[table["TableName"]] = table
 
     regions_sorted = sorted(tables_by_region.keys())
     long_output = []
@@ -33,17 +33,22 @@ def check_aws_dynamodb_summary(item, params, parsed):
         for table_name in tables_names_sorted:
             table = tables_region[table_name]
             long_output.append(
-                "%s -- Items: %s, Size: %s, Status: %s" %
-                (table_name, table['ItemCount'], get_bytes_human_readable(
-                    table['TableSizeBytes']), table['TableStatus']))
+                "%s -- Items: %s, Size: %s, Status: %s"
+                % (
+                    table_name,
+                    table["ItemCount"],
+                    get_bytes_human_readable(table["TableSizeBytes"]),
+                    table["TableStatus"],
+                )
+            )
 
     if long_output:
         yield 0, "\n%s" % "\n".join(long_output)
 
 
-check_info['aws_dynamodb_summary'] = {
-    'parse_function': parse_aws,
-    'inventory_function': discover_single,
-    'check_function': check_aws_dynamodb_summary,
-    'service_description': 'AWS/DynamoDB Summary',
+check_info["aws_dynamodb_summary"] = {
+    "parse_function": parse_aws,
+    "inventory_function": discover_single,
+    "check_function": check_aws_dynamodb_summary,
+    "service_description": "AWS/DynamoDB Summary",
 }

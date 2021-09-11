@@ -28,6 +28,7 @@ check_info["palo_alto"] = {
             "11",  # panSysHAState
             "12",  # panSysHAPeerState
             "13",  # panSysHAMode
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: "25461" in oid(".1.3.6.1.2.1.1.2.0"),
 }

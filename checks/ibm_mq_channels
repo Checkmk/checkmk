@@ -57,7 +57,7 @@ def parse_ibm_mq_channels(info):
 
 def inventory_ibm_mq_channels(parsed):
     for service_name in parsed:
-        if ':' not in service_name:
+        if ":" not in service_name:
             # Do not show queue manager entry in inventory
             continue
         yield service_name, {}

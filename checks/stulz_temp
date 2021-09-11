@@ -84,9 +84,12 @@ check_info["stulz_temp"] = {
     "has_perfdata": True,
     "group": "temperature",
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.29462.10",
-    "snmp_info": (".1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1.1", [
-        OID_END,
-        "",
-    ]),
-    "default_levels_variable": "stulz_temp_default_levels"
+    "snmp_info": (
+        ".1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1.1",
+        [
+            OID_END,
+            "",
+        ],
+    ),
+    "default_levels_variable": "stulz_temp_default_levels",
 }

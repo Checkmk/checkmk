@@ -61,17 +61,18 @@ def check_acme_sbc_snmp(_no_item, params, info):
         yield 0, score_msg
 
 
-check_info['acme_sbc_snmp'] = {
-    'inventory_function': inventory_acme_sbc_snmp,
-    'check_function': check_acme_sbc_snmp,
-    'service_description': 'ACME SBC health',
-    'snmp_info': (
-        '.1.3.6.1.4.1.9148.3.2.1.1',
+check_info["acme_sbc_snmp"] = {
+    "inventory_function": inventory_acme_sbc_snmp,
+    "check_function": check_acme_sbc_snmp,
+    "service_description": "ACME SBC health",
+    "snmp_info": (
+        ".1.3.6.1.4.1.9148.3.2.1.1",
         [
             "3",  # APSYSMGMT-MIB::apSysHealthScore
             "4",  # APSYSMGMT-MIB::apSysRedundancy
-        ]),
-    'snmp_scan_function': scan_acme,
-    'group': 'acme_sbc_snmp',
-    'default_levels_variable': 'acme_sbc_snmp_default_levels',
+        ],
+    ),
+    "snmp_scan_function": scan_acme,
+    "group": "acme_sbc_snmp",
+    "default_levels_variable": "acme_sbc_snmp_default_levels",
 }

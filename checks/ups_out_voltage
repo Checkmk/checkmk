@@ -18,7 +18,7 @@ from cmk.base.check_legacy_includes.ups_out_voltage import *  # pylint: disable=
 
 ups_out_voltage_default_levels = (210, 180)  # warning / critical
 
-check_info['ups_out_voltage'] = {
+check_info["ups_out_voltage"] = {
     "inventory_function": discover(lambda line: int(line[1]) > 0, "ups_out_voltage_default_levels"),
     "check_function": check_ups_out_voltage,
     "service_description": "OUT voltage phase %s",

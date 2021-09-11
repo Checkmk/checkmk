@@ -28,8 +28,9 @@ def check_cisco_ucs_psu(item, _no_params, info):
     for name, status, serial, model in info:
         name = name.split("/")[2]
         if name == item:
-            state, state_readable = map_operability.get(status,
-                                                        (3, "Unknown, status code %s" % status))
+            state, state_readable = map_operability.get(
+                status, (3, "Unknown, status code %s" % status)
+            )
             return state, "Status: %s, Model: %s, SN: %s" % (state_readable, model, serial)
 
 
@@ -45,5 +46,6 @@ check_info["cisco_ucs_psu"] = {
             "8",  # cucsEquipmentPsuOperability
             "13",  # cucsEquipmentPsuSerial
             "6",  # cucsEquipmentPsuModel
-        ]),
+        ],
+    ),
 }

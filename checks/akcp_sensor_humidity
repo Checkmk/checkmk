@@ -33,6 +33,7 @@ check_info["akcp_sensor_humidity"] = {
             3,  # SPAGENT-MIB::sensorProbeHumidityPercent
             4,  # SPAGENT-MIB::sensorProbeHumidityStatus
             5,  # SPAGENT-MIB::sensorProbeHumidityOnline
-        ]),
+        ],
+    ),
     "group": "humidity",
 }

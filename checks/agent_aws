@@ -13,9 +13,9 @@ from cmk.utils import password_store
 def _get_tag_options(tag_values, prefix):
     options = []
     for key, values in tag_values:
-        options.append('--%s-tag-key' % prefix)
+        options.append("--%s-tag-key" % prefix)
         options.append(key)
-        options.append('--%s-tag-values' % prefix)
+        options.append("--%s-tag-values" % prefix)
         options += values
     return options
 
@@ -32,9 +32,9 @@ def _get_services_config(services):
             continue
 
         if service_config.get("limits"):
-            service_args += ['--%s-limits' % service_name]
+            service_args += ["--%s-limits" % service_name]
 
-        selection = service_config.get('selection')
+        selection = service_config.get("selection")
         if not isinstance(selection, tuple):
             # Here: value of selection is 'all' which means there's no
             # restriction (names or tags) to the instances of a specific
@@ -78,17 +78,22 @@ def _agent_aws_stdin(
     if isinstance(secret_access_key, tuple):
         secret_access_key = password_store.extract(secret_access_key)
 
-    return json.dumps({
-        "access_key_id": access_key_id,
-        "secret_access_key": secret_access_key,
-        **proxy_secrets,
-    })
+    return json.dumps(
+        {
+            "access_key_id": access_key_id,
+            "secret_access_key": secret_access_key,
+            **proxy_secrets,
+        }
+    )
 
 
 def agent_aws_arguments(params, hostname, ipaddress):
 
-    args, proxy_secrets = (_get_proxy_args_and_secrets(params["proxy_details"])
-                           if "proxy_details" in params else ([], {}))
+    args, proxy_secrets = (
+        _get_proxy_args_and_secrets(params["proxy_details"])
+        if "proxy_details" in params
+        else ([], {})
+    )
 
     if params.get("assume_role"):
         args += ["--assume-role"]
@@ -114,9 +119,9 @@ def agent_aws_arguments(params, hostname, ipaddress):
     services = params.get("services", {})
 
     # for backwards compatibility
-    if 'cloudwatch' in services:
-        services['cloudwatch_alarms'] = services['cloudwatch']
-        del services['cloudwatch']
+    if "cloudwatch" in services:
+        services["cloudwatch_alarms"] = services["cloudwatch"]
+        del services["cloudwatch"]
 
     if services:
         args.append("--services")
@@ -125,27 +130,28 @@ def agent_aws_arguments(params, hostname, ipaddress):
         args += sorted(services)
         args += _get_services_config(services)
 
-    if 'requests' in services.get('s3', {}):
+    if "requests" in services.get("s3", {}):
         args += ["--s3-requests"]
 
-    alarms = services.get('cloudwatch_alarms', {}).get('alarms')
+    alarms = services.get("cloudwatch_alarms", {}).get("alarms")
     if alarms:
         # {'alarms': 'all'} is handled by no additionally specified names
         args += ["--cloudwatch-alarms"]
         if isinstance(alarms, tuple):
             args += alarms[1]
 
-    if 'cloudfront' in services.get('wafv2', {}):
+    if "cloudfront" in services.get("wafv2", {}):
         args += ["--wafv2-cloudfront"]
 
     # '--overall-tags': [('KEY_1', ['VAL_1', 'VAL_2']), ...)],
-    args += _get_tag_options(params.get('overall_tags', []), 'overall')
+    args += _get_tag_options(params.get("overall_tags", []), "overall")
     args += [
         "--hostname",
         hostname,
     ]
     # TODO: Cleanup this separation violation. This should be accessed through some API
     from cmk.base.config import SpecialAgentConfiguration
+
     return SpecialAgentConfiguration(
         args,
         _agent_aws_stdin(
@@ -156,4 +162,4 @@ def agent_aws_arguments(params, hostname, ipaddress):
     )
 
 
-special_agent_info['aws'] = agent_aws_arguments
+special_agent_info["aws"] = agent_aws_arguments

@@ -28,11 +28,11 @@ def check_oracle_version(item, _no_params, info):
             elif isinstance(err, tuple):
                 return err
 
-            return (0, 'Version: ' + " ".join(line[1:]))
-    return (3, 'no version information, database might be stopped')
+            return (0, "Version: " + " ".join(line[1:]))
+    return (3, "no version information, database might be stopped")
 
 
-check_info['oracle_version'] = {
+check_info["oracle_version"] = {
     "check_function": check_oracle_version,
     "inventory_function": inventory_oracle_version,
     "service_description": "ORA Version %s",

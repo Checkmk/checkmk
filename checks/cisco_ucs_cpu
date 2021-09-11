@@ -21,17 +21,19 @@ from cmk.base.check_legacy_includes.cisco_ucs import *  # pylint: disable=wildca
 
 def inventory_cisco_ucs_cpu(info):
     for name, presence, _serial, _model, _status in info:
-        if presence != '11':  # do not discover missing units
+        if presence != "11":  # do not discover missing units
             yield name, None
 
 
 def check_cisco_ucs_cpu(item, _no_params, info):
     for name, presence, serial, model, status in info:
         if name == item:
-            state, state_readable = map_operability.get(status,
-                                                        (3, "Unknown, status code %s" % status))
+            state, state_readable = map_operability.get(
+                status, (3, "Unknown, status code %s" % status)
+            )
             presence_state, presence_readable = map_presence.get(
-                presence, (3, "Unknown, status code %s" % presence))
+                presence, (3, "Unknown, status code %s" % presence)
+            )
             yield state, "Status: %s" % state_readable
             yield presence_state, "Presence: %s" % presence_readable
             yield 0, "Model: %s, SN: %s" % (model, serial)
@@ -50,5 +52,6 @@ check_info["cisco_ucs_cpu"] = {
             "15",  # cucsProcessorUnitSerial
             "8",  # cucsProcessorUnitModel
             "10",  # cucsProcessorUnitOperability
-        ]),
+        ],
+    ),
 }

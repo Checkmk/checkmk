@@ -10,22 +10,22 @@
 
 def agent_proxmox_ve_arguments(params, hostname, ipaddress):
     return [
-        elem for chunk in (
-            ("-u", params["username"])  #
-            if "username" in params else (),
+        elem
+        for chunk in (
+            ("-u", params["username"]) if "username" in params else (),  #
             ("-p", passwordstore_get_cmdline("%s", params["password"]))  #
-            if "password" in params else (),
-            ("--port", params["port"])  #
-            if "port" in params else (),
-            ("--no-cert-check",)  #
-            if params.get("no-cert-check") else (),
-            ("--timeout", params["timeout"])  #
-            if "timeout" in params else (),
+            if "password" in params
+            else (),
+            ("--port", params["port"]) if "port" in params else (),  #
+            ("--no-cert-check",) if params.get("no-cert-check") else (),  #
+            ("--timeout", params["timeout"]) if "timeout" in params else (),  #
             ("--log-cutoff-weeks", params["log-cutoff-weeks"])  #
-            if "log-cutoff-weeks" in params else (),
+            if "log-cutoff-weeks" in params
+            else (),
             (hostname,),
-        ) for elem in chunk
+        )
+        for elem in chunk
     ]
 
 
-special_agent_info['proxmox_ve'] = agent_proxmox_ve_arguments
+special_agent_info["proxmox_ve"] = agent_proxmox_ve_arguments

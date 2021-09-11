@@ -26,8 +26,9 @@ def check_cisco_ucs_fan(item, _no_params, info):
     for name, status in info:
         name = " ".join(name.split("/")[2:])
         if name == item:
-            state, state_readable = map_operability.get(status,
-                                                        (3, "Unknown, status code %s" % status))
+            state, state_readable = map_operability.get(
+                status, (3, "Unknown, status code %s" % status)
+            )
             return state, "Status: %s" % (state_readable)
 
 
@@ -41,5 +42,6 @@ check_info["cisco_ucs_fan"] = {
         [
             "2",  # cucsEquipmentFanDn
             "10",  # cucsEquipmentFanOperability
-        ]),
+        ],
+    ),
 }

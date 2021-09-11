@@ -12,7 +12,7 @@ def inventory_packeteer_ps_status(info):
 
 def check_packeteer_ps_status(_no_item, _no_params, info):
     for nr, ps_status in enumerate(info[0]):
-        if ps_status == u"1":
+        if ps_status == "1":
             yield 0, "Power Supply %d okay" % nr
         else:
             yield 2, "Power Supply %d not okay" % nr

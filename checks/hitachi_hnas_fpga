@@ -31,9 +31,12 @@ def check_hitachi_hnas_fpga(item, params, info):
                 rc = 1
             if util > crit:
                 rc = 2
-            perfdata = [('fpga_util', str(util) + '%', warn, crit, 0, 100)]
-            return rc, "PNode %s FPGA %s %s utilization is %s%%" % (clusternode, id_, name,
-                                                                    util), perfdata
+            perfdata = [("fpga_util", str(util) + "%", warn, crit, 0, 100)]
+            return (
+                rc,
+                "PNode %s FPGA %s %s utilization is %s%%" % (clusternode, id_, name, util),
+                perfdata,
+            )
 
     return 3, "No utilization found for FPGA %s" % item
 

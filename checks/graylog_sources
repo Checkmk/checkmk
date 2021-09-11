@@ -28,9 +28,12 @@ def parse_graylog_sources(info):
 
         for name, messages in source_name.items():
 
-            parsed.setdefault(name, {
-                "messages": int(messages),
-            })
+            parsed.setdefault(
+                name,
+                {
+                    "messages": int(messages),
+                },
+            )
 
     return parsed
 

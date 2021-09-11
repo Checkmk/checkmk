@@ -36,11 +36,11 @@ def check_zerto_vpg_rpo(_item, _params, data):
     yield state, "VPG Status: %s" % vpg_info
 
 
-check_info['zerto_vpg_rpo'] = {
-    'parse_function': parse_zerto_vpg,
-    'inventory_function': discover(),
-    'check_function': check_zerto_vpg_rpo,
-    'service_description': 'Zerto VPG RPO %s',
-    'has_perfdata': False,
-    'group': 'zerto_vpg_rpo',
+check_info["zerto_vpg_rpo"] = {
+    "parse_function": parse_zerto_vpg,
+    "inventory_function": discover(),
+    "check_function": check_zerto_vpg_rpo,
+    "service_description": "Zerto VPG RPO %s",
+    "has_perfdata": False,
+    "group": "zerto_vpg_rpo",
 }

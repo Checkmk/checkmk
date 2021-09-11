@@ -16,4 +16,4 @@ def agent_alertmanager_arguments(params, hostname, ipaddress):
     return cmk.base.config.SpecialAgentConfiguration([], repr(alertmanager_params))
 
 
-special_agent_info['alertmanager'] = agent_alertmanager_arguments
+special_agent_info["alertmanager"] = agent_alertmanager_arguments

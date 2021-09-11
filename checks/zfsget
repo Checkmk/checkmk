@@ -161,8 +161,7 @@ def _parse_df(lines, parsed_zfs):
         t_u_a = (root_entry["total"], root_entry["used"], root_entry["available"])
         drop = []
         for mountpoint, entry in parsed.items():
-            if mountpoint != "/" and \
-                t_u_a == (entry["total"], entry["used"], entry["available"]):
+            if mountpoint != "/" and t_u_a == (entry["total"], entry["used"], entry["available"]):
                 drop.append(mountpoint)
         for mp in drop:
             del parsed[mp]
@@ -176,7 +175,7 @@ def parse_zfsget(info):
     if ["[df]"] in info:
         idx = info.index(["[df]"])
         info_zfs = info[:idx]
-        info_df = info[idx + 1:]
+        info_df = info[idx + 1 :]
     else:
         info_zfs = info
         info_df = []

@@ -10,9 +10,13 @@
 def agent_zerto_arguments(params, hostname, ipaddress):
     return [
         "--authentication",
-        params.get('authentication', 'windows'), "-u", params['username'], "-p", params['password'],
-        ipaddress or hostname
+        params.get("authentication", "windows"),
+        "-u",
+        params["username"],
+        "-p",
+        params["password"],
+        ipaddress or hostname,
     ]
 
 
-special_agent_info['zerto'] = agent_zerto_arguments
+special_agent_info["zerto"] = agent_zerto_arguments

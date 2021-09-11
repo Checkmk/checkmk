@@ -34,20 +34,20 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 def parse_ibm_svc_enclosurestats(info):
     dflt_header = [
-        'enclosure_id',
-        'stat_name',
-        'stat_current',
-        'stat_peak',
-        'stat_peak_time',
+        "enclosure_id",
+        "stat_name",
+        "stat_current",
+        "stat_peak",
+        "stat_peak_time",
     ]
     parsed = {}
     for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
         for data in rows:
             try:
-                stat_current = int(data['stat_current'])
+                stat_current = int(data["stat_current"])
             except ValueError:
                 continue
-            parsed.setdefault(id_, {}).setdefault(data['stat_name'], stat_current)
+            parsed.setdefault(id_, {}).setdefault(data["stat_name"], stat_current)
     return parsed
 
 
@@ -74,7 +74,7 @@ def check_ibm_svc_enclosurestats_temp(item, params, info):
     data = parsed.get(item)
     if data is None:
         return
-    return check_temperature(data['temp_c'], params, "ibm_svc_enclosurestats_%s" % item)
+    return check_temperature(data["temp_c"], params, "ibm_svc_enclosurestats_%s" % item)
 
 
 check_info["ibm_svc_enclosurestats.temp"] = {
@@ -83,10 +83,10 @@ check_info["ibm_svc_enclosurestats.temp"] = {
     "service_description": "Temperature Enclosure %s",
     "has_perfdata": True,
     "group": "temperature",
-    'default_levels_variable': "ibm_svc_enclosurestats_temperature_default_levels"
+    "default_levels_variable": "ibm_svc_enclosurestats_temperature_default_levels",
 }
 
-#.
+# .
 #   .--power---------------------------------------------------------------.
 #   |                                                                      |
 #   |                    _ __   _____      _____ _ __                      |
@@ -108,8 +108,8 @@ def check_ibm_svc_enclosurestats_power(item, _no_params, info):
     data = parsed.get(item)
     if data is None:
         return
-    stat_current = data['power_w']
-    return 0, "%s Watt" % stat_current, [('power', stat_current)]
+    stat_current = data["power_w"]
+    return 0, "%s Watt" % stat_current, [("power", stat_current)]
 
 
 check_info["ibm_svc_enclosurestats.power"] = {

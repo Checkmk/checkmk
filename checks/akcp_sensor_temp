@@ -42,6 +42,7 @@ check_info["akcp_sensor_temp"] = {
             8,  # SPAGENT-MIB::sensorProbeTempHighCritical
             14,  # SPAGENT-MIB::sensorProbeTempDegreeRaw
             5,  # SPAGENT-MIB::sensorProbeTempOnline
-        ]),
+        ],
+    ),
     "group": "temperature",
 }

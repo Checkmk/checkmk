@@ -8,8 +8,14 @@ import typing
 
 from cmk.base.plugins.agent_based.utils import cache_helper
 
-LegacyMetricTuple = typing.Tuple[str, float, typing.Optional[float], typing.Optional[float],
-                                 typing.Optional[float], typing.Optional[float]]
+LegacyMetricTuple = typing.Tuple[
+    str,
+    float,
+    typing.Optional[float],
+    typing.Optional[float],
+    typing.Optional[float],
+    typing.Optional[float],
+]
 
 
 def _opt_float(string: str) -> typing.Optional[float]:
@@ -21,8 +27,8 @@ def _opt_float(string: str) -> typing.Optional[float]:
 
 def _strip_unit_float(string: str) -> float:
     """
-        >>> _strip_unit_float("12.3 MB")
-        12.3
+    >>> _strip_unit_float("12.3 MB")
+    12.3
     """
     for i in range(len(string), 0, -1):
         try:
@@ -48,7 +54,7 @@ def parse_nagios_perfstring(perfinfo: str) -> typing.Optional[LegacyMetricTuple]
 
     # perfdata must not contain values with colons. So we split
     # these values and use the upper levels only.
-    values = [v.split(':')[-1] for v in values][:5]
+    values = [v.split(":")[-1] for v in values][:5]
     value, warn, crit, min_, max_ = values + [""] * (5 - len(values))
 
     return (
@@ -106,8 +112,8 @@ def check_mrpe(_no_item, _no_params, data):
 
 check_info["mrpe"] = {
     # section already migrated!
-    'inventory_function': discover(),
-    'check_function': check_mrpe,
-    'service_description': '%s',
-    'has_perfdata': True,
+    "inventory_function": discover(),
+    "check_function": check_mrpe,
+    "service_description": "%s",
+    "has_perfdata": True,
 }

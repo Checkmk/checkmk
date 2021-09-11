@@ -24,7 +24,7 @@ def inventory_ups_in_voltage(entry):
     return entry[0] if int(entry[1]) > 0 else False
 
 
-check_info['ups_in_voltage'] = {
+check_info["ups_in_voltage"] = {
     "inventory_function": inventory_ups_in_voltage,
     "check_function": check_ups_in_voltage,
     "service_description": "IN voltage phase %s",

@@ -75,6 +75,7 @@ check_info["datapower_fan"] = {
             1,  # dpStatusEnvironmentalFanSensorsFanID
             2,  # dpStatusEnvironmentalFanSensorsFanSpeed
             4,  # dpStatusEnvironmentalFanSensorsReadingStatus
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_datapower,
 }

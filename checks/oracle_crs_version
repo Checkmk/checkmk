@@ -19,7 +19,7 @@ def check_oracle_crs_version(_no_item, _no_params, info):
     raise MKCounterWrapped("No version details found. Maybe the cssd is not running")
 
 
-check_info['oracle_crs_version'] = {
+check_info["oracle_crs_version"] = {
     "check_function": check_oracle_crs_version,
     "inventory_function": inventory_oracle_crs_version,
     "service_description": "ORA-GI Version",

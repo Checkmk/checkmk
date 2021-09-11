@@ -19,7 +19,7 @@ def check_dns_arguments(params):
         args.append("-L")
 
     for address in settings.get("expected_addresses_list", ()):
-        args += ['-a', address]
+        args += ["-a", address]
 
     if settings.get("expected_authority"):
         args.append("-A")

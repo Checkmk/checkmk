@@ -10,56 +10,60 @@
 
 def inventory_appdynamics_sessions(info):
     for line in info:
-        yield ' '.join(line[0:2]), {}
+        yield " ".join(line[0:2]), {}
 
 
 def check_appdynamics_sessions(item, params, info):
     for line in info:
-        if item == ' '.join(line[0:2]):
+        if item == " ".join(line[0:2]):
             values = {}
             for metric in line[2:]:
-                name, value = metric.split(':')
+                name, value = metric.split(":")
                 values[name] = int(value)
 
-            active = values['activeSessions']
-            rejected = values['rejectedSessions']
-            max_active = values['maxActive']
-            counter = values['sessionCounter']
+            active = values["activeSessions"]
+            rejected = values["rejectedSessions"]
+            max_active = values["maxActive"]
+            counter = values["sessionCounter"]
 
             now = time.time()
-            rate_id = 'appdynamics_sessions.%s.counter' % (item.lower().replace(' ', '_'))
+            rate_id = "appdynamics_sessions.%s.counter" % (item.lower().replace(" ", "_"))
             counter_rate = get_rate(rate_id, now, counter)
 
             state = 0
             perfdata = []
             if isinstance(params, tuple):
                 min_warn, min_crit, max_warn, max_crit = params
-                perfdata.append(('running_sessions', active, max_warn, max_crit))
+                perfdata.append(("running_sessions", active, max_warn, max_crit))
 
                 if active <= min_crit or active >= max_crit:
                     state = 2
                 elif active <= min_warn or active >= max_warn:
                     state = 1
             else:
-                perfdata.append(('running_sessions', active))
+                perfdata.append(("running_sessions", active))
 
-            active_label = ''
+            active_label = ""
             if state > 0:
-                active_label = ' (warn/crit below %d/%d / warn/crit at %d/%d)' \
-                               % (min_warn, min_crit, max_warn, max_crit)
+                active_label = " (warn/crit below %d/%d / warn/crit at %d/%d)" % (
+                    min_warn,
+                    min_crit,
+                    max_warn,
+                    max_crit,
+                )
 
-            yield state, 'Active: %d (%.2f/sec)%s' % (active, counter_rate, active_label), perfdata
+            yield state, "Active: %d (%.2f/sec)%s" % (active, counter_rate, active_label), perfdata
 
-            perfdata = [('rejected_sessions', rejected)]
-            yield 0, 'Rejected: %d' % rejected, perfdata
+            perfdata = [("rejected_sessions", rejected)]
+            yield 0, "Rejected: %d" % rejected, perfdata
 
-            yield 0, 'Maximum active: %d' % max_active
+            yield 0, "Maximum active: %d" % max_active
 
 
-check_info['appdynamics_sessions'] = {
-    'inventory_function': inventory_appdynamics_sessions,
-    'check_function': check_appdynamics_sessions,
-    'service_description': 'AppDynamics Sessions %s',
-    'has_perfdata': True,
-    'group': 'jvm_sessions',
+check_info["appdynamics_sessions"] = {
+    "inventory_function": inventory_appdynamics_sessions,
+    "check_function": check_appdynamics_sessions,
+    "service_description": "AppDynamics Sessions %s",
+    "has_perfdata": True,
+    "group": "jvm_sessions",
 }

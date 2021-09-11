@@ -3,31 +3,31 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-#.1.3.6.1.4.1.23867.3.1.1.1.4.0 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmCount.0
-#.1.3.6.1.4.1.23867.3.1.1.2.1.1.3.1 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSeverity.1
-#.1.3.6.1.4.1.23867.3.1.1.2.1.1.3.2 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSeverity.2
-#.1.3.6.1.4.1.23867.3.1.1.2.1.1.3.3 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSeverity.3
-#.1.3.6.1.4.1.23867.3.1.1.2.1.1.3.4 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSeverity.4
-#.1.3.6.1.4.1.23867.3.1.1.2.1.1.5.1 Tunnel state is Down --> SILVERPEAK-MGMT-MIB::spsActiveAlarmDescr.1
-#.1.3.6.1.4.1.23867.3.1.1.2.1.1.5.2 Tunnel state is Down --> SILVERPEAK-MGMT-MIB::spsActiveAlarmDescr.2
-#.1.3.6.1.4.1.23867.3.1.1.2.1.1.5.3 Tunnel state is Down --> SILVERPEAK-MGMT-MIB::spsActiveAlarmDescr.3
-#.1.3.6.1.4.1.23867.3.1.1.2.1.1.5.4 Tunnel state is Down --> SILVERPEAK-MGMT-MIB::spsActiveAlarmDescr.4
-#.1.3.6.1.4.1.23867.3.1.1.2.1.1.6.1 to_sp01-wpg_WAN-WAN --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSource.1
-#.1.3.6.1.4.1.23867.3.1.1.2.1.1.6.2 to_sp01-dnd_GLB_Overlay --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSource.2
-#.1.3.6.1.4.1.23867.3.1.1.2.1.1.6.3 to_sp01-dnd_WAN-WAN --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSource.3
-#.1.3.6.1.4.1.23867.3.1.1.2.1.1.6.4 to_sp01-mad_WAN-WAN --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSource.4
+# .1.3.6.1.4.1.23867.3.1.1.1.4.0 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmCount.0
+# .1.3.6.1.4.1.23867.3.1.1.2.1.1.3.1 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSeverity.1
+# .1.3.6.1.4.1.23867.3.1.1.2.1.1.3.2 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSeverity.2
+# .1.3.6.1.4.1.23867.3.1.1.2.1.1.3.3 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSeverity.3
+# .1.3.6.1.4.1.23867.3.1.1.2.1.1.3.4 4 --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSeverity.4
+# .1.3.6.1.4.1.23867.3.1.1.2.1.1.5.1 Tunnel state is Down --> SILVERPEAK-MGMT-MIB::spsActiveAlarmDescr.1
+# .1.3.6.1.4.1.23867.3.1.1.2.1.1.5.2 Tunnel state is Down --> SILVERPEAK-MGMT-MIB::spsActiveAlarmDescr.2
+# .1.3.6.1.4.1.23867.3.1.1.2.1.1.5.3 Tunnel state is Down --> SILVERPEAK-MGMT-MIB::spsActiveAlarmDescr.3
+# .1.3.6.1.4.1.23867.3.1.1.2.1.1.5.4 Tunnel state is Down --> SILVERPEAK-MGMT-MIB::spsActiveAlarmDescr.4
+# .1.3.6.1.4.1.23867.3.1.1.2.1.1.6.1 to_sp01-wpg_WAN-WAN --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSource.1
+# .1.3.6.1.4.1.23867.3.1.1.2.1.1.6.2 to_sp01-dnd_GLB_Overlay --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSource.2
+# .1.3.6.1.4.1.23867.3.1.1.2.1.1.6.3 to_sp01-dnd_WAN-WAN --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSource.3
+# .1.3.6.1.4.1.23867.3.1.1.2.1.1.6.4 to_sp01-mad_WAN-WAN --> SILVERPEAK-MGMT-MIB::spsActiveAlarmSource.4
 
 # Taken from SILVERPEAK-TC.txt: translates silverpeak severities to checkmk's OK,WARN,CRIT
 severity_to_states = {
-    '0': ('info', 0),
-    '1': ('warning', 1),
-    '2': ('minor', 1),
-    '3': ('major', 2),
-    '4': ('critical', 2),
-    '5': ('cleared', 3),
-    '6': ('acknowledged', 3),
-    '7': ('unacknowledged', 3),
-    '8': ('indeterminate', 3),
+    "0": ("info", 0),
+    "1": ("warning", 1),
+    "2": ("minor", 1),
+    "3": ("major", 2),
+    "4": ("critical", 2),
+    "5": ("cleared", 3),
+    "6": ("acknowledged", 3),
+    "7": ("unacknowledged", 3),
+    "8": ("indeterminate", 3),
 }
 
 
@@ -50,12 +50,14 @@ def parse_silverpeak(info):
 
         if source:
             parsed.setdefault("alarms", [])
-            parsed["alarms"].append({
-                'state': severity_to_states.get(sever, 3)[1],
-                'severity_as_text': severity_to_states.get(sever, "unkown[%s]" % sever)[0],
-                'descr': descr,
-                'source': source,
-            })
+            parsed["alarms"].append(
+                {
+                    "state": severity_to_states.get(sever, 3)[1],
+                    "severity_as_text": severity_to_states.get(sever, "unkown[%s]" % sever)[0],
+                    "descr": descr,
+                    "source": source,
+                }
+            )
 
     return parsed
 
@@ -67,40 +69,49 @@ def check_silverpeak(_item, _params, parsed):
         yield 0, "No active alarms."
         return
     else:
-        alarms = parsed['alarms']
+        alarms = parsed["alarms"]
 
-        cnt_ok = len([alarm for alarm in alarms if alarm['state'] == 0])
-        cnt_warn = len([alarm for alarm in alarms if alarm['state'] == 1])
-        cnt_crit = len([alarm for alarm in alarms if alarm['state'] == 2])
-        cnt_unkn = len([alarm for alarm in alarms if alarm['state'] == 3])
+        cnt_ok = len([alarm for alarm in alarms if alarm["state"] == 0])
+        cnt_warn = len([alarm for alarm in alarms if alarm["state"] == 1])
+        cnt_crit = len([alarm for alarm in alarms if alarm["state"] == 2])
+        cnt_unkn = len([alarm for alarm in alarms if alarm["state"] == 3])
 
         yield 0, "%s active alarms. OK: %s, WARN: %s, CRIT: %s, UNKNOWN: %s" % (
-            alarm_cnt, cnt_ok, cnt_warn, cnt_crit, cnt_unkn)
+            alarm_cnt,
+            cnt_ok,
+            cnt_warn,
+            cnt_crit,
+            cnt_unkn,
+        )
 
         for elem in alarms:
             yield elem["state"], "\nAlarm: %s, Alarm-Source: %s, Severity: %s" % (
-                elem["descr"], elem["source"], elem["severity_as_text"])
+                elem["descr"],
+                elem["source"],
+                elem["severity_as_text"],
+            )
 
 
-check_info['silverpeak_VX6000'] = {
-    'parse_function': parse_silverpeak,
-    'inventory_function': discover_single,
-    'check_function': check_silverpeak,
-    'service_description': 'Alarms',
-    'snmp_info': [
-        ('.1.3.6.1.4.1.23867.3.1.1.1',
+check_info["silverpeak_VX6000"] = {
+    "parse_function": parse_silverpeak,
+    "inventory_function": discover_single,
+    "check_function": check_silverpeak,
+    "service_description": "Alarms",
+    "snmp_info": [
+        (
+            ".1.3.6.1.4.1.23867.3.1.1.1",
             [
-                "4", # spsActiveAlarmCount
+                "4",  # spsActiveAlarmCount
             ],
         ),
-        ('.1.3.6.1.4.1.23867.3.1.1.2.1.1',
+        (
+            ".1.3.6.1.4.1.23867.3.1.1.2.1.1",
             [
-            "3", # spsActiveAlarmSeverity
-            "5", # spsActiveAlarmDescr
-            "6", # spsActiveAlarmSource
+                "3",  # spsActiveAlarmSeverity
+                "5",  # spsActiveAlarmDescr
+                "6",  # spsActiveAlarmSource
             ],
         ),
     ],
-    'snmp_scan_function': lambda oid: \
-    oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.23867"),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.23867"),
 }

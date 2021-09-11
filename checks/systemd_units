@@ -84,18 +84,18 @@
 import typing
 
 _SYSTEMD_UNITS = [
-    '.service ',
-    '.socket ',
-    '.device ',
-    '.mount ',
-    '.automount ',
-    '.swap ',
-    '.target ',
-    '.path ',
-    '.timer ',
-    '.snapshot ',
-    '.slice ',
-    '.scope ',
+    ".service ",
+    ".socket ",
+    ".device ",
+    ".mount ",
+    ".automount ",
+    ".swap ",
+    ".target ",
+    ".path ",
+    ".timer ",
+    ".snapshot ",
+    ".slice ",
+    ".scope ",
 ]
 
 _SYSTEMD_UNIT_FILE_STATES = [
@@ -135,13 +135,13 @@ def parse_systemd_units(info):
 
     if line[0] == "[list-unit-files]":
         for line in iter_info:
-            if line[0].startswith('['):
+            if line[0].startswith("["):
                 break
             if len(line) >= 2 and line[1] in _SYSTEMD_UNIT_FILE_STATES:
                 enabled_status_collection[line[0]] = line[1]
 
     parsed = {}
-    if line[0] == '[all]':
+    if line[0] == "[all]":
         try:
             line = next(iter_info)
 
@@ -150,24 +150,24 @@ def parse_systemd_units(info):
             return parsed
 
         for row in iter_info:
-            if row[0] in {'●', '*'}:
+            if row[0] in {"●", "*"}:
                 row.pop(0)
-            line = ' '.join(row)
+            line = " ".join(row)
             for unit_marker in _SYSTEMD_UNITS:
-                utype = unit_marker.strip(' ')
+                utype = unit_marker.strip(" ")
                 if row[0].endswith(utype):
-                    unit_type = unit_marker.strip('. ')
+                    unit_type = unit_marker.strip(". ")
                     name, remains = line.split(unit_marker, 1)
                     if "@" in name:
                         pos = name.find("@")
-                        temp = name[:pos + 1]
+                        temp = name[: pos + 1]
                     else:
                         temp = name
                     enabled_status = enabled_status_collection.get(
                         "%s.%s" % (temp, unit_type),
                         "unknown",
                     )
-                    loaded_status, active_status, current_state, descr = remains.split(' ', 3)
+                    loaded_status, active_status, current_state, descr = remains.split(" ", 3)
                     unit = UnitEntry(
                         name,
                         unit_type,
@@ -182,10 +182,10 @@ def parse_systemd_units(info):
     return parsed
 
 
-#.
+# .
 
-check_info['systemd_units'] = {
-    'parse_function': parse_systemd_units,
+check_info["systemd_units"] = {
+    "parse_function": parse_systemd_units,
 }
 
 #   .--services------------------------------------------------------------.
@@ -224,7 +224,8 @@ def discovery_systemd_units_services(parsed):
     # Filter out volatile systemd service units created by the Checkmk agent which appear and
     # disappear frequently. No matter what the user configures, we do not want to discover them.
     filtered_services = [
-        service for service in parsed.get('service', {}).values()
+        service
+        for service in parsed.get("service", {}).values()
         if not regex("^check-mk-agent@.+").match(service.name)
     ]
 
@@ -250,14 +251,16 @@ def discovery_systemd_units_services(parsed):
         names = settings.get("names", [])
         states = settings.get("states", [])
         for service in filtered_services:
-            if (regex_match(descriptions, service.description) and
-                    regex_match(names, service.name) and
-                    state_match(states, service.active_status)):
+            if (
+                regex_match(descriptions, service.description)
+                and regex_match(names, service.name)
+                and state_match(states, service.active_status)
+            ):
                 yield service.name, {}
 
 
 def check_systemd_units_services(item, params, parsed):
-    services = parsed.get('service', {})
+    services = parsed.get("service", {})
     service = services.get(item, None)
     if service is None:
         yield params["else"], "Service not found"
@@ -268,18 +271,18 @@ def check_systemd_units_services(item, params, parsed):
     yield 0, service.description
 
 
-check_info['systemd_units.services'] = {
-    'inventory_function': discovery_systemd_units_services,
-    'check_function': check_systemd_units_services,
-    'service_description': 'Systemd Service %s',
-    'group': 'systemd_services',
-    'default_levels_variable': 'systemd_services_default_levels',
+check_info["systemd_units.services"] = {
+    "inventory_function": discovery_systemd_units_services,
+    "check_function": check_systemd_units_services,
+    "service_description": "Systemd Service %s",
+    "group": "systemd_services",
+    "default_levels_variable": "systemd_services_default_levels",
 }
 
 
 def discovery_systemd_units_services_summary(parsed):
     if parsed:
-        yield 'Summary', {}
+        yield "Summary", {}
 
 
 def _services_split(services, blacklist):
@@ -289,7 +292,7 @@ def _services_split(services, blacklist):
         "disabled": [],
         "activating": [],
         "reloading": [],
-        "static": []
+        "static": [],
     }
     compiled_patterns = [regex(p) for p in blacklist]
     for service in services:
@@ -299,7 +302,9 @@ def _services_split(services, blacklist):
         if service.active_status == "activating":
             services_organised["activating"].append(service)
         elif service.enabled_status in ("reloading", "disabled", "static", "indirect"):
-            service_type = "disabled" if service.enabled_status == "indirect" else service.enabled_status
+            service_type = (
+                "disabled" if service.enabled_status == "indirect" else service.enabled_status
+            )
             services_organised[service_type].append(service)
         else:
             services_organised["included"].append(service)
@@ -315,11 +320,13 @@ def _check_temporary_state(services, params, service_state):
         state_since = previous_state.get(service.name, now)
         current_state[service.name] = state_since
         elapsed_time = now - state_since
-        yield check_levels(elapsed_time,
-                           None,
-                           levels,
-                           human_readable_func=get_age_human_readable,
-                           infoname="Service '%s' %s for" % (service.name, service_state))
+        yield check_levels(
+            elapsed_time,
+            None,
+            levels,
+            human_readable_func=get_age_human_readable,
+            infoname="Service '%s' %s for" % (service.name, service_state),
+        )
 
     set_item_state(service_state, current_state)
 
@@ -342,8 +349,8 @@ def _check_non_ok_services(systemd_services, params, output_string):
 
 
 def check_systemd_units_services_summary(_no_item, params, parsed):
-    services = parsed.get('service', {}).values()
-    blacklist = params.get('ignored', [])
+    services = parsed.get("service", {}).values()
+    blacklist = params.get("ignored", [])
     yield 0, "Total: %d" % len(services)
 
     services_organised = _services_split(services, blacklist)
@@ -355,8 +362,9 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
     long_output = []
 
     included_template = "%d service%s %s (%s)"
-    for subresult in _check_non_ok_services(services_organised["included"], params,
-                                            included_template):
+    for subresult in _check_non_ok_services(
+        services_organised["included"], params, included_template
+    ):
         if subresult[0]:
             yield subresult
         else:
@@ -370,8 +378,9 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
             long_output.append(subresult)
 
     for temporary_type in ("activating", "reloading"):
-        for subresult in _check_temporary_state(services_organised[temporary_type], params,
-                                                temporary_type):
+        for subresult in _check_temporary_state(
+            services_organised[temporary_type], params, temporary_type
+        ):
             if subresult[0]:
                 yield subresult
             else:
@@ -383,12 +392,12 @@ def check_systemd_units_services_summary(_no_item, params, parsed):
     yield from long_output
 
 
-check_info['systemd_units.services_summary'] = {
-    'inventory_function': discovery_systemd_units_services_summary,
-    'check_function': check_systemd_units_services_summary,
-    'service_description': 'Systemd Service %s',
-    'group': 'systemd_services_summary',
-    'default_levels_variable': 'systemd_services_summary_default_levels',
+check_info["systemd_units.services_summary"] = {
+    "inventory_function": discovery_systemd_units_services_summary,
+    "check_function": check_systemd_units_services_summary,
+    "service_description": "Systemd Service %s",
+    "group": "systemd_services_summary",
+    "default_levels_variable": "systemd_services_summary_default_levels",
 }
 
-#.
+# .

@@ -264,7 +264,7 @@ from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-
 # MEMPOOL.req0.toosmall Too
 # MEMPOOL.req0.surplus Too
 # ...
-#.
+# .
 #   .--common--------------------------------------------------------------.
 #   |                                                                      |
 #   |               ___ ___  _ __ ___  _ __ ___   ___  _ __                |
@@ -291,12 +291,14 @@ def parse_varnish(info):
             perf_var_name = perf_var_name.replace("n_wrk", "worker")
         elif perf_var_name.startswith("varnish_n_"):
             perf_var_name = perf_var_name.replace("n_", "objects_")
-        instance.update({
-            "value": value,
-            "descr": descr.replace("/", " "),
-            "perf_var_name": perf_var_name,
-            "params_var_name": parsed_path[-1].split("_", 1)[-1],
-        })
+        instance.update(
+            {
+                "value": value,
+                "descr": descr.replace("/", " "),
+                "perf_var_name": perf_var_name,
+                "params_var_name": parsed_path[-1].split("_", 1)[-1],
+            }
+        )
     # Newer output has MAIN or MGT prefix keys,
     # see above in 'agent output'
     for key in ["MAIN", "MGT"]:
@@ -313,14 +315,12 @@ def _parse_path(raw_path):
     #   => ['LCK', 'sms', 'creat']
     # - 'VBE.default(127.0.0.1,,81).happy'
     #   => ['VBE', 'default(127.0.0.1,,81)', 'happy']
-    if '(' not in raw_path:
+    if "(" not in raw_path:
         return raw_path.split(".")
     head, middle = raw_path.split("(", 1)
     address, tail = middle.split(")", 1)
     head = head.strip(".").split(".")
-    return head[:-1]\
-           + ["%s(%s)" % (head[-1], address)]\
-           + tail.strip(".").split(".")
+    return head[:-1] + ["%s(%s)" % (head[-1], address)] + tail.strip(".").split(".")
 
 
 def _create_hierarchy(path, instance):
@@ -342,27 +342,29 @@ def check_varnish_stats(_no_item, params, parsed, expected_keys):
         data = parsed.get(key)
         if not data:
             continue
-        descr_per_sec = "%s/s" % data['descr']
-        yield check_levels(get_rate("varnish.%s" % key, this_time, data['value']),
-                           data['perf_var_name'],
-                           params.get(data['params_var_name'], (None, None)),
-                           human_readable_func=lambda r, d=descr_per_sec: ("%.1f " + d) % r)
+        descr_per_sec = "%s/s" % data["descr"]
+        yield check_levels(
+            get_rate("varnish.%s" % key, this_time, data["value"]),
+            data["perf_var_name"],
+            params.get(data["params_var_name"], (None, None)),
+            human_readable_func=lambda r, d=descr_per_sec: ("%.1f " + d) % r,
+        )
 
 
 def check_varnish_ratio(_no_item, params, parsed, ratio_keys):
     reference_key, additional_key, perf_key = ratio_keys
-    reference_value = parsed[reference_key]['value']
+    reference_value = parsed[reference_key]["value"]
     ratio = 0.0
-    total = reference_value + parsed[additional_key]['value']
+    total = reference_value + parsed[additional_key]["value"]
     if total > 0:
         ratio = 100.0 * reference_value / total
     warn, crit = params["levels_lower"]
-    return check_levels(ratio,
-                        perf_key, (None, None, warn, crit),
-                        human_readable_func=get_percent_human_readable)
+    return check_levels(
+        ratio, perf_key, (None, None, warn, crit), human_readable_func=get_percent_human_readable
+    )
 
 
-#.
+# .
 #   .--uptime--------------------------------------------------------------.
 #   |                              _   _                                   |
 #   |                  _   _ _ __ | |_(_)_ __ ___   ___                    |
@@ -383,8 +385,11 @@ def check_varnish_uptime(_no_item, _no_params, parsed):
         try:
             return check_uptime_seconds(_no_params, parsed["uptime"]["value"])
         except OverflowError:
-            return (3, f'Could not handle uptime value {parsed["uptime"]["value"]!r}. '
-                    'Output of `varnishstats` seems to be faulty.')
+            return (
+                3,
+                f'Could not handle uptime value {parsed["uptime"]["value"]!r}. '
+                "Output of `varnishstats` seems to be faulty.",
+            )
 
 
 check_info["varnish"] = {
@@ -394,7 +399,7 @@ check_info["varnish"] = {
     "service_description": "Varnish Uptime",
     "has_perfdata": True,
 }
-#.
+# .
 #   .--cache---------------------------------------------------------------.
 #   |                                     _                                |
 #   |                       ___ __ _  ___| |__   ___                       |
@@ -404,19 +409,22 @@ check_info["varnish"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.cache"] = {
-    "inventory_function"      : lambda parsed: \
-        inventory_varnish(parsed, ["cache_miss"]),
-    "check_function"          : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, [
+    "inventory_function": lambda parsed: inventory_varnish(parsed, ["cache_miss"]),
+    "check_function": lambda item, params, parsed: check_varnish_stats(
+        item,
+        params,
+        parsed,
+        [
             "cache_miss",
             "cache_hit",
             "cache_hitpass",
-        ]),
-    "service_description"     : "Varnish Cache",
-    "group"                   : "varnish_cache",
-    "has_perfdata"            : True,
+        ],
+    ),
+    "service_description": "Varnish Cache",
+    "group": "varnish_cache",
+    "has_perfdata": True,
 }
-#.
+# .
 #   .--client--------------------------------------------------------------.
 #   |                            _ _            _                          |
 #   |                        ___| (_) ___ _ __ | |_                        |
@@ -426,20 +434,23 @@ check_info["varnish.cache"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.client"] = {
-    "inventory_function"  : lambda parsed: \
-        inventory_varnish(parsed, ["client_req"]),
-    "check_function"      : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, [
+    "inventory_function": lambda parsed: inventory_varnish(parsed, ["client_req"]),
+    "check_function": lambda item, params, parsed: check_varnish_stats(
+        item,
+        params,
+        parsed,
+        [
             "client_drop",
             "client_req",
             "client_conn",
             "client_drop_late",
-        ]),
-    "service_description" : "Varnish Client",
-    "group"               : "varnish_client",
-    "has_perfdata"        : True,
+        ],
+    ),
+    "service_description": "Varnish Client",
+    "group": "varnish_client",
+    "has_perfdata": True,
 }
-#.
+# .
 #   .--backend-------------------------------------------------------------.
 #   |                _                _                  _                 |
 #   |               | |__   __ _  ___| | _____ _ __   __| |                |
@@ -449,10 +460,14 @@ check_info["varnish.client"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.backend"] = {
-    "inventory_function"  : lambda parsed: \
-        inventory_varnish(parsed, ["backend_fail", "backend_unhealthy", "backend_busy"]),
-    "check_function"      : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, [
+    "inventory_function": lambda parsed: inventory_varnish(
+        parsed, ["backend_fail", "backend_unhealthy", "backend_busy"]
+    ),
+    "check_function": lambda item, params, parsed: check_varnish_stats(
+        item,
+        params,
+        parsed,
+        [
             "backend_busy",
             "backend_unhealthy",
             "backend_req",
@@ -462,12 +477,13 @@ check_info["varnish.backend"] = {
             "backend_toolate",
             "backend_conn",
             "backend_reuse",
-        ]),
-    "service_description" : "Varnish Backend",
-    "group"               : "varnish_backend",
-    "has_perfdata"        : True,
+        ],
+    ),
+    "service_description": "Varnish Backend",
+    "group": "varnish_backend",
+    "has_perfdata": True,
 }
-#.
+# .
 #   .--fetch---------------------------------------------------------------.
 #   |                        __      _       _                             |
 #   |                       / _| ___| |_ ___| |__                          |
@@ -477,12 +493,23 @@ check_info["varnish.backend"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.fetch"] = {
-    "inventory_function"  : lambda parsed: \
-        inventory_varnish(parsed, ["fetch_1xx", "fetch_204", "fetch_304",
-                                   "fetch_bad", "fetch_eof", "fetch_failed",
-                                   "fetch_zero"]),
-    "check_function"      : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, [
+    "inventory_function": lambda parsed: inventory_varnish(
+        parsed,
+        [
+            "fetch_1xx",
+            "fetch_204",
+            "fetch_304",
+            "fetch_bad",
+            "fetch_eof",
+            "fetch_failed",
+            "fetch_zero",
+        ],
+    ),
+    "check_function": lambda item, params, parsed: check_varnish_stats(
+        item,
+        params,
+        parsed,
+        [
             "fetch_oldhttp",
             "fetch_head",
             "fetch_eof",
@@ -495,12 +522,13 @@ check_info["varnish.fetch"] = {
             "fetch_1xx",
             "fetch_chunked",
             "fetch_204",
-        ]),
-    "service_description" : "Varnish Fetch",
-    "group"               : "varnish_fetch",
-    "has_perfdata"        : True,
+        ],
+    ),
+    "service_description": "Varnish Fetch",
+    "group": "varnish_fetch",
+    "has_perfdata": True,
 }
-#.
+# .
 #   .--ESI-----------------------------------------------------------------.
 #   |                           _____ ____ ___                             |
 #   |                          | ____/ ___|_ _|                            |
@@ -509,21 +537,24 @@ check_info["varnish.fetch"] = {
 #   |                          |_____|____/___|                            |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-factory_settings["varnish_esi_default_levels"] = {'errors': (1.0, 2.0)}
+factory_settings["varnish_esi_default_levels"] = {"errors": (1.0, 2.0)}
 check_info["varnish.esi"] = {
-    "inventory_function"      : lambda parsed: \
-        inventory_varnish(parsed, ["esi_errors"]),
-    "check_function"          : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, [
+    "inventory_function": lambda parsed: inventory_varnish(parsed, ["esi_errors"]),
+    "check_function": lambda item, params, parsed: check_varnish_stats(
+        item,
+        params,
+        parsed,
+        [
             "esi_errors",
             "esi_warnings",
-        ]),
-    "service_description"     : "Varnish ESI",
-    "default_levels_variable" : "varnish_esi_default_levels",
-    "group"                   : "varnish_esi",
-    "has_perfdata"            : True,
+        ],
+    ),
+    "service_description": "Varnish ESI",
+    "default_levels_variable": "varnish_esi_default_levels",
+    "group": "varnish_esi",
+    "has_perfdata": True,
 }
-#.
+# .
 #   .--objects-------------------------------------------------------------.
 #   |                         _     _           _                          |
 #   |                    ___ | |__ (_) ___  ___| |_ ___                    |
@@ -533,19 +564,22 @@ check_info["varnish.esi"] = {
 #   |                            |__/                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.objects"] = {
-    "inventory_function"  : lambda parsed: \
-        inventory_varnish(parsed, ["n_expired", "n_lru_nuked"]),
-    "check_function"      : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, [
+    "inventory_function": lambda parsed: inventory_varnish(parsed, ["n_expired", "n_lru_nuked"]),
+    "check_function": lambda item, params, parsed: check_varnish_stats(
+        item,
+        params,
+        parsed,
+        [
             "n_expired",
             "n_lru_nuked",
             "n_lru_moved",
-        ]),
-    "service_description" : "Varnish Objects",
-    "group"               : "varnish_objects",
-    "has_perfdata"        : True,
+        ],
+    ),
+    "service_description": "Varnish Objects",
+    "group": "varnish_objects",
+    "has_perfdata": True,
 }
-#.
+# .
 #   .--worker--------------------------------------------------------------.
 #   |                                     _                                |
 #   |                 __      _____  _ __| | _____ _ __                    |
@@ -555,10 +589,14 @@ check_info["varnish.objects"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 check_info["varnish.worker"] = {
-    "inventory_function"  : lambda parsed: \
-        inventory_varnish(parsed, ["n_wrk_failed", "n_wrk_queued"]),
-    "check_function"      : lambda item, params, parsed: \
-        check_varnish_stats(item, params, parsed, [
+    "inventory_function": lambda parsed: inventory_varnish(
+        parsed, ["n_wrk_failed", "n_wrk_queued"]
+    ),
+    "check_function": lambda item, params, parsed: check_varnish_stats(
+        item,
+        params,
+        parsed,
+        [
             "n_wrk_lqueue",
             "n_wrk_create",
             "n_wrk_drop",
@@ -566,12 +604,13 @@ check_info["varnish.worker"] = {
             "n_wrk_failed",
             "n_wrk_queued",
             "n_wrk_max",
-        ]),
-    "service_description" : "Varnish Worker",
-    "group"               : "varnish_worker",
-    "has_perfdata"        : True,
+        ],
+    ),
+    "service_description": "Varnish Worker",
+    "group": "varnish_worker",
+    "has_perfdata": True,
 }
-#.
+# .
 #   .--cache hit ratio-----------------------------------------------------.
 #   |                  _            _     _ _               _   _          |
 #   |    ___ __ _  ___| |__   ___  | |__ (_) |_   _ __ __ _| |_(_) ___     |
@@ -580,19 +619,18 @@ check_info["varnish.worker"] = {
 #   |   \___\__,_|\___|_| |_|\___| |_| |_|_|\__| |_|  \__,_|\__|_|\___/    |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-factory_settings["varnish_cache_hit_ratio_default_levels"] = {'levels_lower': (70.0, 60.0)}
+factory_settings["varnish_cache_hit_ratio_default_levels"] = {"levels_lower": (70.0, 60.0)}
 check_info["varnish.cache_hit_ratio"] = {
-    "inventory_function"      : lambda parsed: \
-        inventory_varnish(parsed, ["cache_miss", "cache_hit"]),
-    "check_function"          : lambda item, params, parsed: \
-        check_varnish_ratio(item, params, parsed,
-                            ('cache_hit', 'cache_miss', 'cache_hit_ratio')),
-    "default_levels_variable" : "varnish_cache_hit_ratio_default_levels",
-        "service_description"     : "Varnish Cache Hit Ratio",
-    "group"                   : "varnish_cache_hit_ratio",
-    "has_perfdata"            : True,
+    "inventory_function": lambda parsed: inventory_varnish(parsed, ["cache_miss", "cache_hit"]),
+    "check_function": lambda item, params, parsed: check_varnish_ratio(
+        item, params, parsed, ("cache_hit", "cache_miss", "cache_hit_ratio")
+    ),
+    "default_levels_variable": "varnish_cache_hit_ratio_default_levels",
+    "service_description": "Varnish Cache Hit Ratio",
+    "group": "varnish_cache_hit_ratio",
+    "has_perfdata": True,
 }
-#.
+# .
 #   .--backend success ratio-----------------------------------------------.
 #   |                _                _                  _                 |
 #   |               | |__   __ _  ___| | _____ _ __   __| |                |
@@ -607,19 +645,20 @@ check_info["varnish.cache_hit_ratio"] = {
 #   |      |___/\__,_|\___\___\___||___/___/ |_|  \__,_|\__|_|\___/        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-factory_settings["varnish_backend_success_ratio_default_levels"] = {'levels_lower': (70.0, 60.0)}
+factory_settings["varnish_backend_success_ratio_default_levels"] = {"levels_lower": (70.0, 60.0)}
 check_info["varnish.backend_success_ratio"] = {
-    "inventory_function"      : lambda parsed: \
-        inventory_varnish(parsed, ["backend_fail", "backend_conn"]),
-    "check_function"          : lambda item, params, parsed: \
-        check_varnish_ratio(item, params, parsed,
-                            ('backend_conn', 'backend_fail', 'varnish_backend_success_ratio')),
-    "default_levels_variable" : "varnish_backend_success_ratio_default_levels",
-        "service_description"     : "Varnish Backend Success Ratio",
-    "group"                   : "varnish_backend_success_ratio",
-    "has_perfdata"            : True,
+    "inventory_function": lambda parsed: inventory_varnish(
+        parsed, ["backend_fail", "backend_conn"]
+    ),
+    "check_function": lambda item, params, parsed: check_varnish_ratio(
+        item, params, parsed, ("backend_conn", "backend_fail", "varnish_backend_success_ratio")
+    ),
+    "default_levels_variable": "varnish_backend_success_ratio_default_levels",
+    "service_description": "Varnish Backend Success Ratio",
+    "group": "varnish_backend_success_ratio",
+    "has_perfdata": True,
 }
-#.
+# .
 #   .--worker thread ratio-------------------------------------------------.
 #   |                     _               _   _                        _   |
 #   | __      _____  _ __| | _____ _ __  | |_| |__  _ __ ___  __ _  __| |  |
@@ -634,24 +673,28 @@ check_info["varnish.backend_success_ratio"] = {
 #   |                       |_|  \__,_|\__|_|\___/                         |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-factory_settings["varnish_worker_thread_ratio_default_levels"] = {'levels_lower': (70.0, 60.0)}
+factory_settings["varnish_worker_thread_ratio_default_levels"] = {"levels_lower": (70.0, 60.0)}
 
 
 def check_varnish_worker_thread_ratio(_no_item, params, parsed):
     ratio = 0.0
-    worker_create = parsed["n_wrk_create"]['value']
+    worker_create = parsed["n_wrk_create"]["value"]
     if worker_create > 0:
-        ratio = 100.0 * parsed["n_wrk"]['value'] / worker_create
+        ratio = 100.0 * parsed["n_wrk"]["value"] / worker_create
     warn, crit = params["levels_lower"]
-    return check_levels(ratio,
-                        "varnish_worker_thread_ratio", (None, None, warn, crit),
-                        human_readable_func=get_percent_human_readable)
+    return check_levels(
+        ratio,
+        "varnish_worker_thread_ratio",
+        (None, None, warn, crit),
+        human_readable_func=get_percent_human_readable,
+    )
+
+
 check_info["varnish.worker_thread_ratio"] = {
-    "inventory_function"      : lambda parsed: \
-        inventory_varnish(parsed, ["n_wrk", "n_wrk_create"]),
-    "check_function"          : check_varnish_worker_thread_ratio,
-    "service_description"     : "Varnish Worker Thread Ratio",
-    "default_levels_variable" : "varnish_worker_thread_ratio_default_levels",
-    "group"                   : "varnish_worker_thread_ratio",
-    "has_perfdata"            : True,
+    "inventory_function": lambda parsed: inventory_varnish(parsed, ["n_wrk", "n_wrk_create"]),
+    "check_function": check_varnish_worker_thread_ratio,
+    "service_description": "Varnish Worker Thread Ratio",
+    "default_levels_variable": "varnish_worker_thread_ratio_default_levels",
+    "group": "varnish_worker_thread_ratio",
+    "has_perfdata": True,
 }

@@ -40,7 +40,7 @@ def check_cisco_ucs_temp_cpu(item, params, info):
             return check_temperature(temp, params, "cisco_temp_%s" % item)
 
 
-check_info['cisco_ucs_temp_cpu'] = {
+check_info["cisco_ucs_temp_cpu"] = {
     "inventory_function": inventory_cisco_ucs_temp_cpu,
     "check_function": check_cisco_ucs_temp_cpu,
     "service_description": "Temperature CPU %s",
@@ -51,7 +51,8 @@ check_info['cisco_ucs_temp_cpu'] = {
         [
             "2",  # cpu Unit Name
             "10",  # cucsProcessorEnvStatsTemperature
-        ]),
+        ],
+    ),
     "group": "temperature",
     "default_levels_variable": "cisco_ucs_temp_cpu_default_levels",
 }

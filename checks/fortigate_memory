@@ -50,14 +50,15 @@ def check_fortigate_memory(item, params, current_reading):
         human_readable_func=get_percent_human_readable,
     )
 
+
 check_info["fortigate_memory"] = {
-    "parse_function"        : parse_fortigate_memory,
-    "check_function"        : check_fortigate_memory,
-    "inventory_function"    : inventory_fortigate_memory,
-    "service_description"   : "Memory",
-    "has_perfdata"          : True,
-    "group"                 : "memory",
-    "snmp_scan_function"    : lambda oid: "fortigate" in oid(".1.3.6.1.2.1.1.1.0").lower() \
-                                          and oid(".1.3.6.1.4.1.12356.1.9.0"),
-    "snmp_info"                    : ( ".1.3.6.1.4.1.12356.1", [ 9 ]),
+    "parse_function": parse_fortigate_memory,
+    "check_function": check_fortigate_memory,
+    "inventory_function": inventory_fortigate_memory,
+    "service_description": "Memory",
+    "has_perfdata": True,
+    "group": "memory",
+    "snmp_scan_function": lambda oid: "fortigate" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    and oid(".1.3.6.1.4.1.12356.1.9.0"),
+    "snmp_info": (".1.3.6.1.4.1.12356.1", [9]),
 }

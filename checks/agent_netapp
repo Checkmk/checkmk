@@ -14,4 +14,4 @@ def agent_netapp_arguments(params, hostname, ipaddress):
     ] + [element[4:] for element in params["skip_elements"] if element.startswith("ctr_")]
 
 
-special_agent_info['netapp'] = agent_netapp_arguments
+special_agent_info["netapp"] = agent_netapp_arguments

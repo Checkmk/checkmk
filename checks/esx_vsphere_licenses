@@ -44,7 +44,7 @@ def check_esx_vsphere_licenses(item, params, parsed):
     return status, infotext, perfdata
 
 
-check_info['esx_vsphere_licenses'] = {
+check_info["esx_vsphere_licenses"] = {
     "parse_function": parse_esx_vsphere_licenses,
     "inventory_function": inventory_esx_vsphere_licenses,
     "check_function": check_esx_vsphere_licenses,

@@ -25,8 +25,12 @@ def inventory_cisco_ucs_raid(info):
 def check_cisco_ucs_raid(_no_item, _no_params, info):
     model, vendor, serial, status = info[0]
     state, state_readable = map_operability.get(status, (3, "Unknown, status code %s" % status))
-    return state, "Status: %s, Model: %s, Vendor: %s, SN: %s" % \
-                (state_readable, model, vendor, serial)
+    return state, "Status: %s, Model: %s, Vendor: %s, SN: %s" % (
+        state_readable,
+        model,
+        vendor,
+        serial,
+    )
 
 
 check_info["cisco_ucs_raid"] = {
@@ -41,5 +45,6 @@ check_info["cisco_ucs_raid"] = {
             "17",  # cucsStorageControllerVendor
             "14",  # cucsStorageControllerSerial
             "7",  # cucsStorageControllerOperability
-        ]),
+        ],
+    ),
 }

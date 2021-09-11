@@ -7,24 +7,16 @@
 import copy
 import logging
 import socket
-from hashlib import md5, sha256
-from typing import Any, Final, List, Mapping, Optional, Tuple, TYPE_CHECKING
+from typing import Any, Final, List, Mapping, Optional, Tuple
 
 import cmk.utils.debug
-from cmk.utils.encryption import (
-    decrypt_aes_256_cbc_legacy,
-    decrypt_aes_256_cbc_pbkdf2,
-    OPENSSL_SALTED_MARKER,
-)
+from cmk.utils.encryption import decrypt_by_agent_protocol, DigestType
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.type_defs import AgentRawData, HostAddress
 
 from ._base import verify_ipaddress
 from .agent import AgentFetcher, DefaultAgentFileCache
 from .type_defs import Mode
-
-if TYPE_CHECKING:
-    import hashlib
 
 
 class TCPFetcher(AgentFetcher):
@@ -180,50 +172,15 @@ class TCPFetcher(AgentFetcher):
         return output
 
     def _decrypt_agent_data(self, output: AgentRawData) -> AgentRawData:
-        salt_start = len(OPENSSL_SALTED_MARKER)
-
         try:
-            # simply check if the protocol is an actual number
-            protocol = int(output[:2])
-        except ValueError:
-            raise MKFetcherError(f"Unsupported protocol version: {output[:2]!r}")
-        encrypted_pkg = output[2:]
-        password = self.encryption_settings["passphrase"]
+            protocol = DigestType(output[:2])
+        except ValueError as exc:
+            raise MKFetcherError from exc
 
-        if protocol == 3:
-            return AgentRawData(
-                decrypt_aes_256_cbc_pbkdf2(
-                    ciphertext=encrypted_pkg[salt_start:],
-                    password=password,
-                )
+        return AgentRawData(
+            decrypt_by_agent_protocol(
+                self.encryption_settings["passphrase"],
+                protocol,
+                output[2:],
             )
-        if protocol == 2:
-            return AgentRawData(
-                decrypt_aes_256_cbc_legacy(
-                    ciphertext=encrypted_pkg,
-                    password=password,
-                    digest=sha256,
-                )
-            )
-        if protocol == 0:
-            return AgentRawData(
-                decrypt_aes_256_cbc_legacy(
-                    ciphertext=encrypted_pkg,
-                    password=password,
-                    digest=md5,
-                )
-            )
-        # Support encrypted agent data with "99" header.
-        # This was not intended, but the Windows agent accidentally sent this header
-        # instead of "00" up to 2.0.0p1, so we keep this for a while.
-        # Caution: "99" for real-time check data means "unencrypted"!
-        if protocol == 99:
-            return AgentRawData(
-                decrypt_aes_256_cbc_legacy(
-                    ciphertext=encrypted_pkg,
-                    password=password,
-                    digest=md5,
-                )
-            )
-
-        raise MKFetcherError(f"Unsupported protocol version: {protocol}")
+        )

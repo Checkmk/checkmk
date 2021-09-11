@@ -39308,10 +39308,8 @@ msgstr "イベントをローカルイベントコンソールのunixソケッ�
 msgid "Send events to remote syslog host"
 msgstr "リモートsyslogホストにイベントを送信する"
 
-msgid "Send metrics to Graphite / InfluxDB"
-msgstr "メトリックをGraphite/InfluxDBに送信します"
-
-msgid "Send metrics to Graphite/InfluxDB"
+#, fuzzy
+msgid "Send metrics to Graphite"
 msgstr "メトリックをGraphite/InfluxDBに送信します"
 
 msgid "Send metrics to InfluxDB"
@@ -61520,6 +61518,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. All Rights Reserved."
+
+#~ msgid "Send metrics to Graphite / InfluxDB"
+#~ msgstr "メトリックをGraphite/InfluxDBに送信します"
 
 #~ msgid "Sorry"
 #~ msgstr "ごめんなさい"

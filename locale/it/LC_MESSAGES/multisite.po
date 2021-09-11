@@ -40754,10 +40754,8 @@ msgstr "Invia eventi alla console eventi locale in un socket unix"
 msgid "Send events to remote syslog host"
 msgstr "Invia eventi all'host syslog remoto"
 
-msgid "Send metrics to Graphite / InfluxDB"
-msgstr "Invia le metriche a Graphite / InfluxDB"
-
-msgid "Send metrics to Graphite/InfluxDB"
+#, fuzzy
+msgid "Send metrics to Graphite"
 msgstr "Inviare metriche a Graphite/InfluxDB"
 
 #, fuzzy
@@ -64592,6 +64590,9 @@ msgstr "z/OS"
 
 msgid "© 2020 tribe29 GmbH. All Rights Reserved."
 msgstr "© 2020 tribe29 GmbH. Tutti i diritti riservati."
+
+#~ msgid "Send metrics to Graphite / InfluxDB"
+#~ msgstr "Invia le metriche a Graphite / InfluxDB"
 
 #~ msgid ""
 #~ "This rule can be used to configure the discovery of the Linux services "

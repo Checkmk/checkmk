@@ -39506,11 +39506,9 @@ msgstr ""
 msgid "Send events to remote syslog host"
 msgstr ""
 
-msgid "Send metrics to Graphite / InfluxDB"
-msgstr ""
-
-msgid "Send metrics to Graphite/InfluxDB"
-msgstr ""
+#, fuzzy
+msgid "Send metrics to Graphite"
+msgstr "Conexiuni Active"
 
 msgid "Send metrics to InfluxDB"
 msgstr ""
@@ -60543,10 +60541,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Activate changes for event console"
 #~ msgstr "Activare Schimbări!"
-
-#, fuzzy
-#~ msgid "Activate export to Graphite"
-#~ msgstr "Conexiuni Active"
 
 #~ msgid "Active checks enabled"
 #~ msgstr "Verificări active activate"

@@ -1378,19 +1378,16 @@ run_real_time_checks_for_remote() {
         done
 
         # Plugins
-        if cd "$PLUGINSDIR"; then
-            for PLUGIN in $RTC_PLUGINS; do
-                if [ ! -f $PLUGIN ]; then
-                    continue
-                fi
+        cd "${PLUGINSDIR}" || continue
 
-                {
-                    if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
-                        _log_section_time "${plugin_interpreter}" "${PLUGIN}" | _rt_opt_encrypt "${secret}" "$(_rt_timestamp)"
-                    fi
-                } | _rt_sendudp "${remote}" "${RTC_PORT}"
-            done
-        fi
+        for script in ${RTC_PLUGINS}; do
+            is_valid_plugin "${script}" || continue
+            plugin_interpreter=$(get_plugin_interpreter "${script}") || continue
+
+            "${plugin_interpreter}" "${script}" |
+                _rt_opt_encrypt "${secret}" "$(_rt_timestamp)" |
+                _rt_sendudp "${remote}" "${RTC_PORT}"
+        done
 
         sleep 1
         RTC_TIMEOUT=$((RTC_TIMEOUT - 1))
@@ -1892,7 +1889,6 @@ main_async_parts() {
     # Start new liveupdate process in background
     # Starting a new live update process will terminate the old one automatically after
     # max. 1 sec.
-    # run_real_time_checks -> run_real_time_checks_for_remote -> _log_section_time CMD
     run_real_time_checks
 }
 

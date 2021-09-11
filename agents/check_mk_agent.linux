@@ -1326,44 +1326,55 @@ run_real_time_checks() {
     fi
 }
 
-_pidfile_is_mine() {
+_rt_pidfile_is_mine() {
     [ "$(cat "${1}" 2>/dev/null)" = "$$" ]
+}
+
+_rt_timestamp() {
+    date +%s | tr -d '\n'
+}
+
+_rt_sendudp() {
+    # concatenate the output of all commands to a single udp packet
+    dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${1}/${2}"
 }
 
 # Implements Real-Time Check feature of the Checkmk agent which can send
 # some section data in 1 second resolution. Useful for fast notifications and
 # detailed graphing (if you configure your RRDs to this resolution).
+#  2 bytes: protocol version
+#  10 bytes: timestamp
+#  rest: encrypted data
+# Be aware of maximum packet size.
 run_real_time_checks_for_remote() {
+    remote="${1}"
+    secret="${2}"
     PIDFILE=$MK_VARDIR/real_time_checks.pid
 
     echo $$ >"$PIDFILE"
 
     if [ "$ENCRYPTED_RT" != "no" ]; then
-        PROTOCOL=00
+        _rt_opt_encrypt() {
+            printf "00%s" "${2}"
+            openssl enc -aes-256-cbc -md md5 -k "${1}" -nosalt
+        }
     else
-        PROTOCOL=99
+        _rt_opt_encrypt() {
+            printf "99%s" "${2}"
+            cat
+        }
     fi
 
     while true; do
         # terminate when pidfile is gone or other Real-Time Check process started or configured timeout
-        if ! _pidfile_is_mine "${PIDFILE}" || [ "${RTC_TIMEOUT}" -eq 0 ]; then
+        if ! _rt_pidfile_is_mine "${PIDFILE}" || [ "${RTC_TIMEOUT}" -eq 0 ]; then
             exit 1
         fi
 
         for SECTION in $RTC_SECTIONS; do
-            # Be aware of maximum packet size. Maybe we need to check the size of the section
-            # output and do some kind of nicer error handling.
-            # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
-            # dd is used to concatenate the output of all commands to a single write/block => udp packet
-            {
-                printf "%s" "${PROTOCOL}"
-                date +%s | tr -d '\n'
-                if [ "$ENCRYPTED_RT" != "no" ]; then
-                    section_"$SECTION" | RTC_SECRET="${2}" openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
-                else
-                    section_"$SECTION"
-                fi
-            } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${1}/${RTC_PORT}"
+            section_"$SECTION" |
+                _rt_opt_encrypt "${secret}" "$(_rt_timestamp)" |
+                _rt_sendudp "${remote}" "${RTC_PORT}"
         done
 
         # Plugins
@@ -1373,21 +1384,11 @@ run_real_time_checks_for_remote() {
                     continue
                 fi
 
-                # Be aware of maximum packet size. Maybe we need to check the size of the section
-                # output and do some kind of nicer error handling.
-                # 2 bytes: protocol version, 10 bytes: timestamp, rest: encrypted data
-                # dd is used to concatenate the output of all commands to a single write/block => udp packet
                 {
-                    printf "%s" "${PROTOCOL}"
-                    date +%s | tr -d '\n'
                     if plugin_interpreter=$(get_plugin_interpreter "${script}"); then
-                        if [ "$ENCRYPTED_RT" != "no" ]; then
-                            _log_section_time "${plugin_interpreter}" "${PLUGIN}" | RTC_SECRET="${2}" openssl enc -aes-256-cbc -md md5 -pass env:RTC_SECRET -nosalt
-                        else
-                            _log_section_time "${plugin_interpreter}" "${PLUGIN}"
-                        fi
+                        _log_section_time "${plugin_interpreter}" "${PLUGIN}" | _rt_opt_encrypt "${secret}" "$(_rt_timestamp)"
                     fi
-                } | dd bs=9999 iflag=fullblock 2>/dev/null >"/dev/udp/${1}/${RTC_PORT}"
+                } | _rt_sendudp "${remote}" "${RTC_PORT}"
             done
         fi
 

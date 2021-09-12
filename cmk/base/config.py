@@ -4128,8 +4128,8 @@ class CEEConfigCache(ConfigCache):
             hostname,
             description,
             cmc_service_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-            deflt=cmc_flap_settings,
-        )  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            deflt=cmc_flap_settings,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        )
 
     def log_long_output_of_service(self, hostname: HostName, description: ServiceName) -> bool:
         return self.get_service_ruleset_value(
@@ -4242,8 +4242,8 @@ class CEEHostConfig(HostConfig):
     @property
     def log_long_output(self) -> bool:
         entries = self._config_cache.host_extra_conf(
-            self.hostname, cmc_host_long_output_in_monitoring_history
-        )  # type: ignore[name-defined] # type: ignore[name-defined] # pylint: disable=undefined-variable
+            self.hostname, cmc_host_long_output_in_monitoring_history  # type: ignore[name-defined] # type: ignore[name-defined] # pylint: disable=undefined-variable
+        )
         if not entries:
             return False
         return entries[0]
@@ -4261,8 +4261,8 @@ class CEEHostConfig(HostConfig):
     def smartping_settings(self) -> Dict:
         settings = {"timeout": 2.5}
         settings.update(
-            self._config_cache.host_extra_conf_merged(self.hostname, cmc_smartping_settings)
-        )  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            self._config_cache.host_extra_conf_merged(self.hostname, cmc_smartping_settings)  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        )
         return settings
 
     @property

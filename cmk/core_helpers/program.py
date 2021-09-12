@@ -40,12 +40,18 @@ class ProgramFetcher(AgentFetcher):
         self._process: Optional[subprocess.Popen] = None
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(" + ", ".join((
-            f"{type(self.file_cache).__name__}",
-            f"cmdline={self.cmdline!r}",
-            f"stdin={self.stdin!r}",
-            f"is_cmc={self.is_cmc!r}",
-        )) + ")"
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{type(self.file_cache).__name__}",
+                    f"cmdline={self.cmdline!r}",
+                    f"stdin={self.stdin!r}",
+                    f"is_cmc={self.is_cmc!r}",
+                )
+            )
+            + ")"
+        )
 
     @classmethod
     def _from_json(cls, serialized: Mapping[str, Any]) -> "ProgramFetcher":
@@ -138,11 +144,14 @@ class ProgramFetcher(AgentFetcher):
         if self._process is None:
             raise MKFetcherError("No process")
         stdout, stderr = self._process.communicate(
-            input=ensure_binary(self.stdin) if self.stdin else None)
+            input=ensure_binary(self.stdin) if self.stdin else None
+        )
         if self._process.returncode == 127:
             exepath = self.cmdline.split()[0]  # for error message, hide options!
             raise MKFetcherError("Program '%s' not found (exit code 127)" % ensure_str(exepath))
         if self._process.returncode:
-            raise MKFetcherError("Agent exited with code %d: %s" %
-                                 (self._process.returncode, ensure_str(stderr).strip()))
+            raise MKFetcherError(
+                "Agent exited with code %d: %s"
+                % (self._process.returncode, ensure_str(stderr).strip())
+            )
         return stdout

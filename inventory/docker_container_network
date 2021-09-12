@@ -12,14 +12,16 @@ def inv_docker_container_network_networks(parsed, inventory_tree):
     networks = inventory_tree.get_list("software.applications.docker.container.networks:")
 
     for network_name, network in network_data.items():
-        networks.append({
-            "name": network_name,
-            "network_id": network["NetworkID"],
-            "ip_address": network["IPAddress"],
-            "ip_prefixlen": network["IPPrefixLen"],
-            "gateway": network["Gateway"],
-            "mac_address": network["MacAddress"],
-        })
+        networks.append(
+            {
+                "name": network_name,
+                "network_id": network["NetworkID"],
+                "ip_address": network["IPAddress"],
+                "ip_prefixlen": network["IPPrefixLen"],
+                "gateway": network["Gateway"],
+                "mac_address": network["MacAddress"],
+            }
+        )
 
 
 def inv_docker_container_network_ports(parsed, inventory_tree):
@@ -32,15 +34,18 @@ def inv_docker_container_network_ports(parsed, inventory_tree):
 
         if host_ports:
             host_addresses = ", ".join(
-                ["%s:%s" % (hp["HostIp"], hp["HostPort"]) for hp in host_ports])
+                ["%s:%s" % (hp["HostIp"], hp["HostPort"]) for hp in host_ports]
+            )
         else:
             host_addresses = ""
 
-        ports.append({
-            "port": int(port),
-            "protocol": proto,
-            "host_addresses": host_addresses,
-        })
+        ports.append(
+            {
+                "port": int(port),
+                "protocol": proto,
+                "host_addresses": host_addresses,
+            }
+        )
 
 
 def inv_docker_container_network(info, inventory_tree):

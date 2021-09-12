@@ -16,7 +16,7 @@ register_check_parameters(
         help=_("The foo check does check the foo of a bar. Here you can define parameters..."),
         unit="processes",
         default_difference=(10.0, 20.0),  # Default settings when using absolute differences
-        default_levels=(100., 200.0),  # Default levels when using non-predictive static levels
+        default_levels=(100.0, 200.0),  # Default levels when using non-predictive static levels
     ),
     None,  # Check has no item
     None,  # Match type, always None here

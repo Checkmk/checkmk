@@ -20,7 +20,7 @@ def strip_snmp_value(value: str) -> SNMPRawValue:
         # netsnmp command line tools. An example:
         # Checking windows systems via SNMP with hr_fs: disk names like c:\
         # are reported as c:\\, fix this to single \
-        return v.strip().replace('\\\\', '\\').encode()
+        return v.strip().replace("\\\\", "\\").encode()
     return v.encode()
 
 
@@ -28,13 +28,13 @@ def _is_hex_string(value: str) -> bool:
     # as far as I remember, snmpwalk puts a trailing space within
     # the quotes in case of hex strings. So we require that space
     # to be present in order make sure, we really deal with a hex string.
-    if value[-1] != ' ':
+    if value[-1] != " ":
         return False
     hexdigits = "0123456789abcdefABCDEF"
     n = 0
     for x in value:
         if n % 3 == 2:
-            if x != ' ':
+            if x != " ":
                 return False
         else:
             if x not in hexdigits:

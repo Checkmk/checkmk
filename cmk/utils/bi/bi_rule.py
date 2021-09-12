@@ -62,7 +62,8 @@ class BIRule(ABCBIRule, ABCWithSchema):
         self._properties_config = rule_config["properties"]
 
         self.aggregation_function = bi_aggregation_function_registry.instantiate(
-            rule_config["aggregation_function"])
+            rule_config["aggregation_function"]
+        )
         self.computation_options = BIRuleComputationOptions(rule_config["computation_options"])
         self.node_visualization = rule_config["node_visualization"]
         self._properties = BIRuleProperties(rule_config["properties"])
@@ -107,13 +108,15 @@ class BIRule(ABCBIRule, ABCWithSchema):
     def num_nodes(self) -> int:
         return len(self.nodes)
 
-    def compile(self, extern_arguments: ActionArgument,
-                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
+    def compile(
+        self, extern_arguments: ActionArgument, bi_searcher: ABCBISearcher
+    ) -> List[ABCBICompiledNode]:
         if self.computation_options.disabled:
             return []
 
         mapped_rule_arguments: MacroMapping = dict(
-            zip(["$%s$" % x for x in self._params.arguments], extern_arguments))
+            zip(["$%s$" % x for x in self._params.arguments], extern_arguments)
+        )
 
         action_results = []
         for bi_node in self.nodes:
@@ -124,8 +127,9 @@ class BIRule(ABCBIRule, ABCWithSchema):
 
         return [self._generate_rule_branch(action_results, mapped_rule_arguments)]
 
-    def _generate_rule_branch(self, nodes: List[ABCBICompiledNode],
-                              macros: MacroMapping) -> ABCBICompiledNode:
+    def _generate_rule_branch(
+        self, nodes: List[ABCBICompiledNode], macros: MacroMapping
+    ) -> ABCBICompiledNode:
         required_hosts = set()
         for node in nodes:
             required_hosts.update(node.required_hosts)
@@ -151,7 +155,8 @@ class BIRule(ABCBIRule, ABCWithSchema):
         required_hosts = [(x["site_id"], x["host_name"]) for x in schema_config["required_hosts"]]
         properties = BIRuleProperties(schema_config["properties"])
         aggregation_function = bi_aggregation_function_registry.instantiate(
-            schema_config["aggregation_function"])
+            schema_config["aggregation_function"]
+        )
         node_visualization = schema_config["node_visualization"]
 
         return BICompiledRule(
@@ -188,12 +193,17 @@ class BIRuleSchema(Schema):
         example=[],
         description="TODO: Hier muß Andreas noch etwas reinschreiben!",
     )
-    params = create_nested_schema_for_class(BIParams, example_config={
-        "arguments": ["foo", "bar"],
-    })
-    node_visualization = create_nested_schema(BINodeVisLayoutStyleSchema,
-                                              default_schema=BINodeVisBlockStyleSchema)
+    params = create_nested_schema_for_class(
+        BIParams,
+        example_config={
+            "arguments": ["foo", "bar"],
+        },
+    )
+    node_visualization = create_nested_schema(
+        BINodeVisLayoutStyleSchema, default_schema=BINodeVisBlockStyleSchema
+    )
     properties = create_nested_schema_for_class(BIRuleProperties)
-    aggregation_function = create_nested_schema(BIAggregationFunctionSchema,
-                                                default_schema=BIAggregationFunctionBest.schema())
+    aggregation_function = create_nested_schema(
+        BIAggregationFunctionSchema, default_schema=BIAggregationFunctionBest.schema()
+    )
     computation_options = create_nested_schema_for_class(BIRuleComputationOptions)

@@ -34,7 +34,9 @@ ResultColumnsSanitized = List[Tuple[List[SNMPRawValue], SNMPValueEncoding]]
 ResultColumnsDecoded = List[List[SNMPDecodedValues]]
 
 
-class WalkCache(MutableMapping[str, Tuple[bool, SNMPRowInfo]]):  # pylint: disable=too-many-ancestors
+class WalkCache(
+    MutableMapping[str, Tuple[bool, SNMPRowInfo]]
+):  # pylint: disable=too-many-ancestors
     """A cache on a per-fetchoid basis
 
     This cache is different from section stores in that is per-fetchoid,
@@ -44,6 +46,7 @@ class WalkCache(MutableMapping[str, Tuple[bool, SNMPRowInfo]]):  # pylint: disab
     by the plugin using `OIDCached` (that is: if the save_to_cache attribute of the OID object
     is true).
     """
+
     __slots__ = ("_store", "_path")
 
     def __init__(self, host_name: HostName):
@@ -133,7 +136,8 @@ def get_snmp_table(
                 raise MKGeneralException(
                     "Invalid SNMP OID specification in implementation of check. "
                     "You can only use one of OID_END, OID_STRING, OID_BIN, OID_END_BIN "
-                    "and OID_END_OCTET_STRING.")
+                    "and OID_END_OCTET_STRING."
+                )
             rowinfo = []
             index_column = len(columns)
             index_format = oid.column
@@ -206,13 +210,13 @@ def _oid_to_bin(oid: OID) -> SNMPRawValue:
 
 
 def _extract_end_oid(prefix: OID, complete: OID) -> OID:
-    return complete[len(prefix):].lstrip('.')
+    return complete[len(prefix) :].lstrip(".")
 
 
 # sort OID strings numerically
 def _oid_to_intlist(oid: OID) -> List[int]:
     if oid:
-        return list(map(int, oid.split('.')))
+        return list(map(int, oid.split(".")))
     return []
 
 
@@ -225,7 +229,7 @@ def _key_oids(o1: OID) -> List[int]:
 
 
 def _key_oid_pairs(pair1: Tuple[OID, SNMPRawValue]) -> List[int]:
-    return _oid_to_intlist(pair1[0].lstrip('.'))
+    return _oid_to_intlist(pair1[0].lstrip("."))
 
 
 def _get_snmpwalk(
@@ -274,8 +278,9 @@ def _perform_snmpwalk(
         # .1.3.6.1.2.1.1.1.0 was being walked. We try to detect these situations
         # by removing any duplicate OID information
         if len(rows) > 1 and rows[0][0] == rows[1][0]:
-            console.vverbose("Detected broken SNMP agent. Ignoring duplicate OID %s.\n" %
-                             rows[0][0])
+            console.vverbose(
+                "Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rows[0][0]
+            )
             rows = rows[:1]
 
         for row_oid, val in rows:
@@ -288,16 +293,17 @@ def _perform_snmpwalk(
     return rowinfo
 
 
-def _sanitize_snmp_encoding(columns: ResultColumnsSanitized,
-                            snmp_config: SNMPHostConfig) -> ResultColumnsDecoded:
+def _sanitize_snmp_encoding(
+    columns: ResultColumnsSanitized, snmp_config: SNMPHostConfig
+) -> ResultColumnsDecoded:
     return [
-        _decode_column(column, value_encoding, snmp_config)  #
-        for column, value_encoding in columns
+        _decode_column(column, value_encoding, snmp_config) for column, value_encoding in columns  #
     ]
 
 
-def _decode_column(column: List[SNMPRawValue], value_encoding: SNMPValueEncoding,
-                   snmp_config: SNMPHostConfig) -> List[SNMPDecodedValues]:
+def _decode_column(
+    column: List[SNMPRawValue], value_encoding: SNMPValueEncoding, snmp_config: SNMPHostConfig
+) -> List[SNMPDecodedValues]:
     if value_encoding == "string":
         decode: Callable[[bytes], SNMPDecodedValues] = snmp_config.ensure_str
     else:

@@ -62,7 +62,7 @@ def inv_lnx_parse_os(node, line):
     for entry in line:
         if entry.count("=") == 0:
             continue
-        k, v = [x.replace('"', '') for x in entry.split("=", 1)]
+        k, v = [x.replace('"', "") for x in entry.split("=", 1)]
         if k == "VERSION_ID":
             node["version"] = v
         elif k == "PRETTY_NAME":
@@ -82,7 +82,7 @@ def inv_lnx_parse_suse(node, line):
 
     node["vendor"] = "SuSE"
     node["version"] = "%s.%s" % (version, patchlevel)
-    node["name"] = "%s.%s" % (line[0].split('(')[0].strip(), patchlevel)
+    node["name"] = "%s.%s" % (line[0].split("(")[0].strip(), patchlevel)
 
     if node["version"] == "11.2":
         node["code_name"] = "Emerald"
@@ -191,6 +191,6 @@ def inv_lnx_parse_gentoo(node, line):
         del node["code_name"]
 
 
-inv_info['lnx_distro'] = {
+inv_info["lnx_distro"] = {
     "inv_function": inv_lnx_distro,
 }

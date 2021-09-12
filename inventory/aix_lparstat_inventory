@@ -13,8 +13,8 @@ def _try_set(node, nkey, parsed, pkey):
 
 
 def parse_aix_lparstat_inventory(info):
-    lines = (raw[0] for raw in info if ':' in raw[0])
-    pairs = (line.split(':', 1) for line in lines)
+    lines = (raw[0] for raw in info if ":" in raw[0])
+    pairs = (line.split(":", 1) for line in lines)
     parsed = {k.strip(): v.strip() for k, v in pairs}
     return parsed
 
@@ -22,8 +22,8 @@ def parse_aix_lparstat_inventory(info):
 def inv_aix_lparstat_inventory(info, inventory_tree):
     parsed = parse_aix_lparstat_inventory(info)
 
-    cpu_node = inventory_tree.get_dict('hardware.cpu.')
-    sys_node = inventory_tree.get_dict('hardware.system.')
+    cpu_node = inventory_tree.get_dict("hardware.cpu.")
+    sys_node = inventory_tree.get_dict("hardware.system.")
 
     _try_set(cpu_node, "cpu_max_capa", parsed, "Maximum Capacity")
     _try_set(cpu_node, "type", parsed, "Type")
@@ -33,6 +33,6 @@ def inv_aix_lparstat_inventory(info, inventory_tree):
     _try_set(sys_node, "partition_number", parsed, "Partition Number")
 
 
-inv_info['aix_lparstat_inventory'] = {
+inv_info["aix_lparstat_inventory"] = {
     "inv_function": inv_aix_lparstat_inventory,
 }

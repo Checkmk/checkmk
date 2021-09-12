@@ -21,12 +21,15 @@ class PiggybackMarker(NamedTuple):
 
     @staticmethod
     def is_header(line: bytes) -> bool:
-        return (line.strip().startswith(b'<<<<') and line.strip().endswith(b'>>>>') and
-                not PiggybackMarker.is_footer(line))
+        return (
+            line.strip().startswith(b"<<<<")
+            and line.strip().endswith(b">>>>")
+            and not PiggybackMarker.is_footer(line)
+        )
 
     @staticmethod
     def is_footer(line: bytes) -> bool:
-        return line.strip() == b'<<<<>>>>'
+        return line.strip() == b"<<<<>>>>"
 
     @classmethod
     def from_headerline(
@@ -38,7 +41,7 @@ class PiggybackMarker(NamedTuple):
     ) -> "PiggybackMarker":
         raw_host_name = ensure_str_with_fallback(
             line.strip()[4:-4],
-            encoding='utf-8',
+            encoding="utf-8",
             fallback=encoding_fallback,
         )
         assert raw_host_name
@@ -62,13 +65,17 @@ class SectionMarker(NamedTuple):
     @staticmethod
     def is_header(line: bytes) -> bool:
         line = line.strip()
-        return (line.startswith(b'<<<') and line.endswith(b'>>>') and
-                not SectionMarker.is_footer(line) and not PiggybackMarker.is_header(line) and
-                not PiggybackMarker.is_footer(line))
+        return (
+            line.startswith(b"<<<")
+            and line.endswith(b">>>")
+            and not SectionMarker.is_footer(line)
+            and not PiggybackMarker.is_header(line)
+            and not PiggybackMarker.is_footer(line)
+        )
 
     @staticmethod
     def is_footer(line: bytes) -> bool:
-        return line.strip() == b'<<<>>>'
+        return line.strip() == b"<<<>>>"
 
     @classmethod
     def default(cls, name: SectionName):

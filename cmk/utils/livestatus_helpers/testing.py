@@ -194,12 +194,13 @@ program_start num_hosts num_services core_pid'
             [['name'], ['heute'], ['example.com'], ['morgen']]
 
     """
+
     def __init__(self) -> None:
         self.sites: List[SiteName] = []
         self._connections: Dict[SiteName, MockSingleSiteConnection] = collections.OrderedDict()
         self._expect_status_query: Optional[bool] = None
         self.tables: Tables = {}
-        self.set_sites(['NO_SITE', 'remote', 'local'])
+        self.set_sites(["NO_SITE", "remote", "local"])
 
     def set_sites(self, site_names: List[ColumnName]) -> None:
         """Set a new list of sites to be queried.
@@ -249,7 +250,7 @@ program_start num_hosts num_services core_pid'
 
     def enabled_and_disabled_sites(self, user_id) -> Tuple[dict, dict]:
         """This method is used to inject the currently configured sites into livestatus.py"""
-        return {site_name: {'socket': 'unix:'} for site_name in self.sites}, {}
+        return {site_name: {"socket": "unix:"} for site_name in self.sites}, {}
 
     def __call__(self, expect_status_query=True) -> MockLiveStatusConnection:
         self._expect_status_query = expect_status_query
@@ -266,8 +267,8 @@ program_start num_hosts num_services core_pid'
             # cmk.gui.sites._connect_multiple_sites asks for some specifics upon initial connection.
             # We expect this query and give the expected result.
             query = [
-                'GET status',
-                'Columns: livestatus_version program_version program_start num_hosts num_services core_pid',
+                "GET status",
+                "Columns: livestatus_version program_version program_start num_hosts num_services core_pid",
             ]
             self.expect_query(query, force_pos=0)  # first query to be expected
 
@@ -322,35 +323,35 @@ program_start num_hosts num_services core_pid'
     def expect_query(
         self,
         query: Union[str, List[str]],
-        match_type: MatchType = 'strict',
+        match_type: MatchType = "strict",
         force_pos: Optional[int] = None,
     ):
         """Add a LiveStatus query to be expected by this class.
 
-         This method is chainable, as it returns the instance again.
+        This method is chainable, as it returns the instance again.
 
-         Args:
-             query:
-                 The expected query. May be a `str` or a list of `str` which, in the list case, will
-                 be joined by newlines.
+        Args:
+            query:
+                The expected query. May be a `str` or a list of `str` which, in the list case, will
+                be joined by newlines.
 
-             match_type:
-                 Flags with which to decide comparison behavior.
-                 Can be either 'strict' or 'ellipsis'. In case of 'ellipsis', the supplied query
-                 can have placeholders in the form of '...'. These placeholders are ignored in the
-                 comparison.
+            match_type:
+                Flags with which to decide comparison behavior.
+                Can be either 'strict' or 'ellipsis'. In case of 'ellipsis', the supplied query
+                can have placeholders in the form of '...'. These placeholders are ignored in the
+                comparison.
 
-             force_pos:
-                 Only used internally. Ignore.
+            force_pos:
+                Only used internally. Ignore.
 
-         Returns:
-             The object itself, so you can chain.
+        Returns:
+            The object itself, so you can chain.
 
-         Raises:
-             ValueError: when an unknown `match_type` is given.
-         """
+        Raises:
+            ValueError: when an unknown `match_type` is given.
+        """
         if isinstance(query, list):
-            query = '\n'.join(query)
+            query = "\n".join(query)
         query = query.rstrip()
 
         if query.startswith("COMMAND"):
@@ -405,8 +406,9 @@ def execute_query(
     if table and columns:
         # We check the store for data and filter for the actual data that is requested.
         if table not in tables:
-            raise LivestatusTestingError(f"Table {table!r} not stored on site {site_name!r}."
-                                         " Call .add_table(...)")
+            raise LivestatusTestingError(
+                f"Table {table!r} not stored on site {site_name!r}." " Call .add_table(...)"
+            )
 
         # Filtering and Aggregating
         filtered_dicts = evaluate_filter(query, tables[table].get(site_name, []))
@@ -419,8 +421,9 @@ def execute_query(
                 try:
                     row.append(entry[col])
                 except KeyError as exc:
-                    raise KeyError(f"Column '{col}' not in result. "
-                                   "Add to test-data or fix query.") from exc
+                    raise KeyError(
+                        f"Column '{col}' not in result. " "Add to test-data or fix query."
+                    ) from exc
 
             for col in sorted(entry.keys()):
                 if col.startswith("stat_"):
@@ -455,7 +458,7 @@ def remove_headers(query: str, headers: List[str]) -> str:
         if header in headers:
             continue
         result.append(line)
-    return '\n'.join(result)
+    return "\n".join(result)
 
 
 class MockSingleSiteConnection:
@@ -473,14 +476,14 @@ class MockSingleSiteConnection:
     def expect_query(
         self,
         query: Union[str, List[str]],
-        match_type: MatchType = 'strict',
+        match_type: MatchType = "strict",
         force_pos: Optional[int] = None,
     ) -> MockSingleSiteConnection:
-        if match_type not in ('strict', 'ellipsis', 'loose'):
+        if match_type not in ("strict", "ellipsis", "loose"):
             raise ValueError(f"match_type {match_type!r} not supported.")
 
         if isinstance(query, list):
-            query = '\n'.join(query)
+            query = "\n".join(query)
 
         if force_pos is not None:
             self._expected_queries.insert(force_pos, (query, match_type))
@@ -490,9 +493,9 @@ class MockSingleSiteConnection:
 
     def result_of_next_query(self, query: str) -> Response:
         if not self._expected_queries:
-            raise LivestatusTestingError(f"Got unexpected query on site {self._site_name!r}:"
-                                         "\n"
-                                         f" * {repr(query)}")
+            raise LivestatusTestingError(
+                f"Got unexpected query on site {self._site_name!r}:" "\n" f" * {repr(query)}"
+            )
 
         expected_query, match_type = self._expected_queries.pop(0)
 
@@ -500,7 +503,11 @@ class MockSingleSiteConnection:
             # FIXME: Needs to be a bit more strict. We remove them on both sides to make the
             #        queries comparable.
             headers_to_remove = [
-                'Cache', 'Localtime', 'OutputFormat', 'KeepAlive', 'ResponseHeader'
+                "Cache",
+                "Localtime",
+                "OutputFormat",
+                "KeepAlive",
+                "ResponseHeader",
             ]
             expected_query = remove_headers(expected_query, headers_to_remove)
             query = remove_headers(query, headers_to_remove)
@@ -510,7 +517,8 @@ class MockSingleSiteConnection:
                 f"Expected query ({match_type}) on site {self._site_name!r}:\n"
                 f" * {repr(expected_query)}\n"
                 f"Got query:\n"
-                f" * {repr(query)}")
+                f" * {repr(query)}"
+            )
 
         def _generate_output():
             if query.startswith("COMMAND"):
@@ -527,12 +535,12 @@ class MockSingleSiteConnection:
     def socket_recv(self, length: int) -> bytes:
         if self._last_response is None:
             raise LivestatusTestingError("Nothing sent yet. Can't receive!")
-        return self._last_response.read(length).encode('utf-8')
+        return self._last_response.read(length).encode("utf-8")
 
     def socket_send(self, data: bytes) -> None:
         if data[-2:] == b"\n\n":
             data = data[:-2]
-        response = self.result_of_next_query(data.decode('utf-8'))
+        response = self.result_of_next_query(data.decode("utf-8"))
         self._last_response = io.StringIO(_make_livestatus_response(response))
 
     def __enter__(self):
@@ -550,7 +558,7 @@ class MockSingleSiteConnection:
 
 def _show_columns(query: str) -> bool:
     header_dict = _unpack_headers(query)
-    return header_dict.pop('ColumnHeaders', 'off') == 'on'
+    return header_dict.pop("ColumnHeaders", "off") == "on"
 
 
 def _default_tables() -> Dict[TableName, ResultList]:
@@ -558,81 +566,85 @@ def _default_tables() -> Dict[TableName, ResultList]:
     _today = str(dt.datetime.utcnow().date()).replace("-", ".")
     _program_start_timestamp = int(time.time())
     return {
-        'status': [{
-            'livestatus_version': _today,
-            'program_version': f'Check_MK {_today}',
-            'program_start': _program_start_timestamp,
-            'num_hosts': 1,
-            'num_services': 36,
-            'helper_usage_cmk': 0.00151953,
-            'helper_usage_fetcher': 0.00151953,
-            'helper_usage_checker': 0.00151953,
-            'helper_usage_generic': 0.00151953,
-            'average_latency_cmk': 0.0846039,
-            'average_latency_fetcher': 0.0846039,
-            'average_latency_generic': 0.0846039,
-            'core_pid': 12345,
-        }],
-        'downtimes': [{
-            'id': 54,
-            'host_name': 'heute',
-            'service_description': 'CPU load',
-            'is_service': 1,
-            'author': 'cmkadmin',
-            'start_time': 1593770319,
-            'end_time': 1596448719,
-            'recurring': 0,
-            'comment': 'Downtime for service',
-        }],
-        'hosts': [
+        "status": [
             {
-                'name': 'heute',
-                'parents': ['example.com'],
-                'filename': '/wato/hosts.mk',
-                'state': 1,
+                "livestatus_version": _today,
+                "program_version": f"Check_MK {_today}",
+                "program_start": _program_start_timestamp,
+                "num_hosts": 1,
+                "num_services": 36,
+                "helper_usage_cmk": 0.00151953,
+                "helper_usage_fetcher": 0.00151953,
+                "helper_usage_checker": 0.00151953,
+                "helper_usage_generic": 0.00151953,
+                "average_latency_cmk": 0.0846039,
+                "average_latency_fetcher": 0.0846039,
+                "average_latency_generic": 0.0846039,
+                "core_pid": 12345,
+            }
+        ],
+        "downtimes": [
+            {
+                "id": 54,
+                "host_name": "heute",
+                "service_description": "CPU load",
+                "is_service": 1,
+                "author": "cmkadmin",
+                "start_time": 1593770319,
+                "end_time": 1596448719,
+                "recurring": 0,
+                "comment": "Downtime for service",
+            }
+        ],
+        "hosts": [
+            {
+                "name": "heute",
+                "parents": ["example.com"],
+                "filename": "/wato/hosts.mk",
+                "state": 1,
             },
             {
-                'name': 'example.com',
-                'parents': [],
-                'filename': '/wato/hosts.mk',
-                'state': 0,
+                "name": "example.com",
+                "parents": [],
+                "filename": "/wato/hosts.mk",
+                "state": 0,
             },
         ],
-        'services': [
+        "services": [
             {
-                'host_name': 'example.com',
-                'description': 'Memory',
+                "host_name": "example.com",
+                "description": "Memory",
             },
             {
-                'host_name': 'example.com',
-                'description': 'CPU load',
+                "host_name": "example.com",
+                "description": "CPU load",
             },
             {
-                'host_name': 'heute',
-                'description': 'CPU load',
-            },
-        ],
-        'hostgroups': [
-            {
-                'name': 'heute',
-                'members': ['heute'],
-            },
-            {
-                'name': 'example',
-                'members': ['example.com', 'heute'],
+                "host_name": "heute",
+                "description": "CPU load",
             },
         ],
-        'servicegroups': [
+        "hostgroups": [
             {
-                'name': 'heute',
-                'members': [['heute', 'Memory']],
+                "name": "heute",
+                "members": ["heute"],
             },
             {
-                'name': 'example',
-                'members': [
-                    ['example.com', 'Memory'],
-                    ['example.com', 'CPU load'],
-                    ['heute', 'CPU load'],
+                "name": "example",
+                "members": ["example.com", "heute"],
+            },
+        ],
+        "servicegroups": [
+            {
+                "name": "heute",
+                "members": [["heute", "Memory"]],
+            },
+            {
+                "name": "example",
+                "members": [
+                    ["example.com", "Memory"],
+                    ["example.com", "CPU load"],
+                    ["heute", "CPU load"],
                 ],
             },
         ],
@@ -687,7 +699,7 @@ def _compare(expected: str, query: str, match_type: MatchType) -> bool:
         A boolean, indicating the match.
 
     """
-    if match_type == 'loose':
+    if match_type == "loose":
         # FIXME: Too loose, needs to be more strict.
         #   "GET hosts" also matches "GET hosts\nColumns: ..." which should not be possible.
         string_lines = query.splitlines()
@@ -697,9 +709,9 @@ def _compare(expected: str, query: str, match_type: MatchType) -> bool:
                 break
         else:
             result = True
-    elif match_type == 'strict':
+    elif match_type == "strict":
         result = expected == query
-    elif match_type == 'ellipsis':
+    elif match_type == "ellipsis":
         final_pattern = expected.replace("[", "\\[").replace("...", ".*?")  # non-greedy match
         result = bool(re.match(f"^{final_pattern}$", query))
     else:
@@ -797,10 +809,10 @@ def evaluate_stats(query: str, columns: List[ColumnName], result: ResultList) ->
         # We group by all distinct field values explicitly referenced in Columns:
         for key, group in itertools.groupby(sorted(result, key=key_func), key=key_func):
             for count, reducer in enumerate(reducers, start=1):
-                aggregated.append({**dict(key), f'stat_{count}': reducer(list(group))})
+                aggregated.append({**dict(key), f"stat_{count}": reducer(list(group))})
     else:
         for count, reducer in enumerate(reducers, start=1):
-            aggregated.append({f'stat_{count}': reducer(result)})
+            aggregated.append({f"stat_{count}": reducer(result)})
     return aggregated
 
 
@@ -824,13 +836,13 @@ def make_reducer_func(line: str) -> ReduceFunc:
     """
     # As described in https://docs.checkmk.com/master/en/livestatus_references.html#stats
     aggregators: Dict[str, ReduceFunc] = {
-        'avg': statistics.mean,
-        'sum': sum,
-        'min': min,
-        'max': max,
-        'std': statistics.stdev,
-        'suminv': lambda x: 1 / sum(x),
-        'avginv': lambda x: 1 / statistics.mean(x),
+        "avg": statistics.mean,
+        "sum": sum,
+        "min": min,
+        "max": max,
+        "std": statistics.stdev,
+        "suminv": lambda x: 1 / sum(x),
+        "avginv": lambda x: 1 / statistics.mean(x),
     }
 
     def _reducer(_func: ReduceFunc, make_value: Callable[[ResultEntry], Any]) -> ReduceFunc:
@@ -946,6 +958,7 @@ def and_(filters: List[FilterKeyFunc]) -> FilterKeyFunc:
         True
 
     """
+
     def _and_impl(entry: Dict[str, Any]) -> bool:
         return all(filt(entry) for filt in filters)
 
@@ -971,6 +984,7 @@ def or_(filters: List[FilterKeyFunc]) -> FilterKeyFunc:
         False
 
     """
+
     def _or_impl(entry: Dict[str, Any]) -> bool:
         return any(filt(entry) for filt in filters)
 
@@ -978,8 +992,8 @@ def or_(filters: List[FilterKeyFunc]) -> FilterKeyFunc:
 
 
 COMBINATORS: Dict[str, Callable[[List[FilterKeyFunc]], FilterKeyFunc]] = {
-    'And:': and_,
-    'Or:': or_,
+    "And:": and_,
+    "Or:": or_,
 }
 """A dict of logical combinator helper functions."""
 
@@ -990,6 +1004,7 @@ def cast_down(op: OperatorFunc) -> OperatorFunc:
     No explicit checking for compatibility is done. You'll get a ValueError or a TypeError
     (depending on the type) if such a cast is not possible.
     """
+
     def _casting_op(a: Any, b: Any) -> bool:
         t = type(a)
         return op(a, t(b))
@@ -1026,12 +1041,12 @@ def match_regexp(string_: str, regexp: str) -> bool:
 
 
 OPERATORS: Dict[str, OperatorFunc] = {
-    '=': cast_down(operator.eq),
-    '>': cast_down(operator.gt),
-    '<': cast_down(operator.lt),
-    '>=': cast_down(operator.ge),
-    '<=': cast_down(operator.le),
-    '~': match_regexp,
+    "=": cast_down(operator.eq),
+    ">": cast_down(operator.gt),
+    "<": cast_down(operator.lt),
+    ">=": cast_down(operator.ge),
+    "<=": cast_down(operator.le),
+    "~": match_regexp,
 }
 """A dict of all implemented comparison operators."""
 
@@ -1090,11 +1105,12 @@ def make_filter_func(line: str) -> FilterKeyFunc:
     field_name, op, *value = line[7:].split(None, 2)  # strip Filter: as len("Filter:") == 7
     if op not in OPERATORS:
         raise LivestatusTestingError(
-            f"Operator {op!r} not implemented. Please check docs or implement.")
+            f"Operator {op!r} not implemented. Please check docs or implement."
+        )
 
     # For checking empty values. In this case an empty list.
     if not value:
-        value = ['']
+        value = [""]
 
     return _comparison_function(field_name, op, value)
 
@@ -1129,6 +1145,7 @@ def _comparison_function(field_name: str, op: Operator, value: List[Any]) -> Fil
         A function which take a dictionary and returns a boolean.
 
     """
+
     def _apply_op(entry: ResultEntry) -> bool:
         return OPERATORS[op](entry[field_name], *value)
 
@@ -1155,7 +1172,7 @@ def _column_of_query(query: str) -> Optional[List[ColumnName]]:
 
     """
     for line in query.splitlines():
-        if line.startswith('Columns:'):
+        if line.startswith("Columns:"):
             return line[8:].split()  # len("Columns:") == 8
 
     return None
@@ -1213,7 +1230,7 @@ def _unpack_headers(query: str) -> Dict[str, str]:
     """
     unpacked = {}
     for header in query.splitlines():
-        if header.startswith('GET '):
+        if header.startswith("GET "):
             continue
         if ": " not in header:
             continue

@@ -34,7 +34,7 @@ def load_plugins_with_exceptions(package_name: str) -> Generator[Tuple[str, Exce
     """
     __import__(package_name)
     package = sys.modules[package_name]
-    module_path: List[str] = getattr(package, '__path__', [])
+    module_path: List[str] = getattr(package, "__path__", [])
     for _loader, plugin_name, _is_pkg in pkgutil.walk_packages(module_path):
         try:
             importlib.import_module("%s.%s" % (package_name, plugin_name))
@@ -63,7 +63,7 @@ def load_plugins(
     # occurring while compiling.
     __import__(package_name)
     package = sys.modules[package_name]
-    module_path: Optional[List[str]] = getattr(package, '__path__')
+    module_path: Optional[List[str]] = getattr(package, "__path__")
     if module_path:
         for _loader, plugin_name, _is_pkg in pkgutil.walk_packages(module_path):
             importlib.import_module("%s.%s" % (package_name, plugin_name))

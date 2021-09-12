@@ -274,9 +274,7 @@ class OMDConfigCollector(ABCCollector):
 
 class CheckmkServerNameCollector(ABCCollector):
     def _collect_infos(self) -> Optional[HostName]:
-        query = (
-            "GET hosts\nColumns: host_name\nFilter: host_labels = 'cmk/check_mk_server' 'yes'\n"
-        )
+        query = "GET hosts\nColumns: host_name\nFilter: host_labels = 'cmk/check_mk_server' 'yes'\n"
         result = livestatus.LocalConnection().query(query)
         try:
             return HostName(result[0][0])

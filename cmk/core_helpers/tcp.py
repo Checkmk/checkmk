@@ -48,13 +48,19 @@ class TCPFetcher(AgentFetcher):
         self._socket: Optional[socket.socket] = None
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(" + ", ".join((
-            f"{type(self.file_cache).__name__}",
-            f"family={self.family!r}",
-            f"timeout={self.timeout!r}",
-            f"encryption_settings={self.encryption_settings!r}",
-            f"use_only_cache={self.use_only_cache!r}",
-        )) + ")"
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{type(self.file_cache).__name__}",
+                    f"family={self.family!r}",
+                    f"timeout={self.timeout!r}",
+                    f"encryption_settings={self.encryption_settings!r}",
+                    f"use_only_cache={self.use_only_cache!r}",
+                )
+            )
+            + ")"
+        )
 
     @classmethod
     def _from_json(cls, serialized: Mapping[str, Any]) -> "TCPFetcher":
@@ -105,8 +111,9 @@ class TCPFetcher(AgentFetcher):
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self.use_only_cache:
-            raise MKFetcherError("Got no data: No usable cache file present at %s" %
-                                 self.file_cache.base_path)
+            raise MKFetcherError(
+                "Got no data: No usable cache file present at %s" % self.file_cache.base_path
+            )
         if self._socket is None:
             raise MKFetcherError("Not connected")
 
@@ -141,7 +148,8 @@ class TCPFetcher(AgentFetcher):
             self._logger.debug("Output is not encrypted")
             if self.encryption_settings["use_regular"] == "enforce":
                 raise MKFetcherError(
-                    "Agent output is plaintext but encryption is enforced by configuration")
+                    "Agent output is plaintext but encryption is enforced by configuration"
+                )
             return output
 
         self._logger.debug("Output is encrypted or invalid")
@@ -187,21 +195,24 @@ class TCPFetcher(AgentFetcher):
                 decrypt_aes_256_cbc_pbkdf2(
                     ciphertext=encrypted_pkg[salt_start:],
                     password=password,
-                ))
+                )
+            )
         if protocol == 2:
             return AgentRawData(
                 decrypt_aes_256_cbc_legacy(
                     ciphertext=encrypted_pkg,
                     password=password,
                     digest=sha256,
-                ))
+                )
+            )
         if protocol == 0:
             return AgentRawData(
                 decrypt_aes_256_cbc_legacy(
                     ciphertext=encrypted_pkg,
                     password=password,
                     digest=md5,
-                ))
+                )
+            )
         # Support encrypted agent data with "99" header.
         # This was not intended, but the Windows agent accidentally sent this header
         # instead of "00" up to 2.0.0p1, so we keep this for a while.
@@ -212,6 +223,7 @@ class TCPFetcher(AgentFetcher):
                     ciphertext=encrypted_pkg,
                     password=password,
                     digest=md5,
-                ))
+                )
+            )
 
         raise MKFetcherError(f"Unsupported protocol version: {protocol}")

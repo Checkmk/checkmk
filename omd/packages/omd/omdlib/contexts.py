@@ -41,6 +41,7 @@ from cmk.utils.exceptions import MKTerminate
 
 class AbstractSiteContext(abc.ABC):
     """Object wrapping site specific information"""
+
     def __init__(self, sitename: Optional[str]) -> None:
         super().__init__()
         self._sitename = sitename
@@ -160,7 +161,7 @@ class SiteContext(AbstractSiteContext):
         hook_dir = self.dir + "/lib/omd/hooks"
         if os.path.exists(hook_dir):
             for hook_name in sort_hooks(os.listdir(hook_dir)):
-                if hook_name[0] != '.' and hook_name not in self._config:
+                if hook_name[0] != "." and hook_name not in self._config:
                     content = call_hook(self, hook_name, ["default"])[1]
                     self._config[hook_name] = content
 
@@ -202,13 +203,13 @@ class SiteContext(AbstractSiteContext):
 
     def is_empty(self) -> bool:
         for entry in os.listdir(self.dir):
-            if entry not in ['.', '..']:
+            if entry not in [".", ".."]:
                 return False
         return True
 
     def is_autostart(self) -> bool:
         """Determines whether a specific site is set to autostart."""
-        return self.conf.get('AUTOSTART', 'on') == 'on'
+        return self.conf.get("AUTOSTART", "on") == "on"
 
     def is_disabled(self) -> bool:
         """Whether or not this site has been disabled with 'omd disable'"""

@@ -24,7 +24,8 @@ class ABCName(abc.ABC):
     A plugin name must be a non-empty string consisting only of letters A-z, digits
     and the underscore.
     """
-    VALID_CHARACTERS = string.ascii_letters + '_' + string.digits
+
+    VALID_CHARACTERS = string.ascii_letters + "_" + string.digits
 
     @property
     @abc.abstractmethod
@@ -46,7 +47,7 @@ class ABCName(abc.ABC):
             raise ValueError(f"{self.__class__.__name__} initializer must not be empty")
 
         if any(c not in self.VALID_CHARACTERS for c in plugin_name):
-            invalid = ''.join((c for c in plugin_name if c not in self.VALID_CHARACTERS))
+            invalid = "".join((c for c in plugin_name if c not in self.VALID_CHARACTERS))
             class_ = self.__class__.__name__
             raise ValueError(f"Invalid characters in {plugin_name!r} for {class_}: {invalid!r}")
 
@@ -103,14 +104,22 @@ class RuleSetName(ABCName):
         In order not to break things, we allow those
         """
         return {
-            'drbd.net', 'drbd.disk', 'drbd.stats', 'fileinfo-groups', 'hpux_snmp_cs.cpu',
-            'j4p_performance.mem', 'j4p_performance.threads', 'j4p_performance.uptime',
-            'j4p_performance.app_state', 'j4p_performance.app_sess', 'j4p_performance.serv_req'
+            "drbd.net",
+            "drbd.disk",
+            "drbd.stats",
+            "fileinfo-groups",
+            "hpux_snmp_cs.cpu",
+            "j4p_performance.mem",
+            "j4p_performance.threads",
+            "j4p_performance.uptime",
+            "j4p_performance.app_state",
+            "j4p_performance.app_sess",
+            "j4p_performance.serv_req",
         }
 
 
 class CheckPluginName(ABCName):
-    MANAGEMENT_PREFIX = 'mgmt_'
+    MANAGEMENT_PREFIX = "mgmt_"
 
     @property
     def _legacy_naming_exceptions(self) -> Set[str]:
@@ -119,14 +128,14 @@ class CheckPluginName(ABCName):
     def is_management_name(self) -> bool:
         return self._value.startswith(self.MANAGEMENT_PREFIX)
 
-    def create_management_name(self) -> 'CheckPluginName':
+    def create_management_name(self) -> "CheckPluginName":
         if self.is_management_name():
             return self
         return CheckPluginName("%s%s" % (self.MANAGEMENT_PREFIX, self._value))
 
-    def create_basic_name(self) -> 'CheckPluginName':
+    def create_basic_name(self) -> "CheckPluginName":
         if self.is_management_name():
-            return CheckPluginName(self._value[len(self.MANAGEMENT_PREFIX):])
+            return CheckPluginName(self._value[len(self.MANAGEMENT_PREFIX) :])
         return self
 
 

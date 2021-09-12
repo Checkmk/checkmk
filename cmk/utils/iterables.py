@@ -6,7 +6,7 @@
 
 from typing import Callable, Iterable, List, Optional, Tuple, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 def first(iterable: Iterable[T]) -> Optional[T]:

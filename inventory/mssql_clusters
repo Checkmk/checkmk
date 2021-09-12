@@ -33,11 +33,13 @@ def inv_mssql_clusters(info):
             continue
 
         instance = get_list_item("name", instance_id)
-        instance.update({
-            "name": instance_id,
-            "active_node": active_node,
-            "node_names": ", ".join(nodes),
-        })
+        instance.update(
+            {
+                "name": instance_id,
+                "active_node": active_node,
+                "node_names": ", ".join(nodes),
+            }
+        )
 
 
 inv_info["mssql_clusters"] = {

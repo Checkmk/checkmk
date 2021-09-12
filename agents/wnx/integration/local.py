@@ -32,31 +32,33 @@ if not it_utils.check_os():
 
 
 def get_main_yaml_name(base_dir):
-    return os.path.join(base_dir, 'check_mk.yml')
+    return os.path.join(base_dir, "check_mk.yml")
 
 
 def get_user_yaml_name(base_dir):
-    return os.path.join(base_dir,)
+    return os.path.join(
+        base_dir,
+    )
 
 
 def get_main_plugins_name(base_dir):
-    return os.path.join(base_dir, 'plugins')
+    return os.path.join(base_dir, "plugins")
 
 
 def create_protocol_file(on_dir):
     # block  upgrading
-    protocol_dir = on_dir / 'config'
+    protocol_dir = on_dir / "config"
     try:
         os.makedirs(protocol_dir)
     except OSError as e:
-        print(f'Probably folders exist: {e}')
+        print(f"Probably folders exist: {e}")
 
     if not protocol_dir.exists():
-        print(f'Directory {protocol_dir} doesnt exist, may be you have not enough rights')
+        print(f"Directory {protocol_dir} doesnt exist, may be you have not enough rights")
         sys.exit(11)
 
-    protocol_file = protocol_dir / 'upgrade.protocol'
-    with open(protocol_file, 'w') as f:
+    protocol_file = protocol_dir / "upgrade.protocol"
+    with open(protocol_file, "w") as f:
         f.write("Upgraded:\n   time: '2019-05-20 18:21:53.164")
 
 
@@ -67,18 +69,18 @@ def _get_path_from_env(env: str) -> Path:
 
 
 port = 59999
-host = 'localhost'
-EXE_ENV_VAR = 'WNX_TEST_I_ROOT'
-ARTE_ENV_VAR = 'arte'
+host = "localhost"
+EXE_ENV_VAR = "WNX_TEST_I_ROOT"
+ARTE_ENV_VAR = "arte"
 
 artifacts_dir = _get_path_from_env(ARTE_ENV_VAR)
 test_dir = _get_path_from_env(EXE_ENV_VAR)
 if not artifacts_dir.exists():
-    print(f'Artifacts Directory {artifacts_dir} doesnt exist')
+    print(f"Artifacts Directory {artifacts_dir} doesnt exist")
     sys.exit(11)
 
 if not test_dir.exists():
-    print(f'Test Directory {test_dir} doesnt exist')
+    print(f"Test Directory {test_dir} doesnt exist")
     sys.exit(12)
 
 # root dir
@@ -88,13 +90,13 @@ user_dir = test_dir / "test" / "data"
 create_protocol_file(on_dir=user_dir)
 
 # names
-user_yaml_config = user_dir / 'check_mk.user.yml'
+user_yaml_config = user_dir / "check_mk.user.yml"
 main_exe = test_dir / "check_mk_agent.exe"
 
 
 # environment variable set
 def run_subprocess(cmd):
-    sys.stderr.write(' '.join(str(cmd)) + '\n')
+    sys.stderr.write(" ".join(str(cmd)) + "\n")
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = p.communicate(timeout=10)
 
@@ -102,7 +104,7 @@ def run_subprocess(cmd):
 
 
 def run_agent(cmd):
-    p = subprocess.Popen([cmd, 'exec'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen([cmd, "exec"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     return p
 
@@ -111,24 +113,26 @@ def assert_subprocess(cmd):
     exit_code, stdout_ret, stderr_ret = run_subprocess(cmd)
 
     if stdout_ret:
-        sys.stdout.write(stdout_ret.decode(encoding='cp1252'))
+        sys.stdout.write(stdout_ret.decode(encoding="cp1252"))
 
     if stderr_ret:
-        sys.stderr.write(stderr_ret.decode(encoding='cp1252'))
+        sys.stderr.write(stderr_ret.decode(encoding="cp1252"))
 
-    assert exit_code == 0, "'%s' failed" % ' '.join(cmd)
+    assert exit_code == 0, "'%s' failed" % " ".join(cmd)
 
 
 class DuplicateSectionError(Exception):
     """Raised when a section is multiply-created."""
+
     def __init__(self, section):
-        super(DuplicateSectionError, self).__init__(self, 'Section %r already exists' % section)
+        super(DuplicateSectionError, self).__init__(self, "Section %r already exists" % section)
 
 
 class NoSectionError(Exception):
     """Raised when no section matches a requested option."""
+
     def __init__(self, section):
-        super(NoSectionError, self).__init__(self, 'No section: %r' % section)
+        super(NoSectionError, self).__init__(self, "No section: %r" % section)
 
 
 class YamlWriter:
@@ -139,11 +143,13 @@ class YamlWriter:
         self._doc = yaml.safe_load(doc)
 
 
-def local_test(expected_output_from_agent,
-               actual_output_from_agent,
-               current_test,
-               test_name=None,
-               test_class=None):
+def local_test(
+    expected_output_from_agent,
+    actual_output_from_agent,
+    current_test,
+    test_name=None,
+    test_class=None,
+):
     comparison_data = list(zip(expected_output_from_agent, actual_output_from_agent))
     for expected, actual in comparison_data:
         # Uncomment for debug prints:
@@ -153,17 +159,21 @@ def local_test(expected_output_from_agent,
         #     print('DEBUG: expected output\r\n', '\r\n'.join(expected_output))
         # print("EXPECTED: %s\n ACTUAL  : %s\n" % (expected, actual))
 
-        assert re.match(expected,
-                        actual) is not None, "\nExpected '%s'\nActual   '%s'" % (expected, actual)
+        assert re.match(expected, actual) is not None, "\nExpected '%s'\nActual   '%s'" % (
+            expected,
+            actual,
+        )
     try:
         assert len(actual_output_from_agent) >= len(expected_output_from_agent), (
-            'actual output is shorter than expected:\n'
-            'expected output:\n%s\nactual output:\n%s' %
-            ('\n'.join(expected_output_from_agent), '\n'.join(actual_output_from_agent)))
+            "actual output is shorter than expected:\n"
+            "expected output:\n%s\nactual output:\n%s"
+            % ("\n".join(expected_output_from_agent), "\n".join(actual_output_from_agent))
+        )
         assert len(actual_output_from_agent) <= len(expected_output_from_agent), (
-            'actual output is longer than expected:\n'
-            'expected output:\n%s\nactual output:\n%s' %
-            ('\n'.join(expected_output_from_agent), '\n'.join(actual_output_from_agent)))
+            "actual output is longer than expected:\n"
+            "expected output:\n%s\nactual output:\n%s"
+            % ("\n".join(expected_output_from_agent), "\n".join(actual_output_from_agent))
+        )
     except TypeError:
         # expected_output may be an iterator without len
-        assert len(actual_output_from_agent) > 0, 'Actual output was empty'
+        assert len(actual_output_from_agent) > 0, "Actual output was empty"

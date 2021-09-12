@@ -27,7 +27,7 @@ RRDColumnFunction = Callable[[Timestamp, Timestamp], "TimeSeries"]
 TimeSeriesValue = Optional[float]
 TimeSeriesValues = List[TimeSeriesValue]
 ConsolidationFunctionName = str
-Timegroup = NewType('Timegroup', str)
+Timegroup = NewType("Timegroup", str)
 EstimatedLevel = Optional[float]
 EstimatedLevels = Tuple[EstimatedLevel, EstimatedLevel, EstimatedLevel, EstimatedLevel]
 PredictionParameters = Dict[str, Any]  # TODO: improve this type
@@ -51,7 +51,7 @@ class PredictionInfo:
     params: PredictionParameters
 
     @classmethod
-    def loads(cls, raw: str, *, name: Timegroup) -> 'PredictionInfo':
+    def loads(cls, raw: str, *, name: Timegroup) -> "PredictionInfo":
         data = json.loads(raw)
         range_ = data["range"]
         return cls(
@@ -77,7 +77,7 @@ class PredictionData:
     step: Seconds
 
     @classmethod
-    def loads(cls, raw: str) -> 'PredictionData':
+    def loads(cls, raw: str) -> "PredictionData":
         data = json.loads(raw)
         return cls(
             columns=[str(e) for e in data["columns"]],
@@ -108,8 +108,9 @@ def rrd_timestamps(twindow: TimeWindow) -> List[Timestamp]:
     return [t + step for t in range(start, end, step)]
 
 
-def aggregation_functions(series: TimeSeriesValues,
-                          aggr: Optional[ConsolidationFunctionName]) -> TimeSeriesValue:
+def aggregation_functions(
+    series: TimeSeriesValues, aggr: Optional[ConsolidationFunctionName]
+) -> TimeSeriesValue:
     """Aggregate data in series list according to aggr
 
     If series has None values they are dropped before aggregation"""
@@ -122,11 +123,11 @@ def aggregation_functions(series: TimeSeriesValues,
 
     cleaned_series = [x for x in series if x is not None]
 
-    if aggr == 'average':
+    if aggr == "average":
         return sum(cleaned_series) / float(len(cleaned_series))
-    if aggr == 'max':
+    if aggr == "max":
         return max(cleaned_series)
-    if aggr == 'min':
+    if aggr == "min":
         return min(cleaned_series)
 
     raise ValueError("Invalid Aggregation function %s, only max, min, average allowed" % aggr)
@@ -150,10 +151,13 @@ class TimeSeries:
             additional information arguments
 
     """
-    def __init__(self,
-                 data: TimeSeriesValues,
-                 timewindow: Optional[Tuple[float, float, float]] = None,
-                 **metadata: str) -> None:
+
+    def __init__(
+        self,
+        data: TimeSeriesValues,
+        timewindow: Optional[Tuple[float, float, float]] = None,
+        **metadata: str,
+    ) -> None:
         if timewindow is None:
             if data[0] is None or data[1] is None or data[2] is None:
                 raise ValueError("timewindow must not contain None")
@@ -191,9 +195,9 @@ class TimeSeries:
 
         return self.values
 
-    def downsample(self,
-                   twindow: TimeWindow,
-                   cf: ConsolidationFunctionName = 'max') -> TimeSeriesValues:
+    def downsample(
+        self, twindow: TimeWindow, cf: ConsolidationFunctionName = "max"
+    ) -> TimeSeriesValues:
         """Downsample time series by consolidation function
 
         twindow : 3-tuple, (start, end, step)
@@ -232,7 +236,12 @@ class TimeSeries:
         if not isinstance(other, TimeSeries):
             return NotImplemented
 
-        return self.start == other.start and self.end == other.end and self.step == other.step and self.values == other.values
+        return (
+            self.start == other.start
+            and self.end == other.end
+            and self.step == other.step
+            and self.values == other.values
+        )
 
     def __getitem__(self, i: int) -> TimeSeriesValue:
         return self.values[i]
@@ -246,35 +255,39 @@ class TimeSeries:
 
 def lq_logic(filter_condition: str, values: List[str], join: str) -> str:
     """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""
-    conditions = u"".join(u"%s %s\n" % (filter_condition, livestatus.lqencode(x)) for x in values)
-    connective = u"%s: %d\n" % (join, len(values)) if len(values) > 1 else u""
+    conditions = "".join("%s %s\n" % (filter_condition, livestatus.lqencode(x)) for x in values)
+    connective = "%s: %d\n" % (join, len(values)) if len(values) > 1 else ""
     return conditions + connective
 
 
-def livestatus_lql(host_names: List[HostName],
-                   columns: List[str],
-                   service_description: Optional[ServiceName] = None) -> str:
-    query_filter = u"Columns: %s\n" % u" ".join(columns)
+def livestatus_lql(
+    host_names: List[HostName],
+    columns: List[str],
+    service_description: Optional[ServiceName] = None,
+) -> str:
+    query_filter = "Columns: %s\n" % " ".join(columns)
     query_filter += lq_logic(
-        u"Filter: host_name =",
+        "Filter: host_name =",
         [str(hostname) for hostname in host_names],
-        u"Or",
+        "Or",
     )
     if service_description == "_HOST_" or service_description is None:
-        what = 'host'
+        what = "host"
     else:
-        what = 'service'
-        query_filter += lq_logic(u"Filter: service_description =", [service_description], u"Or")
+        what = "service"
+        query_filter += lq_logic("Filter: service_description =", [service_description], "Or")
     return "GET %ss\n%s" % (what, query_filter)
 
 
-def get_rrd_data(hostname: HostName,
-                 service_description: ServiceName,
-                 varname: MetricName,
-                 cf: ConsolidationFunctionName,
-                 fromtime: Timestamp,
-                 untiltime: Timestamp,
-                 max_entries: int = 400) -> TimeSeries:
+def get_rrd_data(
+    hostname: HostName,
+    service_description: ServiceName,
+    varname: MetricName,
+    cf: ConsolidationFunctionName,
+    fromtime: Timestamp,
+    untiltime: Timestamp,
+    max_entries: int = 400,
+) -> TimeSeries:
     """Fetch RRD historic metrics data of a specific service, within the specified time range
 
     returns a TimeSeries object holding interval and data information
@@ -300,14 +313,16 @@ def get_rrd_data(hostname: HostName,
     step = 1
     rpn = "%s.%s" % (varname, cf.lower())  # "MAX" -> "max"
     point_range = ":".join(
-        livestatus.lqencode(str(x)) for x in (fromtime, untiltime, step, max_entries))
+        livestatus.lqencode(str(x)) for x in (fromtime, untiltime, step, max_entries)
+    )
     column = "rrddata:m1:%s:%s" % (rpn, point_range)
 
     lql = livestatus_lql([hostname], [column], service_description) + "OutputFormat: python\n"
 
     try:
-        connection = livestatus.SingleSiteConnection("unix:%s" %
-                                                     cmk.utils.paths.livestatus_unix_socket)
+        connection = livestatus.SingleSiteConnection(
+            "unix:%s" % cmk.utils.paths.livestatus_unix_socket
+        )
         response = connection.query_value(lql)
     except livestatus.MKLivestatusNotFoundError as e:
         if cmk.utils.debug.enabled():
@@ -320,8 +335,12 @@ def get_rrd_data(hostname: HostName,
     return TimeSeries(response)
 
 
-def rrd_datacolum(hostname: HostName, service_description: ServiceName, varname: MetricName,
-                  cf: ConsolidationFunctionName) -> RRDColumnFunction:
+def rrd_datacolum(
+    hostname: HostName,
+    service_description: ServiceName,
+    varname: MetricName,
+    cf: ConsolidationFunctionName,
+) -> RRDColumnFunction:
     "Partial helper function to get rrd data"
 
     def time_boundaries(fromtime: Timestamp, untiltime: Timestamp) -> TimeSeries:
@@ -346,14 +365,17 @@ class PredictionStore:
         )
 
     def available_predictions(self) -> Iterable[PredictionInfo]:
-        return (tg_info for f in self._dir.glob('*.info')
-                if (tg_info := self.get_info(Timegroup(f.stem))) is not None)
+        return (
+            tg_info
+            for f in self._dir.glob("*.info")
+            if (tg_info := self.get_info(Timegroup(f.stem))) is not None
+        )
 
     def _data_file(self, timegroup: Timegroup) -> Path:
         return self._dir / timegroup
 
     def _info_file(self, timegroup: Timegroup) -> Path:
-        return self._dir / f'{timegroup}.info'
+        return self._dir / f"{timegroup}.info"
 
     def save_predictions(
         self,
@@ -408,27 +430,41 @@ def estimate_levels(
     if not reference_value:  # No reference data available
         return (None, None, None, None)
 
-    estimated_upper_warn, estimated_upper_crit = _get_levels_from_params(
-        levels=levels_upper,
-        sig=1,
-        reference_value=reference_value,
-        stdev=stdev,
-        levels_factor=levels_factor,
-    ) if levels_upper else (None, None)
+    estimated_upper_warn, estimated_upper_crit = (
+        _get_levels_from_params(
+            levels=levels_upper,
+            sig=1,
+            reference_value=reference_value,
+            stdev=stdev,
+            levels_factor=levels_factor,
+        )
+        if levels_upper
+        else (None, None)
+    )
 
-    estimated_lower_warn, estimated_lower_crit = _get_levels_from_params(
-        levels=levels_lower,
-        sig=-1,
-        reference_value=reference_value,
-        stdev=stdev,
-        levels_factor=levels_factor,
-    ) if levels_lower else (None, None)
+    estimated_lower_warn, estimated_lower_crit = (
+        _get_levels_from_params(
+            levels=levels_lower,
+            sig=-1,
+            reference_value=reference_value,
+            stdev=stdev,
+            levels_factor=levels_factor,
+        )
+        if levels_lower
+        else (None, None)
+    )
 
     if levels_upper_lower_bound:
-        estimated_upper_warn = None if estimated_upper_warn is None else max(
-            levels_upper_lower_bound[0], estimated_upper_warn)
-        estimated_upper_crit = None if estimated_upper_crit is None else max(
-            levels_upper_lower_bound[1], estimated_upper_crit)
+        estimated_upper_warn = (
+            None
+            if estimated_upper_warn is None
+            else max(levels_upper_lower_bound[0], estimated_upper_warn)
+        )
+        estimated_upper_crit = (
+            None
+            if estimated_upper_crit is None
+            else max(levels_upper_lower_bound[1], estimated_upper_crit)
+        )
 
     return (estimated_upper_warn, estimated_upper_crit, estimated_lower_warn, estimated_lower_crit)
 

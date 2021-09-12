@@ -58,23 +58,23 @@ def inv_win_networkadapter(info):
         elif varname == "Speed":
             array["speed"] = int(value)
         elif varname == "Address":
-            for address in value.split(' '):
-                addrtype = "ipv6" if ':' in address else "ipv4"
+            for address in value.split(" "):
+                addrtype = "ipv6" if ":" in address else "ipv4"
                 addrtypes.setdefault(addrtype + "_address", []).append(address)
         elif varname == "Subnet":
-            for address in value.split(' '):
-                addrtype = "ipv4" if '.' in address else "ipv6"
+            for address in value.split(" "):
+                addrtype = "ipv4" if "." in address else "ipv6"
                 addrtypes.setdefault(addrtype + "_subnet", []).append(address)
         elif varname == "DefaultGateway":
             array["gateway"] = value
 
         # address string array in comma-separated string packing: ['a1','a2',...] -> 'a1,a2...'
         for addrtype in addrtypes:
-            array[addrtype] = ', '.join(addrtypes[addrtype])
+            array[addrtype] = ", ".join(addrtypes[addrtype])
 
     node.append(array)
 
 
-inv_info['win_networkadapter'] = {
+inv_info["win_networkadapter"] = {
     "inv_function": inv_win_networkadapter,
 }

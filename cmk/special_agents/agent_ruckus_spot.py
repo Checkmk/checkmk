@@ -13,7 +13,8 @@ import requests
 
 
 def usage() -> NoReturn:
-    sys.stderr.write("""Check_MK Ruckus Spot Agent
+    sys.stderr.write(
+        """Check_MK Ruckus Spot Agent
 
 USAGE: agent_ruckus_spot [OPTIONS] HOST
 
@@ -22,7 +23,8 @@ OPTIONS:
   --address                     Address {hostname:port}
   --venueid                     Venue ID
   --apikey                      API key
-""")
+"""
+    )
     sys.exit(1)
 
 
@@ -53,8 +55,8 @@ def main(sys_argv=None):
     if sys_argv is None:
         sys_argv = sys.argv[1:]
 
-    short_options = 'h:'
-    long_options = ['help', 'address=', 'venueid=', 'apikey=', 'agent_port=']
+    short_options = "h:"
+    long_options = ["help", "address=", "venueid=", "apikey=", "agent_port="]
 
     address = None
     venueid = None
@@ -68,25 +70,30 @@ def main(sys_argv=None):
         return 1
 
     for o, a in opts:
-        if o in ['--address']:
+        if o in ["--address"]:
             address = a
-        elif o in ['--venueid']:
+        elif o in ["--venueid"]:
             venueid = a
-        elif o in ['--apikey']:
+        elif o in ["--apikey"]:
             api_key = a
-        elif o in ['--agent_port']:
+        elif o in ["--agent_port"]:
             agent_port = a
-        elif o in ['-h', '--help']:
+        elif o in ["-h", "--help"]:
             usage()
 
     if len(args) > 0 or not api_key or not venueid or not address:
         usage()
 
     try:
-        for url_end, section_type in [("access_points/statuses.json", "ap"),
-                                      ("locations/last_known.json", "locations")]:
-            url = "http://%(address)s/api/v1/venues/%(venueid)s/%(url_end)s" % \
-                  {"address": address, "venueid": venueid, "url_end": url_end}
+        for url_end, section_type in [
+            ("access_points/statuses.json", "ap"),
+            ("locations/last_known.json", "locations"),
+        ]:
+            url = "http://%(address)s/api/v1/venues/%(venueid)s/%(url_end)s" % {
+                "address": address,
+                "venueid": venueid,
+                "url_end": url_end,
+            }
             response = requests.get(url, auth=(api_key, "X"))
 
             sys.stdout.write("<<<ruckus_spot_%s:sep(0)>>>\n" % section_type)

@@ -37,6 +37,7 @@ class Result(Generic[T_co, E_co], abc.ABC):
         https://caml.inria.fr/pub/docs/manual-ocaml/libref/Result.html
 
     """
+
     __slots__ = ()
 
     @abc.abstractmethod
@@ -128,6 +129,7 @@ class Result(Generic[T_co, E_co], abc.ABC):
 
 class OK(Result[T_co, E_co]):
     """A successful computation."""
+
     __slots__ = ["_ok"]
 
     def __init__(self, ok: T_co):
@@ -212,6 +214,7 @@ class OK(Result[T_co, E_co]):
 
 class Error(Result[T_co, E_co]):
     """A failed computation."""
+
     __slots__ = ["_error"]
 
     def __init__(self, error: E_co):

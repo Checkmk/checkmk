@@ -16,16 +16,18 @@ def inv_snmp_checkpoint_tunnels(info):
     index = 0
     for peerip, sourceip, peername, tunnelinterface, linkpriority in info[0]:
         index += 1
-        node.append({
-            "index": index,
-            "peerip": peerip,
-            "sourceip": sourceip,
-            "peername": peername,
-            "tunnel_interface": tunnelinterface,
-            "link_priority": link_priorities[linkpriority],
-        })
+        node.append(
+            {
+                "index": index,
+                "peerip": peerip,
+                "sourceip": sourceip,
+                "peername": peername,
+                "tunnel_interface": tunnelinterface,
+                "link_priority": link_priorities[linkpriority],
+            }
+        )
 
 
-inv_info['checkpoint_inv_tunnels'] = {
-    'inv_function': inv_snmp_checkpoint_tunnels,
+inv_info["checkpoint_inv_tunnels"] = {
+    "inv_function": inv_snmp_checkpoint_tunnels,
 }

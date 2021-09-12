@@ -25,6 +25,7 @@ class Table(abc.ABC):
 
     This class doesn't do much, it just acts as a container for `Column` instances.
     """
+
     @classmethod
     @property
     @abc.abstractmethod
@@ -47,6 +48,7 @@ class NoTable(Table):
     Can be used in place of an actual table, in order to not have to use `Optional` types when
     something is initialized only later.
     """
+
     @classmethod
     @property
     def __tablename__(cls) -> str:
@@ -113,7 +115,7 @@ class Column:
         self.name = name
         self.label_name: Optional[str] = None
         self.type: LivestatusType = col_type
-        self.expr = (ListExpression(name) if col_type == 'list' else ScalarExpression(name))
+        self.expr = ListExpression(name) if col_type == "list" else ScalarExpression(name)
         self.table: Type[Table] = NoTable
 
         self.__doc__ = description
@@ -143,7 +145,7 @@ class Column:
         """
         return self.label_name if self.label_name is not None else self.name
 
-    def label(self, label_name: str) -> 'Column':
+    def label(self, label_name: str) -> "Column":
         """Set the label for use in the response.
 
         Args:
@@ -159,7 +161,7 @@ class Column:
         copy.label_name = label_name
         return copy
 
-    def __get__(self, obj, obj_type) -> 'Column':
+    def __get__(self, obj, obj_type) -> "Column":
         # As we don't know on which Table this Column is located, we use
         # the descriptor protocol during attribute access to find out.
         if self.table is NoTable:
@@ -226,19 +228,19 @@ def expr_to_tree(
     """
     if isinstance(query_expr, BinaryExpression):
         return {
-            'op': query_expr.operator,
-            'left': getattr(table, query_expr.left.value).full_name,
-            'right': query_expr.right.value,
+            "op": query_expr.operator,
+            "left": getattr(table, query_expr.left.value).full_name,
+            "right": query_expr.right.value,
         }
 
     if isinstance(query_expr, BoolExpression):
         return {
-            'op': query_expr.__class__.__name__.lower(),
-            'expr': [expr_to_tree(table, arg) for arg in query_expr.args]
+            "op": query_expr.__class__.__name__.lower(),
+            "expr": [expr_to_tree(table, arg) for arg in query_expr.args],
         }
 
     if isinstance(query_expr, Not):
-        return {'op': 'not', 'expr': expr_to_tree(table, query_expr.other)}
+        return {"op": "not", "expr": expr_to_tree(table, query_expr.other)}
 
     if isinstance(query_expr, NothingExpression):
         return None

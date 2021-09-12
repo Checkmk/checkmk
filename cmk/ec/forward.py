@@ -48,12 +48,14 @@ def _validate_sd_name(name: str) -> bool:
     >>> _validate_sd_name('abc=12]3')
     False
     """
-    return (_1_n_printusascii_conform(32, name) and
-            not any(forbidden_char in name for forbidden_char in ("=", " ", "]", '"')))
+    return _1_n_printusascii_conform(32, name) and not any(
+        forbidden_char in name for forbidden_char in ("=", " ", "]", '"')
+    )
 
 
 class StructuredDataName:
     """Represents SD-NAME from https://tools.ietf.org/html/rfc5424"""
+
     def __init__(self, name: str):
         if not _validate_sd_name(name):
             raise ValueError(f"{name} is not an RFC 5425-conform SD-NAME.")
@@ -77,6 +79,7 @@ class StructuredDataName:
 
 class StructuredDataID:
     """Represents SD-ID from https://tools.ietf.org/html/rfc5424"""
+
     def __init__(self, id_: str):
         if not self._validate(id_):
             raise ValueError(f"{id_} is not an RFC 5425-conform SD-ID.")
@@ -117,6 +120,7 @@ class StructuredDataID:
 
 class StructuredDataValue:
     """Represents SD-VALUE from https://tools.ietf.org/html/rfc5424"""
+
     def __init__(self, value: str):
         if "\n" in value:
             raise ValueError("Structured data values must not contain linebreaks.")
@@ -125,9 +129,9 @@ class StructuredDataValue:
     def __repr__(self) -> str:
         value_escaped = self.__value
         for char_to_escape in (
-                '\\',
-                '"',
-                ']',
+            "\\",
+            '"',
+            "]",
         ):
             value_escaped = value_escaped.replace(char_to_escape, rf"\{char_to_escape}")
         return value_escaped
@@ -135,22 +139,27 @@ class StructuredDataValue:
 
 class StructuredDataParameters(Dict[StructuredDataName, StructuredDataValue]):
     """Represents SD-PARAMs of one SD-ELEMENT from https://tools.ietf.org/html/rfc5424"""
+
     def __repr__(self) -> str:
         return " ".join(f'{repr(name)}="{repr(value)}"' for name, value in self.items())
 
 
 class StructuredData(Dict[StructuredDataID, StructuredDataParameters]):
     """Represents STRUCTURED-DATA from https://tools.ietf.org/html/rfc5424"""
+
     def __repr__(self) -> str:
         if not self:
             return _NILVALUE
-        return "".join(f"[{repr(sd_id)}{' ' if sd_params else ''}{repr(sd_params)}]"
-                       for sd_id, sd_params in self.items())
+        return "".join(
+            f"[{repr(sd_id)}{' ' if sd_params else ''}{repr(sd_params)}]"
+            for sd_id, sd_params in self.items()
+        )
 
 
 class SyslogMessage:
     """Represents a syslog message which can be sent to the EC. Sticks to the Syslog Message Format,
     see https://tools.ietf.org/html/rfc5424."""
+
     _CHECKMK_SD_ID = StructuredDataID("Checkmk@18662")
     _ENCODING = "utf-8"
 
@@ -178,8 +187,9 @@ class SyslogMessage:
             raise ValueError("Structured data must not contain element with Checkmk SD-ID")
 
         self._priority = (facility << 3) + severity
-        self._timestamp = (_NILVALUE if isinstance(timestamp, str) else
-                           self._unix_timestamp_to_rfc_5424(timestamp))
+        self._timestamp = (
+            _NILVALUE if isinstance(timestamp, str) else self._unix_timestamp_to_rfc_5424(timestamp)
+        )
 
         self._sd = self._add_ip_and_sl_to_structured_data(
             structured_data,
@@ -192,14 +202,16 @@ class SyslogMessage:
         else:
             self._host_name = _NILVALUE
             self._sd[self._CHECKMK_SD_ID][StructuredDataName("host")] = StructuredDataValue(
-                host_name)
+                host_name
+            )
 
         if _1_n_printusascii_conform(48, application):
             self._application = application
         else:
             self._application = _NILVALUE
             self._sd[self._CHECKMK_SD_ID][StructuredDataName("application")] = StructuredDataValue(
-                application)
+                application
+            )
 
         if _1_n_printusascii_conform(128, proc_id):
             self._proc_id = proc_id
@@ -212,7 +224,8 @@ class SyslogMessage:
         else:
             self._msg_id = _NILVALUE
             self._sd[self._CHECKMK_SD_ID][StructuredDataName("msg_id")] = StructuredDataValue(
-                msg_id)
+                msg_id
+            )
 
         self._text = text
 
@@ -238,20 +251,24 @@ class SyslogMessage:
             checkmk_sd_params[StructuredDataName("ipaddress")] = StructuredDataValue(ip_address)
         if service_level:
             checkmk_sd_params[StructuredDataName("sl")] = StructuredDataValue(str(service_level))
-        return StructuredData({
-            **structured_data,
-            cls._CHECKMK_SD_ID: StructuredDataParameters(checkmk_sd_params),
-        })
+        return StructuredData(
+            {
+                **structured_data,
+                cls._CHECKMK_SD_ID: StructuredDataParameters(checkmk_sd_params),
+            }
+        )
 
     def __repr__(self) -> str:
-        return (f"<{self._priority}>1 "
-                f"{self._timestamp} "
-                f"{self._host_name} "
-                f"{self._application} "
-                f"{self._proc_id} "
-                f"{self._msg_id} "
-                f"{repr(self._sd)}"
-                f"{(' ' + self._bom(self._text) + self._text) if self._text else ''}")
+        return (
+            f"<{self._priority}>1 "
+            f"{self._timestamp} "
+            f"{self._host_name} "
+            f"{self._application} "
+            f"{self._proc_id} "
+            f"{self._msg_id} "
+            f"{repr(self._sd)}"
+            f"{(' ' + self._bom(self._text) + self._text) if self._text else ''}"
+        )
 
     def __bytes__(self) -> bytes:
         return repr(self).encode(self._ENCODING)
@@ -266,13 +283,14 @@ class SyslogMessage:
 
 class ABCSyslogForwarder(ABC):
     """Base class for forwarding syslog messages to the EC"""
+
     @staticmethod
     def _ec_paths() -> Paths:
         return settings(
-            '',
+            "",
             Path(omd_root),
             Path(default_config_dir),
-            [''],
+            [""],
         ).paths
 
     @abstractmethod
@@ -285,6 +303,7 @@ class ABCSyslogForwarder(ABC):
 
 class SyslogForwarderUnixSocket(ABCSyslogForwarder):
     """Forward syslog messages to the EC using the unix socket"""
+
     def __init__(
         self,
         path: Optional[Path] = None,

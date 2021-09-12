@@ -13,11 +13,11 @@ from cmk.utils.i18n import _
 
 g_compiled_regexes: Dict[Tuple[Any, int], Pattern] = {}
 
-REGEX_HOST_NAME_CHARS = r'-0-9a-zA-Z_.'
-REGEX_HOST_NAME = r'^[%s]+$' % REGEX_HOST_NAME_CHARS
+REGEX_HOST_NAME_CHARS = r"-0-9a-zA-Z_."
+REGEX_HOST_NAME = r"^[%s]+$" % REGEX_HOST_NAME_CHARS
 
-REGEX_GENERIC_IDENTIFIER_CHARS = r'-0-9a-zA-Z_.'
-REGEX_GENERIC_IDENTIFIER = r'^[%s]+$' % REGEX_GENERIC_IDENTIFIER_CHARS
+REGEX_GENERIC_IDENTIFIER_CHARS = r"-0-9a-zA-Z_."
+REGEX_GENERIC_IDENTIFIER = r"^[%s]+$" % REGEX_GENERIC_IDENTIFIER_CHARS
 
 
 def regex(pattern: str, flags: int = 0) -> Pattern[str]:
@@ -41,7 +41,7 @@ def is_regex(pattern: str) -> bool:
     """Checks if a string contains characters that make it neccessary
     to use regular expression logic to handle it correctly"""
     for c in pattern:
-        if c in '.?*+^$|[](){}\\':
+        if c in ".?*+^$|[](){}\\":
             return True
     return False
 
@@ -68,4 +68,4 @@ def unescape(pattern: str) -> str:
     >>> unescape(re.escape(r"ä b .*(C)"))
     'ä b .*(C)'
     """
-    return re.sub(r'\\(.)', r'\1', pattern)
+    return re.sub(r"\\(.)", r"\1", pattern)

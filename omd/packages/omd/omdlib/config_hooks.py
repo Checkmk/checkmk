@@ -57,13 +57,13 @@ ConfigHookResult = Tuple[int, str]
 
 # Put all site configuration (explicit and defaults) into environment
 # variables beginning with CONFIG_
-def create_config_environment(site: 'SiteContext') -> None:
+def create_config_environment(site: "SiteContext") -> None:
     for varname, value in site.conf.items():
         os.environ["CONFIG_" + varname] = value
 
 
 # TODO: RENAME
-def save_site_conf(site: 'SiteContext') -> None:
+def save_site_conf(site: "SiteContext") -> None:
     confdir = site.dir + "/etc/omd"
 
     if not os.path.exists(confdir):
@@ -77,13 +77,13 @@ def save_site_conf(site: 'SiteContext') -> None:
 
 # Get information about all hooks. Just needed for
 # the "omd config" command.
-def load_config_hooks(site: 'SiteContext') -> ConfigHooks:
+def load_config_hooks(site: "SiteContext") -> ConfigHooks:
     config_hooks: ConfigHooks = {}
 
     hook_dir = site.dir + "/lib/omd/hooks"
     for hook_name in os.listdir(hook_dir):
         try:
-            if hook_name[0] != '.':
+            if hook_name[0] != ".":
                 hook = _config_load_hook(site, hook_name)
                 # only load configuration hooks
                 if hook.get("choices", None) is not None:
@@ -96,7 +96,7 @@ def load_config_hooks(site: 'SiteContext') -> ConfigHooks:
     return config_hooks
 
 
-def _config_load_hook(site: 'SiteContext', hook_name: str) -> ConfigHook:
+def _config_load_hook(site: "SiteContext", hook_name: str) -> ConfigHook:
     hook: ConfigHook = {
         "name": hook_name,
         "deprecated": False,
@@ -150,7 +150,7 @@ def _config_load_hook(site: 'SiteContext', hook_name: str) -> ConfigHook:
     return hook
 
 
-def load_hook_dependencies(site: 'SiteContext', config_hooks: ConfigHooks) -> ConfigHooks:
+def load_hook_dependencies(site: "SiteContext", config_hooks: ConfigHooks) -> ConfigHooks:
     for hook_name in sort_hooks(list(config_hooks.keys())):
         hook = config_hooks[hook_name]
         exitcode, _content = call_hook(site, hook_name, ["depends"])
@@ -167,19 +167,21 @@ def sort_hooks(hook_names: List[str]) -> Iterable[str]:
     return sorted(hook_names, key=lambda n: (n == "CORE", n))
 
 
-def hook_exists(site: 'SiteContext', hook_name: str) -> bool:
+def hook_exists(site: "SiteContext", hook_name: str) -> bool:
     hook_file = site.dir + "/lib/omd/hooks/" + hook_name
     return os.path.exists(hook_file)
 
 
-def call_hook(site: 'SiteContext', hook_name: str, args: List[str]) -> ConfigHookResult:
+def call_hook(site: "SiteContext", hook_name: str, args: List[str]) -> ConfigHookResult:
 
     cmd = [site.dir + "/lib/omd/hooks/" + hook_name] + args
     hook_env = os.environ.copy()
-    hook_env.update({
-        "OMD_ROOT": site.dir,
-        "OMD_SITE": site.name,
-    })
+    hook_env.update(
+        {
+            "OMD_ROOT": site.dir,
+            "OMD_SITE": site.name,
+        }
+    )
 
     logger.log(VERBOSE, "Calling hook: %s", subprocess.list2cmdline(cmd))
 

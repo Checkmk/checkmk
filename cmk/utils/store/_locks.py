@@ -50,10 +50,13 @@ def lock_checkmk_configuration() -> Iterator[None]:
         aquire_lock(path)
     except MKTimeout as e:
         raise MKConfigLockTimeout(
-            _("Couldn't lock the Checkmk configuration. Another "
-              "process is running that holds this lock. In order for you to be "
-              "able to perform the desired action, you have to wait until the "
-              "other process has finished. Please try again later.")) from e
+            _(
+                "Couldn't lock the Checkmk configuration. Another "
+                "process is running that holds this lock. In order for you to be "
+                "able to perform the desired action, you have to wait until the "
+                "other process has finished. Please try again later."
+            )
+        ) from e
 
     try:
         yield
@@ -66,7 +69,7 @@ def lock_exclusive() -> None:
     aquire_lock(configuration_lockfile())
 
 
-#.
+# .
 #   .--File locking--------------------------------------------------------.
 #   |          _____ _ _        _            _    _                        |
 #   |         |  ___(_) | ___  | | ___   ___| | _(_)_ __   __ _            |
@@ -99,9 +102,10 @@ def with_lock_dict(func):
     Additionally, this decorator passes the locking dictionary as the first parameter to the
     functions, which manipulate the locking dictionary.
     """
+
     @functools.wraps(func)
     def wrapper(*args):
-        if not hasattr(_locks, 'acquired_locks'):
+        if not hasattr(_locks, "acquired_locks"):
             _locks.acquired_locks = {}
         return func(*args, locks=_locks.acquired_locks)
 

@@ -68,6 +68,7 @@ class DefaultAgentFileCache(AgentFileCache):
 
 class NoCache(AgentFileCache):
     """Noop cache for fetchers that do not cache."""
+
     def __init__(
         self,
         hostname: HostName,
@@ -172,6 +173,7 @@ class ParserState(abc.ABC):
         Gamma, Helm, Johnson, Vlissides (1995) Design Patterns "State pattern"
 
     """
+
     def __init__(
         self,
         hostname: HostName,
@@ -494,6 +496,7 @@ class HostSectionParser(ParserState):
 
 class AgentParser(Parser[AgentRawData, AgentHostSections]):
     """A parser for agent data."""
+
     def __init__(
         self,
         hostname: HostName,
@@ -536,7 +539,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
         }
 
         def decode_sections(
-            sections: ImmutableSection,) -> MutableMapping[SectionName, AgentRawDataSection]:
+            sections: ImmutableSection,
+        ) -> MutableMapping[SectionName, AgentRawDataSection]:
             out: MutableMapping[SectionName, AgentRawDataSection] = {}
             for header, content in sections.items():
                 out.setdefault(header.name, []).extend(header.parse_line(line) for line in content)
@@ -565,7 +569,8 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                             header.nostrip,
                             header.persist,
                             header.separator,
-                        )).encode(header.encoding)
+                        )
+                    ).encode(header.encoding)
                 yield from (bytes(line) for line in content)
 
         sections = {
@@ -580,7 +585,9 @@ class AgentParser(Parser[AgentRawData, AgentHostSections]):
                     cached_at=now,
                     cache_for=self.cache_piggybacked_data_for,
                     selection=selection,
-                )) for header, content in piggyback_sections.items()
+                )
+            )
+            for header, content in piggyback_sections.items()
         }
         cache_info = {
             header.name: cache_info_tuple
@@ -675,21 +682,29 @@ class AgentSummarizerDefault(AgentSummarizer):
             output.append("OS: %s" % agent_info["agentos"])
 
         if mode is Mode.CHECKING and cmk_section:
-            for sub_status, sub_output in (r for r in [
+            for sub_status, sub_output in (
+                r
+                for r in [
                     self._check_version(agent_info.get("version")),
                     self._check_only_from(agent_info.get("onlyfrom")),
-                    self._check_agent_update(agent_info.get("updatefailed"),
-                                             agent_info.get("updaterecoveraction")),
-                    self._check_python_plugins(agent_info.get("failedpythonplugins"),
-                                               agent_info.get("failedpythonreason")),
-            ] if r):
+                    self._check_agent_update(
+                        agent_info.get("updatefailed"), agent_info.get("updaterecoveraction")
+                    ),
+                    self._check_python_plugins(
+                        agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
+                    ),
+                ]
+                if r
+            ):
                 status = max(status, sub_status)
                 output.append(sub_output)
 
         return status, ", ".join(output)
 
     @staticmethod
-    def _get_agent_info(string_table: Optional[AgentRawDataSection],) -> Dict[str, Optional[str]]:
+    def _get_agent_info(
+        string_table: Optional[AgentRawDataSection],
+    ) -> Dict[str, Optional[str]]:
         section: Dict[str, Optional[str]] = {}
 
         for line in string_table or ():
@@ -697,39 +712,49 @@ class AgentSummarizerDefault(AgentSummarizer):
             val = " ".join(line[1:])
             section[key] = f"{section.get(key) or ''} {val}".strip() if len(line) > 1 else None
 
-        return {"version": u"unknown", "agentos": u"unknown", **section}
+        return {"version": "unknown", "agentos": "unknown", **section}
 
     def _check_version(
-            self, agent_version: Optional[str]) -> Optional[Tuple[ServiceState, ServiceDetails]]:
+        self, agent_version: Optional[str]
+    ) -> Optional[Tuple[ServiceState, ServiceDetails]]:
         expected_version = self.agent_target_version
 
-        if expected_version and agent_version \
-             and not AgentSummarizerDefault._is_expected_agent_version(agent_version, expected_version):
-            expected = u""
+        if (
+            expected_version
+            and agent_version
+            and not AgentSummarizerDefault._is_expected_agent_version(
+                agent_version, expected_version
+            )
+        ):
+            expected = ""
             # expected version can either be:
             # a) a single version string
             # b) a tuple of ("at_least", {'daily_build': '2014.06.01', 'release': '1.2.5i4'}
             #    (the dict keys are optional)
-            if isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
+            if isinstance(expected_version, tuple) and expected_version[0] == "at_least":
                 spec = cast(Dict[str, str], expected_version[1])
-                expected = 'at least'
-                if 'daily_build' in spec:
-                    expected += ' build %s' % spec['daily_build']
-                if 'release' in spec:
-                    if 'daily_build' in spec:
-                        expected += ' or'
-                    expected += ' release %s' % spec['release']
+                expected = "at least"
+                if "daily_build" in spec:
+                    expected += " build %s" % spec["daily_build"]
+                if "release" in spec:
+                    if "daily_build" in spec:
+                        expected += " or"
+                    expected += " release %s" % spec["release"]
             else:
                 expected = "%s" % (expected_version,)
             status = cast(int, self.exit_spec.get("wrong_version", 1))
-            return status, (f"unexpected agent version {agent_version} "
-                            f"(should be {expected}){state_markers[status]}")
+            return status, (
+                f"unexpected agent version {agent_version} "
+                f"(should be {expected}){state_markers[status]}"
+            )
 
         if self.agent_min_version and cast(int, agent_version) < self.agent_min_version:
             # TODO: This branch seems to be wrong. Or: In which case is agent_version numeric?
             status = self.exit_spec.get("wrong_version", 1)
-            return status, (f"old plugin version {agent_version} "
-                            f"(should be at least {self.agent_min_version}){state_markers[status]}")
+            return status, (
+                f"old plugin version {agent_version} "
+                f"(should be at least {self.agent_min_version}){state_markers[status]}"
+            )
 
         return None
 
@@ -774,7 +799,8 @@ class AgentSummarizerDefault(AgentSummarizer):
             return None
 
         return 1, f"Failed to execute python plugins: {agent_failed_plugins}" + (
-            f" ({agent_fail_reason})" if agent_fail_reason else "")
+            f" ({agent_fail_reason})" if agent_fail_reason else ""
+        )
 
     def _check_agent_update(
         self,
@@ -795,33 +821,34 @@ class AgentSummarizerDefault(AgentSummarizer):
             if agent_version is None:
                 return False
 
-            if agent_version in ['(unknown)', 'None']:
+            if agent_version in ["(unknown)", "None"]:
                 return False
 
             if isinstance(expected_version, str) and expected_version != agent_version:
                 return False
 
-            if isinstance(expected_version, tuple) and expected_version[0] == 'at_least':
+            if isinstance(expected_version, tuple) and expected_version[0] == "at_least":
                 spec = cast(Dict[str, str], expected_version[1])
-                if cmk.utils.misc.is_daily_build_version(agent_version) and 'daily_build' in spec:
-                    expected = int(spec['daily_build'].replace('.', ''))
+                if cmk.utils.misc.is_daily_build_version(agent_version) and "daily_build" in spec:
+                    expected = int(spec["daily_build"].replace(".", ""))
 
                     branch = cmk.utils.misc.branch_of_daily_build(agent_version)
                     if branch == "master":
-                        agent = int(agent_version.replace('.', ''))
+                        agent = int(agent_version.replace(".", ""))
 
                     else:  # branch build (e.g. 1.2.4-2014.06.01)
-                        agent = int(agent_version.split('-')[1].replace('.', ''))
+                        agent = int(agent_version.split("-")[1].replace(".", ""))
 
                     if agent < expected:
                         return False
 
-                elif 'release' in spec:
+                elif "release" in spec:
                     if cmk.utils.misc.is_daily_build_version(agent_version):
                         return False
 
                     if parse_check_mk_version(agent_version) < parse_check_mk_version(
-                            spec['release']):
+                        spec["release"]
+                    ):
                         return False
 
             return True
@@ -829,5 +856,6 @@ class AgentSummarizerDefault(AgentSummarizer):
             if cmk.utils.debug.enabled():
                 raise
             raise MKGeneralException(
-                "Unable to check agent version (Agent: %s Expected: %s, Error: %s)" %
-                (agent_version, expected_version, e))
+                "Unable to check agent version (Agent: %s Expected: %s, Error: %s)"
+                % (agent_version, expected_version, e)
+            )

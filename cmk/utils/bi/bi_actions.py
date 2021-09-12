@@ -63,33 +63,33 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
         self.rule_id = action_config["rule_id"]
         self.params = BIParams(action_config["params"])
 
-    def _generate_action_arguments(self, search_results: SearchResults,
-                                   macros: MacroMapping) -> ActionArguments:
+    def _generate_action_arguments(
+        self, search_results: SearchResults, macros: MacroMapping
+    ) -> ActionArguments:
         return [
-            tuple(replace_macros(self.params.arguments, {
-                **macros,
-                **x
-            })) for x in search_results
+            tuple(replace_macros(self.params.arguments, {**macros, **x})) for x in search_results
         ]
 
-    def execute(self, argument: ActionArgument,
-                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
+    def execute(
+        self, argument: ActionArgument, bi_searcher: ABCBISearcher
+    ) -> List[ABCBICompiledNode]:
         return bi_rule_id_registry[self.rule_id].compile(argument, bi_searcher)
 
     def preview_rule_title(self, search_result: SearchResult) -> str:
         bi_rule = bi_rule_id_registry[self.rule_id]
         rule_arguments = replace_macros(self.params.arguments, search_result)
         mapped_rule_arguments = dict(
-            zip(["$%s$" % x for x in bi_rule.params.arguments], rule_arguments))
+            zip(["$%s$" % x for x in bi_rule.params.arguments], rule_arguments)
+        )
         return replace_macros(bi_rule.properties.title, mapped_rule_arguments)
 
 
 class BICallARuleActionSchema(Schema):
     type = ReqConstant(BICallARuleAction.type())
     rule_id = ReqString(default="", example="test_rule_1")
-    params = ReqNested(BIParamsSchema,
-                       default=BIParamsSchema().dump({}),
-                       example=BIParamsSchema().dump({}))
+    params = ReqNested(
+        BIParamsSchema, default=BIParamsSchema().dump({}), example=BIParamsSchema().dump({})
+    )
 
 
 #   .--StateOfHost---------------------------------------------------------.
@@ -122,14 +122,17 @@ class BIStateOfHostAction(ABCBIAction, ABCWithSchema):
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
-    def _generate_action_arguments(self, search_results: SearchResults,
-                                   macros: MacroMapping) -> ActionArguments:
+    def _generate_action_arguments(
+        self, search_results: SearchResults, macros: MacroMapping
+    ) -> ActionArguments:
         return [(replace_macros(self.host_regex, {**macros, **x}),) for x in search_results]
 
-    def execute(self, argument: ActionArgument,
-                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
+    def execute(
+        self, argument: ActionArgument, bi_searcher: ABCBISearcher
+    ) -> List[ABCBICompiledNode]:
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
-            list(bi_searcher.hosts.values()), argument[0])
+            list(bi_searcher.hosts.values()), argument[0]
+        )
         return [BICompiledLeaf(host_name=x.name, site_id=x.site_id) for x in host_matches]
 
 
@@ -170,33 +173,35 @@ class BIStateOfServiceAction(ABCBIAction, ABCWithSchema):
         self.host_regex = action_config["host_regex"]
         self.service_regex = action_config["service_regex"]
 
-    def _generate_action_arguments(self, search_results: SearchResults,
-                                   macros: MacroMapping) -> ActionArguments:
-        return [(
-            replace_macros(self.host_regex, {
-                **macros,
-                **x
-            }),
-            replace_macros(self.service_regex, {
-                **macros,
-                **x
-            }),
-        ) for x in search_results]
+    def _generate_action_arguments(
+        self, search_results: SearchResults, macros: MacroMapping
+    ) -> ActionArguments:
+        return [
+            (
+                replace_macros(self.host_regex, {**macros, **x}),
+                replace_macros(self.service_regex, {**macros, **x}),
+            )
+            for x in search_results
+        ]
 
-    def execute(self, argument: ActionArgument,
-                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
+    def execute(
+        self, argument: ActionArgument, bi_searcher: ABCBISearcher
+    ) -> List[ABCBICompiledNode]:
         matched_hosts, match_groups = bi_searcher.get_host_name_matches(
-            list(bi_searcher.hosts.values()), argument[0])
+            list(bi_searcher.hosts.values()), argument[0]
+        )
 
         host_search_matches = [BIHostSearchMatch(x, match_groups[x.name]) for x in matched_hosts]
-        service_matches = bi_searcher.get_service_description_matches(host_search_matches,
-                                                                      argument[1])
+        service_matches = bi_searcher.get_service_description_matches(
+            host_search_matches, argument[1]
+        )
         return [
             BICompiledLeaf(
                 site_id=x.host_match.host.site_id,
                 host_name=x.host_match.host.name,
                 service_description=x.service_description,
-            ) for x in service_matches
+            )
+            for x in service_matches
         ]
 
 
@@ -236,14 +241,17 @@ class BIStateOfRemainingServicesAction(ABCBIAction, ABCWithSchema):
         super().__init__(action_config)
         self.host_regex = action_config["host_regex"]
 
-    def _generate_action_arguments(self, search_results: SearchResults,
-                                   macros: MacroMapping) -> ActionArguments:
+    def _generate_action_arguments(
+        self, search_results: SearchResults, macros: MacroMapping
+    ) -> ActionArguments:
         return [(replace_macros(self.host_regex, {**macros, **x}),) for x in search_results]
 
-    def execute(self, argument: ActionArgument,
-                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
+    def execute(
+        self, argument: ActionArgument, bi_searcher: ABCBISearcher
+    ) -> List[ABCBICompiledNode]:
         host_matches, _match_groups = bi_searcher.get_host_name_matches(
-            list(bi_searcher.hosts.values()), argument[0])
+            list(bi_searcher.hosts.values()), argument[0]
+        )
         return [BIRemainingResult([x.name for x in host_matches])]
 
 
@@ -267,12 +275,12 @@ class BIActionSchema(OneOfSchema):
     type_field_remove = False
     type_schemas = dict((k, v.schema()) for k, v in bi_action_registry.items())
 
-    #type_schemas = {
+    # type_schemas = {
     #    "call_a_rule": BICallARuleActionSchema,
     #    "state_of_host": BIStateOfHostActionSchema,
     #    "state_of_service": BIStateOfServiceActionSchema,
     #    "state_of_remaining_services": BIStateOfRemainingServicesActionSchema,
-    #}
+    # }
 
     def get_obj_type(self, obj: Union[ABCBIAction, dict]) -> str:
         if isinstance(obj, dict):

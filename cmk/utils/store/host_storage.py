@@ -30,8 +30,9 @@ from cmk.utils.rulesets.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
 from cmk.utils.store import PickleSerializer
 from cmk.utils.type_defs import ContactgroupName, HostName, Labels, TaggroupIDToTagID
 
-HostAttributeMapping = Tuple[str, str, Dict[str, Any],
-                             str]  # host attr, cmk.base var name, value, title
+HostAttributeMapping = Tuple[
+    str, str, Dict[str, Any], str
+]  # host attr, cmk.base var name, value, title
 
 
 class GroupRuleType(TypedDict):
@@ -48,7 +49,7 @@ def host_storage_fileheader() -> str:
 
 
 def get_hosts_file_variables():
-    """ These parameters imitate a cmk.base environment """
+    """These parameters imitate a cmk.base environment"""
     return {
         "FOLDER_PATH": "",
         "ALL_HOSTS": ALL_HOSTS,
@@ -65,12 +66,8 @@ def get_hosts_file_variables():
         "management_ipmi_credentials": {},
         "management_protocol": {},
         "explicit_host_conf": {},
-        "extra_host_conf": {
-            "alias": []
-        },
-        "extra_service_conf": {
-            "_WATO": []
-        },
+        "extra_host_conf": {"alias": []},
+        "extra_service_conf": {"_WATO": []},
         "host_attributes": {},
         "host_contactgroups": [],
         "service_contactgroups": [],
@@ -108,10 +105,9 @@ class HostsStorageFieldsGenerator:
         folder_path: str,
     ) -> ContactGroupsField:
 
-        contact_group_fields = ContactGroupsField(hosts=[],
-                                                  services=[],
-                                                  folder_hosts=[],
-                                                  folder_services=[])
+        contact_group_fields = ContactGroupsField(
+            hosts=[], services=[], folder_hosts=[], folder_services=[]
+        )
         for group_rules, use_for_services in host_service_group_rules:
             contact_group_fields["hosts"].extend(group_rules)
             if use_for_services:
@@ -122,28 +118,32 @@ class HostsStorageFieldsGenerator:
         # each host that has an explicit setting for that attribute (see above).
         _, folder_contact_groups, use_for_services = folder_host_service_group_rules
         if folder_contact_groups:
-            contact_group_fields["folder_hosts"].append({
-                "value": list(folder_contact_groups),
-                "condition": {
-                    'host_folder': folder_path,
+            contact_group_fields["folder_hosts"].append(
+                {
+                    "value": list(folder_contact_groups),
+                    "condition": {
+                        "host_folder": folder_path,
+                    },
                 }
-            })
+            )
             if use_for_services:
                 # Currently service_contactgroups requires single values. Lists are not supported
-                contact_group_fields["folder_services"] = list({
-                    "value": cg,
-                    "condition": {
-                        'host_folder': folder_path,
+                contact_group_fields["folder_services"] = list(
+                    {
+                        "value": cg,
+                        "condition": {
+                            "host_folder": folder_path,
+                        },
                     }
-                } for cg in folder_contact_groups)
+                    for cg in folder_contact_groups
+                )
 
         return contact_group_fields
 
     @classmethod
     def custom_macros(
-            cls, custom_macros: Dict[str,
-                                     Dict[str,
-                                          str]]) -> Dict[str, List[Tuple[str, List[HostName]]]]:
+        cls, custom_macros: Dict[str, Dict[str, str]]
+    ) -> Dict[str, List[Tuple[str, List[HostName]]]]:
         macros: Dict[str, List[Tuple[str, List[HostName]]]] = {}
         for custom_varname, entries in custom_macros.items():
             if len(entries) == 0:
@@ -167,16 +167,18 @@ class ABCHostsStorage(Generic[THostsReadData]):
     def add_file_extension(self, file_path: Path):
         return file_path.with_suffix(self._storage_format.extension())
 
-    def write(self, file_path: Path, data: HostsStorageData,
-              value_formatter: Callable[[Any], str]) -> None:
+    def write(
+        self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
+    ) -> None:
         return self._write(self.add_file_extension(file_path), data, value_formatter)
 
     def read(self, file_path_without_extension: Path) -> THostsReadData:
         return self._read(self.add_file_extension(file_path_without_extension))
 
     @abc.abstractmethod
-    def _write(self, file_path: Path, data: HostsStorageData,
-               value_formatter: Callable[[Any], str]) -> None:
+    def _write(
+        self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
+    ) -> None:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -188,15 +190,17 @@ class StandardHostsStorage(ABCHostsStorage[str]):
     def __init__(self):
         super().__init__(StorageFormat.STANDARD)
 
-    def _write(self, file_path: Path, data: HostsStorageData,
-               value_formatter: Callable[[Any], str]) -> None:
+    def _write(
+        self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
+    ) -> None:
         out = io.StringIO()
         contact_groups = data.contact_groups
         if contact_groups["hosts"]:
             out.write("\nhost_contactgroups += %s\n\n" % (value_formatter(contact_groups["hosts"])))
         if contact_groups["services"]:
-            out.write("\nservice_contactgroups += %s\n\n" %
-                      (value_formatter(contact_groups["services"])))
+            out.write(
+                "\nservice_contactgroups += %s\n\n" % (value_formatter(contact_groups["services"]))
+            )
 
         if data.all_hosts:
             out.write("all_hosts += %s\n" % value_formatter(data.all_hosts))
@@ -249,8 +253,9 @@ class PickleHostsStorage(ABCHostsStorage[HostsData]):
     def __init__(self):
         super().__init__(StorageFormat.PICKLE)
 
-    def _write(self, file_path: Path, data: HostsStorageData,
-               value_formatter: Callable[[Any], str]) -> None:
+    def _write(
+        self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
+    ) -> None:
         pickle_store = store.ObjectStore(file_path, serializer=PickleSerializer())
         with pickle_store.locked():
             pickle_store.write_obj(asdict(data))
@@ -263,8 +268,9 @@ class RawHostsStorage(ABCHostsStorage[HostsData]):
     def __init__(self):
         super().__init__(StorageFormat.RAW)
 
-    def _write(self, file_path: Path, data: HostsStorageData,
-               value_formatter: Callable[[Any], str]) -> None:
+    def _write(
+        self, file_path: Path, data: HostsStorageData, value_formatter: Callable[[Any], str]
+    ) -> None:
         store.save_text_to_file(str(file_path), value_formatter(data))
 
     def _read(self, file_path: Path) -> HostsData:
@@ -290,13 +296,15 @@ def get_host_storage_loaders(storage_format_option: str) -> List[ABCHostsStorage
         StandardStorageLoader(get_standard_hosts_storage())
     ]
     if storage := _make_experimental_base_hosts_storage_loader(
-            get_storage_format(storage_format_option)):
+        get_storage_format(storage_format_option)
+    ):
         host_storage_loaders.insert(0, storage)
     return host_storage_loaders
 
 
 def _make_experimental_base_hosts_storage_loader(
-        storage_format: StorageFormat) -> Optional[ABCHostsStorageLoader]:
+    storage_format: StorageFormat,
+) -> Optional[ABCHostsStorageLoader]:
     if storage := make_experimental_hosts_storage(storage_format):
         return ExperimentalStorageLoader(storage)
     return None
@@ -316,6 +324,7 @@ def apply_hosts_file_to_object(
 class ABCHostsStorageLoader(abc.ABC, Generic[THostsReadData]):
     __slots__ = ["_storage"]
     """This is WIP class: minimal working functionality. OOP and more clear API is planned"""
+
     def __init__(self, storage: ABCHostsStorage) -> None:
         self._storage = storage
 
@@ -338,7 +347,7 @@ class StandardStorageLoader(ABCHostsStorageLoader[str]):
 
 class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
     def apply(self, data: HostsData, global_dict: Dict[str, Any]) -> bool:
-        """ Integrates HostsData from PickleHostsStorage/RawHostsStorage into the global_dict """
+        """Integrates HostsData from PickleHostsStorage/RawHostsStorage into the global_dict"""
 
         # List based settings, append based
         # TODO: all_hosts can be computed out of host_attributes.keys() -> remove?
@@ -357,18 +366,18 @@ class ExperimentalStorageLoader(ABCHostsStorageLoader[HostsData]):
 
         # Dict based settings
         for key in [
-                "clusters",
-                "host_tags",
-                "host_labels",
-                "ipaddresses",
-                "ipv6addresses",
-                "cmk_agent_connection",  # TODO: will be changed to explicit_attribute
-                "explicit_snmp_communities",
-                "management_ipmi_credentials",
-                "management_snmp_credentials",
-                "management_protocol",
-                "explicit_host_conf",
-                "host_attributes",
+            "clusters",
+            "host_tags",
+            "host_labels",
+            "ipaddresses",
+            "ipv6addresses",
+            "cmk_agent_connection",  # TODO: will be changed to explicit_attribute
+            "explicit_snmp_communities",
+            "management_ipmi_credentials",
+            "management_snmp_credentials",
+            "management_protocol",
+            "explicit_host_conf",
+            "host_attributes",
         ]:
             global_dict[key].update(data.get(key, {}))
 

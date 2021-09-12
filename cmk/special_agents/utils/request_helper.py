@@ -94,8 +94,8 @@ class HTTPSAuthRequester(Requester):
         password: str,
     ) -> None:
         self._req_headers = {
-            'Authorization': "Basic " + base64.encodebytes(
-                ("%s:%s" % (username, password)).encode()).strip().decode()
+            "Authorization": "Basic "
+            + base64.encodebytes(("%s:%s" % (username, password)).encode()).strip().decode()
         }
         self._base_url = "https://%s:%d/%s" % (server, port, base_url)
         self._opener = build_opener(HTTPSAuthHandler(HTTPSConfigurableConnection.IGNORE))
@@ -115,7 +115,7 @@ def create_api_connect_session(
     no_cert_check: bool = False,
     auth: Any = None,
     token: Optional[str] = None,
-) -> 'ApiSession':
+) -> "ApiSession":
     """Create a custom requests Session
 
     Args:
@@ -134,7 +134,7 @@ def create_api_connect_session(
     """
     ssl_verify = None
     if not no_cert_check:
-        ssl_verify = os.environ.get('REQUEST_CA_BUNDLE')
+        ssl_verify = os.environ.get("REQUEST_CA_BUNDLE")
 
     session = ApiSession(api_url, ssl_verify)
 
@@ -149,14 +149,15 @@ def create_api_connect_session(
 class ApiSession(Session):
     """Adjusted requests.session class with a focus on multiple API calls
 
-        ApiSession behaves similar to the requests.session
-        with the exception that a base url is provided and persisted
-        all requests forms use the base url and append the actual request
+    ApiSession behaves similar to the requests.session
+    with the exception that a base url is provided and persisted
+    all requests forms use the base url and append the actual request
 
     """
-    def __init__(self,
-                 base_url: Optional[str] = None,
-                 ssl_verify: Optional[Union[str, bool]] = None):
+
+    def __init__(
+        self, base_url: Optional[str] = None, ssl_verify: Optional[Union[str, bool]] = None
+    ):
         super().__init__()
         self._base_url = base_url if base_url else ""
         self.ssl_verify = ssl_verify if ssl_verify else False
@@ -264,7 +265,8 @@ def urljoin(*args):
     >>> urljoin("http://127.0.0.1:8080/", "api/v2/")
     'http://127.0.0.1:8080/api/v2/'
     """
-    def join_slash(base, part):
-        return base.rstrip('/') + '/' + part.lstrip('/')
 
-    return reduce(join_slash, args) if args else ''
+    def join_slash(base, part):
+        return base.rstrip("/") + "/" + part.lstrip("/")
+
+    return reduce(join_slash, args) if args else ""

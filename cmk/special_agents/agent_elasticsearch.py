@@ -14,7 +14,7 @@ from cmk.special_agents.utils.argument_parsing import Args, create_default_argum
 
 
 def agent_elasticsearch_main(args: Args) -> None:
-    sys.stdout.write('<<<check_mk>>>\n')
+    sys.stdout.write("<<<check_mk>>>\n")
     for host in args.hosts:
         url_base = "%s://%s:%d" % (args.proto, host, args.port)
 
@@ -23,9 +23,9 @@ def agent_elasticsearch_main(args: Args) -> None:
         # Node stats: https://www.elastic.co/guide/en/elasticsearch/reference/current/cluster-nodes-stats.html
         # Indices Stats: https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-stats.html
         sections = {
-            'cluster_health': '/_cluster/health',
-            'nodes': '/_nodes/_all/stats',
-            'stats': '/*-*/_stats/store,docs',
+            "cluster_health": "/_cluster/health",
+            "nodes": "/_nodes/_all/stats",
+            "stats": "/*-*/_stats/store,docs",
         }
 
         try:
@@ -43,11 +43,11 @@ def agent_elasticsearch_main(args: Args) -> None:
                     sys.stdout.write("<<<elasticsearch_%s>>>\n" % section)
 
                 json_response = response.json()
-                if section == 'cluster_health':
+                if section == "cluster_health":
                     handle_cluster_health(json_response)
-                elif section == 'nodes':
+                elif section == "nodes":
                     handle_nodes(json_response)
-                elif section == 'stats':
+                elif section == "stats":
                     handle_stats(json_response)
             sys.exit(0)
         except Exception:
@@ -65,26 +65,23 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         "-P",
         "--proto",
         default="https",
-        help="Use 'http' or 'https' for connection to elasticsearch (default=https)")
-    parser.add_argument("-p",
-                        "--port",
-                        default=9200,
-                        type=int,
-                        help="Use alternative port (default: 9200)")
+        help="Use 'http' or 'https' for connection to elasticsearch (default=https)",
+    )
+    parser.add_argument(
+        "-p", "--port", default=9200, type=int, help="Use alternative port (default: 9200)"
+    )
     parser.add_argument(
         "-m",
         "--modules",
-        type=lambda x: x.split(' '),
+        type=lambda x: x.split(" "),
         default="cluster_health nodes stats",
-        help=
-        "Space-separated list of modules to query. Possible values: cluster_health, nodes, stats (default: all)"
+        help="Space-separated list of modules to query. Possible values: cluster_health, nodes, stats (default: all)",
     )
     parser.add_argument(
         "hosts",
         metavar="HOSTNAME",
         nargs="+",
-        help=
-        "You can define one or more elasticsearch instances to query. First instance where data is queried wins."
+        help="You can define one or more elasticsearch instances to query. First instance where data is queried wins.",
     )
 
     return parser.parse_args(argv)
@@ -104,14 +101,17 @@ def handle_nodes(response):
             cpu = proc["cpu"]
             mem = proc["mem"]
 
-            sys.stdout.write("%s open_file_descriptors %s\n" %
-                             (node["name"], proc["open_file_descriptors"]))
-            sys.stdout.write("%s max_file_descriptors %s\n" %
-                             (node["name"], proc["max_file_descriptors"]))
+            sys.stdout.write(
+                "%s open_file_descriptors %s\n" % (node["name"], proc["open_file_descriptors"])
+            )
+            sys.stdout.write(
+                "%s max_file_descriptors %s\n" % (node["name"], proc["max_file_descriptors"])
+            )
             sys.stdout.write("%s cpu_percent %s\n" % (node["name"], cpu["percent"]))
             sys.stdout.write("%s cpu_total_in_millis %s\n" % (node["name"], cpu["total_in_millis"]))
-            sys.stdout.write("%s mem_total_virtual_in_bytes %s\n" %
-                             (node["name"], mem["total_virtual_in_bytes"]))
+            sys.stdout.write(
+                "%s mem_total_virtual_in_bytes %s\n" % (node["name"], mem["total_virtual_in_bytes"])
+            )
 
 
 def handle_stats(response):
@@ -119,8 +119,9 @@ def handle_stats(response):
     if shards is not None:
         sys.stdout.write("<<<elasticsearch_shards>>>\n")
 
-        sys.stdout.write("%s %s %s\n" %
-                         (shards.get("total"), shards.get("successful"), shards.get("failed")))
+        sys.stdout.write(
+            "%s %s %s\n" % (shards.get("total"), shards.get("successful"), shards.get("failed"))
+        )
 
     docs = response.get("_all", {}).get("total")
     if docs is not None:
@@ -143,16 +144,23 @@ def handle_stats(response):
             for index in indices_data:
                 if index.split("-")[0] == indice:
                     all_counts.append(
-                        indices_data.get(index, {}).get("primaries", {}).get("docs",
-                                                                             {}).get("count"))
+                        indices_data.get(index, {})
+                        .get("primaries", {})
+                        .get("docs", {})
+                        .get("count")
+                    )
                     all_sizes.append(
-                        indices_data.get(index, {}).get("total", {}).get("store",
-                                                                         {}).get("size_in_bytes"))
-            sys.stdout.write("%s %s %s\n" %
-                             (indice, sum(all_counts) / len(all_counts),
-                              sum(all_sizes) / len(all_sizes)))  # fixed: true-division
+                        indices_data.get(index, {})
+                        .get("total", {})
+                        .get("store", {})
+                        .get("size_in_bytes")
+                    )
+            sys.stdout.write(
+                "%s %s %s\n"
+                % (indice, sum(all_counts) / len(all_counts), sum(all_sizes) / len(all_sizes))
+            )  # fixed: true-division
 
 
 def main():
-    """Main entry point to be used """
+    """Main entry point to be used"""
     special_agent_main(parse_arguments, agent_elasticsearch_main)

@@ -51,17 +51,21 @@ def main(args: List[str]) -> int:
     except Exception:
         if arguments.debug:
             raise
-        logger.exception("ERROR: Please repair this and run \"cmk-post-rename-site -v\" "
-                         "BEFORE starting the site again.")
+        logger.exception(
+            'ERROR: Please repair this and run "cmk-post-rename-site -v" '
+            "BEFORE starting the site again."
+        )
         return 1
     return 1 if has_errors else 0
 
 
 def load_plugins() -> None:
     for plugin, exc in chain(
-            load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions"),
-            load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")
-            if not is_raw_edition() else []):
+        load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions"),
+        load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")
+        if not is_raw_edition()
+        else [],
+    ):
         logger.error("Error in action plugin %s: %s\n", plugin, exc)
         if cmk.utils.debug.enabled():
             raise exc
@@ -74,16 +78,20 @@ def parse_arguments(args: List[str]) -> argparse.Namespace:
         return SiteId(s)
 
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('old_site_id',
-                   metavar='OLD_SITE_ID',
-                   type=site_id,
-                   help=('Specify the previous ID of the renamed site.'))
-    p.add_argument('--debug', action='store_true', help='Debug mode: raise Python exceptions')
-    p.add_argument('-v',
-                   '--verbose',
-                   action='count',
-                   default=0,
-                   help='Verbose mode (use multiple times for more output)')
+    p.add_argument(
+        "old_site_id",
+        metavar="OLD_SITE_ID",
+        type=site_id,
+        help=("Specify the previous ID of the renamed site."),
+    )
+    p.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
+    p.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Verbose mode (use multiple times for more output)",
+    )
 
     return p.parse_args(args)
 
@@ -117,7 +125,7 @@ def run(arguments: argparse.Namespace, old_site_id: SiteId, new_site_id: SiteId)
                 rename_action.run(old_site_id, new_site_id)
             except Exception:
                 has_errors = True
-                logger.error(" + \"%s\" failed", rename_action.title, exc_info=True)
+                logger.error(' + "%s" failed', rename_action.title, exc_info=True)
                 if arguments.debug:
                     raise
 

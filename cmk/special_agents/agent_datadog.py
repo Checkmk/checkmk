@@ -25,7 +25,8 @@ from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_m
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation # isort: skip
-    SyslogForwarderUnixSocket, SyslogMessage,
+    SyslogForwarderUnixSocket,
+    SyslogMessage,
 )
 
 Tags = Sequence[str]
@@ -40,8 +41,10 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         "hostname",
         type=str,
         metavar="NAME",
-        help=("Name of the Checkmk host on which the agent is executed (used as filename to store "
-              "the timestamp of the last event)"),
+        help=(
+            "Name of the Checkmk host on which the agent is executed (used as filename to store "
+            "the timestamp of the last event)"
+        ),
     )
     parser.add_argument(
         "api_key",
@@ -102,8 +105,10 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
         type=str,
         nargs="*",
         metavar="REGEX1 REGEX2 ...",
-        help=("Any tag of a fetched event matching one of these regular expressions will be shown "
-              "in the EC"),
+        help=(
+            "Any tag of a fetched event matching one of these regular expressions will be shown "
+            "in the EC"
+        ),
         default=[],
     )
     parser.add_argument(
@@ -130,8 +135,7 @@ def parse_arguments(argv: Optional[Sequence[str]]) -> Args:
     parser.add_argument(
         "--event_add_text",
         action="store_true",
-        help=
-        "Add text of events to data forwarded to the EC. Newline characters are replaced by '~'.",
+        help="Add text of events to data forwarded to the EC. Newline characters are replaced by '~'.",
     )
     return parser.parse_args(argv)
 
@@ -144,8 +148,8 @@ class DatadogAPI:
         app_key: str,
     ) -> None:
         self._query_heads = {
-            'DD-API-KEY': api_key,
-            'DD-APPLICATION-KEY': app_key,
+            "DD-API-KEY": api_key,
+            "DD-APPLICATION-KEY": app_key,
         }
         self._api_url = api_host.rstrip("/") + "/api/v1"
 
@@ -155,7 +159,7 @@ class DatadogAPI:
         params: Mapping[str, Any],
     ) -> Any:
         return requests.get(
-            f'{self._api_url}/{api_endpoint}',
+            f"{self._api_url}/{api_endpoint}",
             headers=self._query_heads,
             params=params,
         ).json()
@@ -181,10 +185,10 @@ class MonitorsQuerier:
         current_page = 0
         while True:
             if monitors_in_page := self._query_monitors_page(
-                    tags,
-                    monitor_tags,
-                    page_size,
-                    current_page,
+                tags,
+                monitor_tags,
+                page_size,
+                current_page,
             ):
                 yield from monitors_in_page
                 current_page += 1
@@ -241,10 +245,10 @@ class EventsQuerier:
 
         while True:
             if events_in_page := self._query_events_page_in_time_window(
-                    start,
-                    end,
-                    current_page,
-                    tags,
+                start,
+                end,
+                current_page,
+                tags,
             ):
                 yield from events_in_page
                 current_page += 1
@@ -310,8 +314,11 @@ def _to_syslog_message(
     add_text: bool,
 ) -> SyslogMessage:
     LOGGER.debug(raw_event)
-    matching_tags = ', '.join(tag for tag in raw_event["tags"] if any(
-        re.match(tag_regex, tag) for tag_regex in tag_regexes))
+    matching_tags = ", ".join(
+        tag
+        for tag in raw_event["tags"]
+        if any(re.match(tag_regex, tag) for tag_regex in tag_regexes)
+    )
     tags_text = f", Tags: {matching_tags}" if matching_tags else ""
     details = str(raw_event["text"]).replace("\n", " ~ ")
     details_text = f", Text: {details}" if add_text else ""
@@ -342,7 +349,9 @@ def _forward_events_to_ec(
             severity,
             service_level,
             add_text,
-        ) for raw_event in raw_events)
+        )
+        for raw_event in raw_events
+    )
 
 
 def _monitors_section(
@@ -352,18 +361,20 @@ def _monitors_section(
     LOGGER.debug("Querying monitors")
     with SectionWriter("datadog_monitors") as writer:
         for monitor in MonitorsQuerier(datadog_api).query_monitors(
-                args.monitor_tags,
-                args.monitor_monitor_tags,
+            args.monitor_tags,
+            args.monitor_monitor_tags,
         ):
             writer.append_json(monitor)
 
 
 def _events_section(datadog_api: DatadogAPI, args: Args) -> None:
     LOGGER.debug("Querying events")
-    events = list(EventsQuerier(
-        datadog_api,
-        args.hostname,
-    ).query_events(args.event_tags))
+    events = list(
+        EventsQuerier(
+            datadog_api,
+            args.hostname,
+        ).query_events(args.event_tags)
+    )
     _forward_events_to_ec(
         events,
         args.event_tags_show,
@@ -383,10 +394,7 @@ def agent_datadog_main(args: Args) -> None:
         args.app_key,
     )
     for section in args.sections:
-        {
-            "monitors": _monitors_section,
-            "events": _events_section,
-        }[section](
+        {"monitors": _monitors_section, "events": _events_section,}[section](
             datadog_api,
             args,
         )

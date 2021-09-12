@@ -23,7 +23,7 @@ def check_actual_input(name, lines, alone, data):
         lines += 2
 
     if len(data) < lines:
-        pytest.skip('"%s" Data is TOO short:\n %s' % (name, '\n'.join(data)))
+        pytest.skip('"%s" Data is TOO short:\n %s' % (name, "\n".join(data)))
         return False
 
     return True
@@ -54,7 +54,7 @@ def make_dir(dir):
 
 
 def check_os():
-    if platform.system() != 'Windows':
+    if platform.system() != "Windows":
         return False
 
     return True

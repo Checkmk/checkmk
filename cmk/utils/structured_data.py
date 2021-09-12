@@ -189,7 +189,7 @@ class StructuredDataStore:
         store.save_bytes_to_file(self._gz_file(host_name), buf.getvalue())
 
         # Inform Livestatus about the latest inventory update
-        store.save_text_to_file(filepath.with_name(".last"), u"")
+        store.save_text_to_file(filepath.with_name(".last"), "")
 
     def load(self, *, host_name: HostName) -> StructuredDataNode:
         return self.load_file(self._host_file(host_name))
@@ -206,7 +206,7 @@ class StructuredDataStore:
         filepath.rename(target_dir / str(int(filepath.stat().st_mtime)))
 
 
-#.
+# .
 #   .--filters-------------------------------------------------------------.
 #   |                       __ _ _ _                                       |
 #   |                      / _(_) | |_ ___ _ __ ___                        |
@@ -229,16 +229,20 @@ def _make_choices_filter(choices: Sequence[Union[str, int]]) -> SDFilterFunc:
 def make_filter(entry: Union[Tuple[SDPath, Optional[SDKeys]], Dict]) -> SDFilter:
     if isinstance(entry, tuple):
         path, keys = entry
-        return SDFilter(
-            path=path,
-            filter_nodes=_use_all,
-            filter_attributes=_use_all,
-            filter_columns=_use_all,
-        ) if keys is None else SDFilter(
-            path=path,
-            filter_nodes=_use_nothing,
-            filter_attributes=_make_choices_filter(keys) if keys else _use_all,
-            filter_columns=_make_choices_filter(keys) if keys else _use_all,
+        return (
+            SDFilter(
+                path=path,
+                filter_nodes=_use_all,
+                filter_attributes=_use_all,
+                filter_columns=_use_all,
+            )
+            if keys is None
+            else SDFilter(
+                path=path,
+                filter_nodes=_use_nothing,
+                filter_attributes=_make_choices_filter(keys) if keys else _use_all,
+                filter_columns=_make_choices_filter(keys) if keys else _use_all,
+            )
         )
 
     return SDFilter(
@@ -261,7 +265,7 @@ def make_filter_from_choice(choice: Union[Tuple[str, List[str]], str, None]) -> 
     return _use_all
 
 
-#.
+# .
 #   .--Structured DataNode-------------------------------------------------.
 #   |         ____  _                   _                      _           |
 #   |        / ___|| |_ _ __ _   _  ___| |_ _   _ _ __ ___  __| |          |
@@ -325,10 +329,13 @@ class StructuredDataNode:
         return True
 
     def count_entries(self) -> int:
-        return sum([
-            self.attributes.count_entries(),
-            self.table.count_entries(),
-        ] + [node.count_entries() for node in self._nodes.values()])
+        return sum(
+            [
+                self.attributes.count_entries(),
+                self.table.count_entries(),
+            ]
+            + [node.count_entries() for node in self._nodes.values()]
+        )
 
     def merge_with(self, other: object) -> StructuredDataNode:
         if not isinstance(other, StructuredDataNode):
@@ -462,7 +469,8 @@ class StructuredDataNode:
                     name=raw_name,
                     path=path + (raw_name,),
                     raw_tree=raw_node,
-                ))
+                )
+            )
 
         return node
 
@@ -499,7 +507,8 @@ class StructuredDataNode:
                             name=str(idx),
                             path=the_path + (str(idx),),
                             raw_tree=entry,
-                        ))
+                        )
+                    )
 
             else:
                 raw_pairs.setdefault(key, value)
@@ -565,8 +574,11 @@ class StructuredDataNode:
                 keep_identical=keep_identical,
             )
 
-            if (delta_node_result.counter['new'] or delta_node_result.counter['changed'] or
-                    delta_node_result.counter['removed']):
+            if (
+                delta_node_result.counter["new"]
+                or delta_node_result.counter["changed"]
+                or delta_node_result.counter["removed"]
+            ):
                 counter.update(delta_node_result.counter)
                 delta_node.add_node(delta_node_result.delta)
 
@@ -603,7 +615,8 @@ class StructuredDataNode:
             filtered_node = filtered.setdefault_node(f.path)
 
             filtered_node.add_attributes(
-                node.attributes.get_filtered_attributes(f.filter_attributes))
+                node.attributes.get_filtered_attributes(f.filter_attributes)
+            )
             filtered_node.add_table(node.table.get_filtered_table(f.filter_columns))
 
             for name, sub_node in node._nodes.items():
@@ -627,7 +640,7 @@ class StructuredDataNode:
             renderer.show_node(self._nodes[name])
 
 
-#.
+# .
 #   .--Table---------------------------------------------------------------.
 #   |                       _____     _     _                              |
 #   |                      |_   _|_ _| |__ | | ___                         |
@@ -800,8 +813,11 @@ class Table:
                 if not previous_intervals:
                     continue
 
-                if (key not in self.key_columns and filter_func(key) and
-                        now <= previous_intervals.keep_until):
+                if (
+                    key not in self.key_columns
+                    and filter_func(key)
+                    and now <= previous_intervals.keep_until
+                ):
                     self.retentions.setdefault(ident, {}).setdefault(key, previous_intervals)
                     old_row.setdefault(key, value)
 
@@ -811,8 +827,9 @@ class Table:
                 reasons.append("added row below %r" % ident)
 
         for ident in compared_idents.both:
-            compared_keys = _compare_dict_keys(old_dict=other._rows[ident],
-                                               new_dict=self._rows[ident])
+            compared_keys = _compare_dict_keys(
+                old_dict=other._rows[ident], new_dict=self._rows[ident]
+            )
 
             row: SDRow = {}
             for key in compared_keys.only_old:
@@ -820,8 +837,11 @@ class Table:
                 if not previous_intervals:
                     continue
 
-                if (key not in self.key_columns and filter_func(key) and
-                        now <= previous_intervals.keep_until):
+                if (
+                    key not in self.key_columns
+                    and filter_func(key)
+                    and now <= previous_intervals.keep_until
+                ):
                     self.retentions.setdefault(ident, {}).setdefault(key, previous_intervals)
                     row.setdefault(key, other._rows[ident][key])
 
@@ -830,14 +850,20 @@ class Table:
                     self.retentions.setdefault(ident, {}).setdefault(key, inv_intervals)
 
             if row:
-                row.update({
-                    **{
-                        k: other._rows[ident][k] for k in other.key_columns if k in other._rows[ident][k]
-                    },
-                    **{
-                        k: self._rows[ident][k] for k in self.key_columns if k in self._rows[ident][k]
-                    },
-                })
+                row.update(
+                    {
+                        **{
+                            k: other._rows[ident][k]
+                            for k in other.key_columns
+                            if k in other._rows[ident][k]
+                        },
+                        **{
+                            k: self._rows[ident][k]
+                            for k in self.key_columns
+                            if k in self._rows[ident][k]
+                        },
+                    }
+                )
                 self.add_row(ident, row)
                 reasons.append("added row below %r" % ident)
 
@@ -881,10 +907,12 @@ class Table:
     def serialize(self) -> SDRawTree:
         raw_table = {}
         if self._rows:
-            raw_table.update({
-                _KEY_COLUMNS_KEY: self.key_columns,
-                _ROWS_KEY: list(self._rows.values()),
-            })
+            raw_table.update(
+                {
+                    _KEY_COLUMNS_KEY: self.key_columns,
+                    _ROWS_KEY: list(self._rows.values()),
+                }
+            )
 
         if self.retentions:
             raw_table[_RETENTIONS_KEY] = {
@@ -978,7 +1006,7 @@ class Table:
         renderer.show_table(self)
 
 
-#.
+# .
 #   .--Attributes----------------------------------------------------------.
 #   |              _   _   _        _ _           _                        |
 #   |             / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___             |
@@ -1171,7 +1199,7 @@ class Attributes:
         renderer.show_attributes(self)
 
 
-#.
+# .
 #   .--helpers-------------------------------------------------------------.
 #   |                  _          _                                        |
 #   |                 | |__   ___| |_ __   ___ _ __ ___                    |
@@ -1264,12 +1292,14 @@ def parse_visible_raw_path(raw_path: SDRawPath) -> SDPath:
 
 
 def _serialize_retentions(
-        intervals_by_keys: RetentionIntervalsByKeys) -> RawRetentionIntervalsByKeys:
+    intervals_by_keys: RetentionIntervalsByKeys,
+) -> RawRetentionIntervalsByKeys:
     return {key: intervals.serialize() for key, intervals in intervals_by_keys.items()}
 
 
 def _deserialize_retentions(
-        raw_intervals_by_keys: Optional[RawRetentionIntervalsByKeys]) -> RetentionIntervalsByKeys:
+    raw_intervals_by_keys: Optional[RawRetentionIntervalsByKeys],
+) -> RetentionIntervalsByKeys:
     if not raw_intervals_by_keys:
         return {}
     return {

@@ -41,25 +41,26 @@ class BytesSerializer:
 class TextSerializer:
     @staticmethod
     def serialize(data: str) -> bytes:
-        return data.encode('utf-8')
+        return data.encode("utf-8")
 
     @staticmethod
     def deserialize(raw: bytes) -> str:
-        return raw.decode('utf-8')
+        return raw.decode("utf-8")
 
 
 class DimSerializer:
     """A dangerous serializer that is not very bright and returns `Any`"""
+
     def __init__(self, *, pretty: bool = False) -> None:
         self.pretty: Final = pretty
 
     def serialize(self, data: Any) -> bytes:
         data_str = pprint.pformat(data) if self.pretty else repr(data)
-        return f"{data_str}\n".encode('utf-8')
+        return f"{data_str}\n".encode("utf-8")
 
     @staticmethod
     def deserialize(raw: bytes) -> Any:
-        return literal_eval(raw.decode('utf-8'))
+        return literal_eval(raw.decode("utf-8"))
 
 
 class ObjectStore(Generic[TObject]):
@@ -91,10 +92,10 @@ class ObjectStore(Generic[TObject]):
         tmp_path = None
         try:
             with tempfile.NamedTemporaryFile(
-                    "wb",
-                    dir=str(self.path.parent),
-                    prefix=".%s.new" % self.path.name,
-                    delete=False,
+                "wb",
+                dir=str(self.path.parent),
+                prefix=".%s.new" % self.path.name,
+                delete=False,
             ) as tmp:
 
                 tmp_path = Path(tmp.name)
@@ -123,8 +124,8 @@ class ObjectStore(Generic[TObject]):
                 # We can archieve this by calling os.link() before the os.rename() below. Then we need
                 # to define in which situations we want to check out the backup open(s) and in which
                 # cases we can savely delete them.
-                #tmp.flush()
-                #os.fsync(tmp.fileno())
+                # tmp.flush()
+                # os.fsync(tmp.fileno())
 
             tmp_path.rename(self.path)
 
@@ -135,8 +136,7 @@ class ObjectStore(Generic[TObject]):
                 tmp_path.unlink(missing_ok=True)
 
             # TODO: How to handle debug mode or logging?
-            raise MKGeneralException(
-                _("Cannot write configuration file \"%s\": %s") % (self.path, e))
+            raise MKGeneralException(_('Cannot write configuration file "%s": %s') % (self.path, e))
 
         finally:
             release_lock(self.path)
@@ -150,11 +150,11 @@ class ObjectStore(Generic[TObject]):
                 # Since locking (currently) creates an empty file,
                 # there is no semantic difference between an empty and a
                 # non-existing file, so we ensure consistency here.
-                return b''
+                return b""
 
         except (MKTerminate, MKTimeout):
             raise
         except Exception as e:
             if cmk.utils.debug.enabled():
                 raise
-            raise MKGeneralException(_("Cannot read file \"%s\": %s") % (self.path, e))
+            raise MKGeneralException(_('Cannot read file "%s": %s') % (self.path, e))

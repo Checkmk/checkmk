@@ -8,5 +8,5 @@ import sys
 
 from cmk.special_agents.agent_tinkerforge import main  # type: ignore[attr-defined] # pylint: disable=import-error # isort: skip
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

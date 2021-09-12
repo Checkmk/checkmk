@@ -24,4 +24,5 @@ rename_action_registry.register(
         title=_("Update core config"),
         sort_index=900,
         handler=update_core_config,
-    ))
+    )
+)

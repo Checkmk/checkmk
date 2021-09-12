@@ -109,8 +109,9 @@ class ABCBIRule(ABCWithSchema):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compile(self, extern_arguments: ActionArgument,
-                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
+    def compile(
+        self, extern_arguments: ActionArgument, bi_searcher: ABCBISearcher
+    ) -> List[ABCBICompiledNode]:
         raise NotImplementedError()
 
     @classmethod

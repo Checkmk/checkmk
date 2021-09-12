@@ -20,7 +20,7 @@ from cmk.special_agents.utils import vcrtrace
 ElementAttributes = Dict[str, str]
 
 # TODO Add functionality in the future
-#import cmk.utils.password_store
+# import cmk.utils.password_store
 
 # Be aware of
 # root = ET.fromstring(content)
@@ -43,18 +43,26 @@ Entities = List[Tuple[str, str, Sequence[Entry]]]
 # Cisco UCS B-Series Blade Servers
 B_SERIES_ENTITIES: Entities = [
     # FANS
-    ("ucs_bladecenter_fans", "UCSB", [
-        ("equipmentFan", ["Dn", "Model", "OperState"]),
-        ("equipmentFanModuleStats", ["Dn", "AmbientTemp"]),
-        ("equipmentNetworkElementFanStats", ["Dn", "SpeedAvg"]),
-        ("equipmentRackUnitFanStats", ["Dn", "SpeedAvg"]),
-        ("equipmentFanStats", ["Dn", "SpeedAvg"]),
-    ]),
+    (
+        "ucs_bladecenter_fans",
+        "UCSB",
+        [
+            ("equipmentFan", ["Dn", "Model", "OperState"]),
+            ("equipmentFanModuleStats", ["Dn", "AmbientTemp"]),
+            ("equipmentNetworkElementFanStats", ["Dn", "SpeedAvg"]),
+            ("equipmentRackUnitFanStats", ["Dn", "SpeedAvg"]),
+            ("equipmentFanStats", ["Dn", "SpeedAvg"]),
+        ],
+    ),
     # PSU
-    ("ucs_bladecenter_psu", "UCSB", [
-        ("equipmentPsuInputStats", ["Dn", "Current", "PowerAvg", "Voltage"]),
-        ("equipmentPsuStats", ["Dn", "AmbientTemp", "Output12vAvg", "Output3v3Avg"]),
-    ]),
+    (
+        "ucs_bladecenter_psu",
+        "UCSB",
+        [
+            ("equipmentPsuInputStats", ["Dn", "Current", "PowerAvg", "Voltage"]),
+            ("equipmentPsuStats", ["Dn", "AmbientTemp", "Output12vAvg", "Output3v3Avg"]),
+        ],
+    ),
     # NETWORK
     (
         "ucs_bladecenter_if",
@@ -63,145 +71,253 @@ B_SERIES_ENTITIES: Entities = [
             # Fibrechannel
             ("fcStats", ["Dn", "BytesRx", "BytesTx", "PacketsRx", "PacketsTx", "Suspect"]),
             ("fcErrStats", ["Dn", "Rx", "Tx", "CrcRx", "DiscardRx", "DiscardTx"]),
-            ("fabricFcSanEp",
-             ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
+            (
+                "fabricFcSanEp",
+                ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"],
+            ),
             ("fabricFcSanPc", ["Dn", "AdminState", "OperState", "OperSpeed"]),
-            ("fabricFcSanPcEp",
-             ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
-
+            (
+                "fabricFcSanPcEp",
+                ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"],
+            ),
             # Errors stats. These are also used by interconnects
-            ("etherTxStats",
-             ["Dn", "TotalBytes", "UnicastPackets", "MulticastPackets", "BroadcastPackets"]),
-            ("etherRxStats",
-             ["Dn", "TotalBytes", "UnicastPackets", "MulticastPackets", "BroadcastPackets"]),
+            (
+                "etherTxStats",
+                ["Dn", "TotalBytes", "UnicastPackets", "MulticastPackets", "BroadcastPackets"],
+            ),
+            (
+                "etherRxStats",
+                ["Dn", "TotalBytes", "UnicastPackets", "MulticastPackets", "BroadcastPackets"],
+            ),
             ("etherErrStats", ["Dn", "OutDiscard", "Rcv"]),
-
             # Ethernet
-            ("fabricEthLanEp", [
-                "Dn", "EpDn", "AdminState", "OperState", "AdminSpeed", "PortId", "SwitchId",
-                "SlotId"
-            ]),
-            ("fabricEthLanPc",
-             ["Dn", "AdminState", "OperState", "AdminSpeed", "OperSpeed", "Name", "PortId"]),
-            ("fabricEthLanPcEp",
-             ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
-
+            (
+                "fabricEthLanEp",
+                [
+                    "Dn",
+                    "EpDn",
+                    "AdminState",
+                    "OperState",
+                    "AdminSpeed",
+                    "PortId",
+                    "SwitchId",
+                    "SlotId",
+                ],
+            ),
+            (
+                "fabricEthLanPc",
+                ["Dn", "AdminState", "OperState", "AdminSpeed", "OperSpeed", "Name", "PortId"],
+            ),
+            (
+                "fabricEthLanPcEp",
+                ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"],
+            ),
             # Interconnects
-            ("fabricDceSwSrvEp",
-             ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
+            (
+                "fabricDceSwSrvEp",
+                ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"],
+            ),
             ("fabricDceSwSrvPc", ["Dn", "AdminState", "OperState", "OperSpeed", "Name", "PortId"]),
-            ("fabricDceSwSrvPcEp",
-             ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"]),
-        ]),
+            (
+                "fabricDceSwSrvPcEp",
+                ["Dn", "EpDn", "AdminState", "OperState", "PortId", "SwitchId", "SlotId"],
+            ),
+        ],
+    ),
     # Fault Instances
-    ("ucs_bladecenter_faultinst", "UCSB", [
-        ("faultInst", ["Dn", "Descr", "Severity"]),
-    ]),
+    (
+        "ucs_bladecenter_faultinst",
+        "UCSB",
+        [
+            ("faultInst", ["Dn", "Descr", "Severity"]),
+        ],
+    ),
     # TopSystem Info
-    ("ucs_bladecenter_topsystem", "UCSB", [
-        ("topSystem", ["Address", "CurrentTime", "Ipv6Addr", "Mode", "Name", "SystemUpTime"]),
-    ]),
+    (
+        "ucs_bladecenter_topsystem",
+        "UCSB",
+        [
+            ("topSystem", ["Address", "CurrentTime", "Ipv6Addr", "Mode", "Name", "SystemUpTime"]),
+        ],
+    ),
 ]
 
 # Cisco UCS C-Series Rack Servers
 C_SERIES_ENTITIES: Entities = [
-    ("ucs_c_rack_server_fans", "UCSC", [
-        ("equipmentFan", [
-            "dn",
-            "id",
-            "model",
-            "operability",
-        ]),
-    ]),
-    ("ucs_c_rack_server_psu", "UCSC", [
-        ("equipmentPsu", [
-            "dn",
-            "id",
-            "model",
-            "operability",
-            "voltage",
-        ]),
-    ]),
-    ("ucs_c_rack_server_power", "UCSC", [
-        ("computeMbPowerStats", [
-            "dn",
-            "consumedPower",
-            "inputCurrent",
-            "inputVoltage",
-        ]),
-    ]),
-    ("ucs_c_rack_server_temp", "UCSC", [
-        ("computeRackUnitMbTempStats", [
-            "dn",
-            "ambientTemp",
-            "frontTemp",
-            "ioh1Temp",
-            "ioh2Temp",
-            "rearTemp",
-        ]),
-    ]),
-    ("ucs_c_rack_server_environment", "UCSC", [
-        ("processorEnvStats", [
-            "dn",
-            "id",
-            "description",
-            "temperature",
-        ]),
-    ]),
-    ("ucs_c_rack_server_environment", "UCSC", [
-        ("memoryUnitEnvStats", [
-            "dn",
-            "id",
-            "description",
-            "temperature",
-        ]),
-    ]),
-    ("ucs_c_rack_server_health", "UCSC", [
-        ("storageControllerHealth", [
-            "dn",
-            "id",
-            "health",
-        ]),
-    ]),
-    ("ucs_c_rack_server_topsystem", "UCSC", [
-        ("topSystem", [
-            "dn",
-            "address",
-            "currentTime",
-            "mode",
-            "name",
-        ]),
-    ]),
-    ("ucs_c_rack_server_util", "UCSC", [
-        ("serverUtilization", [
-            "dn",
-            "overallUtilization",
-            "cpuUtilization",
-            "memoryUtilization",
-            "ioUtilization",
-        ]),
-    ]),
-    ("ucs_c_rack_server_led", "UCSC", [
-        ("equipmentIndicatorLed", [
-            "dn",
-            "name",
-            "color",
-            "operState",
-        ]),
-    ]),
-    ("ucs_c_rack_server_faultinst", "UCSC", [
-        ("faultInst", [
-            "severity",
-            "cause",
-            "code",
-            "descr",
-            "affectedDN",
-        ]),
-    ]),
+    (
+        "ucs_c_rack_server_fans",
+        "UCSC",
+        [
+            (
+                "equipmentFan",
+                [
+                    "dn",
+                    "id",
+                    "model",
+                    "operability",
+                ],
+            ),
+        ],
+    ),
+    (
+        "ucs_c_rack_server_psu",
+        "UCSC",
+        [
+            (
+                "equipmentPsu",
+                [
+                    "dn",
+                    "id",
+                    "model",
+                    "operability",
+                    "voltage",
+                ],
+            ),
+        ],
+    ),
+    (
+        "ucs_c_rack_server_power",
+        "UCSC",
+        [
+            (
+                "computeMbPowerStats",
+                [
+                    "dn",
+                    "consumedPower",
+                    "inputCurrent",
+                    "inputVoltage",
+                ],
+            ),
+        ],
+    ),
+    (
+        "ucs_c_rack_server_temp",
+        "UCSC",
+        [
+            (
+                "computeRackUnitMbTempStats",
+                [
+                    "dn",
+                    "ambientTemp",
+                    "frontTemp",
+                    "ioh1Temp",
+                    "ioh2Temp",
+                    "rearTemp",
+                ],
+            ),
+        ],
+    ),
+    (
+        "ucs_c_rack_server_environment",
+        "UCSC",
+        [
+            (
+                "processorEnvStats",
+                [
+                    "dn",
+                    "id",
+                    "description",
+                    "temperature",
+                ],
+            ),
+        ],
+    ),
+    (
+        "ucs_c_rack_server_environment",
+        "UCSC",
+        [
+            (
+                "memoryUnitEnvStats",
+                [
+                    "dn",
+                    "id",
+                    "description",
+                    "temperature",
+                ],
+            ),
+        ],
+    ),
+    (
+        "ucs_c_rack_server_health",
+        "UCSC",
+        [
+            (
+                "storageControllerHealth",
+                [
+                    "dn",
+                    "id",
+                    "health",
+                ],
+            ),
+        ],
+    ),
+    (
+        "ucs_c_rack_server_topsystem",
+        "UCSC",
+        [
+            (
+                "topSystem",
+                [
+                    "dn",
+                    "address",
+                    "currentTime",
+                    "mode",
+                    "name",
+                ],
+            ),
+        ],
+    ),
+    (
+        "ucs_c_rack_server_util",
+        "UCSC",
+        [
+            (
+                "serverUtilization",
+                [
+                    "dn",
+                    "overallUtilization",
+                    "cpuUtilization",
+                    "memoryUtilization",
+                    "ioUtilization",
+                ],
+            ),
+        ],
+    ),
+    (
+        "ucs_c_rack_server_led",
+        "UCSC",
+        [
+            (
+                "equipmentIndicatorLed",
+                [
+                    "dn",
+                    "name",
+                    "color",
+                    "operState",
+                ],
+            ),
+        ],
+    ),
+    (
+        "ucs_c_rack_server_faultinst",
+        "UCSC",
+        [
+            (
+                "faultInst",
+                [
+                    "severity",
+                    "cause",
+                    "code",
+                    "descr",
+                    "affectedDN",
+                ],
+            ),
+        ],
+    ),
 ]
 SERIES_NECESSARY_SECTIONS = ["ucs_bladecenter_faultinst", "ucs_c_rack_server_faultinst"]
 
-#.
+# .
 #   .--connection----------------------------------------------------------.
 #   |                                          _   _                       |
 #   |           ___ ___  _ __  _ __   ___  ___| |_(_) ___  _ __            |
@@ -228,19 +344,19 @@ class Server:
     def login(self):
         logging.debug("Server.login: Login")
         attributes: ElementAttributes = {
-            'inName': self._username,
-            'inPassword': self._password,
+            "inName": self._username,
+            "inPassword": self._password,
         }
 
-        root = self._communicate(ET.Element('aaaLogin', attrib=attributes))
-        cookie = root.attrib.get('outCookie')
+        root = self._communicate(ET.Element("aaaLogin", attrib=attributes))
+        cookie = root.attrib.get("outCookie")
         if cookie:
             logging.debug("Server.login: Found cookie")
             self._cookie = cookie
 
     @staticmethod
     def filter_credentials(request):
-        if b'inPassword=' in request.body:
+        if b"inPassword=" in request.body:
             request.body = b"login request filtered out"
         return request
 
@@ -248,8 +364,8 @@ class Server:
         logging.debug("Server.logout: Logout")
         attributes: ElementAttributes = {}
         if self._cookie:
-            attributes.update({'inCookie': self._cookie})
-        self._communicate(ET.Element('aaaLogout', attrib=attributes))
+            attributes.update({"inCookie": self._cookie})
+        self._communicate(ET.Element("aaaLogout", attrib=attributes))
 
     def _get_bios_unit_name_from_dn(self, xml_object) -> str:
         dn = self._get_attribute_data(xml_object, "dn")
@@ -258,13 +374,15 @@ class Server:
     def get_model_info(self) -> Mapping[str, str]:
         logging.debug("Server.get_model_info: Get model info")
         return {
-            self._get_bios_unit_name_from_dn(bios_unit):
-            self._get_attribute_data(bios_unit, "model").split("-")[0]
+            self._get_bios_unit_name_from_dn(bios_unit): self._get_attribute_data(
+                bios_unit, "model"
+            ).split("-")[0]
             for bios_unit in self._get_class_data("biosUnit")
         }
 
-    def get_data_from_entities(self, entities: Entities,
-                               model_info: Mapping[str, str]) -> Dict[str, List[Tuple[Any, Any]]]:
+    def get_data_from_entities(
+        self, entities: Entities, model_info: Mapping[str, str]
+    ) -> Dict[str, List[Tuple[Any, Any]]]:
         """
         Returns dict[k: header, v: List[Tuple[class_id, List[Tuple[attribute, attribute data]]]]]
         from entities (B_SERIES_ENTITIES, C_SERIES_ENTITIES).
@@ -275,7 +393,10 @@ class Server:
             for class_id, attributes in entries:
                 logging.debug(
                     "Server.get_data_from_entities: header: '%s', class_id: '%s' - attributes: '%s'",
-                    header, class_id, ','.join(attributes))
+                    header,
+                    class_id,
+                    ",".join(attributes),
+                )
 
                 try:
                     xml_objects = self._get_class_data(class_id)
@@ -302,7 +423,7 @@ class Server:
                         if attribute_data is None:
                             logging.debug("No such attribute '%s'", attribute)
                             # ensure order of entries in related check plugins is consistent
-                            attribute_data = ''
+                            attribute_data = ""
                         xml_data.append((attribute, attribute_data))
                     data.setdefault(header, []).append((class_id, xml_data))
         return data
@@ -317,8 +438,9 @@ class Server:
         # 'OperState'   -> 'operState'
         # 'AmbientTemp' -> 'ambientTemp'
         attribute_lower = attribute[0].lower() + attribute[1:]
-        logging.debug("Server._get_attribute_data: Try getting attribute '%s' (lower)",
-                      attribute_lower)
+        logging.debug(
+            "Server._get_attribute_data: Try getting attribute '%s' (lower)", attribute_lower
+        )
         attribute_data = xml_object.attrib.get(attribute_lower)
         if attribute_data:
             return attribute_data
@@ -328,15 +450,15 @@ class Server:
         Returns list of XML trees for class_id or empty list in case no entries are found.
         """
         attributes: ElementAttributes = {
-            'classId': class_id,
-            'inHierarchical': 'false',
+            "classId": class_id,
+            "inHierarchical": "false",
         }
         if self._cookie:
-            attributes.update({'cookie': self._cookie})
-        root = self._communicate(ET.Element('configResolveClass', attrib=attributes))
+            attributes.update({"cookie": self._cookie})
+        root = self._communicate(ET.Element("configResolveClass", attrib=attributes))
 
         # find all entries recursivelly
-        xml_objects = root.findall('.//%s' % class_id)
+        xml_objects = root.findall(".//%s" % class_id)
         logging.debug("Server._get_class_data: Entries found: '%s'", xml_objects)
         return xml_objects
 
@@ -349,21 +471,20 @@ class Server:
         # https://www.cisco.com/c/en/us/td/docs/unified_computing/ucs/sw/api/b_ucs_api_book/b_ucs_api_book_chapter_01.html#r_unsuccessfulresponses
         # Do not include XML version or DOCTYPE lines in the XML API document.
         # The inName and inPassword attributes are parameters.
-        #xml_string = ET.tostring(xml_obj, encoding="utf8", method="xml")
+        # xml_string = ET.tostring(xml_obj, encoding="utf8", method="xml")
         xml_string = ET.tostring(xml_obj)
         headers = {
             "Content-Length": str(len(xml_string)),
-            "Content-Type": 'text/xml; charset="utf-8"'
+            "Content-Type": 'text/xml; charset="utf-8"',
         }
         logging.debug("Server._communicate: Sending XML string: '%s'", xml_string)
 
         try:
             if self._verify_ssl is False:
                 urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
-            response = self._session.post(self._url,
-                                          headers=headers,
-                                          data=xml_string,
-                                          verify=self._verify_ssl)
+            response = self._session.post(
+                self._url, headers=headers, data=xml_string, verify=self._verify_ssl
+            )
         except requests.ConnectionError as e:
             logging.debug("Server._communicate: PostError: '%s'", e)
             raise CommunicationException(e)
@@ -372,8 +493,9 @@ class Server:
             raise CommunicationException(e)
 
         content = response.content
-        logging.debug("Server._communicate: Got response content: '%s' (%s)", content,
-                      response.status_code)
+        logging.debug(
+            "Server._communicate: Got response content: '%s' (%s)", content, response.status_code
+        )
 
         try:
             root = ET.fromstring(content)
@@ -381,7 +503,7 @@ class Server:
             logging.debug("Server._communicate: ParseError: '%s'", e)
             raise CommunicationException(e)
 
-        errors = root.attrib.get('errorDescr')
+        errors = root.attrib.get("errorDescr")
         if errors:
             logging.debug("Server._communicate: Errors found: '%s'", errors)
             if debug():
@@ -389,7 +511,7 @@ class Server:
         return root
 
 
-#.
+# .
 #   .--main----------------------------------------------------------------.
 #   |                                       _                              |
 #   |                       _ __ ___   __ _(_)_ __                         |
@@ -402,19 +524,22 @@ class Server:
 
 def debug():
     """Do not depend on argument parsing here."""
-    return '-d' in sys.argv[1:] or '--debug' in sys.argv[1:]
+    return "-d" in sys.argv[1:] or "--debug" in sys.argv[1:]
 
 
 def parse_arguments(argv):
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
     parser.add_argument(
         "--vcrtrace",
         action=vcrtrace(before_record_request=Server.filter_credentials),
     )
-    parser.add_argument("--no-cert-check",
-                        action="store_true",
-                        help="Disables the checking of the servers ssl certificate.")
+    parser.add_argument(
+        "--no-cert-check",
+        action="store_true",
+        help="Disables the checking of the servers ssl certificate.",
+    )
     parser.add_argument("--debug", action="store_true", help="Raise Python exceptions.")
     parser.add_argument("-u", "--username", required=True, help="The username.")
     parser.add_argument("-p", "--password", required=True, help="The password.")
@@ -423,7 +548,7 @@ def parse_arguments(argv):
 
 
 def setup_logging(opt_debug):
-    fmt = '%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s'
+    fmt = "%(levelname)s: %(name)s: %(filename)s: %(lineno)s: %(message)s"
     if opt_debug:
         lvl = logging.DEBUG
     else:
@@ -434,7 +559,7 @@ def setup_logging(opt_debug):
 def main(args=None):
     if args is None:
         # TODO Add functionality in the future
-        #cmk.utils.password_store.replace_passwords()
+        # cmk.utils.password_store.replace_passwords()
         args = sys.argv[1:]
 
     args = parse_arguments(args)

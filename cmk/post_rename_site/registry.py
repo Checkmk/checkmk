@@ -15,8 +15,10 @@ RenameActionHandler = Callable[[SiteId, SiteId], None]
 
 class RenameAction:
     """Base class for all site rename operations"""
-    def __init__(self, name: str, title: str, sort_index: int,
-                 handler: RenameActionHandler) -> None:
+
+    def __init__(
+        self, name: str, title: str, sort_index: int, handler: RenameActionHandler
+    ) -> None:
         self._name = name
         self._title = title
         self._sort_index = sort_index

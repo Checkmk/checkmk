@@ -81,11 +81,16 @@ class BIAggregationFunctionBest(ABCBIAggregationFunction):
 class BIAggregationFunctionBestSchema(Schema):
     type = ReqConstant(BIAggregationFunctionBest.type())
     count = ReqInteger(default=1)
-    restrict_state = ReqInteger(default=2, validate=validate.OneOf([
-        0,
-        1,
-        2,
-    ]))
+    restrict_state = ReqInteger(
+        default=2,
+        validate=validate.OneOf(
+            [
+                0,
+                1,
+                2,
+            ]
+        ),
+    )
 
 
 #   .--Worst---------------------------------------------------------------.
@@ -129,11 +134,16 @@ class BIAggregationFunctionWorst(ABCBIAggregationFunction):
 class BIAggregationFunctionWorstSchema(Schema):
     type = ReqConstant(BIAggregationFunctionWorst.type())
     count = ReqInteger(default=1, example=2)
-    restrict_state = ReqInteger(default=2, validate=validate.OneOf([
-        0,
-        1,
-        2,
-    ]))
+    restrict_state = ReqInteger(
+        default=2,
+        validate=validate.OneOf(
+            [
+                0,
+                1,
+                2,
+            ]
+        ),
+    )
 
 
 #   .--CountOK-------------------------------------------------------------.
@@ -212,7 +222,7 @@ class BIAggregationFunctionSchema(OneOfSchema):
     #    "worst": BIAggregationFunctionWorstSchema,
     #    "best": BIAggregationFunctionBestSchema,
     #    "count_ok": BIAggregationFunctionCountOKSchema,
-    #}
+    # }
 
     def get_obj_type(self, obj: Union[ABCBIAggregationFunction, dict]) -> str:
         if isinstance(obj, dict):

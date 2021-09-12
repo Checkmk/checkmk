@@ -32,11 +32,7 @@ def pnp_cleanup(s: str) -> str:
 
     Because it is used as path element, this needs to be handled as "str" in Python 2 and 3
     """
-    return s \
-        .replace(' ', '_') \
-        .replace(':', '_') \
-        .replace('/', '_') \
-        .replace('\\', '_')
+    return s.replace(" ", "_").replace(":", "_").replace("/", "_").replace("\\", "_")
 
 
 def key_config_paths(a: Path) -> Tuple[Tuple[str, ...], int, Tuple[str, ...]]:
@@ -57,7 +53,7 @@ def key_config_paths(a: Path) -> Tuple[Tuple[str, ...], int, Tuple[str, ...]]:
 
 
 def total_size(o: Any, handlers: Optional[Dict] = None) -> int:
-    """ Returns the approximate memory footprint an object and all of its contents.
+    """Returns the approximate memory footprint an object and all of its contents.
 
     Automatically finds the contents of the following builtin containers and
     their subclasses:  tuple, list, dict, set and frozenset.
@@ -99,14 +95,14 @@ def total_size(o: Any, handlers: Optional[Dict] = None) -> int:
 
 # Works with Checkmk version (without tailing .cee and/or .demo)
 def is_daily_build_version(v: str) -> bool:
-    return len(v) == 10 or '-' in v
+    return len(v) == 10 or "-" in v
 
 
 # Works with Checkmk version (without tailing .cee and/or .demo)
 def branch_of_daily_build(v: str) -> str:
     if len(v) == 10:
         return "master"
-    return v.split('-')[0]
+    return v.split("-")[0]
 
 
 def cachefile_age(path: Union[Path, str]) -> float:
@@ -157,16 +153,16 @@ def normalize_ip_addresses(ip_addresses: Union[str, Sequence[str]]) -> List[Host
     if isinstance(ip_addresses, str):
         ip_addresses = ip_addresses.split()
 
-    expanded = [HostAddress(word) for word in ip_addresses if '{' not in word]
+    expanded = [HostAddress(word) for word in ip_addresses if "{" not in word]
     for word in ip_addresses:
         if word in expanded:
             continue
 
         try:
-            prefix, tmp = word.split('{')
-            curly, suffix = tmp.split('}')
+            prefix, tmp = word.split("{")
+            curly, suffix = tmp.split("}")
         except ValueError:
             raise MKGeneralException(f"could not expand {word!r}")
-        expanded.extend(HostAddress(f"{prefix}{i}{suffix}") for i in curly.split(','))
+        expanded.extend(HostAddress(f"{prefix}{i}{suffix}") for i in curly.split(","))
 
     return expanded

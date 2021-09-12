@@ -8,5 +8,5 @@ import sys
 
 from cmk.post_rename_site import main
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main.main(sys.argv[1:]))

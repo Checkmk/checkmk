@@ -26,7 +26,7 @@ from .type_defs import OID, SNMPBackend, SNMPDecodedString, SNMPRawValue, SNMPRo
 SNMPRowInfoForStoredWalk = List[Tuple[OID, str]]
 SNMPWalkOptions = Dict[str, List[OID]]
 
-#.
+# .
 #   .--Generic SNMP--------------------------------------------------------.
 #   |     ____                      _        ____  _   _ __  __ ____       |
 #   |    / ___| ___ _ __   ___ _ __(_) ___  / ___|| \ | |  \/  |  _ \      |
@@ -40,17 +40,16 @@ SNMPWalkOptions = Dict[str, List[OID]]
 
 
 # Contextes can only be used when check_plugin_name is given.
-def get_single_oid(oid: str,
-                   *,
-                   section_name: Optional[SectionName] = None,
-                   backend: SNMPBackend) -> Optional[SNMPDecodedString]:
+def get_single_oid(
+    oid: str, *, section_name: Optional[SectionName] = None, backend: SNMPBackend
+) -> Optional[SNMPDecodedString]:
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
     # the X, however.
-    if oid[0] != '.':
+    if oid[0] != ".":
         if cmk.utils.debug.enabled():
             raise MKGeneralException("OID definition '%s' does not begin with a '.'" % oid)
-        oid = '.' + oid
+        oid = "." + oid
 
     # TODO: Use generic cache mechanism
     if oid in snmp_cache.single_oid_cache():
@@ -94,7 +93,7 @@ def walk_for_export(oid: OID, *, backend: SNMPBackend) -> SNMPRowInfoForStoredWa
     return _convert_rows_for_stored_walk(backend.walk(oid=oid))
 
 
-#.
+# .
 #   .--SNMP helpers--------------------------------------------------------.
 #   |     ____  _   _ __  __ ____    _          _                          |
 #   |    / ___|| \ | |  \/  |  _ \  | |__   ___| |_ __   ___ _ __ ___      |
@@ -118,7 +117,7 @@ def _convert_rows_for_stored_walk(rows: SNMPRowInfo) -> SNMPRowInfoForStoredWalk
         encoded = ""
         for c in bytearray(v):
             encoded += "%02X " % c
-        return "\"%s\"" % encoded
+        return '"%s"' % encoded
 
     new_rows: SNMPRowInfoForStoredWalk = []
     for oid, value in rows:
@@ -132,7 +131,7 @@ def _convert_rows_for_stored_walk(rows: SNMPRowInfo) -> SNMPRowInfoForStoredWalk
     return new_rows
 
 
-#.
+# .
 #   .--Main modes----------------------------------------------------------.
 #   |       __  __       _                             _                   |
 #   |      |  \/  | __ _(_)_ __    _ __ ___   ___   __| | ___  ___         |
@@ -154,8 +153,11 @@ def do_snmptranslate(walk_filename: str) -> None:
         raise MKGeneralException("The walk '%s' does not exist" % walk_path)
 
     command: List[str] = [
-        "snmptranslate", "-m", "ALL",
-        "-M+%s" % cmk.utils.paths.local_mib_dir, '-'
+        "snmptranslate",
+        "-m",
+        "ALL",
+        "-M+%s" % cmk.utils.paths.local_mib_dir,
+        "-",
     ]
     p = subprocess.Popen(
         command,
@@ -167,7 +169,7 @@ def do_snmptranslate(walk_filename: str) -> None:
 
     with walk_path.open("rb") as walk_file:
         walk = walk_file.read().split(b"\n")
-    while walk[-1] == b'':
+    while walk[-1] == b"":
         del walk[-1]
 
     # to be compatible to previous version of this script, we do not feed
@@ -196,11 +198,11 @@ def do_snmpwalk(options: SNMPWalkOptions, *, backend: SNMPBackend) -> None:
     if not os.path.exists(cmk.utils.paths.snmpwalks_dir):
         os.makedirs(cmk.utils.paths.snmpwalks_dir)
 
-    #TODO: What about SNMP management boards?
+    # TODO: What about SNMP management boards?
     try:
-        _do_snmpwalk_on(options,
-                        cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname,
-                        backend=backend)
+        _do_snmpwalk_on(
+            options, cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname, backend=backend
+        )
     except Exception as e:
         console.error("Error walking %s: %s\n" % (backend.hostname, e))
         if cmk.utils.debug.enabled():
@@ -222,11 +224,12 @@ def _do_snmpwalk_on(options: SNMPWalkOptions, filename: str, *, backend: SNMPBac
     console.verbose("Wrote fetched data to %s%s%s.\n" % (tty.bold, filename, tty.normal))
 
 
-def _execute_walks_for_dump(oids: List[OID], *,
-                            backend: SNMPBackend) -> Iterable[SNMPRowInfoForStoredWalk]:
+def _execute_walks_for_dump(
+    oids: List[OID], *, backend: SNMPBackend
+) -> Iterable[SNMPRowInfoForStoredWalk]:
     for oid in oids:
         try:
-            console.verbose("Walk on \"%s\"...\n" % oid)
+            console.verbose('Walk on "%s"...\n' % oid)
             yield walk_for_export(oid, backend=backend)
         except Exception as e:
             console.error("Error: %s\n" % e)
@@ -238,10 +241,7 @@ def oids_to_walk(options: Optional[SNMPWalkOptions] = None) -> List[OID]:
     if options is None:
         options = {}
 
-    oids = [
-        ".1.3.6.1.2.1",  # SNMPv2-SMI::mib-2
-        ".1.3.6.1.4.1"  # SNMPv2-SMI::enterprises
-    ]
+    oids = [".1.3.6.1.2.1", ".1.3.6.1.4.1"]  # SNMPv2-SMI::mib-2  # SNMPv2-SMI::enterprises
 
     if "oids" in options:
         oids = options["oids"]
@@ -253,7 +253,7 @@ def oids_to_walk(options: Optional[SNMPWalkOptions] = None) -> List[OID]:
 
 
 def do_snmpget(oid: OID, *, backend: SNMPBackend) -> None:
-    #TODO what about SNMP management boards?
+    # TODO what about SNMP management boards?
     snmp_cache.initialize_single_oid_cache(backend.config)
 
     value = get_single_oid(oid, backend=backend)

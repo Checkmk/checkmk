@@ -73,6 +73,7 @@ class ConditionalPiggybackSection(SectionManager):
     ...     print("foo: bar")
     foo: bar
     """
+
     def __init__(self, hostname: Optional[str]) -> None:
         super().__init__()
         self.set_piggyback = bool(hostname)
@@ -100,7 +101,8 @@ class SectionWriter(SectionManager):
     "a"
     "b"
     """
-    def __init__(self, section_name: str, separator: Optional[str] = '\0') -> None:
+
+    def __init__(self, section_name: str, separator: Optional[str] = "\0") -> None:
         super().__init__()
         self.append(f"<<<{section_name}{f':sep({ord(separator)})' if separator else ''}>>>")
 
@@ -114,12 +116,8 @@ def _special_agent_main_core(
     args = parse_arguments(argv)
     logging.basicConfig(
         format="%(levelname)s %(asctime)s %(name)s: %(message)s",
-        datefmt='%Y-%m-%d %H:%M:%S',
-        level={
-            0: logging.WARN,
-            1: logging.INFO,
-            2: logging.DEBUG
-        }.get(args.verbose, logging.DEBUG),
+        datefmt="%Y-%m-%d %H:%M:%S",
+        level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG),
     )
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  # type: ignore
     logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)

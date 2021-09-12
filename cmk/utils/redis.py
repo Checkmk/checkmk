@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 QueryData = TypeVar("QueryData")
 
 
-def get_redis_client() -> 'RedisDecoded':
+def get_redis_client() -> "RedisDecoded":
     return Redis.from_url(
         f"unix://{omd_root}/tmp/run/redis",
         db=0,
@@ -39,14 +39,16 @@ class DataUnavailableException(Exception):
     pass
 
 
-def query_redis(client: 'RedisDecoded',
-                data_key: str,
-                integrity_callback: Callable[[], IntegrityCheckResponse],
-                update_callback: Callable[[Pipeline], Any],
-                query_callback: Callable[[], QueryData],
-                timeout: Optional[int] = None,
-                ttl_query_lock: int = 5,
-                ttl_update_lock: int = 10) -> QueryData:
+def query_redis(
+    client: "RedisDecoded",
+    data_key: str,
+    integrity_callback: Callable[[], IntegrityCheckResponse],
+    update_callback: Callable[[Pipeline], Any],
+    query_callback: Callable[[], QueryData],
+    timeout: Optional[int] = None,
+    ttl_query_lock: int = 5,
+    ttl_update_lock: int = 10,
+) -> QueryData:
     query_lock = client.lock("%s.query_lock" % data_key, timeout=ttl_query_lock)
     update_lock = client.lock("%s.update_lock" % data_key, timeout=ttl_update_lock)
     try:

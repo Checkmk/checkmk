@@ -17,9 +17,9 @@ def maincheckify(subcheck_name: str) -> str:
     The new API does not know about "subchecks", so drop the dot notation.
     The validation step will prevent us from having colliding plugins.
     """
-    return (subcheck_name.replace('.', '_')  # subchecks don't exist anymore
-            .replace('-', '_')  # "sap.value-groups"
-           )
+    return subcheck_name.replace(".", "_").replace(  # subchecks don't exist anymore
+        "-", "_"
+    )  # "sap.value-groups"
 
 
 def worst_service_state(*states: int, default: int) -> int:
@@ -48,7 +48,7 @@ class ActiveCheckResult(NamedTuple):
     metrics: Sequence[str]
 
     @classmethod
-    def from_subresults(cls, *subresults: 'ActiveCheckResult') -> 'ActiveCheckResult':
+    def from_subresults(cls, *subresults: "ActiveCheckResult") -> "ActiveCheckResult":
         states_iter, summaries_iter, details_iter, metrics_iter = zip(*subresults)
         return cls(
             state=worst_service_state(*states_iter, default=0),

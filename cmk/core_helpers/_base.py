@@ -41,6 +41,7 @@ TFetcher = TypeVar("TFetcher", bound="Fetcher")
 
 class Fetcher(Generic[TRawData], abc.ABC):
     """Interface to the data fetchers."""
+
     def __init__(
         self,
         file_cache: FileCache,
@@ -67,7 +68,7 @@ class Fetcher(Generic[TRawData], abc.ABC):
         raise NotImplementedError()
 
     @final
-    def __enter__(self) -> 'Fetcher':
+    def __enter__(self) -> "Fetcher":
         """Prepare the data source."""
         try:
             self.open()
@@ -132,6 +133,7 @@ class Fetcher(Generic[TRawData], abc.ABC):
 
 class Parser(Generic[TRawData, THostSections], abc.ABC):
     """Parse raw data into host sections."""
+
     @abc.abstractmethod
     def parse(self, raw_data: TRawData, *, selection: SectionNameCollection) -> THostSections:
         raise NotImplementedError
@@ -145,6 +147,7 @@ class Summarizer(Generic[THostSections], abc.ABC):
         that derive this class.
 
     """
+
     def __init__(self, exit_spec: ExitSpec) -> None:
         super().__init__()
         self.exit_spec: Final[ExitSpec] = exit_spec
@@ -170,12 +173,15 @@ class Summarizer(Generic[THostSections], abc.ABC):
     def _extract_status(self, exc: Exception) -> int:
         if isinstance(exc, MKEmptyAgentData):
             return self.exit_spec.get("empty_output", 2)
-        if isinstance(exc, (
+        if isinstance(
+            exc,
+            (
                 MKAgentError,
                 MKFetcherError,
                 MKIPAddressLookupError,
                 MKSNMPError,
-        )):
+            ),
+        ):
             return self.exit_spec.get("connection", 2)
         if isinstance(exc, MKTimeout):
             return self.exit_spec.get("timeout", 2)
@@ -188,4 +194,5 @@ def verify_ipaddress(address: Optional[HostAddress]) -> None:
 
     if address in ["0.0.0.0", "::"]:
         raise MKIPAddressLookupError(
-            "Failed to lookup IP address and no explicit IP address configured")
+            "Failed to lookup IP address and no explicit IP address configured"
+        )

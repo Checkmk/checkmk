@@ -12,7 +12,7 @@ from cmk.utils.type_defs import HostName, Timestamp
 
 from .core_queries import HostInfo, query_hosts_infos, query_status_program_start
 
-#.
+# .
 #   .--Host config---------------------------------------------------------.
 #   |          _   _           _                      __ _                 |
 #   |         | | | | ___  ___| |_    ___ ___  _ __  / _(_) __ _           |
@@ -36,13 +36,19 @@ class HostConfig:
 
     def get_config_for_host(self, host_name: HostName) -> Optional[HostInfo]:
         with self._lock:
-            return (self._hosts_by_name.get(host_name)
-                    if self._update_cache_after_core_restart() else None)
+            return (
+                self._hosts_by_name.get(host_name)
+                if self._update_cache_after_core_restart()
+                else None
+            )
 
     def get_canonical_name(self, event_host_name: str) -> Optional[HostName]:
         with self._lock:
-            return (self._hosts_by_designation.get(event_host_name.lower())
-                    if self._update_cache_after_core_restart() else None)
+            return (
+                self._hosts_by_designation.get(event_host_name.lower())
+                if self._update_cache_after_core_restart()
+                else None
+            )
 
     def _update_cache_after_core_restart(self) -> bool:
         """Once the core reports a restart update the cache

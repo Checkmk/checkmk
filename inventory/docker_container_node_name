@@ -14,6 +14,6 @@ def inv_docker_container_node_name(info, inventory_tree):
         container["node_name"] = parsed["NodeName"]
 
 
-inv_info['docker_container_node_name'] = {  # pylint: disable=undefined-variable
-    'inv_function': inv_docker_container_node_name,
+inv_info["docker_container_node_name"] = {  # pylint: disable=undefined-variable
+    "inv_function": inv_docker_container_node_name,
 }

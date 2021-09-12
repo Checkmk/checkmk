@@ -18,7 +18,7 @@ logger = logging.getLogger("cmk")
 
 
 def get_formatter(
-    format_str: str = "%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s"
+    format_str: str = "%(asctime)s [%(levelno)s] [%(name)s %(process)d] %(message)s",
 ) -> logging.Formatter:
     """Returns a new message formater instance that uses the standard
     Check_MK log format by default. You can also set another format
@@ -114,9 +114,9 @@ def modify_logging_handler(
 def verbosity_to_log_level(verbosity: int) -> int:
     """Values for "verbosity":
 
-      0: enables INFO and above
-      1: enables VERBOSE and above
-      2: enables DEBUG and above (ALL messages)
+    0: enables INFO and above
+    1: enables VERBOSE and above
+    2: enables DEBUG and above (ALL messages)
     """
     if verbosity == 0:
         return logging.INFO

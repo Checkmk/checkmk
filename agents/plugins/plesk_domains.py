@@ -17,23 +17,24 @@ try:
     import MySQLdb  # type: ignore[import] # pylint: disable=import-error
 except ImportError as e:
     sys.stdout.write(
-        "<<<plesk_domains>>>\n%s. Please install missing module via pip install <module>." % e)
+        "<<<plesk_domains>>>\n%s. Please install missing module via pip install <module>." % e
+    )
     sys.exit(0)
 
 try:
     db = MySQLdb.connect(
-        host='localhost',
-        db='psa',
-        user='admin',
-        passwd=open('/etc/psa/.psa.shadow').read().strip(),
-        charset='utf8',
+        host="localhost",
+        db="psa",
+        user="admin",
+        passwd=open("/etc/psa/.psa.shadow").read().strip(),
+        charset="utf8",
     )
 except MySQLdb.Error as e:
     sys.stderr.write("MySQL-Error %d: %s\n" % (e.args[0], e.args[1]))
     sys.exit(1)
 
 cursor = db.cursor()
-cursor.execute('SELECT name FROM domains')
-sys.stdout.write('<<<plesk_domains>>>\n')
-sys.stdout.write("%s\n" % '\n'.join([d[0] for d in cursor.fetchall()]))
+cursor.execute("SELECT name FROM domains")
+sys.stdout.write("<<<plesk_domains>>>\n")
+sys.stdout.write("%s\n" % "\n".join([d[0] for d in cursor.fetchall()]))
 cursor.close()

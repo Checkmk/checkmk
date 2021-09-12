@@ -183,56 +183,74 @@ def handle_piggyback(value, args, piggyback_name, section):
 
 def parse_arguments(argv):
     sections = [
-        "alerts", "cluster_stats", "cluster_traffic", "failures", "jvm", "license", "messages",
-        "nodes", "sidecars", "sources", "streams"
+        "alerts",
+        "cluster_stats",
+        "cluster_traffic",
+        "failures",
+        "jvm",
+        "license",
+        "messages",
+        "nodes",
+        "sidecars",
+        "sources",
+        "streams",
     ]
 
     parser = argparse.ArgumentParser(description=__doc__)
 
     parser.add_argument("-u", "--user", default=None, help="Username for graylog login")
     parser.add_argument("-s", "--password", default=None, help="Password for graylog login")
-    parser.add_argument("-P",
-                        "--proto",
-                        default="https",
-                        help="Use 'http' or 'https' for connection to graylog (default=https)")
-    parser.add_argument("-p",
-                        "--port",
-                        default=443,
-                        type=int,
-                        help="Use alternative port (default: 443)")
-    parser.add_argument("-t",
-                        "--since",
-                        default=1800,
-                        type=int,
-                        help="The time in seconds, since when failures should be covered")
+    parser.add_argument(
+        "-P",
+        "--proto",
+        default="https",
+        help="Use 'http' or 'https' for connection to graylog (default=https)",
+    )
+    parser.add_argument(
+        "-p", "--port", default=443, type=int, help="Use alternative port (default: 443)"
+    )
+    parser.add_argument(
+        "-t",
+        "--since",
+        default=1800,
+        type=int,
+        help="The time in seconds, since when failures should be covered",
+    )
     parser.add_argument(
         "-m",
         "--sections",
         default=sections,
-        help="""Comma seperated list of data to query. Possible values: %s (default: all)""" %
-        ", ".join(sections))
-    parser.add_argument("--display_node_details",
-                        default=None,
-                        choices=('host', 'node'),
-                        help="""You can optionally choose, where the node details are shown.
-        Default is the queried graylog host. Possible values: host, node (default: host)""")
-    parser.add_argument("--display_sidecar_details",
-                        default="host",
-                        choices=('host', 'sidecar'),
-                        help="""You can optionally choose, where the sidecar details are shown.
-        Default is the queried graylog host. Possible values: host, sidecar (default: host)""")
-    parser.add_argument("--display_source_details",
-                        default="host",
-                        choices=('host', 'source'),
-                        help="""You can optionally choose, where the source details are shown.
-        Default is the queried graylog host. Possible values: host, source (default: host)""")
-    parser.add_argument("--debug",
-                        action="store_true",
-                        help="Debug mode: let Python exceptions come through")
+        help="""Comma seperated list of data to query. Possible values: %s (default: all)"""
+        % ", ".join(sections),
+    )
+    parser.add_argument(
+        "--display_node_details",
+        default=None,
+        choices=("host", "node"),
+        help="""You can optionally choose, where the node details are shown.
+        Default is the queried graylog host. Possible values: host, node (default: host)""",
+    )
+    parser.add_argument(
+        "--display_sidecar_details",
+        default="host",
+        choices=("host", "sidecar"),
+        help="""You can optionally choose, where the sidecar details are shown.
+        Default is the queried graylog host. Possible values: host, sidecar (default: host)""",
+    )
+    parser.add_argument(
+        "--display_source_details",
+        default="host",
+        choices=("host", "source"),
+        help="""You can optionally choose, where the source details are shown.
+        Default is the queried graylog host. Possible values: host, source (default: host)""",
+    )
+    parser.add_argument(
+        "--debug", action="store_true", help="Debug mode: let Python exceptions come through"
+    )
 
-    parser.add_argument("hostname",
-                        metavar="HOSTNAME",
-                        help="Name of the graylog instance to query.")
+    parser.add_argument(
+        "hostname", metavar="HOSTNAME", help="Name of the graylog instance to query."
+    )
 
     return parser.parse_args(argv)
 

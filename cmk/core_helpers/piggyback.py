@@ -43,12 +43,18 @@ class PiggybackFetcher(AgentFetcher):
         self._sources: List[PiggybackRawDataInfo] = []
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(" + ", ".join((
-            f"{type(self.file_cache).__name__}",
-            f"hostname={self.hostname!r}",
-            f"address={self.address!r}",
-            f"time_settings={self.time_settings!r}",
-        )) + ")"
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{type(self.file_cache).__name__}",
+                    f"hostname={self.hostname!r}",
+                    f"address={self.address!r}",
+                    f"time_settings={self.time_settings!r}",
+                )
+            )
+            + ")"
+        )
 
     @classmethod
     def _from_json(cls, serialized: Mapping[str, Any]) -> "PiggybackFetcher":
@@ -97,7 +103,7 @@ class PiggybackFetcher(AgentFetcher):
             return AgentRawData(b"")
 
         labels = {"cmk/piggyback_source_%s" % src.source_hostname: "yes" for src in self._sources}
-        return AgentRawData(b'<<<labels:sep(0)>>>\n%s\n' % json.dumps(labels).encode("utf-8"))
+        return AgentRawData(b"<<<labels:sep(0)>>>\n%s\n" % json.dumps(labels).encode("utf-8"))
 
     @staticmethod
     def _raw_data(
@@ -143,7 +149,7 @@ class PiggybackSummarizer(AgentSummarizer):
 
         Return only summary information in case there is piggyback data"""
         if mode is not Mode.CHECKING:
-            return 0, ''
+            return 0, ""
 
         sources: Final[Sequence[PiggybackRawDataInfo]] = list(
             itertools.chain.from_iterable(
@@ -152,11 +158,13 @@ class PiggybackSummarizer(AgentSummarizer):
                 # sneakily use cached data.  At minimum, we should group all cache
                 # handling performed after the parser.
                 get_piggyback_raw_data(origin, self.time_settings)
-                for origin in (self.hostname, self.ipaddress)))
+                for origin in (self.hostname, self.ipaddress)
+            )
+        )
         if not sources:
             if self.always:
                 return 1, "Missing data"
-            return 0, ''
+            return 0, ""
         return (
             max(src.reason_status for src in sources),
             ", ".join(src.reason for src in sources if src.reason),

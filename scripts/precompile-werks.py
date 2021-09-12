@@ -19,10 +19,6 @@ if not werk_dir.exists():
 werks = cmk.utils.werks.load_raw_files(werk_dir)
 
 if edition_short:
-    werks = {
-        werk["id"]: werk  #
-        for werk in werks.values()
-        if werk["edition"] == edition_short
-    }
+    werks = {werk["id"]: werk for werk in werks.values() if werk["edition"] == edition_short}
 
 cmk.utils.werks.write_precompiled_werks(dest_file, werks)

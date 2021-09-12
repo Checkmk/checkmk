@@ -37,21 +37,64 @@ except ImportError:
 logger = logging.getLogger("RRD INFO Metric Migration")
 
 CHECKS_USING_DF_INCLUDE = list(
-    map(CheckPluginName, [
-        "3par_capacity", "3par_cpgs", "3par_cpgs_usage", "3par_system", "3par_volumes", "ceph_df",
-        "datapower_fs", "db2_logsizes", "dell_compellent_folder", "df", "df_netapp", "df_netapp32",
-        "df_netscaler", "df_zos", "emc_datadomain_fs", "emc_isilon_ifs", "emc_isilon_quota",
-        "emcvnx_raidgroups_capacity", "emcvnx_raidgroups_capacity_contiguous",
-        "esx_vsphere_counters_ramdisk", "esx_vsphere_datastores", "fast_lta_silent_cubes_capacity",
-        "fast_lta_volumes", "hitachi_hnas_span", "hitachi_hnas_volume", "hp_msa_volume_df", "hr_fs",
-        "ibm_svc_mdiskgrp", "k8s_stats_fs", "libelle_business_shadow_archive_dir", "lvm_vgs",
-        "mgmt_hr_fs", "netapp_api_aggr", "netapp_api_luns", "netapp_api_qtree_quota",
-        "netapp_api_volumes", "nimble_volumes", "oracle_asm_diskgroup", "prism_storage_pools",
-        "sap_hana_data_volume", "sap_hana_diskusage", "scaleio_pd", "scaleio_sds",
-        "scaleio_storage_pool", "scaleio_system", "storeonce_clusterinfo_space",
-        "storeonce_servicesets_capacity", "ucd_disk", "vms_diskstat_df", "vnx_quotas", "zfsget",
-        "zpool"
-    ]))
+    map(
+        CheckPluginName,
+        [
+            "3par_capacity",
+            "3par_cpgs",
+            "3par_cpgs_usage",
+            "3par_system",
+            "3par_volumes",
+            "ceph_df",
+            "datapower_fs",
+            "db2_logsizes",
+            "dell_compellent_folder",
+            "df",
+            "df_netapp",
+            "df_netapp32",
+            "df_netscaler",
+            "df_zos",
+            "emc_datadomain_fs",
+            "emc_isilon_ifs",
+            "emc_isilon_quota",
+            "emcvnx_raidgroups_capacity",
+            "emcvnx_raidgroups_capacity_contiguous",
+            "esx_vsphere_counters_ramdisk",
+            "esx_vsphere_datastores",
+            "fast_lta_silent_cubes_capacity",
+            "fast_lta_volumes",
+            "hitachi_hnas_span",
+            "hitachi_hnas_volume",
+            "hp_msa_volume_df",
+            "hr_fs",
+            "ibm_svc_mdiskgrp",
+            "k8s_stats_fs",
+            "libelle_business_shadow_archive_dir",
+            "lvm_vgs",
+            "mgmt_hr_fs",
+            "netapp_api_aggr",
+            "netapp_api_luns",
+            "netapp_api_qtree_quota",
+            "netapp_api_volumes",
+            "nimble_volumes",
+            "oracle_asm_diskgroup",
+            "prism_storage_pools",
+            "sap_hana_data_volume",
+            "sap_hana_diskusage",
+            "scaleio_pd",
+            "scaleio_sds",
+            "scaleio_storage_pool",
+            "scaleio_system",
+            "storeonce_clusterinfo_space",
+            "storeonce_servicesets_capacity",
+            "ucd_disk",
+            "vms_diskstat_df",
+            "vnx_quotas",
+            "zfsget",
+            "zpool",
+        ],
+    )
+)
 
 
 def get_hostnames(config_cache):
@@ -59,19 +102,19 @@ def get_hostnames(config_cache):
 
 
 def get_info_file(hostname, servicedesc, source):
-    if source == 'cmc':
+    if source == "cmc":
         host_dir = cmk.base.cee.rrd.rrd_cmc_host_dir(hostname)
         servicefile = cmk.utils.pnp_cleanup(servicedesc)
-        return os.path.join(host_dir, servicefile + '.info')
+        return os.path.join(host_dir, servicefile + ".info")
     return cmk.base.rrd.xml_path_for(hostname, servicedesc)
 
 
 def get_metrics(filepath, source):
-    if source == 'cmc':
+    if source == "cmc":
         return cmk.base.cee.rrd.read_existing_metrics(filepath)
 
     root = ET.parse(filepath).getroot()
-    return [x.text for x in root.findall('.//NAME')]
+    return [x.text for x in root.findall(".//NAME")]
 
 
 def update_files(hostname, servicedesc, item, source):
@@ -83,23 +126,23 @@ def update_files(hostname, servicedesc, item, source):
     metrics = get_metrics(filepath, source)
     perfvar = cmk.utils.pnp_cleanup(item)
 
-    update_condition = perfvar in metrics and 'fs_used' not in metrics
-    logger.info('Analyzing %s', filepath)
+    update_condition = perfvar in metrics and "fs_used" not in metrics
+    logger.info("Analyzing %s", filepath)
     entry_to_rename = {}
     if update_condition:
-        if source == 'cmc':
-            r_metrics = ['fs_used' if x == perfvar else x for x in metrics]
+        if source == "cmc":
+            r_metrics = ["fs_used" if x == perfvar else x for x in metrics]
             cmk.base.cee.rrd.create_cmc_rrd_info_file(hostname, servicedesc, r_metrics)
         else:
-            entry_to_rename = update_pnp_info_files(perfvar, 'fs_used', filepath)
+            entry_to_rename = update_pnp_info_files(perfvar, "fs_used", filepath)
 
         logger.info("   Updated ")
 
-    elif metrics.count('fs_used') == 1 and perfvar not in metrics:
-        logger.debug('   Already in desired format')
+    elif metrics.count("fs_used") == 1 and perfvar not in metrics:
+        logger.debug("   Already in desired format")
     else:
         logger.error(
-            'RRD files for host %s and service %s stored in files:\n  - %s\n  - %s\n'
+            "RRD files for host %s and service %s stored in files:\n  - %s\n  - %s\n"
             "are messed up. Please restore them both from backup.",
             hostname,
             servicedesc,
@@ -119,13 +162,14 @@ def drop_opt_prefix(path):
 def update_journal(rename_journal):
     if not rename_journal:
         return
-    journaldir = Path(cmk.utils.paths.omd_root, 'var/rrdcached/')
+    journaldir = Path(cmk.utils.paths.omd_root, "var/rrdcached/")
     for filepath in journaldir.iterdir():
-        logger.info('- Updating journal file %s', filepath)
-        new_file = filepath.with_suffix(filepath.suffix + '.new')
+        logger.info("- Updating journal file %s", filepath)
+        new_file = filepath.with_suffix(filepath.suffix + ".new")
         try:
-            with filepath.open('r', encoding="utf-8") as old_jou, new_file.open(
-                    'w', encoding="utf-8") as new_jou:
+            with filepath.open("r", encoding="utf-8") as old_jou, new_file.open(
+                "w", encoding="utf-8"
+            ) as new_jou:
                 for line in old_jou:
                     try:
                         old_rrd_file = drop_opt_prefix(line.split(" ", 2)[1])
@@ -164,15 +208,16 @@ def update_service_info(config_cache, hostnames):
     rename_journal = {}
     for hostname in hostnames:
         for service in cmk.base.autochecks.parse_autochecks_file(
-                hostname,
-                config.service_description,
-                check_variables,
+            hostname,
+            config.service_description,
+            check_variables,
         ):
             if service.check_plugin_name in CHECKS_USING_DF_INCLUDE:
                 if cmc_capable:
-                    update_files(hostname, service.description, service.item, 'cmc')
+                    update_files(hostname, service.description, service.item, "cmc")
                 rename_journal.update(
-                    update_files(hostname, service.description, service.item, 'pnp4nagios'))
+                    update_files(hostname, service.description, service.item, "pnp4nagios")
+                )
 
     update_journal(rename_journal)
 
@@ -194,5 +239,5 @@ def main():
     update()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -22,9 +22,9 @@ from cmk.special_agents.utils.prometheus import extract_connection_args, generat
 
 def parse_arguments(argv):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--debug",
-                        action="store_true",
-                        help='''Debug mode: raise Python exceptions''')
+    parser.add_argument(
+        "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""
+    )
 
     args = parser.parse_args(argv)
     return args
@@ -53,6 +53,7 @@ class AlertmanagerAPI:
     """
     Realizes communication with the Alertmanager API
     """
+
     def __init__(self, session) -> None:
         self.session = session
 
@@ -91,12 +92,12 @@ def retrieve_rule_data(api_client: AlertmanagerAPI) -> Dict[str, Any]:
 def parse_rule_data(group_data: List[Dict[str, Any]], ignore_alerts: IgnoreAlerts) -> Groups:
     """Parses data from Alertmanager API endpoint
 
-        Args:
-            data: Raw  unparsed data from Alertmanager API endpoint
+    Args:
+        data: Raw  unparsed data from Alertmanager API endpoint
 
-        Returns:
-            Returns a dict of all alert rule groups containing a list
-            of all alert rules within the group
+    Returns:
+        Returns a dict of all alert rule groups containing a list
+        of all alert rules within the group
     """
     groups: Groups = {}
     for group_entry in group_data:
@@ -104,8 +105,9 @@ def parse_rule_data(group_data: List[Dict[str, Any]], ignore_alerts: IgnoreAlert
             continue
         rule_list = []
         for rule_entry in group_entry["rules"]:
-            if rule_entry["name"] in ignore_alerts["ignore_alert_rules"] or (ignore_alerts.get(
-                    "ignore_na", False) and not rule_entry.get("state", False)):
+            if rule_entry["name"] in ignore_alerts["ignore_alert_rules"] or (
+                ignore_alerts.get("ignore_na", False) and not rule_entry.get("state", False)
+            ):
                 continue
 
             labels = rule_entry.get("labels", {})
@@ -116,7 +118,8 @@ def parse_rule_data(group_data: List[Dict[str, Any]], ignore_alerts: IgnoreAlert
                     state=rule_entry.get("state"),
                     severity=labels.get("severity"),
                     message=annotations.get("message"),
-                ))
+                )
+            )
         groups[group_entry["name"]] = rule_list
     return groups
 

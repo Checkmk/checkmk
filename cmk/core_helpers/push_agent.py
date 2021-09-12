@@ -51,11 +51,17 @@ class PushAgentFetcher(AgentFetcher):
         self.use_only_cache: Final = use_only_cache
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(" + ", ".join((
-            f"{type(self.file_cache).__name__}",
-            f"allowed_age={self.allowed_age!r}",
-            f"use_only_cache={self.use_only_cache!r}",
-        )) + ")"
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{type(self.file_cache).__name__}",
+                    f"allowed_age={self.allowed_age!r}",
+                    f"use_only_cache={self.use_only_cache!r}",
+                )
+            )
+            + ")"
+        )
 
     @classmethod
     def _from_json(cls, serialized: Mapping[str, Any]) -> "PushAgentFetcher":

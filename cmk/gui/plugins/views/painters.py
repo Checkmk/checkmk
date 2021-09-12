@@ -3290,20 +3290,23 @@ def _paint_discovery_output(field: str, row: Row) -> CellSpec:
         ruleset_url = "wato.py?mode=edit_ruleset&varname=ignored_services"
         discovery_url = "wato.py?mode=inventory&host=%s&mode=inventory" % row["host_name"]
 
-        return None, {
-            "ignored": html.render_icon_button(
-                ruleset_url, _("Disabled (configured away by admin)"), "rulesets"
-            )
-            + escaping.escape_html_permissive(_("Disabled (configured away by admin)")),
-            "vanished": html.render_icon_button(
-                discovery_url, _("Vanished (checked, but no longer exist)"), "services"
-            )
-            + escaping.escape_html_permissive(_("Vanished (checked, but no longer exist)")),
-            "unmonitored": html.render_icon_button(
-                discovery_url, _("Available (missing)"), "services"
-            )
-            + escaping.escape_html_permissive(_("Available (missing)")),
-        }.get(value, value)
+        return (
+            None,
+            {
+                "ignored": html.render_icon_button(
+                    ruleset_url, _("Disabled (configured away by admin)"), "rulesets"
+                )
+                + escaping.escape_html_permissive(_("Disabled (configured away by admin)")),
+                "vanished": html.render_icon_button(
+                    discovery_url, _("Vanished (checked, but no longer exist)"), "services"
+                )
+                + escaping.escape_html_permissive(_("Vanished (checked, but no longer exist)")),
+                "unmonitored": html.render_icon_button(
+                    discovery_url, _("Available (missing)"), "services"
+                )
+                + escaping.escape_html_permissive(_("Available (missing)")),
+            }.get(value, value),
+        )
     if field == "discovery_service" and row["discovery_state"] == "vanished":
         link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
             urlencode(row["site"]),

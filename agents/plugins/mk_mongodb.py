@@ -55,7 +55,8 @@ except ImportError:
     sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
     sys.stdout.write(
         "error\tpymongo library is not installed. Please install it on the monitored system "
-        "(for Python 3 use: 'pip3 install pymongo', for Python 2 use 'pip install pymongo')\n")
+        "(for Python 3 use: 'pip3 install pymongo', for Python 2 use 'pip install pymongo')\n"
+    )
     sys.exit(1)
 
 from bson.json_util import dumps  # type: ignore[import]
@@ -138,10 +139,13 @@ def sections_replica_set(client):
         return
 
     sys.stdout.write("<<<mongodb_replica_set:sep(9)>>>\n")
-    sys.stdout.write("%s\n" % json.dumps(
-        json.loads(dumps(rep_set_status)),
-        separators=(',', ':'),
-    ),)
+    sys.stdout.write(
+        "%s\n"
+        % json.dumps(
+            json.loads(dumps(rep_set_status)),
+            separators=(",", ":"),
+        ),
+    )
 
 
 def sections_replication_info(client, databases):
@@ -157,7 +161,7 @@ def sections_replication_info(client, databases):
 
     sys.stdout.write("<<<mongodb_replication_info:sep(9)>>>\n")
     result_dict = _get_replication_info(client, databases)
-    sys.stdout.write("%s\n" % json.dumps(result_dict, separators=(',', ':')))
+    sys.stdout.write("%s\n" % json.dumps(result_dict, separators=(",", ":")))
 
 
 def _get_replication_info(client, databases):
@@ -185,8 +189,8 @@ def _get_replication_info(client, databases):
     # Returns a timestamp for the first and last (i.e. earliest/latest) operation in the oplog.
     # Compare this value to the last write operation issued against the server.
     # Timestamp is time in seconds since epoch UTC
-    firstc = client.local.oplog.rs.find().sort('{$natural: 1}').limit(1)
-    lastc = client.local.oplog.rs.find().sort('{$natural: -1}').limit(1)
+    firstc = client.local.oplog.rs.find().sort("{$natural: 1}").limit(1)
+    lastc = client.local.oplog.rs.find().sort("{$natural: -1}").limit(1)
     if firstc and lastc:
         timestamp_first_operation = firstc.next().get("ts", None)
         timestamp_last_operation = lastc.next().get("ts", None)
@@ -212,8 +216,11 @@ def section_cluster(client, databases):
     """
     # check if we run on mongos (router) node
     master_dict = client.admin.command("isMaster")
-    if not master_dict.get(
-            "ismaster") or "msg" not in master_dict or master_dict.get("msg") != "isdbgrid":
+    if (
+        not master_dict.get("ismaster")
+        or "msg" not in master_dict
+        or master_dict.get("msg") != "isdbgrid"
+    ):
         return
 
     sys.stdout.write("<<<mongodb_cluster:sep(0)>>>\n")
@@ -238,11 +245,11 @@ def section_cluster(client, databases):
     chunks_dict = _count_chunks_per_shard(client, databases)
 
     # aggregate all information in one dict
-    all_informations_dict = _aggregate_chunks_and_shards_info(databases, chunks_dict, shards_dict,
-                                                              collections_dict, balancer_dict,
-                                                              chunk_size_info)
+    all_informations_dict = _aggregate_chunks_and_shards_info(
+        databases, chunks_dict, shards_dict, collections_dict, balancer_dict, chunk_size_info
+    )
 
-    sys.stdout.write("%s\n" % json.dumps(all_informations_dict, separators=(',', ':')))
+    sys.stdout.write("%s\n" % json.dumps(all_informations_dict, separators=(",", ":")))
 
 
 def _get_balancer_info(client):
@@ -288,8 +295,9 @@ def _add_cluster_info(databases, databases_cluster_info):
             databases.get(database_name).setdefault("collections", [])
 
 
-def _aggregate_chunks_and_shards_info(databases_dict, chunks_dict, shards_dict, collections_dict,
-                                      balancer_dict, settings_dict):
+def _aggregate_chunks_and_shards_info(
+    databases_dict, chunks_dict, shards_dict, collections_dict, balancer_dict, settings_dict
+):
     """
     generate one dictionary containing shards and chunks information per collection per database
     :param databases_dict: dictionary with database and collections statistic details
@@ -306,14 +314,18 @@ def _aggregate_chunks_and_shards_info(databases_dict, chunks_dict, shards_dict, 
             collection_info = collections_dict.get(database_name, {}).get(collection_name, {})
             if collection_info:
                 databases_dict.get(database_name).get("collstats").get(collection_name).update(
-                    collection_info)
+                    collection_info
+                )
             for shard_name in shards_dict:
-                chunks_info = chunks_dict.get(database_name, {}).get(collection_name,
-                                                                     {}).get(shard_name, {})
+                chunks_info = (
+                    chunks_dict.get(database_name, {}).get(collection_name, {}).get(shard_name, {})
+                )
                 if chunks_info and shard_name in databases_dict.get(database_name).get(
-                        "collstats").get(collection_name).get("shards"):
+                    "collstats"
+                ).get(collection_name).get("shards"):
                     databases_dict.get(database_name).get("collstats").get(collection_name).get(
-                        "shards").get(shard_name).update(chunks_info)
+                        "shards"
+                    ).get(shard_name).update(chunks_info)
 
     # remove irrelevant data
     _lensing_data(databases_dict)
@@ -344,19 +356,37 @@ def _lensing_data(databases):
         for collection_name in database.get("collstats", {}):
             collection = database.get("collstats").get(collection_name)
             # remove irrelevant data
-            _remove_keys(collection, [
-                "indexDetails", "wiredTiger", "operationTime", "lastCommittedOpTime", "$gleStats",
-                "$configServerState", "$clusterTime", "indexSizes"
-            ])
+            _remove_keys(
+                collection,
+                [
+                    "indexDetails",
+                    "wiredTiger",
+                    "operationTime",
+                    "lastCommittedOpTime",
+                    "$gleStats",
+                    "$configServerState",
+                    "$clusterTime",
+                    "indexSizes",
+                ],
+            )
 
             # clean up shards data
             for shard_name in collection.get("shards", {}):
                 shard = collection.get("shards").get(shard_name)
                 # remove irrelevant data
-                _remove_keys(shard, [
-                    "indexDetails", "wiredTiger", "operationTime", "lastCommittedOpTime",
-                    "$gleStats", "$configServerState", "$clusterTime", "indexSizes"
-                ])
+                _remove_keys(
+                    shard,
+                    [
+                        "indexDetails",
+                        "wiredTiger",
+                        "operationTime",
+                        "lastCommittedOpTime",
+                        "$gleStats",
+                        "$configServerState",
+                        "$clusterTime",
+                        "indexSizes",
+                    ],
+                )
 
 
 def _get_chunk_size_information(client):
@@ -383,9 +413,9 @@ def _get_collections_information(client):
     """
     collections_def_dict = lambda: defaultdict(collections_def_dict)  # type: Callable
     collections_dict = collections_def_dict()
-    for collection in client.config.collections.find({},
-                                                     set(["_id", "unique", "dropped",
-                                                          "noBalance"])):
+    for collection in client.config.collections.find(
+        {}, set(["_id", "unique", "dropped", "noBalance"])
+    ):
         database_name, collection_name = _split_namespace(collection.get("_id"))
         collection.pop("_id", None)
         collections_dict[database_name][collection_name] = collection
@@ -419,17 +449,27 @@ def _count_chunks_per_shard(client, databases):
     # set default defaults for numberOfChunks and numberOfJumbos
     for database_name in databases:
         for collection_name in databases.get(database_name).get("collections", {}):
-            for shard_name in databases.get(database_name).get("collstats").get(
-                    collection_name, {}).get("shards", {}):
-                is_sharded = databases.get(database_name).get("collstats").get(collection_name,
-                                                                               {}).get(
-                                                                                   "sharded", False)
+            for shard_name in (
+                databases.get(database_name)
+                .get("collstats")
+                .get(collection_name, {})
+                .get("shards", {})
+            ):
+                is_sharded = (
+                    databases.get(database_name)
+                    .get("collstats")
+                    .get(collection_name, {})
+                    .get("sharded", False)
+                )
                 if is_sharded:  # we count chunks below
                     chunks_dict[database_name][collection_name][shard_name]["numberOfChunks"] = 0
                 else:  # unsharded => only 1 shard => nchunks = numberOfChunks (total number of chunks)
-                    chunks_dict[database_name][collection_name][shard_name][
-                        "numberOfChunks"] = databases.get(database_name).get("collstats").get(
-                            collection_name).get("nchunks", 0)
+                    chunks_dict[database_name][collection_name][shard_name]["numberOfChunks"] = (
+                        databases.get(database_name)
+                        .get("collstats")
+                        .get(collection_name)
+                        .get("nchunks", 0)
+                    )
                 chunks_dict[database_name][collection_name][shard_name]["numberOfJumbos"] = 0
 
     chunks = client.config.chunks
@@ -450,13 +490,15 @@ def _count_chunks_per_shard(client, databases):
 
         # count number of chunks per shard
         if chunks_dict:
-            chunks_dict.get(database_name).get(collection_name).get(
-                shard_name)["numberOfChunks"] += 1
+            chunks_dict.get(database_name).get(collection_name).get(shard_name)[
+                "numberOfChunks"
+            ] += 1
 
         # count number of jumbo chunks per shard
         if "jumbo" in chunk:
-            chunks_dict.get(database_name).get(collection_name).get(
-                shard_name)["numberOfJumbos"] += 1
+            chunks_dict.get(database_name).get(collection_name).get(shard_name)[
+                "numberOfJumbos"
+            ] += 1
 
     return chunks_dict
 
@@ -522,23 +564,37 @@ def section_collections(client, databases):
         for collection_name in database.get("collstats", {}):
             collection = database.get("collstats").get(collection_name)
             # remove irrelevant data
-            _remove_keys(collection, [
-                "indexDetails", "wiredTiger", "operationTime", "lastCommittedOpTime", "$gleStats",
-                "$configServerState", "$clusterTime", "shards"
-            ])
+            _remove_keys(
+                collection,
+                [
+                    "indexDetails",
+                    "wiredTiger",
+                    "operationTime",
+                    "lastCommittedOpTime",
+                    "$gleStats",
+                    "$configServerState",
+                    "$clusterTime",
+                    "shards",
+                ],
+            )
             if indexes_dict is None:
                 continue
-            collection["indexStats"] = indexes_dict.get(database_name, {}).get(collection_name,
-                                                                               {}).get(
-                                                                                   "indexStats",
-                                                                                   {},
-                                                                               )
+            collection["indexStats"] = (
+                indexes_dict.get(database_name, {})
+                .get(collection_name, {})
+                .get(
+                    "indexStats",
+                    {},
+                )
+            )
 
     sys.stdout.write(
-        "%s\n" % json.dumps(
+        "%s\n"
+        % json.dumps(
             json.loads(dumps(database_collection)),
-            separators=(',', ':'),
-        ),)
+            separators=(",", ":"),
+        ),
+    )
     database_collection.clear()
 
 
@@ -556,9 +612,14 @@ def _get_indexes_information(client, databases):
             try:
                 # $indexStat only available since mongodb v. 3.2
                 indexes_dict[database_name][collection_name]["indexStats"] = client[database_name][
-                    collection_name].aggregate([{
-                        "$indexStats": {},
-                    }])
+                    collection_name
+                ].aggregate(
+                    [
+                        {
+                            "$indexStats": {},
+                        }
+                    ]
+                )
             except pymongo.errors.OperationFailure as e:
                 sys.stderr.write("%s\n" % e)
                 return
@@ -568,7 +629,7 @@ def _get_indexes_information(client, databases):
 
 def get_timestamp(text):
     """parse timestamps like 'Nov  6 13:44:09.345' or '2015-10-17T05:35:24.234'"""
-    text = text.split('.')[0]
+    text = text.split(".")[0]
     for pattern in ["%a %b %d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"]:
         try:
             return time.mktime(time.strptime(text, pattern))
@@ -603,7 +664,7 @@ def update_statefile(state_file, startup_warnings):
         return
     timestamp = get_timestamp(lines[-1])
     try:
-        state_fd = open(state_file, 'w')
+        state_fd = open(state_file, "w")
         try:
             state_fd.write("%d" % timestamp)
         finally:
@@ -640,7 +701,7 @@ def section_logwatch(client):
     update_statefile(state_file, startup_warnings)
 
 
-DEFAULT_CFG_FILE = os.path.join(os.getenv('MK_CONFDIR', ''), 'mk_mongodb.cfg')
+DEFAULT_CFG_FILE = os.path.join(os.getenv("MK_CONFDIR", ""), "mk_mongodb.cfg")
 
 LOGGER = logging.getLogger(__name__)
 
@@ -648,18 +709,22 @@ LOGGER = logging.getLogger(__name__)
 def parse_arguments(argv):
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--debug",
-                        action="store_true",
-                        help='''Debug mode: raise Python exceptions''')
-    parser.add_argument("-v",
-                        "--verbose",
-                        action="count",
-                        default=0,
-                        help='''Verbose mode (for even more output use -vvv)''')
-    parser.add_argument("-c",
-                        "--config-file",
-                        default=DEFAULT_CFG_FILE,
-                        help='''Read config file (default: %(default)s)''')
+    parser.add_argument(
+        "--debug", action="store_true", help="""Debug mode: raise Python exceptions"""
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="""Verbose mode (for even more output use -vvv)""",
+    )
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        default=DEFAULT_CFG_FILE,
+        help="""Read config file (default: %(default)s)""",
+    )
 
     return parser.parse_args(argv)
 
@@ -678,6 +743,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
     """
     Python2/Python3 compatibility layer for ConfigParser
     """
+
     mongo_section = "MONGODB"
 
     def read_from_filename(self, filename):
@@ -685,7 +751,7 @@ class MongoDBConfigParser(configparser.ConfigParser):
         if not os.path.exists(filename):
             LOGGER.warning("config file does not exist!")
         else:
-            with open(filename, 'r') as cfg:
+            with open(filename, "r") as cfg:
                 if PY2:
                     self.readfp(cfg)  # pylint: disable=deprecated-method
                 else:
@@ -723,24 +789,24 @@ class Config:
         """
         pymongo_config = {}
         if self.username:
-            pymongo_config['username'] = self.username
+            pymongo_config["username"] = self.username
             if self.password:
-                pymongo_config['password'] = self.password
+                pymongo_config["password"] = self.password
 
         if self.tls_enable is not None:
             pymongo_config["tls"] = self.tls_enable
             if self.tls_enable:
                 if self.tls_verify is not None:
-                    pymongo_config['tlsInsecure'] = not self.tls_verify
+                    pymongo_config["tlsInsecure"] = not self.tls_verify
                 if self.tls_ca_file is not None:
-                    pymongo_config['tlsCAFile'] = self.tls_ca_file
+                    pymongo_config["tlsCAFile"] = self.tls_ca_file
 
         if self.auth_mechanism is not None:
-            pymongo_config['authMechanism'] = self.auth_mechanism
+            pymongo_config["authMechanism"] = self.auth_mechanism
         if self.auth_source is not None:
-            pymongo_config['authSource'] = self.auth_source
+            pymongo_config["authSource"] = self.auth_source
         if self.host is not None:
-            pymongo_config['host'] = self.host
+            pymongo_config["host"] = self.host
 
         return pymongo_config
 
@@ -775,8 +841,12 @@ class PyMongoConfigTransformer:
         if pymongo_config.get("tlsInsecure") is True:
             sys.stdout.write("<<<mongodb_instance:sep(9)>>>\n")
             sys.stdout.write(
-                ("error\tCan not use option 'tls_verify = False' with this pymongo version %s."
-                 "This option is only available with pymongo > 3.9.0\n") % str(pymongo_version))
+                (
+                    "error\tCan not use option 'tls_verify = False' with this pymongo version %s."
+                    "This option is only available with pymongo > 3.9.0\n"
+                )
+                % str(pymongo_version)
+            )
             sys.exit(3)
         pymongo_config.pop("tlsInsecure", None)
 
@@ -805,7 +875,7 @@ class PyMongoConfigTransformer:
             )
         else:
             uri = "mongodb://{}".format(host)
-        pymongo_config['host'] = uri
+        pymongo_config["host"] = uri
         return pymongo_config
 
 
@@ -830,8 +900,8 @@ def main(argv=None):
         LOGGER.info("pymongo configuration:")
         message = str(pymongo_config)
         if config.password is not None:
-            message = message.replace(config.password, '****')
-            message = message.replace(quote_plus(config.password), '****')
+            message = message.replace(config.password, "****")
+            message = message.replace(quote_plus(config.password), "****")
         LOGGER.info(message)
 
     client = pymongo.MongoClient(read_preference=pymongo.ReadPreference.SECONDARY, **pymongo_config)

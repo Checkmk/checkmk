@@ -68,6 +68,7 @@ def edition_title():
 
 class TrialState(enum.Enum):
     """All possible states of the free version"""
+
     VALID = enum.auto()
     EXPIRED = enum.auto()
     NO_LIVESTATUS = enum.auto()  # special case, no cmc impossible to determine status
@@ -143,7 +144,7 @@ def _get_os_info() -> str:
             for line in open(f).readlines():
                 if "=" in line:
                     k, v = line.split("=", 1)
-                    info[k.strip()] = v.strip().strip("\"")
+                    info[k.strip()] = v.strip().strip('"')
             break
 
     if "PRETTY_NAME" in info:
@@ -153,7 +154,7 @@ def _get_os_info() -> str:
         return "%s" % info
 
     if os.environ.get("OMD_ROOT"):
-        disto_info = os.environ['OMD_ROOT'] + "/share/omd/distro.info"
+        disto_info = os.environ["OMD_ROOT"] + "/share/omd/distro.info"
         if os.path.exists(disto_info):
             return open(disto_info).readline().split("=", 1)[1].strip()
 

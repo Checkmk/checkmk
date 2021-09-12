@@ -37,12 +37,14 @@ def update_site_config(old_site_id: SiteId, new_site_id: SiteId) -> None:
         site_spec = all_sites[new_site_id] = all_sites.pop(old_site_id)
 
         # 2. Update the sites URL prefix
-        site_spec["url_prefix"] = site_spec["url_prefix"].replace(f"/{old_site_id}/",
-                                                                  f"/{new_site_id}/")
+        site_spec["url_prefix"] = site_spec["url_prefix"].replace(
+            f"/{old_site_id}/", f"/{new_site_id}/"
+        )
 
         # 3. Update the configuration connection
-        site_spec["multisiteurl"] = site_spec["multisiteurl"].replace(f"/{old_site_id}/",
-                                                                      f"/{new_site_id}/")
+        site_spec["multisiteurl"] = site_spec["multisiteurl"].replace(
+            f"/{old_site_id}/", f"/{new_site_id}/"
+        )
 
     # Iterate all sites and check for status host entries refering to the renamed site
     for this_site_id, site_cfg in all_sites.items():
@@ -62,4 +64,5 @@ rename_action_registry.register(
         title=_("Distributed monitoring configuration"),
         sort_index=10,
         handler=update_site_config,
-    ))
+    )
+)

@@ -99,10 +99,12 @@ class SNMPPluginStore(Mapping[SectionName, SNMPPluginStoreItem]):
 
     @classmethod
     def deserialize(cls, serialized: Mapping[str, Any]) -> "SNMPPluginStore":
-        return cls({
-            SectionName(k): SNMPPluginStoreItem.deserialize(v)
-            for k, v in serialized["plugin_store"].items()
-        })
+        return cls(
+            {
+                SectionName(k): SNMPPluginStoreItem.deserialize(v)
+                for k, v in serialized["plugin_store"].items()
+            }
+        )
 
     def serialize(self) -> Mapping[str, Any]:
         return {"plugin_store": {str(k): v.serialize() for k, v in self.items()}}
@@ -111,6 +113,7 @@ class SNMPPluginStore(Mapping[SectionName, SNMPPluginStoreItem]):
 @dataclasses.dataclass(init=False)
 class SectionMeta:
     """Metadata for the section names."""
+
     checking: bool
     disabled: bool
     redetect: bool
@@ -210,18 +213,24 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         return self._section_store.path
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(" + ", ".join((
-            f"{type(self.file_cache).__name__}",
-            f"sections={self.sections!r}",
-            f"on_error={self.on_error!r}",
-            f"missing_sys_description={self.missing_sys_description!r}",
-            f"do_status_data_inventory={self.do_status_data_inventory!r}",
-            f"section_store_path={self.section_store_path!r}",
-            f"snmp_config={self.snmp_config!r}",
-        )) + ")"
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{type(self.file_cache).__name__}",
+                    f"sections={self.sections!r}",
+                    f"on_error={self.on_error!r}",
+                    f"missing_sys_description={self.missing_sys_description!r}",
+                    f"do_status_data_inventory={self.do_status_data_inventory!r}",
+                    f"section_store_path={self.section_store_path!r}",
+                    f"snmp_config={self.snmp_config!r}",
+                )
+            )
+            + ")"
+        )
 
     @classmethod
-    def _from_json(cls, serialized: Mapping[str, Any]) -> 'SNMPFetcher':
+    def _from_json(cls, serialized: Mapping[str, Any]) -> "SNMPFetcher":
         # The SNMPv3 configuration is represented by a tuple of different lengths (see
         # SNMPCredentials). Since we just deserialized from JSON, we have to convert the
         # list used by JSON back to a tuple.
@@ -229,7 +238,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         serialized_ = copy.deepcopy(dict(serialized))
         if isinstance(serialized_["snmp_config"]["credentials"], list):
             serialized_["snmp_config"]["credentials"] = tuple(
-                serialized_["snmp_config"]["credentials"])
+                serialized_["snmp_config"]["credentials"]
+            )
 
         return cls(
             file_cache=SNMPFileCache.from_json(serialized_.pop("file_cache")),
@@ -282,8 +292,9 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         """Determine the sections fetched unconditionally (without detection)"""
         if mode is Mode.CHECKING:
             return frozenset(
-                {name for name in self.checking_sections if not self.sections[name].redetect} -
-                self.disabled_sections)
+                {name for name in self.checking_sections if not self.sections[name].redetect}
+                - self.disabled_sections
+            )
 
         if mode is Mode.FORCE_SECTIONS:
             return self.checking_sections
@@ -294,9 +305,10 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         """Determine the sections fetched after successful detection"""
         if mode is Mode.CHECKING:
             return frozenset(
-                {name for name in self.checking_sections if self.sections[name].redetect} |
-                (self.inventory_sections if self.do_status_data_inventory else frozenset()) -
-                self.disabled_sections)
+                {name for name in self.checking_sections if self.sections[name].redetect}
+                | (self.inventory_sections if self.do_status_data_inventory else frozenset())
+                - self.disabled_sections
+            )
 
         if mode is Mode.INVENTORY:
             return self.inventory_sections - self.disabled_sections
@@ -331,16 +343,24 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         """
         now = int(time.time())
-        persisted_sections = (self._section_store.load() if mode is Mode.CHECKING else
-                              PersistedSections[SNMPRawDataSection]({}))
+        persisted_sections = (
+            self._section_store.load()
+            if mode is Mode.CHECKING
+            else PersistedSections[SNMPRawDataSection]({})
+        )
         section_names = self._get_selection(mode)
         section_names |= self._detect(select_from=self._get_detected_sections(mode) - section_names)
 
         walk_cache = snmp_table.WalkCache(self._backend.hostname)
         if self._use_snmpwalk_cache(mode):
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
-            walk_cache.load(trees=(tree for section_name in section_names
-                                   for tree in self.plugin_store[section_name].trees),)
+            walk_cache.load(
+                trees=(
+                    tree
+                    for section_name in section_names
+                    for tree in self.plugin_store[section_name].trees
+                ),
+            )
         else:
             walk_cache_msg = "SNMP walk cache is disabled"
 
@@ -359,7 +379,8 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                         tree=tree,
                         walk_cache=walk_cache,
                         backend=self._backend,
-                    ) for tree in self.plugin_store[section_name].trees
+                    )
+                    for tree in self.plugin_store[section_name].trees
                 ]
 
         walk_cache.save()
@@ -379,7 +400,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         # to re-order the section names.
         return sorted(
             section_names,
-            key=lambda x: (not ('cpu' in str(x) or x in cls.CPU_SECTIONS_WITHOUT_CPU_IN_NAME), x),
+            key=lambda x: (not ("cpu" in str(x) or x in cls.CPU_SECTIONS_WITHOUT_CPU_IN_NAME), x),
         )
 
 
@@ -390,6 +411,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPHostSections]):
         It is forbidden to add base dependencies to this class.
 
     """
+
     def __init__(
         self,
         hostname: HostName,

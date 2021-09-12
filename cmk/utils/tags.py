@@ -14,7 +14,7 @@ from cmk.utils.i18n import _
 from cmk.utils.type_defs import TaggroupID, TagID
 
 
-def get_effective_tag_config(tag_config: Dict) -> 'TagConfig':
+def get_effective_tag_config(tag_config: Dict) -> "TagConfig":
     # We don't want to access the plain config data structure during GUI code processing
     tags = TagConfig()
     tags.parse_config(tag_config)
@@ -33,15 +33,16 @@ def transform_pre_16_tags(tag_groups, aux_tags):
 
 
 def _parse_legacy_title(title):
-    if '/' in title:
-        return title.split('/', 1)
+    if "/" in title:
+        return title.split("/", 1)
     return None, title
 
 
 def _validate_tag_id(tag_id):
     if not re.match("^[-a-z0-9A-Z_]*$", tag_id):
         raise MKGeneralException(
-            _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+            _("Invalid tag ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed.")
+        )
 
 
 class ABCTag(abc.ABC):
@@ -136,7 +137,8 @@ class AuxTagList:
     def _append(self, aux_tag):
         if self.exists(aux_tag.id):
             raise MKGeneralException(
-                _("The tag ID \"%s\" does already exist in the list of auxiliary tags.") % aux_tag)
+                _('The tag ID "%s" does already exist in the list of auxiliary tags.') % aux_tag
+            )
         self._tags.append(aux_tag)
 
     def update(self, aux_tag_id, aux_tag):
@@ -162,13 +164,13 @@ class AuxTagList:
             # for the moment.
             # With 1.7 we use cmk-update-config to enforce the user to cleanup this.
             # Then we can re-enable this consistency check.
-            #builtin_config = BuiltinTagConfig()
-            #if builtin_config.aux_tag_list.exists(aux_tag.id):
+            # builtin_config = BuiltinTagConfig()
+            # if builtin_config.aux_tag_list.exists(aux_tag.id):
             #    raise MKGeneralException(
             #        _("You can not override the builtin auxiliary tag \"%s\".") % aux_tag.id)
 
             if aux_tag.id in seen:
-                raise MKGeneralException(_("Duplicate tag ID \"%s\" in auxilary tags") % aux_tag.id)
+                raise MKGeneralException(_('Duplicate tag ID "%s" in auxilary tags') % aux_tag.id)
 
             seen.add(aux_tag.id)
 
@@ -319,6 +321,7 @@ class TagGroup:
 class TagConfig:
     """Container object encapsulating a whole set of configured
     tag groups with auxiliary tags"""
+
     def __init__(self):
         super().__init__()
         self._initialize()
@@ -343,12 +346,12 @@ class TagConfig:
     def get_topic_choices(self):
         names = set([])
         for tag_group in self.tag_groups:
-            topic = tag_group.topic or _('Tags')
+            topic = tag_group.topic or _("Tags")
             if topic:
                 names.add((topic, topic))
 
         for aux_tag in self.aux_tag_list.get_tags():
-            topic = aux_tag.topic or _('Tags')
+            topic = aux_tag.topic or _("Tags")
             if topic:
                 names.add((topic, topic))
 
@@ -357,7 +360,7 @@ class TagConfig:
     def get_tag_groups_by_topic(self):
         by_topic: Dict[str, List[str]] = {}
         for tag_group in self.tag_groups:
-            topic = tag_group.topic or _('Tags')
+            topic = tag_group.topic or _("Tags")
             by_topic.setdefault(topic, []).append(tag_group)
         return sorted(by_topic.items(), key=lambda x: x[0])
 
@@ -393,7 +396,7 @@ class TagConfig:
     def get_aux_tags_by_topic(self):
         by_topic: Dict[str, List[str]] = {}
         for aux_tag in self.aux_tag_list.get_tags():
-            topic = aux_tag.topic or _('Tags')
+            topic = aux_tag.topic or _("Tags")
             by_topic.setdefault(topic, []).append(aux_tag)
         return sorted(by_topic.items(), key=lambda x: x[0])
 
@@ -412,8 +415,9 @@ class TagConfig:
         for tag_group in self.tag_groups:
             response.update([(tag_group.id, tag) for tag in tag_group.get_tag_ids()])
 
-        response.update([(aux_tag_id, aux_tag_id) for aux_tag_id in self.aux_tag_list.get_tag_ids()
-                        ])
+        response.update(
+            [(aux_tag_id, aux_tag_id) for aux_tag_id in self.aux_tag_list.get_tag_ids()]
+        )
         return response
 
     def get_tag_or_aux_tag(
@@ -466,7 +470,7 @@ class TagConfig:
                 self.tag_groups[idx] = tag_group
                 break
         else:
-            raise MKGeneralException(_("Unknown tag group \"%s\"") % tag_group.id)
+            raise MKGeneralException(_('Unknown tag group "%s"') % tag_group.id)
         self._validate_group(tag_group)
 
     def validate_config(self):
@@ -481,12 +485,12 @@ class TagConfig:
         seen_ids: Set[str] = set()
         for tag_group in self.tag_groups:
             if tag_group.id in seen_ids:
-                raise MKGeneralException(_("The tag group ID \"%s\" is used twice.") % tag_group.id)
+                raise MKGeneralException(_('The tag group ID "%s" is used twice.') % tag_group.id)
             seen_ids.add(tag_group.id)
 
         for aux_tag in self.aux_tag_list.get_tags():
             if aux_tag.id in seen_ids:
-                raise MKGeneralException(_("The tag ID \"%s\" is used twice.") % aux_tag.id)
+                raise MKGeneralException(_('The tag ID "%s" is used twice.') % aux_tag.id)
             seen_ids.add(aux_tag.id)
 
     def valid_id(self, tag_aux_id):
@@ -508,7 +512,8 @@ class TagConfig:
 
         if tag_group.id == "site":
             raise MKGeneralException(
-                _("The tag group \"%s\" is reserved for internal use.") % tag_group.id)
+                _('The tag group "%s" is reserved for internal use.') % tag_group.id
+            )
 
         # Tag groups were made builtin with ~1.4. Previously users could modify
         # these groups.  These users now have the modified tag groups in their
@@ -516,14 +521,15 @@ class TagConfig:
         # for the moment.
         # With 1.7 we use cmk-update-config to enforce the user to cleanup this.
         # Then we can re-enable this consistency check.
-        #builtin_config = BuiltinTagConfig()
-        #if builtin_config.tag_group_exists(tag_group.id):
+        # builtin_config = BuiltinTagConfig()
+        # if builtin_config.tag_group_exists(tag_group.id):
         #    raise MKGeneralException(
         #        _("You can not override the builtin tag group \"%s\".") % tag_group.id)
 
         if not tag_group.title:
             raise MKGeneralException(
-                _("Please specify a title for your tag group \"%s\".") % tag_group.id)
+                _('Please specify a title for your tag group "%s".') % tag_group.id
+            )
 
         have_none_tag = False
         for nr, tag in enumerate(tag_group.tags):
@@ -533,7 +539,8 @@ class TagConfig:
 
                     if len(tag_group.tags) == 1:
                         raise MKGeneralException(
-                            _("Can not use an empty tag ID with a single choice."))
+                            _("Can not use an empty tag ID with a single choice.")
+                        )
 
                     if have_none_tag:
                         raise MKGeneralException(_("Only one tag may be empty."))
@@ -544,7 +551,8 @@ class TagConfig:
                 for (n, x) in enumerate(tag_group.tags):
                     if n != nr and x.id == tag.id:
                         raise MKGeneralException(
-                            _("Tags IDs must be unique. You've used \"%s\" twice.") % tag.id)
+                            _('Tags IDs must be unique. You\'ve used "%s" twice.') % tag.id
+                        )
 
         if len(tag_group.tags) == 0:
             raise MKGeneralException(_("Please specify at least one tag."))
@@ -569,10 +577,12 @@ class BuiltinAuxTagList(AuxTagList):
 class BuiltinTagConfig(TagConfig):
     def __init__(self):
         super().__init__()
-        self.parse_config({
-            "tag_groups": self._builtin_tag_groups(),
-            "aux_tags": self._builtin_aux_tags(),
-        })
+        self.parse_config(
+            {
+                "tag_groups": self._builtin_tag_groups(),
+                "aux_tags": self._builtin_aux_tags(),
+            }
+        )
 
     def _initialize(self):
         self.tag_groups = []
@@ -581,37 +591,37 @@ class BuiltinTagConfig(TagConfig):
     def _builtin_tag_groups(self):
         return [
             {
-                'id': 'agent',
-                'title': _('Checkmk agent / API integrations'),
-                'topic': _('Monitoring agents'),
-                'tags': [
+                "id": "agent",
+                "title": _("Checkmk agent / API integrations"),
+                "topic": _("Monitoring agents"),
+                "tags": [
                     {
-                        'id': 'cmk-agent',
-                        'title': _('API integrations if configured, else Checkmk agent'),
-                        'aux_tags': ['tcp', 'checkmk-agent'],
+                        "id": "cmk-agent",
+                        "title": _("API integrations if configured, else Checkmk agent"),
+                        "aux_tags": ["tcp", "checkmk-agent"],
                     },
                     {
-                        'id': 'all-agents',
-                        'title': _('Configured API integrations and Checkmk agent'),
-                        'aux_tags': ['tcp', 'checkmk-agent'],
+                        "id": "all-agents",
+                        "title": _("Configured API integrations and Checkmk agent"),
+                        "aux_tags": ["tcp", "checkmk-agent"],
                     },
                     {
-                        'id': 'special-agents',
-                        'title': _('Configured API integrations, no Checkmk agent'),
-                        'aux_tags': ['tcp'],
+                        "id": "special-agents",
+                        "title": _("Configured API integrations, no Checkmk agent"),
+                        "aux_tags": ["tcp"],
                     },
                     {
-                        'id': 'no-agent',
-                        'title': _('No API integrations, no Checkmk agent'),
-                        'aux_tags': [],
+                        "id": "no-agent",
+                        "title": _("No API integrations, no Checkmk agent"),
+                        "aux_tags": [],
                     },
                 ],
             },
             {
-                'id': 'piggyback',
-                'title': _("Piggyback"),
-                'topic': _('Monitoring agents'),
-                'help': _(
+                "id": "piggyback",
+                "title": _("Piggyback"),
+                "topic": _("Monitoring agents"),
+                "help": _(
                     "By default every host has the piggyback data source "
                     "<b>Use piggyback data from other hosts if present</b>. "
                     "In this case the <tt>Check_MK</tt> service of this host processes the piggyback data "
@@ -621,12 +631,13 @@ class BuiltinTagConfig(TagConfig):
                     "data source then this host expects piggyback data and the <tt>Check_MK</tt> service of "
                     "this host warns if no piggyback data is available. "
                     "In the last case, ie. <b>Never use piggyback data</b>, the <tt>Check_MK</tt> service "
-                    "does not process piggyback data at all and ignores it if available."),
-                'tags': [
+                    "does not process piggyback data at all and ignores it if available."
+                ),
+                "tags": [
                     {
                         "id": "auto-piggyback",
                         "title": _("Use piggyback data from other hosts if present"),
-                        "aux_tags": []
+                        "aux_tags": [],
                     },
                     {
                         "id": "piggyback",
@@ -641,47 +652,51 @@ class BuiltinTagConfig(TagConfig):
                 ],
             },
             {
-                'id': 'snmp_ds',
-                'title': _('SNMP'),
-                'topic': _('Monitoring agents'),
-                'tags': [{
-                    'id': 'no-snmp',
-                    'title': _('No SNMP'),
-                    'aux_tags': [],
-                }, {
-                    'id': 'snmp-v2',
-                    'title': _('SNMP v2 or v3'),
-                    'aux_tags': ['snmp'],
-                }, {
-                    'id': 'snmp-v1',
-                    'title': _('SNMP v1'),
-                    'aux_tags': ['snmp'],
-                }],
+                "id": "snmp_ds",
+                "title": _("SNMP"),
+                "topic": _("Monitoring agents"),
+                "tags": [
+                    {
+                        "id": "no-snmp",
+                        "title": _("No SNMP"),
+                        "aux_tags": [],
+                    },
+                    {
+                        "id": "snmp-v2",
+                        "title": _("SNMP v2 or v3"),
+                        "aux_tags": ["snmp"],
+                    },
+                    {
+                        "id": "snmp-v1",
+                        "title": _("SNMP v1"),
+                        "aux_tags": ["snmp"],
+                    },
+                ],
             },
             {
-                'id': 'address_family',
-                'title': _('IP address family'),
-                'topic': u'Address',
-                'tags': [
+                "id": "address_family",
+                "title": _("IP address family"),
+                "topic": "Address",
+                "tags": [
                     {
-                        'id': 'ip-v4-only',
-                        'title': _('IPv4 only'),
-                        'aux_tags': ['ip-v4'],
+                        "id": "ip-v4-only",
+                        "title": _("IPv4 only"),
+                        "aux_tags": ["ip-v4"],
                     },
                     {
-                        'id': 'ip-v6-only',
-                        'title': _('IPv6 only'),
-                        'aux_tags': ['ip-v6'],
+                        "id": "ip-v6-only",
+                        "title": _("IPv6 only"),
+                        "aux_tags": ["ip-v6"],
                     },
                     {
-                        'id': 'ip-v4v6',
-                        'title': _('IPv4/IPv6 dual-stack'),
-                        'aux_tags': ['ip-v4', 'ip-v6'],
+                        "id": "ip-v4v6",
+                        "title": _("IPv4/IPv6 dual-stack"),
+                        "aux_tags": ["ip-v4", "ip-v6"],
                     },
                     {
-                        'id': 'no-ip',
-                        'title': _('No IP'),
-                        'aux_tags': [],
+                        "id": "no-ip",
+                        "title": _("No IP"),
+                        "aux_tags": [],
                     },
                 ],
             },
@@ -690,35 +705,35 @@ class BuiltinTagConfig(TagConfig):
     def _builtin_aux_tags(self):
         return [
             {
-                'id': 'ip-v4',
-                'topic': _('Address'),
-                'title': _('IPv4'),
-                'help': _("Bar"),
+                "id": "ip-v4",
+                "topic": _("Address"),
+                "title": _("IPv4"),
+                "help": _("Bar"),
             },
             {
-                'id': 'ip-v6',
-                'topic': _('Address'),
-                'title': _('IPv6'),
+                "id": "ip-v6",
+                "topic": _("Address"),
+                "title": _("IPv6"),
             },
             {
-                'id': 'snmp',
-                'topic': _('Monitoring agents'),
-                'title': _('Monitor via SNMP'),
+                "id": "snmp",
+                "topic": _("Monitoring agents"),
+                "title": _("Monitor via SNMP"),
             },
             {
-                'id': 'tcp',
-                'topic': _('Monitoring agents'),
-                'title': _('Monitor via Checkmk Agent or special agent'),
+                "id": "tcp",
+                "topic": _("Monitoring agents"),
+                "title": _("Monitor via Checkmk Agent or special agent"),
             },
             {
-                'id': 'checkmk-agent',
-                'topic': _('Monitoring agents'),
-                'title': _('Monitor via Checkmk Agent'),
+                "id": "checkmk-agent",
+                "topic": _("Monitoring agents"),
+                "title": _("Monitor via Checkmk Agent"),
             },
             {
-                'id': 'ping',
-                'topic': _('Monitoring agents'),
-                'title': _('Only ping this device'),
+                "id": "ping",
+                "topic": _("Monitoring agents"),
+                "title": _("Only ping this device"),
             },
         ]
 
@@ -734,45 +749,26 @@ def sample_tag_config():
     created on site creation (more precisely: during first WATO access).
     """
     return {
-        'aux_tags': [],
-        'tag_groups': [
+        "aux_tags": [],
+        "tag_groups": [
             {
-                'id': 'criticality',
-                'tags': [{
-                    'aux_tags': [],
-                    'id': 'prod',
-                    'title': u'Productive system'
-                }, {
-                    'aux_tags': [],
-                    'id': 'critical',
-                    'title': u'Business critical'
-                }, {
-                    'aux_tags': [],
-                    'id': 'test',
-                    'title': u'Test system'
-                }, {
-                    'aux_tags': [],
-                    'id': 'offline',
-                    'title': u'Do not monitor this host'
-                }],
-                'title': u'Criticality'
+                "id": "criticality",
+                "tags": [
+                    {"aux_tags": [], "id": "prod", "title": "Productive system"},
+                    {"aux_tags": [], "id": "critical", "title": "Business critical"},
+                    {"aux_tags": [], "id": "test", "title": "Test system"},
+                    {"aux_tags": [], "id": "offline", "title": "Do not monitor this host"},
+                ],
+                "title": "Criticality",
             },
             {
-                'id': 'networking',
-                'tags': [{
-                    'aux_tags': [],
-                    'id': 'lan',
-                    'title': u'Local network (low latency)'
-                }, {
-                    'aux_tags': [],
-                    'id': 'wan',
-                    'title': u'WAN (high latency)'
-                }, {
-                    'aux_tags': [],
-                    'id': 'dmz',
-                    'title': u'DMZ (low latency, secure access)'
-                }],
-                'title': u'Networking Segment'
+                "id": "networking",
+                "tags": [
+                    {"aux_tags": [], "id": "lan", "title": "Local network (low latency)"},
+                    {"aux_tags": [], "id": "wan", "title": "WAN (high latency)"},
+                    {"aux_tags": [], "id": "dmz", "title": "DMZ (low latency, secure access)"},
+                ],
+                "title": "Networking Segment",
             },
         ],
     }

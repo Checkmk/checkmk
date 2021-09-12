@@ -75,6 +75,7 @@ class ResultRow(dict):
         KeyError: 'foo: Setting of keys not allowed.'
 
     """
+
     def __getattr__(self, item: str) -> Any:
         try:
             return self[item]
@@ -117,9 +118,9 @@ def _get_column(table_class: Type[Table], col: str) -> Column:
         return getattr(table_class, col)
 
     table_name = cast(str, table_class.__tablename__)
-    prefix = table_name.rstrip('s') + "_"
+    prefix = table_name.rstrip("s") + "_"
     while col.startswith(prefix):
-        col = col[len(prefix):]
+        col = col[len(prefix) :]
     return getattr(table_class, col)
 
 
@@ -194,10 +195,11 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         False
 
     """
+
     def __init__(
-            self,
-            columns: List[Column],
-            filter_expr: QueryExpression = NothingExpression(),
+        self,
+        columns: List[Column],
+        filter_expr: QueryExpression = NothingExpression(),
     ):
         """A representation of a livestatus query.
 
@@ -220,7 +222,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
         self.table: Type[Table] = _tables.pop()
 
-    def filter(self, filter_expr: QueryExpression) -> 'Query':
+    def filter(self, filter_expr: QueryExpression) -> "Query":
         """Apply additional filters to an existing query.
 
         This will return a new `Query` instance. The original one is left untouched."""
@@ -333,7 +335,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             ...
             ValueError: Expected one row, got 2 row(s).
 
-       """
+        """
         result = list(self.iterate(sites))
         if len(result) != 1:
             raise ValueError(f"Expected one row, got {len(result)} row(s).")
@@ -424,9 +426,9 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
         """
         if sites.prepend_site:
-            if 'site' in self.column_names:
+            if "site" in self.column_names:
                 raise ValueError("Conflict: site both as column in a table and via prepend_site")
-            names = ['site', *self.column_names]
+            names = ["site", *self.column_names]
         else:
             names = self.column_names
 
@@ -485,13 +487,15 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
         """
         _query: List[Tuple[str, str]] = []
-        column_names = ' '.join(column.name for column in self.columns)
+        column_names = " ".join(column.name for column in self.columns)
         _query.append(("Columns", column_names))
         _query.extend(self.filter_expr.render())
-        return '\n'.join([
-            'GET %s' % self.table.__tablename__,
-            *[': '.join(line) for line in _query],
-        ])
+        return "\n".join(
+            [
+                "GET %s" % self.table.__tablename__,
+                *[": ".join(line) for line in _query],
+            ]
+        )
 
     def dict_repr(self):
         return expr_to_tree(self.table, self.filter_expr)
@@ -500,7 +504,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
     def from_string(
         cls,
         string_query: str,
-    ) -> 'Query':
+    ) -> "Query":
         """Constructs a Query instance from a string based LiveStatus-Query
 
         Args:
@@ -626,7 +630,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
         """
         lines = string_query.split("\n")
         for line in lines:
-            if line.startswith('GET '):
+            if line.startswith("GET "):
                 parts = line.split()
                 if len(parts) < 2:
                     raise ValueError(f"No table found in line: {line!r}")
@@ -641,7 +645,7 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
             raise ValueError("No table found")
 
         for line in lines:
-            if line.startswith('Columns: '):
+            if line.startswith("Columns: "):
                 column_names = line.split(": ", 1)[1].lstrip().split()
                 columns: List[Column] = []
                 for col in column_names:
@@ -655,23 +659,23 @@ description = CPU\\nFilter: host_name ~ morgen\\nNegate: 1\\nAnd: 3'
 
         filters: List[QueryExpression] = []
         for line in lines:
-            if line.startswith('Filter: '):
+            if line.startswith("Filter: "):
                 try:
                     filters.append(_parse_line(table_class, line))
                 except AttributeError:
                     raise ValueError(f"Table {table_name!r}: Could not decode line {line!r}")
-            elif line.startswith('Or: ') or line.startswith("And: "):
+            elif line.startswith("Or: ") or line.startswith("And: "):
                 op, _count = line.split(": ")
                 count = int(_count)
                 # I'm sorry. :)
                 # We take the last `count` filters and pass them into the BooleanExpression
                 try:
-                    expr = {'or': Or, 'and': And}[op.lower()](*filters[-count:])
+                    expr = {"or": Or, "and": And}[op.lower()](*filters[-count:])
                 except ValueError:
                     raise ValueError(f"Could not parse {op} for {filters!r}")
                 filters = filters[:-count]
                 filters.append(expr)
-            elif line.startswith('Negate:') or line.startswith('Not:'):
+            elif line.startswith("Negate:") or line.startswith("Not:"):
                 filters[-1] = Not(filters[-1])
 
         if len(filters) > 1:

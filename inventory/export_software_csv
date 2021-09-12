@@ -50,6 +50,6 @@ def inv_export_software_csv(hostname, params, tree):
         out.write("%s\n" % separator.join(line))
 
 
-inv_export['software_csv'] = {
+inv_export["software_csv"] = {
     "export_function": inv_export_software_csv,
 }

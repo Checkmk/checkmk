@@ -98,7 +98,7 @@ class QueryCallback(Protocol):
         self,
         query: str,
         only_sites: Optional[List[SiteId]] = None,
-        output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON
+        output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
     ) -> LivestatusResponse:
         ...
 
@@ -182,16 +182,19 @@ class ABCWithSchema(abc.ABC):
 
 
 def create_nested_schema_for_class(
-        class_template: Type[ABCWithSchema],
-        default_schema: Optional[Type[Schema]] = None,
-        example_config: Optional[Union[list, Dict[str, Any]]] = None) -> Nested:
+    class_template: Type[ABCWithSchema],
+    default_schema: Optional[Type[Schema]] = None,
+    example_config: Optional[Union[list, Dict[str, Any]]] = None,
+) -> Nested:
     class_schema = class_template.schema()
     return create_nested_schema(class_schema, default_schema, example_config)
 
 
-def create_nested_schema(base_schema,
-                         default_schema: Optional[Type[Schema]] = None,
-                         example_config: Optional[Union[list, Dict[str, Any]]] = None) -> Nested:
+def create_nested_schema(
+    base_schema,
+    default_schema: Optional[Type[Schema]] = None,
+    example_config: Optional[Union[list, Dict[str, Any]]] = None,
+) -> Nested:
     """
 
     >>> from marshmallow import fields
@@ -377,18 +380,21 @@ class ABCBISearcher(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_host_name_matches(self, hosts: List[BIHostData],
-                              pattern: str) -> Tuple[List[BIHostData], Dict]:
+    def get_host_name_matches(
+        self, hosts: List[BIHostData], pattern: str
+    ) -> Tuple[List[BIHostData], Dict]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def get_service_description_matches(self, host_matches: List[BIHostSearchMatch],
-                                        pattern: str) -> List[BIServiceSearchMatch]:
+    def get_service_description_matches(
+        self, host_matches: List[BIHostSearchMatch], pattern: str
+    ) -> List[BIServiceSearchMatch]:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def filter_host_choice(self, hosts: List[BIHostData],
-                           condition: Dict) -> Tuple[List[BIHostData], Dict]:
+    def filter_host_choice(
+        self, hosts: List[BIHostData], condition: Dict
+    ) -> Tuple[List[BIHostData], Dict]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -438,10 +444,12 @@ class ABCBICompiledNode(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def compute(self,
-                computation_options: BIAggregationComputationOptions,
-                bi_status_fetcher: ABCBIStatusFetcher,
-                use_assumed=False) -> Optional[NodeResultBundle]:
+    def compute(
+        self,
+        computation_options: BIAggregationComputationOptions,
+        bi_status_fetcher: ABCBIStatusFetcher,
+        use_assumed=False,
+    ) -> Optional[NodeResultBundle]:
         raise NotImplementedError()
 
     @abc.abstractmethod
@@ -481,12 +489,14 @@ class ABCBIAction(abc.ABC):
     def serialize(self) -> Dict[str, Any]:
         raise NotImplementedError()
 
-    def _generate_action_arguments(self, search_results: List[Dict[str, str]],
-                                   macros: MacroMapping) -> ActionArguments:
+    def _generate_action_arguments(
+        self, search_results: List[Dict[str, str]], macros: MacroMapping
+    ) -> ActionArguments:
         raise NotImplementedError()
 
-    def execute_search_results(self, search_results, macros: MacroMapping,
-                               bi_searcher) -> Iterable[ABCBICompiledNode]:
+    def execute_search_results(
+        self, search_results, macros: MacroMapping, bi_searcher
+    ) -> Iterable[ABCBICompiledNode]:
         action_arguments = self._generate_action_arguments(search_results, macros)
         for argument in self._deduplicate_action_arguments(action_arguments):
             yield from self.execute(argument, bi_searcher)
@@ -495,8 +505,9 @@ class ABCBIAction(abc.ABC):
         return list(dict.fromkeys(arguments).keys())
 
     @abc.abstractmethod
-    def execute(self, argument: ActionArgument,
-                bi_searcher: ABCBISearcher) -> List[ABCBICompiledNode]:
+    def execute(
+        self, argument: ActionArgument, bi_searcher: ABCBISearcher
+    ) -> List[ABCBICompiledNode]:
         raise NotImplementedError()
 
 

@@ -50,21 +50,23 @@ def make_oracle_io_file_list(name_list):
     return [OracleIOFile(name, _convert_to_identifier(name)) for name in name_list]
 
 
-oracle_iofiles = make_oracle_io_file_list([
-    "Archive Log",
-    "Archive Log Backup",
-    "Control File",
-    "Data File",
-    "Data File Backup",
-    "Data File Copy",
-    "Data File Incremental Backup",
-    "Data Pump Dump File",
-    "External Table",
-    "Flashback Log",
-    "Log File",
-    "Other",
-    "Temp File",
-])
+oracle_iofiles = make_oracle_io_file_list(
+    [
+        "Archive Log",
+        "Archive Log Backup",
+        "Control File",
+        "Data File",
+        "Data File Backup",
+        "Data File Copy",
+        "Data File Incremental Backup",
+        "Data Pump Dump File",
+        "External Table",
+        "Flashback Log",
+        "Log File",
+        "Other",
+        "Temp File",
+    ]
+)
 
 oracle_io_sizes = [
     ("s", "Small"),
@@ -100,20 +102,22 @@ def make_oracle_waitclass_list(name_list):
     return [make_oracle_waitclass(name) for name in name_list]
 
 
-oracle_waitclasses = make_oracle_waitclass_list([
-    "Administrative",
-    "Application",
-    "Cluster",
-    "Commit",
-    "Concurrency",
-    "Configuration",
-    "Idle",
-    "Network",
-    "Other",
-    "Scheduler",
-    "System I/O",
-    "User I/O",
-])
+oracle_waitclasses = make_oracle_waitclass_list(
+    [
+        "Administrative",
+        "Application",
+        "Cluster",
+        "Commit",
+        "Concurrency",
+        "Configuration",
+        "Idle",
+        "Network",
+        "Other",
+        "Scheduler",
+        "System I/O",
+        "User I/O",
+    ]
+)
 
 
 #
@@ -134,16 +138,18 @@ def make_oracle_sga_list(input_list):
     return [make_oracle_sga(name, metric) for name, metric in input_list]
 
 
-oracle_sga_fields = make_oracle_sga_list([
-    ("Maximum SGA Size", "oracle_sga_size"),
-    ("Buffer Cache Size", "oracle_sga_buffer_cache"),
-    ("Shared Pool Size", "oracle_sga_shared_pool"),
-    ("Redo Buffers", "oracle_sga_redo_buffer"),
-    ("Java Pool Size", "oracle_sga_java_pool"),
-    ("Large Pool Size", "oracle_sga_large_pool"),
-    ("Streams Pool Size", "oracle_sga_streams_pool"),
-    ("Shared IO Pool Size", "oracle_sga_shared_io_pool"),
-])
+oracle_sga_fields = make_oracle_sga_list(
+    [
+        ("Maximum SGA Size", "oracle_sga_size"),
+        ("Buffer Cache Size", "oracle_sga_buffer_cache"),
+        ("Shared Pool Size", "oracle_sga_shared_pool"),
+        ("Redo Buffers", "oracle_sga_redo_buffer"),
+        ("Java Pool Size", "oracle_sga_java_pool"),
+        ("Large Pool Size", "oracle_sga_large_pool"),
+        ("Streams Pool Size", "oracle_sga_streams_pool"),
+        ("Shared IO Pool Size", "oracle_sga_shared_io_pool"),
+    ]
+)
 
 
 #
@@ -165,8 +171,10 @@ def make_oracle_pga_list(name_list):
     return [make_oracle_pga(name) for name in name_list]
 
 
-oracle_pga_fields = make_oracle_pga_list([
-    "total PGA allocated",
-    "total PGA inuse",
-    "total freeable PGA memory",
-])
+oracle_pga_fields = make_oracle_pga_list(
+    [
+        "total PGA allocated",
+        "total PGA inuse",
+        "total freeable PGA memory",
+    ]
+)

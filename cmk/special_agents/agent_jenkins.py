@@ -28,26 +28,25 @@ def main(argv=None):
 
     # Add new queries here
     sections = [
-        Section(name="instance",
-                key=None,
-                uri="/api/json?tree=mode,nodeDescription,useSecurity,quietingDown"),
+        Section(
+            name="instance",
+            key=None,
+            uri="/api/json?tree=mode,nodeDescription,useSecurity,quietingDown",
+        ),
         Section(
             name="jobs",
             key="jobs",
-            uri=
-            "/api/json?tree=jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp]]]]]"
+            uri="/api/json?tree=jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp],jobs[displayNameOrNull,name,color,lastBuild[number,duration,timestamp,result],healthReport[score],lastSuccessfulBuild[timestamp]]]]]",
         ),
         Section(
             name="nodes",
             key="computer",
-            uri=
-            "/computer/api/json?tree=displayName,busyExecutors,totalExecutors,computer[description,displayName,idle,jnlpAgent,numExecutors,assignedLabels[busyExecutors,idleExecutors,nodes[mode],name],offline,offlineCause,temporarilyOffline,monitorData[*]]"
+            uri="/computer/api/json?tree=displayName,busyExecutors,totalExecutors,computer[description,displayName,idle,jnlpAgent,numExecutors,assignedLabels[busyExecutors,idleExecutors,nodes[mode],name],offline,offlineCause,temporarilyOffline,monitorData[*]]",
         ),
         Section(
             name="queue",
             key="items",
-            uri=
-            "/queue/api/json?tree=items[blocked,id,inQueueSince,stuck,pending,why,buildableStartMilliseconds,task[name,color]]"
+            uri="/queue/api/json?tree=items[blocked,id,inQueueSince,stuck,pending,why,buildableStartMilliseconds,task[name,color]]",
         ),
     ]
 
@@ -62,7 +61,7 @@ def main(argv=None):
 
 def handle_request(args, sections):
     url_base = "%s://%s:%s" % (args.proto, args.hostname, args.port)
-    #labels = {}
+    # labels = {}
 
     for section in sections:
         if section.name not in args.sections:
@@ -86,7 +85,7 @@ def handle_request(args, sections):
         # if piggyback for nodes is implemented,
         # use this section for Host labels
         #
-        #if section.name == "nodes":
+        # if section.name == "nodes":
         #    for line in value:
         #        node_name = line.get("displayName")
         #        label_data = line.get("assignedLabels")
@@ -103,7 +102,7 @@ def handle_request(args, sections):
 
         sys.stdout.write("%s\n" % json.dumps(value))
 
-    #if labels:
+    # if labels:
     #    sys.stdout.write("<<<labels:sep(0)>>>\n")
     #    sys.stdout.write("%s\n" % json.dumps(labels))
 
@@ -111,34 +110,36 @@ def handle_request(args, sections):
 def parse_arguments(argv):
     sections = ["instance", "jobs", "nodes", "queue"]
 
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawTextHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawTextHelpFormatter
+    )
 
-    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[('authorization', '****')]))
+    parser.add_argument("--vcrtrace", action=vcrtrace(filter_headers=[("authorization", "****")]))
     parser.add_argument("-u", "--user", default=None, help="Username for jenkins login")
     parser.add_argument("-s", "--password", default=None, help="Password for jenkins login")
-    parser.add_argument("-P",
-                        "--proto",
-                        default="https",
-                        help="Use 'http' or 'https' for connection to jenkins (default=https)")
-    parser.add_argument("-p",
-                        "--port",
-                        default=443,
-                        type=int,
-                        help="Use alternative port (default: 443)")
+    parser.add_argument(
+        "-P",
+        "--proto",
+        default="https",
+        help="Use 'http' or 'https' for connection to jenkins (default=https)",
+    )
+    parser.add_argument(
+        "-p", "--port", default=443, type=int, help="Use alternative port (default: 443)"
+    )
     parser.add_argument(
         "-m",
         "--sections",
         default=sections,
-        help="Comma separated list of data to query. Possible values: %s (default: all)" %
-        ",".join(sections))
-    parser.add_argument("--debug",
-                        action="store_true",
-                        help="Debug mode: let Python exceptions come through")
+        help="Comma separated list of data to query. Possible values: %s (default: all)"
+        % ",".join(sections),
+    )
+    parser.add_argument(
+        "--debug", action="store_true", help="Debug mode: let Python exceptions come through"
+    )
 
-    parser.add_argument("hostname",
-                        metavar="HOSTNAME",
-                        help="Name of the jenkins instance to query.")
+    parser.add_argument(
+        "hostname", metavar="HOSTNAME", help="Name of the jenkins instance to query."
+    )
 
     return parser.parse_args(argv)
 

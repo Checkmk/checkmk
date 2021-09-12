@@ -18,6 +18,7 @@ THostSections = TypeVar("THostSections", bound="HostSections")
 
 class HostSections(Generic[TRawDataSection], abc.ABC):
     """Host informations from the sources."""
+
     def __init__(
         self,
         sections: Optional[Mapping[SectionName, TRawDataSection]] = None,

@@ -96,8 +96,8 @@ TRawDataSection = TypeVar("TRawDataSection", bound=ABCRawDataSection)
 
 
 class PersistedSections(  # pylint: disable=too-many-ancestors
-        Generic[TRawDataSection],
-        MutableMapping[SectionName, Tuple[int, int, TRawDataSection]],
+    Generic[TRawDataSection],
+    MutableMapping[SectionName, Tuple[int, int, TRawDataSection]],
 ):
     __slots__ = ("_store",)
 
@@ -129,11 +129,13 @@ class PersistedSections(  # pylint: disable=too-many-ancestors
         sections: Mapping[SectionName, TRawDataSection],
         lookup_persist: Callable[[SectionName], Optional[Tuple[int, int]]],
     ) -> "PersistedSections[TRawDataSection]":
-        return cls({
-            section_name: persist_info + (section_content,)
-            for section_name, section_content in sections.items()
-            if (persist_info := lookup_persist(section_name)) is not None
-        })
+        return cls(
+            {
+                section_name: persist_info + (section_content,)
+                for section_name, section_content in sections.items()
+                if (persist_info := lookup_persist(section_name)) is not None
+            }
+        )
 
     def cached_at(self, section_name: SectionName) -> int:
         entry = self[section_name]
@@ -173,7 +175,8 @@ class SectionStore(Generic[TRawDataSection]):
     def load(self) -> PersistedSections[TRawDataSection]:
         raw_sections_data = _store.load_object_from_file(self.path, default={})
         return PersistedSections[TRawDataSection](
-            {SectionName(k): v for k, v in raw_sections_data.items()})
+            {SectionName(k): v for k, v in raw_sections_data.items()}
+        )
 
     def update_and_mutate(
         self,
@@ -207,10 +210,12 @@ class SectionStore(Generic[TRawDataSection]):
         # the possible write here and simply ignore the outdated sections or lock when
         # reading and unlock after writing
         persisted_sections = self.load()
-        persisted_sections.update(PersistedSections[TRawDataSection].from_sections(
-            sections=sections,
-            lookup_persist=lookup_persist,
-        ))
+        persisted_sections.update(
+            PersistedSections[TRawDataSection].from_sections(
+                sections=sections,
+                lookup_persist=lookup_persist,
+            )
+        )
         if not keep_outdated:
             for section_name in tuple(persisted_sections):
                 (_created_at, valid_until, _section_content) = persisted_sections[section_name]
@@ -226,11 +231,13 @@ class SectionStore(Generic[TRawDataSection]):
         cache_info: MutableMapping[SectionName, Tuple[int, int]],
         persisted_sections: PersistedSections[TRawDataSection],
     ) -> None:
-        cache_info.update({
-            section_name: (created_at, valid_until - created_at)
-            for section_name, (created_at, valid_until, *_rest) in persisted_sections.items()
-            if section_name not in sections
-        })
+        cache_info.update(
+            {
+                section_name: (created_at, valid_until - created_at)
+                for section_name, (created_at, valid_until, *_rest) in persisted_sections.items()
+                if section_name not in sections
+            }
+        )
         for section_name, entry in persisted_sections.items():
             if len(entry) == 2:
                 continue  # Skip entries of "old" format
@@ -257,6 +264,7 @@ class MaxAge(NamedTuple):
         cmk.base.config.max_cachefile_age() for the default values configured.
 
     """
+
     checking: int
     discovery: int
     inventory: int
@@ -290,26 +298,34 @@ class FileCache(Generic[TRawData], abc.ABC):
         self._logger: Final = logging.getLogger("cmk.helper")
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}(" + ", ".join((
-            f"{self.hostname}",
-            f"base_path={self.base_path}",
-            f"max_age={self.max_age}",
-            f"disabled={self.disabled}",
-            f"use_outdated={self.use_outdated}",
-            f"simulation={self.simulation}",
-        )) + ")"
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{self.hostname}",
+                    f"base_path={self.base_path}",
+                    f"max_age={self.max_age}",
+                    f"disabled={self.disabled}",
+                    f"use_outdated={self.use_outdated}",
+                    f"simulation={self.simulation}",
+                )
+            )
+            + ")"
+        )
 
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, type(self)):
             return NotImplemented
-        return all((
-            self.hostname == other.hostname,
-            self.base_path == other.base_path,
-            self.max_age == other.max_age,
-            self.disabled == other.disabled,
-            self.use_outdated == other.use_outdated,
-            self.simulation == other.simulation,
-        ))
+        return all(
+            (
+                self.hostname == other.hostname,
+                self.base_path == other.base_path,
+                self.max_age == other.max_age,
+                self.disabled == other.disabled,
+                self.use_outdated == other.use_outdated,
+                self.simulation == other.simulation,
+            )
+        )
 
     def to_json(self) -> Mapping[str, Any]:
         return {
@@ -351,9 +367,9 @@ class FileCache(Generic[TRawData], abc.ABC):
             return True
 
         if mode in {
-                Mode.NONE,
-                Mode.FORCE_SECTIONS,
-                Mode.RTC,
+            Mode.NONE,
+            Mode.FORCE_SECTIONS,
+            Mode.RTC,
         }:
             self._logger.debug("Not using cache (Mode %s)", mode)
             return False

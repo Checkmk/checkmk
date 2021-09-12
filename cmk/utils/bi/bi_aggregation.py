@@ -50,7 +50,8 @@ class BIAggregation:
         self.node = BINodeGenerator(aggr_config["node"])
         self.groups = BIAggregationGroups(aggr_config["groups"])
         self.computation_options = BIAggregationComputationOptions(
-            aggr_config["computation_options"])
+            aggr_config["computation_options"]
+        )
         self.aggregation_visualization = aggr_config["aggregation_visualization"]
 
     @classmethod
@@ -109,8 +110,9 @@ class BIAggregation:
         computation_options = BIAggregationComputationOptions(schema_config["computation_options"])
         aggregation_visualization = schema_config["aggregation_visualization"]
         groups = BIAggregationGroups(schema_config["groups"])
-        return BICompiledAggregation(aggregation_id, branches, computation_options,
-                                     aggregation_visualization, groups)
+        return BICompiledAggregation(
+            aggregation_id, branches, computation_options, aggregation_visualization, groups
+        )
 
 
 class BIAggregationSchema(Schema):
@@ -136,7 +138,7 @@ class BIAggregationSchema(Schema):
         BIAggregationGroups,
         example_config={
             "names": ["groupA", "groupB"],
-            "paths": [["path", "group", "a"], ["path", "group", "b"]]
+            "paths": [["path", "group", "a"], ["path", "group", "b"]],
         },
     )
     node = create_nested_schema_for_class(BINodeGenerator)

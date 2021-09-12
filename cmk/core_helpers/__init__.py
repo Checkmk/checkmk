@@ -70,6 +70,7 @@ class FetcherType(enum.Enum):
     The enum works as a fetcher factory.
 
     """
+
     NONE = enum.auto()
     PUSH_AGENT = enum.auto()
     IPMI = enum.auto()

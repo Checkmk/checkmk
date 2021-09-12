@@ -68,16 +68,14 @@ def _make_event(text: str, ipaddress: str, time: float = _time()) -> Event:
     )
 
 
-def create_event_from_line(line: str,
-                           address: Optional[Tuple[str, int]],
-                           logger: Logger,
-                           *,
-                           verbose: bool = False) -> Event:
+def create_event_from_line(
+    line: str, address: Optional[Tuple[str, int]], logger: Logger, *, verbose: bool = False
+) -> Event:
     if verbose:
-        adr = '' if address is None else f' from host {address[0]}, port {address[1]}:'
+        adr = "" if address is None else f" from host {address[0]}, port {address[1]}:"
         logger.info(f'processing message{adr} "{line}"')
     # TODO: Is it really never a domain name?
-    ipaddress = '' if address is None else address[0]
+    ipaddress = "" if address is None else address[0]
     try:
         event = parse_message(line, ipaddress)
     except Exception as e:
@@ -86,8 +84,10 @@ def create_event_from_line(line: str,
         event = _make_event(line, ipaddress)
     if verbose:
         width = max(len(k) for k in event.keys()) + 1
-        logger.info('parsed message:' + ''.join(f'\n {k+":":{width}} {v}'  #
-                                                for k, v in sorted(event.items())))
+        logger.info(
+            "parsed message:"
+            + "".join(f'\n {k+":":{width}} {v}' for k, v in sorted(event.items()))  #
+        )
     return event
 
 
@@ -140,10 +140,10 @@ def parse_message(line: str, ipaddress: str) -> Event:
 
     event = _make_event(line, ipaddress)
     # Variant 2,3,4,5,6,7,7a,8
-    if line.startswith('<'):
-        i = line.find('>')
+    if line.startswith("<"):
+        i = line.find(">")
         prio = int(line[1:i])
-        line = line[i + 1:]
+        line = line[i + 1 :]
         event["facility"] = prio >> 3
         event["priority"] = prio & 7
 
@@ -153,13 +153,13 @@ def parse_message(line: str, ipaddress: str) -> Event:
         event["priority"] = 5  # notice
 
     # Variant 7 and 7a
-    if line[0] == '@' and line[11] in [' ', ';'] and line.split(' ', 1)[0].count(';') <= 1:
-        details, event['host'], line = line.split(' ', 2)
-        detail_tokens = details.split(';')
+    if line[0] == "@" and line[11] in [" ", ";"] and line.split(" ", 1)[0].count(";") <= 1:
+        details, event["host"], line = line.split(" ", 2)
+        detail_tokens = details.split(";")
         timestamp = detail_tokens[0]
         if len(detail_tokens) > 1:
             event["sl"] = int(detail_tokens[1])
-        event['time'] = float(timestamp[1:])
+        event["time"] = float(timestamp[1:])
         event.update(parse_syslog_info(line))
 
     # Variant 3
@@ -167,9 +167,9 @@ def parse_message(line: str, ipaddress: str) -> Event:
         event.update(parse_monitoring_info(line))
 
     # Variant 5
-    elif len(line) > 24 and line[10] == 'T':
-        timestamp, event['host'], rest = line.split(' ', 2)
-        event['time'] = parse_iso_8601_timestamp(timestamp)
+    elif len(line) > 24 and line[10] == "T":
+        timestamp, event["host"], rest = line.split(" ", 2)
+        event["time"] = parse_iso_8601_timestamp(timestamp)
         event.update(parse_syslog_info(rest))
 
     # Variant 9
@@ -177,17 +177,17 @@ def parse_message(line: str, ipaddress: str) -> Event:
         event.update(parse_rfc5424_syslog_info(line))
 
     # Variant 8
-    elif line[10] == '-' and line[19] == ' ':
-        timestamp, event['host'], rest = line.split(' ', 2)
+    elif line[10] == "-" and line[19] == " ":
+        timestamp, event["host"], rest = line.split(" ", 2)
         timestamp = fix_broken_sophos_timestamp(timestamp)
-        event['time'] = parse_iso_8601_timestamp(timestamp)
+        event["time"] = parse_iso_8601_timestamp(timestamp)
         event.update(parse_syslog_info(rest))
 
     # Variant 6
-    elif len(line.split(': ', 1)[0].split(' ')) == 1:
+    elif len(line.split(": ", 1)[0].split(" ")) == 1:
         event.update(parse_syslog_info(line))
         # There is no datetime information in the message, use current time
-        event['time'] = _time()
+        event["time"] = _time()
         # There is no host information, use the provided address
         event["host"] = ipaddress
 
@@ -198,7 +198,7 @@ def parse_message(line: str, ipaddress: str) -> Event:
         event["application"] = application.rstrip(":")
         event["pid"] = 0
         event["text"] = line
-        event['time'] = mktime(strptime(time_part, '%Y %b %d %H:%M:%S'))
+        event["time"] = mktime(strptime(time_part, "%Y %b %d %H:%M:%S"))
 
     # Variant 1,1a,2,4
     else:
@@ -271,9 +271,9 @@ def parse_syslog_info(line: str) -> Event:
     # like "c://test.log".
     tag, message = line.split(": ", 1)
     event["text"] = message.strip()
-    if '[' in tag:
-        app, pid_str = tag.split('[', 1)
-        pid = int(pid_str.rstrip(']'))
+    if "[" in tag:
+        app, pid_str = tag.split("[", 1)
+        pid = int(pid_str.rstrip("]"))
     else:
         app = tag
         pid = 0
@@ -285,8 +285,8 @@ def parse_syslog_info(line: str) -> Event:
 def parse_monitoring_info(line: str) -> Event:
     event: Event = {}
     # line starts with '@'
-    if line[11] == ';':
-        timestamp_str, sl, contact, rest = line[1:].split(';', 3)
+    if line[11] == ";":
+        timestamp_str, sl, contact, rest = line[1:].split(";", 3)
         host, rest = rest.split(None, 1)
         if len(sl):
             event["sl"] = int(sl)
@@ -316,7 +316,7 @@ def parse_rfc5424_syslog_info(line: str) -> Event:
         sd_and_message,
     ) = line.split(" ", 6)
     nil_value = "-"  # SyslogMessage.nilvalue()
-    event['time'] = _time() if timestamp == nil_value else parse_iso_8601_timestamp(timestamp)
+    event["time"] = _time() if timestamp == nil_value else parse_iso_8601_timestamp(timestamp)
     event["host"] = "" if hostname == nil_value else hostname
     event["application"] = "" if app_name == nil_value else app_name
     event["pid"] = 0 if procid == nil_value else int(procid)
@@ -325,14 +325,16 @@ def parse_rfc5424_syslog_info(line: str) -> Event:
     message = remove_leading_bom(message)
     if structured_data:
         event_update, remaining_structured_data = parse_syslog_message_structured_data(
-            structured_data)
+            structured_data
+        )
         # TODO: Fix the typing chaos below. We really need to parse the attributes.
         event.update(event_update)  # type: ignore[arg-type,typeddict-item]
         # TODO: What about the other non-string attributes of an event?
         if (service_level := event.get("sl")) is not None:
             event["sl"] = int(service_level)
-        event["text"] = (
-            f"{(remaining_structured_data +  ' ') if remaining_structured_data else ''}{message}")
+        event[
+            "text"
+        ] = f"{(remaining_structured_data +  ' ') if remaining_structured_data else ''}{message}"
     else:
         event["text"] = message
     return event
@@ -345,9 +347,9 @@ def parse_iso_8601_timestamp(timestamp: str) -> float:
 # Sophos firewalls use a braindead non-standard timestamp format with funny separators and without a timezone.
 def fix_broken_sophos_timestamp(timestamp: str) -> str:
     # Step 1: Fix separator between date and time
-    timestamp = timestamp.replace('-', 'T', 1)
+    timestamp = timestamp.replace("-", "T", 1)
     # Step 2: Fix separators between date parts
-    timestamp = timestamp.replace(':', '-', 2)
+    timestamp = timestamp.replace(":", "-", 2)
     # Step 3: Add explicit offset for local time
     offset = current_utcoffset_seconds()
     hours, minutes = divmod(abs(offset) // 60, 60)
@@ -384,7 +386,7 @@ def _split_syslog_nonnil_sd_and_message(sd_and_message: str) -> Tuple[str, str]:
         if char == "]" and sd_and_message[idx - 1] != "\\":
             currently_outside_sd_element = True
         if char == " " and currently_outside_sd_element:
-            return sd_and_message[:idx], sd_and_message[idx + 1:]
+            return sd_and_message[:idx], sd_and_message[idx + 1 :]
     # Special case: no message
     if currently_outside_sd_element:
         return sd_and_message, ""
@@ -398,7 +400,8 @@ def parse_syslog_message_structured_data(structured_data: str) -> Tuple[Mapping[
         return {}, structured_data
     if len(checkmk_elements) != 1:
         raise ValueError(
-            "Invalid RFC 5424 syslog message: Found Checkmk structured data element multiple times")
+            "Invalid RFC 5424 syslog message: Found Checkmk structured data element multiple times"
+        )
     event_update = {}
     for sd_param in findall(r' .*?=".*?(?<!\\)"', checkmk_elements[0]):
         name, value = sd_param[1:].split("=", 1)

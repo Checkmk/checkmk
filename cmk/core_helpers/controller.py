@@ -102,7 +102,7 @@ class Timeout:
         self._signaled = True
         raise MKTimeout(self.message)
 
-    def __enter__(self) -> 'Timeout':
+    def __enter__(self) -> "Timeout":
         self._signaled = False
         signal.signal(signal.SIGALRM, self._handler)
         signal.alarm(self.timeout)
@@ -145,7 +145,8 @@ def process_command(raw_command: str, observer: ABCResourceObserver) -> None:
             observer.check_resources(raw_command)
         except Exception as e:
             crash_info = create_fetcher_crash_dump(
-                str(config_path) if config_path is not None else None, host_name)
+                str(config_path) if config_path is not None else None, host_name
+            )
             logger.critical("Exception is '%s' (%s)", e, crash_info)
             sys.exit(15)
 
@@ -186,7 +187,7 @@ def load_global_config(path: Path) -> GlobalConfig:
 
 
 def _run_fetcher(fetcher: Fetcher, mode: Mode) -> protocol.FetcherMessage:
-    """ Entrypoint to obtain data from fetcher objects.    """
+    """Entrypoint to obtain data from fetcher objects."""
     logger.debug("Fetch from %s", fetcher)
     with CPUTracker() as tracker:
         try:
@@ -217,8 +218,10 @@ def _parse_config(config_path: ConfigPath, host_name: HostName) -> Iterator[Fetc
 def _parse_fetcher_config(data: Mapping[str, Any]) -> Iterator[Fetcher]:
     # Hard crash on parser errors: The interface is versioned and internal.
     # Crashing on error really *is* the best way to catch bonehead mistakes.
-    yield from (FetcherType[entry["fetcher_type"]].from_json(entry["fetcher_params"])
-                for entry in data["fetchers"])
+    yield from (
+        FetcherType[entry["fetcher_type"]].from_json(entry["fetcher_params"])
+        for entry in data["fetchers"]
+    )
 
 
 def _parse_cluster_config(data: Mapping[str, Any], config_path: ConfigPath) -> Iterator[Fetcher]:
@@ -239,7 +242,7 @@ def _run_fetchers_from_file(
     mode: Mode,
     timeout: int,
 ) -> None:
-    """ Writes to the stdio next data:
+    """Writes to the stdio next data:
     Count Answer        Content               Action
     ----- ------        -------               ------
     1     Result        Fetcher Blob          Send to the checker
@@ -249,8 +252,8 @@ def _run_fetchers_from_file(
     """
     messages: List[protocol.FetcherMessage] = []
     with Timeout(
-            timeout,
-            message=f"Fetcher for host \"{host_name}\" timed out after {timeout} seconds",
+        timeout,
+        message=f'Fetcher for host "{host_name}" timed out after {timeout} seconds',
     ) as timeout_manager:
         fetchers = tuple(_parse_config(config_path, host_name))
         try:
@@ -264,7 +267,9 @@ def _run_fetchers_from_file(
                     FetcherType.from_fetcher(fetcher),
                     exc,
                     Snapshot.null(),
-                ) for fetcher in fetchers[len(messages):])
+                )
+                for fetcher in fetchers[len(messages) :]
+            )
 
     if timeout_manager.signaled:
         messages = _replace_netsnmp_obfuscated_timeout(messages, timeout_manager.message)
@@ -272,29 +277,42 @@ def _run_fetchers_from_file(
     logger.debug("Produced %d messages", len(messages))
     write_bytes(bytes(protocol.CMCMessage.result_answer(*messages)))
     for msg in filter(
-            lambda msg: msg.header.payload_type is protocol.PayloadType.ERROR,
-            messages,
+        lambda msg: msg.header.payload_type is protocol.PayloadType.ERROR,
+        messages,
     ):
-        logger.log(msg.header.status, "Error in %s fetcher: %r", msg.header.fetcher_type.name,
-                   msg.raw_data.error)
-        logger.debug("".join(
-            traceback.format_exception(
-                msg.raw_data.error.__class__,
-                msg.raw_data.error,
-                msg.raw_data.error.__traceback__,
-            )))
+        logger.log(
+            msg.header.status,
+            "Error in %s fetcher: %r",
+            msg.header.fetcher_type.name,
+            msg.raw_data.error,
+        )
+        logger.debug(
+            "".join(
+                traceback.format_exception(
+                    msg.raw_data.error.__class__,
+                    msg.raw_data.error,
+                    msg.raw_data.error.__traceback__,
+                )
+            )
+        )
 
 
-def _replace_netsnmp_obfuscated_timeout(messages: Iterable[protocol.FetcherMessage],
-                                        timeout_msg: str) -> List[protocol.FetcherMessage]:
+def _replace_netsnmp_obfuscated_timeout(
+    messages: Iterable[protocol.FetcherMessage], timeout_msg: str
+) -> List[protocol.FetcherMessage]:
     return [
         protocol.FetcherMessage.timeout(
             FetcherType.SNMP,
             MKTimeout(timeout_msg),
             Snapshot.null(),
-        ) if (msg.header.fetcher_type is FetcherType.SNMP and
-              msg.header.payload_type is protocol.PayloadType.ERROR and
-              isinstance(msg.raw_data.error, SystemError)) else msg for msg in messages
+        )
+        if (
+            msg.header.fetcher_type is FetcherType.SNMP
+            and msg.header.payload_type is protocol.PayloadType.ERROR
+            and isinstance(msg.raw_data.error, SystemError)
+        )
+        else msg
+        for msg in messages
     ]
 
 

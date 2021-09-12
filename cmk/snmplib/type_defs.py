@@ -50,8 +50,9 @@ SNMPRawDataSection = Union[SNMPTable, Sequence[SNMPTable]]
 #
 SNMPRawData = Mapping[_SectionName, SNMPRawDataSection]
 OID = str
-OIDFunction = Callable[[OID, Optional[SNMPDecodedString], Optional[_CheckPluginName]],
-                       Optional[SNMPDecodedString]]
+OIDFunction = Callable[
+    [OID, Optional[SNMPDecodedString], Optional[_CheckPluginName]], Optional[SNMPDecodedString]
+]
 SNMPScanFunction = Callable[[OIDFunction], bool]
 SNMPRawValue = bytes
 SNMPRowInfo = List[Tuple[OID, SNMPRawValue]]
@@ -68,10 +69,10 @@ SNMPRowInfo = List[Tuple[OID, SNMPRawValue]]
 # (6) privacy protocol pass phrase (-X)
 SNMPCommunity = str
 # TODO: This does not work as intended
-#SNMPv3NoAuthNoPriv = Tuple[str, str]
-#SNMPv3AuthNoPriv = Tuple[str, str, str, str]
-#SNMPv3AuthPriv = Tuple[str, str, str, str, str, str]
-#SNMPCredentials = Union[SNMPCommunity, SNMPv3NoAuthNoPriv, SNMPv3AuthNoPriv, SNMPv3AuthPriv]
+# SNMPv3NoAuthNoPriv = Tuple[str, str]
+# SNMPv3AuthNoPriv = Tuple[str, str, str, str]
+# SNMPv3AuthPriv = Tuple[str, str, str, str, str, str]
+# SNMPCredentials = Union[SNMPCommunity, SNMPv3NoAuthNoPriv, SNMPv3AuthNoPriv, SNMPv3AuthPriv]
 SNMPCredentials = Union[SNMPCommunity, Tuple[str, ...]]
 # TODO: Cleanup to named tuple
 SNMPTiming = Dict
@@ -99,14 +100,18 @@ class SNMPBackendEnum(enum.Enum):
 
 class SNMPDetectSpec(_SNMPDetectBaseType):
     """A specification for SNMP device detection"""
+
     @classmethod
     def from_json(cls, serialized: Mapping[str, Any]) -> "SNMPDetectSpec":
         try:
             # The cast is necessary as mypy does not infer types in a list comprehension.
             # See https://github.com/python/mypy/issues/5068
-            return cls([[cast(SNMPDetectAtom, tuple(inner))
-                         for inner in outer]
-                        for outer in serialized["snmp_detect_spec"]])
+            return cls(
+                [
+                    [cast(SNMPDetectAtom, tuple(inner)) for inner in outer]
+                    for outer in serialized["snmp_detect_spec"]
+                ]
+            )
         except (LookupError, TypeError, ValueError) as exc:
             raise ValueError(serialized) from exc
 
@@ -116,7 +121,9 @@ class SNMPDetectSpec(_SNMPDetectBaseType):
 
 # Wraps the configuration of a host into a single object for the SNMP code
 class SNMPHostConfig(
-        NamedTuple("SNMPHostConfig", [
+    NamedTuple(
+        "SNMPHostConfig",
+        [
             ("is_ipv6_primary", bool),
             ("hostname", _HostName),
             ("ipaddress", _HostAddress),
@@ -131,7 +138,9 @@ class SNMPHostConfig(
             ("character_encoding", Optional[str]),
             ("is_usewalk_host", bool),
             ("snmp_backend", SNMPBackendEnum),
-        ])):
+        ],
+    )
+):
     @property
     def is_snmpv3_host(self) -> bool:
         return isinstance(self.credentials, tuple)
@@ -190,9 +199,9 @@ class SNMPBackend(abc.ABC):
         return self.config.ipaddress
 
     @abc.abstractmethod
-    def get(self,
-            oid: OID,
-            context_name: Optional[SNMPContextName] = None) -> Optional[SNMPRawValue]:
+    def get(
+        self, oid: OID, context_name: Optional[SNMPContextName] = None
+    ) -> Optional[SNMPRawValue]:
         """Fetch a single OID from the given host in the given SNMP context
         The OID may end with .* to perform a GETNEXT request. Otherwise a GET
         request is sent to the given host.
@@ -200,11 +209,13 @@ class SNMPBackend(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def walk(self,
-             oid: OID,
-             check_plugin_name: Optional[_CheckPluginName] = None,
-             table_base_oid: Optional[OID] = None,
-             context_name: Optional[SNMPContextName] = None) -> SNMPRowInfo:
+    def walk(
+        self,
+        oid: OID,
+        check_plugin_name: Optional[_CheckPluginName] = None,
+        table_base_oid: Optional[OID] = None,
+        context_name: Optional[SNMPContextName] = None,
+    ) -> SNMPRowInfo:
         return []
 
 
@@ -233,9 +244,10 @@ class BackendOIDSpec(NamedTuple):
         column: Union[str, int],
         encoding: SNMPValueEncoding,
         save_to_cache: bool,
-    ) -> 'BackendOIDSpec':
+    ) -> "BackendOIDSpec":
         return cls(
-            SpecialColumn(column) if isinstance(column, int) else column, encoding, save_to_cache)
+            SpecialColumn(column) if isinstance(column, int) else column, encoding, save_to_cache
+        )
 
 
 class BackendSNMPTree(NamedTuple):
@@ -244,6 +256,7 @@ class BackendSNMPTree(NamedTuple):
     It mainly features (de)serialization. Validation is done during
     section registration, so we can assume sane values here.
     """
+
     base: str
     oids: Sequence[BackendOIDSpec]
 
@@ -253,7 +266,7 @@ class BackendSNMPTree(NamedTuple):
         *,
         base: str,
         oids: Iterable[Tuple[Union[str, int], SNMPValueEncoding, bool]],
-    ) -> 'BackendSNMPTree':
+    ) -> "BackendSNMPTree":
         return cls(
             base=base,
             oids=[BackendOIDSpec.deserialize(*oid) for oid in oids],

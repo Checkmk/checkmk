@@ -50,8 +50,9 @@ class MKEmptyAgentData(MKAgentError):
 
 
 class MKParseFunctionError(MKException):
-    def __init__(self, exception_type: Type[Exception], exception: Exception,
-                 backtrace: TracebackType) -> None:
+    def __init__(
+        self, exception_type: Type[Exception], exception: Exception, backtrace: TracebackType
+    ) -> None:
         self.exception_type = exception_type
         self.exception = exception
         self.backtrace = backtrace

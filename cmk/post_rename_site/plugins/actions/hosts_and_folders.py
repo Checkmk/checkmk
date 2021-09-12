@@ -46,4 +46,5 @@ rename_action_registry.register(
         title=_("Hosts and folders"),
         sort_index=15,
         handler=update_hosts_and_folders,
-    ))
+    )
+)

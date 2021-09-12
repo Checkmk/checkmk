@@ -25,9 +25,9 @@ def evaluate_snmp_detection(
     Return True if and and only if at least all conditions in one "line" are True
     """
     return any(
-        all(_evaluate_snmp_detection_atom(atom, oid_value_getter)
-            for atom in alternative)
-        for alternative in detect_spec)
+        all(_evaluate_snmp_detection_atom(atom, oid_value_getter) for atom in alternative)
+        for alternative in detect_spec
+    )
 
 
 def _evaluate_snmp_detection_atom(

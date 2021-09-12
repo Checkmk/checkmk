@@ -33,11 +33,9 @@ def decrypt_aes_256_cbc_pbkdf2(
     PBKDF2_CYCLES = 10_000
 
     salt = ciphertext[:SALT_LENGTH]
-    raw_key = PBKDF2(password,
-                     salt,
-                     KEY_LENGTH + IV_LENGTH,
-                     count=PBKDF2_CYCLES,
-                     hmac_hash_module=SHA256)
+    raw_key = PBKDF2(
+        password, salt, KEY_LENGTH + IV_LENGTH, count=PBKDF2_CYCLES, hmac_hash_module=SHA256
+    )
     key, iv = raw_key[:KEY_LENGTH], raw_key[KEY_LENGTH:]
 
     decryption_suite = AES.new(key, AES.MODE_CBC, iv)
@@ -70,14 +68,13 @@ def _derive_openssl_key_and_iv(
     key_length: int,
     iv_length: int,
 ) -> Tuple[bytes, bytes]:
-    """Simple OpenSSL Key derivation function
-    """
+    """Simple OpenSSL Key derivation function"""
     d = d_i = b""
     while len(d) < key_length + iv_length:
         d_i = digest(d_i + password).digest()
         d += d_i
-    return d[:key_length], d[key_length:key_length + iv_length]
+    return d[:key_length], d[key_length : key_length + iv_length]
 
 
 def _strip_fill_bytes(content: bytes) -> bytes:
-    return content[0:-content[-1]]
+    return content[0 : -content[-1]]

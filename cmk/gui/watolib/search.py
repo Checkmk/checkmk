@@ -440,9 +440,7 @@ class IndexSearcher:
                 # Without this call to i18n._, found hosts would be displayed under the topic
                 # "Hosts" instead of "Hôtes" in the setup search.
                 # pylint: disable=translation-of-non-string
-                results[
-                    _(match_item_dict["topic"])
-                ].append(
+                results[_(match_item_dict["topic"])].append(
                     SearchResult(
                         match_item_dict["title"],
                         match_item_dict["url"],

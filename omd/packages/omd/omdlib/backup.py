@@ -36,14 +36,17 @@ from omdlib.contexts import SiteContext
 from omdlib.type_defs import CommandOptions
 
 
-def backup_site_to_tarfile(site: SiteContext, fh: BinaryIO, mode: str, options: CommandOptions,
-                           verbose: bool) -> None:
+def backup_site_to_tarfile(
+    site: SiteContext, fh: BinaryIO, mode: str, options: CommandOptions, verbose: bool
+) -> None:
 
     # Mypy does not understand this: Unexpected keyword argument "verbose" for "open" of "TarFile", same for "site".
     tar = cast(
         BackupTarFile,
         BackupTarFile.open(  # type: ignore[call-arg]
-            fileobj=fh, mode=mode, site=site, verbose=verbose))
+            fileobj=fh, mode=mode, site=site, verbose=verbose
+        ),
+    )
 
     # Add the version symlink as first file to be able to
     # check a) the sitename and b) the version before reading
@@ -86,8 +89,9 @@ def get_exclude_patterns(options: CommandOptions) -> List[str]:
     return excludes
 
 
-def _backup_site_files_to_tarfile(site: SiteContext, tar: 'BackupTarFile',
-                                  options: CommandOptions) -> None:
+def _backup_site_files_to_tarfile(
+    site: SiteContext, tar: "BackupTarFile", options: CommandOptions
+) -> None:
     exclude = get_exclude_patterns(options)
     exclude.append("tmp/*")  # Exclude all tmpfs files
 
@@ -105,8 +109,9 @@ def _backup_site_files_to_tarfile(site: SiteContext, tar: 'BackupTarFile',
     def filter_files(tarinfo):
         # patterns are relative to site directory, tarinfo.name includes site name.
         matches_exclude = any(
-            fnmatch.fnmatch(tarinfo.name[len(site.name) + 1:], glob_pattern)
-            for glob_pattern in exclude)
+            fnmatch.fnmatch(tarinfo.name[len(site.name) + 1 :], glob_pattern)
+            for glob_pattern in exclude
+        )
         return None if matches_exclude else tarinfo
 
     tar.add(site.dir, site.name, filter=filter_files)
@@ -115,6 +120,7 @@ def _backup_site_files_to_tarfile(site: SiteContext, tar: 'BackupTarFile',
 class BackupTarFile(tarfile.TarFile):
     """We need to use our tarfile class here to perform a rrdcached SUSPEND/RESUME
     to prevent writing to individual RRDs during backups."""
+
     def __init__(self, name, mode, fileobj, **kwargs):
         self._site = kwargs.pop("site")
         self._verbose = kwargs.pop("verbose")
@@ -129,7 +135,9 @@ class BackupTarFile(tarfile.TarFile):
     # case it is called in recursive mode and a file vanishes between the os.listdir()
     # and the first file access (often seen os.lstat()) during backup. Instead of failing
     # like this we want to skip those files silently during backup.
-    def add(self, name, arcname=None, recursive=True, *, filter=None):  # pylint: disable=redefined-builtin
+    def add(
+        self, name, arcname=None, recursive=True, *, filter=None
+    ):  # pylint: disable=redefined-builtin
         try:
             super().add(name, arcname, recursive, filter=filter)
         except OSError as e:
@@ -146,10 +154,12 @@ class BackupTarFile(tarfile.TarFile):
             super().addfile(tarinfo, fileobj)
             return
 
-        site_rel_path = tarinfo.name[len(self._site.name) + 1:]
+        site_rel_path = tarinfo.name[len(self._site.name) + 1 :]
 
-        is_rrd = ((site_rel_path.startswith("var/pnp4nagios/perfdata") or
-                   site_rel_path.startswith("var/check_mk/rrd")) and site_rel_path.endswith(".rrd"))
+        is_rrd = (
+            site_rel_path.startswith("var/pnp4nagios/perfdata")
+            or site_rel_path.startswith("var/check_mk/rrd")
+        ) and site_rel_path.endswith(".rrd")
 
         # rrdcached works realpath
         rrd_file_path = os.path.join(self._sites_path, tarinfo.name)
@@ -245,11 +255,13 @@ def get_site_and_version_from_backup(tar: tarfile.TarFile) -> Tuple[str, str]:
     try:
         sitename, version_name = site_tarinfo.name.split("/", 1)
     except ValueError:
-        raise Exception("Failed to detect version of backed up site. "
-                        "Maybe the backup is from an incompatible version.")
+        raise Exception(
+            "Failed to detect version of backed up site. "
+            "Maybe the backup is from an incompatible version."
+        )
 
     if version_name == "version":
-        version = site_tarinfo.linkname.split('/')[-1]
+        version = site_tarinfo.linkname.split("/")[-1]
     else:
         raise Exception("Failed to detect version of backed up site.")
 

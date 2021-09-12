@@ -10,10 +10,11 @@ def inv_winperf_if(parsed, params, inventory_tree):
     _agent_timestamp, perf, _dhcp = parsed
     usage_port_types = params.get(
         "usage_port_types",
-        ['6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'])
+        ["6", "32", "62", "117", "127", "128", "129", "180", "181", "182", "205", "229"],
+    )
 
     def render_mac_address(bytestring):
-        return ":".join(["%02s" % hex(ord(m))[2:] for m in bytestring]).replace(' ', '0').upper()
+        return ":".join(["%02s" % hex(ord(m))[2:] for m in bytestring]).replace(" ", "0").upper()
 
     interfaces = []
     total_ethernet_ports = 0
@@ -35,7 +36,7 @@ def inv_winperf_if(parsed, params, inventory_tree):
         }
 
         if interface.type in usage_port_types:
-            if_available = interface.oper_status == '2'
+            if_available = interface.oper_status == "2"
             total_ethernet_ports += 1
             if if_available:
                 available_ethernet_ports += 1
@@ -46,7 +47,7 @@ def inv_winperf_if(parsed, params, inventory_tree):
         interfaces.append(if_info)
 
     node = inventory_tree.get_list("networking.interfaces:")
-    node.extend(sorted(interfaces, key=lambda r: r.get('index')))
+    node.extend(sorted(interfaces, key=lambda r: r.get("index")))
 
     node = inventory_tree.get_dict("networking.")
     node["available_ethernet_ports"] = available_ethernet_ports
@@ -54,6 +55,6 @@ def inv_winperf_if(parsed, params, inventory_tree):
     node["total_interfaces"] = len(perf)
 
 
-inv_info['winperf_if'] = {
-    'inv_function': inv_winperf_if,
+inv_info["winperf_if"] = {
+    "inv_function": inv_winperf_if,
 }

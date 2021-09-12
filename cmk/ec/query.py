@@ -21,7 +21,7 @@ _StatusServer = Any
 
 class Query:
     @staticmethod
-    def make(status_server: _StatusServer, raw_query: List[str], logger: Logger) -> 'Query':
+    def make(status_server: _StatusServer, raw_query: List[str], logger: Logger) -> "Query":
         parts = raw_query[0].split(None, 1)
         if len(parts) != 2:
             raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
@@ -98,14 +98,15 @@ class QueryGET(Query):
         if header == "OutputFormat":
             if argument not in ["python", "plain", "json"]:
                 raise MKClientError(
-                    "Invalid output format \"%s\" (allowed are: python, plain, json)" % argument)
+                    'Invalid output format "%s" (allowed are: python, plain, json)' % argument
+                )
             self.output_format = argument
         elif header == "Columns":
             self.requested_columns = argument.split(" ")
         elif header == "Filter":
             column_name, operator_name, predicate, argument = self._parse_filter(argument)
             # Needed for later optimization (check_mkevents)
-            if column_name == "event_host" and operator_name == 'in':
+            if column_name == "event_host" and operator_name == "in":
                 self.only_host = set(argument)
             self.filters.append((column_name, operator_name, predicate, argument))
         elif header == "Limit":
@@ -126,8 +127,9 @@ class QueryGET(Query):
         try:
             convert = self.table.column_types[column]
         except KeyError:
-            raise MKClientError("Unknown column: %s (Available are: %s)" %
-                                (column, self.table.column_names))
+            raise MKClientError(
+                "Unknown column: %s (Available are: %s)" % (column, self.table.column_names)
+            )
 
         # TODO: BUG: The query is decoded to unicode after receiving it from
         # the socket. The columns with type str (initialied with "") will apply
@@ -136,8 +138,11 @@ class QueryGET(Query):
         # Fix this by making the default values unicode and skip unicode conversion
         # here (for performance reasons) because argument is already unicode.
         # TODO: Fix the typing chaos below!
-        argument = [convert(arg) for arg in raw_argument.split()
-                   ] if operator_name == 'in' else convert(raw_argument)
+        argument = (
+            [convert(arg) for arg in raw_argument.split()]
+            if operator_name == "in"
+            else convert(raw_argument)
+        )
 
         operator_function = operator_for(operator_name)
         return (column, operator_name, lambda x: operator_function(x, argument), argument)
@@ -145,14 +150,14 @@ class QueryGET(Query):
     def requested_column_indexes(self) -> List[Optional[int]]:
         # If a column is not known: Use None as index and None value later.
         return [
-            self.table.column_indices.get(column_name)  #
-            for column_name in self.requested_columns
+            self.table.column_indices.get(column_name) for column_name in self.requested_columns  #
         ]
 
     def filter_row(self, row: List[Any]) -> bool:
         return all(
             predicate(row[self.table.column_indices[column_name]])
-            for column_name, _operator_name, predicate, _argument in self.filters)
+            for column_name, _operator_name, predicate, _argument in self.filters
+        )
 
 
 class _QueryREPLICATE(Query):

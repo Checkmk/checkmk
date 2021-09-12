@@ -18,14 +18,14 @@ def testfile_engine():
 
 @pytest.fixture
 def testconfig(make_yaml_config):
-    section = 'systemtime'
-    make_yaml_config['global']['sections'] = "systemtime"
+    section = "systemtime"
+    make_yaml_config["global"]["sections"] = "systemtime"
     return make_yaml_config
 
 
 @pytest.fixture(name="expected_output")
 def expected_output_engine():
-    return [r'<<<systemtime>>>', r'\d+']
+    return [r"<<<systemtime>>>", r"\d+"]
 
 
 def test_section_systemtime(testconfig, expected_output, actual_output, testfile):

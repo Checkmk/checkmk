@@ -446,10 +446,14 @@ def _get_post_discovery_services(
             # keep item, if we are currently only looking for new services
             # otherwise fix it: remove ignored and non-longer existing services
             for entry in discovered_services_with_nodes:
-                if mode in (
-                    DiscoveryMode.FIXALL,
-                    DiscoveryMode.REMOVE,
-                ) and service_filters.vanished(host_name, entry.service):
+                if (
+                    mode
+                    in (
+                        DiscoveryMode.FIXALL,
+                        DiscoveryMode.REMOVE,
+                    )
+                    and service_filters.vanished(host_name, entry.service)
+                ):
                     result.self_removed += 1
                 else:
                     post_discovery_services.append(entry)

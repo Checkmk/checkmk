@@ -23,9 +23,11 @@ def warn_about_renamed_remote_site(old_site_id: SiteId, new_site_id: SiteId) -> 
         return
 
     logger.info("")
-    warning("You renamed a distributed remote site.\n\nTo make your distributed "
-            "setup work again, you will have to update the \"Distributed Monitoring\" "
-            "configuration in your central site.\n")
+    warning(
+        "You renamed a distributed remote site.\n\nTo make your distributed "
+        'setup work again, you will have to update the "Distributed Monitoring" '
+        "configuration in your central site.\n"
+    )
 
 
 rename_action_registry.register(
@@ -34,4 +36,5 @@ rename_action_registry.register(
         title=_("Warn about renamed remote site"),
         sort_index=950,
         handler=warn_about_renamed_remote_site,
-    ))
+    )
+)

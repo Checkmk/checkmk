@@ -113,7 +113,7 @@ def get_piggyback_raw_data(
                 successfully_processed=False,
                 reason=reason,
                 reason_status=0,
-                raw_data=AgentRawData(b''),
+                raw_data=AgentRawData(b""),
             )
             logger.log(
                 VERBOSE,
@@ -151,14 +151,15 @@ def get_piggyback_raw_data(
 
 
 def get_source_and_piggyback_hosts(
-        time_settings: PiggybackTimeSettings) -> Iterator[Tuple[HostName, HostName]]:
+    time_settings: PiggybackTimeSettings,
+) -> Iterator[Tuple[HostName, HostName]]:
     """Generates all piggyback pig/piggybacked host pairs that have up-to-date data"""
 
     # Pylint bug (https://github.com/PyCQA/pylint/issues/1660). Fixed with pylint 2.x
     for piggybacked_host_folder in _get_piggybacked_host_folders():
         for file_info in _get_piggyback_processed_file_infos(
-                HostName(piggybacked_host_folder.name),
-                time_settings,
+            HostName(piggybacked_host_folder.name),
+            time_settings,
         ):
             if not file_info.successfully_processed:
                 continue
@@ -187,8 +188,9 @@ def _get_piggyback_processed_file_infos(
     updated files/directories.
     """
     source_hostnames = get_source_hostnames(piggybacked_hostname)
-    matching_time_settings = _get_matching_time_settings(source_hostnames, piggybacked_hostname,
-                                                         time_settings)
+    matching_time_settings = _get_matching_time_settings(
+        source_hostnames, piggybacked_hostname, time_settings
+    )
 
     file_infos = []
     for source_hostname in source_hostnames:
@@ -198,10 +200,12 @@ def _get_piggyback_processed_file_infos(
         piggyback_file_path = _get_piggybacked_file_path(source_hostname, piggybacked_hostname)
 
         successfully_processed, reason, reason_status = _get_piggyback_processed_file_info(
-            source_hostname, piggybacked_hostname, piggyback_file_path, matching_time_settings)
+            source_hostname, piggybacked_hostname, piggyback_file_path, matching_time_settings
+        )
 
-        piggyback_file_info = PiggybackFileInfo(source_hostname, piggyback_file_path,
-                                                successfully_processed, reason, reason_status)
+        piggyback_file_info = PiggybackFileInfo(
+            source_hostname, piggyback_file_path, successfully_processed, reason, reason_status
+        )
         file_infos.append(piggyback_file_info)
     return file_infos
 
@@ -262,10 +266,11 @@ def _get_max_cache_age(
     piggybacked_hostname: HostName,
     time_settings: _PiggybackTimeSettingsMap,
 ) -> int:
-    key = 'max_cache_age'
+    key = "max_cache_age"
     dflt: int = time_settings[(None, key)]
-    return time_settings.get((piggybacked_hostname, key),
-                             time_settings.get((source_hostname, key), dflt))
+    return time_settings.get(
+        (piggybacked_hostname, key), time_settings.get((source_hostname, key), dflt)
+    )
 
 
 def _get_validity_period(
@@ -273,10 +278,11 @@ def _get_validity_period(
     piggybacked_hostname: HostName,
     time_settings: _PiggybackTimeSettingsMap,
 ) -> Optional[int]:
-    key = 'validity_period'
+    key = "validity_period"
     dflt: Optional[int] = time_settings.get((None, key))
-    return time_settings.get((piggybacked_hostname, key),
-                             time_settings.get((source_hostname, key), dflt))
+    return time_settings.get(
+        (piggybacked_hostname, key), time_settings.get((source_hostname, key), dflt)
+    )
 
 
 def _get_validity_state(
@@ -284,10 +290,11 @@ def _get_validity_state(
     piggybacked_hostname: HostName,
     time_settings: _PiggybackTimeSettingsMap,
 ) -> int:
-    key = 'validity_state'
+    key = "validity_state"
     dflt = 0
-    return time_settings.get((piggybacked_hostname, key),
-                             time_settings.get((source_hostname, key), dflt))
+    return time_settings.get(
+        (piggybacked_hostname, key), time_settings.get((source_hostname, key), dflt)
+    )
 
 
 def _eval_file_in_validity_period(
@@ -297,8 +304,11 @@ def _eval_file_in_validity_period(
     reason: str,
 ) -> Tuple[bool, str, int]:
     if validity_period is not None and file_age < validity_period:
-        return (True, "%s (still valid, %s left)" % (reason, Age(validity_period - file_age)),
-                validity_state)
+        return (
+            True,
+            "%s (still valid, %s left)" % (reason, Age(validity_period - file_age)),
+            validity_state,
+        )
     return False, reason, 0
 
 
@@ -380,10 +390,12 @@ def _store_status_file_of(
     # - the piggybacked host may check its files
     # - status file is newer (before utime of piggybacked host files is set)
     # => piggybacked host file is outdated
-    with tempfile.NamedTemporaryFile("wb",
-                                     dir=str(status_file_path.parent),
-                                     prefix=".%s.new" % status_file_path.name,
-                                     delete=False) as tmp:
+    with tempfile.NamedTemporaryFile(
+        "wb",
+        dir=str(status_file_path.parent),
+        prefix=".%s.new" % status_file_path.name,
+        delete=False,
+    ) as tmp:
         tmp_path = tmp.name
         os.chmod(tmp_path, 0o660)
         tmp.write(b"")
@@ -479,7 +491,7 @@ def _get_piggybacked_file_path(
     return cmk.utils.paths.piggyback_dir / piggybacked_hostname / source_hostname
 
 
-#.
+# .
 #   .--clean up------------------------------------------------------------.
 #   |                     _                                                |
 #   |                 ___| | ___  __ _ _ __    _   _ _ __                  |
@@ -522,7 +534,8 @@ def _get_piggybacked_hosts_settings(
             time_settings,
         )
         piggybacked_hosts_settings.append(
-            (piggybacked_host_folder, source_hosts, matching_time_settings))
+            (piggybacked_host_folder, source_hosts, matching_time_settings)
+        )
     return piggybacked_hosts_settings
 
 

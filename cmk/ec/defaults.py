@@ -61,17 +61,14 @@ def default_config() -> ConfigFromWATO:
         "translate_snmptraps": False,
         "snmp_credentials": [v1_v2_credential],
         "event_limit": {
-            'by_host': {
-                'action': 'stop_overflow_notify',
-                'limit': 1000,
+            "by_host": {
+                "action": "stop_overflow_notify",
+                "limit": 1000,
             },
-            'by_rule': {
-                'action': 'stop_overflow_notify',
-                'limit': 1000,
+            "by_rule": {
+                "action": "stop_overflow_notify",
+                "limit": 1000,
             },
-            'overall': {
-                'action': 'stop_overflow_notify',
-                'limit': 10000
-            },
+            "overall": {"action": "stop_overflow_notify", "limit": 10000},
         },
     }

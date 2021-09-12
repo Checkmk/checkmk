@@ -30,10 +30,9 @@ def get_force_stored_walks() -> bool:
     return _force_stored_walks
 
 
-def backend(snmp_config: SNMPHostConfig,
-            logger: logging.Logger,
-            *,
-            use_cache: Optional[bool] = None) -> SNMPBackend:
+def backend(
+    snmp_config: SNMPHostConfig, logger: logging.Logger, *, use_cache: Optional[bool] = None
+) -> SNMPBackend:
     if use_cache is None:
         use_cache = get_force_stored_walks()
 
@@ -47,6 +46,7 @@ def backend(snmp_config: SNMPHostConfig,
         try:
             # NOTE: delay import to save memory in fetcher. PySNMP is experimental and memory hog.
             from .cee.snmp_backend import pysnmp_backend  # type: ignore[import]
+
             return pysnmp_backend.PySNMPBackend(snmp_config, logger)
         except ImportError:
             # This is not an error: we may reuse pysnmp after trial expired. Also classic backedn

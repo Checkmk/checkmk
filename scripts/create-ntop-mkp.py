@@ -26,10 +26,11 @@ with open(REPO_PATH / "buildscripts" / "scripts" / "lib" / "ntop_rules.json") as
 NTOP_PACKAGE_INFO: packaging.PackageInfo = {
     "title": "Checkmk ntop integration",
     "name": "ntop",
-    "description":
-        ("This package ships extensions for the Checkmk user interface to make information from "
-         "your ntop installations available in the Checkmk user interface. This includes ntop "
-         "specific views and dashlets."),
+    "description": (
+        "This package ships extensions for the Checkmk user interface to make information from "
+        "your ntop installations available in the Checkmk user interface. This includes ntop "
+        "specific views and dashlets."
+    ),
     "version": "1.0",
     "version.packaged": cmk_version.__version__,
     "version.min_required": cmk_version.__version__,
@@ -45,7 +46,9 @@ NTOP_PACKAGE_INFO: packaging.PackageInfo = {
 TARFILENAME = packaging.format_file_name(name="ntop", version=NTOP_PACKAGE_INFO["version"])
 
 with Path(TARFILENAME).open("wb") as f:
-    packaging.write_file(NTOP_PACKAGE_INFO,
-                         cast(BinaryIO, f),
-                         package_parts=packaging.get_repo_ntop_parts,
-                         config_parts=lambda: [])
+    packaging.write_file(
+        NTOP_PACKAGE_INFO,
+        cast(BinaryIO, f),
+        package_parts=packaging.get_repo_ntop_parts,
+        config_parts=lambda: [],
+    )

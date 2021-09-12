@@ -23,25 +23,26 @@ from typing import Any, cast, List, Tuple
 RenderIntermediary = List[Tuple[str, str]]
 
 LIVESTATUS_OPERATORS = [
-    '=',
-    '<',
-    '>',
-    '<=',
-    '>=',
-    '~',
-    '~~',
-    '!=',
-    '!<',
-    '!>',
-    '!<=',
-    '!>=',
-    '!~',
-    '!~~',
+    "=",
+    "<",
+    ">",
+    "<=",
+    ">=",
+    "~",
+    "~~",
+    "!=",
+    "!<",
+    "!>",
+    "!<=",
+    "!>=",
+    "!~",
+    "!~~",
 ]
 
 
 class QueryExpression(abc.ABC):
     """Baseclass of all 'Filter:' expressions."""
+
     @abc.abstractmethod
     def render(self) -> RenderIntermediary:
         raise NotImplementedError()
@@ -69,19 +70,21 @@ class NothingExpression(QueryExpression):
     [('Filter', 'foo = bar')]
 
     """
+
     def render(self) -> RenderIntermediary:
         return []
 
 
 class UnaryExpression(abc.ABC):
     """Base class of all concrete single parts of BinaryExpression."""
+
     def __init__(self, value):
         self.value = value
 
-    def op(self, operator: str, other: Any) -> 'BinaryExpression':
+    def op(self, operator: str, other: Any) -> "BinaryExpression":
         # TODO: typing
         if isinstance(other, (list, tuple)):
-            other = LiteralExpression(' '.join(other))
+            other = LiteralExpression(" ".join(other))
         if not isinstance(other, UnaryExpression):
             other = LiteralExpression(other)
         return BinaryExpression(self, other, operator)
@@ -144,6 +147,7 @@ class ScalarExpression(UnaryExpression):
     <= 	Smaller or equal 	Lexicographically smaller or equal
     >= 	Larger or equal 	Lexicographically larger or equal
     """
+
     def __eq__(self, other):
         return self.op("=", other)
 
@@ -180,6 +184,7 @@ class ListExpression(UnaryExpression):
     Filter(column = )
 
     """
+
     def __eq__(self, other):
         return self.equals(other)
 
@@ -224,6 +229,7 @@ class LiteralExpression(ScalarExpression):
         [('', 'blah')]
 
     """
+
     def disparity(self, other, ignore_case=False):
         raise NotImplementedError("Not implemented for this type.")
 
@@ -231,7 +237,7 @@ class LiteralExpression(ScalarExpression):
         raise NotImplementedError("Not implemented for this type.")
 
     def render(self) -> RenderIntermediary:
-        return [('', self.value.replace("\n", ""))]
+        return [("", self.value.replace("\n", ""))]
 
 
 LivestatusOperator = str
@@ -247,11 +253,14 @@ class BinaryExpression(QueryExpression):
         [('Filter', 'hurz = blah')]
 
     """
-    def __init__(self,
-                 left: UnaryExpression,
-                 right: UnaryExpression,
-                 operator: LivestatusOperator,
-                 header: str = 'Filter'):
+
+    def __init__(
+        self,
+        left: UnaryExpression,
+        right: UnaryExpression,
+        operator: LivestatusOperator,
+        header: str = "Filter",
+    ):
         """Represent a binary operation.
 
         Note:
@@ -339,6 +348,7 @@ class And(BoolExpression):
     [('Filter', 'blah = 1'), ('Filter', 'hallo = 0'), ('And', '2')]
 
     """
+
     expr = "And"
 
 
@@ -349,6 +359,7 @@ class Or(BoolExpression):
     [('Filter', 'blah = 1'), ('Filter', 'hallo = 0'), ('Or', '2')]
 
     """
+
     expr = "Or"
 
 
@@ -359,6 +370,7 @@ class Not(QueryExpression):
     [('Filter', 'hurz = 1'), ('Negate', '1')]
 
     """
+
     def __init__(self, other: QueryExpression):
         self.other = other
 
@@ -371,6 +383,7 @@ class Not(QueryExpression):
 
 def lookup_column(table_name, column_name) -> UnaryExpression:
     from cmk.utils.livestatus_helpers import tables
+
     if isinstance(table_name, str):
         table_class = getattr(tables, table_name.title())
     else:
@@ -454,14 +467,15 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:
         #   While these classes are actually the same, Python treats them distinct, so we can't
         #   just say `isinstance(filter_dict, BinaryExpression)` (or their super-type) here.
         return cast(QueryExpression, filter_dict)
-    op = filter_dict['op']
+    op = filter_dict["op"]
     if op in LIVESTATUS_OPERATORS:
-        left = filter_dict['left']
+        left = filter_dict["left"]
         if "." in left:
             _table, column = left.split(".")
             if table is not None and _table_name(table) != _table:
                 raise ValueError(
-                    f"This field can only query table {_table_name(table)!r}. ({left})")
+                    f"This field can only query table {_table_name(table)!r}. ({left})"
+                )
         else:
             if table is None:
                 raise ValueError("Missing table parameter.")
@@ -469,18 +483,18 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:
             column = left
         return BinaryExpression(
             lookup_column(_table, column),
-            LiteralExpression(filter_dict['right']),
+            LiteralExpression(filter_dict["right"]),
             op,
         )
 
-    if op == 'and':
-        return And(*[tree_to_expr(expr, table) for expr in filter_dict['expr']])
+    if op == "and":
+        return And(*[tree_to_expr(expr, table) for expr in filter_dict["expr"]])
 
-    if op == 'or':
-        return Or(*[tree_to_expr(expr, table) for expr in filter_dict['expr']])
+    if op == "or":
+        return Or(*[tree_to_expr(expr, table) for expr in filter_dict["expr"]])
 
-    if op == 'not':
-        return Not(tree_to_expr(filter_dict['expr'], table))
+    if op == "not":
+        return Not(tree_to_expr(filter_dict["expr"], table))
 
     raise ValueError(f"Unknown operator: {op}")
 

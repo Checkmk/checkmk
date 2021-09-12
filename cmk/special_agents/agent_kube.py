@@ -43,32 +43,38 @@ class PodResources(BaseModel):
 class PathPrefixAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if not values:
-            return ''
-        path_prefix = '/' + values.strip('/')
+            return ""
+        path_prefix = "/" + values.strip("/")
         setattr(namespace, self.dest, path_prefix)
 
 
 def parse_arguments(args: List[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--debug', action='store_true', help='Debug mode: raise Python exceptions')
-    p.add_argument('-v',
-                   '--verbose',
-                   action='count',
-                   default=0,
-                   help='Verbose mode (for even more output use -vvv)')
-    p.add_argument('--port', type=int, default=None, help='Port to connect to')
-    p.add_argument('--token', required=True, help='Token for that user')
-    p.add_argument('--api-server-endpoint',
-                   required=True,
-                   help='API server endpoint for Kubernetes API calls')
-    p.add_argument('--path-prefix',
-                   default='',
-                   action=PathPrefixAction,
-                   help='Optional URL path prefix to prepend to Kubernetes API calls')
-    p.add_argument('--no-cert-check', action='store_true', help='Disable certificate verification')
-    p.add_argument('--profile',
-                   metavar='FILE',
-                   help='Profile the performance of the agent and write the output to a file')
+    p.add_argument("--debug", action="store_true", help="Debug mode: raise Python exceptions")
+    p.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Verbose mode (for even more output use -vvv)",
+    )
+    p.add_argument("--port", type=int, default=None, help="Port to connect to")
+    p.add_argument("--token", required=True, help="Token for that user")
+    p.add_argument(
+        "--api-server-endpoint", required=True, help="API server endpoint for Kubernetes API calls"
+    )
+    p.add_argument(
+        "--path-prefix",
+        default="",
+        action=PathPrefixAction,
+        help="Optional URL path prefix to prepend to Kubernetes API calls",
+    )
+    p.add_argument("--no-cert-check", action="store_true", help="Disable certificate verification")
+    p.add_argument(
+        "--profile",
+        metavar="FILE",
+        help="Profile the performance of the agent and write the output to a file",
+    )
 
     arguments = p.parse_args(args)
     return arguments
@@ -84,7 +90,7 @@ def setup_logging(verbosity: int) -> None:
     else:
         logging.disable(logging.CRITICAL)
         lvl = logging.CRITICAL
-    logging.basicConfig(level=lvl, format='%(asctime)s %(levelname)s %(message)s')
+    logging.basicConfig(level=lvl, format="%(asctime)s %(levelname)s %(message)s")
 
 
 class Pod:
@@ -115,8 +121,8 @@ class Node:
 
     def pod_resources(self) -> PodResources:
         resources = {
-            "capacity": self.resources['capacity'].pods,
-            "allocatable": self.resources['allocatable'].pods,
+            "capacity": self.resources["capacity"].pods,
+            "allocatable": self.resources["allocatable"].pods,
         }
         resources.update(dict(Counter([pod.phase for pod in self._pods])))
         return PodResources(**resources)
@@ -160,7 +166,7 @@ class Cluster:
 
     def sections(self) -> None:
         # with ConditionalPiggybackSection(self.name):
-        with SectionWriter('k8s_pod_resources') as writer:
+        with SectionWriter("k8s_pod_resources") as writer:
             writer.append(self.pod_resources().json())
 
 
@@ -173,13 +179,13 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
     if arguments.path_prefix:
         host = "%s%s" % (host, arguments.path_prefix)
     config.host = host
-    config.api_key_prefix['authorization'] = 'Bearer'
-    config.api_key['authorization'] = arguments.token
+    config.api_key_prefix["authorization"] = "Bearer"
+    config.api_key["authorization"] = arguments.token
 
     if arguments.no_cert_check:
         config.verify_ssl = False
     else:
-        config.ssl_ca_cert = os.environ.get('REQUESTS_CA_BUNDLE')
+        config.ssl_ca_cert = os.environ.get("REQUESTS_CA_BUNDLE")
 
     return client.ApiClient(config)
 
@@ -192,10 +198,11 @@ def main(args: Optional[List[str]] = None) -> int:
 
     try:
         setup_logging(arguments.verbose)
-        logging.debug('parsed arguments: %s\n', arguments)
+        logging.debug("parsed arguments: %s\n", arguments)
 
-        with cmk.utils.profile.Profile(enabled=bool(arguments.profile),
-                                       profile_file=arguments.profile):
+        with cmk.utils.profile.Profile(
+            enabled=bool(arguments.profile), profile_file=arguments.profile
+        ):
 
             api_client = make_api_client(arguments)
             api_server = APIServer.from_kubernetes(api_client)
@@ -206,8 +213,10 @@ def main(args: Optional[List[str]] = None) -> int:
         if arguments.debug:
             raise
         if isinstance(e.reason, urllib3.exceptions.NewConnectionError):
-            sys.stderr.write('Failed to establish a connection to %s:%s at URL %s' %
-                             (e.pool.host, e.pool.port, e.url))
+            sys.stderr.write(
+                "Failed to establish a connection to %s:%s at URL %s"
+                % (e.pool.host, e.pool.port, e.url)
+            )
         else:
             sys.stderr.write("%s" % e)
         return 1
@@ -219,5 +228,5 @@ def main(args: Optional[List[str]] = None) -> int:
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

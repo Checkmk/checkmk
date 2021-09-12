@@ -36,7 +36,7 @@ logger = logging.getLogger("cmk.store")
 # TODO: Make all methods handle paths the same way. e.g. mkdir() and makedirs()
 # care about encoding a path to UTF-8. The others don't to that.
 
-#.
+# .
 #   .--Directories---------------------------------------------------------.
 #   |           ____  _               _             _                      |
 #   |          |  _ \(_)_ __ ___  ___| |_ ___  _ __(_) ___  ___            |
@@ -62,7 +62,7 @@ def makedirs(path: Union[Path, str], mode: int = 0o770) -> None:
     path.mkdir(mode=mode, exist_ok=True, parents=True)
 
 
-#.
+# .
 #   .--.mk Configs---------------------------------------------------------.
 #   |                     _       ____             __ _                    |
 #   |           _ __ ___ | | __  / ___|___  _ __  / _(_) __ _ ___          |
@@ -88,9 +88,12 @@ def load_mk_file(path: Union[Path, str], default: Any = None, lock: bool = False
 
     if default is None:
         raise MKGeneralException(
-            _("You need to provide a config dictionary to merge with the "
-              "read configuration. The dictionary should have all expected "
-              "keys and their default values set."))
+            _(
+                "You need to provide a config dictionary to merge with the "
+                "read configuration. The dictionary should have all expected "
+                "keys and their default values set."
+            )
+        )
 
     if lock:
         aquire_lock(path)
@@ -103,7 +106,7 @@ def load_mk_file(path: Union[Path, str], default: Any = None, lock: bool = False
         raise
     except Exception as e:
         # TODO: How to handle debug mode or logging?
-        raise MKGeneralException(_("Cannot read configuration file \"%s\": %s") % (path, e))
+        raise MKGeneralException(_('Cannot read configuration file "%s": %s') % (path, e))
 
     return default
 
@@ -125,10 +128,9 @@ def save_mk_file(path: Union[Path, str], mk_content: str, add_header: bool = Tru
 
 
 # A simple wrapper for cases where you only have to write a single value to a .mk file.
-def save_to_mk_file(path: Union[Path, str],
-                    key: str,
-                    value: Any,
-                    pprint_value: bool = False) -> None:
+def save_to_mk_file(
+    path: Union[Path, str], key: str, value: Any, pprint_value: bool = False
+) -> None:
     format_func = repr
     if pprint_value:
         format_func = pprint.pformat
@@ -142,7 +144,7 @@ def save_to_mk_file(path: Union[Path, str],
     save_mk_file(path, formated)
 
 
-#.
+# .
 #   .--load/save-----------------------------------------------------------.
 #   |             _                 _    __                                |
 #   |            | | ___   __ _  __| |  / /__  __ ___   _____              |

@@ -82,7 +82,7 @@ def agent_activemq_main(args: Args) -> None:
         sys.stderr.write("Unable to connect. Credentials might be incorrect: %s\n" % e)
         return
 
-    attributes = ['size', 'consumerCount', 'enqueueCount', 'dequeueCount']
+    attributes = ["size", "consumerCount", "enqueueCount", "dequeueCount"]
     count = 0
     output_lines = []
     try:
@@ -92,10 +92,10 @@ def agent_activemq_main(args: Args) -> None:
         for line in data:
             count += 1
             if args.piggyback:
-                output_lines.append("<<<<%s>>>>" % line.get('name'))
+                output_lines.append("<<<<%s>>>>" % line.get("name"))
                 output_lines.append("<<<mq_queues>>>")
-            output_lines.append("[[%s]]" % line.get('name'))
-            stats = line.findall('stats')
+            output_lines.append("[[%s]]" % line.get("name"))
+            stats = line.findall("stats")
             values = ""
             for job in attributes:
                 values += "%s " % stats[0].get(job)
@@ -113,7 +113,7 @@ def agent_activemq_main(args: Args) -> None:
 
 
 def main() -> None:
-    """Main entry point to be used """
+    """Main entry point to be used"""
     special_agent_main(
         parse_arguments,
         agent_activemq_main,

@@ -1108,13 +1108,17 @@ class CommandECUpdateEvent(ECCommand):
             else:
                 contact = ""
             ack = html.get_checkbox("_mkeventd_acknowledge")
-            return "UPDATE;%s;%s;%s;%s;%s" % (
-                row["event_id"],
-                user.id,
-                ack and 1 or 0,
-                comment,
-                contact,
-            ), _("update")
+            return (
+                "UPDATE;%s;%s;%s;%s;%s"
+                % (
+                    row["event_id"],
+                    user.id,
+                    ack and 1 or 0,
+                    comment,
+                    contact,
+                ),
+                _("update"),
+            )
         return None
 
 

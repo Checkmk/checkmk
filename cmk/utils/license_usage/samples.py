@@ -19,7 +19,7 @@ class LicenseUsageExtensions:
         return _serialize(self)
 
     @classmethod
-    def deserialize(cls, raw_extensions: bytes) -> 'LicenseUsageExtensions':
+    def deserialize(cls, raw_extensions: bytes) -> "LicenseUsageExtensions":
         extensions = _migrate_extensions(_deserialize(raw_extensions))
         return cls(**extensions)
 
@@ -51,13 +51,12 @@ class LicenseUsageHistoryDump:
         return _serialize(self)
 
     @classmethod
-    def deserialize(cls, raw_history_dump: bytes) -> 'LicenseUsageHistoryDump':
+    def deserialize(cls, raw_history_dump: bytes) -> "LicenseUsageHistoryDump":
         history_dump = _deserialize(raw_history_dump)
         return cls(
             VERSION=LicenseUsageHistoryDumpVersion,
             history=[
-                _migrate_sample(history_dump["VERSION"], s)
-                for s in history_dump.get("history", [])
+                _migrate_sample(history_dump["VERSION"], s) for s in history_dump.get("history", [])
             ],
         )
 

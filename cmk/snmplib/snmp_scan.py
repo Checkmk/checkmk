@@ -85,14 +85,14 @@ def _prefetch_description_object(*, backend: SNMPBackend) -> None:
             raise MKSNMPError(
                 "Cannot fetch %s OID %s. Please check your SNMP "
                 "configuration. Possible reason might be: Wrong credentials, "
-                "wrong SNMP version, Firewall rules, etc." % (name, oid),)
+                "wrong SNMP version, Firewall rules, etc." % (name, oid),
+            )
 
 
 def _fake_description_object() -> None:
     """Fake OID values to prevent issues with a lot of scan functions"""
     console.vverbose(
-        "       Skipping system description OID "
-        '(Set %s and %s to "")\n',
+        "       Skipping system description OID " '(Set %s and %s to "")\n',
         OID_SYS_DESCR,
         OID_SYS_OBJ,
     )
@@ -115,8 +115,8 @@ def _find_sections(
         )
         try:
             if evaluate_snmp_detection(
-                    detect_spec=specs,
-                    oid_value_getter=oid_value_getter,
+                detect_spec=specs,
+                oid_value_getter=oid_value_getter,
             ):
                 found_sections.add(name)
         except MKGeneralException:
@@ -139,10 +139,13 @@ def _output_snmp_check_plugins(
         collection_out = " ".join(str(n) for n in sorted(collection))
     else:
         collection_out = "-"
-    console.vverbose("   %-35s%s%s%s%s\n" % (
-        title,
-        tty.bold,
-        tty.yellow,
-        collection_out,
-        tty.normal,
-    ))
+    console.vverbose(
+        "   %-35s%s%s%s%s\n"
+        % (
+            title,
+            tty.bold,
+            tty.yellow,
+            collection_out,
+            tty.normal,
+        )
+    )

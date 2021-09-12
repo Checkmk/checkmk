@@ -45,8 +45,9 @@ class BISearcher(ABCBISearcher):
         self._host_regex_miss_cache.clear()
 
     def search_hosts(self, conditions: Dict) -> List[BIHostSearchMatch]:
-        matched_hosts, matched_re_groups = self.filter_host_choice(list(self.hosts.values()),
-                                                                   conditions["host_choice"])
+        matched_hosts, matched_re_groups = self.filter_host_choice(
+            list(self.hosts.values()), conditions["host_choice"]
+        )
         matched_hosts = self.filter_host_tags(matched_hosts, conditions["host_tags"])
         matched_hosts = self.filter_host_labels(matched_hosts, conditions["host_labels"])
         return [BIHostSearchMatch(x, matched_re_groups[x.name]) for x in matched_hosts]
@@ -148,14 +149,15 @@ class BISearcher(ABCBISearcher):
             for service_description in host_match.host.services.keys():
                 if match := regex_pattern.match(service_description):
                     matched_services.append(
-                        BIServiceSearchMatch(host_match, service_description,
-                                             tuple(match.groups())))
+                        BIServiceSearchMatch(host_match, service_description, tuple(match.groups()))
+                    )
         return matched_services
 
     def search_services(self, conditions: Dict) -> List[BIServiceSearchMatch]:
         host_matches: List[BIHostSearchMatch] = self.search_hosts(conditions)
-        service_matches = self.get_service_description_matches(host_matches,
-                                                               conditions["service_regex"])
+        service_matches = self.get_service_description_matches(
+            host_matches, conditions["service_regex"]
+        )
         service_matches = self.filter_service_labels(service_matches, conditions["service_labels"])
         return service_matches
 
@@ -165,13 +167,16 @@ class BISearcher(ABCBISearcher):
         tag_conditions: TaggroupIDToTagCondition,
     ) -> List[BIHostData]:
         return [
-            host for host in hosts  #
+            host
+            for host in hosts  #
             if all(
                 matches_tag_condition(
                     taggroup_id,
                     tag_condition,
                     host.tags,
-                ) for taggroup_id, tag_condition in tag_conditions.items())
+                )
+                for taggroup_id, tag_condition in tag_conditions.items()
+            )
         ]
 
     def filter_host_labels(self, hosts: List[BIHostData], required_labels):

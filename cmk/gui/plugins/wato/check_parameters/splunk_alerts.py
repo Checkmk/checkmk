@@ -14,16 +14,20 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_splunk_alerts():
-    return Dictionary(elements=[
-        ("alerts",
-         Tuple(
-             title=_("Upper levels for number of alerts"),
-             elements=[
-                 Integer(title=_("Warning at"), minvalue=0),
-                 Integer(title=_("Critical at"), minvalue=0),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "alerts",
+                Tuple(
+                    title=_("Upper levels for number of alerts"),
+                    elements=[
+                        Integer(title=_("Warning at"), minvalue=0),
+                        Integer(title=_("Critical at"), minvalue=0),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -33,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_splunk_alerts,
         title=lambda: _("Splunk Alerts"),
-    ))
+    )
+)

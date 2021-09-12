@@ -14,22 +14,30 @@ from cmk.gui.valuespec import Dictionary, Filesize, TextInput, Tuple
 
 
 def _parameter_valuespec_netapp_fcportio():
-    return Dictionary(elements=[("read",
-                                 Tuple(
-                                     title=_("Read"),
-                                     elements=[
-                                         Filesize(title=_("Warning if below")),
-                                         Filesize(title=_("Critical if below")),
-                                     ],
-                                 )),
-                                ("write",
-                                 Tuple(
-                                     title=_("Write"),
-                                     elements=[
-                                         Filesize(title=_("Warning at")),
-                                         Filesize(title=_("Critical at")),
-                                     ],
-                                 ))],)
+    return Dictionary(
+        elements=[
+            (
+                "read",
+                Tuple(
+                    title=_("Read"),
+                    elements=[
+                        Filesize(title=_("Warning if below")),
+                        Filesize(title=_("Critical if below")),
+                    ],
+                ),
+            ),
+            (
+                "write",
+                Tuple(
+                    title=_("Write"),
+                    elements=[
+                        Filesize(title=_("Warning at")),
+                        Filesize(title=_("Critical at")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -40,4 +48,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netapp_fcportio,
         title=lambda: _("Netapp FC Port throughput"),
-    ))
+    )
+)

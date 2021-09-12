@@ -22,12 +22,7 @@ if is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
-GroupName = Literal[
-    'host_group_config',
-    'contact_group_config',
-    'service_group_config',
-    'agent'
-]  # yapf: disable
+GroupName = Literal["host_group_config", "contact_group_config", "service_group_config", "agent"]
 
 
 def complement_customer(details):
@@ -46,8 +41,8 @@ def serve_group(group, serializer):
     response = Response()
     response.set_data(json.dumps(serializer(group)))
     if response.status_code != 204:
-        response.set_content_type('application/json')
-    response.headers.add('ETag', constructors.etag_of_dict(group).to_header())
+        response.set_content_type("application/json")
+    response.headers.add("ETag", constructors.etag_of_dict(group).to_header())
     return response
 
 
@@ -61,19 +56,20 @@ def serialize_group_list(
             constructors.collection_item(
                 domain_type=domain_type,
                 obj={
-                    'title': group['alias'],
-                    'id': group['id'],
+                    "title": group["alias"],
+                    "id": group["id"],
                 },
-            ) for group in collection
+            )
+            for group in collection
         ],
-        links=[constructors.link_rel('self', constructors.collection_href(domain_type))],
+        links=[constructors.link_rel("self", constructors.collection_href(domain_type))],
     )
 
 
 def serialize_group(name: GroupName) -> Any:
     def _serializer(group):
         # type: (Dict[str, str]) -> Any
-        ident = group['id']
+        ident = group["id"]
         extensions = {}
         if "customer" in group:
             customer_id = group["customer"]
@@ -81,11 +77,11 @@ def serialize_group(name: GroupName) -> Any:
         elif is_managed_edition():
             extensions["customer"] = managed.default_customer_id()
 
-        extensions['alias'] = group['alias']
+        extensions["alias"] = group["alias"]
         return constructors.domain_object(
             domain_type=name,
             identifier=ident,
-            title=group['alias'] or ident,
+            title=group["alias"] or ident,
             extensions=extensions,
         )
 
@@ -95,8 +91,8 @@ def serialize_group(name: GroupName) -> Any:
 def update_groups(group_type: GroupType, entries: List[Dict[str, Any]]):
     groups = []
     for details in entries:
-        name = details['name']
-        group_details = details['attributes']
+        name = details["name"]
+        group_details = details["attributes"]
         updated_details = updated_group_details(name, group_type, group_details)
         edit_group(name, group_type, updated_details)
         groups.append(name)
@@ -109,21 +105,20 @@ def prepare_groups(group_type: str, entries: List[Dict[str, Any]]) -> Dict[str, 
     groups: Dict[str, Dict[str, Any]] = {}
     already_existing = []
     for details in entries:
-        name = details['name']
+        name = details["name"]
         if name in specific_existing_groups:
             already_existing.append(name)
             continue
-        group_details = {'alias': details['alias']}
+        group_details = {"alias": details["alias"]}
         if version.is_managed_edition():
-            group_details = update_customer_info(group_details, details['customer'])
+            group_details = update_customer_info(group_details, details["customer"])
         groups[name] = group_details
 
     if already_existing:
         raise ProblemException(
             status=400,
             title=f"Some {group_type} groups already exist",
-            detail=
-            f"The following {group_type} group names already exist: {', '.join(already_existing)}",
+            detail=f"The following {group_type} group names already exist: {', '.join(already_existing)}",
         )
 
     return groups
@@ -137,7 +132,7 @@ def fetch_group(
 ) -> GroupSpec:
     groups = load_group_information()[group_type]
     group = _retrieve_group(ident, groups, status, message)
-    group['id'] = ident
+    group["id"] = ident
     return group
 
 
@@ -151,7 +146,7 @@ def fetch_specific_groups(
     result = []
     for ident in idents:
         group = _retrieve_group(ident, groups, status, message)
-        group['id'] = ident
+        group["id"] = ident
         result.append(group)
     return result
 
@@ -189,8 +184,9 @@ def may_fail(
 "detail": "Nothing to see here, move along."}'
 
     """
+
     def _get_message(e):
-        if hasattr(e, 'message'):
+        if hasattr(e, "message"):
             return e.message
 
         return str(e)
@@ -266,4 +262,4 @@ def folder_slug(folder: CREFolder) -> str:
         A path looking like this: `~folder~subfolder~leaf_folder`
 
     """
-    return '~' + folder.path().rstrip("/").replace("/", "~")
+    return "~" + folder.path().rstrip("/").replace("/", "~")

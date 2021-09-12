@@ -17,18 +17,22 @@ def _valuespec_discovery_cmciii():
     return Dictionary(
         title=_("Rittal CMC III discovery"),
         elements=[
-            ("use_sensor_description",
-             DropdownChoice(
-                 title=_("Service description"),
-                 help=_("The sensor description is a user defined text. If you use "
+            (
+                "use_sensor_description",
+                DropdownChoice(
+                    title=_("Service description"),
+                    help=_(
+                        "The sensor description is a user defined text. If you use "
                         "this option, you must ensure that all sensors have a "
                         "unique description. Otherwise two or more sensors can be "
-                        "aliased to the same service."),
-                 choices=[
-                     (False, _("Use device and sensor name")),
-                     (True, _("Use sensor description (see help text)")),
-                 ],
-             )),
+                        "aliased to the same service."
+                    ),
+                    choices=[
+                        (False, _("Use device and sensor name")),
+                        (True, _("Use sensor description (see help text)")),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -39,4 +43,5 @@ rulespec_registry.register(
         match_type="dict",
         name="discovery_cmciii",
         valuespec=_valuespec_discovery_cmciii,
-    ))
+    )
+)

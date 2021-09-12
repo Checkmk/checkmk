@@ -31,4 +31,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_parameter_valuespec_plug_count,
         title=lambda: _("Number of active Plugs"),
-    ))
+    )
+)

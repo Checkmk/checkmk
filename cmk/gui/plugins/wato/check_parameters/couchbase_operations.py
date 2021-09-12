@@ -16,16 +16,22 @@ from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 def _parameter_valuespec_couchbase_operations():
     return Dictionary(
-        title=_('Couchbase Operations'),
+        title=_("Couchbase Operations"),
         elements=[
-            ('ops',
-             Tuple(
-                 title='Operations per sec',
-                 elements=[
-                     Float(title='warn',),
-                     Float(title='crit',),
-                 ],
-             )),
+            (
+                "ops",
+                Tuple(
+                    title="Operations per sec",
+                    elements=[
+                        Float(
+                            title="warn",
+                        ),
+                        Float(
+                            title="crit",
+                        ),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -35,10 +41,11 @@ rulespec_registry.register(
         check_group_name="couchbase_ops",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextInput(title=_('Node or bucket name')),
+        item_spec=lambda: TextInput(title=_("Node or bucket name")),
         parameter_valuespec=_parameter_valuespec_couchbase_operations,
         title=lambda: _("Couchbase Operations"),
-    ))
+    )
+)
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
@@ -47,7 +54,8 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_couchbase_operations,
         title=lambda: _("Couchbase Total Node Operations"),
-    ))
+    )
+)
 
 rulespec_registry.register(
     CheckParameterRulespecWithoutItem(
@@ -56,4 +64,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_couchbase_operations,
         title=lambda: _("Couchbase Total Bucket Operations"),
-    ))
+    )
+)

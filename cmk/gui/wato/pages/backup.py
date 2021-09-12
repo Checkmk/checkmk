@@ -72,8 +72,9 @@ class ModeBackupTargets(backup.PageBackupTargets, WatoMode):
 
     def page(self):
         self.targets().show_list()
-        backup.SystemBackupTargetsReadOnly().show_list(editable=False,
-                                                       title=_("System global targets"))
+        backup.SystemBackupTargetsReadOnly().show_list(
+            editable=False, title=_("System global targets")
+        )
 
 
 @mode_registry.register
@@ -141,15 +142,18 @@ class ModeEditBackupJob(backup.PageEditBackupJob, WatoMode):
 
     def custom_job_attributes(self):
         return [
-            ("no_history",
-             Checkbox(
-                 title=_("Do not backup historical data"),
-                 help=_(
-                     "You may use this option to create a much smaller partial backup of the site."
-                 ),
-                 label=_(
-                     "Do not backup metric data (RRD files), the monitoring history and log files"),
-             )),
+            (
+                "no_history",
+                Checkbox(
+                    title=_("Do not backup historical data"),
+                    help=_(
+                        "You may use this option to create a much smaller partial backup of the site."
+                    ),
+                    label=_(
+                        "Do not backup metric data (RRD files), the monitoring history and log files"
+                    ),
+                ),
+            ),
         ]
 
 
@@ -295,8 +299,9 @@ class ModeBackupRestore(backup.PageBackupRestore, WatoMode):
 
     def _show_target_list(self) -> None:
         super()._show_target_list()
-        backup.SystemBackupTargetsReadOnly().show_list(editable=False,
-                                                       title=_("System global targets"))
+        backup.SystemBackupTargetsReadOnly().show_list(
+            editable=False, title=_("System global targets")
+        )
 
     def _show_backup_list(self) -> None:
         assert self._target is not None

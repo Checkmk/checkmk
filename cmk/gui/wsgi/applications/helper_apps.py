@@ -14,8 +14,8 @@ def dump_environ_app(environ, start_response):
 
 def serve_string(_str):
     def _server(environ, start_response):
-        status = '200 OK'
-        response_headers = [('Content-Type', 'text/plain'), ('Content-Length', str(len(_str)))]
+        status = "200 OK"
+        response_headers = [("Content-Type", "text/plain"), ("Content-Length", str(len(_str)))]
         start_response(status, response_headers)
 
         return [_str]
@@ -26,21 +26,21 @@ def serve_string(_str):
 def test_formdata(environ, start_response):
     # show the environment:
     output = [
-        '<pre>',
+        "<pre>",
         pformat(environ),
-        '</pre>',
+        "</pre>",
         '<form method="post">',
         '<input type="text" name="test">',
         '<input type="submit">',
-        '</form>',
+        "</form>",
     ]
 
-    if environ['REQUEST_METHOD'] == 'POST':
+    if environ["REQUEST_METHOD"] == "POST":
         # show form data as received by POST:
-        output.append('<h1>FORM DATA</h1>')
-        output.append(pformat(environ['wsgi.input'].read()))
+        output.append("<h1>FORM DATA</h1>")
+        output.append(pformat(environ["wsgi.input"].read()))
 
     # send results
     output_len = sum(len(line) for line in output)
-    start_response('200 OK', [('Content-type', 'text/html'), ('Content-Length', str(output_len))])
+    start_response("200 OK", [("Content-type", "text/html"), ("Content-Length", str(output_len))])
     return output

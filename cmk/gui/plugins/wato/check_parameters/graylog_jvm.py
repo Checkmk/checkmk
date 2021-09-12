@@ -14,24 +14,30 @@ from cmk.gui.valuespec import Dictionary, Filesize, Tuple
 
 
 def _parameter_valuespec_graylog_jvm():
-    return Dictionary(elements=[
-        ("used",
-         Tuple(
-             title=_("Absolute levels for used heap space"),
-             elements=[
-                 Filesize(title=_("Warning at")),
-                 Filesize(title=_("Critical at")),
-             ],
-         )),
-        ("committed",
-         Tuple(
-             title=_("Absolute levels for committed heap space"),
-             elements=[
-                 Filesize(title=_("Warning at")),
-                 Filesize(title=_("Critical at")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "used",
+                Tuple(
+                    title=_("Absolute levels for used heap space"),
+                    elements=[
+                        Filesize(title=_("Warning at")),
+                        Filesize(title=_("Critical at")),
+                    ],
+                ),
+            ),
+            (
+                "committed",
+                Tuple(
+                    title=_("Absolute levels for committed heap space"),
+                    elements=[
+                        Filesize(title=_("Warning at")),
+                        Filesize(title=_("Critical at")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -41,4 +47,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_graylog_jvm,
         title=lambda: _("Graylog JVM"),
-    ))
+    )
+)

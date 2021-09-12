@@ -17,10 +17,14 @@ def _parameter_valuespec_plesk_backups():
     return Dictionary(
         help=_("This check monitors backups configured for domains in plesk."),
         elements=[
-            ("no_backup_configured_state",
-             MonitoringState(title=_("State when no backup is configured"), default_value=1)),
-            ("no_backup_found_state",
-             MonitoringState(title=_("State when no backup can be found"), default_value=1)),
+            (
+                "no_backup_configured_state",
+                MonitoringState(title=_("State when no backup is configured"), default_value=1),
+            ),
+            (
+                "no_backup_found_state",
+                MonitoringState(title=_("State when no backup can be found"), default_value=1),
+            ),
             (
                 "backup_age",
                 Tuple(
@@ -36,9 +40,11 @@ def _parameter_valuespec_plesk_backups():
                 "total_size",
                 Tuple(
                     title=_("Maximum size of all files on backup space"),
-                    help=_("The maximum size of all files on the backup space. "
-                           "This might be set to the allowed quotas on the configured "
-                           "FTP server to be notified if the space limit is reached."),
+                    help=_(
+                        "The maximum size of all files on the backup space. "
+                        "This might be set to the allowed quotas on the configured "
+                        "FTP server to be notified if the space limit is reached."
+                    ),
                     elements=[
                         Filesize(title=_("Warning at")),
                         Filesize(title=_("Critical at")),
@@ -46,7 +52,7 @@ def _parameter_valuespec_plesk_backups():
                 ),
             ),
         ],
-        optional_keys=['backup_age', 'total_size'],
+        optional_keys=["backup_age", "total_size"],
     )
 
 
@@ -58,4 +64,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_plesk_backups,
         title=lambda: _("Plesk Backups"),
-    ))
+    )
+)

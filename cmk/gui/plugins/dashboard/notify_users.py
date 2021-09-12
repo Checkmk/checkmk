@@ -12,6 +12,7 @@ from cmk.gui.user_notify import render_user_notification_table
 @dashlet_registry.register
 class NotifyUsersDashlet(Dashlet):
     """Dashlet that displays GUI notifications for users"""
+
     @classmethod
     def type_name(cls):
         return "notify_users"

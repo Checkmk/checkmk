@@ -18,20 +18,26 @@ from cmk.gui.valuespec import Checkbox, Dictionary
 
 
 def _valuespec_mssql_transactionlogs_discovery():
-    return Dictionary(title=_("MSSQL datafile and transactionlog discovery"),
-                      elements=[
-                          ("summarize_datafiles",
-                           Checkbox(
-                               title=_("Display only a summary of all Datafiles"),
-                               label=_("Summarize Datafiles"),
-                           )),
-                          ("summarize_transactionlogs",
-                           Checkbox(
-                               title=_("Display only a summary of all Transactionlogs"),
-                               label=_("Summarize Transactionlogs"),
-                           )),
-                      ],
-                      optional_keys=[])
+    return Dictionary(
+        title=_("MSSQL datafile and transactionlog discovery"),
+        elements=[
+            (
+                "summarize_datafiles",
+                Checkbox(
+                    title=_("Display only a summary of all Datafiles"),
+                    label=_("Summarize Datafiles"),
+                ),
+            ),
+            (
+                "summarize_transactionlogs",
+                Checkbox(
+                    title=_("Display only a summary of all Transactionlogs"),
+                    label=_("Summarize Transactionlogs"),
+                ),
+            ),
+        ],
+        optional_keys=[],
+    )
 
 
 rulespec_registry.register(
@@ -39,19 +45,24 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersDiscovery,
         name="mssql_transactionlogs_discovery",
         valuespec=_valuespec_mssql_transactionlogs_discovery,
-    ))
+    )
+)
 
 
 def _parameter_valuespec_mssql_transactionlogs():
     return Dictionary(
         title=_("File Size Levels"),
-        help=_("Specify levels for transactionlogs of a database. Please note that relative "
-               "levels will only work if there is a max_size set for the file on the database "
-               "side."),
+        help=_(
+            "Specify levels for transactionlogs of a database. Please note that relative "
+            "levels will only work if there is a max_size set for the file on the database "
+            "side."
+        ),
         elements=[
             ("used_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("used"))),
-            ("allocated_used_levels",
-             levels_absolute_or_dynamic(_("Transactionlog"), _("used of allocation"))),
+            (
+                "allocated_used_levels",
+                levels_absolute_or_dynamic(_("Transactionlog"), _("used of allocation")),
+            ),
             ("allocated_levels", levels_absolute_or_dynamic(_("Transactionlog"), _("allocated"))),
         ],
     )
@@ -65,4 +76,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_transactionlogs,
         title=lambda: _("MSSQL Transactionlog Sizes"),
-    ))
+    )
+)

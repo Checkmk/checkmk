@@ -68,12 +68,15 @@ def foldable_container(
                 "open" if isopen else "closed",
             ],
             src=theme.detect_icon_path(icon, "icon_"),
-            onclick=onclick)
+            onclick=onclick,
+        )
     else:
-        html.img(id_=img_id,
-                 class_=["treeangle", "open" if isopen else "closed"],
-                 src=theme.url("images/tree_closed.svg"),
-                 onclick=onclick)
+        html.img(
+            id_=img_id,
+            class_=["treeangle", "open" if isopen else "closed"],
+            src=theme.url("images/tree_closed.svg"),
+            onclick=onclick,
+        )
 
     if indent != "form" or not isinstance(title, HTML):
         html.br()
@@ -84,9 +87,9 @@ def foldable_container(
         html.close_tr()
         html.close_table()
         indent_style += "margin: 0; "
-    html.open_ul(id_=container_id,
-                 class_=["treeangle", "open" if isopen else "closed"],
-                 style=indent_style)
+    html.open_ul(
+        id_=container_id, class_=["treeangle", "open" if isopen else "closed"], style=indent_style
+    )
 
     yield isopen
 
@@ -96,7 +99,10 @@ def foldable_container(
 
 def foldable_container_onclick(treename: str, id_: str, fetch_url: Optional[str]) -> str:
     return "cmk.foldable_container.toggle(%s, %s, %s)" % (
-        json.dumps(treename), json.dumps(id_), json.dumps(fetch_url if fetch_url else ''))
+        json.dumps(treename),
+        json.dumps(id_),
+        json.dumps(fetch_url if fetch_url else ""),
+    )
 
 
 def foldable_container_img_id(treename: str, id_: str) -> str:

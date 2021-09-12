@@ -40,4 +40,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_counters_ple,
         title=lambda: _("MSSQL Page Life Expectancy"),
-    ))
+    )
+)

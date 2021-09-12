@@ -32,10 +32,12 @@ def load_notification_rules(lock: bool = False) -> List[Dict]:
 
 def save_notification_rules(rules: List[Dict]) -> None:
     store.mkdir(wato_root_dir())
-    store.save_to_mk_file(wato_root_dir() + "notifications.mk",
-                          "notification_rules",
-                          rules,
-                          pprint_value=config.wato_pprint_config)
+    store.save_to_mk_file(
+        wato_root_dir() + "notifications.mk",
+        "notification_rules",
+        rules,
+        pprint_value=config.wato_pprint_config,
+    )
 
 
 def load_user_notification_rules() -> Dict[UserId, List[EventRule]]:

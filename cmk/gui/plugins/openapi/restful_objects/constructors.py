@@ -42,14 +42,16 @@ def _request_context(secure=True):
     from werkzeug.test import create_environ
 
     from cmk.gui.utils.script_helpers import request_context
+
     if secure:
-        protocol = 'https'
+        protocol = "https"
     else:
-        protocol = 'http'
+        protocol = "http"
     # Previous tests already set the site to "heute", which makes this test fail.
     omd_site.cache_clear()
-    with mock.patch.dict(os.environ, {'OMD_SITE': 'NO_SITE'}), \
-            request_context(create_environ(base_url=f"{protocol}://localhost:5000/")):
+    with mock.patch.dict(os.environ, {"OMD_SITE": "NO_SITE"}), request_context(
+        create_environ(base_url=f"{protocol}://localhost:5000/")
+    ):
         yield
 
 
@@ -84,8 +86,8 @@ def absolute_url(href):
 def link_rel(
     rel: LinkRelation,
     href: str,
-    method: HTTPMethod = 'get',
-    content_type: str = 'application/json',
+    method: HTTPMethod = "get",
+    content_type: str = "application/json",
     profile: Optional[str] = None,
     title: Optional[str] = None,
     parameters: Optional[Dict[str, str]] = None,
@@ -140,19 +142,19 @@ def link_rel(
     """
     content_type_params = {}
     if profile is not None:
-        content_type_params['profile'] = expand_rel(profile)
+        content_type_params["profile"] = expand_rel(profile)
 
     link_obj = {
-        'rel': expand_rel(rel, parameters),
-        'href': absolute_url(href),
-        'method': method.upper(),
-        'type': expand_rel(content_type, content_type_params),
-        'domainType': 'link',
+        "rel": expand_rel(rel, parameters),
+        "href": absolute_url(href),
+        "method": method.upper(),
+        "type": expand_rel(content_type, content_type_params),
+        "domainType": "link",
     }
     if body_params is not None:
-        link_obj['body_params'] = body_params
+        link_obj["body_params"] = body_params
     if title is not None:
-        link_obj['title'] = title
+        link_obj["title"] = title
     return link_obj
 
 
@@ -207,8 +209,11 @@ def require_etag(etag: ETags) -> None:
     if not request.if_match:
         if not etags_required:
             return
-        raise ProblemException(HTTPStatus.PRECONDITION_REQUIRED, "Precondition required",
-                               "If-Match header required for this operation. See documentation.")
+        raise ProblemException(
+            HTTPStatus.PRECONDITION_REQUIRED,
+            "Precondition required",
+            "If-Match header required for this operation. See documentation.",
+        )
 
     if request.if_match.as_set() != etag.as_set():
         raise ProblemException(
@@ -237,16 +242,18 @@ def object_action(name: str, parameters: dict, base: str) -> Dict[str, Any]:
     """
 
     return {
-        'id': name,
-        'memberType': "action",
-        'links': [
-            link_rel('up', base),
-            link_rel('.../invoke',
-                     base + f'/actions/{name}/invoke',
-                     method='post',
-                     parameters={'action': name}),
+        "id": name,
+        "memberType": "action",
+        "links": [
+            link_rel("up", base),
+            link_rel(
+                ".../invoke",
+                base + f"/actions/{name}/invoke",
+                method="post",
+                parameters={"action": name},
+            ),
         ],
-        'parameters': parameters,
+        "parameters": parameters,
     }
 
 
@@ -295,15 +302,15 @@ def object_collection(
 
     """
     links = [
-        link_rel('self', base + collection_href(domain_type)),
+        link_rel("self", base + collection_href(domain_type)),
     ]
     if base:
-        links.append(link_rel('up', base))
+        links.append(link_rel("up", base))
     return {
-        'id': name,
-        'memberType': "collection",
-        'value': entries,
-        'links': links,
+        "id": name,
+        "memberType": "collection",
+        "value": entries,
+        "links": links,
     }
 
 
@@ -315,16 +322,16 @@ def action_result(
 ) -> Dict:
     """Construct an Action Result resource
 
-    Described in Restful Objects, chapter 19.1-4 """
+    Described in Restful Objects, chapter 19.1-4"""
     if result_links is None:
         result_links = []
     return {
-        'links': action_links,
-        'resultType': result_type,
-        'result': {
-            'links': result_links,
-            'value': result_value,
-        }
+        "links": action_links,
+        "resultType": result_type,
+        "result": {
+            "links": result_links,
+            "value": result_value,
+        },
     }
 
 
@@ -342,8 +349,9 @@ class DomainObjectMembers:
         linkable=True,
         links: Optional[List[LinkType]] = None,
     ):
-        self.members[name] = object_property(name, value, prop_format, self.base, title, linkable,
-                                             links)
+        self.members[name] = object_property(
+            name, value, prop_format, self.base, title, linkable, links
+        )
         return self.members[name]
 
     def to_dict(self):
@@ -369,18 +377,18 @@ def object_sub_property(
     if extensions is None:
         extensions = {}
     ret: ObjectProperty = {
-        'id': f"{ident}_{name}",
-        'value': value,
-        'extensions': extensions,
+        "id": f"{ident}_{name}",
+        "value": value,
+        "extensions": extensions,
     }
     if disabled_reason is not None:
-        ret['disabledReason'] = disabled_reason
+        ret["disabledReason"] = disabled_reason
 
-    ret['links'] = [
+    ret["links"] = [
         link_rel(
-            rel='.../modify',
+            rel=".../modify",
             href=object_property_href(domain_type, ident, name),
-            method='put',
+            method="put",
         ),
     ]
 
@@ -419,10 +427,10 @@ def collection_property(
 
     """
     return {
-        'id': name,
-        'memberType': "property",
-        'value': value,
-        'links': [link_rel(rel='self', href=base.rstrip("/") + f'/collections/{name}')],
+        "id": name,
+        "memberType": "property",
+        "value": value,
+        "links": [link_rel(rel="self", href=base.rstrip("/") + f"/collections/{name}")],
     }
 
 
@@ -473,24 +481,24 @@ def object_property(
 
     """
     property_obj = {
-        'id': name,
-        'memberType': "property",
-        'value': value,
-        'format': prop_format,
-        'title': title,
+        "id": name,
+        "memberType": "property",
+        "value": value,
+        "format": prop_format,
+        "title": title,
     }
     if choices is not None:
-        property_obj['choices'] = choices
+        property_obj["choices"] = choices
 
     if linkable:
-        property_obj['links'] = [link_rel('self', f"{base}/properties/{name}")]
+        property_obj["links"] = [link_rel("self", f"{base}/properties/{name}")]
 
     if links:
-        property_obj.setdefault('links', [])
-        property_obj['links'].extend(links)
+        property_obj.setdefault("links", [])
+        property_obj["links"].extend(links)
 
     if extensions:
-        property_obj['extensions'] = extensions
+        property_obj["extensions"] = extensions
 
     return property_obj
 
@@ -544,7 +552,7 @@ def domain_object_collection_href(
     return f"/objects/{domain_type}/{url_safe(obj_id)}/collections/{collection_name}"
 
 
-def collection_href(domain_type: DomainType, name: str = 'all') -> str:
+def collection_href(domain_type: DomainType, name: str = "all") -> str:
     """Constructs a href to a collection.
 
     Please note that domain-types can have multiple collections.
@@ -565,7 +573,7 @@ def collection_href(domain_type: DomainType, name: str = 'all') -> str:
         The href as a string
 
     """
-    return f'/domain-types/{domain_type}/collections/{url_safe(name)}'
+    return f"/domain-types/{domain_type}/collections/{url_safe(name)}"
 
 
 def object_action_href(
@@ -607,7 +615,8 @@ def object_action_href(
     base_href = f"/objects/{domain_type}/{obj_id}/actions/{action_name}/invoke"
     if query_params:
         params_part = "&".join(
-            (f"{key}={quote(value, safe=' ').replace(' ', '+')}" for key, value in query_params))
+            (f"{key}={quote(value, safe=' ').replace(' ', '+')}" for key, value in query_params)
+        )
         return f"{base_href}?{params_part}"
     return base_href
 
@@ -637,7 +646,7 @@ def object_href(
         The URL.
 
     """
-    return f'/objects/{domain_type}/{url_safe(obj_id)}'
+    return f"/objects/{domain_type}/{url_safe(obj_id)}"
 
 
 def url_safe(part: Union[int, str]) -> str:
@@ -669,9 +678,9 @@ def url_safe(part: Union[int, str]) -> str:
     """
     _part = str(part)
     # We don't want to escape variable templates.
-    if re.match('^[{][a-z_]+[}]$', _part):
+    if re.match("^[{][a-z_]+[}]$", _part):
         return _part
-    return quote(quote(_part, safe=''))
+    return quote(quote(_part, safe=""))
 
 
 def domain_object(
@@ -727,28 +736,30 @@ def domain_object(
     if members is None:
         members = {}
 
-    _links = [self_link if self_link is not None else link_rel('self', uri, method='get')]
+    _links = [self_link if self_link is not None else link_rel("self", uri, method="get")]
 
     if editable:
-        _links.append(link_rel('.../update', uri, method='put'))
+        _links.append(link_rel(".../update", uri, method="put"))
     if deletable:
-        _links.append(link_rel('.../delete', uri, method='delete'))
+        _links.append(link_rel(".../delete", uri, method="delete"))
     if links:
         _links.extend(links)
     return {
-        'domainType': domain_type,
-        'id': identifier,
-        'title': title,
-        'links': _links,
-        'members': members,
-        'extensions': extensions,
+        "domainType": domain_type,
+        "id": identifier,
+        "title": title,
+        "links": _links,
+        "members": members,
+        "extensions": extensions,
     }
 
 
-def collection_object(domain_type: DomainType,
-                      value: List[Union[CollectionItem, LinkType]],
-                      links: Optional[List[LinkType]] = None,
-                      extensions: Optional[Dict[str, Any]] = None) -> CollectionObject:
+def collection_object(
+    domain_type: DomainType,
+    value: List[Union[CollectionItem, LinkType]],
+    links: Optional[List[LinkType]] = None,
+    extensions: Optional[Dict[str, Any]] = None,
+) -> CollectionObject:
     """A collection object as specified in C-115 (Page 121)
 
     Args:
@@ -771,16 +782,16 @@ def collection_object(domain_type: DomainType,
     if extensions is None:
         extensions = {}
     _links = [
-        link_rel('self', collection_href(domain_type)),
+        link_rel("self", collection_href(domain_type)),
     ]
     if links is not None:
         _links.extend(links)
     return {
-        'id': domain_type,
-        'domainType': domain_type,
-        'links': _links,
-        'value': value,
-        'extensions': extensions,
+        "id": domain_type,
+        "domainType": domain_type,
+        "links": _links,
+        "value": value,
+        "extensions": extensions,
     }
 
 
@@ -805,16 +816,16 @@ def link_endpoint(
     """
     endpoint = ENDPOINT_REGISTRY.lookup(module_name, rel, parameters)
     return link_rel(
-        href=endpoint['endpoint'].make_url(parameters),
-        rel=endpoint['rel'],
-        method=endpoint['method'],
+        href=endpoint["endpoint"].make_url(parameters),
+        rel=endpoint["rel"],
+        method=endpoint["method"],
     )
 
 
 def collection_item(
     domain_type: DomainType,
     obj: Dict[str, str],
-    collection_name: str = 'all',
+    collection_name: str = "all",
 ) -> CollectionItem:
     """A link for use in a collection object.
 
@@ -844,17 +855,17 @@ def collection_item(
 
     """
     return link_rel(
-        rel='.../value',
-        parameters={'collection': collection_name},
-        href=object_href(domain_type, obj['id']),
+        rel=".../value",
+        parameters={"collection": collection_name},
+        href=object_href(domain_type, obj["id"]),
         profile=".../object",
-        method='get',
-        title=obj['title'],
+        method="get",
+        title=obj["title"],
     )
 
 
 def serve_json(data: Serializable, profile: Optional[Dict[str, str]] = None) -> Response:
-    content_type = 'application/json'
+    content_type = "application/json"
     if profile is not None:
         content_type += ';profile="%s"' % (profile,)
     response = Response()
@@ -864,13 +875,16 @@ def serve_json(data: Serializable, profile: Optional[Dict[str, str]] = None) -> 
 
 
 def action_parameter(action, parameter, friendly_name, optional, pattern):
-    return (action, {
-        'id': '%s-%s' % (action, parameter),
-        'name': parameter,
-        'friendlyName': friendly_name,
-        'optional': optional,
-        'pattern': pattern,
-    })
+    return (
+        action,
+        {
+            "id": "%s-%s" % (action, parameter),
+            "name": parameter,
+            "friendlyName": friendly_name,
+            "optional": optional,
+            "pattern": pattern,
+        },
+    )
 
 
 def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
@@ -898,6 +912,7 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
         str: The hex-digest of the built hash.
 
     """
+
     def _update(_hash_obj, _d):
         if isinstance(_d, (list, tuple)):
             for value in _d:
@@ -905,15 +920,15 @@ def etag_of_dict(dict_: Dict[str, Any]) -> ETags:
         else:
             if isinstance(_d, dict):
                 for key, value in sorted(_d.items()):
-                    _hash_obj.update(key.encode('utf-8'))
+                    _hash_obj.update(key.encode("utf-8"))
                     if isinstance(value, (dict, list, tuple)):
                         _update(_hash_obj, value)
                     elif isinstance(value, bool):
-                        _hash_obj.update(str(value).lower().encode('utf-8'))
+                        _hash_obj.update(str(value).lower().encode("utf-8"))
                     else:
-                        _hash_obj.update(str(value).encode('utf-8'))
+                        _hash_obj.update(str(value).encode("utf-8"))
             else:
-                _hash_obj.update(str(_d).encode('utf-8'))
+                _hash_obj.update(str(_d).encode("utf-8"))
 
     _hash = hashlib.sha256()
     _update(_hash, dict_)

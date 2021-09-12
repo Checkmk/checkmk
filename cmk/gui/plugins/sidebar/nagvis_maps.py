@@ -61,14 +61,16 @@ class NagVisMaps(SidebarSnapin):
         for map_cfg in api_request["maps"]:
             html.open_tr()
             html.open_td()
-            html.div("",
-                     class_=[
-                         "statebullet",
-                         self._state_class(map_cfg),
-                         self._sub_state_class(map_cfg),
-                         self._stale_class(map_cfg)
-                     ],
-                     title=self._state_title(map_cfg))
+            html.div(
+                "",
+                class_=[
+                    "statebullet",
+                    self._state_class(map_cfg),
+                    self._sub_state_class(map_cfg),
+                    self._stale_class(map_cfg),
+                ],
+                title=self._state_title(map_cfg),
+            )
             html.a(map_cfg["alias"], href=map_cfg["url"], class_="link", target="main")
             html.close_td()
             html.close_tr()
@@ -124,14 +126,16 @@ class NagVisMaps(SidebarSnapin):
         for map_name, map_cfg in maps.items():
             html.open_li()
             if map_name in children:
-                with foldable_container(treename="nagvis",
-                                        id_=map_name,
-                                        isopen=False,
-                                        title=map_cfg["alias"],
-                                        title_url=map_cfg["url"],
-                                        title_target="main",
-                                        indent=False,
-                                        icon="foldable_sidebar"):
+                with foldable_container(
+                    treename="nagvis",
+                    id_=map_name,
+                    isopen=False,
+                    title=map_cfg["alias"],
+                    title_url=map_cfg["url"],
+                    title_target="main",
+                    indent=False,
+                    icon="foldable_sidebar",
+                ):
                     self._show_tree_nodes(children[map_name], children)
             else:
                 html.a(map_cfg["alias"], href=map_cfg["url"], target="main", class_="link")

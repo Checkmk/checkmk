@@ -15,16 +15,20 @@ from cmk.gui.valuespec import Dictionary, TextInput
 
 
 def _parameter_valuespec_mssql_backup_per_type():
-    return Dictionary(elements=[
-        ("levels", _vs_mssql_backup_age("Upper levels for the backup age")),
-    ],)
+    return Dictionary(
+        elements=[
+            ("levels", _vs_mssql_backup_age("Upper levels for the backup age")),
+        ],
+    )
 
 
 def _item_spec() -> TextInput:
     return TextInput(
         title=_("Instance, tablespace & backup type"),
-        help=_("The MSSQL instance name, the tablespace name and the backup type, each separated "
-               "by a space."),
+        help=_(
+            "The MSSQL instance name, the tablespace name and the backup type, each separated "
+            "by a space."
+        ),
         allow_empty=False,
     )
 
@@ -37,4 +41,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_backup_per_type,
         title=lambda: _("MSSQL Backup"),
-    ))
+    )
+)

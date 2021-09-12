@@ -14,16 +14,20 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_carbon_monoxide():
-    return Dictionary(elements=[
-        ("levels_ppm",
-         Tuple(
-             title="Levels in parts per million",
-             elements=[
-                 Integer(title=_("Warning at"), unit=_("ppm"), default_value=10),
-                 Integer(title=_("Critical at"), unit=_("ppm"), default_value=25),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels_ppm",
+                Tuple(
+                    title="Levels in parts per million",
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("ppm"), default_value=10),
+                        Integer(title=_("Critical at"), unit=_("ppm"), default_value=25),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -33,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_carbon_monoxide,
         title=lambda: _("Carbon monoxide"),
-    ))
+    )
+)

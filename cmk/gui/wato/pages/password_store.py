@@ -71,22 +71,31 @@ class ModePasswords(SimpleListMode):
         return _("Passwords")
 
     def _delete_confirm_message(self):
-        return " ".join([
-            _("The password may be used in checks. If you delete the password, "
-              "the checks won't be able to authenticate with this password anymore."),
-            super()._delete_confirm_message()
-        ])
+        return " ".join(
+            [
+                _(
+                    "The password may be used in checks. If you delete the password, "
+                    "the checks won't be able to authenticate with this password anymore."
+                ),
+                super()._delete_confirm_message(),
+            ]
+        )
 
     def page(self):
         html.p(
-            _("This password management module stores the passwords you use in your checks and "
-              "special agents in a central place. Please note that this password store is no "
-              "kind of password safe. Your passwords will not be encrypted."))
+            _(
+                "This password management module stores the passwords you use in your checks and "
+                "special agents in a central place. Please note that this password store is no "
+                "kind of password safe. Your passwords will not be encrypted."
+            )
+        )
         html.p(
-            _("All the passwords you store in your monitoring configuration, "
-              "including this password store, are needed in plain text to contact remote systems "
-              "for monitoring. So all those passwords have to be stored readable by the monitoring."
-             ))
+            _(
+                "All the passwords you store in your monitoring configuration, "
+                "including this password store, are needed in plain text to contact remote systems "
+                "for monitoring. So all those passwords have to be stored readable by the monitoring."
+            )
+        )
         super().page()
 
     def _show_entry_cells(self, table, ident, entry):
@@ -94,8 +103,8 @@ class ModePasswords(SimpleListMode):
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
             html.write_text(
-                _("Administrators (having the permission "
-                  "\"Write access to all passwords\")"))
+                _("Administrators (having the permission " '"Write access to all passwords")')
+            )
         else:
             html.write_text(self._contact_group_alias(entry["owned_by"]))
         table.cell(_("Shared with"))
@@ -134,46 +143,63 @@ class ModeEditPassword(SimpleEditMode):
                 FixedValue(
                     None,
                     title=_("Administrators"),
-                    totext=_("Administrators (having the permission "
-                             "\"Write access to all passwords\")"),
+                    totext=_(
+                        "Administrators (having the permission " '"Write access to all passwords")'
+                    ),
                 )
             ]
         else:
             admin_element = []
 
         elements: List[DictionaryEntry] = [
-            ("password", Password(
-                title=_("Password"),
-                allow_empty=False,
-            )),
-            ("owned_by",
-             Alternative(
-                 title=_("Editable by"),
-                 help=_("Each password is owned by a group of users which are able to edit, "
-                        "delete and use existing passwords."),
-                 elements=admin_element + [
-                     DropdownChoice(
-                         title=_("Members of the contact group:"),
-                         choices=lambda: sorted_contact_group_choices(only_own=True),
-                         invalid_choice="complain",
-                         empty_text=_(
-                             "You need to be member of at least one contact group to be able to "
-                             "create a password."),
-                         invalid_choice_title=_("Group not existant or not member"),
-                         invalid_choice_error=_("The choosen group is either not existant "
-                                                "anymore or you are not a member of this "
-                                                "group. Please choose another one."),
-                     ),
-                 ])),
-            ("shared_with",
-             DualListChoice(
-                 title=_("Share with"),
-                 help=_("By default only the members of the owner contact group are permitted "
+            (
+                "password",
+                Password(
+                    title=_("Password"),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "owned_by",
+                Alternative(
+                    title=_("Editable by"),
+                    help=_(
+                        "Each password is owned by a group of users which are able to edit, "
+                        "delete and use existing passwords."
+                    ),
+                    elements=admin_element
+                    + [
+                        DropdownChoice(
+                            title=_("Members of the contact group:"),
+                            choices=lambda: sorted_contact_group_choices(only_own=True),
+                            invalid_choice="complain",
+                            empty_text=_(
+                                "You need to be member of at least one contact group to be able to "
+                                "create a password."
+                            ),
+                            invalid_choice_title=_("Group not existant or not member"),
+                            invalid_choice_error=_(
+                                "The choosen group is either not existant "
+                                "anymore or you are not a member of this "
+                                "group. Please choose another one."
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "shared_with",
+                DualListChoice(
+                    title=_("Share with"),
+                    help=_(
+                        "By default only the members of the owner contact group are permitted "
                         "to use a a configured password. It is possible to share a password with "
-                        "other groups of users to make them able to use a password in checks."),
-                 choices=sorted_contact_group_choices,
-                 autoheight=False,
-             )),
+                        "other groups of users to make them able to use a password in checks."
+                    ),
+                    choices=sorted_contact_group_choices,
+                    autoheight=False,
+                ),
+            ),
         ]
 
         return elements

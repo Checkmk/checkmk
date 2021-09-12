@@ -14,10 +14,12 @@ from cmk.gui.valuespec import Age, Tuple
 
 
 def _parameter_valuespec_antivir_update_age():
-    return Tuple(elements=[
-        Age(title=_("Warning level for time since last update")),
-        Age(title=_("Critical level for time since last update")),
-    ],)
+    return Tuple(
+        elements=[
+            Age(title=_("Warning level for time since last update")),
+            Age(title=_("Critical level for time since last update")),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -26,4 +28,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_antivir_update_age,
         title=lambda: _("AntiVirus last update age"),
-    ))
+    )
+)

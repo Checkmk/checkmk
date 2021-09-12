@@ -16,22 +16,24 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 def _parameter_valuespec_zorp_connections():
     return Dictionary(
         elements=[
-            ("levels",
-             Tuple(
-                 title=_("Levels"),
-                 elements=[
-                     Integer(
-                         title=_("Warning at"),
-                         default_value=15,
-                     ),
-                     Integer(
-                         title=_("Critical at"),
-                         default_value=20,
-                     ),
-                 ],
-             )),
+            (
+                "levels",
+                Tuple(
+                    title=_("Levels"),
+                    elements=[
+                        Integer(
+                            title=_("Warning at"),
+                            default_value=15,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            default_value=20,
+                        ),
+                    ],
+                ),
+            ),
         ],
-        required_keys=['levels'],  # There is only one value, so its required
+        required_keys=["levels"],  # There is only one value, so its required
     )
 
 
@@ -42,4 +44,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_zorp_connections,
         title=lambda: _("Zorp connections"),
-    ))
+    )
+)

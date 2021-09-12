@@ -16,4 +16,5 @@ rulespec_registry.register(
         check_group_name="zypper",
         group=RulespecGroupEnforcedServicesOperatingSystem,
         title=lambda: _("Zypper Updates"),
-    ))
+    )
+)

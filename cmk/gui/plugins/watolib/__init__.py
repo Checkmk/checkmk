@@ -4,7 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-#.
+# .
 #   .--Plugin API----------------------------------------------------------.
 #   |           ____  _             _            _    ____ ___             |
 #   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
@@ -16,11 +16,12 @@
 
 from cmk.utils.plugin_loader import load_plugins
 
-from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    ABCConfigDomain, config_domain_registry,
+from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
+    ABCConfigDomain,
+    config_domain_registry,
 )
 
-#.
+# .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |

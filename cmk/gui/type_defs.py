@@ -71,13 +71,17 @@ PainterNameSpec = Union[PainterName, Tuple[PainterName, PainterParameters]]
 
 
 class PainterSpec(
-        NamedTuple('PainterSpec', [
-            ('painter_name', PainterNameSpec),
-            ('link_spec', Optional[VisualLinkSpec]),
-            ('tooltip', Optional[ColumnName]),
-            ('join_index', Optional[ColumnName]),
-            ('column_title', Optional[str]),
-        ])):
+    NamedTuple(
+        "PainterSpec",
+        [
+            ("painter_name", PainterNameSpec),
+            ("link_spec", Optional[VisualLinkSpec]),
+            ("tooltip", Optional[ColumnName]),
+            ("join_index", Optional[ColumnName]),
+            ("column_title", Optional[str]),
+        ],
+    )
+):
     def __new__(cls, *value):
         # Some legacy views have optional fields like "tooltip" set to "" instead of None
         # in their definitions. Consolidate this case to None.
@@ -94,8 +98,9 @@ class PainterSpec(
         return super().__new__(cls, *value)
 
     def __repr__(self):
-        return str((self.painter_name, tuple(self.link_spec) if self.link_spec else None) +
-                   tuple(self)[2:])
+        return str(
+            (self.painter_name, tuple(self.link_spec) if self.link_spec else None) + tuple(self)[2:]
+        )
 
 
 ViewSpec = Dict[str, Any]
@@ -124,6 +129,7 @@ class SetOnceDict(dict):
         ValueError: key 'foo' already set
 
     """
+
     def __setitem__(self, key, value):
         if key in self:
             raise ValueError("key %r already set" % (key,))
@@ -135,6 +141,7 @@ class SetOnceDict(dict):
 
 class ABCMegaMenuSearch(ABC):
     """Abstract base class for search fields in mega menus"""
+
     def __init__(self, name: str) -> None:
         self._name = name
 
@@ -195,6 +202,7 @@ SearchQuery = str
 @dataclass
 class SearchResult:
     """Representation of a single result"""
+
     title: str
     url: str
     context: str = ""
@@ -207,8 +215,9 @@ GraphIdentifier = Tuple[str, Any]
 RenderingExpression = Tuple[Any, ...]
 TranslatedMetrics = Dict[str, Dict[str, Any]]
 PerfometerSpec = Dict[str, Any]
-PerfdataTuple = Tuple[str, float, str, Optional[float], Optional[float], Optional[float],
-                      Optional[float]]
+PerfdataTuple = Tuple[
+    str, float, str, Optional[float], Optional[float], Optional[float], Optional[float]
+]
 Perfdata = List[PerfdataTuple]
 
 

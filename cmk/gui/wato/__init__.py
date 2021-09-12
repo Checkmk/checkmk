@@ -41,7 +41,7 @@
 # folder_path --> A relative specification of a folder (e.g. "linux/prod")
 # folder      --> An instance of the class Folder
 
-#.
+# .
 #   .--Init----------------------------------------------------------------.
 #   |                           ___       _ _                              |
 #   |                          |_ _|_ __ (_) |_                            |
@@ -316,12 +316,14 @@ from cmk.gui.plugins.wato.utils.html_elements import (
     wato_html_footer,
     wato_html_head,
 )
-
-from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility with pre 1.6 plugins # isort: skip
-    MainMenu, MenuItem, register_modules, WatoModule,
+from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility with pre 1.6 plugins
+    MainMenu,
+    MenuItem,
+    register_modules,
+    WatoModule,
 )
 
-#.
+# .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
@@ -351,8 +353,9 @@ def load_plugins(force: bool) -> None:
 
     if modes:
         raise MKGeneralException(
-            _("Deprecated WATO modes found: %r. "
-              "They need to be refactored to new API.") % list(modes.keys()))
+            _("Deprecated WATO modes found: %r. " "They need to be refactored to new API.")
+            % list(modes.keys())
+        )
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins

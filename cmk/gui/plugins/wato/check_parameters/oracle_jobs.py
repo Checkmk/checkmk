@@ -23,16 +23,21 @@ from cmk.gui.valuespec import Dictionary, TextInput
 def _item_spec_oracle_jobs():
     return TextInput(
         title=_("Scheduler Job Name"),
-        help=_("Here you can set explicit Scheduler-Jobs by defining them via SID, Job-Owner "
-               "and Job-Name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"),
-        regex=r'.+\..+',
-        allow_empty=False)
+        help=_(
+            "Here you can set explicit Scheduler-Jobs by defining them via SID, Job-Owner "
+            "and Job-Name, separated by a dot, for example <tt>TUX12C.SYS.PURGE_LOG</tt>"
+        ),
+        regex=r".+\..+",
+        allow_empty=False,
+    )
 
 
 def _parameter_valuespec_oracle_jobs():
     return Dictionary(
-        help=_("A scheduler job is an object in an ORACLE database which could be "
-               "compared to a cron job on Unix. "),
+        help=_(
+            "A scheduler job is an object in an ORACLE database which could be "
+            "compared to a cron job on Unix. "
+        ),
         elements=[
             ("run_duration", run_duration),
             ("disabled", ignore_db_status),
@@ -51,4 +56,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_jobs,
         title=lambda: _("Oracle Scheduler Job"),
-    ))
+    )
+)

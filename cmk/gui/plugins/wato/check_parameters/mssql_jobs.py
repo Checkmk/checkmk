@@ -22,8 +22,10 @@ from cmk.gui.valuespec import Dictionary, TextInput
 def _item_spec_mssql_jobs():
     return TextInput(
         title=_("Job Name"),
-        help=_("You can set explicit jobs by defining their job names. The job names can be found "
-               "in the column \"name\" in the table \"dbo.sysjobs\" on the MSDB database."),
+        help=_(
+            "You can set explicit jobs by defining their job names. The job names can be found "
+            'in the column "name" in the table "dbo.sysjobs" on the MSDB database.'
+        ),
         allow_empty=False,
     )
 
@@ -48,4 +50,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_jobs,
         title=lambda: _("MSSQL Jobs"),
-    ))
+    )
+)

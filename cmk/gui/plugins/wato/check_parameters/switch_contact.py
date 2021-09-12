@@ -32,4 +32,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Sensor"), allow_empty=False),
         parameter_valuespec=_parameter_valuespec_switch_contact,
         title=lambda: _("Switch contact state"),
-    ))
+    )
+)

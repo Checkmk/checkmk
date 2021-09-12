@@ -14,12 +14,16 @@ from cmk.gui.valuespec import Dictionary, Integer
 
 
 def _parameter_valuespec_fireeye_mail():
-    return Dictionary(elements=[
-        (
-            "interval",
-            Integer(title="Timespan for mail rate computation", default_value=60, unit="minutes"),
-        ),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "interval",
+                Integer(
+                    title="Timespan for mail rate computation", default_value=60, unit="minutes"
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -29,4 +33,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fireeye_mail,
         title=lambda: _("Fireeye Mail Rate Average"),
-    ))
+    )
+)

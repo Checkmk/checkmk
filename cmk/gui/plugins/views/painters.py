@@ -153,14 +153,16 @@ class PainterOptionMatrixOmitUniform(PainterOption):
 
     @property
     def valuespec(self) -> DropdownChoice:
-        return DropdownChoice(title=_("Find differences..."),
-                              choices=[
-                                  (False, _("Always show all rows")),
-                                  (True, _("Omit rows where all columns are identical")),
-                              ])
+        return DropdownChoice(
+            title=_("Find differences..."),
+            choices=[
+                (False, _("Always show all rows")),
+                (True, _("Omit rows where all columns are identical")),
+            ],
+        )
 
 
-#.
+# .
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
@@ -172,18 +174,18 @@ class PainterOptionMatrixOmitUniform(PainterOption):
 
 
 # This helper function returns the value of the given custom var
-def _paint_custom_var(what: str,
-                      key: CSSClass,
-                      row: Row,
-                      choices: Optional[List] = None) -> CellSpec:
+def _paint_custom_var(
+    what: str, key: CSSClass, row: Row, choices: Optional[List] = None
+) -> CellSpec:
     if choices is None:
         choices = []
 
     if what:
-        what += '_'
+        what += "_"
 
     custom_vars = dict(
-        zip(row[what + "custom_variable_names"], row[what + "custom_variable_values"]))
+        zip(row[what + "custom_variable_names"], row[what + "custom_variable_values"])
+    )
 
     if key in custom_vars:
         custom_val = custom_vars[key]
@@ -197,7 +199,7 @@ def _paint_custom_var(what: str,
 def _paint_future_time(timestamp: Timestamp) -> CellSpec:
     if timestamp <= 0:
         return "", "-"
-    return paint_age(timestamp, True, 0, what='future')
+    return paint_age(timestamp, True, 0, what="future")
 
 
 def _paint_day(timestamp: Timestamp) -> CellSpec:
@@ -219,8 +221,8 @@ def _paint_icons(what: IconObjectType, row: Row) -> CellSpec:
 
     # In case of non HTML output, just return the top level icon names
     # as space separated string
-    if html.output_format != 'html':
-        return 'icons', ' '.join(i.icon_name for i in toplevel_icons if isinstance(i, IconEntry))
+    if html.output_format != "html":
+        return "icons", " ".join(i.icon_name for i in toplevel_icons if isinstance(i, IconEntry))
 
     output = HTML()
     for icon in toplevel_icons:
@@ -229,16 +231,14 @@ def _paint_icons(what: IconObjectType, row: Row) -> CellSpec:
                 url, target_frame = transform_action_url(icon.url_spec)
                 url = replace_action_url_macros(url, what, row)
 
-                onclick = ''
-                if url.startswith('onclick:'):
+                onclick = ""
+                if url.startswith("onclick:"):
                     onclick = url[8:]
-                    url = 'javascript:void(0)'
+                    url = "javascript:void(0)"
 
-                output += html.render_icon_button(url,
-                                                  icon.title or "",
-                                                  icon.icon_name,
-                                                  onclick=onclick,
-                                                  target=target_frame)
+                output += html.render_icon_button(
+                    url, icon.title or "", icon.icon_name, onclick=onclick, target=target_frame
+                )
             else:
                 output += html.render_icon(icon.icon_name, icon.title)
         elif isinstance(icon, LegacyIconEntry):
@@ -302,7 +302,7 @@ class PainterHostIcons(Painter):
         return _paint_icons("host", row)
 
 
-#.
+# .
 #   .--Site----------------------------------------------------------------.
 #   |                           ____  _ _                                  |
 #   |                          / ___|(_) |_ ___                            |
@@ -325,15 +325,15 @@ class PainterSiteIcon(Painter):
         return _("Site icon")
 
     def short_title(self, cell: Cell) -> str:
-        return u""
+        return ""
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['site']
+        return ["site"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'site'
+        return "site"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if row.get("site") and config.use_siteicons:
@@ -355,11 +355,11 @@ class PainterSitenamePlain(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['site']
+        return ["site"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'site'
+        return "site"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["site"])
@@ -376,13 +376,13 @@ class PainterSitealias(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['site']
+        return ["site"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, get_site_config(row["site"])["alias"])
 
 
-#.
+# .
 #   .--Services------------------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
@@ -448,11 +448,11 @@ class PainterServiceState(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_has_been_checked', 'service_state']
+        return ["service_has_been_checked", "service_state"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'svcstate'
+        return "svcstate"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_service_state_short(row)
@@ -472,11 +472,11 @@ class PainterSvcPluginOutput(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_plugin_output', 'service_custom_variables', 'service_check_command']
+        return ["service_plugin_output", "service_custom_variables", "service_check_command"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'svcoutput'
+        return "svcoutput"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_stalified(row, format_plugin_output(row["service_plugin_output"], row))
@@ -496,24 +496,30 @@ class PainterSvcLongPluginOutput(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_long_plugin_output', 'service_custom_variables']
+        return ["service_long_plugin_output", "service_custom_variables"]
 
     @property
     def parameters(self) -> Dictionary:
-        return Dictionary(elements=[
-            ('max_len',
-             Integer(
-                 title=_("Maximum number of characters in to show"),
-                 help=_("Truncate content at this amount of characters."
-                        "A zero value mean not to truncate"),
-                 default_value=0,
-                 minvalue=0,
-             )),
-        ])
+        return Dictionary(
+            elements=[
+                (
+                    "max_len",
+                    Integer(
+                        title=_("Maximum number of characters in to show"),
+                        help=_(
+                            "Truncate content at this amount of characters."
+                            "A zero value mean not to truncate"
+                        ),
+                        default_value=0,
+                        minvalue=0,
+                    ),
+                ),
+            ]
+        )
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         params = cell.painter_parameters()
-        max_len = params.get('max_len', 0)
+        max_len = params.get("max_len", 0)
         long_output = row["service_long_plugin_output"]
 
         if 0 < max_len < len(long_output):
@@ -522,7 +528,7 @@ class PainterSvcLongPluginOutput(Painter):
         content = format_plugin_output(long_output, row)
 
         # In long output we get newlines which should also be displayed in the GUI
-        content.value = content.value.replace('\\n', '<br>').replace('\n', '<br>')
+        content.value = content.value.replace("\\n", "<br>").replace("\n", "<br>")
 
         return paint_stalified(row, content)
 
@@ -541,7 +547,7 @@ class PainterSvcPerfData(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_perf_data']
+        return ["service_perf_data"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_stalified(row, row["service_perf_data"])
@@ -561,26 +567,29 @@ class PainterSvcMetrics(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_check_command', 'service_perf_data']
+        return ["service_check_command", "service_perf_data"]
 
     @property
     def printable(self) -> bool:
         return False
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        translated_metrics = metrics.translate_perf_data(row["service_perf_data"],
-                                                         row["service_check_command"])
+        translated_metrics = metrics.translate_perf_data(
+            row["service_perf_data"], row["service_check_command"]
+        )
 
         if row["service_perf_data"] and not translated_metrics:
             return "", _("Failed to parse performance data string: %s") % row["service_perf_data"]
 
         with output_funnel.plugged():
-            self._show_metrics_table(translated_metrics, row["host_name"],
-                                     row["service_description"])
+            self._show_metrics_table(
+                translated_metrics, row["host_name"], row["service_description"]
+            )
             return "", HTML(output_funnel.drain())
 
-    def _show_metrics_table(self, translated_metrics: TranslatedMetrics, host_name: str,
-                            service_description: str) -> None:
+    def _show_metrics_table(
+        self, translated_metrics: TranslatedMetrics, host_name: str, service_description: str
+    ) -> None:
         html.open_table(class_="metricstable")
         for metric_name, metric in sorted(translated_metrics.items(), key=lambda x: x[1]["title"]):
             html.open_tr()
@@ -590,16 +599,22 @@ class PainterSvcMetrics(Painter):
             if not cmk_version.is_raw_edition():
                 html.td(
                     html.render_popup_trigger(
-                        html.render_icon("menu",
-                                         title=_("Add this metric to dedicated graph"),
-                                         cssclass="iconbutton"),
+                        html.render_icon(
+                            "menu",
+                            title=_("Add this metric to dedicated graph"),
+                            cssclass="iconbutton",
+                        ),
                         ident="add_metric_to_graph_" + host_name + ";" + str(service_description),
-                        method=MethodAjax(endpoint="add_metric_to_graph",
-                                          url_vars=[
-                                              ("host", host_name),
-                                              ("service", service_description),
-                                              ("metric", metric_name),
-                                          ])))
+                        method=MethodAjax(
+                            endpoint="add_metric_to_graph",
+                            url_vars=[
+                                ("host", host_name),
+                                ("service", service_description),
+                                ("metric", metric_name),
+                            ],
+                        ),
+                    )
+                )
             html.close_tr()
         html.close_table()
 
@@ -620,7 +635,7 @@ class PainterSvcPerfVal(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_perf_data']
+        return ["service_perf_data"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_stalified(row, get_perfdata_nth_value(row, self._num - 1))
@@ -690,7 +705,7 @@ class PainterSvcCheckCommand(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_check_command']
+        return ["service_check_command"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["service_check_command"])
@@ -710,7 +725,7 @@ class PainterSvcCheckCommandExpanded(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_check_command_expanded']
+        return ["service_check_command_expanded"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["service_check_command_expanded"])
@@ -730,7 +745,7 @@ class PainterSvcContacts(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_contacts']
+        return ["service_contacts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, ", ".join(row["service_contacts"]))
@@ -750,7 +765,7 @@ class PainterSvcContactGroups(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_contact_groups']
+        return ["service_contact_groups"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, ", ".join(row["service_contact_groups"]))
@@ -770,11 +785,11 @@ class PainterServiceDescription(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_description']
+        return ["service_description"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'svcdescr'
+        return "svcdescr"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["service_description"])
@@ -794,11 +809,11 @@ class PainterServiceDisplayName(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_display_name']
+        return ["service_display_name"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'svcdispname'
+        return "svcdispname"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["service_display_name"])
@@ -818,19 +833,20 @@ class PainterSvcStateAge(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_has_been_checked', 'service_last_state_change']
+        return ["service_has_been_checked", "service_last_state_change"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'stateage'
+        return "stateage"
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["service_last_state_change"], row["service_has_been_checked"] == 1,
-                         60 * 10)
+        return paint_age(
+            row["service_last_state_change"], row["service_has_been_checked"] == 1, 60 * 10
+        )
 
 
 def _paint_checked(what: str, row: Row) -> CellSpec:
@@ -861,11 +877,11 @@ class PainterSvcCheckAge(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_has_been_checked', 'service_last_check', 'service_cached_at']
+        return ["service_has_been_checked", "service_last_check", "service_cached_at"]
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_checked("service", row)
@@ -885,11 +901,11 @@ class PainterSvcCheckCacheInfo(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_last_check', 'service_cached_at', 'service_cache_interval']
+        return ["service_last_check", "service_cached_at", "service_cache_interval"]
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if not row["service_cached_at"]:
@@ -911,7 +927,7 @@ class PainterSvcNextCheck(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_next_check']
+        return ["service_next_check"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_future_time(row["service_next_check"])
@@ -931,7 +947,7 @@ class PainterSvcLastTimeOk(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_last_time_ok', 'service_has_been_checked']
+        return ["service_last_time_ok", "service_has_been_checked"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["service_last_time_ok"], row["service_has_been_checked"] == 1, 60 * 10)
@@ -951,7 +967,7 @@ class PainterSvcNextNotification(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_next_notification']
+        return ["service_next_notification"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_future_time(row["service_next_notification"])
@@ -964,22 +980,29 @@ def _paint_notification_postponement_reason(what: str, row: Row) -> CellSpec:
         "periodic notification": _("Periodic notification"),
         "currently in downtime": _("In downtime"),
         "host of this service is currently in downtime": _("Host is in downtime"),
-        "problem acknowledged and periodic notifications are enabled":
-            _("Problem is acknowledged, but is configured to be periodic"),
-        "notifications are disabled, but periodic notifications are enabled":
-            _("Notifications are disabled, but is configured to be periodic"),
+        "problem acknowledged and periodic notifications are enabled": _(
+            "Problem is acknowledged, but is configured to be periodic"
+        ),
+        "notifications are disabled, but periodic notifications are enabled": _(
+            "Notifications are disabled, but is configured to be periodic"
+        ),
         "not in notification period": _("Is not in notification period"),
         "host of this service is not up": _("Host is down"),
         "last host check not recent enough": _("Last host check is not recent enough"),
         "last service check not recent enough": _("Last service check is not recent enough"),
         "all parents are down": _("All parents are down"),
-        "at least one parent is up, but no check is recent enough":
-            _("Last service check is not recent enough"),
+        "at least one parent is up, but no check is recent enough": _(
+            "Last service check is not recent enough"
+        ),
     }
 
-    return ("",
-            reasons.get(row[what + "_notification_postponement_reason"],
-                        row[what + "_notification_postponement_reason"]))
+    return (
+        "",
+        reasons.get(
+            row[what + "_notification_postponement_reason"],
+            row[what + "_notification_postponement_reason"],
+        ),
+    )
 
 
 @painter_registry.register
@@ -996,7 +1019,7 @@ class PainterSvcNotificationPostponementReason(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_notification_postponement_reason']
+        return ["service_notification_postponement_reason"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_notification_postponement_reason("service", row)
@@ -1016,11 +1039,11 @@ class PainterSvcLastNotification(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_last_notification']
+        return ["service_last_notification"]
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["service_last_notification"], row["service_last_notification"], 0)
@@ -1040,7 +1063,7 @@ class PainterSvcNotificationNumber(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_current_notification_number']
+        return ["service_current_notification_number"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         # Keep in sync with HACK in cmk/base/events.py
@@ -1062,7 +1085,7 @@ class PainterSvcCheckLatency(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_latency']
+        return ["service_latency"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", approx_age(row["service_latency"]))
@@ -1082,7 +1105,7 @@ class PainterSvcCheckDuration(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_execution_time']
+        return ["service_execution_time"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", approx_age(row["service_execution_time"]))
@@ -1102,7 +1125,7 @@ class PainterSvcAttempt(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_current_attempt', 'service_max_check_attempts']
+        return ["service_current_attempt", "service_max_check_attempts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, "%d/%d" % (row["service_current_attempt"], row["service_max_check_attempts"]))
@@ -1122,7 +1145,7 @@ class PainterSvcNormalInterval(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_check_interval']
+        return ["service_check_interval"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("number", approx_age(row["service_check_interval"] * 60.0))
@@ -1142,7 +1165,7 @@ class PainterSvcRetryInterval(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_retry_interval']
+        return ["service_retry_interval"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("number", approx_age(row["service_retry_interval"] * 60.0))
@@ -1162,13 +1185,16 @@ class PainterSvcCheckInterval(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_check_interval', 'service_retry_interval']
+        return ["service_check_interval", "service_retry_interval"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (
             None,
-            "%s / %s" % (approx_age(row["service_check_interval"] * 60.0),
-                         approx_age(row["service_retry_interval"] * 60.0)),
+            "%s / %s"
+            % (
+                approx_age(row["service_check_interval"] * 60.0),
+                approx_age(row["service_retry_interval"] * 60.0),
+            ),
         )
 
 
@@ -1186,7 +1212,7 @@ class PainterSvcCheckType(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_check_type']
+        return ["service_check_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, _("ACTIVE") if row["service_check_type"] == 0 else _("PASSIVE"))
@@ -1206,7 +1232,7 @@ class PainterSvcInDowntime(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_scheduled_downtime_depth']
+        return ["service_scheduled_downtime_depth"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "service_scheduled_downtime_depth", True)
@@ -1226,7 +1252,7 @@ class PainterSvcInNotifper(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_in_notification_period']
+        return ["service_in_notification_period"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "service_in_notification_period", False)
@@ -1246,7 +1272,7 @@ class PainterSvcNotifper(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_notification_period']
+        return ["service_notification_period"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["service_notification_period"])
@@ -1266,7 +1292,7 @@ class PainterSvcCheckPeriod(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_check_period']
+        return ["service_check_period"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["service_check_period"])
@@ -1286,7 +1312,7 @@ class PainterSvcFlapping(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_is_flapping']
+        return ["service_is_flapping"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "service_is_flapping", True)
@@ -1306,7 +1332,7 @@ class PainterSvcNotificationsEnabled(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_notifications_enabled']
+        return ["service_notifications_enabled"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "service_notifications_enabled", False)
@@ -1326,7 +1352,7 @@ class PainterSvcIsActive(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_active_checks_enabled']
+        return ["service_active_checks_enabled"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "service_active_checks_enabled", False)
@@ -1346,7 +1372,7 @@ class PainterSvcGroupMemberlist(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_groups']
+        return ["service_groups"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         links = []
@@ -1368,20 +1394,20 @@ class PainterSvcPnpgraph(Painter):
     @property
     def columns(self) -> List[ColumnName]:
         return [
-            'host_name',
-            'service_description',
-            'service_perf_data',
-            'service_metrics',
-            'service_check_command',
+            "host_name",
+            "service_description",
+            "service_perf_data",
+            "service_metrics",
+            "service_check_command",
         ]
 
     @property
     def printable(self) -> str:
-        return 'time_graph'
+        return "time_graph"
 
     @property
     def painter_options(self) -> List[str]:
-        return ['pnp_timerange']
+        return ["pnp_timerange"]
 
     @property
     def parameters(self) -> Transform:
@@ -1405,7 +1431,7 @@ class PainterCheckManpage(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_check_command']
+        return ["service_check_command"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         command = row["service_check_command"]
@@ -1429,17 +1455,20 @@ class PainterCheckManpage(Painter):
         if page is None:
             return "", _("Man page %s not found.") % checktype
 
-        description = escaping.escape_attribute(page["header"]["description"]) \
-            .replace("{", "<b>")  \
-            .replace("}", "</b>")  \
+        description = (
+            escaping.escape_attribute(page["header"]["description"])
+            .replace("{", "<b>")
+            .replace("}", "</b>")
             .replace("&lt;br&gt;", "<br>")
+        )
         return "", HTML(description)
 
 
 def _paint_comments(prefix: str, row: Row) -> CellSpec:
     comments = row[prefix + "comments_with_info"]
     text = HTML(", ").join(
-        [html.render_i(a) + escaping.escape_html_permissive(": %s" % c) for _id, a, c in comments])
+        [html.render_i(a) + escaping.escape_html_permissive(": %s" % c) for _id, a, c in comments]
+    )
     return "", text
 
 
@@ -1457,7 +1486,7 @@ class PainterSvcComments(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_comments_with_info']
+        return ["service_comments_with_info"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_comments("service_", row)
@@ -1477,7 +1506,7 @@ class PainterSvcAcknowledged(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_acknowledged']
+        return ["service_acknowledged"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "service_acknowledged", False)
@@ -1487,9 +1516,9 @@ def notes_matching_pattern_entries(dirs: Iterable[str], item: str) -> Iterable[s
     matching = []
     for directory in dirs:
         if os.path.isdir(directory):
-            entries = sorted([d for d in os.listdir(directory) if d[0] != '.'], reverse=True)
+            entries = sorted([d for d in os.listdir(directory) if d[0] != "."], reverse=True)
             for pattern in entries:
-                if pattern[0] != '.' and fnmatch(item, pattern):
+                if pattern[0] != "." and fnmatch(item, pattern):
                     matching.append(directory + "/" + pattern)
     return matching
 
@@ -1512,17 +1541,18 @@ def _paint_custom_notes(what: str, row: Row) -> CellSpec:
     def replace_tags(text: str) -> str:
         sitename = row["site"]
         url_prefix = get_site_config(sitename)["url_prefix"]
-        return text\
-            .replace('$URL_PREFIX$',     url_prefix)\
-            .replace('$SITE$',           sitename)\
-            .replace('$HOSTNAME$',       host)\
-            .replace('$HOSTNAME_LOWER$', host.lower())\
-            .replace('$HOSTNAME_UPPER$', host.upper())\
-            .replace('$HOSTNAME_TITLE$', host[0].upper() + host[1:].lower())\
-            .replace('$HOSTADDRESS$',    row["host_address"])\
-            .replace('$SERVICEOUTPUT$',  row.get("service_plugin_output", ""))\
-            .replace('$HOSTOUTPUT$',     row.get("host_plugin_output", ""))\
-            .replace('$SERVICEDESC$',    row.get("service_description", ""))
+        return (
+            text.replace("$URL_PREFIX$", url_prefix)
+            .replace("$SITE$", sitename)
+            .replace("$HOSTNAME$", host)
+            .replace("$HOSTNAME_LOWER$", host.lower())
+            .replace("$HOSTNAME_UPPER$", host.upper())
+            .replace("$HOSTNAME_TITLE$", host[0].upper() + host[1:].lower())
+            .replace("$HOSTADDRESS$", row["host_address"])
+            .replace("$SERVICEOUTPUT$", row.get("service_plugin_output", ""))
+            .replace("$HOSTOUTPUT$", row.get("host_plugin_output", ""))
+            .replace("$SERVICEDESC$", row.get("service_description", ""))
+        )
 
     for f in files:
         contents.append(replace_tags(io.open(f, encoding="utf8").read().strip()))
@@ -1543,7 +1573,7 @@ class PainterSvcCustomNotes(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_name', 'host_address', 'service_description', 'service_plugin_output']
+        return ["host_name", "host_address", "service_description", "service_plugin_output"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_custom_notes("service", row)
@@ -1563,16 +1593,16 @@ class PainterSvcStaleness(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_staleness']
+        return ["service_staleness"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ('', '%0.2f' % row.get('service_staleness', 0))
+        return ("", "%0.2f" % row.get("service_staleness", 0))
 
 
 def _paint_is_stale(row: Row) -> CellSpec:
     if is_stale(row):
-        return "badflag", html.render_span(_('yes'))
-    return "goodflag", _('no')
+        return "badflag", html.render_span(_("yes"))
+    return "goodflag", _("no")
 
 
 @painter_registry.register
@@ -1589,11 +1619,11 @@ class PainterSvcIsStale(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_staleness']
+        return ["service_staleness"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'svc_staleness'
+        return "svc_staleness"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_is_stale(row)
@@ -1613,14 +1643,14 @@ class PainterSvcServicelevel(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_custom_variable_names', 'service_custom_variable_values']
+        return ["service_custom_variable_names", "service_custom_variable_values"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'servicelevel'
+        return "servicelevel"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var('service', 'EC_SL', row, config.mkeventd_service_levels)
+        return _paint_custom_var("service", "EC_SL", row, config.mkeventd_service_levels)
 
 
 def _paint_custom_vars(what: str, row: Row, blacklist: Optional[List] = None) -> CellSpec:
@@ -1632,7 +1662,7 @@ def _paint_custom_vars(what: str, row: Row, blacklist: Optional[List] = None) ->
     for varname, value in items:
         if varname not in blacklist:
             rows.append(html.render_tr(html.render_td(varname) + html.render_td(value)))
-    return '', html.render_table(HTML().join(rows))
+    return "", html.render_table(HTML().join(rows))
 
 
 @painter_registry.register
@@ -1646,13 +1676,13 @@ class PainterServiceCustomVariables(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_custom_variables']
+        return ["service_custom_variables"]
 
     def group_by(self, row: Row, cell: Cell) -> Tuple[Tuple[str, str], ...]:
         return tuple(row["service_custom_variables"].items())
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_vars('service', row)
+        return _paint_custom_vars("service", row)
 
 
 class ABCPainterCustomVariable(Painter, abc.ABC):
@@ -1694,10 +1724,13 @@ class ABCPainterCustomVariable(Painter, abc.ABC):
     def parameters(self) -> Dictionary:
         return Dictionary(
             elements=[
-                ("ident", DropdownChoice(
-                    choices=self._custom_attribute_choices,
-                    title=_("ID"),
-                )),
+                (
+                    "ident",
+                    DropdownChoice(
+                        choices=self._custom_attribute_choices,
+                        title=_("ID"),
+                    ),
+                ),
             ],
             title=_("Options"),
             optional_keys=[],
@@ -1716,7 +1749,7 @@ class PainterServiceCustomVariable(ABCPainterCustomVariable):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['service_custom_variable_names', 'service_custom_variable_values']
+        return ["service_custom_variable_names", "service_custom_variable_values"]
 
     @property
     def _default_title(self) -> str:
@@ -1741,20 +1774,20 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_custom_variable_names', 'host_custom_variable_values']
+        return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def group_by(self, row: Row, cell: Cell) -> Union[str, Tuple[str, ...]]:
         parameters: Optional[Dict[str, str]] = cell.painter_parameters()
         if parameters is None:
-            return ''
-        custom_variable_name = parameters['ident']
+            return ""
+        custom_variable_name = parameters["ident"]
         try:
-            index = row['host_custom_variable_names'].index(custom_variable_name.upper())
+            index = row["host_custom_variable_names"].index(custom_variable_name.upper())
         except ValueError:
             # group all hosts without this custom variable into a single group.
             # this group does not have a headline.
-            return ''
-        return row['host_custom_variable_values'][index]
+            return ""
+        return row["host_custom_variable_values"][index]
 
     @property
     def _default_title(self) -> str:
@@ -1771,7 +1804,7 @@ class PainterHostCustomVariable(ABCPainterCustomVariable):
         return sorted(choices, key=lambda x: x[1])
 
 
-#.
+# .
 #   .--Hosts---------------------------------------------------------------.
 #   |                       _   _           _                              |
 #   |                      | | | | ___  ___| |_ ___                        |
@@ -1801,11 +1834,11 @@ class PainterHostState(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_has_been_checked', 'host_state']
+        return ["host_has_been_checked", "host_state"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'hoststate'
+        return "hoststate"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_host_state_short(row)
@@ -1825,11 +1858,11 @@ class PainterHostStateOnechar(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_has_been_checked', 'host_state']
+        return ["host_has_been_checked", "host_state"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'hoststate'
+        return "hoststate"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_host_state_short(row, short=True)
@@ -1849,7 +1882,7 @@ class PainterHostPluginOutput(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_plugin_output', 'host_custom_variables']
+        return ["host_plugin_output", "host_custom_variables"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, format_plugin_output(row["host_plugin_output"], row))
@@ -1869,7 +1902,7 @@ class PainterHostPerfData(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_perf_data']
+        return ["host_perf_data"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["host_perf_data"])
@@ -1889,7 +1922,7 @@ class PainterHostCheckCommand(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_check_command']
+        return ["host_check_command"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["host_check_command"])
@@ -1909,7 +1942,7 @@ class PainterHostCheckCommandExpanded(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_check_command_expanded']
+        return ["host_check_command_expanded"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["host_check_command_expanded"])
@@ -1929,11 +1962,11 @@ class PainterHostStateAge(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_has_been_checked', 'host_last_state_change']
+        return ["host_has_been_checked", "host_last_state_change"]
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["host_last_state_change"], row["host_has_been_checked"] == 1, 60 * 10)
@@ -1953,11 +1986,11 @@ class PainterHostCheckAge(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_has_been_checked', 'host_last_check']
+        return ["host_has_been_checked", "host_last_check"]
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_checked("host", row)
@@ -1977,7 +2010,7 @@ class PainterHostNextCheck(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_next_check']
+        return ["host_next_check"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_future_time(row["host_next_check"])
@@ -1997,7 +2030,7 @@ class PainterHostNextNotification(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_next_notification']
+        return ["host_next_notification"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_future_time(row["host_next_notification"])
@@ -2017,7 +2050,7 @@ class PainterHostNotificationPostponementReason(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_notification_postponement_reason']
+        return ["host_notification_postponement_reason"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_notification_postponement_reason("host", row)
@@ -2037,11 +2070,11 @@ class PainterHostLastNotification(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_last_notification']
+        return ["host_last_notification"]
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["host_last_notification"], row["host_last_notification"], 0)
@@ -2061,7 +2094,7 @@ class PainterHostCheckLatency(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_latency']
+        return ["host_latency"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", approx_age(row["host_latency"]))
@@ -2081,7 +2114,7 @@ class PainterHostCheckDuration(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_execution_time']
+        return ["host_execution_time"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", approx_age(row["host_execution_time"]))
@@ -2101,7 +2134,7 @@ class PainterHostAttempt(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_current_attempt', 'host_max_check_attempts']
+        return ["host_current_attempt", "host_max_check_attempts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, "%d/%d" % (row["host_current_attempt"], row["host_max_check_attempts"]))
@@ -2121,7 +2154,7 @@ class PainterHostNormalInterval(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_check_interval']
+        return ["host_check_interval"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, approx_age(row["host_check_interval"] * 60.0))
@@ -2141,7 +2174,7 @@ class PainterHostRetryInterval(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_retry_interval']
+        return ["host_retry_interval"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, approx_age(row["host_retry_interval"] * 60.0))
@@ -2161,13 +2194,16 @@ class PainterHostCheckInterval(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_check_interval', 'host_retry_interval']
+        return ["host_check_interval", "host_retry_interval"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (
             None,
-            "%s / %s" % (approx_age(
-                row["host_check_interval"] * 60.0), approx_age(row["host_retry_interval"] * 60.0)),
+            "%s / %s"
+            % (
+                approx_age(row["host_check_interval"] * 60.0),
+                approx_age(row["host_retry_interval"] * 60.0),
+            ),
         )
 
 
@@ -2185,7 +2221,7 @@ class PainterHostCheckType(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_check_type']
+        return ["host_check_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["host_check_type"] == 0 and "ACTIVE" or "PASSIVE")
@@ -2205,7 +2241,7 @@ class PainterHostInNotifper(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_in_notification_period']
+        return ["host_in_notification_period"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "host_in_notification_period", False)
@@ -2225,7 +2261,7 @@ class PainterHostNotifper(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_notification_period']
+        return ["host_notification_period"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["host_notification_period"])
@@ -2245,7 +2281,7 @@ class PainterHostNotificationNumber(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_current_notification_number']
+        return ["host_current_notification_number"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", str(row["host_current_notification_number"]))
@@ -2265,7 +2301,7 @@ class PainterHostFlapping(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_is_flapping']
+        return ["host_is_flapping"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "host_is_flapping", True)
@@ -2285,7 +2321,7 @@ class PainterHostIsActive(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_active_checks_enabled']
+        return ["host_active_checks_enabled"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "host_active_checks_enabled", False)
@@ -2305,7 +2341,7 @@ class PainterHostNotificationsEnabled(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_notifications_enabled']
+        return ["host_notifications_enabled"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "host_notifications_enabled", False)
@@ -2325,15 +2361,15 @@ class PainterHostPnpgraph(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_name', 'host_perf_data', 'host_metrics', 'host_check_command']
+        return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
 
     @property
     def printable(self) -> str:
-        return 'time_graph'
+        return "time_graph"
 
     @property
     def painter_options(self) -> List[str]:
-        return ['pnp_timerange']
+        return ["pnp_timerange"]
 
     @property
     def parameters(self) -> Transform:
@@ -2357,11 +2393,11 @@ class PainterHostBlack(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['site', 'host_name', 'host_state']
+        return ["site", "host_name", "host_state"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'site_host'
+        return "site_host"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         state = row["host_state"]
@@ -2384,11 +2420,11 @@ class PainterHostWithState(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['site', 'host_name', 'host_state', 'host_has_been_checked']
+        return ["site", "host_name", "host_state", "host_has_been_checked"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'site_host'
+        return "site_host"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if row["host_has_been_checked"]:
@@ -2414,26 +2450,32 @@ class PainterHost(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_name', 'host_state', 'host_has_been_checked', 'host_scheduled_downtime_depth']
+        return ["host_name", "host_state", "host_has_been_checked", "host_scheduled_downtime_depth"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'site_host'
+        return "site_host"
 
     @property
     def parameters(self) -> Dictionary:
         elements: DictionaryElements = [
-            ("color_choices",
-             ListChoice(choices=[
-                 ("colorize_up", _("Colorize background if host is up")),
-                 ("colorize_down", _("Colorize background if host is down")),
-                 ("colorize_unreachable", _("Colorize background if host unreachable")),
-                 ("colorize_pending", _("Colorize background if host is pending")),
-                 ("colorize_downtime", _("Colorize background if host is downtime"))
-             ],
-                        title=_("Coloring"),
-                        help=_("Here you can configure the background color for specific states. "
-                               "The coloring for host in dowtime overrules all other coloring.")))
+            (
+                "color_choices",
+                ListChoice(
+                    choices=[
+                        ("colorize_up", _("Colorize background if host is up")),
+                        ("colorize_down", _("Colorize background if host is down")),
+                        ("colorize_unreachable", _("Colorize background if host unreachable")),
+                        ("colorize_pending", _("Colorize background if host is pending")),
+                        ("colorize_downtime", _("Colorize background if host is downtime")),
+                    ],
+                    title=_("Coloring"),
+                    help=_(
+                        "Here you can configure the background color for specific states. "
+                        "The coloring for host in dowtime overrules all other coloring."
+                    ),
+                ),
+            )
         ]
 
         return Dictionary(elements=elements, title=_("Options"), optional_keys=[])
@@ -2464,8 +2506,9 @@ class PainterHost(Painter):
                 css.append("hstate%s" % option_state)
                 break
 
-        return " ".join(css), html.render_span(row["host_name"],
-                                               class_=["state_rounded_fill", "host"])
+        return " ".join(css), html.render_span(
+            row["host_name"], class_=["state_rounded_fill", "host"]
+        )
 
 
 @painter_registry.register
@@ -2482,7 +2525,7 @@ class PainterAlias(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_alias']
+        return ["host_alias"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["host_alias"])
@@ -2502,7 +2545,7 @@ class PainterHostAddress(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_address']
+        return ["host_address"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["host_address"])
@@ -2522,10 +2565,10 @@ class PainterHostIpv4Address(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_custom_variable_names', 'host_custom_variable_values']
+        return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var('host', 'ADDRESS_4', row)
+        return _paint_custom_var("host", "ADDRESS_4", row)
 
 
 @painter_registry.register
@@ -2542,10 +2585,10 @@ class PainterHostIpv6Address(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_custom_variable_names', 'host_custom_variable_values']
+        return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var('host', 'ADDRESS_6', row)
+        return _paint_custom_var("host", "ADDRESS_6", row)
 
 
 @painter_registry.register
@@ -2562,11 +2605,12 @@ class PainterHostAddresses(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_address', 'host_custom_variable_names', 'host_custom_variable_values']
+        return ["host_address", "host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         custom_vars = dict(
-            zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
+            zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
+        )
 
         if custom_vars.get("ADDRESS_FAMILY", "4") == "4":
             primary = custom_vars.get("ADDRESS_4", "")
@@ -2598,7 +2642,8 @@ class PainterHostAddressesAdditional(Painter):
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         custom_vars = dict(
-            zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
+            zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
+        )
 
         ipv4_addresses = custom_vars.get("ADDRESSES_4", "").strip()
         ipv6_addresses = custom_vars.get("ADDRESSES_6", "").strip()
@@ -2626,10 +2671,10 @@ class PainterHostAddressFamily(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_custom_variable_names', 'host_custom_variable_values']
+        return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var('host', 'ADDRESS_FAMILY', row)
+        return _paint_custom_var("host", "ADDRESS_FAMILY", row)
 
 
 @painter_registry.register
@@ -2646,11 +2691,12 @@ class PainterHostAddressFamilies(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_custom_variable_names', 'host_custom_variable_values']
+        return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         custom_vars = dict(
-            zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
+            zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
+        )
 
         primary = custom_vars.get("ADDRESS_FAMILY", "4")
 
@@ -2688,14 +2734,14 @@ class PainterNumServices(Painter):
         return _("Number of services")
 
     def short_title(self, cell: Cell) -> str:
-        return u""
+        return ""
 
     def title_classes(self) -> List[str]:
         return ["right"]
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_num_services']
+        return ["host_num_services"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, str(row["host_num_services"]))
@@ -2718,7 +2764,7 @@ class PainterNumServicesOk(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_num_services_ok']
+        return ["host_num_services_ok"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(0, row["host_num_services_ok"])
@@ -2741,12 +2787,15 @@ class PainterNumProblems(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_num_services', 'host_num_services_ok', 'host_num_services_pending']
+        return ["host_num_services", "host_num_services_ok", "host_num_services_pending"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(
-            's', row["host_num_services"] - row["host_num_services_ok"] -
-            row["host_num_services_pending"])
+            "s",
+            row["host_num_services"]
+            - row["host_num_services_ok"]
+            - row["host_num_services_pending"],
+        )
 
 
 @painter_registry.register
@@ -2766,7 +2815,7 @@ class PainterNumServicesWarn(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_num_services_warn']
+        return ["host_num_services_warn"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(1, row["host_num_services_warn"])
@@ -2789,7 +2838,7 @@ class PainterNumServicesCrit(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_num_services_crit']
+        return ["host_num_services_crit"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(2, row["host_num_services_crit"])
@@ -2812,7 +2861,7 @@ class PainterNumServicesUnknown(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_num_services_unknown']
+        return ["host_num_services_unknown"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(3, row["host_num_services_unknown"])
@@ -2835,7 +2884,7 @@ class PainterNumServicesPending(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_num_services_pending']
+        return ["host_num_services_pending"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count("p", row["host_num_services_pending"])
@@ -2856,8 +2905,11 @@ def _paint_service_list(row: Row, columnname: str) -> CellSpec:
             svc, state, checked = entry
             host = row["host_name"]
             text = svc
-        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (urlencode(
-            row["site"]), urlencode(host), urlencode(svc))
+        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
+            urlencode(row["site"]),
+            urlencode(host),
+            urlencode(svc),
+        )
         if checked:
             css = "state%d" % state
         else:
@@ -2882,7 +2934,7 @@ class PainterHostServices(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_name', 'host_services_with_state']
+        return ["host_name", "host_services_with_state"]
 
     @property
     def parameters(self) -> Dictionary:
@@ -2894,20 +2946,26 @@ class PainterHostServices(Painter):
             ("p", _("PEND")),
         ]
         elements: DictionaryElements = [
-            ("render_states",
-             ListChoice(choices=choices,
-                        toggle_all=True,
-                        default_value=[0, 1, 2, 3, 'p'],
-                        title=_("Only show services in this states"),
-                        help=_("Here you can configure which services are displayed depending on "
-                               "their state. This is a filter at display level not query level.")))
+            (
+                "render_states",
+                ListChoice(
+                    choices=choices,
+                    toggle_all=True,
+                    default_value=[0, 1, 2, 3, "p"],
+                    title=_("Only show services in this states"),
+                    help=_(
+                        "Here you can configure which services are displayed depending on "
+                        "their state. This is a filter at display level not query level."
+                    ),
+                ),
+            )
         ]
 
         return Dictionary(elements=elements, title=_("Options"))
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         params = cell.painter_parameters()
-        render_states = params.get('render_states', [0, 1, 2, 3, 'p'])
+        render_states = params.get("render_states", [0, 1, 2, 3, "p"])
         render_pend = [1]
         if "p" in render_states:
             render_pend.append(0)
@@ -2917,7 +2975,7 @@ class PainterHostServices(Painter):
             if state in render_states and checked in render_pend:
                 filtered_services.append([svc, state, checked])
 
-        row['host_services_with_state_filtered'] = filtered_services
+        row["host_services_with_state_filtered"] = filtered_services
 
         return _paint_service_list(row, "host_services_with_state_filtered")
 
@@ -2936,7 +2994,7 @@ class PainterHostParents(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_parents']
+        return ["host_parents"]
 
     @property
     def use_painter_link(self) -> bool:
@@ -2960,7 +3018,7 @@ class PainterHostChilds(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_childs']
+        return ["host_childs"]
 
     @property
     def use_painter_link(self) -> bool:
@@ -2984,7 +3042,7 @@ class PainterHostGroupMemberlist(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_groups']
+        return ["host_groups"]
 
     def group_by(self, row: Row, cell: Cell) -> Tuple[str, ...]:
         return tuple(row["host_groups"])
@@ -2999,7 +3057,8 @@ class PainterHostGroupMemberlist(Painter):
             link = "view.py?view_name=hostgroup&hostgroup=" + group
             if request.var("display_options"):
                 link += "&display_options=%s" % escaping.escape_attribute(
-                    request.var("display_options"))
+                    request.var("display_options")
+                )
             links.append(html.render_a(group, link))
         return "", HTML(", ").join(links)
 
@@ -3018,7 +3077,7 @@ class PainterHostContacts(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_contacts']
+        return ["host_contacts"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, ", ".join(row["host_contacts"]))
@@ -3038,7 +3097,7 @@ class PainterHostContactGroups(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_contact_groups']
+        return ["host_contact_groups"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, ", ".join(row["host_contact_groups"]))
@@ -3058,7 +3117,7 @@ class PainterHostCustomNotes(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_name', 'host_address', 'host_plugin_output']
+        return ["host_name", "host_address", "host_plugin_output"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_custom_notes("hosts", row)
@@ -3078,7 +3137,7 @@ class PainterHostComments(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_comments_with_info']
+        return ["host_comments_with_info"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_comments("host_", row)
@@ -3098,7 +3157,7 @@ class PainterHostInDowntime(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_scheduled_downtime_depth']
+        return ["host_scheduled_downtime_depth"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "host_scheduled_downtime_depth", True)
@@ -3118,7 +3177,7 @@ class PainterHostAcknowledged(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_acknowledged']
+        return ["host_acknowledged"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_nagiosflag(row, "host_acknowledged", False)
@@ -3138,10 +3197,10 @@ class PainterHostStaleness(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_staleness']
+        return ["host_staleness"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return ('', '%0.2f' % row.get('host_staleness', 0))
+        return ("", "%0.2f" % row.get("host_staleness", 0))
 
 
 @painter_registry.register
@@ -3158,11 +3217,11 @@ class PainterHostIsStale(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_staleness']
+        return ["host_staleness"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'svc_staleness'
+        return "svc_staleness"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_is_stale(row)
@@ -3182,14 +3241,14 @@ class PainterHostServicelevel(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_custom_variable_names', 'host_custom_variable_values']
+        return ["host_custom_variable_names", "host_custom_variable_values"]
 
     @property
     def sorter(self) -> SorterName:
-        return 'servicelevel'
+        return "servicelevel"
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_var('host', 'EC_SL', row, config.mkeventd_service_levels)
+        return _paint_custom_var("host", "EC_SL", row, config.mkeventd_service_levels)
 
 
 @painter_registry.register
@@ -3203,22 +3262,26 @@ class PainterHostCustomVariables(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['host_custom_variables']
+        return ["host_custom_variables"]
 
     def group_by(self, row: Row, cell: Cell) -> Tuple[Tuple[str, str], ...]:
         return tuple(row["host_custom_variables"].items())
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_custom_vars('host', row, [
-            'FILENAME',
-            'TAGS',
-            'ADDRESS_4',
-            'ADDRESS_6',
-            'ADDRESS_FAMILY',
-            'NODEIPS',
-            'NODEIPS_4',
-            'NODEIPS_6',
-        ])
+        return _paint_custom_vars(
+            "host",
+            row,
+            [
+                "FILENAME",
+                "TAGS",
+                "ADDRESS_4",
+                "ADDRESS_6",
+                "ADDRESS_FAMILY",
+                "NODEIPS",
+                "NODEIPS_4",
+                "NODEIPS_6",
+            ],
+        )
 
 
 def _paint_discovery_output(field: str, row: Row) -> CellSpec:
@@ -3229,19 +3292,24 @@ def _paint_discovery_output(field: str, row: Row) -> CellSpec:
 
         return None, {
             "ignored": html.render_icon_button(
-                ruleset_url, _('Disabled (configured away by admin)'), 'rulesets') +
-                       escaping.escape_html_permissive(_("Disabled (configured away by admin)")),
+                ruleset_url, _("Disabled (configured away by admin)"), "rulesets"
+            )
+            + escaping.escape_html_permissive(_("Disabled (configured away by admin)")),
             "vanished": html.render_icon_button(
-                discovery_url, _('Vanished (checked, but no longer exist)'), 'services') +
-                        escaping.escape_html_permissive(
-                            _("Vanished (checked, but no longer exist)")),
-            "unmonitored": html.render_icon_button(discovery_url, _('Available (missing)'),
-                                                   'services') +
-                           escaping.escape_html_permissive(_("Available (missing)"))
+                discovery_url, _("Vanished (checked, but no longer exist)"), "services"
+            )
+            + escaping.escape_html_permissive(_("Vanished (checked, but no longer exist)")),
+            "unmonitored": html.render_icon_button(
+                discovery_url, _("Available (missing)"), "services"
+            )
+            + escaping.escape_html_permissive(_("Available (missing)")),
         }.get(value, value)
     if field == "discovery_service" and row["discovery_state"] == "vanished":
-        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (urlencode(
-            row["site"]), urlencode(row["host_name"]), urlencode(value))
+        link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
+            urlencode(row["site"]),
+            urlencode(row["host_name"]),
+            urlencode(value),
+        )
         return None, html.render_div(html.render_a(value, link))
     return None, value
 
@@ -3260,7 +3328,7 @@ class PainterServiceDiscoveryState(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['discovery_state']
+        return ["discovery_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_discovery_output("discovery_state", row)
@@ -3280,7 +3348,7 @@ class PainterServiceDiscoveryCheck(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['discovery_state', 'discovery_check', 'discovery_service']
+        return ["discovery_state", "discovery_check", "discovery_service"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_discovery_output("discovery_check", row)
@@ -3300,7 +3368,7 @@ class PainterServiceDiscoveryService(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['discovery_state', 'discovery_check', 'discovery_service']
+        return ["discovery_state", "discovery_check", "discovery_service"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_discovery_output("discovery_service", row)
@@ -3327,13 +3395,15 @@ class PainterHostgroupHosts(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_members_with_state']
+        return ["hostgroup_members_with_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         h = HTML()
         for host, state, checked in row["hostgroup_members_with_state"]:
-            link = "view.py?view_name=host&site=%s&host=%s" % (urlencode(
-                row["site"]), urlencode(host))
+            link = "view.py?view_name=host&site=%s&host=%s" % (
+                urlencode(row["site"]),
+                urlencode(host),
+            )
             if checked:
                 css = "hstate%d" % state
             else:
@@ -3352,11 +3422,11 @@ class PainterHgNumServices(Painter):
         return _("Number of services (Host Group)")
 
     def short_title(self, cell: Cell) -> str:
-        return u""
+        return ""
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_num_services']
+        return ["hostgroup_num_services"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, str(row["hostgroup_num_services"]))
@@ -3379,7 +3449,7 @@ class PainterHgNumServicesOk(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_num_services_ok']
+        return ["hostgroup_num_services_ok"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(0, row["hostgroup_num_services_ok"])
@@ -3402,7 +3472,7 @@ class PainterHgNumServicesWarn(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_num_services_warn']
+        return ["hostgroup_num_services_warn"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(1, row["hostgroup_num_services_warn"])
@@ -3425,7 +3495,7 @@ class PainterHgNumServicesCrit(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_num_services_crit']
+        return ["hostgroup_num_services_crit"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(2, row["hostgroup_num_services_crit"])
@@ -3448,7 +3518,7 @@ class PainterHgNumServicesUnknown(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_num_services_unknown']
+        return ["hostgroup_num_services_unknown"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(3, row["hostgroup_num_services_unknown"])
@@ -3471,7 +3541,7 @@ class PainterHgNumServicesPending(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_num_services_pending']
+        return ["hostgroup_num_services_pending"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count("p", row["hostgroup_num_services_pending"])
@@ -3494,7 +3564,7 @@ class PainterHgNumHostsUp(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_num_hosts_up']
+        return ["hostgroup_num_hosts_up"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_host_count(0, row["hostgroup_num_hosts_up"])
@@ -3517,7 +3587,7 @@ class PainterHgNumHostsDown(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_num_hosts_down']
+        return ["hostgroup_num_hosts_down"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_host_count(1, row["hostgroup_num_hosts_down"])
@@ -3540,7 +3610,7 @@ class PainterHgNumHostsUnreach(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_num_hosts_unreach']
+        return ["hostgroup_num_hosts_unreach"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_host_count(2, row["hostgroup_num_hosts_unreach"])
@@ -3563,7 +3633,7 @@ class PainterHgNumHostsPending(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_num_hosts_pending']
+        return ["hostgroup_num_hosts_pending"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_host_count(None, row["hostgroup_num_hosts_pending"])
@@ -3583,7 +3653,7 @@ class PainterHgName(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_name']
+        return ["hostgroup_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["hostgroup_name"])
@@ -3603,7 +3673,7 @@ class PainterHgAlias(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['hostgroup_alias']
+        return ["hostgroup_alias"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["hostgroup_alias"])
@@ -3631,7 +3701,7 @@ class PainterSgServices(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['servicegroup_members_with_state']
+        return ["servicegroup_members_with_state"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return _paint_service_list(row, "servicegroup_members_with_state")
@@ -3647,11 +3717,11 @@ class PainterSgNumServices(Painter):
         return _("Number of services (Service Group)")
 
     def short_title(self, cell: Cell) -> str:
-        return u""
+        return ""
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['servicegroup_num_services']
+        return ["servicegroup_num_services"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, str(row["servicegroup_num_services"]))
@@ -3671,7 +3741,7 @@ class PainterSgNumServicesOk(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['servicegroup_num_services_ok']
+        return ["servicegroup_num_services_ok"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(0, row["servicegroup_num_services_ok"])
@@ -3691,7 +3761,7 @@ class PainterSgNumServicesWarn(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['servicegroup_num_services_warn']
+        return ["servicegroup_num_services_warn"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(1, row["servicegroup_num_services_warn"])
@@ -3711,7 +3781,7 @@ class PainterSgNumServicesCrit(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['servicegroup_num_services_crit']
+        return ["servicegroup_num_services_crit"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(2, row["servicegroup_num_services_crit"])
@@ -3731,7 +3801,7 @@ class PainterSgNumServicesUnknown(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['servicegroup_num_services_unknown']
+        return ["servicegroup_num_services_unknown"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(3, row["servicegroup_num_services_unknown"])
@@ -3751,7 +3821,7 @@ class PainterSgNumServicesPending(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['servicegroup_num_services_pending']
+        return ["servicegroup_num_services_pending"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count("p", row["servicegroup_num_services_pending"])
@@ -3771,7 +3841,7 @@ class PainterSgName(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['servicegroup_name']
+        return ["servicegroup_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["servicegroup_name"])
@@ -3791,7 +3861,7 @@ class PainterSgAlias(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['servicegroup_alias']
+        return ["servicegroup_alias"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["servicegroup_alias"])
@@ -3819,7 +3889,7 @@ class PainterCommentId(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['comment_id']
+        return ["comment_id"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, str(row["comment_id"]))
@@ -3839,7 +3909,7 @@ class PainterCommentAuthor(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['comment_author']
+        return ["comment_author"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["comment_author"])
@@ -3856,7 +3926,7 @@ class PainterCommentComment(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['comment_comment']
+        return ["comment_comment"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, format_plugin_output(row["comment_comment"], row))
@@ -3876,7 +3946,7 @@ class PainterCommentWhat(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['comment_type']
+        return ["comment_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["comment_type"] == 1 and _("Host") or _("Service"))
@@ -3896,11 +3966,11 @@ class PainterCommentTime(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['comment_entry_time']
+        return ["comment_entry_time"]
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["comment_entry_time"], True, 3600)
@@ -3920,17 +3990,16 @@ class PainterCommentExpires(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['comment_expire_time']
+        return ["comment_expire_time"]
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_age(row["comment_expire_time"],
-                         row["comment_expire_time"] != 0,
-                         3600,
-                         what='future')
+        return paint_age(
+            row["comment_expire_time"], row["comment_expire_time"] != 0, 3600, what="future"
+        )
 
 
 @painter_registry.register
@@ -3947,7 +4016,7 @@ class PainterCommentEntryType(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['comment_entry_type', 'host_name', 'service_description']
+        return ["comment_entry_type", "host_name", "service_description"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         t = row["comment_entry_type"]
@@ -3999,7 +4068,7 @@ class PainterDowntimeId(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['downtime_id']
+        return ["downtime_id"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, "%d" % row["downtime_id"])
@@ -4019,7 +4088,7 @@ class PainterDowntimeAuthor(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['downtime_author']
+        return ["downtime_author"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["downtime_author"])
@@ -4039,7 +4108,7 @@ class PainterDowntimeComment(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['downtime_comment']
+        return ["downtime_comment"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, format_plugin_output(row["downtime_comment"], row))
@@ -4059,7 +4128,7 @@ class PainterDowntimeFixed(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['downtime_fixed']
+        return ["downtime_fixed"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["downtime_fixed"] == 0 and _("flexible") or _("fixed"))
@@ -4079,7 +4148,7 @@ class PainterDowntimeOrigin(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['downtime_origin']
+        return ["downtime_origin"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["downtime_origin"] == 1 and _("configuration") or _("command"))
@@ -4099,7 +4168,7 @@ class PainterDowntimeRecurring(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['downtime_recurring']
+        return ["downtime_recurring"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         try:
@@ -4127,7 +4196,7 @@ class PainterDowntimeWhat(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['downtime_is_service']
+        return ["downtime_is_service"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["downtime_is_service"] and _("Service") or _("Host"))
@@ -4147,7 +4216,7 @@ class PainterDowntimeType(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['downtime_type']
+        return ["downtime_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return (None, row["downtime_type"] == 0 and _("active") or _("pending"))
@@ -4167,11 +4236,11 @@ class PainterDowntimeEntryTime(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['downtime_entry_time']
+        return ["downtime_entry_time"]
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["downtime_entry_time"], True, 3600)
@@ -4191,11 +4260,11 @@ class PainterDowntimeStartTime(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['downtime_start_time']
+        return ["downtime_start_time"]
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["downtime_start_time"], True, 3600, what="both")
@@ -4215,11 +4284,11 @@ class PainterDowntimeEndTime(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['downtime_end_time']
+        return ["downtime_end_time"]
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["downtime_end_time"], True, 3600, what="both")
@@ -4239,7 +4308,7 @@ class PainterDowntimeDuration(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['downtime_duration', 'downtime_fixed']
+        return ["downtime_duration", "downtime_fixed"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if row["downtime_fixed"] == 0:
@@ -4269,7 +4338,7 @@ class PainterLogMessage(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_message']
+        return ["log_message"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["log_message"])
@@ -4289,7 +4358,7 @@ class PainterLogPluginOutput(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_plugin_output', 'log_type', 'log_state_type', 'log_comment']
+        return ["log_plugin_output", "log_type", "log_state_type", "log_comment"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         output = row["log_plugin_output"]
@@ -4324,7 +4393,7 @@ class PainterLogWhat(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_type']
+        return ["log_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         lt = row["log_type"]
@@ -4349,7 +4418,7 @@ class PainterLogAttempt(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_attempt']
+        return ["log_attempt"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", str(row["log_attempt"]))
@@ -4362,14 +4431,14 @@ class PainterLogStateType(Painter):
         return "log_state_type"
 
     def title(self, cell: Cell) -> str:
-        return _("Log: state type (DEPRECATED: Use \"state information\")")
+        return _('Log: state type (DEPRECATED: Use "state information")')
 
     def short_title(self, cell: Cell) -> str:
         return _("Type")
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_state_type']
+        return ["log_state_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["log_state_type"])
@@ -4389,7 +4458,7 @@ class PainterLogStateInfo(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_state_info', 'log_state_type']
+        return ["log_state_info", "log_state_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         info = row["log_state_info"]
@@ -4415,7 +4484,7 @@ class PainterLogType(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_type']
+        return ["log_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("nowrap", row["log_type"])
@@ -4435,11 +4504,14 @@ class PainterLogContactName(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_contact_name']
+        return ["log_contact_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        target_view_name = ("mobile_contactnotifications"
-                            if is_mobile(request, response) else "contactnotifications")
+        target_view_name = (
+            "mobile_contactnotifications"
+            if is_mobile(request, response)
+            else "contactnotifications"
+        )
         return (
             "nowrap",
             HTML(", ").join(
@@ -4452,7 +4524,10 @@ class PainterLogContactName(Painter):
                             ("log_contact_name", contact),
                         ],
                         filename="mobile_view.py" if is_mobile(request, response) else "view.py",
-                    )) for contact in row["log_contact_name"].split(",")),
+                    ),
+                )
+                for contact in row["log_contact_name"].split(",")
+            ),
         )
 
 
@@ -4470,7 +4545,7 @@ class PainterLogCommand(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_command_name']
+        return ["log_command_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("nowrap", row["log_command_name"])
@@ -4486,11 +4561,11 @@ class PainterLogIcon(Painter):
         return _("Log: event icon")
 
     def short_title(self, cell: Cell) -> str:
-        return u""
+        return ""
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_type', 'log_state', 'log_state_type', 'log_command_name']
+        return ["log_type", "log_state", "log_state_type", "log_command_name"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         img = None
@@ -4592,7 +4667,7 @@ class PainterLogOptions(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_options']
+        return ["log_options"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", row["log_options"])
@@ -4612,12 +4687,12 @@ class PainterLogComment(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_options']
+        return ["log_options"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        msg = row['log_options']
-        if ';' in msg:
-            parts = msg.split(';')
+        msg = row["log_options"]
+        if ";" in msg:
+            parts = msg.split(";")
             if len(parts) > 6:
                 return ("", parts[-1])
         return ("", "")
@@ -4637,11 +4712,11 @@ class PainterLogTime(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_time']
+        return ["log_time"]
 
     @property
     def painter_options(self) -> List[str]:
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_age(row["log_time"], True, 3600 * 24)
@@ -4661,7 +4736,7 @@ class PainterLogLineno(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_lineno']
+        return ["log_lineno"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("number", str(row["log_lineno"]))
@@ -4681,7 +4756,7 @@ class PainterLogDate(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_time']
+        return ["log_time"]
 
     def group_by(self, row: Row, cell: Cell) -> str:
         return str(_paint_day(row["log_time"])[1])
@@ -4707,20 +4782,21 @@ class PainterLogState(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_state', 'log_state_type', 'log_service_description', 'log_type']
+        return ["log_state", "log_state_type", "log_service_description", "log_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         state = row["log_state"]
 
         # Notification result/progress lines don't hold real states. They hold notification plugin
         # exit results (0: ok, 1: temp issue, 2: perm issue). We display them as service states.
-        if row["log_service_description"] \
-           or row["log_type"].endswith("NOTIFICATION RESULT") \
-           or row["log_type"].endswith("NOTIFICATION PROGRESS"):
-            return _paint_service_state_short({
-                "service_has_been_checked": 1,
-                "service_state": state
-            })
+        if (
+            row["log_service_description"]
+            or row["log_type"].endswith("NOTIFICATION RESULT")
+            or row["log_type"].endswith("NOTIFICATION PROGRESS")
+        ):
+            return _paint_service_state_short(
+                {"service_has_been_checked": 1, "service_state": state}
+            )
         return _paint_host_state_short({"host_has_been_checked": 1, "host_state": state})
 
 
@@ -4744,7 +4820,7 @@ class PainterAlertStatsOk(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_alerts_ok']
+        return ["log_alerts_ok"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return ("", str(row["log_alerts_ok"]))
@@ -4767,7 +4843,7 @@ class PainterAlertStatsWarn(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_alerts_warn']
+        return ["log_alerts_warn"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(1, row["log_alerts_warn"])
@@ -4790,7 +4866,7 @@ class PainterAlertStatsCrit(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_alerts_crit']
+        return ["log_alerts_crit"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(2, row["log_alerts_crit"])
@@ -4813,7 +4889,7 @@ class PainterAlertStatsUnknown(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_alerts_unknown']
+        return ["log_alerts_unknown"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         return paint_svc_count(3, row["log_alerts_unknown"])
@@ -4836,10 +4912,10 @@ class PainterAlertStatsProblem(Painter):
 
     @property
     def columns(self) -> List[ColumnName]:
-        return ['log_alerts_problem']
+        return ["log_alerts_problem"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return paint_svc_count('s', row["log_alerts_problem"])
+        return paint_svc_count("s", row["log_alerts_problem"])
 
 
 #
@@ -4880,7 +4956,8 @@ class ABCPainterTagsWithTitles(Painter, abc.ABC):
     def render(self, row: Row, cell: Cell) -> CellSpec:
         entries = self._get_entries(row)
         return "", html.render_br().join(
-            [escaping.escape_html_permissive("%s: %s" % e) for e in sorted(entries)])
+            [escaping.escape_html_permissive("%s: %s" % e) for e in sorted(entries)]
+        )
 
     def _get_entries(self, row):
         entries = []
@@ -4888,7 +4965,8 @@ class ABCPainterTagsWithTitles(Painter, abc.ABC):
             tag_group = config.tags.get_tag_group(tag_group_id)
             if tag_group:
                 entries.append(
-                    (tag_group.title, dict(tag_group.get_tag_choices()).get(tag_id, tag_id)))
+                    (tag_group.title, dict(tag_group.get_tag_choices()).get(tag_id, tag_id))
+                )
                 continue
 
             aux_tag_title = dict(config.tags.aux_tag_list.get_choices()).get(tag_group_id)
@@ -4998,10 +5076,12 @@ class PainterHostLabels(Painter):
         if html.is_api_call():
             return "", get_labels(row, "host")
 
-        return "", render_labels(get_labels(row, "host"),
-                                 "host",
-                                 with_links=True,
-                                 label_sources=get_label_sources(row, "host"))
+        return "", render_labels(
+            get_labels(row, "host"),
+            "host",
+            with_links=True,
+            label_sources=get_label_sources(row, "host"),
+        )
 
 
 @painter_registry.register
@@ -5028,10 +5108,12 @@ class PainterServiceLabels(Painter):
         if html.is_api_call():
             return "", get_labels(row, "service")
 
-        return "", render_labels(get_labels(row, "service"),
-                                 "service",
-                                 with_links=True,
-                                 label_sources=get_label_sources(row, "service"))
+        return "", render_labels(
+            get_labels(row, "service"),
+            "service",
+            with_links=True,
+            label_sources=get_label_sources(row, "service"),
+        )
 
 
 @painter_registry.register
@@ -5051,10 +5133,10 @@ class PainterHostDockerNode(Painter):
         return ["host_labels", "host_label_sources"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        """ We use the information stored in output of docker_container_status
+        """We use the information stored in output of docker_container_status
         here. It's the most trusted source of the current node the container is
-        running on. """
-        if row.get("host_labels", {}).get("cmk/docker_object") != 'container':
+        running on."""
+        if row.get("host_labels", {}).get("cmk/docker_object") != "container":
             return "", ""
 
         docker_nodes = _get_docker_container_status_outputs()
@@ -5083,11 +5165,13 @@ def _get_docker_container_status_outputs() -> Dict[str, str]:
     It is important to cache this query per request and also try to use the
     liveproxyd query cached.
     """
-    if 'docker_nodes' in g:
+    if "docker_nodes" in g:
         return g.docker_nodes
-    query: str = "GET services\n"\
-                 "Columns: host_name service_plugin_output\n"\
-                 "Filter: check_command = check_mk-docker_container_status\n"
+    query: str = (
+        "GET services\n"
+        "Columns: host_name service_plugin_output\n"
+        "Filter: check_command = check_mk-docker_container_status\n"
+    )
     docker_nodes: Dict[str, str] = {row[0]: row[1] for row in sites.live().query(query)}
     g.docker_nodes = docker_nodes
     return docker_nodes
@@ -5122,7 +5206,7 @@ class AbstractPainterSpecificMetric(Painter):
 
     @property
     def parameters(self) -> Dictionary:
-        if 'painter_specific_metric_choices' in g:
+        if "painter_specific_metric_choices" in g:
             choices = g.painter_specific_metric_choices
         else:
             choices = []
@@ -5131,25 +5215,33 @@ class AbstractPainterSpecificMetric(Painter):
             choices.sort(key=lambda x: x[1])
             g.painter_specific_metric_choices = choices
 
-        return Dictionary(elements=[
-            ("metric",
-             DropdownChoice(title=_("Show metric"),
-                            choices=choices,
-                            help=_("If available, the following metric will be shown"))),
-            ("column_title", TextInput(title=_("Custom title"))),
-        ],
-                          optional_keys=["column_title"])
+        return Dictionary(
+            elements=[
+                (
+                    "metric",
+                    DropdownChoice(
+                        title=_("Show metric"),
+                        choices=choices,
+                        help=_("If available, the following metric will be shown"),
+                    ),
+                ),
+                ("column_title", TextInput(title=_("Custom title"))),
+            ],
+            optional_keys=["column_title"],
+        )
 
     def _render(self, row, cell, perf_data_entries, check_command):
         show_metric = cell.painter_parameters()["metric"]
-        translated_metrics = metrics.translate_perf_data(perf_data_entries,
-                                                         check_command=check_command)
+        translated_metrics = metrics.translate_perf_data(
+            perf_data_entries, check_command=check_command
+        )
 
         if show_metric not in translated_metrics:
             return "", ""
 
         return "", translated_metrics[show_metric]["unit"]["render"](
-            translated_metrics[show_metric]["value"])
+            translated_metrics[show_metric]["value"]
+        )
 
 
 @painter_registry.register

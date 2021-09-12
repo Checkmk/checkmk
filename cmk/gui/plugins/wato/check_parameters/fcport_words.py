@@ -28,8 +28,11 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fcport_words",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextInput(title=_("Port index"),),
+        item_spec=lambda: TextInput(
+            title=_("Port index"),
+        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fcport_words,
         title=lambda: _("Atto Fibrebridge FC port"),
-    ))
+    )
+)

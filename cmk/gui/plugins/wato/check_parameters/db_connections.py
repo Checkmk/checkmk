@@ -27,8 +27,10 @@ def _transform_connection_type(params):
 def _parameter_valuespec_db_connections():
     return Transform(
         Dictionary(
-            help=_("This rule allows you to configure the number of maximum concurrent "
-                   "connections for a given database."),
+            help=_(
+                "This rule allows you to configure the number of maximum concurrent "
+                "connections for a given database."
+            ),
             elements=[
                 (
                     "levels_perc_active",
@@ -38,21 +40,26 @@ def _parameter_valuespec_db_connections():
                             Percentage(
                                 title=_("Warning at"),
                                 # xgettext: no-python-format
-                                unit=_("% of maximum active connections")),
+                                unit=_("% of maximum active connections"),
+                            ),
                             Percentage(
                                 title=_("Critical at"),
                                 # xgettext: no-python-format
-                                unit=_("% of maximum active connections")),
+                                unit=_("% of maximum active connections"),
+                            ),
                         ],
-                    )),
-                ("levels_abs_active",
-                 Tuple(
-                     title=_("Absolute number of active connections"),
-                     elements=[
-                         Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
-                         Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
-                     ],
-                 )),
+                    ),
+                ),
+                (
+                    "levels_abs_active",
+                    Tuple(
+                        title=_("Absolute number of active connections"),
+                        elements=[
+                            Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
+                            Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
+                        ],
+                    ),
+                ),
                 (
                     "levels_perc_idle",
                     Tuple(
@@ -69,15 +76,18 @@ def _parameter_valuespec_db_connections():
                                 unit=_("% of maximum idle connections"),
                             ),
                         ],
-                    )),
-                ("levels_abs_idle",
-                 Tuple(
-                     title=_("Absolute number of idle connections"),
-                     elements=[
-                         Integer(title=_("Warning at"), minvalue=0, unit=_("idle connections")),
-                         Integer(title=_("Critical at"), minvalue=0, unit=_("idle connections")),
-                     ],
-                 )),
+                    ),
+                ),
+                (
+                    "levels_abs_idle",
+                    Tuple(
+                        title=_("Absolute number of idle connections"),
+                        elements=[
+                            Integer(title=_("Warning at"), minvalue=0, unit=_("idle connections")),
+                            Integer(title=_("Critical at"), minvalue=0, unit=_("idle connections")),
+                        ],
+                    ),
+                ),
             ],
         ),
         forth=_transform_connection_type,
@@ -88,17 +98,22 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="db_connections",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Name of the database"),),
+        item_spec=lambda: TextInput(
+            title=_("Name of the database"),
+        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db_connections,
         title=lambda: _("PostgreSQL database connections"),
-    ))
+    )
+)
 
 
 def _parameter_valuespec_db_connections_mongodb():
     return Dictionary(
-        help=_("This rule allows you to configure the number of incoming connections from clients "
-               "to the database server."),
+        help=_(
+            "This rule allows you to configure the number of incoming connections from clients "
+            "to the database server."
+        ),
         elements=[
             (
                 "levels_perc",
@@ -116,15 +131,18 @@ def _parameter_valuespec_db_connections_mongodb():
                             unit=_("% of maximum connections"),
                         ),
                     ],
-                )),
-            ("levels_abs",
-             Tuple(
-                 title=_("Absolute number of incoming connections"),
-                 elements=[
-                     Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
-                     Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
-                 ],
-             )),
+                ),
+            ),
+            (
+                "levels_abs",
+                Tuple(
+                    title=_("Absolute number of incoming connections"),
+                    elements=[
+                        Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
+                        Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -133,8 +151,11 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="db_connections_mongodb",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Name of the database"),),
+        item_spec=lambda: TextInput(
+            title=_("Name of the database"),
+        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db_connections_mongodb,
         title=lambda: _("MongoDB database connections"),
-    ))
+    )
+)

@@ -75,7 +75,7 @@ def init_modules() -> None:
     module_names_prev = set(_imports())
 
     # Load all multisite pages which will also perform imports of the needed modules
-    utils.load_web_plugins('pages', globals())
+    utils.load_web_plugins("pages", globals())
 
     # Save the modules loaded during the former steps in the modules list
     _legacy_modules += [sys.modules[m] for m in set(_imports()).difference(module_names_prev)]
@@ -97,8 +97,9 @@ def load_all_plugins(only_modules: Optional[List[str]] = None) -> None:
         # initial config is already loaded, do not load it again
         if module.__name__ == "cmk.gui.config":
             continue
-        if (only_modules is None or module.__name__ in only_modules) and \
-           hasattr(module, "load_plugins"):
+        if (only_modules is None or module.__name__ in only_modules) and hasattr(
+            module, "load_plugins"
+        ):
             # hasattr above ensures the function is available. Mypy does not understand this.
             module.load_plugins(force=need_plugins_reload)  # type: ignore[attr-defined]
 
@@ -119,9 +120,14 @@ def _cmk_gui_top_level_modules() -> List[ModuleType]:
         # https://www.python.org/dev/peps/pep-0328/#relative-imports-and-indirection-entries-in-sys-modules
         if module is not None
         # top level modules only, please...
-        if (name.startswith("cmk.gui.") and len(name.split(".")) == 3 or
-            name.startswith("cmk.gui.cee.") and len(name.split(".")) == 4 or
-            name.startswith("cmk.gui.cme.") and len(name.split(".")) == 4)
+        if (
+            name.startswith("cmk.gui.")
+            and len(name.split(".")) == 3
+            or name.startswith("cmk.gui.cee.")
+            and len(name.split(".")) == 4
+            or name.startswith("cmk.gui.cme.")
+            and len(name.split(".")) == 4
+        )
     ]
 
 
@@ -150,7 +156,7 @@ _last_web_plugins_update = 0.0
 def _local_web_plugins_have_changed() -> bool:
     global _last_web_plugins_update
 
-    if 'local_web_plugins_have_changed' in g:
+    if "local_web_plugins_have_changed" in g:
         return g.local_web_plugins_have_changed
 
     this_time = 0.0

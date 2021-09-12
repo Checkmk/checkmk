@@ -30,17 +30,18 @@ def _parameter_valuespec_statgrab_mem():
                         # xgettext: no-python-format
                         unit=_("% of RAM"),
                         maxvalue=None,
-                    )
+                    ),
                 ],
             ),
             Tuple(
                 title=_("Specify levels in absolute usage values"),
                 elements=[
                     Integer(title=_("Warning at"), unit=_("MB")),
-                    Integer(title=_("Critical at"), unit=_("MB"))
+                    Integer(title=_("Critical at"), unit=_("MB")),
                 ],
             ),
-        ],)
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -50,4 +51,5 @@ rulespec_registry.register(
         is_deprecated=True,
         parameter_valuespec=_parameter_valuespec_statgrab_mem,
         title=lambda: _("Statgrab Memory Usage"),
-    ))
+    )
+)

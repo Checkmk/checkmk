@@ -21,18 +21,26 @@ def _item_spec_motion():
 
 
 def _parameter_valuespec_motion():
-    return Dictionary(elements=[
-        ("time_periods",
-         Dictionary(
-             title=_("Time periods"),
-             help=_("Specifiy time ranges during which no motion is expected. "
-                    "Outside these times, the motion detector will always be in "
-                    "state OK"),
-             elements=[(day_id, ListOfTimeRanges(title=day_str))
-                       for day_id, day_str in defines.weekdays_by_name()],
-             optional_keys=[],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "time_periods",
+                Dictionary(
+                    title=_("Time periods"),
+                    help=_(
+                        "Specifiy time ranges during which no motion is expected. "
+                        "Outside these times, the motion detector will always be in "
+                        "state OK"
+                    ),
+                    elements=[
+                        (day_id, ListOfTimeRanges(title=day_str))
+                        for day_id, day_str in defines.weekdays_by_name()
+                    ],
+                    optional_keys=[],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -43,4 +51,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_motion,
         title=lambda: _("Motion Detectors"),
-    ))
+    )
+)

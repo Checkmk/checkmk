@@ -38,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_pf_used_states,
         title=lambda: _("Number of used states of OpenBSD PF engine"),
-    ))
+    )
+)

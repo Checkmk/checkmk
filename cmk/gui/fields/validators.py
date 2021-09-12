@@ -9,7 +9,7 @@ import re
 from marshmallow import ValidationError
 from marshmallow.validate import Validator
 
-HOST_NAME_REGEXP = r'[-0-9a-zA-Z_.]+'
+HOST_NAME_REGEXP = r"[-0-9a-zA-Z_.]+"
 
 
 class ValidateIPv4(Validator):
@@ -23,15 +23,16 @@ class ValidateIPv4(Validator):
 class ValidateIPv6(Validator):
     """Validate an IPv6 address
 
-        >>> v = ValidateIPv6()
-        >>> v("::1")
+    >>> v = ValidateIPv6()
+    >>> v("::1")
 
-        >>> v("::0")  # doctest: +ELLIPSIS
-        Traceback (most recent call last):
-        ...
-        marshmallow.exceptions.ValidationError: This address must never be assigned to any node. ...
+    >>> v("::0")  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ...
+    marshmallow.exceptions.ValidationError: This address must never be assigned to any node. ...
 
     """
+
     def __init__(
         self,
         allow_unspecified: bool = False,
@@ -106,6 +107,7 @@ class ValidateAnyOfValidators(Validator):
 'Length must be between 0 and 4.', 'Length must be between 6 and 10.']
 
     """
+
     def __init__(self, validators):
         self.validators = validators
 
@@ -136,6 +138,7 @@ class IsValidRegexp(Validator):
         >>> validator("(?:abc())")
 
     """
+
     def __call__(self, value):
         try:
             re.compile(value)

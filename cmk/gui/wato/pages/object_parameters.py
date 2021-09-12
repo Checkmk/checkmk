@@ -50,7 +50,7 @@ class ModeObjectParameters(WatoMode):
         self._hostname = request.get_ascii_input_mandatory("host")
         self._host = watolib.Folder.current().host(self._hostname)
         if self._host is None:
-            raise MKUserError("host", _('The given host does not exist.'))
+            raise MKUserError("host", _("The given host does not exist."))
         self._host.need_permission("read")
 
         # TODO: Validate?
@@ -106,31 +106,34 @@ class ModeObjectParameters(WatoMode):
         last_maingroup = None
         for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names()):
             maingroup = groupname.split("/")[0]
-            for rulespec in sorted(rulespec_registry.get_by_group(groupname),
-                                   key=lambda x: x.title or ""):
-                if (rulespec.item_type == 'service') == (not self._service):
+            for rulespec in sorted(
+                rulespec_registry.get_by_group(groupname), key=lambda x: x.title or ""
+            ):
+                if (rulespec.item_type == "service") == (not self._service):
                     continue  # This rule is not for hosts/services
 
                 # Open form for that group here, if we know that we have at least one rule
                 if last_maingroup != maingroup:
                     last_maingroup = maingroup
                     rulegroup = watolib.get_rulegroup(maingroup)
-                    forms.header(rulegroup.title,
-                                 isopen=maingroup == "monconf",
-                                 narrow=True,
-                                 css="rulesettings")
+                    forms.header(
+                        rulegroup.title,
+                        isopen=maingroup == "monconf",
+                        narrow=True,
+                        css="rulesettings",
+                    )
                     html.help(rulegroup.help)
 
-                self._output_analysed_ruleset(all_rulesets,
-                                              rulespec,
-                                              svc_desc_or_item=self._service,
-                                              svc_desc=self._service)
+                self._output_analysed_ruleset(
+                    all_rulesets, rulespec, svc_desc_or_item=self._service, svc_desc=self._service
+                )
 
         forms.end()
 
     def _show_host_info(self):
-        host_info = watolib.check_mk_automation(self._host.site_id(), "analyse-host",
-                                                [self._hostname])
+        host_info = watolib.check_mk_automation(
+            self._host.site_id(), "analyse-host", [self._hostname]
+        )
         if not host_info:
             return
 
@@ -140,8 +143,9 @@ class ModeObjectParameters(WatoMode):
     def _show_service_info(self, all_rulesets):
         assert self._service is not None
 
-        serviceinfo = watolib.check_mk_automation(self._host.site_id(), "analyse-service",
-                                                  [self._hostname, self._service])
+        serviceinfo = watolib.check_mk_automation(
+            self._host.site_id(), "analyse-service", [self._hostname, self._service]
+        )
         if not serviceinfo:
             return
 
@@ -160,19 +164,27 @@ class ModeObjectParameters(WatoMode):
             checkgroup = serviceinfo["checkgroup"]
             checktype = serviceinfo["checktype"]
             if not checkgroup:
-                self._render_rule_reason(_("Parameters"), None, "", "", True,
-                                         _("This check is not configurable via WATO"))
+                self._render_rule_reason(
+                    _("Parameters"),
+                    None,
+                    "",
+                    "",
+                    True,
+                    _("This check is not configurable via WATO"),
+                )
 
             # Logwatch needs a special handling, since it is not configured
             # via checkgroup_parameters but via "logwatch_rules" in a special
             # WATO module.
             elif checkgroup == "logwatch":
                 rulespec = rulespec_registry["logwatch_rules"]
-                self._output_analysed_ruleset(all_rulesets,
-                                              rulespec,
-                                              svc_desc_or_item=serviceinfo["item"],
-                                              svc_desc=self._service,
-                                              known_settings=serviceinfo["parameters"])
+                self._output_analysed_ruleset(
+                    all_rulesets,
+                    rulespec,
+                    svc_desc_or_item=serviceinfo["item"],
+                    svc_desc=self._service,
+                    known_settings=serviceinfo["parameters"],
+                )
 
             else:
                 # Note: some discovered checks have a check group but
@@ -186,26 +198,42 @@ class ModeObjectParameters(WatoMode):
                     try:
                         rulespec = rulespec_registry["static_checks:" + checkgroup]
                     except KeyError:
-                        self._render_rule_reason(_("Parameters"), None, "", "", True,
-                                                 _("This check is not configurable via WATO"))
+                        self._render_rule_reason(
+                            _("Parameters"),
+                            None,
+                            "",
+                            "",
+                            True,
+                            _("This check is not configurable via WATO"),
+                        )
                         return
 
-                    url = watolib.folder_preserving_link([('mode', 'edit_ruleset'),
-                                                          ('varname',
-                                                           "static_checks:" + checkgroup),
-                                                          ('host', self._hostname)])
+                    url = watolib.folder_preserving_link(
+                        [
+                            ("mode", "edit_ruleset"),
+                            ("varname", "static_checks:" + checkgroup),
+                            ("host", self._hostname),
+                        ]
+                    )
                     assert isinstance(rulespec.valuespec, Tuple)
                     self._render_rule_reason(
-                        _("Parameters"), url, _("Determined by discovery"), None, False,
-                        rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]))
+                        _("Parameters"),
+                        url,
+                        _("Determined by discovery"),
+                        None,
+                        False,
+                        rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"]),
+                    )
 
                 else:
                     rulespec = rulespec_registry[grouprule]
-                    self._output_analysed_ruleset(all_rulesets,
-                                                  rulespec,
-                                                  svc_desc_or_item=serviceinfo["item"],
-                                                  svc_desc=self._service,
-                                                  known_settings=serviceinfo["parameters"])
+                    self._output_analysed_ruleset(
+                        all_rulesets,
+                        rulespec,
+                        svc_desc_or_item=serviceinfo["item"],
+                        svc_desc=self._service,
+                        known_settings=serviceinfo["parameters"],
+                    )
 
         elif origin == "static":
             checkgroup = serviceinfo["checkgroup"]
@@ -223,14 +251,17 @@ class ModeObjectParameters(WatoMode):
                     item_text = serviceinfo["item"]
                     title = _("Item")
                 self._render_rule_reason(title, None, "", "", False, item_text)
-                self._output_analysed_ruleset(all_rulesets,
-                                              rulespec,
-                                              svc_desc_or_item=serviceinfo["item"],
-                                              svc_desc=self._service,
-                                              known_settings=self._PARAMETERS_OMIT)
+                self._output_analysed_ruleset(
+                    all_rulesets,
+                    rulespec,
+                    svc_desc_or_item=serviceinfo["item"],
+                    svc_desc=self._service,
+                    known_settings=self._PARAMETERS_OMIT,
+                )
                 assert isinstance(rulespec.valuespec, Tuple)
-                html.write_text(rulespec.valuespec._elements[2].value_to_text(
-                    serviceinfo["parameters"]))
+                html.write_text(
+                    rulespec.valuespec._elements[2].value_to_text(serviceinfo["parameters"])
+                )
                 html.close_td()
                 html.close_tr()
                 html.close_table()
@@ -238,38 +269,48 @@ class ModeObjectParameters(WatoMode):
         elif origin == "active":
             checktype = serviceinfo["checktype"]
             rulespec = rulespec_registry["active_checks:" + checktype]
-            self._output_analysed_ruleset(all_rulesets,
-                                          rulespec,
-                                          svc_desc_or_item=None,
-                                          svc_desc=None,
-                                          known_settings=serviceinfo["parameters"])
+            self._output_analysed_ruleset(
+                all_rulesets,
+                rulespec,
+                svc_desc_or_item=None,
+                svc_desc=None,
+                known_settings=serviceinfo["parameters"],
+            )
 
         elif origin == "classic":
             ruleset = all_rulesets.get("custom_checks")
-            origin_rule_result = self._get_custom_check_origin_rule(ruleset, self._hostname,
-                                                                    self._service)
+            origin_rule_result = self._get_custom_check_origin_rule(
+                ruleset, self._hostname, self._service
+            )
             if origin_rule_result is None:
                 raise MKUserError(
                     None,
-                    _("Failed to determine origin rule of %s / %s") %
-                    (self._hostname, self._service))
+                    _("Failed to determine origin rule of %s / %s")
+                    % (self._hostname, self._service),
+                )
             rule_folder, rule_index, rule = origin_rule_result
 
-            url = watolib.folder_preserving_link([('mode', 'edit_ruleset'),
-                                                  ('varname', "custom_checks"),
-                                                  ('host', self._hostname)])
+            url = watolib.folder_preserving_link(
+                [("mode", "edit_ruleset"), ("varname", "custom_checks"), ("host", self._hostname)]
+            )
             forms.section(html.render_a(_("Command Line"), href=url))
-            url = watolib.folder_preserving_link([('mode', 'edit_rule'),
-                                                  ('varname', "custom_checks"),
-                                                  ('rule_folder', rule_folder.path()),
-                                                  ('rule_id', rule.id), ('host', self._hostname)])
+            url = watolib.folder_preserving_link(
+                [
+                    ("mode", "edit_rule"),
+                    ("varname", "custom_checks"),
+                    ("rule_folder", rule_folder.path()),
+                    ("rule_id", rule.id),
+                    ("host", self._hostname),
+                ]
+            )
 
             html.open_table(class_="setting")
             html.open_tr()
 
             html.open_td(class_="reason")
-            html.a("%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()),
-                   href=url)
+            html.a(
+                "%s %d %s %s" % (_("Rule"), rule_index + 1, _("in"), rule_folder.title()), href=url
+            )
             html.close_td()
             html.open_td(class_=["settingvalue", "used"])
             if "command_line" in serviceinfo:
@@ -281,16 +322,18 @@ class ModeObjectParameters(WatoMode):
             html.close_tr()
             html.close_table()
 
-        self._show_labels(serviceinfo.get("labels", {}), "service",
-                          serviceinfo.get("label_sources", {}))
+        self._show_labels(
+            serviceinfo.get("labels", {}), "service", serviceinfo.get("label_sources", {})
+        )
 
-    def _get_custom_check_origin_rule(self, ruleset: Ruleset, hostname: str,
-                                      svc_desc: str) -> Optional[_Tuple[CREFolder, int, Rule]]:
+    def _get_custom_check_origin_rule(
+        self, ruleset: Ruleset, hostname: str, svc_desc: str
+    ) -> Optional[_Tuple[CREFolder, int, Rule]]:
         # We could use the outcome of _setting instead of the outcome of
         # the automation call in the future
-        _setting, rules = ruleset.analyse_ruleset(self._hostname,
-                                                  svc_desc_or_item=None,
-                                                  svc_desc=None)
+        _setting, rules = ruleset.analyse_ruleset(
+            self._hostname, svc_desc_or_item=None, svc_desc=None
+        )
 
         for rule_folder, rule_index, rule in rules:
             if rule.is_disabled():
@@ -312,17 +355,18 @@ class ModeObjectParameters(WatoMode):
         html.close_td()
         html.open_td(class_=["settingvalue", "used"])
         html.write_html(
-            cmk.gui.view_utils.render_labels(labels,
-                                             object_type,
-                                             with_links=False,
-                                             label_sources=label_sources))
+            cmk.gui.view_utils.render_labels(
+                labels, object_type, with_links=False, label_sources=label_sources
+            )
+        )
         html.close_td()
 
         html.close_tr()
         html.close_table()
 
-    def _render_rule_reason(self, title, title_url, reason, reason_url, is_default,
-                            setting: Union[str, HTML]) -> None:
+    def _render_rule_reason(
+        self, title, title_url, reason, reason_url, is_default, setting: Union[str, HTML]
+    ) -> None:
         if title_url:
             title = html.render_a(title, href=title_url)
         forms.section(title)
@@ -341,36 +385,40 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-    def _output_analysed_ruleset(self,
-                                 all_rulesets,
-                                 rulespec,
-                                 svc_desc_or_item,
-                                 svc_desc,
-                                 known_settings=None):
+    def _output_analysed_ruleset(
+        self, all_rulesets, rulespec, svc_desc_or_item, svc_desc, known_settings=None
+    ):
         if known_settings is None:
             known_settings = self._PARAMETERS_UNKNOWN
 
         def rule_url(rule: Rule) -> str:
-            return watolib.folder_preserving_link([
-                ('mode', 'edit_rule'),
-                ('varname', varname),
-                ('rule_folder', rule.folder.path()),
-                ('rule_id', rule.id),
-                ('host', self._hostname),
-                ('item', watolib.mk_repr(svc_desc_or_item).decode() if svc_desc_or_item else ''),
-                ('service', watolib.mk_repr(svc_desc).decode() if svc_desc else ''),
-            ])
+            return watolib.folder_preserving_link(
+                [
+                    ("mode", "edit_rule"),
+                    ("varname", varname),
+                    ("rule_folder", rule.folder.path()),
+                    ("rule_id", rule.id),
+                    ("host", self._hostname),
+                    (
+                        "item",
+                        watolib.mk_repr(svc_desc_or_item).decode() if svc_desc_or_item else "",
+                    ),
+                    ("service", watolib.mk_repr(svc_desc).decode() if svc_desc else ""),
+                ]
+            )
 
         varname = rulespec.name
         valuespec = rulespec.valuespec
 
-        url = watolib.folder_preserving_link([
-            ('mode', 'edit_ruleset'),
-            ('varname', varname),
-            ('host', self._hostname),
-            ('item', watolib.mk_repr(svc_desc_or_item).decode()),
-            ('service', watolib.mk_repr(svc_desc).decode()),
-        ])
+        url = watolib.folder_preserving_link(
+            [
+                ("mode", "edit_ruleset"),
+                ("varname", varname),
+                ("host", self._hostname),
+                ("item", watolib.mk_repr(svc_desc_or_item).decode()),
+                ("service", watolib.mk_repr(svc_desc).decode()),
+            ]
+        )
 
         forms.section(html.render_a(rulespec.title, url))
 
@@ -400,8 +448,9 @@ class ModeObjectParameters(WatoMode):
         if isinstance(known_settings, dict) and "tp_computed_params" in known_settings:
             computed_at = known_settings["tp_computed_params"]["computed_at"]
             html.write_text(
-                _("Timespecific parameters computed at %s") %
-                cmk.utils.render.date_and_time(computed_at))
+                _("Timespecific parameters computed at %s")
+                % cmk.utils.render.date_and_time(computed_at)
+            )
             html.br()
             known_settings = known_settings["tp_computed_params"]["params"]
 
@@ -429,8 +478,10 @@ class ModeObjectParameters(WatoMode):
             # while other keys are taken from the factory defaults. We need to show the
             # complete outcoming value here.
             if rules and ruleset.match_type() == "dict":
-                if rulespec.factory_default is not watolib.Rulespec.NO_FACTORY_DEFAULT \
-                    and rulespec.factory_default is not watolib.Rulespec.FACTORY_DEFAULT_UNUSED:
+                if (
+                    rulespec.factory_default is not watolib.Rulespec.NO_FACTORY_DEFAULT
+                    and rulespec.factory_default is not watolib.Rulespec.FACTORY_DEFAULT_UNUSED
+                ):
                     fd = rulespec.factory_default.copy()
                     fd.update(setting)
                     setting = fd
@@ -463,7 +514,7 @@ class ModeObjectParameters(WatoMode):
 
             # Binary rule, no valuespec, outcome is True or False
             else:
-                icon_name = "rule_%s%s" % ("yes" if setting else "no", "_off" if not rules else '')
+                icon_name = "rule_%s%s" % ("yes" if setting else "no", "_off" if not rules else "")
                 html.icon(icon_name, title=_("yes") if setting else _("no"))
         html.close_td()
         html.close_tr()

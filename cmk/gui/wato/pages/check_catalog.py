@@ -66,23 +66,29 @@ class ModeCheckPlugins(WatoMode):
 
     def page(self):
         html.help(
-            _("This catalog of check plugins gives you a complete listing of all plugins "
-              "that are shipped with your Check_MK installation. It also allows you to "
-              "access the rule sets for configuring the parameters of the checks and to "
-              "manually create services in case you cannot or do not want to rely on the "
-              "automatic service discovery."))
+            _(
+                "This catalog of check plugins gives you a complete listing of all plugins "
+                "that are shipped with your Check_MK installation. It also allows you to "
+                "access the rule sets for configuring the parameters of the checks and to "
+                "manually create services in case you cannot or do not want to rely on the "
+                "automatic service discovery."
+            )
+        )
 
         menu = MainMenu()
         for topic, _has_second_level, title, helptext in _man_page_catalog_topics():
             menu.add_item(
-                MenuItem(mode_or_url=makeuri(
-                    request,
-                    [("mode", "check_plugin_topic"), ("topic", topic)],
-                ),
-                         title=title,
-                         icon="plugins_" + topic,
-                         permission=None,
-                         description=helptext))
+                MenuItem(
+                    mode_or_url=makeuri(
+                        request,
+                        [("mode", "check_plugin_topic"), ("topic", topic)],
+                    ),
+                    title=title,
+                    icon="plugins_" + topic,
+                    permission=None,
+                    description=helptext,
+                )
+            )
         menu.show()
 
 
@@ -191,8 +197,9 @@ class ModeCheckPluginTopic(WatoMode):
         """Add each individual level of the catalog topics as single breadcrumb item"""
         parent_cls = self.parent_mode()
         assert parent_cls is not None
-        breadcrumb = _add_breadcrumb_topic_items(parent_cls().breadcrumb(), self._titles,
-                                                 self._path)
+        breadcrumb = _add_breadcrumb_topic_items(
+            parent_cls().breadcrumb(), self._titles, self._path
+        )
         breadcrumb.append(self._breadcrumb_item())
         return breadcrumb
 
@@ -248,7 +255,8 @@ class ModeCheckPluginTopic(WatoMode):
                         icon="check_plugins",
                         permission=None,
                         description=helptext,
-                    ))
+                    )
+                )
             menu.show()
 
         else:
@@ -271,7 +279,7 @@ class ModeCheckPluginTopic(WatoMode):
             for subcat in subnode.values():
                 num_plugins += len(subcat)
 
-        text = u""
+        text = ""
         if num_cats > 1:
             text += "%d %s<br>" % (num_cats, _("sub categories"))
         text += "%d %s" % (num_plugins, _("check plugins"))
@@ -288,7 +296,8 @@ def _add_breadcrumb_topic_items(breadcrumb, titles, path):
                     request,
                     [("mode", "check_plugin_topic"), ("topic", "/".join(elements))],
                 ),
-            ))
+            )
+        )
     return breadcrumb
 
 
@@ -312,33 +321,56 @@ def _render_manpage_list(titles, manpage_list, path_comp, heading):
             )
             table.cell(_("Type of Check"), html.render_a(entry["title"], href=url), css="title")
             table.cell(_("Plugin Name"), html.render_tt(entry["name"]), css="name")
-            table.cell(_("Agents"),
-                       ", ".join(map(translate, sorted(entry["agents"]))),
-                       css="agents")
+            table.cell(
+                _("Agents"), ", ".join(map(translate, sorted(entry["agents"]))), css="agents"
+            )
 
 
 def _man_page_catalog_topics():
     # topic, has_second_level, title, description
     return [
-        ("hw", True, _("Appliances, other dedicated hardware"),
-         _("Switches, load balancers, storage, UPSes, "
-           "environmental sensors, etc. ")),
-        ("os", True, _("Operating systems"),
-         _("Plugins for operating systems, things "
-           "like memory, CPU, filesystems, etc.")),
-        ("app", False, _("Applications"),
-         _("Monitoring of applications such as "
-           "processes, services or databases")),
-        ("cloud", False, _("Cloud Based Environments"),
-         _("Monitoring of cloud environments like Microsoft Azure")),
-        ("containerization", False, _("Containerization"),
-         _("Monitoring of container and container orchestration software")),
-        ("agentless", False, _("Networking checks without agent"),
-         _("Plugins that directly check networking "
-           "protocols like HTTP or IMAP")),
-        ("generic", False, _("Generic check plugins"),
-         _("Plugins for local agent extensions or "
-           "communication with the agent in general")),
+        (
+            "hw",
+            True,
+            _("Appliances, other dedicated hardware"),
+            _("Switches, load balancers, storage, UPSes, " "environmental sensors, etc. "),
+        ),
+        (
+            "os",
+            True,
+            _("Operating systems"),
+            _("Plugins for operating systems, things " "like memory, CPU, filesystems, etc."),
+        ),
+        (
+            "app",
+            False,
+            _("Applications"),
+            _("Monitoring of applications such as " "processes, services or databases"),
+        ),
+        (
+            "cloud",
+            False,
+            _("Cloud Based Environments"),
+            _("Monitoring of cloud environments like Microsoft Azure"),
+        ),
+        (
+            "containerization",
+            False,
+            _("Containerization"),
+            _("Monitoring of container and container orchestration software"),
+        ),
+        (
+            "agentless",
+            False,
+            _("Networking checks without agent"),
+            _("Plugins that directly check networking " "protocols like HTTP or IMAP"),
+        ),
+        (
+            "generic",
+            False,
+            _("Generic check plugins"),
+            _("Plugins for local agent extensions or " "communication with the agent in general"),
+        ),
     ]
 
 
@@ -396,9 +428,11 @@ class ModeCheckManPage(WatoMode):
     def _from_vars(self):
         self._check_type = request.get_ascii_input_mandatory("check_type", "")
 
-        builtin_check_types = ['check-mk', "check-mk-inventory"]
-        if not re.match("^[a-zA-Z0-9_.]+$", self._check_type) and \
-                self._check_type not in builtin_check_types:
+        builtin_check_types = ["check-mk", "check-mk-inventory"]
+        if (
+            not re.match("^[a-zA-Z0-9_.]+$", self._check_type)
+            and self._check_type not in builtin_check_types
+        ):
             raise MKUserError("check_type", _("Invalid check type"))
 
         manpage = man_pages.load_man_page(self._check_type)
@@ -421,15 +455,16 @@ class ModeCheckManPage(WatoMode):
         elif self._check_type in builtin_check_types:
             self._manpage = {
                 "type": "check_mk",
-                "service_description": "Check_MK%s" %
-                                       ("" if self._check_type == "check-mk" else " Discovery"),
+                "service_description": "Check_MK%s"
+                % ("" if self._check_type == "check-mk" else " Discovery"),
                 **self._manpage,
             }
         else:
             raise MKUserError(
                 None,
-                _("Could not detect type of manpage: %s. Maybe the check is missing ") %
-                self._check_type)
+                _("Could not detect type of manpage: %s. Maybe the check is missing ")
+                % self._check_type,
+            )
 
     def title(self):
         return self._manpage["header"]["title"]

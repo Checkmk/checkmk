@@ -40,9 +40,9 @@ def save_global_settings(vars_, site_specific=False, custom_site_path=None):
     # Some settings are handed over from the central site but are not registered in the
     # configuration domains since the user must not change it directly.
     for varname in [
-            "wato_enabled",
-            "userdb_automatic_sync",
-            "user_login",
+        "wato_enabled",
+        "userdb_automatic_sync",
+        "user_login",
     ]:
         if varname in vars_:
             per_domain.setdefault(ConfigDomainGUI.ident(), {})[varname] = vars_[varname]

@@ -14,22 +14,38 @@ from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput
 
 
 def _parameter_valuespec_hostsystem_sensors():
-    return ListOf(Dictionary(
-        help=_("This rule allows to override alert levels for the given sensor names."),
-        elements=[("name", TextInput(title=_("Sensor name"))),
-                  ("states",
-                   Dictionary(
-                       title=_("Custom states"),
-                       elements=[(element,
-                                  MonitoringState(title="Sensor %s" % description,
-                                                  label=_("Set state to"),
-                                                  default_value=int(element)))
-                                 for (element, description) in [("0", _("OK")), (
-                                     "1", _("WARNING")), ("2", _("CRITICAL")), ("3", _("UNKNOWN"))]
-                                ],
-                   ))],
-        optional_keys=False),
-                  add_label=_("Add sensor name"))
+    return ListOf(
+        Dictionary(
+            help=_("This rule allows to override alert levels for the given sensor names."),
+            elements=[
+                ("name", TextInput(title=_("Sensor name"))),
+                (
+                    "states",
+                    Dictionary(
+                        title=_("Custom states"),
+                        elements=[
+                            (
+                                element,
+                                MonitoringState(
+                                    title="Sensor %s" % description,
+                                    label=_("Set state to"),
+                                    default_value=int(element),
+                                ),
+                            )
+                            for (element, description) in [
+                                ("0", _("OK")),
+                                ("1", _("WARNING")),
+                                ("2", _("CRITICAL")),
+                                ("3", _("UNKNOWN")),
+                            ]
+                        ],
+                    ),
+                ),
+            ],
+            optional_keys=False,
+        ),
+        add_label=_("Add sensor name"),
+    )
 
 
 rulespec_registry.register(
@@ -38,4 +54,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_parameter_valuespec_hostsystem_sensors,
         title=lambda: _("Hostsystem sensor alerts"),
-    ))
+    )
+)

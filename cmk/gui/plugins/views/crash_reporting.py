@@ -70,20 +70,23 @@ class CrashReportsRowTable(RowTable):
                 continue  # skip broken crash reports
 
             crash_info_raw = json.loads(raw_row["crash_info"])
-            rows.append({
-                "site": raw_row["site"],
-                "crash_id": raw_row["crash_id"],
-                "crash_type": raw_row["crash_type"],
-                "crash_time": crash_info_raw["time"],
-                "crash_version": crash_info_raw["version"],
-                "crash_exc_type": crash_info_raw["exc_type"],
-                "crash_exc_value": crash_info_raw["exc_value"],
-                "crash_exc_traceback": crash_info_raw["exc_traceback"],
-            })
+            rows.append(
+                {
+                    "site": raw_row["site"],
+                    "crash_id": raw_row["crash_id"],
+                    "crash_type": raw_row["crash_type"],
+                    "crash_time": crash_info_raw["time"],
+                    "crash_version": crash_info_raw["version"],
+                    "crash_exc_type": crash_info_raw["exc_type"],
+                    "crash_exc_value": crash_info_raw["exc_value"],
+                    "crash_exc_traceback": crash_info_raw["exc_traceback"],
+                }
+            )
         return sorted(rows, key=lambda r: r["crash_time"])
 
-    def get_crash_report_rows(self, only_sites: Optional[List[SiteId]],
-                              filter_headers: str) -> List[Dict[str, str]]:
+    def get_crash_report_rows(
+        self, only_sites: Optional[List[SiteId]], filter_headers: str
+    ) -> List[Dict[str, str]]:
 
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
@@ -112,8 +115,9 @@ class CrashReportsRowTable(RowTable):
                 raw_row = sites.live().query_row(
                     "GET crashreports\n"
                     "Columns: %s\n"
-                    "Filter: id = %s" %
-                    (" ".join(columns), livestatus.lqencode(crash_info["crash_id"])))
+                    "Filter: id = %s"
+                    % (" ".join(columns), livestatus.lqencode(crash_info["crash_id"]))
+                )
             finally:
                 sites.live().set_only_sites(None)
                 sites.live().set_prepend_site(False)
@@ -123,14 +127,15 @@ class CrashReportsRowTable(RowTable):
 
         return rows
 
-    def _get_crash_report_info(self,
-                               only_sites: Optional[List[SiteId]],
-                               filter_headers: Optional[str] = None) -> List[Dict[str, str]]:
+    def _get_crash_report_info(
+        self, only_sites: Optional[List[SiteId]], filter_headers: Optional[str] = None
+    ) -> List[Dict[str, str]]:
         try:
             sites.live().set_prepend_site(True)
             sites.live().set_only_sites(only_sites)
-            rows = sites.live().query("GET crashreports\nColumns: id component\n%s" %
-                                      (filter_headers or ""))
+            rows = sites.live().query(
+                "GET crashreports\nColumns: id component\n%s" % (filter_headers or "")
+            )
         finally:
             sites.live().set_only_sites(None)
             sites.live().set_prepend_site(False)
@@ -205,7 +210,7 @@ class PainterCrashTime(Painter):
 
     @property
     def painter_options(self):
-        return ['ts_format', 'ts_date']
+        return ["ts_format", "ts_date"]
 
     def render(self, row, cell):
         return paint_age(row["crash_time"], has_been_checked=True, bold_if_younger_than=3600)
@@ -263,7 +268,7 @@ class SorterCrashTime(Sorter):
 
     @property
     def columns(self):
-        return ['crash_time']
+        return ["crash_time"]
 
     def cmp(self, r1, r2):
         return cmp_simple_number("crash_time", r1, r2)
@@ -276,7 +281,8 @@ PermissionActionDeleteCrashReport = permission_registry.register(
         title=_l("Delete crash reports"),
         description=_l("Delete crash reports created by Checkmk"),
         defaults=["admin"],
-    ))
+    )
+)
 
 
 @command_registry.register
@@ -306,8 +312,9 @@ class CommandDeleteCrashReports(Command):
     def render(self, what):
         html.button("_delete_crash_reports", _("Delete"))
 
-    def _action(self, cmdtag: str, spec: str, row: dict, row_index: int,
-                num_rows: int) -> CommandActionResult:
+    def _action(
+        self, cmdtag: str, spec: str, row: dict, row_index: int, num_rows: int
+    ) -> CommandActionResult:
         if request.has_var("_delete_crash_reports"):
             commands = [("DEL_CRASH_REPORT;%s" % row["crash_id"])]
             return commands, _("remove")

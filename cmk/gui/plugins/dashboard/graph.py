@@ -61,6 +61,7 @@ def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
 @autocompleter_registry.register
 class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all graph templates"""
+
     ident = "available_graphs"
     _MARKER_DEPRECATED_CHOICE = "_deprecated_int_value"
 
@@ -77,7 +78,8 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                 "a single number indexing the output of the corresponding service. Such elements "
                 "will continue to work, however, if you want to re-edit them, you have to re-"
                 "select the graph. To check which graph is currently selected, look at the title "
-                "of the element in the dashboard.",),
+                "of the element in the dashboard.",
+            ),
             **kwargs,
         }
         super().__init__(**kwargs_with_defaults)
@@ -95,17 +97,22 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
             return self.choices()
         return [
             next(
-                ((
-                    graph_id,
-                    graph_detail.get(
-                        "title",
+                (
+                    (
                         graph_id,
-                    ),
-                ) for graph_id, graph_detail in graph_info.items() if graph_id == value),
+                        graph_detail.get(
+                            "title",
+                            graph_id,
+                        ),
+                    )
+                    for graph_id, graph_detail in graph_info.items()
+                    if graph_id == value
+                ),
                 (
                     value,
                     _("Deprecated choice, please re-select")
-                    if value == self._MARKER_DEPRECATED_CHOICE else _metric_title_from_id(value),
+                    if value == self._MARKER_DEPRECATED_CHOICE
+                    else _metric_title_from_id(value),
                 ),
             )
         ]
@@ -127,15 +134,21 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         metrics: Iterable[MetricName],
         check_cmd: str,
     ) -> Iterable[TupleType[str, str]]:
-        yield from ((
-            template["id"],
-            cls._graph_template_title(template),
-        ) for template in get_graph_templates(
-            translated_metrics_from_row({
-                "service_metrics": metrics,
-                "service_perf_data": perf_data,
-                "service_check_command": check_cmd,
-            })))
+        yield from (
+            (
+                template["id"],
+                cls._graph_template_title(template),
+            )
+            for template in get_graph_templates(
+                translated_metrics_from_row(
+                    {
+                        "service_metrics": metrics,
+                        "service_perf_data": perf_data,
+                        "service_check_command": check_cmd,
+                    }
+                )
+            )
+        )
 
     # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
     @classmethod
@@ -144,26 +157,32 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
         Called by the webservice with the current input field value and the
         completions_params to get the list of choices"""
         if not (params.get("host") or params.get("service")):
-            choices: Iterable[TupleType[str, str]] = ((
-                graph_id,
-                graph_details.get(
-                    "title",
+            choices: Iterable[TupleType[str, str]] = (
+                (
                     graph_id,
-                ),
-            ) for graph_id, graph_details in graph_info.items())
+                    graph_details.get(
+                        "title",
+                        graph_id,
+                    ),
+                )
+                for graph_id, graph_details in graph_info.items()
+            )
 
         else:
-            query = "\n".join([
-                "GET services",
-                "Columns: perf_data metrics check_command",
-            ] + [
-                f"Filter: {filter_name} = {livestatus.lqencode(filter_value)}"
-                for filter_name, filter_value in (
-                    ("host_name", params.get("host")),
-                    ("service_description", params.get("service")),
-                )
-                if filter_value
-            ])
+            query = "\n".join(
+                [
+                    "GET services",
+                    "Columns: perf_data metrics check_command",
+                ]
+                + [
+                    f"Filter: {filter_name} = {livestatus.lqencode(filter_value)}"
+                    for filter_name, filter_value in (
+                        ("host_name", params.get("host")),
+                        ("service_description", params.get("service")),
+                    )
+                    if filter_value
+                ]
+            )
             with sites.set_limit(None):
                 choices = set(
                     chain.from_iterable(
@@ -171,7 +190,10 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                             perf_data,
                             metrics,
                             check_cmd,
-                        ) for perf_data, metrics, check_cmd in sites.live().query(query)))
+                        )
+                        for perf_data, metrics, check_cmd in sites.live().query(query)
+                    )
+                )
 
         val_lower = value.lower()
         return sorted(
@@ -183,6 +205,7 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
 @dashlet_registry.register
 class GraphDashlet(Dashlet):
     """Dashlet for rendering a single performance graph"""
+
     @classmethod
     def type_name(cls):
         return "pnpgraph"
@@ -222,16 +245,23 @@ class GraphDashlet(Dashlet):
     def default_display_title(self) -> str:
         return self._dashlet_spec.get("_graph_title") or self.title()
 
-    def __init__(self, dashboard_name: DashboardName, dashboard: DashboardConfig,
-                 dashlet_id: DashletId, dashlet: DashletConfig) -> None:
-        super().__init__(dashboard_name=dashboard_name,
-                         dashboard=dashboard,
-                         dashlet_id=dashlet_id,
-                         dashlet=dashlet)
+    def __init__(
+        self,
+        dashboard_name: DashboardName,
+        dashboard: DashboardConfig,
+        dashlet_id: DashletId,
+        dashlet: DashletConfig,
+    ) -> None:
+        super().__init__(
+            dashboard_name=dashboard_name,
+            dashboard=dashboard,
+            dashlet_id=dashlet_id,
+            dashlet=dashlet,
+        )
 
         # New graphs which have been added via "add to visual" option don't have a timerange
         # configured. So we assume the default timerange here by default.
-        self._dashlet_spec.setdefault('timerange', '1')
+        self._dashlet_spec.setdefault("timerange", "1")
 
         self._init_exception = None
         try:
@@ -267,7 +297,7 @@ class GraphDashlet(Dashlet):
         single_context = get_singlecontext_vars(context, self.single_infos())
         host = single_context.get("host")
         if not host:
-            raise MKUserError('host', _('Missing needed host parameter.'))
+            raise MKUserError("host", _("Missing needed host parameter."))
 
         service = single_context.get("service")
         if not service:
@@ -296,8 +326,8 @@ class GraphDashlet(Dashlet):
     @classmethod
     def vs_parameters(cls) -> ValueSpec:
         return Dictionary(
-            title=_('Properties'),
-            render='form',
+            title=_("Properties"),
+            render="form",
             optional_keys=[],
             elements=cls._parameter_elements,
         )
@@ -308,8 +338,8 @@ class GraphDashlet(Dashlet):
         return (
             "timerange",
             DropdownChoice(
-                title=_('Timerange'),
-                default_value='1',
+                title=_("Timerange"),
+                default_value="1",
                 choices=[
                     ("0", _("4 Hours")),
                     ("1", _("25 Hours")),
@@ -388,15 +418,17 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         return self._reload_js()
 
     def _reload_js(self):
-        if any(prop not in self._dashlet_spec
-               for prop in ["_graph_identification", "graph_render_options", "timerange"]):
+        if any(
+            prop not in self._dashlet_spec
+            for prop in ["_graph_identification", "graph_render_options", "timerange"]
+        ):
             return ""
 
         return "dashboard_render_graph(%d, %s, %s, '%s')" % (
             self._dashlet_id,
             json.dumps(self._dashlet_spec["_graph_identification"]),
             json.dumps(self._dashlet_spec["graph_render_options"]),
-            self._dashlet_spec['timerange'],
+            self._dashlet_spec["timerange"],
         )
 
     def show(self):

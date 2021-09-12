@@ -66,6 +66,7 @@ class ModeAutomation(AjaxPage):
     This page is accessible without regular login. The request is authenticated using the given
     login secret that has previously been exchanged during "site login" (see above).
     """
+
     def _from_vars(self):
         self._authenticate()
         self._command = request.get_str_input_mandatory("command")
@@ -141,12 +142,13 @@ class ModeAutomation(AjaxPage):
 
         if our_id is not None and our_id != site_id:
             raise MKGeneralException(
-                _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
-                (our_id, site_id))
+                _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.")
+                % (our_id, site_id)
+            )
 
         profile = request.var("profile")
         if not profile:
-            raise MKGeneralException(_('Invalid call: The profile is missing.'))
+            raise MKGeneralException(_("Invalid call: The profile is missing."))
 
         users = userdb.load_users(lock=True)
         users[UserId(user_id)] = watolib.mk_eval(profile)

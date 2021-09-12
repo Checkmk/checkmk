@@ -14,22 +14,32 @@ from cmk.gui.valuespec import Dictionary, Integer, MonitoringState, TextInput, T
 
 
 def _parameter_valuespec_redis_info_persistence():
-    return Dictionary(elements=[
-        ("rdb_last_bgsave_state",
-         MonitoringState(title=_("State when last RDB save operation was faulty"),
-                         default_value=1)),
-        ("aof_last_rewrite_state",
-         MonitoringState(title=_("State when Last AOF rewrite operation was faulty"),
-                         default_value=1)),
-        ("rdb_changes_count",
-         Tuple(
-             title=_("Number of changes since last dump"),
-             elements=[
-                 Integer(title=_("Warning at"), unit="changes"),
-                 Integer(title=_("Critical at"), unit="changes")
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "rdb_last_bgsave_state",
+                MonitoringState(
+                    title=_("State when last RDB save operation was faulty"), default_value=1
+                ),
+            ),
+            (
+                "aof_last_rewrite_state",
+                MonitoringState(
+                    title=_("State when Last AOF rewrite operation was faulty"), default_value=1
+                ),
+            ),
+            (
+                "rdb_changes_count",
+                Tuple(
+                    title=_("Number of changes since last dump"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit="changes"),
+                        Integer(title=_("Critical at"), unit="changes"),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -40,4 +50,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_redis_info_persistence,
         title=lambda: _("Redis persistence"),
-    ))
+    )
+)

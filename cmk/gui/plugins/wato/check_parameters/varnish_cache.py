@@ -14,16 +14,20 @@ from cmk.gui.valuespec import Dictionary, Float, Tuple
 
 
 def _parameter_valuespec_varnish_cache():
-    return Dictionary(elements=[
-        ("miss",
-         Tuple(
-             title=_("Upper levels for \"cache misses\" per second"),
-             elements=[
-                 Float(title=_("Warning at"), default_value=1.0),
-                 Float(title=_("Critical at"), default_value=2.0),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "miss",
+                Tuple(
+                    title=_('Upper levels for "cache misses" per second'),
+                    elements=[
+                        Float(title=_("Warning at"), default_value=1.0),
+                        Float(title=_("Critical at"), default_value=2.0),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -33,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_varnish_cache,
         title=lambda: _("Varnish Cache"),
-    ))
+    )
+)

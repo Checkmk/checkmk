@@ -31,4 +31,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_parameter_valuespec_single_humidity,
         title=lambda: _("Humidity Levels for devices with a single sensor"),
-    ))
+    )
+)

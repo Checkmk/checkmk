@@ -14,28 +14,34 @@ from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 
 def _parameter_valuespec_brocade_sfp():
-    return Dictionary(elements=[
-        ("rx_power",
-         Tuple(
-             title=_("Rx power level"),
-             elements=[
-                 Float(title=_("Critical below"), unit=_("dBm")),
-                 Float(title=_("Warning below"), unit=_("dBm")),
-                 Float(title=_("Warning at"), unit=_("dBm")),
-                 Float(title=_("Critical at"), unit=_("dBm"))
-             ],
-         )),
-        ("tx_power",
-         Tuple(
-             title=_("Tx power level"),
-             elements=[
-                 Float(title=_("Critical below"), unit=_("dBm")),
-                 Float(title=_("Warning below"), unit=_("dBm")),
-                 Float(title=_("Warning at"), unit=_("dBm")),
-                 Float(title=_("Critical at"), unit=_("dBm"))
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "rx_power",
+                Tuple(
+                    title=_("Rx power level"),
+                    elements=[
+                        Float(title=_("Critical below"), unit=_("dBm")),
+                        Float(title=_("Warning below"), unit=_("dBm")),
+                        Float(title=_("Warning at"), unit=_("dBm")),
+                        Float(title=_("Critical at"), unit=_("dBm")),
+                    ],
+                ),
+            ),
+            (
+                "tx_power",
+                Tuple(
+                    title=_("Tx power level"),
+                    elements=[
+                        Float(title=_("Critical below"), unit=_("dBm")),
+                        Float(title=_("Warning below"), unit=_("dBm")),
+                        Float(title=_("Warning at"), unit=_("dBm")),
+                        Float(title=_("Critical at"), unit=_("dBm")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -46,4 +52,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_brocade_sfp,
         title=lambda: _("Brocade SFPs"),
-    ))
+    )
+)

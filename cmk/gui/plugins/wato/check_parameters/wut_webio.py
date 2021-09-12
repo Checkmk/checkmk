@@ -30,29 +30,35 @@ def _valuespec_wut_webio_check():
                     elements=[
                         FixedValue(
                             title=_("Consider the input states during discovery to be OK"),
-                            help=_("If this option is activated, the state of an input "
-                                   "during the discovery will be evaluated as OK. All "
-                                   "other states will result in CRIT."),
+                            help=_(
+                                "If this option is activated, the state of an input "
+                                "during the discovery will be evaluated as OK. All "
+                                "other states will result in CRIT."
+                            ),
                             totext="",
                             value=AS_DISCOVERED,
                         ),
                         Dictionary(
                             title=_("Custom input state mapping"),
-                            help=_("Define which monitoring state maps "
-                                   "which input state. This applies for every "
-                                   "single input."),
+                            help=_(
+                                "Define which monitoring state maps "
+                                "which input state. This applies for every "
+                                "single input."
+                            ),
                             default_keys=["Off", "On"],
                             required_keys=["Off", "On"],
                             elements=[
                                 (
                                     "Off",
-                                    MonitoringState(title=_("State if input is OFF"),
-                                                    default_value=2),
+                                    MonitoringState(
+                                        title=_("State if input is OFF"), default_value=2
+                                    ),
                                 ),
                                 (
                                     "On",
-                                    MonitoringState(title=_("State if input is ON"),
-                                                    default_value=0),
+                                    MonitoringState(
+                                        title=_("State if input is ON"), default_value=0
+                                    ),
                                 ),
                             ],
                         ),
@@ -68,4 +74,5 @@ rulespec_registry.register(
         check_group_name="wut_webio",
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_valuespec_wut_webio_check,
-    ))
+    )
+)

@@ -92,4 +92,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_svc_mdisk,
         title=lambda: _("IBM SVC Disk"),
-    ))
+    )
+)

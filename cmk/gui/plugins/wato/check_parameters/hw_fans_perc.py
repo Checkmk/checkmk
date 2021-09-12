@@ -14,24 +14,30 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_hw_fans_perc():
-    return Dictionary(elements=[
-        ("levels",
-         Tuple(
-             title=_("Upper fan speed levels"),
-             elements=[
-                 Percentage(title=_("warning if at")),
-                 Percentage(title=_("critical if at")),
-             ],
-         )),
-        ("levels_lower",
-         Tuple(
-             title=_("Lower fan speed levels"),
-             elements=[
-                 Percentage(title=_("warning if below")),
-                 Percentage(title=_("critical if below")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Upper fan speed levels"),
+                    elements=[
+                        Percentage(title=_("warning if at")),
+                        Percentage(title=_("critical if at")),
+                    ],
+                ),
+            ),
+            (
+                "levels_lower",
+                Tuple(
+                    title=_("Lower fan speed levels"),
+                    elements=[
+                        Percentage(title=_("warning if below")),
+                        Percentage(title=_("critical if below")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -42,4 +48,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_hw_fans_perc,
         title=lambda: _("Fan speed of hardware devices (in percent)"),
-    ))
+    )
+)

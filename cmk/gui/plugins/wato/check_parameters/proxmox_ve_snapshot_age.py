@@ -14,24 +14,28 @@ from cmk.gui.valuespec import Age, Dictionary, Tuple
 
 
 def _parameter_valuespec_proxmox_ve_snapshot_age_requirements():
-    return Dictionary(elements=[(
-        "oldest_levels",
-        Tuple(
-            title=_("Max age of the oldest snapshot"),
-            elements=[
-                Age(
-                    title=_("Warning at"),
-                    display=["days", "hours"],
-                    default_value=int(60 * 60 * 24 * 1),
+    return Dictionary(
+        elements=[
+            (
+                "oldest_levels",
+                Tuple(
+                    title=_("Max age of the oldest snapshot"),
+                    elements=[
+                        Age(
+                            title=_("Warning at"),
+                            display=["days", "hours"],
+                            default_value=int(60 * 60 * 24 * 1),
+                        ),
+                        Age(
+                            title=_("Critical at"),
+                            display=["days", "hours"],
+                            default_value=int(60 * 60 * 24 * 2),
+                        ),
+                    ],
                 ),
-                Age(
-                    title=_("Critical at"),
-                    display=["days", "hours"],
-                    default_value=int(60 * 60 * 24 * 2),
-                ),
-            ],
-        ),
-    )])
+            )
+        ]
+    )
 
 
 rulespec_registry.register(
@@ -41,4 +45,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_proxmox_ve_snapshot_age_requirements,
-    ))
+    )
+)

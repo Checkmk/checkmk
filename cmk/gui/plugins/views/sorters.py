@@ -67,11 +67,12 @@ class SorterSvcstate(Sorter):
 
     @property
     def columns(self):
-        return ['service_state', 'service_has_been_checked']
+        return ["service_state", "service_has_been_checked"]
 
     def cmp(self, r1, r2):
-        return (cmp_state_equiv(r1) > cmp_state_equiv(r2)) - (cmp_state_equiv(r1) <
-                                                              cmp_state_equiv(r2))
+        return (cmp_state_equiv(r1) > cmp_state_equiv(r2)) - (
+            cmp_state_equiv(r1) < cmp_state_equiv(r2)
+        )
 
 
 @sorter_registry.register
@@ -86,11 +87,12 @@ class SorterHoststate(Sorter):
 
     @property
     def columns(self):
-        return ['host_state', 'host_has_been_checked']
+        return ["host_state", "host_has_been_checked"]
 
     def cmp(self, r1, r2):
-        return (cmp_host_state_equiv(r1) > cmp_host_state_equiv(r2)) - (cmp_host_state_equiv(r1) <
-                                                                        cmp_host_state_equiv(r2))
+        return (cmp_host_state_equiv(r1) > cmp_host_state_equiv(r2)) - (
+            cmp_host_state_equiv(r1) < cmp_host_state_equiv(r2)
+        )
 
 
 @sorter_registry.register
@@ -105,11 +107,12 @@ class SorterSiteHost(Sorter):
 
     @property
     def columns(self):
-        return ['site', 'host_name']
+        return ["site", "host_name"]
 
     def cmp(self, r1, r2):
         return (r1["site"] > r2["site"]) - (r1["site"] < r2["site"]) or cmp_num_split(
-            "host_name", r1, r2)
+            "host_name", r1, r2
+        )
 
 
 @sorter_registry.register
@@ -124,7 +127,7 @@ class SorterHostName(Sorter):
 
     @property
     def columns(self):
-        return ['host_name']
+        return ["host_name"]
 
     def cmp(self, r1, r2):
         return cmp_num_split("host_name", r1, r2)
@@ -142,11 +145,12 @@ class SorterSitealias(Sorter):
 
     @property
     def columns(self):
-        return ['site']
+        return ["site"]
 
     def cmp(self, r1, r2):
         return (get_site_config(r1["site"])["alias"] > get_site_config(r2["site"])["alias"]) - (
-            get_site_config(r1["site"])["alias"] < get_site_config(r2["site"])["alias"])
+            get_site_config(r1["site"])["alias"] < get_site_config(r2["site"])["alias"]
+        )
 
 
 class ABCTagSorter(Sorter, abc.ABC):
@@ -261,29 +265,36 @@ class SorterServicelevel(Sorter):
 
     @property
     def columns(self):
-        return ['custom_variables']
+        return ["custom_variables"]
 
     def cmp(self, r1, r2):
-        return cmp_custom_variable(r1, r2, 'EC_SL', cmp_simple_number)
+        return cmp_custom_variable(r1, r2, "EC_SL", cmp_simple_number)
 
 
 def cmp_service_name(column, r1, r2):
-    return ((cmp_service_name_equiv(r1[column]) > cmp_service_name_equiv(r2[column])) -
-            (cmp_service_name_equiv(r1[column]) < cmp_service_name_equiv(r2[column])) or
-            cmp_num_split(column, r1, r2))
+    return (cmp_service_name_equiv(r1[column]) > cmp_service_name_equiv(r2[column])) - (
+        cmp_service_name_equiv(r1[column]) < cmp_service_name_equiv(r2[column])
+    ) or cmp_num_split(column, r1, r2)
 
 
 #                      name                      title                              column                       sortfunction
 declare_simple_sorter("svcdescr", _("Service description"), "service_description", cmp_service_name)
-declare_simple_sorter("svcdispname", _("Service alternative display name"), "service_display_name",
-                      cmp_simple_string)
-declare_simple_sorter("svcoutput", _("Service plugin output"), "service_plugin_output",
-                      cmp_simple_string)
-declare_simple_sorter("svc_long_plugin_output", _("Long output of check plugin"),
-                      "service_long_plugin_output", cmp_simple_string)
+declare_simple_sorter(
+    "svcdispname", _("Service alternative display name"), "service_display_name", cmp_simple_string
+)
+declare_simple_sorter(
+    "svcoutput", _("Service plugin output"), "service_plugin_output", cmp_simple_string
+)
+declare_simple_sorter(
+    "svc_long_plugin_output",
+    _("Long output of check plugin"),
+    "service_long_plugin_output",
+    cmp_simple_string,
+)
 declare_simple_sorter("site", _("Site"), "site", cmp_simple_string)
-declare_simple_sorter("stateage", _("Service state age"), "service_last_state_change",
-                      cmp_simple_number)
+declare_simple_sorter(
+    "stateage", _("Service state age"), "service_last_state_change", cmp_simple_number
+)
 declare_simple_sorter("servicegroup", _("Servicegroup"), "servicegroup_alias", cmp_simple_string)
 declare_simple_sorter("hostgroup", _("Hostgroup"), "hostgroup_alias", cmp_simple_string)
 
@@ -330,7 +341,7 @@ class PerfValSorter(Sorter):
 
     @property
     def columns(self):
-        return ['service_perf_data']
+        return ["service_perf_data"]
 
     def cmp(self, r1, r2):
         v1 = utils.savefloat(get_perfdata_nth_value(r1, self._num - 1, True))
@@ -438,9 +449,9 @@ class SorterCustomHostVariable(DerivedColumnsSorter):
 
     @property
     def columns(self) -> List[str]:
-        return ['host_custom_variable_names', 'host_custom_variable_values']
+        return ["host_custom_variable_names", "host_custom_variable_values"]
 
-    def derived_columns(self, view: 'View', uuid: Optional[str]) -> None:
+    def derived_columns(self, view: "View", uuid: Optional[str]) -> None:
         self._variable_name = uuid
 
     def get_parameters(self) -> Optional[ValueSpec]:
@@ -469,10 +480,10 @@ class SorterCustomHostVariable(DerivedColumnsSorter):
 
         def _get_value(row: Row) -> str:
             try:
-                index = row['host_custom_variable_names'].index(variable_name)
+                index = row["host_custom_variable_names"].index(variable_name)
             except ValueError:
-                return ''
-            return row['host_custom_variable_values'][index]
+                return ""
+            return row["host_custom_variable_values"][index]
 
         return cmp_insensitive_string(_get_value(r1), _get_value(r2))
 
@@ -489,12 +500,13 @@ class SorterHostIpv4Address(Sorter):
 
     @property
     def columns(self):
-        return ['host_custom_variable_names', 'host_custom_variable_values']
+        return ["host_custom_variable_names", "host_custom_variable_values"]
 
     def cmp(self, r1, r2):
         def get_address(row):
             custom_vars = dict(
-                zip(row["host_custom_variable_names"], row["host_custom_variable_values"]))
+                zip(row["host_custom_variable_names"], row["host_custom_variable_values"])
+            )
             return custom_vars.get("ADDRESS_4", "")
 
         return compare_ips(get_address(r1), get_address(r2))
@@ -512,15 +524,16 @@ class SorterNumProblems(Sorter):
 
     @property
     def columns(self):
-        return ['host_num_services', 'host_num_services_ok', 'host_num_services_pending']
+        return ["host_num_services", "host_num_services_ok", "host_num_services_pending"]
 
     def cmp(self, r1, r2):
-        return ((r1["host_num_services"] - r1["host_num_services_ok"] -
-                 r1["host_num_services_pending"] > r2["host_num_services"] -
-                 r2["host_num_services_ok"] - r2["host_num_services_pending"]) -
-                (r1["host_num_services"] - r1["host_num_services_ok"] -
-                 r1["host_num_services_pending"] < r2["host_num_services"] -
-                 r2["host_num_services_ok"] - r2["host_num_services_pending"]))
+        return (
+            r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"]
+            > r2["host_num_services"] - r2["host_num_services_ok"] - r2["host_num_services_pending"]
+        ) - (
+            r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"]
+            < r2["host_num_services"] - r2["host_num_services_ok"] - r2["host_num_services_pending"]
+        )
 
 
 # Hostgroup
@@ -562,14 +575,18 @@ declare_1to1_sorter("downtime_author", cmp_simple_string)
 declare_1to1_sorter("downtime_comment", cmp_simple_string)
 declare_1to1_sorter("downtime_fixed", cmp_simple_number)
 declare_1to1_sorter("downtime_type", cmp_simple_number)
-declare_simple_sorter("downtime_what", _("Downtime for host/service"), "downtime_is_service",
-                      cmp_simple_number)
-declare_simple_sorter("downtime_start_time", _("Downtime start"), "downtime_start_time",
-                      cmp_simple_number)
-declare_simple_sorter("downtime_end_time", _("Downtime end"), "downtime_end_time",
-                      cmp_simple_number)
-declare_simple_sorter("downtime_entry_time", _("Downtime entry time"), "downtime_entry_time",
-                      cmp_simple_number)
+declare_simple_sorter(
+    "downtime_what", _("Downtime for host/service"), "downtime_is_service", cmp_simple_number
+)
+declare_simple_sorter(
+    "downtime_start_time", _("Downtime start"), "downtime_start_time", cmp_simple_number
+)
+declare_simple_sorter(
+    "downtime_end_time", _("Downtime end"), "downtime_end_time", cmp_simple_number
+)
+declare_simple_sorter(
+    "downtime_entry_time", _("Downtime entry time"), "downtime_entry_time", cmp_simple_number
+)
 
 # Log
 declare_1to1_sorter("log_plugin_output", cmp_simple_string)
@@ -617,12 +634,15 @@ declare_1to1_sorter("log_date", cmp_date)
 # Alert statistics
 declare_simple_sorter("alerts_ok", _("Number of recoveries"), "log_alerts_ok", cmp_simple_number)
 declare_simple_sorter("alerts_warn", _("Number of warnings"), "log_alerts_warn", cmp_simple_number)
-declare_simple_sorter("alerts_crit", _("Number of critical alerts"), "log_alerts_crit",
-                      cmp_simple_number)
-declare_simple_sorter("alerts_unknown", _("Number of unknown alerts"), "log_alerts_unknown",
-                      cmp_simple_number)
-declare_simple_sorter("alerts_problem", _("Number of problem alerts"), "log_alerts_problem",
-                      cmp_simple_number)
+declare_simple_sorter(
+    "alerts_crit", _("Number of critical alerts"), "log_alerts_crit", cmp_simple_number
+)
+declare_simple_sorter(
+    "alerts_unknown", _("Number of unknown alerts"), "log_alerts_unknown", cmp_simple_number
+)
+declare_simple_sorter(
+    "alerts_problem", _("Number of problem alerts"), "log_alerts_problem", cmp_simple_number
+)
 
 # Aggregations
 declare_simple_sorter("aggr_name", _("Aggregation name"), "aggr_name", cmp_simple_string)

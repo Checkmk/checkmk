@@ -39,10 +39,13 @@ def _valuespec_datadog_monitors_discovery() -> Dictionary:
                 "states_discover",
                 DualListChoice(
                     title=_("Only discover monitors in the following states"),
-                    choices=[(
-                        datadog_state,
-                        datadog_state,
-                    ) for datadog_state, _checkmk_state in _DEFAULT_DATADOG_AND_CHECKMK_STATES],
+                    choices=[
+                        (
+                            datadog_state,
+                            datadog_state,
+                        )
+                        for datadog_state, _checkmk_state in _DEFAULT_DATADOG_AND_CHECKMK_STATES
+                    ],
                     default_value=[
                         datadog_state
                         for datadog_state, _checkmk_state in _DEFAULT_DATADOG_AND_CHECKMK_STATES
@@ -63,7 +66,8 @@ rulespec_registry.register(
         match_type="dict",
         name="datadog_monitors_discovery",
         valuespec=_valuespec_datadog_monitors_discovery,
-    ),)
+    ),
+)
 
 
 def _item_spec_datadog_monitors():
@@ -74,37 +78,44 @@ def _item_spec_datadog_monitors():
 
 
 def _parameter_valuespec_datadog_monitors() -> Dictionary:
-    return Dictionary([
-        (
-            "state_mapping",
-            Dictionary(
-                [(
-                    datadog_state,
-                    MonitoringState(
-                        title=datadog_state,
-                        default_value=checkmk_state,
-                    ),
-                ) for datadog_state, checkmk_state in _DEFAULT_DATADOG_AND_CHECKMK_STATES],
-                title=_("Map monitor states to Checkmk monitoring states"),
-                optional_keys=False,
-            ),
-        ),
-        (
-            "tags_to_show",
-            ListOfStrings(
-                valuespec=RegExp(
-                    RegExp.prefix,
-                    size=30,
-                    allow_empty=False,
+    return Dictionary(
+        [
+            (
+                "state_mapping",
+                Dictionary(
+                    [
+                        (
+                            datadog_state,
+                            MonitoringState(
+                                title=datadog_state,
+                                default_value=checkmk_state,
+                            ),
+                        )
+                        for datadog_state, checkmk_state in _DEFAULT_DATADOG_AND_CHECKMK_STATES
+                    ],
+                    title=_("Map monitor states to Checkmk monitoring states"),
+                    optional_keys=False,
                 ),
-                title=_("Datadog tags shown in service output"),
-                help=_("This option allows you to configure which Datadog tags will be shown in "
-                       "the service output. This is done by entering regular expressions matching "
-                       "one or more Datadog tags. Any matching tag will be displayed in the "
-                       "service output."),
             ),
-        ),
-    ],)
+            (
+                "tags_to_show",
+                ListOfStrings(
+                    valuespec=RegExp(
+                        RegExp.prefix,
+                        size=30,
+                        allow_empty=False,
+                    ),
+                    title=_("Datadog tags shown in service output"),
+                    help=_(
+                        "This option allows you to configure which Datadog tags will be shown in "
+                        "the service output. This is done by entering regular expressions matching "
+                        "one or more Datadog tags. Any matching tag will be displayed in the "
+                        "service output."
+                    ),
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -115,4 +126,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_datadog_monitors,
         title=lambda: _("Checking of Datadog monitors"),
-    ))
+    )
+)

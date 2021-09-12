@@ -16,16 +16,18 @@ from cmk.gui.valuespec import Dictionary, ListChoice, TextInput
 def _parameter_valuespec_enterasys_powersupply():
     return Dictionary(
         elements=[
-            ("redundancy_ok_states",
-             ListChoice(
-                 title=_("States treated as OK"),
-                 choices=[
-                     (1, 'redundant'),
-                     (2, 'notRedundant'),
-                     (3, 'notSupported'),
-                 ],
-                 default_value=[1],
-             )),
+            (
+                "redundancy_ok_states",
+                ListChoice(
+                    title=_("States treated as OK"),
+                    choices=[
+                        (1, "redundant"),
+                        (2, "notRedundant"),
+                        (3, "notSupported"),
+                    ],
+                    default_value=[1],
+                ),
+            ),
         ],
         optional_keys=False,
     )
@@ -35,8 +37,11 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="enterasys_powersupply",
         group=RulespecGroupCheckParametersNetworking,
-        item_spec=lambda: TextInput(title=_("Number of Powersupply"),),
+        item_spec=lambda: TextInput(
+            title=_("Number of Powersupply"),
+        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_enterasys_powersupply,
         title=lambda: _("Enterasys Power Supply Settings"),
-    ))
+    )
+)

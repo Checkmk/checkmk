@@ -17,10 +17,13 @@ def _parameter_valuespec_apc_system_events():
     return Dictionary(
         title=_("System Events on APX Inrow Devices"),
         elements=[
-            ("state", MonitoringState(
-                title=_("State during active system events"),
-                default_value=2,
-            )),
+            (
+                "state",
+                MonitoringState(
+                    title=_("State during active system events"),
+                    default_value=2,
+                ),
+            ),
         ],
     )
 
@@ -32,4 +35,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_apc_system_events,
         title=lambda: _("APC Inrow System Events"),
-    ))
+    )
+)

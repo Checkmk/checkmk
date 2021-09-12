@@ -14,26 +14,34 @@ from cmk.gui.valuespec import Dictionary, Float, Tuple
 
 
 def _parameter_valuespec_mcafee_web_gateway():
-    return Dictionary(elements=[
-        ("infections",
-         Tuple(
-             title=_("Upper levels for infections"),
-             help=_("Here you can specify upper levels for the number of "
-                    "infections detected by the McAfee Gateway Antimalware Engine."),
-             elements=[
-                 Float(title=_("Warning at")),
-                 Float(title=_("Critical at")),
-             ],
-         )),
-        ("connections_blocked",
-         Tuple(
-             title=_("Upper levels for blocked connections"),
-             elements=[
-                 Float(title=_("Warning at")),
-                 Float(title=_("Critical at")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "infections",
+                Tuple(
+                    title=_("Upper levels for infections"),
+                    help=_(
+                        "Here you can specify upper levels for the number of "
+                        "infections detected by the McAfee Gateway Antimalware Engine."
+                    ),
+                    elements=[
+                        Float(title=_("Warning at")),
+                        Float(title=_("Critical at")),
+                    ],
+                ),
+            ),
+            (
+                "connections_blocked",
+                Tuple(
+                    title=_("Upper levels for blocked connections"),
+                    elements=[
+                        Float(title=_("Warning at")),
+                        Float(title=_("Critical at")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -43,4 +51,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mcafee_web_gateway,
         title=lambda: _("McAfee web gateway statistics"),
-    ))
+    )
+)

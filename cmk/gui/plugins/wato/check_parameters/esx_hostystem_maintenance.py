@@ -14,17 +14,21 @@ from cmk.gui.valuespec import Dictionary, DropdownChoice
 
 
 def _parameter_valuespec_esx_hostystem_maintenance():
-    return Dictionary(elements=[
-        ("target_state",
-         DropdownChoice(
-             title=_("Target State"),
-             help=_("Configure the target mode for the system."),
-             choices=[
-                 ('true', "System should be in Maintenance Mode"),
-                 ('false', "System not should be in Maintenance Mode"),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "target_state",
+                DropdownChoice(
+                    title=_("Target State"),
+                    help=_("Configure the target mode for the system."),
+                    choices=[
+                        ("true", "System should be in Maintenance Mode"),
+                        ("false", "System not should be in Maintenance Mode"),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -34,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_esx_hostystem_maintenance,
         title=lambda: _("ESX Hostsystem Maintenance Mode"),
-    ))
+    )
+)

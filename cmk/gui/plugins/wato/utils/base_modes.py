@@ -129,7 +129,7 @@ class WatoMode(abc.ABC):
         if main_module is None:
             return
             # TODO: Can be activated once all non top level modes have a parent_mode set
-            #raise RuntimeError("Could not determine topic breadcrumb item for mode %r" % mode_name)
+            # raise RuntimeError("Could not determine topic breadcrumb item for mode %r" % mode_name)
 
         yield BreadcrumbItem(
             title=main_module().topic.title,

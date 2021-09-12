@@ -16,7 +16,8 @@ from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 def _parameter_valuespec_postgres_stat_database():
     return Dictionary(
         help=_(
-            "This check monitors how often database objects in a PostgreSQL Database are accessed"),
+            "This check monitors how often database objects in a PostgreSQL Database are accessed"
+        ),
         elements=[
             (
                 "blocks_read",
@@ -90,4 +91,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_postgres_stat_database,
         title=lambda: _("PostgreSQL Database Statistics"),
-    ))
+    )
+)

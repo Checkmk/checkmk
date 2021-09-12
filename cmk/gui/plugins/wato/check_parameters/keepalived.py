@@ -14,36 +14,56 @@ from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _parameter_valuespec_keepalived():
-    return Dictionary(elements=[
-        ("master", MonitoringState(
-            title=_("master"),
-            default_value=0,
-        )),
-        ("unknown", MonitoringState(
-            title=_("unknown"),
-            default_value=3,
-        )),
-        ("init", MonitoringState(
-            title=_("init"),
-            default_value=0,
-        )),
-        ("backup", MonitoringState(
-            title=_("backup"),
-            default_value=0,
-        )),
-        ("fault", MonitoringState(
-            title=_("fault"),
-            default_value=2,
-        )),
-    ])
+    return Dictionary(
+        elements=[
+            (
+                "master",
+                MonitoringState(
+                    title=_("master"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "unknown",
+                MonitoringState(
+                    title=_("unknown"),
+                    default_value=3,
+                ),
+            ),
+            (
+                "init",
+                MonitoringState(
+                    title=_("init"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "backup",
+                MonitoringState(
+                    title=_("backup"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "fault",
+                MonitoringState(
+                    title=_("fault"),
+                    default_value=2,
+                ),
+            ),
+        ]
+    )
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="keepalived",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("VRRP Instance"),),
+        item_spec=lambda: TextInput(
+            title=_("VRRP Instance"),
+        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_keepalived,
         title=lambda: _("Keepalived Parameters"),
-    ))
+    )
+)

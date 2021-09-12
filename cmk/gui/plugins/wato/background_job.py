@@ -87,12 +87,13 @@ class ModeBackgroundJobsOverview(WatoMode):
         job_manager = gui_background_job.GUIBackgroundJobManager()
 
         back_url = makeuri_contextless(request, [("mode", "background_jobs_overview")])
-        job_manager.show_status_of_job_classes(gui_background_job.job_registry.values(),
-                                               job_details_back_url=back_url)
+        job_manager.show_status_of_job_classes(
+            gui_background_job.job_registry.values(), job_details_back_url=back_url
+        )
 
         if any(
-                job_manager.get_running_job_ids(c)
-                for c in gui_background_job.job_registry.values()):
+            job_manager.get_running_job_ids(c) for c in gui_background_job.job_registry.values()
+        ):
             html.immediate_browser_redirect(0.8, "")
 
     # Mypy requires the explicit return, pylint does not like it.
@@ -154,13 +155,16 @@ class ModeBackgroundJobDetails(WatoMode):
     def page(self):
         html.div(html.render_message(_("Loading...")), id_="async_progress_msg")
         html.div("", id_="status_container")
-        html.javascript("cmk.background_job.start('ajax_background_job_details.py', %s)" %
-                        json.dumps(request.get_ascii_input_mandatory("job_id")))
+        html.javascript(
+            "cmk.background_job.start('ajax_background_job_details.py', %s)"
+            % json.dumps(request.get_ascii_input_mandatory("job_id"))
+        )
 
 
 @page_registry.register_page("ajax_background_job_details")
 class ModeAjaxCycleThemes(AjaxPage):
     """AJAX handler for supporting the background job state update"""
+
     def handle_page(self) -> None:
         self.action()
         super().handle_page()

@@ -41,7 +41,7 @@ class IconEntry(ABCIconEntry):
     url_spec: Union[None, Tuple[str, str], str] = None
 
 
-#.
+# .
 #   .--Plugin API----------------------------------------------------------.
 #   |           ____  _             _            _    ____ ___             |
 #   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
@@ -70,23 +70,27 @@ def get_icons(what: IconObjectType, row: Row, toplevel: bool) -> List[ABCIconEnt
         zip(
             row["host_custom_variable_names"],
             row["host_custom_variable_values"],
-        ))
+        )
+    )
 
-    if what != 'host':
+    if what != "host":
         custom_vars = dict(
             zip(
                 row[what + "_custom_variable_names"],
                 row[what + "_custom_variable_values"],
-            ))
+            )
+        )
     else:
         custom_vars = host_custom_vars
 
     # Extract needed custom variables
-    tags = host_custom_vars.get('TAGS', '').split()
-    user_icon_ids = custom_vars.get('ACTIONS', '').split(',')
+    tags = host_custom_vars.get("TAGS", "").split()
+    user_icon_ids = custom_vars.get("ACTIONS", "").split(",")
 
-    return sorted(_process_icons(what, row, tags, host_custom_vars, toplevel, user_icon_ids),
-                  key=lambda i: i.sort_index)
+    return sorted(
+        _process_icons(what, row, tags, host_custom_vars, toplevel, user_icon_ids),
+        key=lambda i: i.sort_index,
+    )
 
 
 def _process_icons(
@@ -113,12 +117,16 @@ def _process_icons(
                 icons.append(result)
         except Exception:
             icons.append(
-                IconEntry(sort_index=icon.sort_index(),
-                          icon_name="alert",
-                          title=_("Exception in icon '%s': %s") % (
-                              icon_id,
-                              traceback.format_exc(),
-                          )))
+                IconEntry(
+                    sort_index=icon.sort_index(),
+                    icon_name="alert",
+                    title=_("Exception in icon '%s': %s")
+                    % (
+                        icon_id,
+                        traceback.format_exc(),
+                    ),
+                )
+            )
     return icons
 
 
@@ -157,8 +165,9 @@ def _process_icon(
         # TODO: This is handling the deprecated API with 1.2.7. Remove this one day. But there
         # are icons that still use this API. These need to be cleaned up before.
         # LM: There are icons that still use this API
-        if ((isinstance(result, str) and result[0] == '<') or
-            (isinstance(result, HTML) and str(result)[0] == '<')):
+        if (isinstance(result, str) and result[0] == "<") or (
+            isinstance(result, HTML) and str(result)[0] == "<"
+        ):
             # seems like an old format icon (html code). In regular rendering
             # case (html), it can simply be appended to the output. Otherwise
             # extract the icon name from icon images
@@ -200,23 +209,25 @@ def _process_icon(
 
 def iconpainter_columns(what: IconObjectType, toplevel: Optional[bool]) -> List[ColumnName]:
     cols = {
-        'site',
-        'host_name',
-        'host_address',
-        'host_custom_variable_names',
-        'host_custom_variable_values',
+        "site",
+        "host_name",
+        "host_address",
+        "host_custom_variable_names",
+        "host_custom_variable_values",
     }
 
-    if what == 'service':
-        cols.update([
-            'service_description',
-            'service_custom_variable_names',
-            'service_custom_variable_values',
-        ])
+    if what == "service":
+        cols.update(
+            [
+                "service_description",
+                "service_custom_variable_names",
+                "service_custom_variable_values",
+            ]
+        )
 
     for icon in get_multisite_icons().values():
         if toplevel is None or toplevel == icon.toplevel():
-            cols.update([what + '_' + c for c in icon.columns()])
+            cols.update([what + "_" + c for c in icon.columns()])
             cols.update(["host_" + c for c in icon.host_columns()])
             if what == "service":
                 cols.update(["service_" + c for c in icon.service_columns()])
@@ -224,7 +235,7 @@ def iconpainter_columns(what: IconObjectType, toplevel: Optional[bool]) -> List[
     return list(cols)
 
 
-#.
+# .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |

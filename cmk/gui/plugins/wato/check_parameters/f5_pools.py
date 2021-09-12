@@ -30,4 +30,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Name of pool")),
         parameter_valuespec=_parameter_valuespec_f5_pools,
         title=lambda: _("F5 Loadbalancer Pools"),
-    ))
+    )
+)

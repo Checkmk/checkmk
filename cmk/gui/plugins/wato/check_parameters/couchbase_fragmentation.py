@@ -17,22 +17,26 @@ def _parameter_valuespec_couchbase_fragmentation():
     return Dictionary(
         title=_("Couchbase Fragmentation"),
         elements=[
-            ("docs",
-             Tuple(
-                 title="Documents fragmentation",
-                 elements=[
-                     Percentage(title="warn"),
-                     Percentage(title="crit"),
-                 ],
-             )),
-            ("views",
-             Tuple(
-                 title="Views fragmentation",
-                 elements=[
-                     Percentage(title="warn"),
-                     Percentage(title="crit"),
-                 ],
-             )),
+            (
+                "docs",
+                Tuple(
+                    title="Documents fragmentation",
+                    elements=[
+                        Percentage(title="warn"),
+                        Percentage(title="crit"),
+                    ],
+                ),
+            ),
+            (
+                "views",
+                Tuple(
+                    title="Views fragmentation",
+                    elements=[
+                        Percentage(title="warn"),
+                        Percentage(title="crit"),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -42,7 +46,8 @@ rulespec_registry.register(
         check_group_name="couchbase_fragmentation",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        item_spec=lambda: TextInput(title=_('Bucket name')),
+        item_spec=lambda: TextInput(title=_("Bucket name")),
         parameter_valuespec=_parameter_valuespec_couchbase_fragmentation,
         title=lambda: _("Couchbase Fragmentation"),
-    ))
+    )
+)

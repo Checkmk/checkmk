@@ -31,10 +31,13 @@ class HostMatrixSnapin(CustomizableSidebarSnapin):
     @classmethod
     def vs_parameters(cls):
         return [
-            ("context", visuals.VisualFilterList(
-                title=_("Filters"),
-                info_list=["host"],
-            )),
+            (
+                "context",
+                visuals.VisualFilterList(
+                    title=_("Filters"),
+                    info_list=["host"],
+                ),
+            ),
         ]
 
     @classmethod

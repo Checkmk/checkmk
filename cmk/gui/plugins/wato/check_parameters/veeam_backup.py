@@ -14,16 +14,20 @@ from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
 
 
 def _parameter_valuespec_veeam_backup():
-    return Dictionary(elements=[("age",
-                                 Tuple(
-                                     title=_("Time since end of last backup"),
-                                     elements=[
-                                         Age(title=_("Warning if older than"),
-                                             default_value=108000),
-                                         Age(title=_("Critical if older than"),
-                                             default_value=172800)
-                                     ],
-                                 ))],)
+    return Dictionary(
+        elements=[
+            (
+                "age",
+                Tuple(
+                    title=_("Time since end of last backup"),
+                    elements=[
+                        Age(title=_("Warning if older than"), default_value=108000),
+                        Age(title=_("Critical if older than"), default_value=172800),
+                    ],
+                ),
+            )
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -34,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_veeam_backup,
         title=lambda: _("Veeam: Time since last Backup"),
-    ))
+    )
+)

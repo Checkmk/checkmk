@@ -122,17 +122,19 @@ def to_openapi(
             raise ValueError(f"Don't recognize parameter of form: {raw_param!r}")
 
         for name, field in _fields:
-            metadata = denilled({
-                'description': field.metadata.get('description'),
-                'example': field.metadata.get('example'),
-                'required': field.required,
-                'allow_empty': field.allow_none,
-                'schema_enum': field.metadata.get('enum'),
-                'schema_string_format': field.metadata.get('format'),
-                'schema_string_pattern': field.metadata.get('pattern'),
-                'schema_num_minimum': field.metadata.get('minimum'),
-                'schema_num_maximum': field.metadata.get('maximum'),
-            })
+            metadata = denilled(
+                {
+                    "description": field.metadata.get("description"),
+                    "example": field.metadata.get("example"),
+                    "required": field.required,
+                    "allow_empty": field.allow_none,
+                    "schema_enum": field.metadata.get("enum"),
+                    "schema_string_format": field.metadata.get("format"),
+                    "schema_string_pattern": field.metadata.get("pattern"),
+                    "schema_num_minimum": field.metadata.get("minimum"),
+                    "schema_num_maximum": field.metadata.get("maximum"),
+                }
+            )
             param = translate_to_openapi_keys(
                 name=name,
                 location=location,
@@ -143,7 +145,8 @@ def to_openapi(
 
 
 def to_schema(
-        params: Optional[Union[Sequence[RawParameter], RawParameter]]) -> Optional[Type[Schema]]:
+    params: Optional[Union[Sequence[RawParameter], RawParameter]]
+) -> Optional[Type[Schema]]:
     """
     Examples:
 
@@ -191,14 +194,17 @@ def to_schema(
         A marshmallow schema with all the fields unified
 
     """
+
     def _validate_fields(name, dict_):
         for key, field in dict_.items():
-            if 'description' not in field.metadata:
+            if "description" not in field.metadata:
                 # FIXME: Add descriptions to all BI fields and schemas
                 if not name.startswith("BI"):
-                    raise ValueError(f"{name}: field {key} has no description."
-                                     f"\n\n{field.metadata!r}"
-                                     f"\n\n{dict_!r}")
+                    raise ValueError(
+                        f"{name}: field {key} has no description."
+                        f"\n\n{field.metadata!r}"
+                        f"\n\n{dict_!r}"
+                    )
 
     def _from_dict(dict_):
         needs_validating = False
@@ -207,7 +213,7 @@ def to_schema(
                 needs_validating = True
 
         if needs_validating:
-            _validate_fields('dict', dict_)
+            _validate_fields("dict", dict_)
         schema_class = BaseSchema.from_dict(dict_)
         assert issubclass(schema_class, BaseSchema)
         return schema_class
@@ -261,8 +267,8 @@ def fill_out_path_template(
             raise ValueError(f"Parameter {path_param!r} needed, but not supplied in {parameters!r}")
 
         param_spec = parameters[path_param]
-        if 'example' not in param_spec:
+        if "example" not in param_spec:
             raise ValueError(f"Parameter {path_param!r} of path {orig_path!r} has no example.")
 
-        path = path.replace("{" + path_param + "}", param_spec['example'])
+        path = path.replace("{" + path_param + "}", param_spec["example"])
     return path

@@ -14,14 +14,20 @@ from cmk.gui.valuespec import Age, Dictionary, Tuple
 
 
 def _parameter_valuespec_fireeye_content():
-    return Dictionary(elements=[(
-        "update_time_levels",
-        Tuple(title=_("Upper levels for the age of the update"),
-              elements=[
-                  Age(title=_("Warning at")),
-                  Age(title=_("Critical at")),
-              ]),
-    )])
+    return Dictionary(
+        elements=[
+            (
+                "update_time_levels",
+                Tuple(
+                    title=_("Upper levels for the age of the update"),
+                    elements=[
+                        Age(title=_("Warning at")),
+                        Age(title=_("Critical at")),
+                    ],
+                ),
+            )
+        ]
+    )
 
 
 rulespec_registry.register(
@@ -31,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fireeye_content,
         title=lambda: _("Fireeye Security Content"),
-    ))
+    )
+)

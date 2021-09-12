@@ -14,33 +14,41 @@ from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, TextInput, Tuple
 
 
 def _parameter_valuespec_redis_info():
-    return Dictionary(elements=[
-        ("expected_mode",
-         DropdownChoice(
-             title=_("Expected mode"),
-             choices=[
-                 ("standalone", _("Standalone")),
-                 ("sentinel", _("Sentinel")),
-                 ("cluster", _("Cluster")),
-             ],
-         )),
-        ("min",
-         Tuple(
-             title=_("Minimum required uptime"),
-             elements=[
-                 Age(title=_("Warning if below")),
-                 Age(title=_("Critical if below")),
-             ],
-         )),
-        ("max",
-         Tuple(
-             title=_("Maximum allowed uptime"),
-             elements=[
-                 Age(title=_("Warning at")),
-                 Age(title=_("Critical at")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "expected_mode",
+                DropdownChoice(
+                    title=_("Expected mode"),
+                    choices=[
+                        ("standalone", _("Standalone")),
+                        ("sentinel", _("Sentinel")),
+                        ("cluster", _("Cluster")),
+                    ],
+                ),
+            ),
+            (
+                "min",
+                Tuple(
+                    title=_("Minimum required uptime"),
+                    elements=[
+                        Age(title=_("Warning if below")),
+                        Age(title=_("Critical if below")),
+                    ],
+                ),
+            ),
+            (
+                "max",
+                Tuple(
+                    title=_("Maximum allowed uptime"),
+                    elements=[
+                        Age(title=_("Warning at")),
+                        Age(title=_("Critical at")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -51,4 +59,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_redis_info,
         title=lambda: _("Redis info"),
-    ))
+    )
+)

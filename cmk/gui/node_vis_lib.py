@@ -18,10 +18,9 @@ class BILayoutManagement:
 
     @classmethod
     def save_layouts(cls) -> None:
-        store.save_to_mk_file(str(BILayoutManagement._config_file),
-                              "bi_layouts",
-                              config.bi_layouts,
-                              pprint_value=True)
+        store.save_to_mk_file(
+            str(BILayoutManagement._config_file), "bi_layouts", config.bi_layouts, pprint_value=True
+        )
 
     @classmethod
     def load_bi_template_layout(cls, template_id: Optional[str]) -> Any:

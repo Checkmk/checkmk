@@ -27,24 +27,30 @@ def _parameter_valuespec_bvip_link():
     return Dictionary(
         title=_("Update State"),
         elements=[
-            ("ok_states",
-             ListChoice(
-                 title=_("States which result in OK"),
-                 choices=bvip_link_states,
-                 default_value=[0, 4, 5],
-             )),
-            ("warn_states",
-             ListChoice(
-                 title=_("States which result in Warning"),
-                 choices=bvip_link_states,
-                 default_value=[7],
-             )),
-            ("crit_states",
-             ListChoice(
-                 title=_("States which result in Critical"),
-                 choices=bvip_link_states,
-                 default_value=[1, 2, 3],
-             )),
+            (
+                "ok_states",
+                ListChoice(
+                    title=_("States which result in OK"),
+                    choices=bvip_link_states,
+                    default_value=[0, 4, 5],
+                ),
+            ),
+            (
+                "warn_states",
+                ListChoice(
+                    title=_("States which result in Warning"),
+                    choices=bvip_link_states,
+                    default_value=[7],
+                ),
+            ),
+            (
+                "crit_states",
+                ListChoice(
+                    title=_("States which result in Critical"),
+                    choices=bvip_link_states,
+                    default_value=[1, 2, 3],
+                ),
+            ),
         ],
         optional_keys=False,
     )
@@ -57,4 +63,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bvip_link,
         title=lambda: _("Allowed Network states on Bosch IP Cameras"),
-    ))
+    )
+)

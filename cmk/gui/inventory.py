@@ -93,8 +93,10 @@ def parse_tree_path(raw_path: SDRawPath) -> Tuple[SDPath, Optional[SDKeys]]:
         attribute_keys = [path.pop(-1)]
 
     # ":": Nested tables, see also lib/structured_data.py
-    return ([p for part in path for p in (part.split(":") if ":" in part else [part]) if p],
-            attribute_keys)
+    return (
+        [p for part in path for p in (part.split(":") if ":" in part else [part]) if p],
+        attribute_keys,
+    )
 
 
 def load_filtered_inventory_tree(hostname: Optional[HostName]) -> Optional[StructuredDataNode]:
@@ -114,8 +116,10 @@ def load_filtered_and_merged_tree(row: Row) -> Optional[StructuredDataNode]:
 
 
 def get_status_data_via_livestatus(site: Optional[livestatus.SiteId], hostname: HostName) -> Row:
-    query = "GET hosts\nColumns: host_structured_status\nFilter: host_name = %s\n" % livestatus.lqencode(
-        hostname)
+    query = (
+        "GET hosts\nColumns: host_structured_status\nFilter: host_name = %s\n"
+        % livestatus.lqencode(hostname)
+    )
     try:
         sites.live().set_only_sites([site] if site else None)
         result = sites.live().query(query)
@@ -128,24 +132,25 @@ def get_status_data_via_livestatus(site: Optional[livestatus.SiteId], hostname: 
     return row
 
 
-def load_delta_tree(hostname: HostName,
-                    timestamp: int) -> Tuple[Optional[StructuredDataNode], List[str]]:
+def load_delta_tree(
+    hostname: HostName, timestamp: int
+) -> Tuple[Optional[StructuredDataNode], List[str]]:
     """Load inventory history and compute delta tree of a specific timestamp"""
     # Timestamp is timestamp of the younger of both trees. For the oldest
     # tree we will just return the complete tree - without any delta
     # computation.
-    delta_history, corrupted_history_files = \
-        get_history_deltas(hostname, search_timestamp=str(timestamp))
+    delta_history, corrupted_history_files = get_history_deltas(
+        hostname, search_timestamp=str(timestamp)
+    )
     if not delta_history:
         return None, []
     return delta_history[0][1][3], corrupted_history_files
 
 
 def get_history_deltas(
-    hostname: HostName,
-    search_timestamp: Optional[str] = None
+    hostname: HostName, search_timestamp: Optional[str] = None
 ) -> Tuple[List[Tuple[str, InventoryDeltaData]], List[str]]:
-    if '/' in hostname:
+    if "/" in hostname:
         return [], []  # just for security reasons
 
     inventory_path = "%s/%s" % (cmk.utils.paths.inventory_output_dir, hostname)
@@ -189,14 +194,19 @@ def get_history_deltas(
         else:
             inventory_archive_path = Path(inventory_archive_dir, timestamp)
             tree_lookup[timestamp] = _filter_tree(
-                StructuredDataStore.load_file(inventory_archive_path))
+                StructuredDataStore.load_file(inventory_archive_path)
+            )
         return tree_lookup[timestamp]
 
     corrupted_history_files = []
     delta_history: List[Tuple[str, InventoryDeltaData]] = []
     for _idx, timestamp in enumerate(required_timestamps):
-        cached_delta_path = os.path.join(cmk.utils.paths.var_dir, "inventory_delta_cache", hostname,
-                                         "%s_%s" % (previous_timestamp, timestamp))
+        cached_delta_path = os.path.join(
+            cmk.utils.paths.var_dir,
+            "inventory_delta_cache",
+            hostname,
+            "%s_%s" % (previous_timestamp, timestamp),
+        )
 
         cached_data = None
         try:
@@ -215,8 +225,12 @@ def get_history_deltas(
             previous_tree = get_tree(previous_timestamp)
             current_tree = get_tree(timestamp)
             delta_result = current_tree.compare_with(previous_tree)
-            delta_data = (delta_result.counter['new'], delta_result.counter['changed'],
-                          delta_result.counter['removed'], delta_result.delta)
+            delta_data = (
+                delta_result.counter["new"],
+                delta_result.counter["changed"],
+                delta_result.counter["removed"],
+                delta_result.delta,
+            )
             new, changed, removed, delta_tree = delta_data
             if new or changed or removed:
                 store.save_text_to_file(
@@ -226,7 +240,8 @@ def get_history_deltas(
                 delta_history.append((timestamp, delta_data))
         except LoadStructuredDataError:
             corrupted_history_files.append(
-                str(get_short_inventory_history_filepath(hostname, timestamp)))
+                str(get_short_inventory_history_filepath(hostname, timestamp))
+            )
 
         previous_timestamp = timestamp
 
@@ -234,13 +249,19 @@ def get_history_deltas(
 
 
 def get_short_inventory_filepath(hostname: HostName) -> Path:
-    return Path(cmk.utils.paths.inventory_output_dir).joinpath(hostname).relative_to(
-        cmk.utils.paths.omd_root)
+    return (
+        Path(cmk.utils.paths.inventory_output_dir)
+        .joinpath(hostname)
+        .relative_to(cmk.utils.paths.omd_root)
+    )
 
 
 def get_short_inventory_history_filepath(hostname: HostName, timestamp: str) -> Path:
-    return Path(cmk.utils.paths.inventory_archive_dir).joinpath(
-        "%s/%s" % (hostname, timestamp)).relative_to(cmk.utils.paths.omd_root)
+    return (
+        Path(cmk.utils.paths.inventory_archive_dir)
+        .joinpath("%s/%s" % (hostname, timestamp))
+        .relative_to(cmk.utils.paths.omd_root)
+    )
 
 
 def parent_path(invpath: SDRawPath) -> Optional[SDRawPath]:
@@ -252,30 +273,35 @@ def parent_path(invpath: SDRawPath) -> Optional[SDRawPath]:
         invpath = invpath[:-1]
 
     last_sep = max(invpath.rfind(":"), invpath.rfind("."))
-    return invpath[:last_sep + 1]
+    return invpath[: last_sep + 1]
 
 
 def vs_element_inventory_visible_raw_path() -> Tuple[str, ValueSpec]:
     # Via 'Display options::Show internal tree paths' the tree paths are shown as 'path.to.node'.
     # We keep this format in order to easily copy&paste these tree paths to
     # 'Contact groups::Permitted HW/SW inventory paths'.
-    return ("visible_raw_path", TextInput(
-        title=_("Path to categories"),
-        size=60,
-        allow_empty=False,
-    ))
+    return (
+        "visible_raw_path",
+        TextInput(
+            title=_("Path to categories"),
+            size=60,
+            allow_empty=False,
+        ),
+    )
 
 
 def vs_inventory_path_or_keys_help():
-    return _("Via <tt>Display options > Show internal tree paths</tt>"
-             " on the HW/SW Inventory page of a host the internal tree paths leading"
-             " to subcategories, the keys of singles values or table column names"
-             " become visible. Key columns of tables are marked with '*'. See"
-             " <a href=\"https://docs.checkmk.com/latest/de/inventory.html\">HW/SW Inventory</a>."
-             " for more details about the HW/SW Inventory system.")
+    return _(
+        "Via <tt>Display options > Show internal tree paths</tt>"
+        " on the HW/SW Inventory page of a host the internal tree paths leading"
+        " to subcategories, the keys of singles values or table column names"
+        " become visible. Key columns of tables are marked with '*'. See"
+        ' <a href="https://docs.checkmk.com/latest/de/inventory.html">HW/SW Inventory</a>.'
+        " for more details about the HW/SW Inventory system."
+    )
 
 
-#.
+# .
 #   .--helpers-------------------------------------------------------------.
 #   |                  _          _                                        |
 #   |                 | |__   ___| |_ __   ___ _ __ ___                    |
@@ -290,8 +316,9 @@ class LoadStructuredDataError(MKException):
     pass
 
 
-def _load_structured_data_tree(tree_type: Literal["inventory", "status_data"],
-                               hostname: Optional[HostName]) -> Optional[StructuredDataNode]:
+def _load_structured_data_tree(
+    tree_type: Literal["inventory", "status_data"], hostname: Optional[HostName]
+) -> Optional[StructuredDataNode]:
     """Load data of a host, cache it in the current HTTP request"""
     if not hostname:
         return None
@@ -300,13 +327,15 @@ def _load_structured_data_tree(tree_type: Literal["inventory", "status_data"],
     if hostname in inventory_tree_cache:
         inventory_tree = inventory_tree_cache[hostname]
     else:
-        if '/' in hostname:
+        if "/" in hostname:
             # just for security reasons
             return None
 
         tree_store = StructuredDataStore(
-            Path(cmk.utils.paths.inventory_output_dir) if tree_type ==
-            "inventory" else Path(cmk.utils.paths.status_data_dir))
+            Path(cmk.utils.paths.inventory_output_dir)
+            if tree_type == "inventory"
+            else Path(cmk.utils.paths.status_data_dir)
+        )
 
         try:
             inventory_tree = tree_store.load(host_name=hostname)
@@ -346,7 +375,8 @@ def _filter_tree(struct_tree: Optional[StructuredDataNode]) -> Optional[Structur
 
     if permitted_paths := _get_permitted_inventory_paths():
         return struct_tree.get_filtered_node(
-            [make_filter(entry) for entry in permitted_paths if entry])
+            [make_filter(entry) for entry in permitted_paths if entry]
+        )
 
     return struct_tree
 
@@ -356,7 +386,7 @@ def _get_permitted_inventory_paths():
     Returns either a list of permitted paths or
     None in case the user is allowed to see the whole tree.
     """
-    if 'permitted_inventory_paths' in g:
+    if "permitted_inventory_paths" in g:
         return g.permitted_inventory_paths
 
     user_groups = [] if user.id is None else userdb.contactgroups_of_user(user.id)
@@ -368,7 +398,7 @@ def _get_permitted_inventory_paths():
     forbid_whole_tree = False
     permitted_paths = []
     for user_group in user_groups:
-        inventory_paths = config.multisite_contactgroups.get(user_group, {}).get('inventory_paths')
+        inventory_paths = config.multisite_contactgroups.get(user_group, {}).get("inventory_paths")
         if inventory_paths is None:
             # Old configuration: no paths configured means 'allow_all'
             g.permitted_inventory_paths = None
@@ -392,7 +422,7 @@ def _get_permitted_inventory_paths():
     return permitted_paths
 
 
-#.
+# .
 #   .--Inventory API-------------------------------------------------------.
 #   |   ___                      _                        _    ____ ___    |
 #   |  |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _     / \  |  _ \_ _|   |
@@ -416,8 +446,10 @@ def check_for_valid_hostname(hostname: HostName) -> None:
     raise MKUserError(
         None,
         _(
-            "You need to provide a valid \"hostname\". "
-            "Only letters, digits, dash, underscore and dot are allowed.",))
+            'You need to provide a valid "hostname". '
+            "Only letters, digits, dash, underscore and dot are allowed.",
+        ),
+    )
 
 
 @cmk.gui.pages.register("host_inv_api")
@@ -440,7 +472,7 @@ def page_host_inv_api() -> None:
         else:
             host_name = api_request.get("host")
             if host_name is None:
-                raise MKUserError("host", _("You need to provide a \"host\"."))
+                raise MKUserError("host", _('You need to provide a "host".'))
             check_for_valid_hostname(host_name)
 
             result = inventory_of_host(host_name, api_request)
@@ -485,7 +517,8 @@ def inventory_of_host(host_name: HostName, api_request):
 
     if "paths" in api_request:
         merged_tree = merged_tree.get_filtered_node(
-            [make_filter(parse_tree_path(path)) for path in api_request["paths"]])
+            [make_filter(parse_tree_path(path)) for path in api_request["paths"]]
+        )
 
     assert merged_tree is not None
     return merged_tree.serialize()
@@ -507,8 +540,9 @@ def verify_permission(host_name: HostName, site: Optional[livestatus.SiteId]) ->
         result = sites.live().query_summed_stats(query, "ColumnHeaders: off\n")
     except livestatus.MKLivestatusNotFoundError:
         raise MKAuthException(
-            _("No such inventory tree of host %s."
-              " You may also have no access to this host.") % host_name)
+            _("No such inventory tree of host %s." " You may also have no access to this host.")
+            % host_name
+        )
     finally:
         if site:
             sites.live().set_only_sites()
@@ -524,7 +558,7 @@ def _write_xml(resp):
 
 
 def _write_json(resp):
-    response.set_data(json.dumps(resp, sort_keys=True, indent=4, separators=(',', ': ')))
+    response.set_data(json.dumps(resp, sort_keys=True, indent=4, separators=(",", ": ")))
 
 
 def _write_python(resp):
@@ -539,7 +573,9 @@ class InventoryHousekeeping:
         self._inventory_delta_cache_path = Path(cmk.utils.paths.var_dir) / "inventory_delta_cache"
 
     def run(self):
-        if not self._inventory_delta_cache_path.exists() or not self._inventory_archive_path.exists(
+        if (
+            not self._inventory_delta_cache_path.exists()
+            or not self._inventory_archive_path.exists()
         ):
             return
 
@@ -564,9 +600,9 @@ class InventoryHousekeeping:
         for hostname in inventory_delta_cache_hosts:
             available_timestamps = self._get_timestamps_for_host(hostname)
             for filename in [
-                    x.name
-                    for x in (self._inventory_delta_cache_path / hostname).iterdir()
-                    if not x.is_dir()
+                x.name
+                for x in (self._inventory_delta_cache_path / hostname).iterdir()
+                if not x.is_dir()
             ]:
                 delete = False
                 try:
@@ -589,7 +625,7 @@ class InventoryHousekeeping:
             pass
 
         for filename in [
-                x for x in (self._inventory_archive_path / hostname).iterdir() if not x.is_dir()
+            x for x in (self._inventory_archive_path / hostname).iterdir() if not x.is_dir()
         ]:
             timestamps.add(filename.name)
         return timestamps

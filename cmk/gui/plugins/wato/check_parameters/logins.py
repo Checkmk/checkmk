@@ -18,7 +18,7 @@ def _parameter_valuespec_logins():
         help=_("This rule defines upper limits for the number of logins on a system."),
         elements=[
             Integer(title=_("Warning at"), unit=_("users"), default_value=20),
-            Integer(title=_("Critical at"), unit=_("users"), default_value=30)
+            Integer(title=_("Critical at"), unit=_("users"), default_value=30),
         ],
     )
 
@@ -29,4 +29,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_logins,
         title=lambda: _("Number of Logins on System"),
-    ))
+    )
+)

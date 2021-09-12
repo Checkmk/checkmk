@@ -77,10 +77,12 @@ class RoleManagement:
         config.roles.update(self._roles)
 
         store.mkdir(watolib.multisite_dir())
-        store.save_to_mk_file(watolib.multisite_dir() + "roles.mk",
-                              "roles",
-                              self._roles,
-                              pprint_value=config.wato_pprint_config)
+        store.save_to_mk_file(
+            watolib.multisite_dir() + "roles.mk",
+            "roles",
+            self._roles,
+            pprint_value=config.wato_pprint_config,
+        )
 
         hooks.call("roles-saved", self._roles)
 
@@ -124,7 +126,8 @@ class ModeRoles(RoleManagement, WatoMode):
                                     title=_("Permission matrix"),
                                     icon_name="matrix",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link([("mode", "role_matrix")])),
+                                        watolib.folder_preserving_link([("mode", "role_matrix")])
+                                    ),
                                 ),
                             ],
                         ),
@@ -146,7 +149,7 @@ class ModeRoles(RoleManagement, WatoMode):
             if delid not in self._roles:
                 raise MKUserError(None, _("This role does not exist."))
 
-            if transactions.transaction_valid() and self._roles[delid].get('builtin'):
+            if transactions.transaction_valid() and self._roles[delid].get("builtin"):
                 raise MKUserError(None, _("You cannot delete the builtin roles!"))
 
             users = userdb.load_users()
@@ -160,9 +163,9 @@ class ModeRoles(RoleManagement, WatoMode):
             self._rename_user_role(delid, None)  # Remove from existing users
             del self._roles[delid]
             self._save_roles()
-            watolib.add_change("edit-roles",
-                               _("Deleted role '%s'") % delid,
-                               sites=get_login_sites())
+            watolib.add_change(
+                "edit-roles", _("Deleted role '%s'") % delid, sites=get_login_sites()
+            )
 
         elif request.var("_clone"):
             cloneid = request.get_ascii_input_mandatory("_clone")
@@ -190,9 +193,9 @@ class ModeRoles(RoleManagement, WatoMode):
 
             self._roles[newid] = new_role
             self._save_roles()
-            watolib.add_change("edit-roles",
-                               _("Created new role '%s'") % newid,
-                               sites=get_login_sites())
+            watolib.add_change(
+                "edit-roles", _("Created new role '%s'") % newid, sites=get_login_sites()
+            )
 
         return redirect(self.mode_url())
 
@@ -230,19 +233,26 @@ class ModeRoles(RoleManagement, WatoMode):
                     _("Modifications"),
                     html.render_span(
                         str(len(role["permissions"])),
-                        title=_("That many permissions do not use the factory defaults.")))
+                        title=_("That many permissions do not use the factory defaults."),
+                    ),
+                )
 
                 # Users
                 table.cell(
                     _("Users"),
-                    HTML(", ").join([
-                        html.render_a(
-                            user.get("alias", user_id),
-                            watolib.folder_preserving_link([("mode", "edit_user"),
-                                                            ("edit", user_id)]))
-                        for (user_id, user) in users.items()
-                        if rid in user["roles"]
-                    ]))
+                    HTML(", ").join(
+                        [
+                            html.render_a(
+                                user.get("alias", user_id),
+                                watolib.folder_preserving_link(
+                                    [("mode", "edit_user"), ("edit", user_id)]
+                                ),
+                            )
+                            for (user_id, user) in users.items()
+                            if rid in user["roles"]
+                        ]
+                    ),
+                )
 
         # Possibly we could also display the following information
         # - number of set permissions (needs loading users)
@@ -282,10 +292,9 @@ class ModeEditRole(RoleManagement, WatoMode):
         return _("Edit role %s") % self._role_id
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(_("Role"),
-                                          breadcrumb,
-                                          form_name="role",
-                                          button_name="save")
+        menu = make_simple_form_page_menu(
+            _("Role"), breadcrumb, form_name="role", button_name="save"
+        )
         menu.inpage_search = PageMenuSearch()
         return menu
 
@@ -304,7 +313,8 @@ class ModeEditRole(RoleManagement, WatoMode):
             raise MKUserError("id", "You have to provide a ID.")
         if not re.match("^[-a-z0-9A-Z_]*$", new_id):
             raise MKUserError(
-                "id", _("Invalid role ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                "id", _("Invalid role ID. Only the characters a-z, A-Z, 0-9, _ and - are allowed.")
+            )
         if new_id != self._role_id:
             if new_id in self._roles:
                 raise MKUserError("id", _("The ID is already used by another role"))
@@ -315,8 +325,9 @@ class ModeEditRole(RoleManagement, WatoMode):
         if not self._role.get("builtin"):
             basedon = request.get_ascii_input_mandatory("basedon")
             if basedon not in builtin_role_ids:
-                raise MKUserError("basedon",
-                                  _("Invalid valid for based on. Must be id of builtin rule."))
+                raise MKUserError(
+                    "basedon", _("Invalid valid for based on. Must be id of builtin rule.")
+                )
             self._role["basedon"] = basedon
 
         # Permissions
@@ -343,9 +354,9 @@ class ModeEditRole(RoleManagement, WatoMode):
             self._rename_user_role(self._role_id, new_id)
 
         self._save_roles()
-        watolib.add_change("edit-roles",
-                           _("Modified user role '%s'") % new_id,
-                           sites=get_login_sites())
+        watolib.add_change(
+            "edit-roles", _("Modified user role '%s'") % new_id, sites=get_login_sites()
+        )
         return redirect(mode_url("roles"))
 
     def page(self):
@@ -372,18 +383,20 @@ class ModeEditRole(RoleManagement, WatoMode):
         if not self._role.get("builtin"):
             forms.section(_("Based on role"))
             html.help(
-                _("Each user defined role is based on one of the builtin roles. "
-                  "When created it will start with all permissions of that role. When due to a software "
-                  "update or installation of an addons new permissions appear, the user role will get or "
-                  "not get those new permissions based on the default settings of the builtin role it's "
-                  "based on."))
+                _(
+                    "Each user defined role is based on one of the builtin roles. "
+                    "When created it will start with all permissions of that role. When due to a software "
+                    "update or installation of an addons new permissions appear, the user role will get or "
+                    "not get those new permissions based on the default settings of the builtin role it's "
+                    "based on."
+                )
+            )
             role_choices: Choices = [
                 (i, r["alias"]) for i, r in self._roles.items() if r.get("builtin")
             ]
-            html.dropdown("basedon",
-                          role_choices,
-                          deflt=self._role.get("basedon", "user"),
-                          ordered=True)
+            html.dropdown(
+                "basedon", role_choices, deflt=self._role.get("basedon", "user"), ordered=True
+            )
 
         forms.end()
 
@@ -393,18 +406,22 @@ class ModeEditRole(RoleManagement, WatoMode):
         base_role_id = self._role.get("basedon", self._role_id)
 
         html.help(
-            _("When you leave the permissions at &quot;default&quot; then they get their "
-              "settings from the factory defaults (for builtin roles) or from the "
-              "factory default of their base role (for user define roles). Factory defaults "
-              "may change due to software updates. When choosing another base role, all "
-              "permissions that are on default will reflect the new base role."))
+            _(
+                "When you leave the permissions at &quot;default&quot; then they get their "
+                "settings from the factory defaults (for builtin roles) or from the "
+                "factory default of their base role (for user define roles). Factory defaults "
+                "may change due to software updates. When choosing another base role, all "
+                "permissions that are on default will reflect the new base role."
+            )
+        )
 
         for section in permission_section_registry.get_sorted_sections():
             # Now filter by the optional search term
             filtered_perms = []
             for perm in permission_registry.get_sorted_permissions(section):
-                if search and (search not in perm.title.lower() and
-                               search not in perm.name.lower()):
+                if search and (
+                    search not in perm.title.lower() and search not in perm.name.lower()
+                ):
                     continue
 
                 filtered_perms.append(perm)
@@ -456,9 +473,9 @@ class ModeRoleMatrix(WatoMode):
 
         for section in permission_section_registry.get_sorted_sections():
             with table_element(
-                    section.name,
-                    section.title,
-                    foldable=True,
+                section.name,
+                section.title,
+                foldable=True,
             ) as table:
 
                 permission_list = permission_registry.get_sorted_permissions(section)
@@ -474,7 +491,7 @@ class ModeRoleMatrix(WatoMode):
 
                     html.help(perm.description)
                     for role_id, role in role_list:
-                        base_on_id = role.get('basedon', role_id)
+                        base_on_id = role.get("basedon", role_id)
                         pvalue = role["permissions"].get(perm.name)
                         if pvalue is None:
                             if base_on_id in perm.defaults:

@@ -14,17 +14,21 @@ from cmk.gui.valuespec import Dictionary, DropdownChoice
 
 
 def _parameter_valuespec_raid_summary():
-    return Dictionary(elements=[
-        ("use_device_states",
-         DropdownChoice(
-             title=_("Use device states and overwrite expected status"),
-             choices=[
-                 (False, _("Ignore")),
-                 (True, _("Use device states")),
-             ],
-             default_value=True,
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "use_device_states",
+                DropdownChoice(
+                    title=_("Use device states and overwrite expected status"),
+                    choices=[
+                        (False, _("Ignore")),
+                        (True, _("Use device states")),
+                    ],
+                    default_value=True,
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -34,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_raid_summary,
         title=lambda: _("RAID: summary state"),
-    ))
+    )
+)

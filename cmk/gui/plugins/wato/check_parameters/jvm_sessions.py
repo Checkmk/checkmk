@@ -23,8 +23,10 @@ def _item_spec_jvm_sessions():
 
 def _parameter_valuespec_jvm_sessions():
     return Tuple(
-        help=_("This rule sets the warn and crit levels for the number of current "
-               "connections to a JVM application on the servlet level."),
+        help=_(
+            "This rule sets the warn and crit levels for the number of current "
+            "connections to a JVM application on the servlet level."
+        ),
         elements=[
             Integer(
                 title=_("Warning if below"),
@@ -57,4 +59,5 @@ rulespec_registry.register(
         item_spec=_item_spec_jvm_sessions,
         parameter_valuespec=_parameter_valuespec_jvm_sessions,
         title=lambda: _("JVM session count"),
-    ))
+    )
+)

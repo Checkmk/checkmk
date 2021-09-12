@@ -18,7 +18,9 @@ rulespec_registry.register(
         check_group_name="ceph_status",
         group=RulespecGroupCheckParametersStorage,
         match_type="dict",
-        parameter_valuespec=lambda: Dictionary(elements=ceph_epoch_element(
-            _("Status epoch levels and average")),),
+        parameter_valuespec=lambda: Dictionary(
+            elements=ceph_epoch_element(_("Status epoch levels and average")),
+        ),
         title=lambda: _("Ceph Status"),
-    ))
+    )
+)

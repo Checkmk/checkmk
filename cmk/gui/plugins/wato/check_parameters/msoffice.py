@@ -18,26 +18,32 @@ def _item_spec_msoffice_licenses():
 
 
 def _parameter_valuespec_msoffice_licenses():
-    return Dictionary(elements=[
-        ("usage",
-         Alternative(
-             title=_("Upper levels for license usage"),
-             elements=[
-                 Tuple(
-                     title=_("Upper absolute levels"),
-                     elements=[Integer(title=_("Warning at")),
-                               Integer(title=_("Critical at"))],
-                 ),
-                 Tuple(
-                     title=_("Upper percentage levels"),
-                     elements=[
-                         Percentage(title=_("Warning at"), default_value=80.0),
-                         Percentage(title=_("Critical at"), default_value=90.0)
-                     ],
-                 ),
-             ],
-         )),
-    ])
+    return Dictionary(
+        elements=[
+            (
+                "usage",
+                Alternative(
+                    title=_("Upper levels for license usage"),
+                    elements=[
+                        Tuple(
+                            title=_("Upper absolute levels"),
+                            elements=[
+                                Integer(title=_("Warning at")),
+                                Integer(title=_("Critical at")),
+                            ],
+                        ),
+                        Tuple(
+                            title=_("Upper percentage levels"),
+                            elements=[
+                                Percentage(title=_("Warning at"), default_value=80.0),
+                                Percentage(title=_("Critical at"), default_value=90.0),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+        ]
+    )
 
 
 rulespec_registry.register(
@@ -48,18 +54,25 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_msoffice_licenses,
         title=lambda: _("MS Office 365 licenses"),
-    ))
+    )
+)
 
 
 def _parameter_valuespec_msoffice_serviceplans():
-    return Dictionary(elements=[
-        ("levels",
-         Tuple(title=_("Upper levels for pending activations"),
-               elements=[
-                   Integer(title=_("Warning at"), unit=_("services")),
-                   Integer(title=_("Critical at"), unit=_("services")),
-               ])),
-    ])
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Upper levels for pending activations"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("services")),
+                        Integer(title=_("Critical at"), unit=_("services")),
+                    ],
+                ),
+            ),
+        ]
+    )
 
 
 rulespec_registry.register(
@@ -70,4 +83,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_msoffice_serviceplans,
         title=lambda: _("MS Office 365 service plans"),
-    ))
+    )
+)

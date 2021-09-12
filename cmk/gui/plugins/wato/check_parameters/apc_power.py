@@ -45,4 +45,5 @@ rulespec_registry.register(
         item_spec=_item_spec_apc_power,
         parameter_valuespec=_parameter_valuespec_apc_power,
         title=lambda: _("APC Power Consumption"),
-    ))
+    )
+)

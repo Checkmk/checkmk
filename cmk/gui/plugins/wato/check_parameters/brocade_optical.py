@@ -16,15 +16,23 @@ from cmk.gui.valuespec import Checkbox, Dictionary, TextInput
 def _parameter_valuespec_brocade_optical():
     return Dictionary(
         elements=[
-            ('temp', Checkbox(title=_("Temperature Alert"), default_value=True)),
-            ('tx_light',
-             Checkbox(title=_("TX Light alert"), label=_("TX Light alert"), default_value=False)),
-            ('rx_light',
-             Checkbox(title=_("RX Light alert"), label=_("TX Light alert"), default_value=False)),
-            ('lanes',
-             Checkbox(title=_("Lanes"),
-                      label=_("Monitor & Graph Lanes"),
-                      help=_("Monitor and graph the lanes, if the port has multiple"))),
+            ("temp", Checkbox(title=_("Temperature Alert"), default_value=True)),
+            (
+                "tx_light",
+                Checkbox(title=_("TX Light alert"), label=_("TX Light alert"), default_value=False),
+            ),
+            (
+                "rx_light",
+                Checkbox(title=_("RX Light alert"), label=_("TX Light alert"), default_value=False),
+            ),
+            (
+                "lanes",
+                Checkbox(
+                    title=_("Lanes"),
+                    label=_("Monitor & Graph Lanes"),
+                    help=_("Monitor and graph the lanes, if the port has multiple"),
+                ),
+            ),
         ],
         optional_keys=[],
     )
@@ -38,4 +46,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_brocade_optical,
         title=lambda: _("Brocade Optical Signal"),
-    ))
+    )
+)

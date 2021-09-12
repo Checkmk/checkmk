@@ -15,18 +15,20 @@ from cmk.gui.valuespec import Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_threepar_capacity():
-    return vs_filesystem([
-        (
-            "failed_capacity_levels",
-            Tuple(
-                title=_("Levels for failed capacity in percent"),
-                elements=[
-                    Percentage(title=_("Warning at"), default_value=0.0),
-                    Percentage(title=_("Critical at"), default_value=0.0),
-                ],
+    return vs_filesystem(
+        [
+            (
+                "failed_capacity_levels",
+                Tuple(
+                    title=_("Levels for failed capacity in percent"),
+                    elements=[
+                        Percentage(title=_("Warning at"), default_value=0.0),
+                        Percentage(title=_("Critical at"), default_value=0.0),
+                    ],
+                ),
             ),
-        ),
-    ],)
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -37,4 +39,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_threepar_capacity,
         title=lambda: _("3PAR Capacity (used space and growth)"),
-    ))
+    )
+)

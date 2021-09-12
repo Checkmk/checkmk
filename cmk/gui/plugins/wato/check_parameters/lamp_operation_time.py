@@ -14,18 +14,20 @@ from cmk.gui.valuespec import Age, Tuple
 
 
 def _parameter_valuespec_lamp_operation_time():
-    return Tuple(elements=[
-        Age(
-            title=_("Warning at"),
-            default_value=1000 * 3600,
-            display=["hours"],
-        ),
-        Age(
-            title=_("Critical at"),
-            default_value=1500 * 3600,
-            display=["hours"],
-        ),
-    ],)
+    return Tuple(
+        elements=[
+            Age(
+                title=_("Warning at"),
+                default_value=1000 * 3600,
+                display=["hours"],
+            ),
+            Age(
+                title=_("Critical at"),
+                default_value=1500 * 3600,
+                display=["hours"],
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -34,4 +36,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_parameter_valuespec_lamp_operation_time,
         title=lambda: _("Beamer lamp operation time"),
-    ))
+    )
+)

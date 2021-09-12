@@ -14,24 +14,30 @@ from cmk.gui.valuespec import Dictionary, Float, Tuple
 
 
 def _parameter_valuespec_varnish_objects():
-    return Dictionary(elements=[
-        ("expired",
-         Tuple(
-             title=_("Upper levels for \"expired objects\" per second"),
-             elements=[
-                 Float(title=_("Warning at"), default_value=1.0),
-                 Float(title=_("Critical at"), default_value=2.0)
-             ],
-         )),
-        ("lru_nuked",
-         Tuple(
-             title=_("Upper levels for \"LRU nuked objects\" per second"),
-             elements=[
-                 Float(title=_("Warning at"), default_value=1.0),
-                 Float(title=_("Critical at"), default_value=2.0)
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "expired",
+                Tuple(
+                    title=_('Upper levels for "expired objects" per second'),
+                    elements=[
+                        Float(title=_("Warning at"), default_value=1.0),
+                        Float(title=_("Critical at"), default_value=2.0),
+                    ],
+                ),
+            ),
+            (
+                "lru_nuked",
+                Tuple(
+                    title=_('Upper levels for "LRU nuked objects" per second'),
+                    elements=[
+                        Float(title=_("Warning at"), default_value=1.0),
+                        Float(title=_("Critical at"), default_value=2.0),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -41,4 +47,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_varnish_objects,
         title=lambda: _("Varnish Objects"),
-    ))
+    )
+)

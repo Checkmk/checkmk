@@ -14,14 +14,17 @@ from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _item_spec_efreq():
-    return TextInput(title=_("Phase"),
-                     help=_("The identifier of the phase the power is related to."))
+    return TextInput(
+        title=_("Phase"), help=_("The identifier of the phase the power is related to.")
+    )
 
 
 def _parameter_valuespec_efreq():
     return Tuple(
-        help=_("Levels for the nominal frequencies of AC devices "
-               "like UPSs or PDUs. Several phases may be addressed independently."),
+        help=_(
+            "Levels for the nominal frequencies of AC devices "
+            "like UPSs or PDUs. Several phases may be addressed independently."
+        ),
         elements=[
             Integer(title=_("warning if below"), unit="Hz", default_value=40),
             Integer(title=_("critical if below"), unit="Hz", default_value=45),
@@ -36,4 +39,5 @@ rulespec_registry.register(
         item_spec=_item_spec_efreq,
         parameter_valuespec=_parameter_valuespec_efreq,
         title=lambda: _("Nominal Frequencies"),
-    ))
+    )
+)

@@ -28,12 +28,13 @@ import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKConfigError
 from cmk.gui.globals import config, local
 from cmk.gui.i18n import _
-from cmk.gui.plugins.config.base import CREConfig
 
 # Kept for compatibility with pre 1.6 GUI plugins
-from cmk.gui.permissions import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    declare_permission, declare_permission_section,
+from cmk.gui.permissions import (  # noqa: F401 # pylint: disable=unused-import
+    declare_permission,
+    declare_permission_section,
 )
+from cmk.gui.plugins.config.base import CREConfig
 
 if not cmk_version.is_raw_edition():
     from cmk.gui.cee.plugins.config.cee import CEEConfig  # pylint: disable=no-name-in-module
@@ -78,10 +79,11 @@ class Config(CREConfig, CEEConfig, CMEConfig):
     be introduced by 3rd party extensions. For these variables we don't have the features
     mentioned above. But that's fine for now.
     """
+
     tags: cmk.utils.tags.TagConfig = cmk.utils.tags.TagConfig()
 
 
-#.
+# .
 #   .--Functions-----------------------------------------------------------.
 #   |             _____                 _   _                              |
 #   |            |  ___|   _ _ __   ___| |_(_) ___  _ __  ___              |
@@ -174,11 +176,14 @@ def make_config_object(raw_config: Dict[str, Any]) -> Config:
     if not custom_keys:
         cls: type = Config
     else:
-        cls = make_dataclass("ExtendedConfig",
-                             fields=[(k, object,
-                                      field(default_factory=partial(raw_config.__getitem__, k)))
-                                     for k in custom_keys],
-                             bases=(Config,))
+        cls = make_dataclass(
+            "ExtendedConfig",
+            fields=[
+                (k, object, field(default_factory=partial(raw_config.__getitem__, k)))
+                for k in custom_keys
+            ],
+            bases=(Config,),
+        )
 
     return cls(**raw_config)
 
@@ -187,10 +192,12 @@ def _prepare_tag_config(raw_config: Dict[str, Any]) -> None:
     # When the user config does not contain "tags" a pre 1.6 config is loaded. Convert
     # the wato_host_tags and wato_aux_tags to the new structure
     tag_config = raw_config["wato_tags"]
-    if not any(tag_config.values()) and (raw_config["wato_host_tags"] or
-                                         raw_config["wato_aux_tags"]):
-        tag_config = cmk.utils.tags.transform_pre_16_tags(raw_config["wato_host_tags"],
-                                                          raw_config["wato_aux_tags"])
+    if not any(tag_config.values()) and (
+        raw_config["wato_host_tags"] or raw_config["wato_aux_tags"]
+    ):
+        tag_config = cmk.utils.tags.transform_pre_16_tags(
+            raw_config["wato_host_tags"], raw_config["wato_aux_tags"]
+        )
 
     raw_config["tags"] = cmk.utils.tags.get_effective_tag_config(tag_config)
 
@@ -248,14 +255,19 @@ def _get_default_config_from_module_plugins() -> Dict[str, Any]:
 
 def _config_plugin_modules() -> List[ModuleType]:
     return [
-        module for name, module in sys.modules.items()
-        if (name.startswith("cmk.gui.plugins.config.")  #
+        module
+        for name, module in sys.modules.items()
+        if (
+            name.startswith("cmk.gui.plugins.config.")  #
             or name.startswith("cmk.gui.cee.plugins.config.")  #
-            or name.startswith("cmk.gui.cme.plugins.config."))  #
-        and name not in (
+            or name.startswith("cmk.gui.cme.plugins.config.")
+        )  #
+        and name
+        not in (
             "cmk.gui.plugins.config.base",  #
             "cmk.gui.cee.plugins.config.cee",  #
-            "cmk.gui.cme.plugins.config.cme")  #
+            "cmk.gui.cme.plugins.config.cme",
+        )  #
         and module is not None
     ]
 
@@ -317,19 +329,22 @@ def _migrate_pre_16_socket_config(site_cfg: Dict[str, Any]) -> None:
             site_cfg["socket"] = ("local", None)
 
         elif isinstance(socket, tuple):
-            site_cfg["socket"] = ("tcp", {
-                "address": proxy_socket,
-                "tls": ("plain_text", {}),
-            })
+            site_cfg["socket"] = (
+                "tcp",
+                {
+                    "address": proxy_socket,
+                    "tls": ("plain_text", {}),
+                },
+            )
 
         else:
             raise NotImplementedError("Unhandled proxy socket: %r" % proxy_socket)
 
         return
 
-    if socket == 'disabled':
-        site_cfg['disabled'] = True
-        site_cfg['socket'] = ("local", None)
+    if socket == "disabled":
+        site_cfg["disabled"] = True
+        site_cfg["socket"] = ("local", None)
         return
 
     if isinstance(socket, str):
@@ -357,18 +372,18 @@ def _migrate_string_encoded_socket(value: str) -> Tuple[str, Union[Dict]]:
 def default_single_site_configuration() -> SiteConfigurations:
     return {
         omd_site(): {
-            'alias': _("Local site %s") % omd_site(),
-            'socket': ("local", None),
-            'disable_wato': True,
-            'disabled': False,
-            'insecure': False,
-            'url_prefix': url_prefix(),
-            'multisiteurl': '',
-            'persist': False,
-            'replicate_ec': False,
-            'replication': None,
-            'timeout': 5,
-            'user_login': True,
-            'proxy': None,
+            "alias": _("Local site %s") % omd_site(),
+            "socket": ("local", None),
+            "disable_wato": True,
+            "disabled": False,
+            "insecure": False,
+            "url_prefix": url_prefix(),
+            "multisiteurl": "",
+            "persist": False,
+            "replicate_ec": False,
+            "replication": None,
+            "timeout": 5,
+            "user_login": True,
+            "proxy": None,
         }
     }

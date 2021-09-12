@@ -65,11 +65,13 @@ class SiteManagement:
             orientation="horizontal",
             choices=cls._connection_choices(),
             render=CascadingDropdown.Render.foldable,
-            help=_("When connecting to remote site please make sure "
-                   "that Livestatus over TCP is activated there. You can use UNIX sockets "
-                   "to connect to foreign sites on localhost. Please make sure that this "
-                   "site has proper read and write permissions to the UNIX socket of the "
-                   "foreign site."),
+            help=_(
+                "When connecting to remote site please make sure "
+                "that Livestatus over TCP is activated there. You can use UNIX sockets "
+                "to connect to foreign sites on localhost. Please make sure that this "
+                "site has proper read and write permissions to the UNIX socket of the "
+                "foreign site."
+            ),
         )
 
     @classmethod
@@ -83,23 +85,33 @@ class SiteManagement:
     @classmethod
     def _connection_choices(cls):
         conn_choices = [
-            ("local", _("Connect to the local site"), FixedValue(
-                None,
-                totext="",
-            )),
+            (
+                "local",
+                _("Connect to the local site"),
+                FixedValue(
+                    None,
+                    totext="",
+                ),
+            ),
             ("tcp", _("Connect via TCP (IPv4)"), cls._tcp_socket_valuespec(ipv6=False)),
             ("tcp6", _("Connect via TCP (IPv6)"), cls._tcp_socket_valuespec(ipv6=True)),
-            ("unix", _("Connect via UNIX socket"),
-             Dictionary(
-                 elements=[
-                     ("path", TextInput(
-                         label=_("Path:"),
-                         size=40,
-                         allow_empty=False,
-                     )),
-                 ],
-                 optional_keys=False,
-             )),
+            (
+                "unix",
+                _("Connect via UNIX socket"),
+                Dictionary(
+                    elements=[
+                        (
+                            "path",
+                            TextInput(
+                                label=_("Path:"),
+                                size=40,
+                                allow_empty=False,
+                            ),
+                        ),
+                    ],
+                    optional_keys=False,
+                ),
+            ),
         ]
         return conn_choices
 
@@ -107,26 +119,28 @@ class SiteManagement:
     def _tcp_socket_valuespec(cls, ipv6):
         return Dictionary(
             elements=[
-                ("address",
-                 Tuple(
-                     title=_("TCP address to connect to"),
-                     orientation="float",
-                     elements=[
-                         HostAddress(
-                             label=_("Host:"),
-                             allow_empty=False,
-                             size=15,
-                             allow_ipv4_address=not ipv6,
-                             allow_ipv6_address=ipv6,
-                         ),
-                         Integer(
-                             label=_("Port:"),
-                             minvalue=1,
-                             maxvalue=65535,
-                             default_value=6557,
-                         ),
-                     ],
-                 )),
+                (
+                    "address",
+                    Tuple(
+                        title=_("TCP address to connect to"),
+                        orientation="float",
+                        elements=[
+                            HostAddress(
+                                label=_("Host:"),
+                                allow_empty=False,
+                                size=15,
+                                allow_ipv4_address=not ipv6,
+                                allow_ipv6_address=ipv6,
+                            ),
+                            Integer(
+                                label=_("Port:"),
+                                minvalue=1,
+                                maxvalue=65535,
+                                default_value=6557,
+                            ),
+                        ],
+                    ),
+                ),
                 ("tls", cls._tls_valuespec()),
             ],
             optional_keys=False,
@@ -142,32 +156,39 @@ class SiteManagement:
                     _("Plain text (Unencrypted)"),
                     FixedValue({}, totext=_("Use plain text, unencrypted transport")),
                 ),
-                ("encrypted", _("Encrypt data using TLS"),
-                 Dictionary(
-                     elements=[
-                         ("verify",
-                          Checkbox(
-                              title=_("Verify server certificate"),
-                              label=_(
-                                  "Verify the Livestatus server certificate using the local site CA"
-                              ),
-                              default_value=True,
-                              help=
-                              _("Either verify the server certificate using the site local CA or accept "
-                                "any certificate offered by the server. It is highly recommended to "
-                                "leave this enabled."),
-                          )),
-                     ],
-                     optional_keys=False,
-                 )),
+                (
+                    "encrypted",
+                    _("Encrypt data using TLS"),
+                    Dictionary(
+                        elements=[
+                            (
+                                "verify",
+                                Checkbox(
+                                    title=_("Verify server certificate"),
+                                    label=_(
+                                        "Verify the Livestatus server certificate using the local site CA"
+                                    ),
+                                    default_value=True,
+                                    help=_(
+                                        "Either verify the server certificate using the site local CA or accept "
+                                        "any certificate offered by the server. It is highly recommended to "
+                                        "leave this enabled."
+                                    ),
+                                ),
+                            ),
+                        ],
+                        optional_keys=False,
+                    ),
+                ),
             ],
-            help=
-            _("When connecting to Check_MK versions older than 1.6 you can only use plain text "
-              "transport. Starting with Check_MK 1.6 it is possible to use encrypted Livestatus "
-              "communication. Sites created with 1.6 will automatically use encrypted communication "
-              "by default. Sites created with previous versions need to be configured manually to "
-              "enable the encryption. Have a look at <a href=\"werk.py?werk=7017\">werk #7017</a> "
-              "for further information."),
+            help=_(
+                "When connecting to Check_MK versions older than 1.6 you can only use plain text "
+                "transport. Starting with Check_MK 1.6 it is possible to use encrypted Livestatus "
+                "communication. Sites created with 1.6 will automatically use encrypted communication "
+                "by default. Sites created with previous versions need to be configured manually to "
+                'enable the encryption. Have a look at <a href="werk.py?werk=7017">werk #7017</a> '
+                "for further information."
+            ),
         )
 
     @classmethod
@@ -178,36 +199,41 @@ class SiteManagement:
             choices=[
                 (None, _("Disable automatic user synchronization (use master site users)")),
                 ("all", _("Sync users with all connections")),
-                ("list", _("Sync with the following LDAP connections"),
-                 ListChoice(
-                     choices=userdb_utils.connection_choices,
-                     allow_empty=False,
-                 )),
+                (
+                    "list",
+                    _("Sync with the following LDAP connections"),
+                    ListChoice(
+                        choices=userdb_utils.connection_choices,
+                        allow_empty=False,
+                    ),
+                ),
             ],
             default_value="all" if site_is_local(site_id) else None,
             help=_(
-                'By default the users are synchronized automatically in the interval configured '
-                'in the connection. For example the LDAP connector synchronizes the users every '
-                'five minutes by default. The interval can be changed for each connection '
+                "By default the users are synchronized automatically in the interval configured "
+                "in the connection. For example the LDAP connector synchronizes the users every "
+                "five minutes by default. The interval can be changed for each connection "
                 'individually in the <a href="wato.py?mode=ldap_config">connection settings</a>. '
-                'Please note that the synchronization is only performed on the master site in '
-                'distributed setups by default.<br>'
-                'The remote sites don\'t perform automatic user synchronizations with the '
-                'configured connections. But you can configure each site to either '
-                'synchronize the users with all configured connections or a specific list of '
-                'connections.'),
+                "Please note that the synchronization is only performed on the master site in "
+                "distributed setups by default.<br>"
+                "The remote sites don't perform automatic user synchronizations with the "
+                "configured connections. But you can configure each site to either "
+                "synchronize the users with all configured connections or a specific list of "
+                "connections."
+            ),
         )
 
     @classmethod
     def validate_configuration(cls, site_id, site_configuration, all_sites):
         if not re.match("^[-a-z0-9A-Z_]+$", site_id):
             raise MKUserError(
-                "id", _("The site id must consist only of letters, digit and the underscore."))
+                "id", _("The site id must consist only of letters, digit and the underscore.")
+            )
 
         if not site_configuration.get("alias"):
             raise MKUserError(
-                "alias",
-                _("Please enter an alias name or description for the site %s.") % site_id)
+                "alias", _("Please enter an alias name or description for the site %s.") % site_id
+            )
 
         if site_configuration.get("url_prefix") and site_configuration.get("url_prefix")[-1] != "/":
             raise MKUserError("url_prefix", _("The URL prefix must end with a slash."))
@@ -216,9 +242,13 @@ class SiteManagement:
         if site_configuration["socket"][0] == "local" and site_id != omd_site():
             raise MKUserError(
                 "method_sel",
-                _("You can only configure a local site connection for "
-                  "the local site. The site IDs ('%s' and '%s') are "
-                  "not equal.") % (site_id, omd_site()))
+                _(
+                    "You can only configure a local site connection for "
+                    "the local site. The site IDs ('%s' and '%s') are "
+                    "not equal."
+                )
+                % (site_id, omd_site()),
+            )
 
         # Timeout
         if "timeout" in site_configuration:
@@ -226,8 +256,9 @@ class SiteManagement:
             try:
                 int(timeout)
             except ValueError:
-                raise MKUserError("timeout",
-                                  _("The timeout %s is not a valid integer number.") % timeout)
+                raise MKUserError(
+                    "timeout", _("The timeout %s is not a valid integer number.") % timeout
+                )
 
         # Status host
         status_host = site_configuration.get("status_host")
@@ -236,29 +267,32 @@ class SiteManagement:
             if status_host_site not in all_sites:
                 raise MKUserError("sh_site", _("The site of the status host does not exist."))
             if status_host_site == site_id:
-                raise MKUserError("sh_site",
-                                  _("You cannot use the site itself as site of the status host."))
+                raise MKUserError(
+                    "sh_site", _("You cannot use the site itself as site of the status host.")
+                )
             if not status_host_name:
                 raise MKUserError("sh_host", _("Please specify the name of the status host."))
 
         if site_configuration.get("replication"):
             multisiteurl = site_configuration.get("multisiteurl")
             if not site_configuration.get("multisiteurl"):
-                raise MKUserError("multisiteurl",
-                                  _("Please enter the Multisite URL of the slave site."))
+                raise MKUserError(
+                    "multisiteurl", _("Please enter the Multisite URL of the slave site.")
+                )
 
             if not multisiteurl.endswith("/check_mk/"):
                 raise MKUserError("multisiteurl", _("The Multisite URL must end with /check_mk/"))
 
-            if not multisiteurl.startswith("http://") and \
-               not multisiteurl.startswith("https://"):
+            if not multisiteurl.startswith("http://") and not multisiteurl.startswith("https://"):
                 raise MKUserError(
                     "multisiteurl",
-                    _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."))
+                    _("The Multisites URL must begin with <tt>http://</tt> or <tt>https://</tt>."),
+                )
 
             if site_configuration["socket"][0] == "local":
-                raise MKUserError("replication",
-                                  _("You cannot do replication with the local site."))
+                raise MKUserError(
+                    "replication", _("You cannot do replication with the local site.")
+                )
 
         # User synchronization
         user_sync_valuespec = cls.user_sync_valuespec(site_id)
@@ -284,6 +318,7 @@ class SiteManagement:
     def save_sites(cls, sites, activate=True):
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import Folder
+
         store.mkdir(multisite_dir())
         store.save_to_mk_file(cls._sites_mk(), "sites", sites)
 
@@ -308,35 +343,43 @@ class SiteManagement:
     def delete_site(cls, site_id):
         # TODO: Clean this up
         from cmk.gui.watolib.hosts_and_folders import Folder
+
         all_sites = cls.load_sites()
         if site_id not in all_sites:
             raise MKUserError(None, _("Unable to delete unknown site id: %s") % site_id)
 
         # Make sure that site is not being used by hosts and folders
         if site_id in Folder.root_folder().all_site_ids():
-            search_url = makeactionuri(request, transactions, [
-                ("host_search_change_site", "on"),
-                ("host_search_site", site_id),
-                ("host_search", "1"),
-                ("folder", ""),
-                ("mode", "search"),
-                ("filled_in", "edit_host"),
-            ])
+            search_url = makeactionuri(
+                request,
+                transactions,
+                [
+                    ("host_search_change_site", "on"),
+                    ("host_search_site", site_id),
+                    ("host_search", "1"),
+                    ("folder", ""),
+                    ("mode", "search"),
+                    ("filled_in", "edit_host"),
+                ],
+            )
             raise MKUserError(
                 None,
-                _("You cannot delete this connection. It has folders/hosts "
-                  "assigned to it. You can use the <a href=\"%s\">host "
-                  "search</a> to get a list of the hosts.") % search_url)
+                _(
+                    "You cannot delete this connection. It has folders/hosts "
+                    'assigned to it. You can use the <a href="%s">host '
+                    "search</a> to get a list of the hosts."
+                )
+                % search_url,
+            )
 
         domains = cls._affected_config_domains()
 
         del all_sites[site_id]
         cls.save_sites(all_sites)
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
-        cmk.gui.watolib.changes.add_change("edit-sites",
-                                           _("Deleted site %s") % site_id,
-                                           domains=domains,
-                                           sites=[omd_site()])
+        cmk.gui.watolib.changes.add_change(
+            "edit-sites", _("Deleted site %s") % site_id, domains=domains, sites=[omd_site()]
+        )
 
     @classmethod
     def _affected_config_domains(cls):
@@ -383,36 +426,41 @@ class CEESiteManagement(SiteManagement):
                         optional_keys=["tcp"],
                         columns=1,
                         elements=[
-                            ("params",
-                             Alternative(
-                                 title=_("Parameters"),
-                                 elements=[
-                                     FixedValue(
-                                         None,
-                                         title=_("Use global connection parameters"),
-                                         totext=
-                                         _("Use the <a href=\"%s\">global parameters</a> for this connection"
-                                          ) %
-                                         "wato.py?mode=edit_configvar&site=&varname=liveproxyd_default_connection_params",
-                                     ),
-                                     Dictionary(
-                                         title=_("Use custom connection parameters"),
-                                         elements=cls.liveproxyd_connection_params_elements(),
-                                     ),
-                                 ],
-                             )),
-                            ("tcp",
-                             LivestatusViaTCP(
-                                 title=_("Allow access via TCP"),
-                                 help=
-                                 _("This option can be useful to build a cascading distributed setup. "
-                                   "The Livestatus Proxy of this site connects to the site configured "
-                                   "here via Livestatus and opens up a TCP port for clients. The "
-                                   "requests of the clients are forwarded to the destination site. "
-                                   "You need to configure a TCP port here that is not used on the "
-                                   "local system yet."),
-                                 tcp_port=6560,
-                             )),
+                            (
+                                "params",
+                                Alternative(
+                                    title=_("Parameters"),
+                                    elements=[
+                                        FixedValue(
+                                            None,
+                                            title=_("Use global connection parameters"),
+                                            totext=_(
+                                                'Use the <a href="%s">global parameters</a> for this connection'
+                                            )
+                                            % "wato.py?mode=edit_configvar&site=&varname=liveproxyd_default_connection_params",
+                                        ),
+                                        Dictionary(
+                                            title=_("Use custom connection parameters"),
+                                            elements=cls.liveproxyd_connection_params_elements(),
+                                        ),
+                                    ],
+                                ),
+                            ),
+                            (
+                                "tcp",
+                                LivestatusViaTCP(
+                                    title=_("Allow access via TCP"),
+                                    help=_(
+                                        "This option can be useful to build a cascading distributed setup. "
+                                        "The Livestatus Proxy of this site connects to the site configured "
+                                        "here via Livestatus and opens up a TCP port for clients. The "
+                                        "requests of the clients are forwarded to the destination site. "
+                                        "You need to configure a TCP port here that is not used on the "
+                                        "local system yet."
+                                    ),
+                                    tcp_port=6560,
+                                ),
+                            ),
                         ],
                     ),
                     forth=cls.transform_old_connection_params,
@@ -441,60 +489,78 @@ class CEESiteManagement(SiteManagement):
         defaults = ConfigDomainLiveproxy.connection_params_defaults()
 
         return [
-            ("channels",
-             Integer(
-                 title=_("Number of channels to keep open"),
-                 minvalue=2,
-                 maxvalue=50,
-                 default_value=defaults["channels"],
-             )),
-            ("heartbeat",
-             Tuple(title=_("Regular heartbeat"),
-                   orientation="float",
-                   elements=[
-                       Integer(
-                           label=_("One heartbeat every"),
-                           unit=_("sec"),
-                           minvalue=1,
-                           default_value=defaults["heartbeat"][0],
-                       ),
-                       Float(label=_("with a timeout of"),
-                             unit=_("sec"),
-                             minvalue=0.1,
-                             default_value=defaults["heartbeat"][1],
-                             display_format="%.1f"),
-                   ])),
-            ("channel_timeout",
-             Float(
-                 title=_("Timeout waiting for a free channel"),
-                 minvalue=0.1,
-                 default_value=defaults["channel_timeout"],
-                 unit=_("sec"),
-             )),
-            ("query_timeout",
-             Float(
-                 title=_("Total query timeout"),
-                 minvalue=0.1,
-                 unit=_("sec"),
-                 default_value=defaults["query_timeout"],
-             )),
-            ("connect_retry",
-             Float(
-                 title=_("Cooling period after failed connect/heartbeat"),
-                 minvalue=0.1,
-                 unit=_("sec"),
-                 default_value=defaults["connect_retry"],
-             )),
-            ("cache",
-             Checkbox(
-                 title=_("Enable Caching"),
-                 label=_("Cache several non-status queries"),
-                 help=_("This option will enable the caching of several queries that "
+            (
+                "channels",
+                Integer(
+                    title=_("Number of channels to keep open"),
+                    minvalue=2,
+                    maxvalue=50,
+                    default_value=defaults["channels"],
+                ),
+            ),
+            (
+                "heartbeat",
+                Tuple(
+                    title=_("Regular heartbeat"),
+                    orientation="float",
+                    elements=[
+                        Integer(
+                            label=_("One heartbeat every"),
+                            unit=_("sec"),
+                            minvalue=1,
+                            default_value=defaults["heartbeat"][0],
+                        ),
+                        Float(
+                            label=_("with a timeout of"),
+                            unit=_("sec"),
+                            minvalue=0.1,
+                            default_value=defaults["heartbeat"][1],
+                            display_format="%.1f",
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "channel_timeout",
+                Float(
+                    title=_("Timeout waiting for a free channel"),
+                    minvalue=0.1,
+                    default_value=defaults["channel_timeout"],
+                    unit=_("sec"),
+                ),
+            ),
+            (
+                "query_timeout",
+                Float(
+                    title=_("Total query timeout"),
+                    minvalue=0.1,
+                    unit=_("sec"),
+                    default_value=defaults["query_timeout"],
+                ),
+            ),
+            (
+                "connect_retry",
+                Float(
+                    title=_("Cooling period after failed connect/heartbeat"),
+                    minvalue=0.1,
+                    unit=_("sec"),
+                    default_value=defaults["connect_retry"],
+                ),
+            ),
+            (
+                "cache",
+                Checkbox(
+                    title=_("Enable Caching"),
+                    label=_("Cache several non-status queries"),
+                    help=_(
+                        "This option will enable the caching of several queries that "
                         "need no current data. This reduces the number of Livestatus "
                         "queries to sites and cuts down the response time of remote "
-                        "sites with large latencies."),
-                 default_value=defaults["cache"],
-             )),
+                        "sites with large latencies."
+                    ),
+                    default_value=defaults["cache"],
+                ),
+            ),
         ]
 
     # Each site had it's individual connection params set all time. Detect whether or
@@ -565,36 +631,46 @@ class CEESiteManagement(SiteManagement):
 class LivestatusViaTCP(Dictionary):
     def __init__(self, **kwargs):
         kwargs["elements"] = [
-            ("port",
-             Integer(
-                 title=_("TCP port"),
-                 minvalue=1,
-                 maxvalue=65535,
-                 default_value=kwargs.pop("tcp_port", 6557),
-             )),
-            ("only_from",
-             ListOfStrings(
-                 title=_("Restrict access to IP addresses"),
-                 help=_("The access to Livestatus via TCP will only be allowed from the "
+            (
+                "port",
+                Integer(
+                    title=_("TCP port"),
+                    minvalue=1,
+                    maxvalue=65535,
+                    default_value=kwargs.pop("tcp_port", 6557),
+                ),
+            ),
+            (
+                "only_from",
+                ListOfStrings(
+                    title=_("Restrict access to IP addresses"),
+                    help=_(
+                        "The access to Livestatus via TCP will only be allowed from the "
                         "configured source IP addresses. You can either configure specific "
-                        "IP addresses or networks in the syntax <tt>10.3.3.0/24</tt>."),
-                 valuespec=IPNetwork(),
-                 orientation="horizontal",
-                 allow_empty=False,
-                 default_value=["0.0.0.0", "::/0"],
-             )),
-            ("tls",
-             FixedValue(
-                 True,
-                 title=_("Encrypt communication"),
-                 totext=_("Encrypt TCP Livestatus connections"),
-                 help=_("Since Check_MK 1.6 it is possible to encrypt the TCP Livestatus "
+                        "IP addresses or networks in the syntax <tt>10.3.3.0/24</tt>."
+                    ),
+                    valuespec=IPNetwork(),
+                    orientation="horizontal",
+                    allow_empty=False,
+                    default_value=["0.0.0.0", "::/0"],
+                ),
+            ),
+            (
+                "tls",
+                FixedValue(
+                    True,
+                    title=_("Encrypt communication"),
+                    totext=_("Encrypt TCP Livestatus connections"),
+                    help=_(
+                        "Since Check_MK 1.6 it is possible to encrypt the TCP Livestatus "
                         "connections using SSL. This is enabled by default for sites that "
                         "enable Livestatus via TCP with 1.6 or newer. Sites that already "
                         "have this option enabled keep the communication unencrypted for "
                         "compatibility reasons. However, it is highly recommended to "
-                        "migrate to an encrypted communication."),
-             )),
+                        "migrate to an encrypted communication."
+                    ),
+                ),
+            ),
         ]
         kwargs["optional_keys"] = ["only_from", "tls"]
         super().__init__(**kwargs)
@@ -602,7 +678,7 @@ class LivestatusViaTCP(Dictionary):
 
 def _create_nagvis_backends(sites_config):
     cfg = [
-        '; MANAGED BY CHECK_MK WATO - Last Update: %s' % time.strftime('%Y-%m-%d %H:%M:%S'),
+        "; MANAGED BY CHECK_MK WATO - Last Update: %s" % time.strftime("%Y-%m-%d %H:%M:%S"),
     ]
     for site_id, site in sites_config.items():
         if site == omd_site():
@@ -611,23 +687,24 @@ def _create_nagvis_backends(sites_config):
         socket = _encode_socket_for_nagvis(site_id, site)
 
         cfg += [
-            '',
-            '[backend_%s]' % site_id,
+            "",
+            "[backend_%s]" % site_id,
             'backendtype="mklivestatus"',
             'socket="%s"' % socket,
         ]
 
         if site.get("status_host"):
-            cfg.append('statushost="%s"' % ':'.join(site['status_host']))
+            cfg.append('statushost="%s"' % ":".join(site["status_host"]))
 
         if site["proxy"] is None and is_livestatus_encrypted(site):
             address_spec = site["socket"][1]
             tls_settings = address_spec["tls"][1]
-            cfg.append('verify_tls_peer=%d' % tls_settings["verify"])
-            cfg.append('verify_tls_ca_path=%s' % ConfigDomainCACertificates.trusted_cas_file)
+            cfg.append("verify_tls_peer=%d" % tls_settings["verify"])
+            cfg.append("verify_tls_ca_path=%s" % ConfigDomainCACertificates.trusted_cas_file)
 
-    store.save_text_to_file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % cmk.utils.paths.omd_root,
-                            '\n'.join(cfg))
+    store.save_text_to_file(
+        "%s/etc/nagvis/conf.d/cmk_backends.ini.php" % cmk.utils.paths.omd_root, "\n".join(cfg)
+    )
 
 
 def _encode_socket_for_nagvis(site_id, site):
@@ -700,6 +777,7 @@ class AutomationPushSnapshot(AutomationCommand):
     This is kept for compatibility of pre 1.7 central sites with 1.7 remote sites.
     TODO: This call can be dropped with 1.8.
     """
+
     def command_name(self):
         return "push-snapshot"
 
@@ -709,15 +787,18 @@ class AutomationPushSnapshot(AutomationCommand):
 
         snapshot = request.uploaded_file("snapshot")
         if not snapshot:
-            raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
+            raise MKGeneralException(_("Invalid call: The snapshot is missing."))
 
         return PushSnapshotRequest(site_id=site_id, tar_content=ensure_binary(snapshot[2]))
 
     def execute(self, api_request: PushSnapshotRequest) -> bool:
         with store.lock_checkmk_configuration():
             return cmk.gui.watolib.activate_changes.apply_pre_17_sync_snapshot(
-                api_request.site_id, api_request.tar_content, Path(cmk.utils.paths.omd_root),
-                cmk.gui.watolib.activate_changes.get_replication_paths())
+                api_request.site_id,
+                api_request.tar_content,
+                Path(cmk.utils.paths.omd_root),
+                cmk.gui.watolib.activate_changes.get_replication_paths(),
+            )
 
 
 def get_effective_global_setting(site_id: SiteId, is_remote_site: bool, varname: str) -> Any:

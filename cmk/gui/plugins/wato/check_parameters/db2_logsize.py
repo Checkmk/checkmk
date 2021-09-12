@@ -18,20 +18,25 @@ from cmk.gui.valuespec import Dictionary, TextInput, Transform
 
 
 def _item_spec_db2_logsize():
-    return TextInput(title=_("Instance"),
-                     help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
+    return TextInput(
+        title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
+    )
 
 
 def _parameter_valuespec_db2_logsize():
-    return Dictionary(elements=[
-        ("levels",
-         Transform(
-             get_free_used_dynamic_valuespec("free", "logfile", default_value=(20.0, 10.0)),
-             title=_("Logfile levels"),
-             forth=transform_filesystem_free,
-             back=transform_filesystem_free,
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Transform(
+                    get_free_used_dynamic_valuespec("free", "logfile", default_value=(20.0, 10.0)),
+                    title=_("Logfile levels"),
+                    forth=transform_filesystem_free,
+                    back=transform_filesystem_free,
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -42,4 +47,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db2_logsize,
         title=lambda: _("DB2 logfile usage"),
-    ))
+    )
+)

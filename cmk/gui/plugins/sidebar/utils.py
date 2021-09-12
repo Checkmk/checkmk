@@ -62,6 +62,7 @@ class PermissionSectionSidebarSnapins(PermissionSection):
 # TODO: Transform methods to class methods
 class SidebarSnapin(abc.ABC):
     """Abstract base class for all sidebar snapins"""
+
     @classmethod
     @abc.abstractmethod
     def type_name(cls) -> str:
@@ -122,6 +123,7 @@ class CustomizableSidebarSnapin(SidebarSnapin, abc.ABC):
 
     Subclass this class in case you want to implement a sidebar snapin type that can
     be customized by the user"""
+
     @classmethod
     @abc.abstractmethod
     def vs_parameters(cls):
@@ -139,6 +141,7 @@ class CustomizableSidebarSnapin(SidebarSnapin, abc.ABC):
 # classes obfuscates the code and makes typing a nightmare.
 class SnapinRegistry(cmk.utils.plugin_registry.Registry[Type[SidebarSnapin]]):
     """The management object for all available plugins."""
+
     def plugin_name(self, instance):
         return instance.type_name()
 
@@ -156,10 +159,14 @@ class SnapinRegistry(cmk.utils.plugin_registry.Registry[Type[SidebarSnapin]]):
             cmk.gui.pages.register_page_handler(path, page_func)
 
     def get_customizable_snapin_types(self) -> List[Tuple[str, Type[CustomizableSidebarSnapin]]]:
-        return [(snapin_type_id, snapin_type)
-                for snapin_type_id, snapin_type in self.items()
-                if (issubclass(snapin_type, CustomizableSidebarSnapin) and
-                    not snapin_type.is_custom_snapin())]
+        return [
+            (snapin_type_id, snapin_type)
+            for snapin_type_id, snapin_type in self.items()
+            if (
+                issubclass(snapin_type, CustomizableSidebarSnapin)
+                and not snapin_type.is_custom_snapin()
+            )
+        ]
 
     def register_custom_snapins(self, custom_snapins: List[CustomSnapins]) -> None:
         """Extends the snapin registry with the ones configured in the site (for the current user)"""
@@ -227,7 +234,7 @@ class SnapinRegistry(cmk.utils.plugin_registry.Registry[Type[SidebarSnapin]]):
 
 snapin_registry = SnapinRegistry()
 
-#.
+# .
 #   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
@@ -239,29 +246,29 @@ snapin_registry = SnapinRegistry()
 # TODO: Move these to a class
 
 
-def render_link(text: Union[str, HTML],
-                url: str,
-                target: str = "main",
-                onclick: Optional[str] = None) -> HTML:
+def render_link(
+    text: Union[str, HTML], url: str, target: str = "main", onclick: Optional[str] = None
+) -> HTML:
     # Convert relative links into absolute links. We have three kinds
     # of possible links and we change only [3]
     # [1] protocol://hostname/url/link.py
     # [2] /absolute/link.py
     # [3] relative.py
-    if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != '/':
+    if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != "/":
         url = url_prefix() + "check_mk/" + url
-    return html.render_a(text,
-                         href=url,
-                         class_="link",
-                         target=target or '',
-                         onfocus="if (this.blur) this.blur();",
-                         onclick=onclick or None)
+    return html.render_a(
+        text,
+        href=url,
+        class_="link",
+        target=target or "",
+        onfocus="if (this.blur) this.blur();",
+        onclick=onclick or None,
+    )
 
 
-def link(text: Union[str, HTML],
-         url: str,
-         target: str = "main",
-         onclick: Optional[str] = None) -> None:
+def link(
+    text: Union[str, HTML], url: str, target: str = "main", onclick: Optional[str] = None
+) -> None:
     html.write_html(render_link(text, url, target=target, onclick=onclick))
 
 
@@ -286,9 +293,9 @@ def iconlink(text: str, url: str, icon: Icon) -> None:
 
 def write_snapin_exception(e: Exception) -> None:
     html.open_div(class_=["snapinexception"])
-    html.h2(_('Error'))
+    html.h2(_("Error"))
     html.p(str(e))
-    html.div(traceback.format_exc().replace('\n', '<br>'), style="display:none;")
+    html.div(traceback.format_exc().replace("\n", "<br>"), style="display:none;")
     html.close_div()
 
 
@@ -362,19 +369,20 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
                 items=[],
                 icon=topic.icon_name(),
                 hide=topic.hide(),
-            ))
+            ),
+        )
         topic.items.append(
             TopicMenuItem(
                 name=name,
-                title=visual_title(visual_type_name,
-                                   visual,
-                                   visual["context"],
-                                   skip_title_context=True),
+                title=visual_title(
+                    visual_type_name, visual, visual["context"], skip_title_context=True
+                ),
                 url=url,
                 sort_index=visual["sort_index"],
                 is_show_more=visual["is_show_more"],
                 icon=visual["icon"],
-            ))
+            )
+        )
 
     # Sort the items of all topics
     for topic in by_topic.values():
@@ -382,7 +390,8 @@ def make_topic_menu(visuals: List[Tuple[str, Tuple[str, Visual]]]) -> List[Topic
 
     # Return the sorted topics
     return [
-        v for k, v in sorted(by_topic.items(), key=lambda e: (e[0].sort_index(), e[0].title()))
+        v
+        for k, v in sorted(by_topic.items(), key=lambda e: (e[0].sort_index(), e[0].title()))
         if not v.hide
     ]
 
@@ -409,9 +418,9 @@ def _visual_url(visual_type_name: str, name: str) -> str:
     raise NotImplementedError("Unknown visual type: %s" % visual_type_name)
 
 
-def show_topic_menu(treename: str,
-                    menu: List[TopicMenuTopic],
-                    show_item_icons: bool = False) -> None:
+def show_topic_menu(
+    treename: str, menu: List[TopicMenuTopic], show_item_icons: bool = False
+) -> None:
     for topic in menu:
         _show_topic(treename, topic, show_item_icons)
 
@@ -420,12 +429,14 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
     if not topic.items:
         return
 
-    with foldable_container(treename=treename,
-                            id_=topic.name,
-                            isopen=False,
-                            title=topic.title,
-                            indent=True,
-                            icon="foldable_sidebar"):
+    with foldable_container(
+        treename=treename,
+        id_=topic.name,
+        isopen=False,
+        title=topic.title,
+        indent=True,
+        icon="foldable_sidebar",
+    ):
 
         for item in topic.items:
             if show_item_icons:
@@ -433,6 +444,6 @@ def _show_topic(treename: str, topic: TopicMenuTopic, show_item_icons: bool) -> 
                 iconlink(item.title, item.url, item.icon or "icon_missing")
                 html.close_li()
             else:
-                bulletlink(item.title,
-                           item.url,
-                           onclick="return cmk.sidebar.wato_views_clicked(this)")
+                bulletlink(
+                    item.title, item.url, onclick="return cmk.sidebar.wato_views_clicked(this)"
+                )

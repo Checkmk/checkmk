@@ -35,8 +35,11 @@ if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.webapi  # pylint: disable=import-error,no-name-in-module
 
 # TODO: Kept for compatibility reasons with legacy plugins
-from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    add_configuration_hash, api_call_collection_registry, check_hostname, validate_config_hash,
+from cmk.gui.plugins.webapi.utils import (  # noqa: F401 # pylint: disable=unused-import
+    add_configuration_hash,
+    api_call_collection_registry,
+    check_hostname,
+    validate_config_hash,
     validate_host_attributes,
 )
 
@@ -61,20 +64,27 @@ permission_registry.register(
         section=PermissionSectionWATO,
         name="api_allowed",
         title=_l("Access to Web-API"),
-        description=_l("This permissions specifies if the role "
-                       "is able to use Web-API functions. It is only available "
-                       "for automation users."),
+        description=_l(
+            "This permissions specifies if the role "
+            "is able to use Web-API functions. It is only available "
+            "for automation users."
+        ),
         defaults=builtin_role_ids,
-    ))
+    )
+)
 
 Formatter = Callable[[Dict[str, Any]], str]
 
 _FORMATTERS: Dict[str, Tuple[Formatter, Formatter]] = {
-    "json": (json.dumps,
-             lambda resp: json.dumps(resp, sort_keys=True, indent=4, separators=(',', ': '))),
+    "json": (
+        json.dumps,
+        lambda resp: json.dumps(resp, sort_keys=True, indent=4, separators=(",", ": ")),
+    ),
     "python": (repr, pprint.pformat),
-    "xml": (dicttoxml.dicttoxml,
-            lambda resp: xml.dom.minidom.parseString(dicttoxml.dicttoxml(resp)).toprettyxml()),
+    "xml": (
+        dicttoxml.dicttoxml,
+        lambda resp: xml.dom.minidom.parseString(dicttoxml.dicttoxml(resp)).toprettyxml(),
+    ),
 }
 
 
@@ -90,8 +100,10 @@ def page_api():
         if output_format not in _FORMATTERS:
             response.set_content_type("text/plain")
             raise MKUserError(
-                None, "Only %s are supported as output formats" %
-                " and ".join('"%s"' % f for f in _FORMATTERS))
+                None,
+                "Only %s are supported as output formats"
+                % " and ".join('"%s"' % f for f in _FORMATTERS),
+            )
 
         # TODO: Add some kind of helper for boolean-valued variables?
         pretty_print = False
@@ -111,7 +123,7 @@ def page_api():
     except MKAuthException as e:
         resp = {
             "result_code": 1,
-            "result": _("Authorization Error. Insufficent permissions for '%s'") % e
+            "result": _("Authorization Error. Insufficent permissions for '%s'") % e,
         }
     except MKException as e:
         resp = {"result_code": 1, "result": _("Checkmk exception: %s") % e}
@@ -132,7 +144,7 @@ def page_api():
 
 
 def _get_api_call():
-    action = request.var('action')
+    action = request.var("action")
     for cls in api_call_collection_registry.values():
         api_call = cls().get_api_calls().get(action)
         if api_call:
@@ -147,8 +159,7 @@ def _check_permissions(api_call):
     if not config.wato_enabled:
         raise MKUserError(None, _("Setup is disabled on this site."))
 
-    for permission in ["wato.use", "wato.api_allowed"] + \
-                      api_call.get("required_permissions", []):
+    for permission in ["wato.use", "wato.api_allowed"] + api_call.get("required_permissions", []):
         user.need_permission(permission)
 
 
@@ -163,12 +174,14 @@ def _check_formats(output_format, api_call, request_object):
     required_input_format = api_call.get("required_input_format")
     if required_input_format and required_input_format != request_object["request_format"]:
         raise MKUserError(
-            None, "This API call requires a %s-encoded request parameter" % required_input_format)
+            None, "This API call requires a %s-encoded request parameter" % required_input_format
+        )
 
     required_output_format = api_call.get("required_output_format")
     if required_output_format and required_output_format != output_format:
         raise MKUserError(
-            None, "This API call requires the parameter output_format=%s" % required_output_format)
+            None, "This API call requires the parameter output_format=%s" % required_output_format
+        )
 
     # The request_format parameter is not forwarded into the API action
     if "request_format" in request_object:
@@ -197,8 +210,7 @@ def _execute_action(api_call, request_object):
 
 
 def _execute_action_no_lock(api_call, request_object):
-    if cmk.gui.watolib.read_only.is_enabled() and \
-       not cmk.gui.watolib.read_only.may_override():
+    if cmk.gui.watolib.read_only.is_enabled() and not cmk.gui.watolib.read_only.may_override():
         raise MKUserError(None, cmk.gui.watolib.read_only.message())
 
     # We assume something will be modified and increase the config generation

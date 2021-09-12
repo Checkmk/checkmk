@@ -23,8 +23,10 @@ from cmk.gui.valuespec import (
 
 def _parameter_valuespec_multipath_count():
     return Alternative(
-        help=_("This rules sets the expected number of active paths for a multipath LUN "
-               "on ESX servers"),
+        help=_(
+            "This rules sets the expected number of active paths for a multipath LUN "
+            "on ESX servers"
+        ),
         title=_("Match type"),
         elements=[
             FixedValue(
@@ -35,28 +37,35 @@ def _parameter_valuespec_multipath_count():
             Dictionary(
                 title=_("Custom settings"),
                 elements=[
-                    (element,
-                     Transform(Tuple(
-                         title=description,
-                         elements=[
-                             Integer(title=_("Critical if less than")),
-                             Integer(title=_("Warning if less than")),
-                             Integer(title=_("Warning if more than")),
-                             Integer(title=_("Critical if more than")),
-                         ],
-                     ),
-                               forth=lambda x: len(x) == 2 and (
-                                   0,
-                                   0,
-                                   x[0],
-                                   x[1],
-                               ) or x))
-                    for (element,
-                         description) in [("active", _("Active paths")), (
-                             "dead", _("Dead paths")), (
-                                 "disabled", _("Disabled paths")), (
-                                     "standby", _("Standby paths")), ("unknown",
-                                                                      _("Unknown paths"))]
+                    (
+                        element,
+                        Transform(
+                            Tuple(
+                                title=description,
+                                elements=[
+                                    Integer(title=_("Critical if less than")),
+                                    Integer(title=_("Warning if less than")),
+                                    Integer(title=_("Warning if more than")),
+                                    Integer(title=_("Critical if more than")),
+                                ],
+                            ),
+                            forth=lambda x: len(x) == 2
+                            and (
+                                0,
+                                0,
+                                x[0],
+                                x[1],
+                            )
+                            or x,
+                        ),
+                    )
+                    for (element, description) in [
+                        ("active", _("Active paths")),
+                        ("dead", _("Dead paths")),
+                        ("disabled", _("Disabled paths")),
+                        ("standby", _("Standby paths")),
+                        ("unknown", _("Unknown paths")),
+                    ]
                 ],
             ),
         ],
@@ -70,4 +79,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Path ID")),
         parameter_valuespec=_parameter_valuespec_multipath_count,
         title=lambda: _("ESX Multipath Count"),
-    ))
+    )
+)

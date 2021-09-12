@@ -14,16 +14,20 @@ from cmk.gui.valuespec import Dictionary, Percentage, Tuple
 
 
 def _parameter_valuespec_sophos_memory():
-    return Dictionary(elements=[
-        ("memory_levels",
-         Tuple(
-             title=_("Memory percentage usage"),
-             elements=[
-                 Percentage(title=_("Warning at"), default_value=80),
-                 Percentage(title=_("Critical at"), default_value=90)
-             ],
-         )),
-    ])
+    return Dictionary(
+        elements=[
+            (
+                "memory_levels",
+                Tuple(
+                    title=_("Memory percentage usage"),
+                    elements=[
+                        Percentage(title=_("Warning at"), default_value=80),
+                        Percentage(title=_("Critical at"), default_value=90),
+                    ],
+                ),
+            ),
+        ]
+    )
 
 
 rulespec_registry.register(
@@ -33,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_sophos_memory,
         title=lambda: _("Sophos Memory utilization"),
-    ))
+    )
+)

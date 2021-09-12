@@ -14,35 +14,43 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_k8s_roles():
-    return Dictionary(elements=[
-        ('total',
-         Tuple(
-             title=_('Total'),
-             default_value=(80.0, 90.0),
-             elements=[
-                 Integer(title=_("Warning above")),
-                 Integer(title=_("Critical above")),
-             ],
-         )),
-        ('cluster_roles',
-         Tuple(
-             title=_('Cluster roles'),
-             default_value=(80.0, 90.0),
-             elements=[
-                 Integer(title=_("Warning above")),
-                 Integer(title=_("Critical above")),
-             ],
-         )),
-        ('roles',
-         Tuple(
-             title=_('Roles'),
-             default_value=(80.0, 90.0),
-             elements=[
-                 Integer(title=_("Warning above")),
-                 Integer(title=_("Critical above")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "total",
+                Tuple(
+                    title=_("Total"),
+                    default_value=(80.0, 90.0),
+                    elements=[
+                        Integer(title=_("Warning above")),
+                        Integer(title=_("Critical above")),
+                    ],
+                ),
+            ),
+            (
+                "cluster_roles",
+                Tuple(
+                    title=_("Cluster roles"),
+                    default_value=(80.0, 90.0),
+                    elements=[
+                        Integer(title=_("Warning above")),
+                        Integer(title=_("Critical above")),
+                    ],
+                ),
+            ),
+            (
+                "roles",
+                Tuple(
+                    title=_("Roles"),
+                    default_value=(80.0, 90.0),
+                    elements=[
+                        Integer(title=_("Warning above")),
+                        Integer(title=_("Critical above")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -52,4 +60,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_k8s_roles,
         title=lambda: _("Kubernetes roles"),
-    ))
+    )
+)

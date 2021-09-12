@@ -36,10 +36,17 @@ class DowntimeSchedule:
         self.comment = comment
 
     def livestatus_command(self, specification: str, cmdtag: str) -> str:
-        return ("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % specification) + ("%d;%d;%d;0;%d;%s;" % (
-            self.start_time,
-            self.end_time,
-            self.mode,
-            self.delayed_duration,
-            user.id,
-        )) + livestatus.lqencode(self.comment)
+        return (
+            ("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % specification)
+            + (
+                "%d;%d;%d;0;%d;%s;"
+                % (
+                    self.start_time,
+                    self.end_time,
+                    self.mode,
+                    self.delayed_duration,
+                    user.id,
+                )
+            )
+            + livestatus.lqencode(self.comment)
+        )

@@ -27,31 +27,33 @@ bluecat_ha_operstates = [
 def _parameter_valuespec_bluecat_ha():
     return Dictionary(
         elements=[
-            ("oper_states",
-             Dictionary(
-                 title=_("Operations States"),
-                 elements=[
-                     (
-                         "warning",
-                         ListChoice(
-                             title=_("States treated as warning"),
-                             choices=bluecat_ha_operstates,
-                             default_value=[5, 6, 7],
-                         ),
-                     ),
-                     (
-                         "critical",
-                         ListChoice(
-                             title=_("States treated as critical"),
-                             choices=bluecat_ha_operstates,
-                             default_value=[8, 4],
-                         ),
-                     ),
-                 ],
-                 required_keys=['warning', 'critical'],
-             )),
+            (
+                "oper_states",
+                Dictionary(
+                    title=_("Operations States"),
+                    elements=[
+                        (
+                            "warning",
+                            ListChoice(
+                                title=_("States treated as warning"),
+                                choices=bluecat_ha_operstates,
+                                default_value=[5, 6, 7],
+                            ),
+                        ),
+                        (
+                            "critical",
+                            ListChoice(
+                                title=_("States treated as critical"),
+                                choices=bluecat_ha_operstates,
+                                default_value=[8, 4],
+                            ),
+                        ),
+                    ],
+                    required_keys=["warning", "critical"],
+                ),
+            ),
         ],
-        required_keys=['oper_states'],  # There is only one value, so its required
+        required_keys=["oper_states"],  # There is only one value, so its required
     )
 
 
@@ -62,4 +64,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_bluecat_ha,
         title=lambda: _("Bluecat HA Settings"),
-    ))
+    )
+)

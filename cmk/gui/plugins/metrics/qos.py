@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import graph_info, metric_info
 
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -34,7 +34,7 @@ metric_info["qos_outbound_bytes_rate"] = {
     "color": "26/a",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -52,5 +52,5 @@ graph_info["qos_class_traffic"] = {
         ("qos_outbound_bytes_rate,8,*@bits/s", "area", _("QoS outbound bits")),
         ("qos_dropped_bytes_rate,8,*@bits/s", "-area", _("QoS dropped bits")),
     ],
-    "range": ("qos_dropped_bytes_rate:max,8,*,-1,*", "qos_outbound_bytes_rate:max,8,*")
+    "range": ("qos_dropped_bytes_rate:max,8,*,-1,*", "qos_outbound_bytes_rate:max,8,*"),
 }

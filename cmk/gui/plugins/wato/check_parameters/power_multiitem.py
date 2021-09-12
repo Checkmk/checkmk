@@ -21,16 +21,20 @@ def _item_spec_power_multiitem():
 
 
 def _parameter_valuespec_power_multiitem():
-    return Dictionary(elements=[
-        ("power_upper_levels",
-         Tuple(
-             title=_("Alert on too high power consumption"),
-             elements=[
-                 Integer(title=_("Warning at"), unit=_("W"), default_value=90),
-                 Integer(title=_("Critical at"), unit=_("W"), default_value=100),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "power_upper_levels",
+                Tuple(
+                    title=_("Alert on too high power consumption"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("W"), default_value=90),
+                        Integer(title=_("Critical at"), unit=_("W"), default_value=100),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -41,4 +45,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_power_multiitem,
         title=lambda: _("Device Component Power Consumption"),
-    ))
+    )
+)

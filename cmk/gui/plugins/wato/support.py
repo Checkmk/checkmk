@@ -18,7 +18,7 @@ from cmk.gui.valuespec import HTTPUrl, TextInput
 @config_variable_group_registry.register
 class ConfigVariableGroupSupport(ConfigVariableGroup):
     def title(self):
-        return _('Support')
+        return _("Support")
 
     def sort_index(self):
         return 80
@@ -57,8 +57,10 @@ class ConfigVariableCrashReportTarget(ConfigVariable):
     def valuespec(self):
         return TextInput(
             title=_("Crash report fallback mail address"),
-            help=_("By default crash reports will be sent to our crash reporting server. In case "
-                   "this fails for some reason, the crash reports can be sent by mail to the "
-                   "address configured here."),
+            help=_(
+                "By default crash reports will be sent to our crash reporting server. In case "
+                "this fails for some reason, the crash reports can be sent by mail to the "
+                "address configured here."
+            ),
             size=80,
         )

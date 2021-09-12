@@ -106,16 +106,19 @@ def _page_not_found() -> Response:
         title = _("Page not found")
         html.header(
             title,
-            Breadcrumb([
-                BreadcrumbItem(
-                    title="Nowhere",
-                    url=None,
-                ),
-                BreadcrumbItem(
-                    title=title,
-                    url="javascript:document.location.reload(false)",
-                ),
-            ]))
+            Breadcrumb(
+                [
+                    BreadcrumbItem(
+                        title="Nowhere",
+                        url=None,
+                    ),
+                    BreadcrumbItem(
+                        title=title,
+                        url="javascript:document.location.reload(false)",
+                    ),
+                ]
+            ),
+        )
         html.show_error(_("This page was not found. Sorry."))
     html.footer()
 
@@ -181,6 +184,7 @@ def get_mime_type_from_output_format(output_format: str) -> str:
 
 class CheckmkApp:
     """The Check_MK GUI WSGI entry point"""
+
     def __init__(self, debug=False):
         self.debug = debug
 
@@ -188,7 +192,8 @@ class CheckmkApp:
         req = http.Request(environ)
 
         output_format = get_output_format(
-            req.get_ascii_input_mandatory("output_format", "html").lower())
+            req.get_ascii_input_mandatory("output_format", "html").lower()
+        )
         mime_type = get_mime_type_from_output_format(output_format)
 
         resp = Response(headers=default_response_headers(req), mimetype=mime_type)
@@ -201,14 +206,14 @@ class CheckmkApp:
         config_obj = config_module.make_config_object(config_module.get_default_config())
 
         with AppContext(self), RequestContext(
-                req=req,
-                resp=resp,
-                funnel=funnel,
-                config_obj=config_obj,
-                html_obj=htmllib.html(req, resp, funnel, output_format),
-                timeout_manager=timeout_manager,
-                display_options=DisplayOptions(),
-                theme=theme,
+            req=req,
+            resp=resp,
+            funnel=funnel,
+            config_obj=config_obj,
+            html_obj=htmllib.html(req, resp, funnel, output_format),
+            timeout_manager=timeout_manager,
+            display_options=DisplayOptions(),
+            theme=theme,
         ), patch_json(json):
             config_module.initialize()
             theme.from_config(config.ui_theme)
@@ -220,7 +225,9 @@ class CheckmkApp:
             return _process_request(environ, start_response, debug=self.debug)
 
 
-def _process_request(environ, start_response, debug=False) -> Response:  # pylint: disable=too-many-branches
+def _process_request(
+    environ, start_response, debug=False
+) -> Response:  # pylint: disable=too-many-branches
     try:
         # Make sure all plugins are available as early as possible. At least
         # we need the plugins (i.e. the permissions declared in these) at the

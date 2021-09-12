@@ -14,16 +14,20 @@ from cmk.gui.valuespec import Age, Dictionary, Tuple
 
 
 def _parameter_valuespec_backup_timemachine():
-    return Dictionary(elements=[
-        ("age",
-         Tuple(
-             title=_("Maximum age of latest timemachine backup"),
-             elements=[
-                 Age(title=_("Warning if older than"), default_value=86400),
-                 Age(title=_("Critical if older than"), default_value=172800)
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "age",
+                Tuple(
+                    title=_("Maximum age of latest timemachine backup"),
+                    elements=[
+                        Age(title=_("Warning if older than"), default_value=86400),
+                        Age(title=_("Critical if older than"), default_value=172800),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -33,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_backup_timemachine,
         title=lambda: _("Timemachine backup age"),
-    ))
+    )
+)

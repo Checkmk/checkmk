@@ -55,6 +55,7 @@ class MegaMenuRegistry(Registry[MegaMenu]):
         >>> assert mega_menu_registry["monitoring"].sort_index == 5
 
     """
+
     def plugin_name(self, instance: MegaMenu) -> str:
         return instance.name
 
@@ -129,7 +130,8 @@ def _help_menu_topics() -> List[TopicMenuTopic]:
                     sort_index=40,
                     icon=None,  # TODO(CMK-5773): add an icon
                 ),
-            ]),
+            ],
+        ),
         TopicMenuTopic(
             name="external_help",
             title=_("External"),
@@ -172,7 +174,8 @@ mega_menu_registry.register(
         sort_index=18,
         topics=_help_menu_topics,
         info_line=lambda: f"{__version__} ({edition_title()}){free_edition_status()}",
-    ))
+    )
+)
 
 
 def free_edition_status() -> str:
@@ -188,4 +191,5 @@ def free_edition_status() -> str:
     if remaining_time.days > 1:
         return "<br>" + _("Trial expires in %s days") % remaining_time.days
     return "<br>" + _("Trial expires today (%s)") % time.strftime(
-        str(_("%H:%M")), time.localtime(time.time() + remaining_time.seconds))
+        str(_("%H:%M")), time.localtime(time.time() + remaining_time.seconds)
+    )

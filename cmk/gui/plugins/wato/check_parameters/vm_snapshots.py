@@ -14,24 +14,30 @@ from cmk.gui.valuespec import Age, Dictionary, Tuple
 
 
 def _parameter_valuespec_vm_snapshots():
-    return Dictionary(elements=[
-        ("age_oldest",
-         Tuple(
-             title=_("Age of the oldest snapshot"),
-             elements=[
-                 Age(title=_("Warning if older than")),
-                 Age(title=_("Critical if older than"))
-             ],
-         )),
-        ("age",
-         Tuple(
-             title=_("Age of the latest snapshot"),
-             elements=[
-                 Age(title=_("Warning if older than")),
-                 Age(title=_("Critical if older than"))
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "age_oldest",
+                Tuple(
+                    title=_("Age of the oldest snapshot"),
+                    elements=[
+                        Age(title=_("Warning if older than")),
+                        Age(title=_("Critical if older than")),
+                    ],
+                ),
+            ),
+            (
+                "age",
+                Tuple(
+                    title=_("Age of the latest snapshot"),
+                    elements=[
+                        Age(title=_("Warning if older than")),
+                        Age(title=_("Critical if older than")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -41,4 +47,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_vm_snapshots,
         title=lambda: _("Virtual Machine Snapshots"),
-    ))
+    )
+)

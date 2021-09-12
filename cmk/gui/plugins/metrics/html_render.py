@@ -77,17 +77,20 @@ def host_service_graph_popup_cmk(site, host_name, service_description):
         "time_range": (start_time, end_time),
     }
 
-    graph_identification = ("template", {
-        "site": site,
-        "host_name": host_name,
-        "service_description": service_description,
-    })
+    graph_identification = (
+        "template",
+        {
+            "site": site,
+            "host_name": host_name,
+            "service_description": service_description,
+        },
+    )
 
     html.write_html(
-        render_graphs_from_specification_html(graph_identification,
-                                              graph_data_range,
-                                              graph_render_options,
-                                              render_async=False))
+        render_graphs_from_specification_html(
+            graph_identification, graph_data_range, graph_render_options, render_async=False
+        )
+    )
 
 
 def render_graph_or_error_html(graph_artwork, graph_data_range, graph_render_options) -> HTML:
@@ -111,8 +114,10 @@ def render_graph_error_html(msg_or_exc, title=None) -> HTML:
     if title is None:
         title = _("Cannot display graph")
 
-    return html.render_div(html.render_div(title, class_="title") + html.render_pre(msg),
-                           class_=["graph", "brokengraph"])
+    return html.render_div(
+        html.render_div(title, class_="title") + html.render_pre(msg),
+        class_=["graph", "brokengraph"],
+    )
 
 
 # Render the complete HTML code of a graph - including its <div> container.
@@ -125,9 +130,14 @@ def render_graph_html(graph_artwork, graph_data_range, graph_render_options) -> 
         html_code = HTML(output_funnel.drain())
 
     return html.render_javascript(
-        'cmk.graphs.create_graph(%s, %s, %s, %s);' %
-        (json.dumps(html_code), json.dumps(graph_artwork), json.dumps(graph_render_options),
-         json.dumps(graph_ajax_context(graph_artwork, graph_data_range, graph_render_options))))
+        "cmk.graphs.create_graph(%s, %s, %s, %s);"
+        % (
+            json.dumps(html_code),
+            json.dumps(graph_artwork),
+            json.dumps(graph_render_options),
+            json.dumps(graph_ajax_context(graph_artwork, graph_data_range, graph_render_options)),
+        )
+    )
 
 
 # The ajax context will be passed back to us to the page handler ajax_graph() whenever
@@ -148,7 +158,8 @@ def render_title_elements_plain(elements: Iterable[str]) -> str:
 
 def render_plain_graph_title(graph_artwork, graph_render_options) -> str:
     return render_title_elements_plain(
-        element[0] for element in _render_graph_title_elements(graph_artwork, graph_render_options))
+        element[0] for element in _render_graph_title_elements(graph_artwork, graph_render_options)
+    )
 
 
 def _render_graph_title_elements(graph_artwork, graph_render_options):
@@ -220,8 +231,10 @@ def _show_html_graph_title(graph_artwork, graph_render_options) -> None:
     if not title:
         return
 
-    html.div(title,
-             class_=["title", "inline" if graph_render_options["show_title"] == "inline" else None])
+    html.div(
+        title,
+        class_=["title", "inline" if graph_render_options["show_title"] == "inline" else None],
+    )
 
 
 def _graph_legend_enabled(graph_render_options, graph_artwork) -> bool:
@@ -236,9 +249,11 @@ def _show_graph_html_content(graph_artwork, graph_data_range, graph_render_optio
     """
     graph_render_options = artwork.add_default_render_options(graph_render_options)
 
-    html.open_div(class_=["graph", "preview" if graph_render_options["preview"] else None],
-                  style="font-size: %.1fpt;%s" %
-                  (graph_render_options["font_size"], _graph_padding_styles(graph_render_options)))
+    html.open_div(
+        class_=["graph", "preview" if graph_render_options["preview"] else None],
+        style="font-size: %.1fpt;%s"
+        % (graph_render_options["font_size"], _graph_padding_styles(graph_render_options)),
+    )
 
     if graph_render_options["show_controls"]:
         _show_graph_add_to_icon_for_popup(graph_artwork, graph_data_range, graph_render_options)
@@ -249,8 +264,10 @@ def _show_graph_html_content(graph_artwork, graph_data_range, graph_render_optio
 
     # Add the floating elements
     if graph_render_options["show_graph_time"] and not graph_render_options["preview"]:
-        html.div(graph_artwork["time_axis"]["title"] or "",
-                 css=["time", "inline" if graph_render_options["show_title"] == "inline" else None])
+        html.div(
+            graph_artwork["time_axis"]["title"] or "",
+            css=["time", "inline" if graph_render_options["show_title"] == "inline" else None],
+        )
 
     if graph_render_options["show_controls"] and graph_render_options["resizable"]:
         html.img(src=theme.url("images/resize_graph.png"), class_="resize")
@@ -263,8 +280,9 @@ def _show_graph_html_content(graph_artwork, graph_data_range, graph_render_optio
         _show_graph_legend(graph_artwork, graph_render_options)
 
     model_params_repr = graph_artwork["definition"].get("model_params_repr")
-    model_params_display = graph_artwork["definition"].get('model_params',
-                                                           {}).get("display_model_parametrization")
+    model_params_display = (
+        graph_artwork["definition"].get("model_params", {}).get("display_model_parametrization")
+    )
     if model_params_repr and model_params_display:
         html.open_div(align="center")
         html.h2(_("Forecast Parametrization"))
@@ -274,24 +292,27 @@ def _show_graph_html_content(graph_artwork, graph_data_range, graph_render_optio
     html.close_div()
 
 
-def _show_graph_add_to_icon_for_popup(graph_artwork, graph_data_range,
-                                      graph_render_options) -> None:
-    icon_html = html.render_icon('menu', _('Add this graph to...'))
+def _show_graph_add_to_icon_for_popup(
+    graph_artwork, graph_data_range, graph_render_options
+) -> None:
+    icon_html = html.render_icon("menu", _("Add this graph to..."))
     element_type_name = "pnpgraph"
 
     # Data will be transferred via URL and Javascript magic eventually
     # to our function popup_add_element (htdocs/reporting.py)
     # argument report_name --> provided by popup system
     # further arguments:
-    html.popup_trigger(content=icon_html,
-                       ident='add_visual',
-                       method=MethodAjax(endpoint='add_visual',
-                                         url_vars=[("add_type", "pnpgraph")]),
-                       data=[
-                           element_type_name, None,
-                           graph_ajax_context(graph_artwork, graph_data_range, graph_render_options)
-                       ],
-                       style="z-index:2")  # Ensures that graph canvas does not cover it
+    html.popup_trigger(
+        content=icon_html,
+        ident="add_visual",
+        method=MethodAjax(endpoint="add_visual", url_vars=[("add_type", "pnpgraph")]),
+        data=[
+            element_type_name,
+            None,
+            graph_ajax_context(graph_artwork, graph_data_range, graph_render_options),
+        ],
+        style="z-index:2",
+    )  # Ensures that graph canvas does not cover it
 
 
 def _show_graph_canvas(graph_render_options) -> None:
@@ -299,11 +320,12 @@ def _show_graph_canvas(graph_render_options) -> None:
     size = graph_render_options["size"]
     graph_width = size[0] * html_size_per_ex
     graph_height = size[1] * html_size_per_ex
-    html.canvas("",
-                style="position: relative; width: %dpx; height: %dpx;" %
-                (graph_width, graph_height),
-                width=graph_width * 2,
-                height=graph_height * 2)
+    html.canvas(
+        "",
+        style="position: relative; width: %dpx; height: %dpx;" % (graph_width, graph_height),
+        width=graph_width * 2,
+        height=graph_height * 2,
+    )
 
 
 def show_pin_time(graph_artwork, graph_render_options):
@@ -311,8 +333,10 @@ def show_pin_time(graph_artwork, graph_render_options):
         return False
 
     timestamp = graph_artwork["pin_time"]
-    return timestamp is not None and graph_artwork["start_time"] <= timestamp <= graph_artwork[
-        "end_time"]
+    return (
+        timestamp is not None
+        and graph_artwork["start_time"] <= timestamp <= graph_artwork["end_time"]
+    )
 
 
 def render_pin_time_label(graph_artwork):
@@ -383,21 +407,25 @@ def _show_graph_legend(graph_artwork, graph_render_options) -> None:
     for scalar, title, inactive in scalars:
         classes = ["scalar", scalar]
         if inactive and graph_artwork["step"] != 60:
-            descr = _("This graph is based on data consolidated with the function \"%s\". The "
-                      "values in this column are the \"%s\" values of the \"%s\" values "
-                      "aggregated in %s steps. Assuming a check interval of 1 minute, the %s "
-                      "values here are based on the %s value out of %d raw values.") % (
-                          graph_artwork["definition"]["consolidation_function"],
-                          scalar,
-                          graph_artwork["definition"]["consolidation_function"],
-                          artwork.get_step_label(graph_artwork["step"]),
-                          scalar,
-                          graph_artwork["definition"]["consolidation_function"],
-                          (graph_artwork["step"] / 60),
-                      )
+            descr = _(
+                'This graph is based on data consolidated with the function "%s". The '
+                'values in this column are the "%s" values of the "%s" values '
+                "aggregated in %s steps. Assuming a check interval of 1 minute, the %s "
+                "values here are based on the %s value out of %d raw values."
+            ) % (
+                graph_artwork["definition"]["consolidation_function"],
+                scalar,
+                graph_artwork["definition"]["consolidation_function"],
+                artwork.get_step_label(graph_artwork["step"]),
+                scalar,
+                graph_artwork["definition"]["consolidation_function"],
+                (graph_artwork["step"] / 60),
+            )
 
-            descr += "\n\n" + _("Click here to change the graphs "
-                                "consolidation function to \"%s\".") % scalar
+            descr += (
+                "\n\n"
+                + _("Click here to change the graphs " 'consolidation function to "%s".') % scalar
+            )
 
             classes.append("inactive")
         else:
@@ -531,8 +559,9 @@ def render_ajax_graph(context):
     if graph_render_options["editing"]:
         save_user_graph_data_range(graph_data_range)
 
-    graph_artwork = artwork.compute_graph_artwork(graph_recipe, graph_data_range,
-                                                  graph_render_options)
+    graph_artwork = artwork.compute_graph_artwork(
+        graph_recipe, graph_data_range, graph_render_options
+    )
 
     with output_funnel.plugged():
         _show_graph_html_content(graph_artwork, graph_data_range, graph_render_options)
@@ -546,14 +575,17 @@ def render_ajax_graph(context):
             "definition": graph_recipe,
             "data_range": graph_data_range,
             "render_options": graph_render_options,
-        }
+        },
     }
 
 
 def load_user_graph_data_range():
-    return user.load_file("graph_range", {
-        "time_range": (time.time() - 86400, time.time()),
-    })
+    return user.load_file(
+        "graph_range",
+        {
+            "time_range": (time.time() - 86400, time.time()),
+        },
+    )
 
 
 def save_user_graph_data_range(graph_data_range):
@@ -567,8 +599,9 @@ def forget_manual_vertical_zoom():
         save_user_graph_data_range(user_range)
 
 
-def resolve_graph_recipe(graph_identification: GraphIdentifier,
-                         destination=None) -> Sequence[GraphRecipe]:
+def resolve_graph_recipe(
+    graph_identification: GraphIdentifier, destination=None
+) -> Sequence[GraphRecipe]:
     return graph_identification_types.create_graph_recipes(
         graph_identification,
         destination=None,
@@ -586,9 +619,14 @@ def resolve_graph_recipe_with_error_handling(
         )
     except livestatus.MKLivestatusNotFoundError:
         return render_graph_error_html(
-            "%s\n\n%s: %r" % (_("Cannot fetch data via Livestatus"),
-                              _("The graph specification is"), graph_identification),
-            _("Cannot calculate graph recipes"))
+            "%s\n\n%s: %r"
+            % (
+                _("Cannot fetch data via Livestatus"),
+                _("The graph specification is"),
+                graph_identification,
+            ),
+            _("Cannot calculate graph recipes"),
+        )
     except Exception as e:
         return render_graph_error_html(e, _("Cannot calculate graph recipes"))
 
@@ -604,28 +642,31 @@ def render_graphs_from_specification_html(
     if isinstance(graph_recipes, HTML):
         return graph_recipes  # This is to html.write the exception
 
-    return render_graphs_from_definitions(graph_recipes, graph_data_range, graph_render_options,
-                                          render_async)
+    return render_graphs_from_definitions(
+        graph_recipes, graph_data_range, graph_render_options, render_async
+    )
 
 
-def render_graphs_from_definitions(graph_recipes,
-                                   graph_data_range,
-                                   graph_render_options,
-                                   render_async=True) -> HTML:
+def render_graphs_from_definitions(
+    graph_recipes, graph_data_range, graph_render_options, render_async=True
+) -> HTML:
     # Estimate step. Step is the number of seconds each fetched data point represents.
     # It does not make sense to fetch the data in *much* greater precision than our
     # display has. A *bit* more precision is useful for better optical zoom.
     graph_data_range.setdefault(
-        "step", estimate_graph_step_for_html(graph_data_range["time_range"], graph_render_options))
+        "step", estimate_graph_step_for_html(graph_data_range["time_range"], graph_render_options)
+    )
 
     output = HTML()
     for graph_recipe in graph_recipes:
         if render_async:
-            output += render_graph_container_html(graph_recipe, graph_data_range,
-                                                  graph_render_options)
+            output += render_graph_container_html(
+                graph_recipe, graph_data_range, graph_render_options
+            )
         else:
-            output += render_graph_content_html(graph_recipe, graph_data_range,
-                                                graph_render_options)
+            output += render_graph_content_html(
+                graph_recipe, graph_data_range, graph_render_options
+            )
     return output
 
 
@@ -641,19 +682,21 @@ def render_graph_container_html(graph_recipe, graph_data_range, graph_render_opt
     graph_width = size[0] * html_size_per_ex
     graph_height = size[1] * html_size_per_ex
 
-    content = html.render_div("", class_="title") \
-        + html.render_div("",
-                          class_="content",
-                          style="width:%dpx;height:%dpx" % (graph_width, graph_height))
+    content = html.render_div("", class_="title") + html.render_div(
+        "", class_="content", style="width:%dpx;height:%dpx" % (graph_width, graph_height)
+    )
 
-    output = html.render_div(html.render_div(content, class_=["graph", "loading_graph"]),
-                             class_="graph_load_container") \
-
-    output += html.render_javascript("cmk.graphs.load_graph_content(%s, %s, %s)" % (
-        json.dumps(graph_recipe),
-        json.dumps(graph_data_range),
-        json.dumps(graph_render_options),
-    ))
+    output = html.render_div(
+        html.render_div(content, class_=["graph", "loading_graph"]), class_="graph_load_container"
+    )
+    output += html.render_javascript(
+        "cmk.graphs.load_graph_content(%s, %s, %s)"
+        % (
+            json.dumps(graph_recipe),
+            json.dumps(graph_data_range),
+            json.dumps(graph_render_options),
+        )
+    )
 
     if "cmk.graphs.register_delayed_graph_listener" not in html.final_javascript_code:
         html.final_javascript("cmk.graphs.register_delayed_graph_listener()")
@@ -669,9 +712,11 @@ def ajax_render_graph_content():
         api_request = request.get_request()
         resp = {
             "result_code": 0,
-            "result": render_graph_content_html(api_request["graph_recipe"],
-                                                api_request["graph_data_range"],
-                                                api_request["graph_render_options"]),
+            "result": render_graph_content_html(
+                api_request["graph_recipe"],
+                api_request["graph_data_range"],
+                api_request["graph_render_options"],
+            ),
         }
     except Exception:
         logger.exception("could not render graph")
@@ -686,13 +731,15 @@ def ajax_render_graph_content():
 def render_graph_content_html(graph_recipe, graph_data_range, graph_render_options) -> HTML:
     output = HTML()
     try:
-        graph_artwork = artwork.compute_graph_artwork(graph_recipe, graph_data_range,
-                                                      graph_render_options)
-        main_graph_html = render_graph_or_error_html(graph_artwork, graph_data_range,
-                                                     graph_render_options)
+        graph_artwork = artwork.compute_graph_artwork(
+            graph_recipe, graph_data_range, graph_render_options
+        )
+        main_graph_html = render_graph_or_error_html(
+            graph_artwork, graph_data_range, graph_render_options
+        )
 
         previews = graph_render_options["show_time_range_previews"]
-        if graph_recipe['specification'][0] == 'forecast':
+        if graph_recipe["specification"][0] == "forecast":
             previews = False
 
         if previews:
@@ -704,8 +751,9 @@ def render_graph_content_html(graph_recipe, graph_data_range, graph_render_optio
             output += main_graph_html
 
     except livestatus.MKLivestatusNotFoundError:
-        output += render_graph_error_html(_("Cannot fetch data via Livestatus"),
-                                          _("Cannot create graph"))
+        output += render_graph_error_html(
+            _("Cannot fetch data via Livestatus"), _("Cannot create graph")
+        )
 
     except Exception as e:
         output += render_graph_error_html(e, _("Cannot create graph"))
@@ -719,18 +767,20 @@ def render_time_range_selection(graph_recipe, graph_render_options) -> HTML:
     for timerange_attrs in config.graph_timeranges:
         duration = timerange_attrs["duration"]
         assert isinstance(duration, int)
-        graph_render_options.update({
-            "size": (20, 4),
-            "font_size": 6.0,  # pt
-            "onclick": "cmk.graphs.change_graph_timerange(graph, %d)" % duration,
-            "fixed_timerange": True,  # Do not follow timerange changes of other graphs
-            "title": timerange_attrs["title"],
-            "show_legend": False,
-            "show_controls": False,
-            "preview": True,
-            "resizable": False,
-            "interaction": False,
-        })
+        graph_render_options.update(
+            {
+                "size": (20, 4),
+                "font_size": 6.0,  # pt
+                "onclick": "cmk.graphs.change_graph_timerange(graph, %d)" % duration,
+                "fixed_timerange": True,  # Do not follow timerange changes of other graphs
+                "title": timerange_attrs["title"],
+                "show_legend": False,
+                "show_controls": False,
+                "preview": True,
+                "resizable": False,
+                "interaction": False,
+            }
+        )
 
         timerange = now - duration, now
         graph_data_range = {
@@ -738,15 +788,18 @@ def render_time_range_selection(graph_recipe, graph_render_options) -> HTML:
             "step": 2 * estimate_graph_step_for_html(timerange, graph_render_options),
         }
 
-        graph_artwork = artwork.compute_graph_artwork(graph_recipe, graph_data_range,
-                                                      graph_render_options)
+        graph_artwork = artwork.compute_graph_artwork(
+            graph_recipe, graph_data_range, graph_render_options
+        )
         rows.append(
             html.render_td(
                 render_graph_html(graph_artwork, graph_data_range, graph_render_options),
                 title=_("Change graph timerange to: %s") % timerange_attrs["title"],
-            ))
-    return html.render_table(HTML().join(html.render_tr(content) for content in rows),
-                             class_="timeranges")
+            )
+        )
+    return html.render_table(
+        HTML().join(html.render_tr(content) for content in rows), class_="timeranges"
+    )
 
 
 def estimate_graph_step_for_html(time_range, graph_render_options):
@@ -757,7 +810,7 @@ def estimate_graph_step_for_html(time_range, graph_render_options):
     return int((time_range[1] - time_range[0]) / number_of_steps)
 
 
-#.
+# .
 #   .--Graph hover---------------------------------------------------------.
 #   |        ____                 _       _                                |
 #   |       / ___|_ __ __ _ _ __ | |__   | |__   _____   _____ _ __        |
@@ -812,7 +865,7 @@ def graph_legend_height_ex(graph_render_options, graph_artwork) -> float:
     return 3.0 + (len(graph_curves(graph_artwork)) + len(graph_artwork["horizontal_rules"])) * 1.3
 
 
-#.
+# .
 #   .--Graph Dashlet-------------------------------------------------------.
 #   |    ____                 _       ____            _     _      _       |
 #   |   / ___|_ __ __ _ _ __ | |__   |  _ \  __ _ ___| |__ | | ___| |_     |
@@ -900,8 +953,9 @@ def host_service_graph_dashlet_cmk(
         "time_range": (start_time, end_time),
     }
 
-    graph_data_range["step"] = estimate_graph_step_for_html(graph_data_range["time_range"],
-                                                            graph_render_options)
+    graph_data_range["step"] = estimate_graph_step_for_html(
+        graph_data_range["time_range"], graph_render_options
+    )
 
     graph_recipes = resolve_graph_recipe_with_error_handling(
         graph_identification,
@@ -918,14 +972,14 @@ def host_service_graph_dashlet_cmk(
     # make the graph fit into the dashlet area.
     if graph_render_options["show_legend"]:
         # TODO FIXME: This graph artwork is calulated twice. Once here and once in render_graphs_from_specification_html()
-        graph_artwork = artwork.compute_graph_artwork(graph_recipe, graph_data_range,
-                                                      graph_render_options)
+        graph_artwork = artwork.compute_graph_artwork(
+            graph_recipe, graph_data_range, graph_render_options
+        )
         if graph_artwork["curves"]:
             legend_height = graph_legend_height_ex(graph_render_options, graph_artwork)
             graph_render_options["size"] = (width, height - legend_height)
 
-    html_code = render_graphs_from_definitions([graph_recipe],
-                                               graph_data_range,
-                                               graph_render_options,
-                                               render_async=False)
+    html_code = render_graphs_from_definitions(
+        [graph_recipe], graph_data_range, graph_render_options, render_async=False
+    )
     html.write_html(html_code)

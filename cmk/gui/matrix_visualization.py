@@ -30,9 +30,9 @@ class MatrixVisualization:
         return NotImplementedError
 
     def _get_livestatus(self, context):
-        context_filters, only_sites = visuals.get_filter_headers(table=self.livestatus_table(),
-                                                                 infos=self.filter_infos(),
-                                                                 context=context)
+        context_filters, only_sites = visuals.get_filter_headers(
+            table=self.livestatus_table(), infos=self.filter_infos(), context=context
+        )
         return self._execute_query(self._get_query(context_filters), only_sites)
 
     def _execute_query(self, query, only_sites):
@@ -46,10 +46,11 @@ class MatrixVisualization:
             sites.live().set_prepend_site(False)
 
     def _get_query(self, context_filters):
-        query = ("GET %s\n"
-                 "Columns: %s\n"
-                 "Limit: 901\n" %
-                 (self.livestatus_table(), self.livestatus_columns())) + context_filters
+        query = (
+            "GET %s\n"
+            "Columns: %s\n"
+            "Limit: 901\n" % (self.livestatus_table(), self.livestatus_columns())
+        ) + context_filters
         return query
 
 
@@ -93,7 +94,7 @@ class HostMatrixVisualization(MatrixVisualization):
 
         # Add one cell_spacing so that the cells fill the whole snapin width.
         # The spacing of the last cell overflows on the right.
-        html.open_table(class_=["hostmatrix"], style=['width:%spx' % (width + cell_spacing)])
+        html.open_table(class_=["hostmatrix"], style=["width:%spx" % (width + cell_spacing)])
         col, row = 1, 1
         for site, host, state, has_been_checked, worstsvc, downtimedepth in sorted(hosts):
             if col == 1:
@@ -112,17 +113,20 @@ class HostMatrixVisualization(MatrixVisualization):
             else:
                 s = "0"
             url = "view.py?view_name=host&site=%s&host=%s" % (urlencode(site), urlencode(host))
-            html.open_td(style=[
-                "width:%.2fpx" % (cell_size + cell_spacing),
-                "height:%.2fpx" % (cell_height + cell_spacing)
-            ])
-            html.a('',
-                   href=url,
-                   title=host,
-                   target="main",
-                   class_=["state", "state%s" % s],
-                   style=["width:%.2fpx;" % cell_size,
-                          "height:%.2fpx;" % cell_height])
+            html.open_td(
+                style=[
+                    "width:%.2fpx" % (cell_size + cell_spacing),
+                    "height:%.2fpx" % (cell_height + cell_spacing),
+                ]
+            )
+            html.a(
+                "",
+                href=url,
+                title=host,
+                target="main",
+                class_=["state", "state%s" % s],
+                style=["width:%.2fpx;" % cell_size, "height:%.2fpx;" % cell_height],
+            )
             html.close_td()
 
             if col == n or (row == rows and n == lastcols):

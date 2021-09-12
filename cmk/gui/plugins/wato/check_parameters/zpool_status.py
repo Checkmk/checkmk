@@ -16,4 +16,5 @@ rulespec_registry.register(
         check_group_name="zpool_status",
         group=RulespecGroupEnforcedServicesStorage,
         title=lambda: _("ZFS storage pool status"),
-    ))
+    )
+)

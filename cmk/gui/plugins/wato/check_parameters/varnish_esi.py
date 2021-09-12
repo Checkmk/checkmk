@@ -14,24 +14,30 @@ from cmk.gui.valuespec import Dictionary, Float, Tuple
 
 
 def _parameter_valuespec_varnish_esi():
-    return Dictionary(elements=[
-        ("errors",
-         Tuple(
-             title=_("Upper levels for \"ESI errors\" per second"),
-             elements=[
-                 Float(title=_("Warning at"), default_value=1.0),
-                 Float(title=_("Critical at"), default_value=2.0)
-             ],
-         )),
-        ("warnings",
-         Tuple(
-             title=_("Upper levels for \"ESI warnings\" per second"),
-             elements=[
-                 Float(title=_("Warning at"), default_value=1.0),
-                 Float(title=_("Critical at"), default_value=2.0)
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "errors",
+                Tuple(
+                    title=_('Upper levels for "ESI errors" per second'),
+                    elements=[
+                        Float(title=_("Warning at"), default_value=1.0),
+                        Float(title=_("Critical at"), default_value=2.0),
+                    ],
+                ),
+            ),
+            (
+                "warnings",
+                Tuple(
+                    title=_('Upper levels for "ESI warnings" per second'),
+                    elements=[
+                        Float(title=_("Warning at"), default_value=1.0),
+                        Float(title=_("Critical at"), default_value=2.0),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -41,4 +47,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_varnish_esi,
         title=lambda: _("Varnish ESI"),
-    ))
+    )
+)

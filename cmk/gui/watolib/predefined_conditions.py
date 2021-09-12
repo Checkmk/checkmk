@@ -14,8 +14,10 @@ from cmk.gui.watolib.utils import wato_root_dir
 
 class PredefinedConditionStore(WatoSimpleConfigFile):
     def __init__(self):
-        super().__init__(config_file_path=Path(wato_root_dir()) / "predefined_conditions.mk",
-                         config_variable="predefined_conditions")
+        super().__init__(
+            config_file_path=Path(wato_root_dir()) / "predefined_conditions.mk",
+            config_variable="predefined_conditions",
+        )
 
     def filter_usable_entries(self, entries):
         if user.may("wato.edit_all_predefined_conditions"):
@@ -37,5 +39,7 @@ class PredefinedConditionStore(WatoSimpleConfigFile):
         return {k: v for k, v in entries.items() if v["owned_by"] in user_groups}
 
     def choices(self):
-        return [(ident, entry["title"])
-                for ident, entry in self.filter_usable_entries(self.load_for_reading()).items()]
+        return [
+            (ident, entry["title"])
+            for ident, entry in self.filter_usable_entries(self.load_for_reading()).items()
+        ]

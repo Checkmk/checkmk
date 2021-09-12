@@ -29,7 +29,7 @@ from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerData = List[Tuple[float, str]]
 
-#.
+# .
 #   .--Plugin API----------------------------------------------------------.
 #   |           ____  _             _            _    ____ ___             |
 #   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
@@ -57,7 +57,7 @@ perfometers: _Dict[str, Callable[[Row, str, Perfdata], LegacyPerfometerResult]] 
 #   '----------------------------------------------------------------------'
 
 
-#helper function for perfometer tables
+# helper function for perfometer tables
 def render_perfometer_td(perc: float, color: str) -> HTML:
     # the hex color can have additional information about opacity
     # internet explorer has problems with the format of rgba, e.g.: #aaaaaa4d
@@ -71,7 +71,7 @@ def render_perfometer_td(perc: float, color: str) -> HTML:
     style = ["width: %d%%;" % int(float(perc)), "background-color: %s" % color]
     if opacity is not None:
         style += ["opacity: %s" % opacity]
-    return html.render_td('', class_="inner", style=style)
+    return html.render_td("", class_="inner", style=style)
 
 
 # render the perfometer table
@@ -89,15 +89,23 @@ def perfometer_linear(perc: float, color: str) -> HTML:
 # Paint logarithm with base 10, half_value is being
 # displayed at 50% of the width
 def perfometer_logarithmic(value: float, half_value: float, base: float, color: str) -> HTML:
-    return render_metricometer([
-        metrics.MetricometerRendererLogarithmic.get_stack_from_values(value, half_value, base,
-                                                                      color)
-    ])
+    return render_metricometer(
+        [
+            metrics.MetricometerRendererLogarithmic.get_stack_from_values(
+                value, half_value, base, color
+            )
+        ]
+    )
 
 
 # prepare the rows for logarithmic perfometers (left or right)
-def calculate_half_row_logarithmic(left_or_right: Literal["left", "right"], value: float,
-                                   color: str, half_value: float, base: float) -> PerfometerData:
+def calculate_half_row_logarithmic(
+    left_or_right: Literal["left", "right"],
+    value: float,
+    color: str,
+    half_value: float,
+    base: float,
+) -> PerfometerData:
     value = float(value)
 
     if value == 0.0:
@@ -113,28 +121,43 @@ def calculate_half_row_logarithmic(left_or_right: Literal["left", "right"], valu
 
 
 # Dual logarithmic Perf-O-Meter
-def perfometer_logarithmic_dual(value_left: float, color_left: str, value_right: float,
-                                color_right: str, half_value: float, base: float) -> HTML:
+def perfometer_logarithmic_dual(
+    value_left: float,
+    color_left: str,
+    value_right: float,
+    color_right: str,
+    half_value: float,
+    base: float,
+) -> HTML:
     data: PerfometerData = []
     data.extend(calculate_half_row_logarithmic("left", value_left, color_left, half_value, base))
     data.extend(calculate_half_row_logarithmic("right", value_right, color_right, half_value, base))
     return render_perfometer(data)
 
 
-def perfometer_logarithmic_dual_independent(value_left: float, color_left: str,
-                                            half_value_left: float, base_left: float,
-                                            value_right: float, color_right: str,
-                                            half_value_right: float, base_right: float) -> HTML:
+def perfometer_logarithmic_dual_independent(
+    value_left: float,
+    color_left: str,
+    half_value_left: float,
+    base_left: float,
+    value_right: float,
+    color_right: str,
+    half_value_right: float,
+    base_right: float,
+) -> HTML:
     data: PerfometerData = []
     data.extend(
-        calculate_half_row_logarithmic("left", value_left, color_left, half_value_left, base_left))
+        calculate_half_row_logarithmic("left", value_left, color_left, half_value_left, base_left)
+    )
     data.extend(
-        calculate_half_row_logarithmic("right", value_right, color_right, half_value_right,
-                                       base_right))
+        calculate_half_row_logarithmic(
+            "right", value_right, color_right, half_value_right, base_right
+        )
+    )
     return render_perfometer(data)
 
 
-#.
+# .
 #   .--New Style--(Metric-O-Meters)----------------------------------------.
 #   |            _   _                 ____  _         _                   |
 #   |           | \ | | _____      __ / ___|| |_ _   _| | ___              |
@@ -151,14 +174,15 @@ def perfometer_logarithmic_dual_independent(value_left: float, color_left: str,
 def render_metricometer(stack) -> HTML:
     if len(stack) not in (1, 2):
         raise MKGeneralException(
-            _("Invalid Perf-O-Meter definition %r: only one or two entries are allowed") % stack)
+            _("Invalid Perf-O-Meter definition %r: only one or two entries are allowed") % stack
+        )
     h = HTML().join(map(render_perfometer, stack))
     if len(stack) == 2:
         h = html.render_div(h, class_="stacked")
     return h
 
 
-#.
+# .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |

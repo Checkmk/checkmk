@@ -34,8 +34,9 @@ class MasterControlSnapin(SidebarSnapin):
 
     @classmethod
     def description(cls) -> str:
-        return _("Buttons for switching globally states such as enabling "
-                 "checks and notifications")
+        return _(
+            "Buttons for switching globally states such as enabling " "checks and notifications"
+        )
 
     def show(self) -> None:
         items = self._core_toggles()
@@ -44,20 +45,26 @@ class MasterControlSnapin(SidebarSnapin):
         site_status_info: Dict[sites.SiteId, List] = {}
         try:
             sites.live().set_prepend_site(True)
-            for row in sites.live().query("GET status\nColumns: %s" %
-                                          " ".join([i[0] for i in items])):
+            for row in sites.live().query(
+                "GET status\nColumns: %s" % " ".join([i[0] for i in items])
+            ):
                 site_id, values = row[0], row[1:]
                 site_status_info[site_id] = values
         finally:
             sites.live().set_prepend_site(False)
 
         for site_id, site_alias in sites.sorted_sites():
-            container: ContextManager[bool] = foldable_container(
-                treename="master_control",
-                id_=site_id,
-                isopen=True,
-                title=site_alias,
-                icon="foldable_sidebar") if not sites.is_single_local_site() else nullcontext(False)
+            container: ContextManager[bool] = (
+                foldable_container(
+                    treename="master_control",
+                    id_=site_id,
+                    isopen=True,
+                    title=site_alias,
+                    icon="foldable_sidebar",
+                )
+                if not sites.is_single_local_site()
+                else nullcontext(False)
+            )
             with container:
                 try:
                     self._show_master_control_site(site_id, site_status_info, items)
@@ -76,9 +83,12 @@ class MasterControlSnapin(SidebarSnapin):
             ("enable_event_handlers", _("Alert handlers")),
         ]
 
-    def _show_master_control_site(self, site_id: sites.SiteId, site_status_info: Dict[sites.SiteId,
-                                                                                      List],
-                                  items: List[Tuple[str, str]]) -> None:
+    def _show_master_control_site(
+        self,
+        site_id: sites.SiteId,
+        site_status_info: Dict[sites.SiteId, List],
+        items: List[Tuple[str, str]],
+    ) -> None:
         site_state = sites.states().get(site_id)
 
         if not site_state:
@@ -118,14 +128,19 @@ class MasterControlSnapin(SidebarSnapin):
                 continue
 
             colvalue = site_info[i]
-            url = makeactionuri_contextless(request,
-                                            transactions, [
-                                                ("site", site_id),
-                                                ("switch", colname),
-                                                ("state", "%d" % (1 - colvalue)),
-                                            ],
-                                            filename="switch_master_state.py")
-            onclick = "cmk.ajax.get_url('%s', cmk.utils.update_contents, 'snapin_master_control')" % url
+            url = makeactionuri_contextless(
+                request,
+                transactions,
+                [
+                    ("site", site_id),
+                    ("switch", colname),
+                    ("state", "%d" % (1 - colvalue)),
+                ],
+                filename="switch_master_state.py",
+            )
+            onclick = (
+                "cmk.ajax.get_url('%s', cmk.utils.update_contents, 'snapin_master_control')" % url
+            )
 
             html.open_tr()
             html.td(title, class_="left")
@@ -185,7 +200,8 @@ class MasterControlSnapin(SidebarSnapin):
         sites.live().set_only_sites([site])
         sites.live().query(
             "GET status\nWaitTrigger: program\nWaitTimeout: 10000\nWaitCondition: %s = %d\nColumns: %s\n"
-            % (column, state, column))
+            % (column, state, column)
+        )
         sites.live().set_only_sites()
 
         self.show()

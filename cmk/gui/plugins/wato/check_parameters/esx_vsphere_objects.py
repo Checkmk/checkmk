@@ -18,7 +18,8 @@ def _item_spec_esx_vsphere_objects():
         title=_("Name of the VM/HostSystem"),
         help=_(
             "Please do not forget to specify either <tt>VM</tt> or <tt>HostSystem</tt>. Example: <tt>VM abcsrv123</tt>. Also note, "
-            "that we match the <i>beginning</i> of the name."),
+            "that we match the <i>beginning</i> of the name."
+        ),
         regex="(^VM|HostSystem)( .*|$)",
         regex_error=_("The name of the system must begin with <tt>VM</tt> or <tt>HostSystem</tt>."),
         allow_empty=False,
@@ -27,42 +28,55 @@ def _item_spec_esx_vsphere_objects():
 
 def _parameter_valuespec_esx_vsphere_objects():
     return Dictionary(
-        help=_("Usually the check goes to WARN if a VM or host is powered off and OK otherwise. "
-               "You can change this behaviour on a per-state-basis here."),
+        help=_(
+            "Usually the check goes to WARN if a VM or host is powered off and OK otherwise. "
+            "You can change this behaviour on a per-state-basis here."
+        ),
         optional_keys=False,
         elements=[
-            ("states",
-             Dictionary(
-                 title=_("Target states"),
-                 optional_keys=False,
-                 elements=[
-                     ("poweredOn",
-                      MonitoringState(
-                          title=_("Powered ON"),
-                          help=_("Check result if the host or VM is powered on"),
-                          default_value=0,
-                      )),
-                     ("poweredOff",
-                      MonitoringState(
-                          title=_("Powered OFF"),
-                          help=_("Check result if the host or VM is powered off"),
-                          default_value=1,
-                      )),
-                     ("suspended",
-                      MonitoringState(
-                          title=_("Suspended"),
-                          help=_("Check result if the host or VM is suspended"),
-                          default_value=1,
-                      )),
-                     ("unknown",
-                      MonitoringState(
-                          title=_("Unknown"),
-                          help=_(
-                              "Check result if the host or VM state is reported as <i>unknown</i>"),
-                          default_value=3,
-                      )),
-                 ],
-             )),
+            (
+                "states",
+                Dictionary(
+                    title=_("Target states"),
+                    optional_keys=False,
+                    elements=[
+                        (
+                            "poweredOn",
+                            MonitoringState(
+                                title=_("Powered ON"),
+                                help=_("Check result if the host or VM is powered on"),
+                                default_value=0,
+                            ),
+                        ),
+                        (
+                            "poweredOff",
+                            MonitoringState(
+                                title=_("Powered OFF"),
+                                help=_("Check result if the host or VM is powered off"),
+                                default_value=1,
+                            ),
+                        ),
+                        (
+                            "suspended",
+                            MonitoringState(
+                                title=_("Suspended"),
+                                help=_("Check result if the host or VM is suspended"),
+                                default_value=1,
+                            ),
+                        ),
+                        (
+                            "unknown",
+                            MonitoringState(
+                                title=_("Unknown"),
+                                help=_(
+                                    "Check result if the host or VM state is reported as <i>unknown</i>"
+                                ),
+                                default_value=3,
+                            ),
+                        ),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -75,4 +89,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_esx_vsphere_objects,
         title=lambda: _("ESX host and virtual machine states"),
-    ))
+    )
+)

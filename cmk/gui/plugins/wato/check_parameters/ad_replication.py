@@ -37,4 +37,5 @@ rulespec_registry.register(
         item_spec=_item_spec_ad_replication,
         parameter_valuespec=_parameter_valuespec_ad_replication,
         title=lambda: _("Active Directory Replication"),
-    ))
+    )
+)

@@ -22,46 +22,61 @@ from cmk.gui.valuespec import (
 
 
 def _parameter_valuespec_fileinfo():
-    return Dictionary(elements=[
-        ("minage",
-         Tuple(
-             title=_("Minimal age"),
-             elements=[
-                 Age(title=_("Warning below")),
-                 Age(title=_("Critical below")),
-             ],
-         )),
-        ("maxage",
-         Tuple(
-             title=_("Maximal age"),
-             elements=[
-                 Age(title=_("Warning at or above")),
-                 Age(title=_("Critical at or above")),
-             ],
-         )),
-        ("minsize",
-         Tuple(
-             title=_("Minimal size"),
-             elements=[
-                 Filesize(title=_("Warning below")),
-                 Filesize(title=_("Critical below")),
-             ],
-         )),
-        ("maxsize",
-         Tuple(
-             title=_("Maximal size"),
-             elements=[
-                 Filesize(title=_("Warning at or above")),
-                 Filesize(title=_("Critical at or above")),
-             ],
-         )),
-        ("timeofday",
-         ListOfTimeRanges(
-             title=_("Only check during the following times of the day"),
-             help=_("Outside these ranges the check will always be OK"),
-         )),
-        ("state_missing", MonitoringState(default_value=3, title=_("State when file is missing"))),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "minage",
+                Tuple(
+                    title=_("Minimal age"),
+                    elements=[
+                        Age(title=_("Warning below")),
+                        Age(title=_("Critical below")),
+                    ],
+                ),
+            ),
+            (
+                "maxage",
+                Tuple(
+                    title=_("Maximal age"),
+                    elements=[
+                        Age(title=_("Warning at or above")),
+                        Age(title=_("Critical at or above")),
+                    ],
+                ),
+            ),
+            (
+                "minsize",
+                Tuple(
+                    title=_("Minimal size"),
+                    elements=[
+                        Filesize(title=_("Warning below")),
+                        Filesize(title=_("Critical below")),
+                    ],
+                ),
+            ),
+            (
+                "maxsize",
+                Tuple(
+                    title=_("Maximal size"),
+                    elements=[
+                        Filesize(title=_("Warning at or above")),
+                        Filesize(title=_("Critical at or above")),
+                    ],
+                ),
+            ),
+            (
+                "timeofday",
+                ListOfTimeRanges(
+                    title=_("Only check during the following times of the day"),
+                    help=_("Outside these ranges the check will always be OK"),
+                ),
+            ),
+            (
+                "state_missing",
+                MonitoringState(default_value=3, title=_("State when file is missing")),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -72,4 +87,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fileinfo,
         title=lambda: _("Size and age of single files"),
-    ))
+    )
+)

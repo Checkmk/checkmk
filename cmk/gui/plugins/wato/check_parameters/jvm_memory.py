@@ -26,8 +26,10 @@ def _item_spec_jvm_memory() -> TextInput:
 
 
 def _transform_legacy_parameters_jvm_memory(
-    params: Union[TupleType[float, float],  #
-                  Mapping[str, Union[TupleType[int, int], TupleType[float, float]]]]
+    params: Union[
+        TupleType[float, float],  #
+        Mapping[str, Union[TupleType[int, int], TupleType[float, float]]],
+    ]
 ) -> Mapping[str, Union[TupleType[int, int], TupleType[float, float]]]:
     # These old parameters only applied to the depricated jolokia_metrics.mem service
     # NOT to jolokia_jvm_memory(.pools).
@@ -44,25 +46,26 @@ def _transform_legacy_parameters_jvm_memory(
         float: "perc",
     }
     type_to_transform: Mapping[Type, Callable[[float], float]] = {
-        int: lambda v: v * 1024**2,
+        int: lambda v: v * 1024 ** 2,
         float: lambda v: v,
     }
 
     new_params_from_legacy = {}
     for old_key in (
-            "totalheap",
-            "heap",
-            "nonheap",
+        "totalheap",
+        "heap",
+        "nonheap",
     ):
         if not (levels := params.get(old_key)):  # pylint: disable=superfluous-parens
             continue
         type_ = type(levels[0])
         transform = type_to_transform[type_]
         new_params_from_legacy[
-            f"{type_to_prefix[type_]}_{old_key_to_new_key.get(old_key, old_key)}"] = (
-                transform(levels[0]),
-                transform(levels[1]),
-            )
+            f"{type_to_prefix[type_]}_{old_key_to_new_key.get(old_key, old_key)}"
+        ] = (
+            transform(levels[0]),
+            transform(levels[1]),
+        )
 
     if new_params_from_legacy:
         return new_params_from_legacy
@@ -82,36 +85,49 @@ def _get_memory_level_elements(mem_type) -> Iterable[TupleType[str, Tuple]]:
                         # xgettext: no-python-format
                         label=_("% usage"),
                         default_value=80.0,
-                        maxvalue=None),
+                        maxvalue=None,
+                    ),
                     Percentage(
                         title=_("Critical at"),
                         # xgettext: no-python-format
                         label=_("% usage"),
                         default_value=90.0,
-                        maxvalue=None),
+                        maxvalue=None,
+                    ),
                 ],
-            )),
-        ("abs_%s" % mem_type,
-         Tuple(
-             title=_("Absolute levels for %s memory") % mem_type,
-             elements=[
-                 Filesize(title=_("Warning at")),
-                 Filesize(title=_("Critical at")),
-             ],
-         )),
+            ),
+        ),
+        (
+            "abs_%s" % mem_type,
+            Tuple(
+                title=_("Absolute levels for %s memory") % mem_type,
+                elements=[
+                    Filesize(title=_("Warning at")),
+                    Filesize(title=_("Critical at")),
+                ],
+            ),
+        ),
     ]
 
 
 def _parameter_valuespec_jvm_memory() -> Transform:
-    return Transform(Dictionary(
-        help=(_("This rule allows to set the warn and crit levels of the heap / "
-                "non-heap and total memory area usage on web application servers.") + " " +
-              _("Other keywords for this rule: %s") % "Tomcat, Jolokia, JMX"),
-        elements=sum(
-            (_get_memory_level_elements(mem_type) for mem_type in ("heap", "nonheap", "total")),
-            []),
-    ),
-                     forth=_transform_legacy_parameters_jvm_memory)
+    return Transform(
+        Dictionary(
+            help=(
+                _(
+                    "This rule allows to set the warn and crit levels of the heap / "
+                    "non-heap and total memory area usage on web application servers."
+                )
+                + " "
+                + _("Other keywords for this rule: %s") % "Tomcat, Jolokia, JMX"
+            ),
+            elements=sum(
+                (_get_memory_level_elements(mem_type) for mem_type in ("heap", "nonheap", "total")),
+                [],
+            ),
+        ),
+        forth=_transform_legacy_parameters_jvm_memory,
+    )
 
 
 rulespec_registry.register(
@@ -122,7 +138,8 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_jvm_memory,
         title=lambda: _("JVM memory levels"),
-    ))
+    )
+)
 
 
 def _item_spec_jvm_memory_pools() -> TextInput:
@@ -134,10 +151,17 @@ def _item_spec_jvm_memory_pools() -> TextInput:
 
 
 def _parameter_valuespec_jvm_memory_pools() -> Dictionary:
-    return Dictionary(help=(_("This rule allows to set the warn and crit levels of the memory"
-                              " pools on web application servers.") + " " +
-                            _("Other keywords for this rule: %s") % "Tomcat, Jolokia, JMX"),
-                      elements=_get_memory_level_elements("used"))
+    return Dictionary(
+        help=(
+            _(
+                "This rule allows to set the warn and crit levels of the memory"
+                " pools on web application servers."
+            )
+            + " "
+            + _("Other keywords for this rule: %s") % "Tomcat, Jolokia, JMX"
+        ),
+        elements=_get_memory_level_elements("used"),
+    )
 
 
 rulespec_registry.register(
@@ -148,4 +172,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_jvm_memory_pools,
         title=lambda: _("JVM memory pool levels"),
-    ))
+    )
+)

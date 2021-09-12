@@ -30,4 +30,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Node ID")),
         parameter_valuespec=_parameter_valuespec_bossock_fibers,
         title=lambda: _("Number of Running Bossock Fibers"),
-    ))
+    )
+)

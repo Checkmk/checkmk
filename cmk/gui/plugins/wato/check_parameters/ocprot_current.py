@@ -14,10 +14,12 @@ from cmk.gui.valuespec import Float, TextInput, Tuple
 
 
 def _parameter_valuespec_ocprot_current():
-    return Tuple(elements=[
-        Float(title=_("Warning at"), unit=u"A", default_value=14.0),
-        Float(title=_("Critical at"), unit=u"A", default_value=15.0),
-    ],)
+    return Tuple(
+        elements=[
+            Float(title=_("Warning at"), unit="A", default_value=14.0),
+            Float(title=_("Critical at"), unit="A", default_value=15.0),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -27,4 +29,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("The Index of the Overcurrent Protector")),
         parameter_valuespec=_parameter_valuespec_ocprot_current,
         title=lambda: _("Electrical Current of Overcurrent Protectors"),
-    ))
+    )
+)

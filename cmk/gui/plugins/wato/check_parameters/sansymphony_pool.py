@@ -35,7 +35,10 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="sansymphony_pool",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Name of the pool"),),
+        item_spec=lambda: TextInput(
+            title=_("Name of the pool"),
+        ),
         parameter_valuespec=_parameter_valuespec_sansymphony_pool,
         title=lambda: _("Sansymphony pool allocation"),
-    ))
+    )
+)

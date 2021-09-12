@@ -47,7 +47,7 @@ def _valuespec_discovery_systemd_units_services_rules() -> Transform:
             title=_("Systemd single services discovery"),
             elements=[
                 (
-                    'descriptions',
+                    "descriptions",
                     ListOf(
                         TextOrRegExp(),
                         title=_("Restrict by description"),
@@ -56,7 +56,7 @@ def _valuespec_discovery_systemd_units_services_rules() -> Transform:
                     ),
                 ),
                 (
-                    'names',
+                    "names",
                     ListOf(
                         TextOrRegExp(),
                         title=_("Restrict by service unit name"),
@@ -65,7 +65,7 @@ def _valuespec_discovery_systemd_units_services_rules() -> Transform:
                     ),
                 ),
                 (
-                    'states',
+                    "states",
                     ListChoice(
                         choices=[
                             ("active", "active"),
@@ -83,7 +83,8 @@ def _valuespec_discovery_systemd_units_services_rules() -> Transform:
                 "condition, if configured. To simply discover all systemd services, do not "
                 "configure any restrictions. Note that independently of this ruleset, some systemd "
                 "service units which are used by the Checkmk agent ('check-mk-agent@...') will "
-                "never be discovered because they appear and disappear frequently."),
+                "never be discovered because they appear and disappear frequently."
+            ),
             empty_text=_("No restrictions (discover all systemd service units)"),
         ),
         forth=_discovery_forth,
@@ -96,47 +97,62 @@ rulespec_registry.register(
         match_type="all",
         name="discovery_systemd_units_services_rules",
         valuespec=_valuespec_discovery_systemd_units_services_rules,
-    ))
+    )
+)
 
 
 def _parameter_valuespec_systemd_services():
     return Dictionary(
         elements=[
-            ("states",
-             Dictionary(
-                 title=_("Map systemd states to monitoring states"),
-                 elements=[
-                     ("active",
-                      MonitoringState(
-                          title=_("Monitoring state if service is active"),
-                          default_value=0,
-                      )),
-                     ("inactive",
-                      MonitoringState(
-                          title=_("Monitoring state if service is inactive"),
-                          default_value=0,
-                      )),
-                     ("failed",
-                      MonitoringState(
-                          title=_("Monitoring state if service is failed"),
-                          default_value=2,
-                      )),
-                 ],
-             )),
-            ("states_default",
-             MonitoringState(
-                 title=_("Monitoring state for any other service state"),
-                 default_value=2,
-             )),
-            ("else",
-             MonitoringState(
-                 title=_("Monitoring state if a monitored service is not found at all."),
-                 default_value=2,
-             )),
+            (
+                "states",
+                Dictionary(
+                    title=_("Map systemd states to monitoring states"),
+                    elements=[
+                        (
+                            "active",
+                            MonitoringState(
+                                title=_("Monitoring state if service is active"),
+                                default_value=0,
+                            ),
+                        ),
+                        (
+                            "inactive",
+                            MonitoringState(
+                                title=_("Monitoring state if service is inactive"),
+                                default_value=0,
+                            ),
+                        ),
+                        (
+                            "failed",
+                            MonitoringState(
+                                title=_("Monitoring state if service is failed"),
+                                default_value=2,
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "states_default",
+                MonitoringState(
+                    title=_("Monitoring state for any other service state"),
+                    default_value=2,
+                ),
+            ),
+            (
+                "else",
+                MonitoringState(
+                    title=_("Monitoring state if a monitored service is not found at all."),
+                    default_value=2,
+                ),
+            ),
         ],
         help=_(
             "This ruleset only applies when individual Systemd services are discovered. The user "
-            "needs to configure this option in the discovery section."))
+            "needs to configure this option in the discovery section."
+        ),
+    )
 
 
 rulespec_registry.register(
@@ -147,4 +163,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_systemd_services,
         title=lambda: _("Systemd single services"),
-    ))
+    )
+)

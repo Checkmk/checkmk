@@ -14,10 +14,12 @@ from cmk.gui.valuespec import Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_signal_quality():
-    return Tuple(elements=[
-        Percentage(title=_("Warning if under"), maxvalue=100),
-        Percentage(title=_("Critical if under"), maxvalue=100),
-    ],)
+    return Tuple(
+        elements=[
+            Percentage(title=_("Warning if under"), maxvalue=100),
+            Percentage(title=_("Critical if under"), maxvalue=100),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -27,4 +29,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Network specification"), allow_empty=True),
         parameter_valuespec=_parameter_valuespec_signal_quality,
         title=lambda: _("Signal quality of Wireless device"),
-    ))
+    )
+)

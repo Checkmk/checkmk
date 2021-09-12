@@ -15,14 +15,16 @@ from cmk.gui.watolib.password_store import PasswordStore
 
 # Password = Dict[str, Union[Optional[str], List[str]]]
 Password = TypedDict(
-    'Password', {
+    "Password",
+    {
         "title": str,
         "comment": str,
         "docu_url": str,
         "password": str,
         "owned_by": Optional[str],
         "shared_with": List[str],
-    })
+    },
+)
 
 
 def contact_group_choices(only_own=False):
@@ -35,7 +37,7 @@ def contact_group_choices(only_own=False):
         user_groups = []
 
     entries = [
-        (c, g['alias']) for c, g in contact_groups.items() if not only_own or c in user_groups
+        (c, g["alias"]) for c, g in contact_groups.items() if not only_own or c in user_groups
     ]
     return entries
 

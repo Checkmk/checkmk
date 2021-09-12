@@ -20,4 +20,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Node name"), allow_empty=False),
         parameter_valuespec=fortigate_sessions_element,
         title=lambda: _("Fortigate Cluster Active Sessions"),
-    ))
+    )
+)

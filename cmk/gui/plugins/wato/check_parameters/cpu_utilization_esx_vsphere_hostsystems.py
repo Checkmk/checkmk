@@ -17,23 +17,26 @@ from cmk.gui.valuespec import Dictionary, Integer, ListOf, Tuple
 def _vsphere_esx_hostsystem_cluster_elements():
     return [
         (
-            'cluster',
+            "cluster",
             ListOf(
                 Tuple(
-                    orientation='horizontal',
+                    orientation="horizontal",
                     elements=[
                         Integer(
                             title=_("Nodes"),
-                            help=
-                            _("Apply these levels to clusters that have at least the following number of nodes:"
-                             ),
+                            help=_(
+                                "Apply these levels to clusters that have at least the following number of nodes:"
+                            ),
                             minvalue=1,
                         ),
                         Dictionary(elements=cpu_util_elements()),
-                    ]),
-                title=_('Clusters: node specific CPU utilization'),
-                help=_('Configure thresholds that apply to clusters based on how many nodes '
-                       'they have.'),
+                    ],
+                ),
+                title=_("Clusters: node specific CPU utilization"),
+                help=_(
+                    "Configure thresholds that apply to clusters based on how many nodes "
+                    "they have."
+                ),
             ),
         ),
     ]
@@ -41,10 +44,12 @@ def _vsphere_esx_hostsystem_cluster_elements():
 
 def _parameter_valuespec_cpu_utilization_esx_vsphere_hostsystem():
     return Dictionary(
-        help=_("This rule configures levels for the CPU utilization (not load) for "
-               "VMWare ESX host systems. "
-               "The utilization percentage is computed with respect to the total "
-               "number of CPUs. "),
+        help=_(
+            "This rule configures levels for the CPU utilization (not load) for "
+            "VMWare ESX host systems. "
+            "The utilization percentage is computed with respect to the total "
+            "number of CPUs. "
+        ),
         elements=cpu_util_elements() + _vsphere_esx_hostsystem_cluster_elements(),
     )
 
@@ -56,4 +61,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cpu_utilization_esx_vsphere_hostsystem,
         title=lambda: _("ESX Vsphere host system CPU utilization"),
-    ))
+    )
+)

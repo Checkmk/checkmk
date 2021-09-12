@@ -25,8 +25,9 @@ from cmk.gui.utils.output_funnel import OutputFunnel
 
 
 @contextlib.contextmanager
-def mock_livestatus(with_context: bool = False,
-                    with_html: bool = False) -> Generator[MockLiveStatusConnection, None, None]:
+def mock_livestatus(
+    with_context: bool = False, with_html: bool = False
+) -> Generator[MockLiveStatusConnection, None, None]:
     live = MockLiveStatusConnection()
 
     env = EnvironBuilder().get_environ()
@@ -59,13 +60,15 @@ def mock_livestatus(with_context: bool = False,
         app_context = contextlib.nullcontext()
         req_context = contextlib.nullcontext()
 
-    with app_context, req_context, \
-         mock.patch("cmk.gui.sites._get_enabled_and_disabled_sites",
-                    new=live.enabled_and_disabled_sites), \
-         mock.patch("livestatus.MultiSiteConnection.expect_query",
-                    new=live.expect_query, create=True), \
-         mock.patch("livestatus.SingleSiteConnection._create_socket", new=live.create_socket), \
-         mock.patch.dict(os.environ, {'OMD_ROOT': '/', 'OMD_SITE': 'NO_SITE'}):
+    with app_context, req_context, mock.patch(
+        "cmk.gui.sites._get_enabled_and_disabled_sites", new=live.enabled_and_disabled_sites
+    ), mock.patch(
+        "livestatus.MultiSiteConnection.expect_query", new=live.expect_query, create=True
+    ), mock.patch(
+        "livestatus.SingleSiteConnection._create_socket", new=live.create_socket
+    ), mock.patch.dict(
+        os.environ, {"OMD_ROOT": "/", "OMD_SITE": "NO_SITE"}
+    ):
 
         # We don't want to be polluted by other tests.
         omd_site.cache_clear()
@@ -76,7 +79,7 @@ def mock_livestatus(with_context: bool = False,
 
 @contextlib.contextmanager
 def simple_expect(
-    query='',
+    query="",
     match_type: MatchType = "loose",
     expect_status_query: bool = True,
 ) -> Generator[MultiSiteConnection, None, None]:

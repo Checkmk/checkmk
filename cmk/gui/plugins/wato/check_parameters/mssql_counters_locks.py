@@ -32,7 +32,8 @@ rulespec_registry.register(
         match_type="dict",
         name="inventory_mssql_counters_rules",
         valuespec=_valuespec_inventory_mssql_counters_rules,
-    ))
+    )
+)
 
 
 def _parameter_valuespec_mssql_counters_locks():
@@ -43,9 +44,9 @@ def _parameter_valuespec_mssql_counters_locks():
                 "lock_requests/sec",
                 Tuple(
                     title=_("Lock Requests / sec"),
-                    help=
-                    _("Number of new locks and lock conversions per second requested from the lock manager."
-                     ),
+                    help=_(
+                        "Number of new locks and lock conversions per second requested from the lock manager."
+                    ),
                     elements=[
                         Float(title=_("Warning at"), unit=_("requests/sec")),
                         Float(title=_("Critical at"), unit=_("requests/sec")),
@@ -56,9 +57,9 @@ def _parameter_valuespec_mssql_counters_locks():
                 "lock_timeouts/sec",
                 Tuple(
                     title=_("Lock Timeouts / sec"),
-                    help=
-                    _("Number of lock requests per second that timed out, including requests for NOWAIT locks."
-                     ),
+                    help=_(
+                        "Number of lock requests per second that timed out, including requests for NOWAIT locks."
+                    ),
                     elements=[
                         Float(title=_("Warning at"), unit=_("timeouts/sec")),
                         Float(title=_("Critical at"), unit=_("timeouts/sec")),
@@ -99,4 +100,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_counters_locks,
         title=lambda: _("MSSQL Locks"),
-    ))
+    )
+)

@@ -50,7 +50,8 @@ permission_registry.register(
         title=_l("Manage background jobs"),
         description=_l("Allows you to see the job overview page."),
         defaults=["admin"],
-    ))
+    )
+)
 
 permission_registry.register(
     Permission(
@@ -61,7 +62,8 @@ permission_registry.register(
             "Configures the permission to stop background jobs. Note: some jobs cannot be stopped."
         ),
         defaults=["user", "admin"],
-    ))
+    )
+)
 
 permission_registry.register(
     Permission(
@@ -72,7 +74,8 @@ permission_registry.register(
             "Configures the permission to delete background jobs. Note: some jobs cannot be deleted."
         ),
         defaults=["user", "admin"],
-    ))
+    )
+)
 
 permission_registry.register(
     Permission(
@@ -81,7 +84,8 @@ permission_registry.register(
         title=_l("See foreign background jobs"),
         description=_l("Allows you to see jobs of other users."),
         defaults=["admin"],
-    ))
+    )
+)
 
 permission_registry.register(
     Permission(
@@ -89,9 +93,11 @@ permission_registry.register(
         name="stop_foreign_jobs",
         title=_l("Stop foreign background jobs"),
         description=_l(
-            "Allows you to stop jobs of other users. Note: some jobs cannot be stopped."),
+            "Allows you to stop jobs of other users. Note: some jobs cannot be stopped."
+        ),
         defaults=["admin"],
-    ))
+    )
+)
 
 permission_registry.register(
     Permission(
@@ -99,9 +105,11 @@ permission_registry.register(
         name="delete_foreign_jobs",
         title=_l("Delete foreign background jobs"),
         description=_l(
-            "Allows you to delete jobs of other users. Note: some jobs cannot be deleted"),
+            "Allows you to delete jobs of other users. Note: some jobs cannot be deleted"
+        ),
         defaults=["admin"],
-    ))
+    )
+)
 
 
 class GUIBackgroundProcess(background_job.BackgroundProcess):
@@ -263,7 +271,8 @@ class GUIBackgroundStatusSnapshot:
     def __getattr__(self, name):
         if name not in self._job_status:
             raise MKGeneralException(
-                _("The function %s is not in the snapshotted functions.") % name)
+                _("The function %s is not in the snapshotted functions.") % name
+            )
         return lambda: self._job_status[name]
 
 
@@ -319,8 +328,9 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
             job_id, job_status = list(job_info.items())[0]
             JobRenderer.show_job_details(job_id, job_status)
         else:
-            raise MKGeneralException("Background job with id <i>%s</i> not found" %
-                                     job_snapshot.get_job_id())
+            raise MKGeneralException(
+                "Background job with id <i>%s</i> not found" % job_snapshot.get_job_id()
+            )
 
     def _get_job_infos(self, jobs):
         all_jobs = {}
@@ -342,7 +352,7 @@ class GUIBackgroundJobManager(background_job.BackgroundJobManager):
         return all_jobs
 
 
-#.
+# .
 #   .--Rendering-----------------------------------------------------------.
 #   |            ____                _           _                         |
 #   |           |  _ \ ___ _ __   __| | ___ _ __(_)_ __   __ _             |
@@ -378,8 +388,9 @@ class JobRenderer:
         if job_status.get("may_stop"):
             html.icon_button(
                 make_confirm_link(
-                    url=makeactionuri(request, transactions,
-                                      [(ActionHandler.stop_job_var, job_id)]),
+                    url=makeactionuri(
+                        request, transactions, [(ActionHandler.stop_job_var, job_id)]
+                    ),
                     message=_("Stop job %s%s?") % (job_id, cls._get_extra_info(job_status)),
                 ),
                 _("Stop this job"),
@@ -388,8 +399,9 @@ class JobRenderer:
         if job_status.get("may_delete"):
             html.icon_button(
                 make_confirm_link(
-                    url=makeactionuri(request, transactions,
-                                      [(ActionHandler.delete_job_var, job_id)]),
+                    url=makeactionuri(
+                        request, transactions, [(ActionHandler.delete_job_var, job_id)]
+                    ),
                     message=_("Delete job %s%s?") % (job_id, cls._get_extra_info(job_status)),
                 ),
                 _("Delete this job"),
@@ -413,11 +425,14 @@ class JobRenderer:
         # Dynamic data
         loginfo = job_status.get("loginfo")
         runtime_info = ensure_str(cmk.utils.render.timespan(job_status.get("duration", 0)))
-        if job_status["state"] == background_job.JobStatusStates.RUNNING \
-            and job_status.get("estimated_duration") is not None:
-            runtime_info += u" (%s: %s)" % (
+        if (
+            job_status["state"] == background_job.JobStatusStates.RUNNING
+            and job_status.get("estimated_duration") is not None
+        ):
+            runtime_info += " (%s: %s)" % (
                 _("estimated duration"),
-                ensure_str(cmk.utils.render.timespan(job_status["estimated_duration"])))
+                ensure_str(cmk.utils.render.timespan(job_status["estimated_duration"])),
+            )
         for left, right in [
             (_("Runtime"), runtime_info),
             (_("PID"), str(job_status["pid"]) or ""),
@@ -438,7 +453,8 @@ class JobRenderer:
             html.open_td()
             if exceptions and "logfile_path" in job_status:
                 exceptions.append(
-                    _("More information can be found in %s") % job_status["logfile_path"])
+                    _("More information can be found in %s") % job_status["logfile_path"]
+                )
             html.open_div(class_="log_output", id_="exception_log")
             html.pre("\n".join(exceptions))
             html.close_div()
@@ -482,9 +498,9 @@ class JobRenderer:
 
             cls.show_job_row_headers()
             odd = "even"
-            for job_id, job_status in sorted(jobs_info.items(),
-                                             key=lambda x: x[1]["started"],
-                                             reverse=True):
+            for job_id, job_status in sorted(
+                jobs_info.items(), key=lambda x: x[1]["started"], reverse=True
+            ):
                 cls.render_job_row(job_id, job_status, odd, **kwargs)
                 odd = "even" if odd == "odd" else "odd"
 
@@ -507,7 +523,7 @@ class JobRenderer:
             _("PID"),
             _("Runtime"),
             _("Last progress info"),
-            _("Results")
+            _("Results"),
         ]
 
     @classmethod
@@ -519,11 +535,15 @@ class JobRenderer:
         if job_status.get("may_stop"):
             html.icon_button(
                 makeactionuri(request, transactions, [(ActionHandler.stop_job_var, job_id)]),
-                _("Stop this job"), "disable_test")
+                _("Stop this job"),
+                "disable_test",
+            )
         if job_status.get("may_delete"):
             html.icon_button(
                 makeactionuri(request, transactions, [(ActionHandler.delete_job_var, job_id)]),
-                _("Delete this job"), "delete")
+                _("Delete this job"),
+                "delete",
+            )
         html.close_td()
 
         # Job ID
@@ -544,8 +564,9 @@ class JobRenderer:
         html.td(job_status.get("title", _("Background Job")), css="job_title")
 
         # State
-        html.td(html.render_span(job_status["state"]),
-                css=cls.get_css_for_jobstate(job_status["state"]))
+        html.td(
+            html.render_span(job_status["state"]), css=cls.get_css_for_jobstate(job_status["state"])
+        )
 
         # Started
         html.td(cmk.utils.render.date_and_time(job_status["started"]), css="job_started")
@@ -582,12 +603,12 @@ class JobRenderer:
             background_job.JobStatusStates.RUNNING: "state job_running",
             background_job.JobStatusStates.EXCEPTION: "state state2",
             background_job.JobStatusStates.STOPPED: "state state2",  # same css as exception
-            background_job.JobStatusStates.FINISHED: "state state0"
+            background_job.JobStatusStates.FINISHED: "state state0",
         }
         return job_css_map.get(job_state, "")
 
 
-#.
+# .
 #   .--Actions-------------------------------------------------------------.
 #   |                     _        _   _                                   |
 #   |                    / \   ___| |_(_) ___  _ __  ___                   |

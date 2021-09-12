@@ -18,7 +18,7 @@ def _parameter_valuespec_cisco_supervisor_mem():
         title=_("The average utilization of memory on the active supervisor"),
         elements=[
             Percentage(title=_("Warning at a usage of"), default_value=80.0, maxvalue=100.0),
-            Percentage(title=_("Critical at a usage of"), default_value=90.0, maxvalue=100.0)
+            Percentage(title=_("Critical at a usage of"), default_value=90.0, maxvalue=100.0),
         ],
     )
 
@@ -29,4 +29,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_cisco_supervisor_mem,
         title=lambda: _("Cisco Nexus Supervisor Memory Usage"),
-    ))
+    )
+)

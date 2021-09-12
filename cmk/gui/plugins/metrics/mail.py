@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import graph_info, metric_info
 
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -76,7 +76,7 @@ metric_info["mail_received_rate"] = {
     "color": "31/a",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -104,11 +104,11 @@ graph_info["size_of_mails_in_queues"] = {
     ],
 }
 
-graph_info['amount_of_mails_in_secondary_queues'] = {
-    'title': _('Amount of mails in queues'),
-    'metrics': [
-        ('mail_queue_hold_length', 'stack'),
-        ('mail_queue_incoming_length', 'stack'),
-        ('mail_queue_drop_length', 'stack'),
+graph_info["amount_of_mails_in_secondary_queues"] = {
+    "title": _("Amount of mails in queues"),
+    "metrics": [
+        ("mail_queue_hold_length", "stack"),
+        ("mail_queue_incoming_length", "stack"),
+        ("mail_queue_drop_length", "stack"),
     ],
 }

@@ -13,6 +13,7 @@ from cmk.gui.valuespec import TextInput
 @dashlet_registry.register
 class StaticTextDashlet(Dashlet):
     """Dashlet that displays a static text"""
+
     @classmethod
     def type_name(cls):
         return "nodata"
@@ -36,15 +37,18 @@ class StaticTextDashlet(Dashlet):
     @classmethod
     def vs_parameters(cls):
         return [
-            ("text",
-             TextInput(
-                 title=_('Text'),
-                 size=50,
-                 help=_(
-                     "You can enter a text here that will be displayed in the element when "
-                     "viewing the dashboard. It is also possible to insert a limited set of HTML "
-                     "tags, some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."),
-             )),
+            (
+                "text",
+                TextInput(
+                    title=_("Text"),
+                    size=50,
+                    help=_(
+                        "You can enter a text here that will be displayed in the element when "
+                        "viewing the dashboard. It is also possible to insert a limited set of HTML "
+                        "tags, some of them are: h2, b, tt, i, br, pre, a, sup, p, li, ul and ol."
+                    ),
+                ),
+            ),
         ]
 
     def show(self):

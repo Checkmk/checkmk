@@ -24,15 +24,21 @@ def _parameter_valuespec_lnx_quota():
     return Dictionary(
         optional_keys=False,
         elements=[
-            ("user", Checkbox(
-                title=_("Monitor user quotas"),
-                label=_("Enable"),
-                default_value=True,
-            )),
-            ("group", Checkbox(
-                title=_("Monitor group quotas"),
-                label=_("Enable"),
-            )),
+            (
+                "user",
+                Checkbox(
+                    title=_("Monitor user quotas"),
+                    label=_("Enable"),
+                    default_value=True,
+                ),
+            ),
+            (
+                "group",
+                Checkbox(
+                    title=_("Monitor group quotas"),
+                    label=_("Enable"),
+                ),
+            ),
         ],
     )
 
@@ -45,4 +51,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_lnx_quota,
         title=lambda: _("Linux quota check"),
-    ))
+    )
+)

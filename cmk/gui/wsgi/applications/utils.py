@@ -51,7 +51,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             # Update the UI theme with the attribute configured by the user.
             # Returns None on first load
             assert user.id is not None
-            theme.set(cmk.gui.userdb.load_custom_attr(user.id, 'ui_theme', lambda x: x))
+            theme.set(cmk.gui.userdb.load_custom_attr(user.id, "ui_theme", lambda x: x))
 
             func()
 
@@ -77,8 +77,11 @@ def _ensure_general_access() -> None:
         return
 
     reason = [
-        _("You are not authorized to use the Check_MK GUI. Sorry. "
-          "You are logged in as <b>%s</b>.") % user.id
+        _(
+            "You are not authorized to use the Check_MK GUI. Sorry. "
+            "You are logged in as <b>%s</b>."
+        )
+        % user.id
     ]
 
     if user.role_ids:
@@ -87,13 +90,16 @@ def _ensure_general_access() -> None:
         reason.append(_("<b>You do not have any roles.</b>"))
 
     reason.append(
-        _("If you think this is an error, please ask your administrator "
-          "to check the permissions configuration."))
+        _(
+            "If you think this is an error, please ask your administrator "
+            "to check the permissions configuration."
+        )
+    )
 
-    if login.auth_type == 'cookie':
+    if login.auth_type == "cookie":
         reason.append(
-            _("<p>You have been logged out. Please reload the page "
-              "to re-authenticate.</p>"))
+            _("<p>You have been logged out. Please reload the page " "to re-authenticate.</p>")
+        )
         login.del_auth_cookie()
 
     raise MKAuthException(" ".join(reason))
@@ -102,20 +108,22 @@ def _ensure_general_access() -> None:
 def _handle_not_authenticated() -> Response:
     if fail_silently():
         # While api call don't show the login dialog
-        raise MKUnauthenticatedException(_('You are not authenticated.'))
+        raise MKUnauthenticatedException(_("You are not authenticated."))
 
     # Redirect to the login-dialog with the current url as original target
     # Never render the login form directly when accessing urls like "index.py"
     # or "dashboard.py". This results in strange problems.
     requested_file = requested_file_name(request)
-    if requested_file != 'login':
+    if requested_file != "login":
         post_login_url = makeuri(request, [])
         if requested_file != "index":
             # Ensure that users start with a navigation after they have logged in
-            post_login_url = makeuri_contextless(request, [("start_url", post_login_url)],
-                                                 filename="index.py")
-        raise HTTPRedirect('%scheck_mk/login.py?_origtarget=%s' %
-                           (url_prefix(), urlencode(post_login_url)))
+            post_login_url = makeuri_contextless(
+                request, [("start_url", post_login_url)], filename="index.py"
+            )
+        raise HTTPRedirect(
+            "%scheck_mk/login.py?_origtarget=%s" % (url_prefix(), urlencode(post_login_url))
+        )
 
     # This either displays the login page or validates the information submitted
     # to the login form. After successful login a http redirect to the originally

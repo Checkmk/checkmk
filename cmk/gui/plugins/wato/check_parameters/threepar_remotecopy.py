@@ -14,40 +14,66 @@ from cmk.gui.valuespec import Dictionary, MonitoringState
 
 
 def _parameter_valuespec_threepar_remotecopy():
-    return Dictionary(elements=[
-        ("1", MonitoringState(
-            title=_("Status: NORMAL"),
-            default_value=0,
-        )),
-        ("2", MonitoringState(
-            title=_("Status: STARTUP"),
-            default_value=1,
-        )),
-        ("3", MonitoringState(
-            title=_("Status: SHUTDOWN"),
-            default_value=1,
-        )),
-        ("4", MonitoringState(
-            title=_("Status: ENABLE"),
-            default_value=0,
-        )),
-        ("5", MonitoringState(
-            title=_("Status: DISBALE"),
-            default_value=2,
-        )),
-        ("6", MonitoringState(
-            title=_("Status: INVALID"),
-            default_value=2,
-        )),
-        ("7", MonitoringState(
-            title=_("Status: NODEUP"),
-            default_value=1,
-        )),
-        ("8", MonitoringState(
-            title=_("Status: UPGRADE"),
-            default_value=0,
-        )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "1",
+                MonitoringState(
+                    title=_("Status: NORMAL"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "2",
+                MonitoringState(
+                    title=_("Status: STARTUP"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "3",
+                MonitoringState(
+                    title=_("Status: SHUTDOWN"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "4",
+                MonitoringState(
+                    title=_("Status: ENABLE"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "5",
+                MonitoringState(
+                    title=_("Status: DISBALE"),
+                    default_value=2,
+                ),
+            ),
+            (
+                "6",
+                MonitoringState(
+                    title=_("Status: INVALID"),
+                    default_value=2,
+                ),
+            ),
+            (
+                "7",
+                MonitoringState(
+                    title=_("Status: NODEUP"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "8",
+                MonitoringState(
+                    title=_("Status: UPGRADE"),
+                    default_value=0,
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -57,4 +83,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_threepar_remotecopy,
         title=lambda: _("3PAR Remote Copy"),
-    ))
+    )
+)

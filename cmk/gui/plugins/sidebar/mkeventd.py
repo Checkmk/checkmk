@@ -52,8 +52,8 @@ class SidebarSnapinCustomers(SidebarSnapin):
         html.close_table()
 
     def _mkeventd_performance_entries(
-            self,
-            only_sites: Optional[List[SiteId]]) -> List[Tuple[float, HTMLContent, HTMLContent]]:
+        self, only_sites: Optional[List[SiteId]]
+    ) -> List[Tuple[float, HTMLContent, HTMLContent]]:
         status = mkeventd.get_total_stats(only_sites)  # combination of several sites
         entries: List[Tuple[float, HTMLContent, HTMLContent]] = []
 
@@ -78,9 +78,17 @@ class SidebarSnapinCustomers(SidebarSnapin):
             entries.append((3.5, _("Rule hit ratio"), _("-.-- %")))
         else:
             entries.append(
-                (3.5, _("Rule hit ratio"), "%.2f%%" %
-                 (status["status_average_rule_hit_rate"] / status["status_average_rule_trie_rate"] *
-                  100)))  # fixed: true-division
+                (
+                    3.5,
+                    _("Rule hit ratio"),
+                    "%.2f%%"
+                    % (
+                        status["status_average_rule_hit_rate"]
+                        / status["status_average_rule_trie_rate"]
+                        * 100
+                    ),
+                )
+            )  # fixed: true-division
 
         # Time columns
         time_columns = [
@@ -91,13 +99,25 @@ class SidebarSnapinCustomers(SidebarSnapin):
         for index, title, name in time_columns:
             value = status.get("status_average_%s_time" % name)
             if value:
-                entries.append((index, title, u"%.3f ms" % (value * 1000)))
+                entries.append((index, title, "%.3f ms" % (value * 1000)))
             elif name != "sync":
                 entries.append((index, title, _("-.-- ms")))
 
         # Load
-        entries.append((6, "Processing load", u"%.0f%%" % (min(
-            100.0, status["status_average_processing_time"] *
-            status["status_average_message_rate"] * 100.0))))
+        entries.append(
+            (
+                6,
+                "Processing load",
+                "%.0f%%"
+                % (
+                    min(
+                        100.0,
+                        status["status_average_processing_time"]
+                        * status["status_average_message_rate"]
+                        * 100.0,
+                    )
+                ),
+            )
+        )
 
         return sorted(entries)

@@ -20,8 +20,10 @@ mailqueue_params = Dictionary(
             "failed",
             Tuple(
                 title=_("Mails in failed mail queue"),
-                help=_("This rule is applied to the number of E-Mails currently "
-                       "in the failed mail queue"),
+                help=_(
+                    "This rule is applied to the number of E-Mails currently "
+                    "in the failed mail queue"
+                ),
                 elements=[
                     Integer(title=_("Warning at"), unit=_("mails"), default_value=1),
                     Integer(title=_("Critical at"), unit=_("mails"), default_value=1),
@@ -48,4 +50,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mail_queue_length,
         title=lambda: _("Mails in outgoing mail queue"),
-    ))
+    )
+)

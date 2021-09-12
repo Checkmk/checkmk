@@ -17,18 +17,20 @@ def _parameter_valuespec_proxmox_ve_vm_info():
     # use Dictionary as Optional returning an empty dict if empty
     return Dictionary(
         title=_("Check Parameter"),
-        elements=[(
-            "required_vm_status",
-            Optional(
-                title=_("Modify: Check VM Status (off: keep default)"),
-                label=_("Activate Check (off: ignore VM status)"),
-                default_value=True,
-                valuespec=TextInput(
-                    title=_("Warn if VM status value is not"),
-                    default_value="running",
+        elements=[
+            (
+                "required_vm_status",
+                Optional(
+                    title=_("Modify: Check VM Status (off: keep default)"),
+                    label=_("Activate Check (off: ignore VM status)"),
+                    default_value=True,
+                    valuespec=TextInput(
+                        title=_("Warn if VM status value is not"),
+                        default_value="running",
+                    ),
                 ),
-            ),
-        )],
+            )
+        ],
     )
 
 
@@ -39,4 +41,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_proxmox_ve_vm_info,
-    ))
+    )
+)

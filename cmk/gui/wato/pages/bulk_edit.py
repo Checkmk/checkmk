@@ -48,10 +48,9 @@ class ModeBulkEdit(WatoMode):
         return _("Bulk edit hosts")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Hosts"),
-                                          breadcrumb,
-                                          form_name="edit_host",
-                                          button_name="_save")
+        return make_simple_form_page_menu(
+            _("Hosts"), breadcrumb, form_name="edit_host", button_name="_save"
+        )
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
@@ -85,14 +84,25 @@ class ModeBulkEdit(WatoMode):
             request.del_vars(prefix="attr_")
             request.del_vars(prefix="bulk_change_")
 
-        html.p("%s%s %s" %
-               (_("You have selected <b>%d</b> hosts for bulk edit. You can now change "
-                  "host attributes for all selected hosts at once. ") % len(hosts),
-                _("If a select is set to <i>don't change</i> then currenty not all selected "
-                  "hosts share the same setting for this attribute. "
-                  "If you leave that selection, all hosts will keep their individual settings."),
-                _("In case you want to <i>unset</i> attributes on multiple hosts, you need to "
-                  "use the <i>bulk cleanup</i> action instead of bulk edit.")))
+        html.p(
+            "%s%s %s"
+            % (
+                _(
+                    "You have selected <b>%d</b> hosts for bulk edit. You can now change "
+                    "host attributes for all selected hosts at once. "
+                )
+                % len(hosts),
+                _(
+                    "If a select is set to <i>don't change</i> then currenty not all selected "
+                    "hosts share the same setting for this attribute. "
+                    "If you leave that selection, all hosts will keep their individual settings."
+                ),
+                _(
+                    "In case you want to <i>unset</i> attributes on multiple hosts, you need to "
+                    "use the <i>bulk cleanup</i> action instead of bulk edit."
+                ),
+            )
+        )
 
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()
@@ -126,12 +136,13 @@ class ModeBulkCleanup(WatoMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         hosts = get_hosts_from_checkboxes()
 
-        return make_simple_form_page_menu(_("Attributes"),
-                                          breadcrumb,
-                                          form_name="bulkcleanup",
-                                          button_name="_save",
-                                          save_is_enabled=bool(
-                                              self._get_attributes_for_bulk_cleanup(hosts)))
+        return make_simple_form_page_menu(
+            _("Attributes"),
+            breadcrumb,
+            form_name="bulkcleanup",
+            button_name="_save",
+            save_is_enabled=bool(self._get_attributes_for_bulk_cleanup(hosts)),
+        )
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
@@ -165,10 +176,14 @@ class ModeBulkCleanup(WatoMode):
         hosts = get_hosts_from_checkboxes()
 
         html.p(
-            _("You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
-              "explicit attribute values from hosts. The hosts will then inherit attributes "
-              "configured at the host list or folders or simply fall back to the builtin "
-              "default values.") % len(hosts))
+            _(
+                "You have selected <b>%d</b> hosts for bulk cleanup. This means removing "
+                "explicit attribute values from hosts. The hosts will then inherit attributes "
+                "configured at the host list or folders or simply fall back to the builtin "
+                "default values."
+            )
+            % len(hosts)
+        )
 
         html.begin_form("bulkcleanup", method="POST")
         forms.header(_("Attributes to remove from hosts"))
@@ -185,11 +200,15 @@ class ModeBulkCleanup(WatoMode):
 
             if attr.is_mandatory() and not is_inherited:
                 html.write_text(
-                    _("This attribute is mandatory and there is no value "
-                      "defined in the host list or any parent folder."))
+                    _(
+                        "This attribute is mandatory and there is no value "
+                        "defined in the host list or any parent folder."
+                    )
+                )
             else:
-                label = "clean this attribute on <b>%s</b> hosts" % \
-                    (num_haveit == len(hosts) and "all selected" or str(num_haveit))
+                label = "clean this attribute on <b>%s</b> hosts" % (
+                    num_haveit == len(hosts) and "all selected" or str(num_haveit)
+                )
                 html.checkbox("_clean_%s" % attr.name(), False, label=label)
             html.help(attr.help())
 

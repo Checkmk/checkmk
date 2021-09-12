@@ -120,8 +120,7 @@ class Document:
         self._width, self._height = self._pagesize
         self._height = self._pagesize[1]
 
-        self._margin_top, self._margin_right, \
-            self._margin_bottom, self._margin_left = self._margins
+        self._margin_top, self._margin_right, self._margin_bottom, self._margin_left = self._margins
 
         self._inner_width = self._width - self._margin_left - self._margin_right
         self._inner_height = self._height - self._margin_top - self._margin_bottom
@@ -375,7 +374,7 @@ class Document:
             # Try to move to correct Y position
             self._canvas.drawString(l, (t + el_height * 0.66) - (el_height * 0.5 * num), line)
             # Debug the text bounding box
-            #self._canvas.rect(l, t - el_height * 0.5 * num, el_width, el_height, fill=0)
+            # self._canvas.rect(l, t - el_height * 0.5 * num, el_width, el_height, fill=0)
 
     def place_page_box(self):
         self.save_state()
@@ -388,7 +387,7 @@ class Document:
         width, height = self.get_image_dimensions(pil, width_mm, height_mm, resolution)
         x, y = self.convert_position(position, width, height)
         ir = ImageReader(pil)
-        self._canvas.drawImage(ir, x, y - height, width, height, mask='auto')
+        self._canvas.drawImage(ir, x, y - height, width, height, mask="auto")
 
     # Functions for adding floating text
 
@@ -472,7 +471,7 @@ class Document:
         x = self._left + (self._inner_width - width) / 2.0  # center
         y = self._linepos
         ir = ImageReader(pil)
-        self._canvas.drawImage(ir, x, y, width, height, mask='auto')
+        self._canvas.drawImage(ir, x, y, width, height, mask="auto")
         if border:
             self._canvas.rect(x, y, width, height, fill=0)
 
@@ -507,45 +506,47 @@ class Document:
         self.check_pagebreak()
 
         def aligned_string(x, y, t, alignment):
-            if alignment == 'l':
+            if alignment == "l":
                 self._canvas.drawString(x, y, t)
-            elif alignment == 'r':
+            elif alignment == "r":
                 self._canvas.drawRightString(x, y, t)
             else:
                 self._canvas.drawCentredString(x, y, t)
 
-        l = l.strip(' ')
+        l = l.strip(" ")
         self._linepos -= self.lineskip()
         tab = -1
 
-        for part in l.split('\t'):
+        for part in l.split("\t"):
             self.save_state()
 
             if tab >= 0:
                 format_chars, x_position = self._tabstops[tab]  # added extra tab stop every 20 mm
-                if 'b' in format_chars:
+                if "b" in format_chars:
                     self.set_font_bold(True)
-                if 't' in format_chars:
+                if "t" in format_chars:
                     self.set_font_tt(True)
-                if 'g' in format_chars:
+                if "g" in format_chars:
                     self.set_font_color(gray)
-                if 'r' in format_chars:
-                    alignment = 'r'
-                elif 'c' in format_chars:
-                    alignment = 'c'
+                if "r" in format_chars:
+                    alignment = "r"
+                elif "c" in format_chars:
+                    alignment = "c"
                 else:
-                    alignment = 'l'
+                    alignment = "l"
 
                 # Negative values are interpreted as offset from the right border
                 if x_position < 0:
                     x_position = self._right - x_position
             else:
                 x_position = 0
-                alignment = 'l'
+                alignment = "l"
             tab += 1
             abs_x = self._left + x_position
-            abs_y = self._linepos + (self._gfx_state["font_size"] *
-                                     self._gfx_state["font_zoom_factor"]) * 0.2
+            abs_y = (
+                self._linepos
+                + (self._gfx_state["font_size"] * self._gfx_state["font_zoom_factor"]) * 0.2
+            )
             aligned_string(abs_x, abs_y, part, alignment)
             self.restore_state()
 
@@ -581,21 +582,33 @@ class Document:
         char_avg = self._canvas.stringWidth(text) / len(text)
         return wrap(text, max(1, int(width / char_avg)), break_long_words=wrap_long_words)
 
-    def add_table(self,
-                  header_texts: Any,
-                  raw_rows: Any,
-                  font_size: RawTableRows,
-                  show_headings: Any,
-                  padding: Any,
-                  spacing: Any,
-                  hrules: Any,
-                  vrules: Any,
-                  rule_width: Any,
-                  row_shading: Any,
-                  respect_narrow_columns: bool = True) -> None:
-        TableRenderer(self).add_table(header_texts, raw_rows, font_size, show_headings, padding,
-                                      spacing, hrules, vrules, rule_width, row_shading,
-                                      respect_narrow_columns)
+    def add_table(
+        self,
+        header_texts: Any,
+        raw_rows: Any,
+        font_size: RawTableRows,
+        show_headings: Any,
+        padding: Any,
+        spacing: Any,
+        hrules: Any,
+        vrules: Any,
+        rule_width: Any,
+        row_shading: Any,
+        respect_narrow_columns: bool = True,
+    ) -> None:
+        TableRenderer(self).add_table(
+            header_texts,
+            raw_rows,
+            font_size,
+            show_headings,
+            padding,
+            spacing,
+            hrules,
+            vrules,
+            rule_width,
+            row_shading,
+            respect_narrow_columns,
+        )
 
     # Lowlevel functions for direct rendering into the page. Dimensions are in
     # mm. Positions are from the top left of the physical page. These functions
@@ -617,12 +630,9 @@ class Document:
         pil = PngImagePlugin.PngImageFile(fp=path)
         ir = ImageReader(pil)
         try:
-            self._canvas.drawImage(ir,
-                                   left_mm * mm,
-                                   top_mm * mm,
-                                   width_mm * mm,
-                                   height_mm * mm,
-                                   mask='auto')
+            self._canvas.drawImage(
+                ir, left_mm * mm, top_mm * mm, width_mm * mm, height_mm * mm, mask="auto"
+            )
         except Exception as e:
             raise Exception("Cannot render image %s: %s" % (path, e))
 
@@ -633,16 +643,18 @@ class Document:
         return self._canvas.stringWidth(text) / mm  # fixed: true-division
 
     # TODO: unify with render_text()
-    def render_aligned_text(self,
-                            left_mm,
-                            top_mm,
-                            width_mm,
-                            height_mm,
-                            text,
-                            align="center",
-                            valign="bottom",
-                            bold=False,
-                            color=None):
+    def render_aligned_text(
+        self,
+        left_mm,
+        top_mm,
+        width_mm,
+        height_mm,
+        text,
+        align="center",
+        valign="bottom",
+        bold=False,
+        color=None,
+    ):
         if color or bold:
             self.save_state()
 
@@ -666,14 +678,16 @@ class Document:
         if color or bold:
             self.restore_state()
 
-    def render_rect(self,
-                    left_mm,
-                    top_mm,
-                    width_mm,
-                    height_mm,
-                    line_width=None,
-                    line_color=None,
-                    fill_color=None):
+    def render_rect(
+        self,
+        left_mm,
+        top_mm,
+        width_mm,
+        height_mm,
+        line_width=None,
+        line_color=None,
+        fill_color=None,
+    ):
         self.save_state()
 
         # Default to unfilled rect with fine black outline
@@ -690,23 +704,20 @@ class Document:
         if fill_color:
             self.set_fill_color(fill_color)
 
-        self._canvas.rect(left_mm * mm,
-                          top_mm * mm,
-                          width_mm * mm,
-                          height_mm * mm,
-                          fill=fill_color and 1 or 0,
-                          stroke=(line_color or line_width) and 1 or 0)
+        self._canvas.rect(
+            left_mm * mm,
+            top_mm * mm,
+            width_mm * mm,
+            height_mm * mm,
+            fill=fill_color and 1 or 0,
+            stroke=(line_color or line_width) and 1 or 0,
+        )
 
         self.restore_state()
 
-    def render_line(self,
-                    left1_mm,
-                    top1_mm,
-                    left2_mm,
-                    top2_mm,
-                    width=0.05,
-                    color=black,
-                    dashes=None):
+    def render_line(
+        self, left1_mm, top1_mm, left2_mm, top2_mm, width=0.05, color=black, dashes=None
+    ):
         self.save_state()
         self.set_line_width(width)
         self.set_line_color(color)
@@ -736,19 +747,19 @@ class Document:
         # It may look better, but that's not worth it.
         #
         # Older versions of reportlab do not support gradients
-        #try:
+        # try:
         #    self._canvas.linearGradient
-        #except:
+        # except:
         #    gradient = None
 
-        #if gradient:
+        # if gradient:
         #    grad_left, grad_top, grad_width, grad_height, color_range, switch_points = gradient
         #    self._canvas.saveState()
         #    self._canvas.clipPath(self._path, stroke=0)
         #    self._canvas.linearGradient(grad_left * mm, grad_top * mm, grad_width * mm, grad_height * mm,
         #                                color_range, switch_points, extend=False)
         #    self._canvas.restoreState()
-        #else:
+        # else:
         self.set_fill_color(color)
         self._canvas.drawPath(self._path, stroke=0, fill=1)
 
@@ -775,12 +786,15 @@ class Document:
 
     # Compute the absolute distance between two lines
     def lineskip(self):
-        return self._gfx_state["line_height"] * self._gfx_state[
-            "font_zoom_factor"] * self._gfx_state["font_size"]
+        return (
+            self._gfx_state["line_height"]
+            * self._gfx_state["font_zoom_factor"]
+            * self._gfx_state["font_size"]
+        )
 
     # Estimate the height of a one-line text
     def font_height_ex(self):
-        return self._canvas.stringWidth('M') * 1
+        return self._canvas.stringWidth("M") * 1
 
     def font_height(self):
         return self.font_height_ex() / mm  # fixed: true-division
@@ -836,7 +850,7 @@ class Document:
             aspect = float(pix_width) / float(pix_height)
             # Both are unset, and no resolution: scale to inner width
             if width_mm is None and height_mm is None:
-                width = (self._right - self._left)
+                width = self._right - self._left
                 height = width / aspect  # fixed: true-division
             else:  # At least one known
                 if width_mm is not None:
@@ -852,6 +866,7 @@ class Document:
 
 class TableRenderer:
     """Intelligent table rendering with word wrapping and pagination"""
+
     def __init__(self, pdf: Document) -> None:
         super().__init__()
         self.pdf = pdf
@@ -903,8 +918,7 @@ class TableRenderer:
         # ( "number", "0.75" ), or ("", ("icon", "/bar/foo.png") )
         # The headers come *without* the css field and are always texts.
         headers: List[Union[TextCell, IconCell]] = [
-            TitleCell("heading", header_text)  #
-            for header_text in header_texts
+            TitleCell("heading", header_text) for header_text in header_texts  #
         ]
 
         rows: List[List[Union[TextCell, IconCell]]] = []
@@ -964,8 +978,9 @@ class TableRenderer:
 
         # Now compute the available width, i.e. take the usable page width
         # and substract spacing and padding.
-        available_width = self.pdf._inner_width - (
-            (num_cols - 1) * x_spacing) - (num_cols * 2 * x_padding)
+        available_width = (
+            self.pdf._inner_width - ((num_cols - 1) * x_spacing) - (num_cols * 2 * x_padding)
+        )
 
         # If there is space enough for not breaking single words, then
         # we begin with giving each column the width of their maximal
@@ -980,7 +995,9 @@ class TableRenderer:
             for s in stats:
                 _row_count, _total_width, min_width, max_width, _weight, is_dynamic = s
                 if is_dynamic:
-                    weight = max_width - min_width + 1 * mm  # add 1mm in order to avoid zero weights
+                    weight = (
+                        max_width - min_width + 1 * mm
+                    )  # add 1mm in order to avoid zero weights
                     s[4] = weight
                     sum_weight += weight
                 else:
@@ -1015,35 +1032,39 @@ class TableRenderer:
         for row_index, row in enumerate(rows):
             row_oddeven = "odd" if row_oddeven == "even" else "even"
 
-            if self._paint_graph_row(row,
-                                     column_widths,
-                                     y_padding,
-                                     x_padding,
-                                     y_spacing,
-                                     x_spacing,
-                                     headers,
-                                     hrules,
-                                     vrules,
-                                     rule_width,
-                                     row_shading,
-                                     paint_header=row_index == 0,
-                                     row_oddeven=row_oddeven):
+            if self._paint_graph_row(
+                row,
+                column_widths,
+                y_padding,
+                x_padding,
+                y_spacing,
+                x_spacing,
+                headers,
+                hrules,
+                vrules,
+                rule_width,
+                row_shading,
+                paint_header=row_index == 0,
+                row_oddeven=row_oddeven,
+            ):
                 continue
 
-            self._paint_row(row,
-                            column_widths,
-                            y_padding,
-                            x_padding,
-                            y_spacing,
-                            x_spacing,
-                            headers,
-                            hrules,
-                            vrules,
-                            rule_width,
-                            row_shading,
-                            paint_header=row_index == 0,
-                            is_header=False,
-                            row_oddeven=row_oddeven)
+            self._paint_row(
+                row,
+                column_widths,
+                y_padding,
+                x_padding,
+                y_spacing,
+                x_spacing,
+                headers,
+                hrules,
+                vrules,
+                rule_width,
+                row_shading,
+                paint_header=row_index == 0,
+                is_header=False,
+                row_oddeven=row_oddeven,
+            )
 
         self.pdf.restore_state()
 
@@ -1062,20 +1083,22 @@ class TableRenderer:
     ):
         self._paint_hrule(hrules, rule_width)
         if headers:
-            self._paint_row(headers,
-                            column_widths,
-                            y_padding,
-                            x_padding,
-                            y_spacing,
-                            x_spacing,
-                            headers,
-                            hrules,
-                            vrules,
-                            rule_width,
-                            row_shading,
-                            paint_header=False,
-                            is_header=True,
-                            row_oddeven="heading")
+            self._paint_row(
+                headers,
+                column_widths,
+                y_padding,
+                x_padding,
+                y_spacing,
+                x_spacing,
+                headers,
+                hrules,
+                vrules,
+                rule_width,
+                row_shading,
+                paint_header=False,
+                is_header=True,
+                row_oddeven="heading",
+            )
 
     def _paint_row(
         self,
@@ -1108,8 +1131,9 @@ class TableRenderer:
 
         needed_vspace = row_height + 2 * y_padding + y_spacing
 
-        if (not self.pdf.fits_on_remaining_page(needed_vspace / mm) and
-                self.pdf.fits_on_empty_page(needed_vspace / mm)):
+        if not self.pdf.fits_on_remaining_page(needed_vspace / mm) and self.pdf.fits_on_empty_page(
+            needed_vspace / mm
+        ):
             self.pdf.do_pagebreak()
             paint_header = True
 
@@ -1135,7 +1159,8 @@ class TableRenderer:
                 self.pdf._linepos / mm - h,  # fixed: true-divisioin
                 self.pdf._inner_width / mm,  # fixed: true-division
                 h,
-                fill_color=row_shading[row_oddeven])
+                fill_color=row_shading[row_oddeven],
+            )
 
         # Finally paint
         left = self.pdf._left
@@ -1149,7 +1174,8 @@ class TableRenderer:
                 (row_height + 2 * y_padding) / mm,
                 x_padding / mm,  # fixed: true-division
                 y_padding / mm,  # fixed: true-division
-                row_oddeven if row_shading["enabled"] else None)
+                row_oddeven if row_shading["enabled"] else None,
+            )
 
             self.pdf._linepos = old_linepos
 
@@ -1168,8 +1194,9 @@ class TableRenderer:
         if vrules:
             self.pdf._canvas.setLineWidth(rule_width)
             self.pdf._canvas.setStrokeColorRGB(*black)
-            self.pdf._canvas.line(left, self.pdf._linepos, left,
-                                  self.pdf._linepos - row_height - 2 * y_padding)
+            self.pdf._canvas.line(
+                left, self.pdf._linepos, left, self.pdf._linepos - row_height - 2 * y_padding
+            )
 
     def _paint_graph_row(
         self,
@@ -1207,9 +1234,12 @@ class TableRenderer:
         # pylint: disable=no-name-in-module
         from cmk.gui.cee.plugins.reporting.pnp_graphs import PainterPrinterTimeGraph
 
-        is_single_dataset = (len(row) == 2 and isinstance(row[0], TitleCell) and
-                             isinstance(row[1], PainterPrinterTimeGraph))
-        is_single_column = (len(row) == 1 and isinstance(row[0], PainterPrinterTimeGraph))
+        is_single_dataset = (
+            len(row) == 2
+            and isinstance(row[0], TitleCell)
+            and isinstance(row[1], PainterPrinterTimeGraph)
+        )
+        is_single_column = len(row) == 1 and isinstance(row[0], PainterPrinterTimeGraph)
 
         if not is_single_dataset and not is_single_column:
             return False
@@ -1229,20 +1259,22 @@ class TableRenderer:
             else:
                 step_row = [step]
 
-            self._paint_row(step_row,
-                            column_widths,
-                            y_padding,
-                            x_padding,
-                            y_spacing,
-                            x_spacing,
-                            headers,
-                            hrules,
-                            vrules,
-                            rule_width,
-                            row_shading,
-                            paint_header=paint_header and index == 0,
-                            is_header=False,
-                            row_oddeven=row_oddeven)
+            self._paint_row(
+                step_row,
+                column_widths,
+                y_padding,
+                x_padding,
+                y_spacing,
+                x_spacing,
+                headers,
+                hrules,
+                vrules,
+                rule_width,
+                row_shading,
+                paint_header=paint_header and index == 0,
+                is_header=False,
+                row_oddeven=row_oddeven,
+            )
         return True
 
 
@@ -1312,20 +1344,18 @@ class TextCell:
 
         for line in self._lines:
             top -= pdfdoc.get_line_skip()
-            y = top - y_padding + (
-                (pdfdoc.get_line_skip() - pdfdoc.font_height()) / 2.0)  # fixed: true-division
+            y = (
+                top - y_padding + ((pdfdoc.get_line_skip() - pdfdoc.font_height()) / 2.0)
+            )  # fixed: true-division
             if self._alignment == "right":
                 x = left + width - x_padding
             elif self._alignment == "left":
                 x = left + x_padding
             else:
                 x = left + (width / 2.0)
-            pdfdoc.render_text(x,
-                               y,
-                               line,
-                               align=self._alignment,
-                               bold=self._bold,
-                               color=self._color)
+            pdfdoc.render_text(
+                x, y, line, align=self._alignment, bold=self._bold, color=self._color
+            )
 
 
 class TitleCell(TextCell):
@@ -1360,7 +1390,7 @@ class IconCell:
         pdfdoc.render_image(left + x_padding, top - w - y_padding, w, w, self._image_path)
 
 
-#.
+# .
 #   .--PDF2PNG-------------------------------------------------------------.
 #   |              ____  ____  _____ ____  ____  _   _  ____               |
 #   |             |  _ \|  _ \|  ___|___ \|  _ \| \ | |/ ___|              |
@@ -1398,8 +1428,11 @@ def pdf2png(pdf_source):
     exitcode = p.returncode
     if exitcode != 0:
         raise MKInternalError(
-            _('Cannot create PNG from PDF: %s, Exit code is %d, '
-              'command was "%s", PDF source code was "%s..."') %
-            (stderr, exitcode, " ".join(command), pdf_source[:500]))
+            _(
+                "Cannot create PNG from PDF: %s, Exit code is %d, "
+                'command was "%s", PDF source code was "%s..."'
+            )
+            % (stderr, exitcode, " ".join(command), pdf_source[:500])
+        )
 
     return stdout

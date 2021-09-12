@@ -14,17 +14,28 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_mongodb_locks():
-    return Dictionary(elements=[("%s_locks" % what,
-                                 Tuple(
-                                     title=_("%s Locks") % what.title().replace("_", " "),
-                                     elements=[
-                                         Integer(title=_("Warning at"), minvalue=0),
-                                         Integer(title=_("Critical at"), minvalue=0),
-                                     ],
-                                 )) for what in [
-                                     "clients_readers", "clients_writers", "clients_total",
-                                     "queue_readers", "queue_writers", "queue_total"
-                                 ]],)
+    return Dictionary(
+        elements=[
+            (
+                "%s_locks" % what,
+                Tuple(
+                    title=_("%s Locks") % what.title().replace("_", " "),
+                    elements=[
+                        Integer(title=_("Warning at"), minvalue=0),
+                        Integer(title=_("Critical at"), minvalue=0),
+                    ],
+                ),
+            )
+            for what in [
+                "clients_readers",
+                "clients_writers",
+                "clients_total",
+                "queue_readers",
+                "queue_writers",
+                "queue_total",
+            ]
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -34,4 +45,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mongodb_locks,
         title=lambda: _("MongoDB Locks"),
-    ))
+    )
+)

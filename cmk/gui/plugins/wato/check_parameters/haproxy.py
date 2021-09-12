@@ -19,13 +19,22 @@ SERVER_STATES = [("UP", 0), ("DOWN", 2), ("NOLB", 2), ("MAINT", 2), ("DRAIN", 2)
 def _parameter_valuespec_haproxy_frontend() -> Dictionary:
     return Dictionary(
         title=_("Translation of HAProxy state to monitoring state"),
-        help=_("Define a direct translation of the possible states of the HAProxy frontend "
-               "to monitoring states, i.e. to the result of the check. This overwrites the default "
-               "mapping used by the check."),
-        elements=[(fe_state,
-                   MonitoringState(title=_("Monitoring state if HAProxy frontend is %s") % fe_state,
-                                   default_value=default))
-                  for fe_state, default in FRONTEND_STATES])
+        help=_(
+            "Define a direct translation of the possible states of the HAProxy frontend "
+            "to monitoring states, i.e. to the result of the check. This overwrites the default "
+            "mapping used by the check."
+        ),
+        elements=[
+            (
+                fe_state,
+                MonitoringState(
+                    title=_("Monitoring state if HAProxy frontend is %s") % fe_state,
+                    default_value=default,
+                ),
+            )
+            for fe_state, default in FRONTEND_STATES
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -35,20 +44,29 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_haproxy_frontend,
         title=lambda: _("HAproxy Frontend State"),
-    ))
+    )
+)
 
 
 def _parameter_valuespec_haproxy_server() -> Dictionary:
     return Dictionary(
         title=_("Translation of HAProxy state to monitoring state"),
-        help=_("Define a direct translation of the possible states of the HAProxy server "
-               "to monitoring states, i.e. to the result of the check. This overwrites the default "
-               "mapping used by the check."),
+        help=_(
+            "Define a direct translation of the possible states of the HAProxy server "
+            "to monitoring states, i.e. to the result of the check. This overwrites the default "
+            "mapping used by the check."
+        ),
         elements=[
-            (server_state,
-             MonitoringState(title=_("Monitoring state if HAProxy server is %s") % server_state,
-                             default_value=default)) for server_state, default in SERVER_STATES
-        ])
+            (
+                server_state,
+                MonitoringState(
+                    title=_("Monitoring state if HAProxy server is %s") % server_state,
+                    default_value=default,
+                ),
+            )
+            for server_state, default in SERVER_STATES
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -58,4 +76,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_haproxy_server,
         title=lambda: _("HAproxy Server State"),
-    ))
+    )
+)

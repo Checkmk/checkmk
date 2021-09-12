@@ -96,36 +96,46 @@ class ModePredefinedConditions(SimpleListMode):
     def _validate_deletion(self, ident, entry):
         rulesets = AllRulesets()
         rulesets.load()
-        matched_rulesets = SearchedRulesets(rulesets, {
-            "rule_predefined_condition": ident
-        }).get_rulesets()
+        matched_rulesets = SearchedRulesets(
+            rulesets, {"rule_predefined_condition": ident}
+        ).get_rulesets()
 
         if matched_rulesets:
             raise MKUserError(
                 "_delete",
-                _("You can not delete this %s because it is <a href=\"%s\">in use</a>.") %
-                (self._mode_type.name_singular(), self._search_url(ident)))
+                _('You can not delete this %s because it is <a href="%s">in use</a>.')
+                % (self._mode_type.name_singular(), self._search_url(ident)),
+            )
 
     def page(self):
         html.p(
-            _("This module can be used to define conditions for Check_MK rules in a central place. "
-              "You can then refer to these conditions from different rulesets. Using these predefined "
-              "conditions may save you a lot of redundant conditions when you need them in multiple "
-              "rulesets."))
+            _(
+                "This module can be used to define conditions for Check_MK rules in a central place. "
+                "You can then refer to these conditions from different rulesets. Using these predefined "
+                "conditions may save you a lot of redundant conditions when you need them in multiple "
+                "rulesets."
+            )
+        )
         super().page()
 
     def _show_action_cell(self, table, ident):
         super()._show_action_cell(table, ident)
 
-        html.icon_button(self._search_url(ident),
-                         _("Show rules using this %s") % self._mode_type.name_singular(), "search")
+        html.icon_button(
+            self._search_url(ident),
+            _("Show rules using this %s") % self._mode_type.name_singular(),
+            "search",
+        )
 
     def _search_url(self, ident):
         return makeuri_contextless(
             request,
-            [("mode", "rule_search"), ("filled_in", "rule_search"),
-             ("search_p_rule_predefined_condition", DropdownChoice.option_id(ident)),
-             ("search_p_rule_predefined_condition_USE", "on")],
+            [
+                ("mode", "rule_search"),
+                ("filled_in", "rule_search"),
+                ("search_p_rule_predefined_condition", DropdownChoice.option_id(ident)),
+                ("search_p_rule_predefined_condition_USE", "on"),
+            ],
         )
 
     def _show_entry_cells(self, table, ident, entry):
@@ -135,8 +145,8 @@ class ModePredefinedConditions(SimpleListMode):
         html.open_ul(class_="conditions")
         html.open_li()
         html.write_text(
-            "%s: %s" %
-            (_("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path()))
+            "%s: %s" % (_("Folder"), Folder.folder(entry["conditions"]["host_folder"]).alias_path())
+        )
         html.close_li()
         html.close_ul()
         html.write_text(vs_conditions().value_to_text(entry["conditions"]))
@@ -144,8 +154,11 @@ class ModePredefinedConditions(SimpleListMode):
         table.cell(_("Editable by"))
         if entry["owned_by"] is None:
             html.write_text(
-                _("Administrators (having the permission "
-                  "\"Write access to all predefined conditions\")"))
+                _(
+                    "Administrators (having the permission "
+                    '"Write access to all predefined conditions")'
+                )
+            )
         else:
             html.write_text(self._contact_group_alias(entry["owned_by"]))
 
@@ -185,8 +198,10 @@ class ModeEditPredefinedCondition(SimpleEditMode):
                 FixedValue(
                     None,
                     title=_("Administrators"),
-                    totext=_("Administrators (having the permission "
-                             "\"Write access to all predefined conditions\")"),
+                    totext=_(
+                        "Administrators (having the permission "
+                        '"Write access to all predefined conditions")'
+                    ),
                 )
             ]
         else:
@@ -194,37 +209,47 @@ class ModeEditPredefinedCondition(SimpleEditMode):
 
         return [
             ("conditions", vs_conditions()),
-            ("owned_by",
-             Alternative(
-                 title=_("Editable by"),
-                 help=_(
-                     "Each predefined condition is owned by a group of users which are able to edit, "
-                     "delete and use existing predefined conditions."),
-                 elements=admin_element + [
-                     DropdownChoice(
-                         title=_("Members of the contact group:"),
-                         choices=lambda: self._contact_group_choices(only_own=True),
-                         invalid_choice="complain",
-                         empty_text=_(
-                             "You need to be member of at least one contact group to be able to "
-                             "create a predefined condition."),
-                         invalid_choice_title=_("Group not existant or not member"),
-                         invalid_choice_error=_("The choosen group is either not existant "
-                                                "anymore or you are not a member of this "
-                                                "group. Please choose another one."),
-                     ),
-                 ])),
-            ("shared_with",
-             DualListChoice(
-                 title=_("Share with"),
-                 help=_(
-                     "By default only the members of the owner contact group are permitted "
-                     "to use a a predefined condition. It is possible to share it with "
-                     "other groups of users to make them able to use a predefined condition in rules."
-                 ),
-                 choices=self._contact_group_choices,
-                 autoheight=False,
-             )),
+            (
+                "owned_by",
+                Alternative(
+                    title=_("Editable by"),
+                    help=_(
+                        "Each predefined condition is owned by a group of users which are able to edit, "
+                        "delete and use existing predefined conditions."
+                    ),
+                    elements=admin_element
+                    + [
+                        DropdownChoice(
+                            title=_("Members of the contact group:"),
+                            choices=lambda: self._contact_group_choices(only_own=True),
+                            invalid_choice="complain",
+                            empty_text=_(
+                                "You need to be member of at least one contact group to be able to "
+                                "create a predefined condition."
+                            ),
+                            invalid_choice_title=_("Group not existant or not member"),
+                            invalid_choice_error=_(
+                                "The choosen group is either not existant "
+                                "anymore or you are not a member of this "
+                                "group. Please choose another one."
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "shared_with",
+                DualListChoice(
+                    title=_("Share with"),
+                    help=_(
+                        "By default only the members of the owner contact group are permitted "
+                        "to use a a predefined condition. It is possible to share it with "
+                        "other groups of users to make them able to use a predefined condition in rules."
+                    ),
+                    choices=self._contact_group_choices,
+                    autoheight=False,
+                ),
+            ),
         ]
 
     def _save(self, entries):
@@ -295,6 +320,6 @@ class ModeEditPredefinedCondition(SimpleEditMode):
             user_groups = []
 
         entries = [
-            (c, g['alias']) for c, g in contact_groups.items() if not only_own or c in user_groups
+            (c, g["alias"]) for c, g in contact_groups.items() if not only_own or c in user_groups
         ]
         return sorted(entries, key=lambda x: x[1])

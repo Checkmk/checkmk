@@ -104,7 +104,7 @@ class ParentChildTopologyPage(Page):
         }
 
     def page(self) -> PageResult:
-        """ Determines the hosts to be shown """
+        """Determines the hosts to be shown"""
         user.need_permission("general.parent_child_topology")
 
         topology_settings = TopologySettings()
@@ -119,7 +119,8 @@ class ParentChildTopologyPage(Page):
         else:
             # Default page without further context
             topology_settings.growth_root_nodes = self._get_default_view_hostnames(
-                topology_settings.growth_auto_max_nodes)
+                topology_settings.growth_auto_max_nodes
+            )
 
         if request.has_var("topology_settings"):
             # These parameters are usually generated within javascript through user interactions
@@ -133,7 +134,7 @@ class ParentChildTopologyPage(Page):
         self.show_topology(topology_settings)
 
     def _get_default_view_hostnames(self, max_nodes: int) -> Set[HostName]:
-        """ Returns all hosts without any parents """
+        """Returns all hosts without any parents"""
         query = "GET hosts\nColumns: name\nFilter: parents ="
         with sites.prepend_site(), sites.only_sites(request.var("site")):
             hosts = [(x[0], x[1]) for x in sites.live().query(query)]
@@ -159,8 +160,9 @@ class ParentChildTopologyPage(Page):
 
     def show_topology(self, topology_settings: TopologySettings) -> None:
         visual_spec = ParentChildTopologyPage.visual_spec()
-        breadcrumb = make_topic_breadcrumb(mega_menu_registry.menu_monitoring(),
-                                           PagetypeTopics.get_topic(visual_spec["topic"]))
+        breadcrumb = make_topic_breadcrumb(
+            mega_menu_registry.menu_monitoring(), PagetypeTopics.get_topic(visual_spec["topic"])
+        )
         breadcrumb.append(make_current_page_breadcrumb_item(visual_spec["title"]))
         page_menu = PageMenu(breadcrumb=breadcrumb)
         self._extend_display_dropdown(page_menu, visual_spec["name"])
@@ -171,11 +173,14 @@ class ParentChildTopologyPage(Page):
         div_id = "node_visualization"
         html.div("", id_=div_id)
         html.javascript(
-            "topology_instance = new cmk.node_visualization.TopologyVisualization(%s);" %
-            json.dumps(div_id))
+            "topology_instance = new cmk.node_visualization.TopologyVisualization(%s);"
+            % json.dumps(div_id)
+        )
 
-        html.javascript("topology_instance.show_topology(%s)" %
-                        json.dumps(TopologySettingsJSON(**asdict(topology_settings)).to_json()))
+        html.javascript(
+            "topology_instance.show_topology(%s)"
+            % json.dumps(TopologySettingsJSON(**asdict(topology_settings)).to_json())
+        )
 
     def _get_overlays_config(self) -> List:
         return []
@@ -200,20 +205,24 @@ class ParentChildTopologyPage(Page):
                                 info_list=["host", "service"],
                                 context={f.ident: {} for f in show_filters if f.available()},
                                 page_name=page_name,
-                                reset_ajax_page="ajax_initial_topology_filters")),
+                                reset_ajax_page="ajax_initial_topology_filters",
+                            )
+                        ),
                         name="filters",
                         is_shortcut=True,
                     ),
-                ]))
+                ],
+            ),
+        )
 
 
 def get_topology_view_and_filters() -> Tuple[View, List[Filter]]:
     view_name = "topology_filters"
     view_spec = get_permitted_views()[view_name]
     view = View(view_name, view_spec, view_spec.get("context", {}))
-    filters = cmk.gui.visuals.filters_of_visual(view.spec,
-                                                view.datasource.infos,
-                                                link_filters=view.datasource.link_filters)
+    filters = cmk.gui.visuals.filters_of_visual(
+        view.spec, view.datasource.infos, link_filters=view.datasource.link_filters
+    )
     show_filters = cmk.gui.visuals.visible_filters_of_visual(view.spec, filters)
     return view, show_filters
 
@@ -234,11 +243,13 @@ def _bi_map() -> None:
     html.header(title, breadcrumb)
     div_id = "node_visualization"
     html.div("", id=div_id)
-    html.javascript("node_instance = new cmk.node_visualization.BIVisualization(%s);" %
-                    json.dumps(div_id))
+    html.javascript(
+        "node_instance = new cmk.node_visualization.BIVisualization(%s);" % json.dumps(div_id)
+    )
 
-    html.javascript("node_instance.show_aggregations(%s, %s)" %
-                    (json.dumps([aggr_name]), json.dumps(layout_id)))
+    html.javascript(
+        "node_instance.show_aggregations(%s, %s)" % (json.dumps([aggr_name]), json.dumps(layout_id))
+    )
 
 
 @page_registry.register_page("ajax_fetch_aggregation_data")
@@ -253,7 +264,8 @@ class AjaxFetchAggregationData(AjaxPage):
 
         bi_aggregation_filter = BIAggregationFilter([], [], [], filter_names, [], [])
         results = bi.get_cached_bi_manager().computer.compute_result_for_filter(
-            bi_aggregation_filter)
+            bi_aggregation_filter
+        )
 
         aggregation_info: Dict[str, Any] = {"aggregations": {}}
 
@@ -264,7 +276,8 @@ class AjaxFetchAggregationData(AjaxPage):
                 branch = node_result_bundle.instance
                 aggr_name = branch.properties.title
                 visual_mapper = NodeVisualizationBIDataMapper(
-                    is_single_host_aggregation=len(branch.get_required_hosts()) == 1)
+                    is_single_host_aggregation=len(branch.get_required_hosts()) == 1
+                )
                 hierarchy = visual_mapper.consume(node_result_bundle)
 
                 data: Dict[str, Any] = {}
@@ -280,7 +293,8 @@ class AjaxFetchAggregationData(AjaxPage):
                     layout["origin_type"] = "globally_enforced"
                     layout["origin_info"] = _("Globally enforced")
                     layout["use_layout"] = BILayoutManagement.load_bi_template_layout(
-                        forced_layout_id)
+                        forced_layout_id
+                    )
                 else:
                     if aggr_name in aggregation_layouts:
                         layout["origin_type"] = "explicit"
@@ -293,7 +307,8 @@ class AjaxFetchAggregationData(AjaxPage):
 
                 if "ignore_rule_styles" not in layout["config"]:
                     layout["config"]["ignore_rule_styles"] = aggr_settings.get(
-                        "ignore_rule_styles", False)
+                        "ignore_rule_styles", False
+                    )
                 if "line_config" not in layout["config"]:
                     layout["config"]["line_config"] = self._get_line_style_config(aggr_settings)
 
@@ -318,7 +333,8 @@ class AjaxFetchAggregationData(AjaxPage):
             layout_settings["origin_info"] = _("Template: %s") % template_layout_id
             layout_settings["template_id"] = template_layout_id
             layout_settings["config"] = BILayoutManagement.load_bi_template_layout(
-                template_layout_id)
+                template_layout_id
+            )
         elif template_layout_id.startswith("builtin_"):
             # FIXME: this mapping is currently copied from the bi configuration valuespec
             #        BI refactoring required...
@@ -326,11 +342,12 @@ class AjaxFetchAggregationData(AjaxPage):
                 "builtin_default": _("global"),
                 "builtin_force": _("force"),
                 "builtin_radial": _("radial"),
-                "builtin_hierarchy": _("hierarchy")
+                "builtin_hierarchy": _("hierarchy"),
             }
             layout_settings["origin_type"] = "default_template"
             layout_settings["origin_info"] = _("Default %s template") % builtin_mapping.get(
-                template_layout_id, _("Unknown"))
+                template_layout_id, _("Unknown")
+            )
 
             if template_layout_id == "builtin_default":
                 template_layout_id = config.default_bi_layout["node_style"]
@@ -339,7 +356,9 @@ class AjaxFetchAggregationData(AjaxPage):
             # Any Unknown/Removed layout id gets the default template
             layout_settings["origin_type"] = "default_template"
             layout_settings["origin_info"] = _("Fallback template (%s): Unknown ID %s") % (
-                config.default_bi_layout["node_style"][8:].title(), template_layout_id)
+                config.default_bi_layout["node_style"][8:].title(),
+                template_layout_id,
+            )
             layout_settings["default_id"] = config.default_bi_layout["node_style"][8:]
 
         return layout_settings
@@ -385,12 +404,13 @@ class NodeVisualizationBIDataMapper:
         aggregation_function = bi_compiled_rule.aggregation_function
         function_data = BIAggregationFunctionSchema().dump(aggregation_function)
         aggr_func_gui = bi_valuespecs.bi_config_aggregation_function_registry[
-            aggregation_function.type()]
+            aggregation_function.type()
+        ]
 
         node_data["rule_id"] = {
             "pack": bi_compiled_rule.pack_id,
             "rule": bi_compiled_rule.id,
-            "aggregation_function_description": str(aggr_func_gui(function_data))
+            "aggregation_function_description": str(aggr_func_gui(function_data)),
         }
         node_data["rule_layout_style"] = bi_compiled_rule.node_visualization
         return node_data
@@ -405,7 +425,8 @@ class NodeVisualizationBIDataMapper:
                 node_data["name"] = bi_compiled_leaf.service_description
             else:
                 node_data["name"] = " ".join(
-                    [bi_compiled_leaf.host_name, bi_compiled_leaf.service_description])
+                    [bi_compiled_leaf.host_name, bi_compiled_leaf.service_description]
+                )
         return node_data
 
 
@@ -509,7 +530,8 @@ class AjaxFetchTopology(AjaxPage):
 
             sorted_children = sorted([x for x in mesh if x != mesh_root])
             mesh_info["children"] = list(
-                topology.get_info_for_host(x, mesh) for x in sorted_children)
+                topology.get_info_for_host(x, mesh) for x in sorted_children
+            )
             sorted_mesh = [mesh_root] + sorted_children
 
             mesh_links = set()
@@ -535,12 +557,12 @@ class AjaxFetchTopology(AjaxPage):
                 },
                 "type": "topology",
                 "hierarchy": mesh_info,
-                "links": list(mesh_links)
+                "links": list(mesh_links),
             }
 
         return topology_info
 
-    def _topology_instance_factory(self, topology_settings: TopologySettings) -> 'Topology':
+    def _topology_instance_factory(self, topology_settings: TopologySettings) -> "Topology":
         topology_class = topology_registry.get(topology_settings.display_mode)
         if topology_class is None:
             raise Exception("unknown topology")
@@ -673,10 +695,12 @@ class Topology:
         total_nodes = sum(map(len, self._meshes))
         if total_nodes > self.max_nodes:
             raise MKGrowthExceeded(
-                _("Maximum number of nodes exceeded %d/%d") % (total_nodes, self.max_nodes))
+                _("Maximum number of nodes exceeded %d/%d") % (total_nodes, self.max_nodes)
+            )
         if total_nodes > self.growth_auto_max_nodes:
             raise MKGrowthInterruption(
-                _("Growth interrupted %d/%d") % (total_nodes, self.growth_auto_max_nodes))
+                _("Growth interrupted %d/%d") % (total_nodes, self.growth_auto_max_nodes)
+            )
 
     @property
     def max_nodes(self) -> int:
@@ -787,7 +811,7 @@ class Topology:
         self._integrate_new_meshes(new_meshes)
 
     def _integrate_new_meshes(self, new_meshes: List[Set[HostName]]) -> None:
-        """ Combines meshes with identical items """
+        """Combines meshes with identical items"""
         self._meshes.extend(new_meshes)
         all_hosts = set(itertools.chain.from_iterable(self._meshes))
         for hostname in all_hosts:
@@ -817,7 +841,8 @@ topology_registry = TopologyRegistry()
 
 
 class ParentChildNetworkTopology(Topology):
-    """ Generates parent/child topology view """
+    """Generates parent/child topology view"""
+
     @classmethod
     def ident(cls) -> str:
         return "parent_child"
@@ -835,26 +860,36 @@ class ParentChildNetworkTopology(Topology):
         try:
             sites.live().set_prepend_site(True)
             columns = [
-                "name", "state", "alias", "icon_image", "parents", "childs", "has_been_checked"
+                "name",
+                "state",
+                "alias",
+                "icon_image",
+                "parents",
+                "childs",
+                "has_been_checked",
             ]
-            query_result = sites.live().query("GET hosts\nColumns: %s\n%s" %
-                                              (" ".join(columns), "\n".join(hostname_filters)))
+            query_result = sites.live().query(
+                "GET hosts\nColumns: %s\n%s" % (" ".join(columns), "\n".join(hostname_filters))
+            )
         finally:
             sites.live().set_prepend_site(False)
 
-        return [{
-            "site": str(x[0]),
-            "name": HostName(str(x[1])),
-            "state": int(x[2]),
-            "alias": str(x[3]),
-            "icon_image": str(x[4]),
-            "outgoing": [HostName(str(i)) for i in x[5]],
-            "incoming": [HostName(str(i)) for i in x[6]],
-            "has_been_checked": bool(x[7]),
-        } for x in query_result]
+        return [
+            {
+                "site": str(x[0]),
+                "name": HostName(str(x[1])),
+                "state": int(x[2]),
+                "alias": str(x[3]),
+                "icon_image": str(x[4]),
+                "outgoing": [HostName(str(i)) for i in x[5]],
+                "incoming": [HostName(str(i)) for i in x[6]],
+                "has_been_checked": bool(x[7]),
+            }
+            for x in query_result
+        ]
 
     def _postprocess_meshes(self, meshes: Meshes) -> Meshes:
-        """ Create a central node and add all monitoring sites as childs """
+        """Create a central node and add all monitoring sites as childs"""
 
         central_node: _MeshNode = {
             "name": HostName(""),
@@ -869,11 +904,14 @@ class ParentChildNetworkTopology(Topology):
             for node_name in mesh:
                 site = self._known_hosts[node_name]["site"]
                 site_node_name = HostName(_("Site %s") % site)
-                site_nodes.setdefault(site_node_name, {
-                    "node_type": "topology_site",
-                    "outgoing": [central_node["name"]],
-                    "incoming": []
-                })
+                site_nodes.setdefault(
+                    site_node_name,
+                    {
+                        "node_type": "topology_site",
+                        "outgoing": [central_node["name"]],
+                        "incoming": [],
+                    },
+                )
                 outgoing_nodes = self._known_hosts.get(node_name, {"outgoing": []})["outgoing"]
                 # Only attach this node to the site if it has no parents that are visible
                 # in the current mesh

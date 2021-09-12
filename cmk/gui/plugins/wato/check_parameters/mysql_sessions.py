@@ -22,8 +22,10 @@ def _item_spec_mysql_sessions():
 
 def _parameter_valuespec_mysql_sessions():
     return Dictionary(
-        help=_("This check monitors the current number of active sessions to the MySQL "
-               "database server as well as the connection rate."),
+        help=_(
+            "This check monitors the current number of active sessions to the MySQL "
+            "database server as well as the connection rate."
+        ),
         elements=[
             (
                 "total",
@@ -68,4 +70,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mysql_sessions,
         title=lambda: _("MySQL Sessions & Connections"),
-    ))
+    )
+)

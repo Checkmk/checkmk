@@ -12,7 +12,7 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.valuespec import Dictionary, Filesize, Tuple
 
-MEMORY_DEFAULT = 1024**3
+MEMORY_DEFAULT = 1024 ** 3
 
 
 def _memory_tuple(title):
@@ -26,13 +26,15 @@ def _memory_tuple(title):
 
 
 def _parameter_valuespec_esx_host_memory():
-    return Dictionary(elements=[
-        ("host", _memory_tuple(_("Host memory usage"))),
-        ("guest", _memory_tuple(_("Guest memory usage"))),
-        ("ballooned", _memory_tuple(_("Ballooned memory usage"))),
-        ("private", _memory_tuple(_("Private memory usage"))),
-        ("shared", _memory_tuple(_("Shared memory usage"))),
-    ])
+    return Dictionary(
+        elements=[
+            ("host", _memory_tuple(_("Host memory usage"))),
+            ("guest", _memory_tuple(_("Guest memory usage"))),
+            ("ballooned", _memory_tuple(_("Ballooned memory usage"))),
+            ("private", _memory_tuple(_("Private memory usage"))),
+            ("shared", _memory_tuple(_("Shared memory usage"))),
+        ]
+    )
 
 
 rulespec_registry.register(
@@ -41,4 +43,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_esx_host_memory,
         title=lambda: _("ESX VM memory usage"),
-    ))
+    )
+)

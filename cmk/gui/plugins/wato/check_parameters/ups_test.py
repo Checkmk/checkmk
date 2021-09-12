@@ -19,15 +19,19 @@ def _parameter_valuespec_ups_test():
         elements=[
             Integer(
                 title=_("Warning Level for time since last self test"),
-                help=_("Warning Level for time since last diagnostic test of the device. "
-                       "For a value of 0 the warning level will not be used"),
+                help=_(
+                    "Warning Level for time since last diagnostic test of the device. "
+                    "For a value of 0 the warning level will not be used"
+                ),
                 unit=_("days"),
                 default_value=0,
             ),
             Integer(
                 title=_("Critical Level for time since last self test"),
-                help=_("Critical Level for time since last diagnostic test of the device. "
-                       "For a value of 0 the critical level will not be used"),
+                help=_(
+                    "Critical Level for time since last diagnostic test of the device. "
+                    "For a value of 0 the critical level will not be used"
+                ),
                 unit=_("days"),
                 default_value=0,
             ),
@@ -41,4 +45,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_parameter_valuespec_ups_test,
         title=lambda: _("Time since last UPS selftest"),
-    ))
+    )
+)

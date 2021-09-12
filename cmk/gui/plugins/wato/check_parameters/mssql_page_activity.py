@@ -18,30 +18,36 @@ def _parameter_valuespec_mssql_page_activity():
     return Dictionary(
         title=_("Page Activity Levels"),
         elements=[
-            ("page_reads/sec",
-             Tuple(
-                 title=_("Reads/sec"),
-                 elements=[
-                     Float(title=_("warning at"), unit=_("/sec")),
-                     Float(title=_("critical at"), unit=_("/sec")),
-                 ],
-             )),
-            ("page_writes/sec",
-             Tuple(
-                 title=_("Writes/sec"),
-                 elements=[
-                     Float(title=_("warning at"), unit=_("/sec")),
-                     Float(title=_("critical at"), unit=_("/sec")),
-                 ],
-             )),
-            ("page_lookups/sec",
-             Tuple(
-                 title=_("Lookups/sec"),
-                 elements=[
-                     Float(title=_("warning at"), unit=_("/sec")),
-                     Float(title=_("critical at"), unit=_("/sec")),
-                 ],
-             )),
+            (
+                "page_reads/sec",
+                Tuple(
+                    title=_("Reads/sec"),
+                    elements=[
+                        Float(title=_("warning at"), unit=_("/sec")),
+                        Float(title=_("critical at"), unit=_("/sec")),
+                    ],
+                ),
+            ),
+            (
+                "page_writes/sec",
+                Tuple(
+                    title=_("Writes/sec"),
+                    elements=[
+                        Float(title=_("warning at"), unit=_("/sec")),
+                        Float(title=_("critical at"), unit=_("/sec")),
+                    ],
+                ),
+            ),
+            (
+                "page_lookups/sec",
+                Tuple(
+                    title=_("Lookups/sec"),
+                    elements=[
+                        Float(title=_("warning at"), unit=_("/sec")),
+                        Float(title=_("critical at"), unit=_("/sec")),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -54,4 +60,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_page_activity,
         title=lambda: _("MSSQL Page Activity"),
-    ))
+    )
+)

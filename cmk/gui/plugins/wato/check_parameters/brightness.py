@@ -39,4 +39,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_brightness,
         title=lambda: _("Brightness Levels"),
-    ))
+    )
+)

@@ -29,7 +29,7 @@ class PainterHostFilename(Painter):
 
     @property
     def columns(self):
-        return ['host_filename']
+        return ["host_filename"]
 
     def render(self, row, cell):
         return ("tt", row["host_filename"])
@@ -63,7 +63,7 @@ def get_wato_folder(row: Dict, how: str, with_links: bool = True) -> Union[str, 
     if not current_path or not wato_path.startswith(current_path):
         return HTML(" / ").join(title_path)
 
-    depth = current_path.count('/') + 1
+    depth = current_path.count("/") + 1
     return HTML(" / ").join(title_path[depth:])
 
 
@@ -85,11 +85,11 @@ class PainterWatoFolderAbs(Painter):
 
     @property
     def columns(self):
-        return ['host_filename']
+        return ["host_filename"]
 
     @property
     def sorter(self):
-        return 'wato_folder_abs'
+        return "wato_folder_abs"
 
     def render(self, row, cell):
         return paint_wato_folder(row, "abs")
@@ -109,11 +109,11 @@ class PainterWatoFolderRel(Painter):
 
     @property
     def columns(self):
-        return ['host_filename']
+        return ["host_filename"]
 
     @property
     def sorter(self):
-        return 'wato_folder_rel'
+        return "wato_folder_rel"
 
     def render(self, row, cell):
         return paint_wato_folder(row, "rel")
@@ -133,19 +133,20 @@ class PainterWatoFolderPlain(Painter):
 
     @property
     def columns(self):
-        return ['host_filename']
+        return ["host_filename"]
 
     @property
     def sorter(self):
-        return 'wato_folder_plain'
+        return "wato_folder_plain"
 
     def render(self, row, cell):
         return paint_wato_folder(row, "plain")
 
 
 def cmp_wato_folder(r1: Row, r2: Row, how: str) -> int:
-    return ((_get_wato_folder_text(r1, how) > _get_wato_folder_text(r2, how)) -
-            (_get_wato_folder_text(r1, how) < _get_wato_folder_text(r2, how)))
+    return (_get_wato_folder_text(r1, how) > _get_wato_folder_text(r2, how)) - (
+        _get_wato_folder_text(r1, how) < _get_wato_folder_text(r2, how)
+    )
 
 
 # NOTE: The funny str() call is only necessary because of the broken typing of
@@ -166,10 +167,10 @@ class SorterWatoFolderAbs(Sorter):
 
     @property
     def columns(self):
-        return ['host_filename']
+        return ["host_filename"]
 
     def cmp(self, r1, r2):
-        return cmp_wato_folder(r1, r2, 'abs')
+        return cmp_wato_folder(r1, r2, "abs")
 
 
 @sorter_registry.register
@@ -184,10 +185,10 @@ class SorterWatoFolderRel(Sorter):
 
     @property
     def columns(self):
-        return ['host_filename']
+        return ["host_filename"]
 
     def cmp(self, r1, r2):
-        return cmp_wato_folder(r1, r2, 'rel')
+        return cmp_wato_folder(r1, r2, "rel")
 
 
 @sorter_registry.register
@@ -202,7 +203,7 @@ class SorterWatoFolderPlain(Sorter):
 
     @property
     def columns(self):
-        return ['host_filename']
+        return ["host_filename"]
 
     def cmp(self, r1, r2):
-        return cmp_wato_folder(r1, r2, 'plain')
+        return cmp_wato_folder(r1, r2, "plain")

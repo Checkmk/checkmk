@@ -64,8 +64,18 @@ AVBIObjectSpec = _Tuple[None, None, str]
 AVHostOrServiceObjectSpec = _Tuple[SiteId, HostName, ServiceName]
 AVObjectSpec = Union[None, AVBIObjectSpec, AVHostOrServiceObjectSpec]
 AVOutageStatisticsAggregations = List[Literal["min", "max", "avg", "cnt"]]
-AVOutageStatisticsStates = List[Literal["ok", "warn", "crit", "unknown", "flapping", "host_down",
-                                        "in_downtime", "outof_notification_period"]]
+AVOutageStatisticsStates = List[
+    Literal[
+        "ok",
+        "warn",
+        "crit",
+        "unknown",
+        "flapping",
+        "host_down",
+        "in_downtime",
+        "outof_notification_period",
+    ]
+]
 AVOutageStatistics = _Tuple[AVOutageStatisticsAggregations, AVOutageStatisticsStates]
 AVSpan = Dict[str, Any]  # TODO: Improve this type
 SiteHost = _Tuple[SiteId, HostName]
@@ -84,16 +94,35 @@ AVTimeStamp = float
 AVTimeRange = _Tuple[AVTimeStamp, AVTimeStamp]
 AVTimeFormats = List[_Tuple[str, Callable[[AVTimeStamp, int], str]]]
 AVRangeSpec = _Tuple[AVTimeRange, str]
-AVTimeformatSpecLegacy = Literal["percentage_0", "percentage_1", "percentage_2", "percentage_3",
-                                 "seconds", "minutes", "hours", "hhmmss"]
-AVTimeformatSpec = Union[AVTimeformatSpecLegacy,
-                         _Tuple[Literal["both", "perc", "time"],
-                                Literal["percentage_0", "percentage_1", "percentage_2",
-                                        "percentage_3"], Literal["seconds", "minutes", "hours",
-                                                                 "hhmmss"]]]
-AVTimelineLabelling = Literal["omit_headers", "omit_host", "show_alias", "use_display_name",
-                              "omit_buttons", "omit_timeline_plugin_output", "timeline_long_output",
-                              "display_timeline_legend", "omit_av_levels",]
+AVTimeformatSpecLegacy = Literal[
+    "percentage_0",
+    "percentage_1",
+    "percentage_2",
+    "percentage_3",
+    "seconds",
+    "minutes",
+    "hours",
+    "hhmmss",
+]
+AVTimeformatSpec = Union[
+    AVTimeformatSpecLegacy,
+    _Tuple[
+        Literal["both", "perc", "time"],
+        Literal["percentage_0", "percentage_1", "percentage_2", "percentage_3"],
+        Literal["seconds", "minutes", "hours", "hhmmss"],
+    ],
+]
+AVTimelineLabelling = Literal[
+    "omit_headers",
+    "omit_host",
+    "show_alias",
+    "use_display_name",
+    "omit_buttons",
+    "omit_timeline_plugin_output",
+    "timeline_long_output",
+    "display_timeline_legend",
+    "omit_av_levels",
+]
 AVIconSpec = _Tuple[str, str, str]
 
 AVTimelineStateName = str
@@ -172,8 +201,12 @@ class AvailabilityColumns:
             ("in_downtime", "downtime", _("Downtime"), _("The host was in a scheduled downtime")),
             ("outof_notification_period", "", _("OO/Notif"), _("Out of Notification Period")),
             ("outof_service_period", "ooservice", _("OO/Service"), _("Out of Service Period")),
-            ("unmonitored", "unmonitored", _("N/A"),
-             _("During this time period no monitoring data is available")),
+            (
+                "unmonitored",
+                "unmonitored",
+                _("N/A"),
+                _("During this time period no monitoring data is available"),
+            ),
         ]
 
     def _service_availability_columns(self) -> List[ColumnSpec]:
@@ -184,12 +217,20 @@ class AvailabilityColumns:
             ("unknown", "state3", _("UNKNOWN"), None),
             ("flapping", "flapping", _("Flapping"), None),
             ("host_down", "hostdown", _("H.Down"), _("The host was down")),
-            ("in_downtime", "downtime", _("Downtime"),
-             _("The host or service was in a scheduled downtime")),
+            (
+                "in_downtime",
+                "downtime",
+                _("Downtime"),
+                _("The host or service was in a scheduled downtime"),
+            ),
             ("outof_notification_period", "", _("OO/Notif"), _("Out of Notification Period")),
             ("outof_service_period", "ooservice", _("OO/Service"), _("Out of Service Period")),
-            ("unmonitored", "unmonitored", _("N/A"),
-             _("During this time period no monitoring data is available")),
+            (
+                "unmonitored",
+                "unmonitored",
+                _("N/A"),
+                _("During this time period no monitoring data is available"),
+            ),
         ]
 
     def _bi_availability_columns(self) -> List[ColumnSpec]:
@@ -198,14 +239,22 @@ class AvailabilityColumns:
             ("warn", "state1", _("WARN"), None),
             ("crit", "state2", _("CRIT"), None),
             ("unknown", "state3", _("UNKNOWN"), None),
-            ("in_downtime", "downtime", _("Downtime"),
-             _("The aggregate was in a scheduled downtime")),
-            ("unmonitored", "unmonitored", _("N/A"),
-             _("During this time period no monitoring data is available")),
+            (
+                "in_downtime",
+                "downtime",
+                _("Downtime"),
+                _("The aggregate was in a scheduled downtime"),
+            ),
+            (
+                "unmonitored",
+                "unmonitored",
+                _("N/A"),
+                _("During this time period no monitoring data is available"),
+            ),
         ]
 
 
-#.
+# .
 #   .--Options-------------------------------------------------------------.
 #   |                   ___        _   _                                   |
 #   |                  / _ \ _ __ | |_(_) ___  _ __  ___                   |
@@ -251,9 +300,11 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
             filename="wato.py",
         )
         long_output_labelling = [
-            (u"timeline_long_output",
-             _("Display long output in timeline (<a href=\"%s\">Enable in Setup</a>)") %
-             ruleset_search_url)
+            (
+                "timeline_long_output",
+                _('Display long output in timeline (<a href="%s">Enable in Setup</a>)')
+                % ruleset_search_url,
+            )
         ]
     else:
         long_output_labelling = []
@@ -261,241 +312,338 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
     return [
         # Time range selection
         ("rangespec", "double", False, vs_rangespec()),
-
         # Labelling and Texts
-        ("labelling", "double", True,
-         ListChoice(
-             title=_("Labelling Options"),
-             choices=[
-                 (u"omit_headers", _("Do not display column headers")),
-                 (u"omit_host", _("Do not display the host name")),
-                 (u"show_alias", _("Display the host alias")),
-                 (u"use_display_name", _("Use alternative display name for services")),
-                 (u"omit_buttons", _("Do not display icons for history and timeline")),
-                 (u"omit_timeline_plugin_output", _("Do not display plugin output in timeline")),
-             ] + long_output_labelling + [
-                 (u"display_timeline_legend", _("Display legend for timeline")),
-                 (u"omit_av_levels", _("Do not display legend for availability levels")),
-             ])),
-
+        (
+            "labelling",
+            "double",
+            True,
+            ListChoice(
+                title=_("Labelling Options"),
+                choices=[
+                    ("omit_headers", _("Do not display column headers")),
+                    ("omit_host", _("Do not display the host name")),
+                    ("show_alias", _("Display the host alias")),
+                    ("use_display_name", _("Use alternative display name for services")),
+                    ("omit_buttons", _("Do not display icons for history and timeline")),
+                    ("omit_timeline_plugin_output", _("Do not display plugin output in timeline")),
+                ]
+                + long_output_labelling
+                + [
+                    ("display_timeline_legend", _("Display legend for timeline")),
+                    ("omit_av_levels", _("Do not display legend for availability levels")),
+                ],
+            ),
+        ),
         # Visual levels for the availability
-        ("av_levels", "double", True,
-         Optional(
-             Tuple(elements=[
-                 Percentage(
-                     title=_("Warning below"), default_value=99, display_format="%.3f", size=7),
-                 Percentage(
-                     title=_("Critical below"), default_value=95, display_format="%.3f", size=7),
-             ]),
-             title=_("Visual levels for the availability (OK percentage)"),
-         )),
-
+        (
+            "av_levels",
+            "double",
+            True,
+            Optional(
+                Tuple(
+                    elements=[
+                        Percentage(
+                            title=_("Warning below"),
+                            default_value=99,
+                            display_format="%.3f",
+                            size=7,
+                        ),
+                        Percentage(
+                            title=_("Critical below"),
+                            default_value=95,
+                            display_format="%.3f",
+                            size=7,
+                        ),
+                    ]
+                ),
+                title=_("Visual levels for the availability (OK percentage)"),
+            ),
+        ),
         # Show colummns for min, max, avg duration and count
-        ("outage_statistics", "double", True,
-         Tuple(title=_("Outage statistics"),
-               orientation="horizontal",
-               elements=[
-                   ListChoice(title=_("Aggregations"),
-                              choices=[
-                                  ("min", _("min. duration")),
-                                  ("max", _("max. duration")),
-                                  ("avg", _("avg. duration")),
-                                  ("cnt", _("count")),
-                              ]),
-                   ListChoice(title=_("For these states:"),
-                              columns=2,
-                              choices=[
-                                  ("ok", _("OK/Up")),
-                                  ("warn", _("Warn")),
-                                  ("crit", _("Crit/Down")),
-                                  ("unknown", _("Unknown/Unreach")),
-                                  ("flapping", _("Flapping")),
-                                  ("host_down", _("Host Down")),
-                                  ("in_downtime", _("Downtime")),
-                                  ("outof_notification_period", _("OO/Notif")),
-                              ])
-               ])),
-        ("timeformat", "double", True,
-         Tuple(
-             title=_("Format time ranges"),
-             elements=[
-                 DropdownChoice(
-                     choices=[
-                         ("both", _("Percent and time")),
-                         ("perc", _("Only percent")),
-                         ("time", _("Only time")),
-                     ],
-                     default_value="perc",
-                 ),
-                 DropdownChoice(
-                     choices=[
-                         ("percentage_0", _("Percentage - XX %")),
-                         ("percentage_1", _("Percentage - XX.X %")),
-                         ("percentage_2", _("Percentage - XX.XX %")),
-                         ("percentage_3", _("Percentage - XX.XXX %")),
-                     ],
-                     default_value="percentage_2",
-                 ),
-                 DropdownChoice(choices=[
-                     ("seconds", _("Seconds")),
-                     ("minutes", _("Minutes")),
-                     ("hours", _("Hours")),
-                     ("hhmmss", _("HH:MM:SS")),
-                 ],),
-             ],
-         )),
-
+        (
+            "outage_statistics",
+            "double",
+            True,
+            Tuple(
+                title=_("Outage statistics"),
+                orientation="horizontal",
+                elements=[
+                    ListChoice(
+                        title=_("Aggregations"),
+                        choices=[
+                            ("min", _("min. duration")),
+                            ("max", _("max. duration")),
+                            ("avg", _("avg. duration")),
+                            ("cnt", _("count")),
+                        ],
+                    ),
+                    ListChoice(
+                        title=_("For these states:"),
+                        columns=2,
+                        choices=[
+                            ("ok", _("OK/Up")),
+                            ("warn", _("Warn")),
+                            ("crit", _("Crit/Down")),
+                            ("unknown", _("Unknown/Unreach")),
+                            ("flapping", _("Flapping")),
+                            ("host_down", _("Host Down")),
+                            ("in_downtime", _("Downtime")),
+                            ("outof_notification_period", _("OO/Notif")),
+                        ],
+                    ),
+                ],
+            ),
+        ),
+        (
+            "timeformat",
+            "double",
+            True,
+            Tuple(
+                title=_("Format time ranges"),
+                elements=[
+                    DropdownChoice(
+                        choices=[
+                            ("both", _("Percent and time")),
+                            ("perc", _("Only percent")),
+                            ("time", _("Only time")),
+                        ],
+                        default_value="perc",
+                    ),
+                    DropdownChoice(
+                        choices=[
+                            ("percentage_0", _("Percentage - XX %")),
+                            ("percentage_1", _("Percentage - XX.X %")),
+                            ("percentage_2", _("Percentage - XX.XX %")),
+                            ("percentage_3", _("Percentage - XX.XXX %")),
+                        ],
+                        default_value="percentage_2",
+                    ),
+                    DropdownChoice(
+                        choices=[
+                            ("seconds", _("Seconds")),
+                            ("minutes", _("Minutes")),
+                            ("hours", _("Hours")),
+                            ("hhmmss", _("HH:MM:SS")),
+                        ],
+                    ),
+                ],
+            ),
+        ),
         # Omit all non-OK columns
-        ("av_mode", "single", True,
-         Checkbox(
-             title=_("Availability"),
-             label=_("Just show the availability (i.e. OK/UP)"),
-         )),
-
+        (
+            "av_mode",
+            "single",
+            True,
+            Checkbox(
+                title=_("Availability"),
+                label=_("Just show the availability (i.e. OK/UP)"),
+            ),
+        ),
         # Group by Host, Hostgroup or Servicegroup?
-        ("grouping", "single", True,
-         DropdownChoice(
-             title=_("Grouping"),
-             choices=grouping_choices,
-             default_value=None,
-         )),
-
+        (
+            "grouping",
+            "single",
+            True,
+            DropdownChoice(
+                title=_("Grouping"),
+                choices=grouping_choices,
+                default_value=None,
+            ),
+        ),
         # Format of numbers
-        ("dateformat", "single", True,
-         DropdownChoice(
-             title=_("Format time stamps as"),
-             choices=[
-                 ("yyyy-mm-dd hh:mm:ss", _("YYYY-MM-DD HH:MM:SS")),
-                 ("epoch", _("Unix Timestamp (Epoch)")),
-             ],
-             default_value="yyyy-mm-dd hh:mm:ss",
-         )),
-
+        (
+            "dateformat",
+            "single",
+            True,
+            DropdownChoice(
+                title=_("Format time stamps as"),
+                choices=[
+                    ("yyyy-mm-dd hh:mm:ss", _("YYYY-MM-DD HH:MM:SS")),
+                    ("epoch", _("Unix Timestamp (Epoch)")),
+                ],
+                default_value="yyyy-mm-dd hh:mm:ss",
+            ),
+        ),
         # Summary line
-        ("summary", "single", True,
-         DropdownChoice(
-             title=_("Summary line"),
-             choices=[
-                 (None, _("Do not show a summary line")),
-                 ("sum", _("Display total sum (for % the average)")),
-                 ("average", _("Display average")),
-             ],
-             default_value="sum",
-         )),
-
+        (
+            "summary",
+            "single",
+            True,
+            DropdownChoice(
+                title=_("Summary line"),
+                choices=[
+                    (None, _("Do not show a summary line")),
+                    ("sum", _("Display total sum (for % the average)")),
+                    ("average", _("Display average")),
+                ],
+                default_value="sum",
+            ),
+        ),
         # Timeline
-        ("show_timeline", "single", True,
-         Checkbox(
-             title=_("Timeline"),
-             label=_("Show timeline of each object directly in table"),
-         )),
+        (
+            "show_timeline",
+            "single",
+            True,
+            Checkbox(
+                title=_("Timeline"),
+                label=_("Show timeline of each object directly in table"),
+            ),
+        ),
     ]
 
 
 def vs_rangespec() -> Timerange:
     return Timerange(
         title=_("Time Range"),
-        default_value='d0',
+        default_value="d0",
     )
 
 
 def get_av_computation_options() -> AVOptionValueSpecs:
     return [
         # How to deal with downtimes
-        ("downtimes", "double", True,
-         Dictionary(
-             title=_("Scheduled Downtimes"),
-             columns=2,
-             elements=[
-                 ("include",
-                  DropdownChoice(
-                      title=_("Handling"),
-                      choices=[
-                          ("honor", _("Honor scheduled downtimes")),
-                          ("ignore", _("Ignore scheduled downtimes")),
-                          ("exclude", _("Exclude scheduled downtimes")),
-                      ],
-                      default_value="honor",
-                  )),
-                 ("exclude_ok",
-                  Checkbox(title=_("Phases"), label=_("Treat phases of UP/OK as non-downtime"))),
-             ],
-             optional_keys=False,
-         )),
-
+        (
+            "downtimes",
+            "double",
+            True,
+            Dictionary(
+                title=_("Scheduled Downtimes"),
+                columns=2,
+                elements=[
+                    (
+                        "include",
+                        DropdownChoice(
+                            title=_("Handling"),
+                            choices=[
+                                ("honor", _("Honor scheduled downtimes")),
+                                ("ignore", _("Ignore scheduled downtimes")),
+                                ("exclude", _("Exclude scheduled downtimes")),
+                            ],
+                            default_value="honor",
+                        ),
+                    ),
+                    (
+                        "exclude_ok",
+                        Checkbox(
+                            title=_("Phases"), label=_("Treat phases of UP/OK as non-downtime")
+                        ),
+                    ),
+                ],
+                optional_keys=False,
+            ),
+        ),
         # How to deal with downtimes, etc.
-        ("consider", "double", True,
-         Dictionary(
-             title=_("Status Classification"),
-             columns=2,
-             elements=[
-                 ("flapping",
-                  Checkbox(title=_("Consider periods of flapping states"), default_value=True)),
-                 ("host_down",
-                  Checkbox(title=_("Consider times where the host is down"), default_value=True)),
-                 ("unmonitored", Checkbox(title=_("Include unmonitored time"), default_value=True)),
-             ],
-             optional_keys=False,
-         )),
-        ("state_grouping", "double", True,
-         Dictionary(
-             title=_("Service Status Grouping"),
-             columns=2,
-             elements=[
-                 ("warn",
-                  DropdownChoice(
-                      title=_("Treat Warning as"),
-                      choices=[
-                          ("ok", _("OK")),
-                          ("warn", _("WARN")),
-                          ("crit", _("CRIT")),
-                          ("unknown", _("UNKNOWN")),
-                      ],
-                      default_value="warn",
-                  )),
-                 ("unknown",
-                  DropdownChoice(
-                      title=_("Treat Unknown/Unreachable as"),
-                      choices=[
-                          ("ok", _("OK")),
-                          ("warn", _("WARN")),
-                          ("crit", _("CRIT")),
-                          ("unknown", _("UNKNOWN")),
-                      ],
-                      default_value="unknown",
-                  )),
-                 ("host_down",
-                  DropdownChoice(
-                      title=_("Treat Host Down as"),
-                      choices=[
-                          ("ok", _("OK")),
-                          ("warn", _("WARN")),
-                          ("crit", _("CRIT")),
-                          ("unknown", _("UNKNOWN")),
-                          ("host_down", _("Host Down")),
-                      ],
-                      default_value="host_down",
-                  )),
-             ],
-             optional_keys=False,
-         )),
-
+        (
+            "consider",
+            "double",
+            True,
+            Dictionary(
+                title=_("Status Classification"),
+                columns=2,
+                elements=[
+                    (
+                        "flapping",
+                        Checkbox(
+                            title=_("Consider periods of flapping states"), default_value=True
+                        ),
+                    ),
+                    (
+                        "host_down",
+                        Checkbox(
+                            title=_("Consider times where the host is down"), default_value=True
+                        ),
+                    ),
+                    (
+                        "unmonitored",
+                        Checkbox(title=_("Include unmonitored time"), default_value=True),
+                    ),
+                ],
+                optional_keys=False,
+            ),
+        ),
+        (
+            "state_grouping",
+            "double",
+            True,
+            Dictionary(
+                title=_("Service Status Grouping"),
+                columns=2,
+                elements=[
+                    (
+                        "warn",
+                        DropdownChoice(
+                            title=_("Treat Warning as"),
+                            choices=[
+                                ("ok", _("OK")),
+                                ("warn", _("WARN")),
+                                ("crit", _("CRIT")),
+                                ("unknown", _("UNKNOWN")),
+                            ],
+                            default_value="warn",
+                        ),
+                    ),
+                    (
+                        "unknown",
+                        DropdownChoice(
+                            title=_("Treat Unknown/Unreachable as"),
+                            choices=[
+                                ("ok", _("OK")),
+                                ("warn", _("WARN")),
+                                ("crit", _("CRIT")),
+                                ("unknown", _("UNKNOWN")),
+                            ],
+                            default_value="unknown",
+                        ),
+                    ),
+                    (
+                        "host_down",
+                        DropdownChoice(
+                            title=_("Treat Host Down as"),
+                            choices=[
+                                ("ok", _("OK")),
+                                ("warn", _("WARN")),
+                                ("crit", _("CRIT")),
+                                ("unknown", _("UNKNOWN")),
+                                ("host_down", _("Host Down")),
+                            ],
+                            default_value="host_down",
+                        ),
+                    ),
+                ],
+                optional_keys=False,
+            ),
+        ),
         # Filter rows according to actual availability
-        ("av_filter_outages", "double", True,
-         Dictionary(
-             title=_("Only show objects with outages"),
-             columns=2,
-             elements=[
-                 ("warn",
-                  Percentage(title=_("Show only rows with WARN of at least"), default_value=0.0)),
-                 ("crit",
-                  Percentage(title=_("Show only rows with CRIT of at least"), default_value=0.0)),
-                 ("non-ok",
-                  Percentage(title=_("Show only rows with non-OK of at least"), default_value=0.0)),
-             ],
-             optional_keys=False,
-         )),
-
+        (
+            "av_filter_outages",
+            "double",
+            True,
+            Dictionary(
+                title=_("Only show objects with outages"),
+                columns=2,
+                elements=[
+                    (
+                        "warn",
+                        Percentage(
+                            title=_("Show only rows with WARN of at least"), default_value=0.0
+                        ),
+                    ),
+                    (
+                        "crit",
+                        Percentage(
+                            title=_("Show only rows with CRIT of at least"), default_value=0.0
+                        ),
+                    ),
+                    (
+                        "non-ok",
+                        Percentage(
+                            title=_("Show only rows with non-OK of at least"), default_value=0.0
+                        ),
+                    ),
+                ],
+                optional_keys=False,
+            ),
+        ),
         # Optionally group some states together
         (
             "host_state_grouping",
@@ -520,70 +668,94 @@ def get_av_computation_options() -> AVOptionValueSpecs:
                     ),
                 ],
                 optional_keys=False,
-            )),
-
+            ),
+        ),
         # How to deal with the service periods
-        ("service_period", "single", True,
-         DropdownChoice(
-             title=_("Service Time"),
-             choices=[
-                 ("honor", _("Base report only on service times")),
-                 ("ignore", _("Include both service and non-service times")),
-                 ("exclude", _("Base report only on non-service times")),
-             ],
-             default_value="honor",
-         )),
-
+        (
+            "service_period",
+            "single",
+            True,
+            DropdownChoice(
+                title=_("Service Time"),
+                choices=[
+                    ("honor", _("Base report only on service times")),
+                    ("ignore", _("Include both service and non-service times")),
+                    ("exclude", _("Base report only on non-service times")),
+                ],
+                default_value="honor",
+            ),
+        ),
         # How to deal with times out of the notification period
-        ("notification_period", "single", True,
-         DropdownChoice(
-             title=_("Notification Period"),
-             choices=[
-                 ("honor", _("Distinguish times in and out of notification period")),
-                 ("exclude", _("Exclude times out of notification period")),
-                 ("ignore", _("Ignore notification period")),
-             ],
-             default_value="ignore",
-         )),
-
+        (
+            "notification_period",
+            "single",
+            True,
+            DropdownChoice(
+                title=_("Notification Period"),
+                choices=[
+                    ("honor", _("Distinguish times in and out of notification period")),
+                    ("exclude", _("Exclude times out of notification period")),
+                    ("ignore", _("Ignore notification period")),
+                ],
+                default_value="ignore",
+            ),
+        ),
         # Short time intervals
-        ("short_intervals", "single", True,
-         Integer(
-             title=_("Short Time Intervals"),
-             label=_("Ignore intervals shorter or equal"),
-             minvalue=0,
-             unit=_("sec"),
-             default_value=0,
-         )),
-
+        (
+            "short_intervals",
+            "single",
+            True,
+            Integer(
+                title=_("Short Time Intervals"),
+                label=_("Ignore intervals shorter or equal"),
+                minvalue=0,
+                unit=_("sec"),
+                default_value=0,
+            ),
+        ),
         # Merging
-        ("dont_merge", "single", True,
-         Checkbox(
-             title=_("Phase Merging"),
-             label=_("Do not merge consecutive phases with equal state"),
-         )),
-        ("timelimit", "single", False,
-         Age(
-             title=_("Query Time Limit"),
-             help=_("Limit the execution time of the query, in order to "
-                    "avoid a hanging system."),
-             default_value=30,
-         )),
-        ("logrow_limit", "single", True,
-         Integer(
-             title=_("Limit processed data"),
-             help=_("The availability is computed by processing entries from a data table "
+        (
+            "dont_merge",
+            "single",
+            True,
+            Checkbox(
+                title=_("Phase Merging"),
+                label=_("Do not merge consecutive phases with equal state"),
+            ),
+        ),
+        (
+            "timelimit",
+            "single",
+            False,
+            Age(
+                title=_("Query Time Limit"),
+                help=_(
+                    "Limit the execution time of the query, in order to " "avoid a hanging system."
+                ),
+                default_value=30,
+            ),
+        ),
+        (
+            "logrow_limit",
+            "single",
+            True,
+            Integer(
+                title=_("Limit processed data"),
+                help=_(
+                    "The availability is computed by processing entries from a data table "
                     "of historic events and state phases. In order to avoid a hanging system "
                     "in cases where your time range and filtering would accept a vast amount "
                     "of data entries, the number of processed entries is limited. You can raise "
                     "this limit here if you really need to process a huge amount of data. Set this "
-                    "to zero in order to disable the limit."),
-             label=_("Process at most"),
-             unit=_("status entries"),
-             minvalue=0,
-             default_value=5000,
-             size=6,
-         )),
+                    "to zero in order to disable the limit."
+                ),
+                label=_("Process at most"),
+                unit=_("status entries"),
+                minvalue=0,
+                default_value=5000,
+                size=6,
+            ),
+        ),
     ]
 
 
@@ -596,18 +768,22 @@ def render_number_function(timeformat: str) -> Callable[[AVTimeStamp, int], str]
             if not d:
                 return _("n/a")
             return ("%." + timeformat[11:] + "f%%") % (float(n) / float(d) * 100.0)
+
     elif timeformat == "seconds":
 
         def render_number(n: AVTimeStamp, d: int) -> str:
             return "%d s" % n
+
     elif timeformat == "minutes":
 
         def render_number(n: AVTimeStamp, d: int) -> str:
             return "%d min" % (n / 60)
+
     elif timeformat == "hours":
 
         def render_number(n: AVTimeStamp, d: int) -> str:
             return "%d h" % (n / 3600)
+
     else:
 
         def render_number(n: AVTimeStamp, d: int) -> str:
@@ -640,8 +816,10 @@ def prepare_avo_timeformats(timeformat: AVTimeformatSpec) -> AVTimeFormats:
             this_timeformat = [(timeformat[1], render_number_function(timeformat[1]))]
         elif timeformat[0] == "time":
             this_timeformat = [(timeformat[2], render_number_function(timeformat[2]))]
-    elif isinstance(timeformat, str) and (timeformat.startswith("percentage_") or
-                                          timeformat in ["seconds", "minutes", "hours", "hhmmss"]):
+    elif isinstance(timeformat, str) and (
+        timeformat.startswith("percentage_")
+        or timeformat in ["seconds", "minutes", "hours", "hhmmss"]
+    ):
         # Old style
         this_timeformat = [(timeformat, render_number_function(timeformat))]
     return this_timeformat
@@ -653,11 +831,7 @@ def get_default_avoptions() -> AVOptions:
         "rangespec": "d0",
         "labelling": [],
         "av_levels": None,
-        "av_filter_outages": {
-            "warn": 0.0,
-            "crit": 0.0,
-            "non-ok": 0.0
-        },
+        "av_filter_outages": {"warn": 0.0, "crit": 0.0, "non-ok": 0.0},
         "outage_statistics": ([], []),
         "av_mode": False,
         "service_period": "honor",
@@ -703,7 +877,7 @@ def get_outage_statistic_options(avoptions: AVOptions) -> AVOutageStatistics:
     return aggrs, fixed_states
 
 
-#.
+# .
 #   .--Computation---------------------------------------------------------.
 #   |      ____                            _        _   _                  |
 #   |     / ___|___  _ __ ___  _ __  _   _| |_ __ _| |_(_) ___  _ __       |
@@ -740,16 +914,19 @@ def get_availability_rawdata(
     # which has not the task to track the processed rows/cpu time but the views module does
     # track these steps.
     if what == "bi":
-        return get_bi_availability_rawdata(filterheaders, only_sites, av_object, include_output,
-                                           avoptions)
+        return get_bi_availability_rawdata(
+            filterheaders, only_sites, av_object, include_output, avoptions
+        )
 
     time_range: AVTimeRange = avoptions["range"][0]
 
     av_filter = "Filter: time >= %d\nFilter: time < %d\n" % time_range
     if av_object:
         tl_site, tl_host, tl_service = av_object
-        av_filter += "Filter: host_name = %s\nFilter: service_description = %s\n" % (tl_host,
-                                                                                     tl_service)
+        av_filter += "Filter: host_name = %s\nFilter: service_description = %s\n" % (
+            tl_host,
+            tl_service,
+        )
         only_sites = [SiteId(tl_site)]
     elif what == "service":
         av_filter += "Filter: service_description !=\n"
@@ -793,7 +970,8 @@ def get_availability_rawdata(
     logrow_limit = avoptions["logrow_limit"]
 
     with sites.only_sites(only_sites), sites.prepend_site(), sites.set_limit(
-            logrow_limit or None), CPUTracker() as fetch_rows_tracker:
+        logrow_limit or None
+    ), CPUTracker() as fetch_rows_tracker:
         data = sites.live().query(query)
 
     columns = ["site"] + columns
@@ -824,8 +1002,9 @@ def get_availability_rawdata(
     return spans_by_object(spans), exceeded_log_row_limit
 
 
-def filter_groups_of_entries(context: VisualContext, avoptions: AVOptions,
-                             spans: List[AVSpan]) -> None:
+def filter_groups_of_entries(
+    context: VisualContext, avoptions: AVOptions, spans: List[AVSpan]
+) -> None:
     group_by = avoptions["grouping"]
 
     only_groups = set()
@@ -953,8 +1132,9 @@ def compute_availability(what: AVObjectType, av_rawdata: AVRawData, avoptions: A
                 consider = True
 
                 if avoptions["service_period"] != "ignore" and (
-                    (span["in_service_period"] and avoptions["service_period"] != "honor") or
-                    (not span["in_service_period"] and avoptions["service_period"] == "honor")):
+                    (span["in_service_period"] and avoptions["service_period"] != "honor")
+                    or (not span["in_service_period"] and avoptions["service_period"] == "honor")
+                ):
                     s = "outof_service_period"
                     consider = False
                 elif state == -1:
@@ -965,17 +1145,23 @@ def compute_availability(what: AVObjectType, av_rawdata: AVRawData, avoptions: A
                     # state is None means that this element was not known at this given time
                     # So there is no reason for creating a fake pending state
                     consider = False
-                elif span["in_notification_period"] == 0 and avoptions[
-                        "notification_period"] == "exclude":
+                elif (
+                    span["in_notification_period"] == 0
+                    and avoptions["notification_period"] == "exclude"
+                ):
                     consider = False
 
-                elif span["in_notification_period"] == 0 and avoptions[
-                        "notification_period"] == "honor":
+                elif (
+                    span["in_notification_period"] == 0
+                    and avoptions["notification_period"] == "honor"
+                ):
                     s = "outof_notification_period"
 
-                elif (span["in_downtime"] or span["in_host_downtime"]
-                     ) and not (avoptions["downtimes"]["exclude_ok"] and
-                                state == 0) and not avoptions["downtimes"]["include"] == "ignore":
+                elif (
+                    (span["in_downtime"] or span["in_host_downtime"])
+                    and not (avoptions["downtimes"]["exclude_ok"] and state == 0)
+                    and not avoptions["downtimes"]["include"] == "ignore"
+                ):
                     if avoptions["downtimes"]["include"] == "exclude":
                         consider = False
                     else:
@@ -1010,8 +1196,9 @@ def compute_availability(what: AVObjectType, av_rawdata: AVRawData, avoptions: A
 
             # Melt down short intervals
             if avoptions["short_intervals"]:
-                melt_short_intervals(timeline_rows, avoptions["short_intervals"],
-                                     avoptions["dont_merge"])
+                melt_short_intervals(
+                    timeline_rows, avoptions["short_intervals"], avoptions["dont_merge"]
+                )
 
             # Condense into availability
             states: AVTimelineStates = {}
@@ -1023,8 +1210,11 @@ def compute_availability(what: AVObjectType, av_rawdata: AVRawData, avoptions: A
                 if need_statistics:
                     entry = statistics.get(s)
                     if entry:
-                        statistics[s] = (entry[0] + 1, min(entry[1],
-                                                           duration), max(entry[2], duration))
+                        statistics[s] = (
+                            entry[0] + 1,
+                            min(entry[1], duration),
+                            max(entry[2], duration),
+                        )
                     else:
                         statistics[s] = (1, duration, duration)  # count, min, max
 
@@ -1071,8 +1261,9 @@ def reclassify_by_annotations(what: AVObjectType, av_rawdata: AVRawData) -> AVRa
 
             for anno_key in cycles:
                 if anno_key in annotations:
-                    new_entries[service_description] = \
-                          reclassify_history_by_annotations(history, annotations[anno_key])
+                    new_entries[service_description] = reclassify_history_by_annotations(
+                        history, annotations[anno_key]
+                    )
                     history = new_entries[service_description]
                 else:
                     new_entries[service_description] = history
@@ -1086,8 +1277,9 @@ class ReclassifyConfig(NamedTuple):
     service_state: _Optional[Any]
 
 
-def reclassify_history_by_annotations(history: List[AVSpan],
-                                      annotation_entries: List[AVAnnotationEntry]) -> List[AVSpan]:
+def reclassify_history_by_annotations(
+    history: List[AVSpan], annotation_entries: List[AVAnnotationEntry]
+) -> List[AVSpan]:
     new_history = history
     for annotation in annotation_entries:
         downtime = annotation.get("downtime")
@@ -1127,8 +1319,11 @@ def reclassify_times_by_annotation(
     if annotation["from"] < history_entry["until"] and annotation["until"] > history_entry["from"]:
         for is_in, p_from, p_until in [
             (False, history_entry["from"], max(history_entry["from"], annotation["from"])),
-            (True, max(history_entry["from"],
-                       annotation["from"]), min(history_entry["until"], annotation["until"])),
+            (
+                True,
+                max(history_entry["from"], annotation["from"]),
+                min(history_entry["until"], annotation["until"]),
+            ),
             (False, min(history_entry["until"], annotation["until"]), history_entry["until"]),
         ]:
             if p_from < p_until:
@@ -1137,8 +1332,9 @@ def reclassify_times_by_annotation(
                 new_entry["until"] = p_until
                 new_entry["duration"] = p_until - p_from
                 if is_in:
-                    reclassify_config_by_annotation(history_entry, annotation, new_entry,
-                                                    new_config)
+                    reclassify_config_by_annotation(
+                        history_entry, annotation, new_entry, new_config
+                    )
 
                 new_history.append(new_entry)
     else:
@@ -1154,20 +1350,19 @@ def reclassify_config_by_annotation(
     new_config: ReclassifyConfig,
 ) -> AVSpan:
     if new_config.downtime:
-        new_entry["in_downtime"] = 1 if annotation['downtime'] else 0
+        new_entry["in_downtime"] = 1 if annotation["downtime"] else 0
         # If the annotation removes a downtime from the services, but
         # the actual reason for the service being in downtime is a host
         # downtime, then we must cancel the host downtime (also), or else
         # that would override the unset service downtime.
-        if history_entry.get("in_host_downtime") \
-            and annotation["downtime"] is False:
+        if history_entry.get("in_host_downtime") and annotation["downtime"] is False:
             new_entry["in_host_downtime"] = 0
     if new_config.host_state:
-        new_host_state = annotation.get('host_state', history_entry.get("host_state"))
+        new_host_state = annotation.get("host_state", history_entry.get("host_state"))
         new_entry["state"] = new_host_state
         new_entry["host_down"] = 1 if new_host_state else 0
     if new_config.service_state:
-        new_entry["state"] = annotation.get('service_state', history_entry.get("state"))
+        new_entry["state"] = annotation.get("service_state", history_entry.get("state"))
 
     return new_entry
 
@@ -1261,8 +1456,10 @@ def merge_timeline(entries: AVTimelineRows) -> None:
     """Merge consecutive rows with same state"""
     n = 1
     while n < len(entries):
-        if (entries[n][1] == entries[n - 1][1] and
-                entries[n][0]["from"] == entries[n - 1][0]["until"]):
+        if (
+            entries[n][1] == entries[n - 1][1]
+            and entries[n][0]["from"] == entries[n - 1][0]["until"]
+        ):
             entries[n - 1][0]["duration"] += entries[n][0]["duration"]
             entries[n - 1][0]["until"] = entries[n][0]["until"]
             del entries[n]
@@ -1274,9 +1471,14 @@ def melt_short_intervals(entries: AVTimelineRows, duration: int, dont_merge: boo
     n = 1
     need_merge = False
     while n < len(entries) - 1:
-        if entries[n][0]["duration"] <= duration and \
-            (entries[n-1][0]["until"] == entries[n][0]["from"] or entries[n][0]["until"] == entries[n+1][0]["from"]) and \
-            entries[n-1][1] == entries[n+1][1]:
+        if (
+            entries[n][0]["duration"] <= duration
+            and (
+                entries[n - 1][0]["until"] == entries[n][0]["from"]
+                or entries[n][0]["until"] == entries[n + 1][0]["from"]
+            )
+            and entries[n - 1][1] == entries[n + 1][1]
+        ):
             entries[n] = (entries[n][0], entries[n - 1][1])
             need_merge = True
         n += 1
@@ -1287,7 +1489,7 @@ def melt_short_intervals(entries: AVTimelineRows, duration: int, dont_merge: boo
         melt_short_intervals(entries, duration, dont_merge)
 
 
-#.
+# .
 #   .--Annotations---------------------------------------------------------.
 #   |         _                      _        _   _                        |
 #   |        / \   _ __  _ __   ___ | |_ __ _| |_(_) ___  _ __  ___        |
@@ -1387,7 +1589,7 @@ def delete_annotation(
         del entries[found]
 
 
-#.
+# .
 #   .--Layout--------------------------------------------------------------.
 #   |                  _                            _                      |
 #   |                 | |    __ _ _   _  ___  _   _| |_                    |
@@ -1443,8 +1645,9 @@ def layout_availability_table(
 
     # Headers for availability cells
     os_aggrs, os_states = get_outage_statistic_options(avoptions)
-    av_table["cell_titles"] = _availability_cell_headers(availability_columns, avoptions, os_aggrs,
-                                                         os_states, timeformats, what)
+    av_table["cell_titles"] = _availability_cell_headers(
+        availability_columns, avoptions, os_aggrs, os_states, timeformats, what
+    )
 
     # Actual rows
     for entry in availability_table:
@@ -1465,11 +1668,9 @@ def layout_availability_table(
 
         # Inline timeline
         if show_timeline:
-            row["timeline"] = layout_timeline(what,
-                                              entry["timeline"],
-                                              entry["considered_duration"],
-                                              avoptions,
-                                              style="inline")
+            row["timeline"] = layout_timeline(
+                what, entry["timeline"], entry["considered_duration"], avoptions, style="inline"
+            )
 
         # Actuall cells with availability data
         cells: AVRowCells = []
@@ -1508,8 +1709,9 @@ def layout_availability_table(
                     for aggr in os_aggrs:
                         if x_cnt is not None:
                             if aggr == "avg":
-                                r = render_number(int(number / x_cnt),
-                                                  considered_duration)  # fixed: true-division
+                                r = render_number(
+                                    int(number / x_cnt), considered_duration
+                                )  # fixed: true-division
                             elif aggr == "min":
                                 r = render_number(x_min, considered_duration)
                             elif aggr == "max":
@@ -1520,7 +1722,7 @@ def layout_availability_table(
                                 summary_counts[ssid] += x_cnt
                             statistics.append((r, css))
                         else:
-                            statistics.append((u"", ""))
+                            statistics.append(("", ""))
                     cells.extend(statistics)
 
             # If timeline == [] and states == {} then this objects has complete unmonitored state
@@ -1530,11 +1732,13 @@ def layout_availability_table(
         # regardless of timeformat the percentage value should be taken for summary levels
         # verification since the percentage value takes the considered duration as reference duration
         if show_summary and av_levels:
-            summary["ok_level"] = sum([
-                float(entry["states"].get("ok", 0)) / entry["considered_duration"]
-                for entry in availability_table
-                if entry["considered_duration"] > 0
-            ])
+            summary["ok_level"] = sum(
+                [
+                    float(entry["states"].get("ok", 0)) / entry["considered_duration"]
+                    for entry in availability_table
+                    if entry["considered_duration"] > 0
+                ]
+            )
 
     # Summary line. It has the same format as each entry in cells
     # We ignore unmonitored objects
@@ -1553,17 +1757,21 @@ def layout_availability_table(
                     css = "unused"
                 else:
                     if show_summary == "average" or timeformat.startswith("percentage"):
-                        number = _availability_value(len_availability_table,
-                                                     number,
-                                                     total_duration,
-                                                     percentage=timeformat.startswith("percentage"))
+                        number = _availability_value(
+                            len_availability_table,
+                            number,
+                            total_duration,
+                            percentage=timeformat.startswith("percentage"),
+                        )
 
                     if av_levels and sid in ("ok", "up"):
                         if sid == "ok":
-                            check_value = _availability_value(len_availability_table,
-                                                              summary["ok_level"],
-                                                              total_duration,
-                                                              percentage=True)
+                            check_value = _availability_value(
+                                len_availability_table,
+                                summary["ok_level"],
+                                total_duration,
+                                percentage=True,
+                            )
                         else:
                             check_value = number
                         css = "state%d" % check_av_levels(check_value, av_levels, total_duration)
@@ -1586,10 +1794,9 @@ def layout_availability_table(
     return av_table
 
 
-def _availability_value(len_availability_table: int,
-                        number: float,
-                        total_duration: float,
-                        percentage: bool = False) -> float:
+def _availability_value(
+    len_availability_table: int, number: float, total_duration: float, percentage: bool = False
+) -> float:
     result: float = number / len_availability_table
     if percentage:
         result *= total_duration
@@ -1626,8 +1833,9 @@ def omit_urls(
         )
     urls.append(("timeline", _("Timeline"), timeline_url))
     if what != "bi":
-        urls.append(("history", _("Event History"), history_url_of((site, host, service),
-                                                                   time_range)))
+        urls.append(
+            ("history", _("Event History"), history_url_of((site, host, service), time_range))
+        )
     return urls
 
 
@@ -1640,8 +1848,7 @@ def object_column_titles(labelling: AVTimelineLabelling, what: AVObjectType) -> 
         # host availability this is only possible if the alias is
         # being displayed, Otherwise the table wouldn't make sense
         # and the pdf renderer would crash
-        if "omit_host" not in labelling or \
-            (what == "host" and "show_alias" not in labelling):
+        if "omit_host" not in labelling or (what == "host" and "show_alias" not in labelling):
             titles.append(_("Host"))
         if "show_alias" in labelling:
             titles.append(_("Alias"))
@@ -1688,15 +1895,16 @@ def get_object_cells(what: AVObjectType, av_entry: AVEntry, labelling: List[str]
 
     objectcells: AVObjectCells = []
     if what == "bi":
-        bi_url = "view.py?" + urlencode_vars([("view_name", "aggr_single"), ("aggr_group", host),
-                                              ("aggr_name", service)])
+        bi_url = "view.py?" + urlencode_vars(
+            [("view_name", "aggr_single"), ("aggr_group", host), ("aggr_name", service)]
+        )
         objectcells.append((service, bi_url))
         return objectcells
 
-    host_url = "view.py?" + urlencode_vars([("view_name", "hoststatus"), ("site", av_entry["site"]),
-                                            ("host", host)])
-    if "omit_host" not in labelling or\
-            (what == "host" and "show_alias" not in labelling):
+    host_url = "view.py?" + urlencode_vars(
+        [("view_name", "hoststatus"), ("site", av_entry["site"]), ("host", host)]
+    )
+    if "omit_host" not in labelling or (what == "host" and "show_alias" not in labelling):
         objectcells.append((host, host_url))
 
     if "show_alias" in labelling:
@@ -1707,9 +1915,14 @@ def get_object_cells(what: AVObjectType, av_entry: AVEntry, labelling: List[str]
             service_name = av_entry["display_name"]
         else:
             service_name = service
-        service_url = "view.py?" + urlencode_vars([("view_name", "service"),
-                                                   ("site", av_entry["site"]), ("host", host),
-                                                   ("service", service)])
+        service_url = "view.py?" + urlencode_vars(
+            [
+                ("view_name", "service"),
+                ("site", av_entry["site"]),
+                ("host", host),
+                ("service", service),
+            ]
+        )
         objectcells.append((service_name, service_url))
 
     return objectcells
@@ -1779,11 +1992,15 @@ def layout_timeline(
             texts.append(render_number(n, d))
         return ", ".join(texts)
 
-    def chaos_period(chaos_begin: AVTimeStamp, chaos_end: AVTimeStamp, chaos_count: int,
-                     chaos_width: int) -> AVTimelineSpan:
+    def chaos_period(
+        chaos_begin: AVTimeStamp, chaos_end: AVTimeStamp, chaos_count: int, chaos_width: int
+    ) -> AVTimelineSpan:
         title = _("%d chaotic state changes from %s until %s (%s)") % (
-            chaos_count, render_date(chaos_begin), render_date(chaos_end),
-            apply_render_number_functions(chaos_end - chaos_begin, considered_duration))
+            chaos_count,
+            render_date(chaos_begin),
+            render_date(chaos_end),
+            apply_render_number_functions(chaos_end - chaos_begin, considered_duration),
+        )
         return (None, title, chaos_width, "chaos")
 
     current_time = from_time
@@ -1791,12 +2008,14 @@ def layout_timeline(
         this_from_time = row["from"]
         this_until_time = row["until"]
         if this_from_time > current_time:  # GAP
-            spans.append((
-                None,
-                "",
-                100.0 * (this_from_time - current_time) / total_duration,
-                "unmonitored",
-            ))
+            spans.append(
+                (
+                    None,
+                    "",
+                    100.0 * (this_from_time - current_time) / total_duration,
+                    "unmonitored",
+                )
+            )
         current_time = this_until_time
 
         from_text = render_date(this_from_time)
@@ -1807,24 +2026,30 @@ def layout_timeline(
             if sid != state_id:
                 continue
 
-            title = _("From %s until %s (%s) %s") % (from_text, until_text, duration_text,
-                                                     help_txt and help_txt or sname)
+            title = _("From %s until %s (%s) %s") % (
+                from_text,
+                until_text,
+                duration_text,
+                help_txt and help_txt or sname,
+            )
             if "log_output" in row and row["log_output"]:
                 title += " - " + row["log_output"]
             width = rest_percentage * row["duration"] / total_duration  # fixed: true-division
 
             # Information for table of detailed events
             if style == "standalone":
-                table.append({
-                    "state": state_id,
-                    "css": css,
-                    "state_name": sname,
-                    "from": row["from"],
-                    "until": row["until"],
-                    "from_text": from_text,
-                    "until_text": until_text,
-                    "duration_text": duration_text,
-                })
+                table.append(
+                    {
+                        "state": state_id,
+                        "css": css,
+                        "state_name": sname,
+                        "from": row["from"],
+                        "until": row["until"],
+                        "from_text": from_text,
+                        "until_text": until_text,
+                        "duration_text": duration_text,
+                    }
+                )
                 if "log_output" in row and row["log_output"]:
                     table[-1]["log_output"] = row["log_output"]
                 if "long_log_output" in row and row["long_log_output"]:
@@ -1879,7 +2104,7 @@ def layout_timeline_choords(time_range: AVTimeRange) -> Iterator[_Tuple[float, s
 
 
 def _dispatch_scale(
-    hours: float
+    hours: float,
 ) -> _Tuple[Callable[[time.struct_time], time.struct_time], Callable[[time.struct_time], str],]:
     """decide automatically whether to use hours, days, weeks or months
 
@@ -1936,6 +2161,7 @@ def _fix_dst_change(
     incrementor: Callable[[time.struct_time], time.struct_time],
 ) -> Callable[[time.struct_time], time.struct_time]:
     """Fix up one hour offset in case the incrementor crosses the DST switch"""
+
     @functools.wraps(incrementor)
     def wrapped(intime: time.struct_time) -> time.struct_time:
         outtime = incrementor(intime)
@@ -1977,7 +2203,7 @@ def _increment_month(tst: time.struct_time) -> time.struct_time:
     return _make_struct(tst.tm_year + (tst.tm_mon == 12), (tst.tm_mon % 12) + 1, 1, 0, offset=0)
 
 
-#.
+# .
 #   .--BI------------------------------------------------------------------.
 #   |                              ____ ___                                |
 #   |                             | __ )_ _|                               |
@@ -2009,13 +2235,19 @@ def get_bi_availability_rawdata(
 
 
 def get_timeline_containers(
-        aggr_rows: Rows, avoptions: AVOptions, timewarp: _Optional[AVTimeStamp],
-        livestatus_limit: _Optional[int]) -> _Tuple[List[TimelineContainer], int]:
+    aggr_rows: Rows,
+    avoptions: AVOptions,
+    timewarp: _Optional[AVTimeStamp],
+    livestatus_limit: _Optional[int],
+) -> _Tuple[List[TimelineContainer], int]:
     time_range: AVTimeRange = avoptions["range"][0]
     phases_list, timeline_containers, fetched_rows = get_bi_leaf_history(
-        aggr_rows, time_range, livestatus_limit)
-    return compute_bi_timelines(timeline_containers, time_range, timewarp,
-                                phases_list), fetched_rows
+        aggr_rows, time_range, livestatus_limit
+    )
+    return (
+        compute_bi_timelines(timeline_containers, time_range, timewarp, phases_list),
+        fetched_rows,
+    )
 
 
 # Not a real class, more a struct
@@ -2025,7 +2257,8 @@ class TimelineContainer:
 
         # PUBLIC accessible data
         self.aggr_compiled_aggregation: BICompiledAggregation = self._aggr_row[
-            "aggr_compiled_aggregation"]
+            "aggr_compiled_aggregation"
+        ]
         self.aggr_compiled_branch: BICompiledRule = self._aggr_row["aggr_compiled_branch"]
         self.aggr_tree: BIAggregationTree = self._aggr_row["aggr_tree"]
         self.aggr_group: BIAggregationGroupTitle = self._aggr_row["aggr_group"]
@@ -2045,8 +2278,8 @@ class TimelineContainer:
 
 
 def get_bi_leaf_history(
-        aggr_rows: Rows, time_range: AVTimeRange,
-        livestatus_limit: _Optional[int]) -> _Tuple[AVBIPhases, List[TimelineContainer], int]:
+    aggr_rows: Rows, time_range: AVTimeRange, livestatus_limit: _Optional[int]
+) -> _Tuple[AVBIPhases, List[TimelineContainer], int]:
     """Get state history of all hosts and services contained in the tree.
     In order to simplify the query, we always fetch the information for all hosts of the aggregates.
     """
@@ -2068,9 +2301,13 @@ def get_bi_leaf_history(
         "in_service_period",
     ]
 
-    query = "GET statehist\n" + \
-            "Columns: " + " ".join(columns) + "\n" +\
-            "Filter: time >= %d\nFilter: time < %d\n" % time_range
+    query = (
+        "GET statehist\n"
+        + "Columns: "
+        + " ".join(columns)
+        + "\n"
+        + "Filter: time >= %d\nFilter: time < %d\n" % time_range
+    )
 
     # Create a specific filter. We really only want the services and hosts
     # of the aggregation in question. That prevents status changes
@@ -2096,7 +2333,8 @@ def get_bi_leaf_history(
         query += "Or: %d\n" % len(hosts)
 
     with sites.output_format(LivestatusOutputFormat.JSON), sites.only_sites(
-            list(only_sites)), sites.prepend_site(), sites.set_limit(livestatus_limit):
+        list(only_sites)
+    ), sites.prepend_site(), sites.set_limit(livestatus_limit):
         data = sites.live().query(query)
 
     if not data:
@@ -2138,8 +2376,11 @@ def compute_bi_timelines(
     if not timeline_containers:
         return timeline_containers
 
-    def update_states(states: AVBITimelineStates, use_entries: Set[_Tuple[HostName, ServiceName]],
-                      phase_entries: AVBIPhaseData) -> None:
+    def update_states(
+        states: AVBITimelineStates,
+        use_entries: Set[_Tuple[HostName, ServiceName]],
+        phase_entries: AVBIPhaseData,
+    ) -> None:
         for element in use_entries:
             hostname, svc_desc = element
             values = phase_entries[element]
@@ -2156,7 +2397,9 @@ def compute_bi_timelines(
     logger.warning(
         "Computing timelines for range %r. %d phases and %d timeline containers",
         tuple(map(lambda x: time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(x)), time_range)),
-        len(phases_list), len(timeline_containers))
+        len(phases_list),
+        len(timeline_containers),
+    )
     computed_aggregations = 0
     for from_time, phase_hst_svc in phases_list:
         phase_keys = set(phase_hst_svc.keys())
@@ -2174,16 +2417,21 @@ def compute_bi_timelines(
             if timeline_container.node_compute_result is not None:
                 assert timeline_container.tree_time is not None
                 timeline_container.timeline.append(
-                    create_bi_timeline_entry(timeline_container.aggr_tree,
-                                             timeline_container.aggr_group,
-                                             timeline_container.tree_time, from_time,
-                                             timeline_container.node_compute_result))
+                    create_bi_timeline_entry(
+                        timeline_container.aggr_tree,
+                        timeline_container.aggr_group,
+                        timeline_container.tree_time,
+                        from_time,
+                        timeline_container.node_compute_result,
+                    )
+                )
 
             timeline_container.node_compute_result = next_node_compute_result
             timeline_container.tree_time = from_time
             if timewarp == timeline_container.tree_time:
                 timeline_container.timewarp_state = _get_timewarp_state(
-                    result_bundle, timeline_container)
+                    result_bundle, timeline_container
+                )
 
     # Create a final timeline entry to the end of the query interval
     for timeline_container in list(timeline_containers):
@@ -2195,9 +2443,14 @@ def compute_bi_timelines(
 
         assert timeline_container.tree_time is not None
         timeline_container.timeline.append(
-            create_bi_timeline_entry(timeline_container.aggr_tree, timeline_container.aggr_group,
-                                     timeline_container.tree_time, time_range[1],
-                                     timeline_container.node_compute_result))
+            create_bi_timeline_entry(
+                timeline_container.aggr_tree,
+                timeline_container.aggr_group,
+                timeline_container.tree_time,
+                time_range[1],
+                timeline_container.node_compute_result,
+            )
+        )
 
     logger.warning("Timeline generation finished. Computed %d aggregations", computed_aggregations)
     return timeline_containers
@@ -2225,7 +2478,8 @@ def _get_timewarp_state(node_compute_result_bundle, timeline_container):
             [],  # no subtrees available
         )
     return timeline_container.aggr_compiled_aggregation.convert_result_to_legacy_format(
-        node_compute_result_bundle)["aggr_treestate"]
+        node_compute_result_bundle
+    )["aggr_treestate"]
 
 
 def create_bi_timeline_entry(
@@ -2242,7 +2496,7 @@ def create_bi_timeline_entry(
         "until": until_time,
         "site": "",
         "host_name": aggr_group,
-        "service_description": tree['title'],
+        "service_description": tree["title"],
         "in_notification_period": 1,
         "in_service_period": node_compute_result.in_service_period,
         "in_downtime": node_compute_result.downtime_state > 0,
@@ -2253,8 +2507,9 @@ def create_bi_timeline_entry(
     }
 
 
-def _compute_node_result_bundle(timeline_container: TimelineContainer,
-                                bi_manager: BIManager) -> NodeResultBundle:
+def _compute_node_result_bundle(
+    timeline_container: TimelineContainer, bi_manager: BIManager
+) -> NodeResultBundle:
     # Convert our status format into that needed by BI
     status = timeline_container.states
     services_by_host: Dict[BIHostSpec, Dict[str, BIServiceWithFullState]] = {}
@@ -2347,7 +2602,7 @@ def reclassify_bi_rows(rows: Rows) -> Rows:
     return new_rows
 
 
-#.
+# .
 #   .--Various-------------------------------------------------------------.
 #   |                __     __         _                                   |
 #   |                \ \   / /_ _ _ __(_) ___  _   _ ___                   |
@@ -2417,13 +2672,19 @@ def get_av_groups(availability_table: AVData, avoptions: AVOptions) -> Set[AVGro
 # Sort according to host and service. First after site, then
 # host (natural sort), then service
 def key_av_entry(
-    a: AVEntry
-) -> _Tuple[_Tuple[Union[int, str], ...], int, _Tuple[Union[int, str], ...], _Tuple[Union[int, str],
-                                                                                    ...]]:
+    a: AVEntry,
+) -> _Tuple[
+    _Tuple[Union[int, str], ...], int, _Tuple[Union[int, str], ...], _Tuple[Union[int, str], ...]
+]:
     # This local import currently needed
     import cmk.gui.plugins.views as views
-    return utils.key_num_split(a["service"]), views.cmp_service_name_equiv(
-        a["service"]), utils.key_num_split(a["host"]), utils.key_num_split(a["site"])
+
+    return (
+        utils.key_num_split(a["service"]),
+        views.cmp_service_name_equiv(a["service"]),
+        utils.key_num_split(a["host"]),
+        utils.key_num_split(a["site"]),
+    )
 
 
 def history_url_of(av_object: AVHostOrServiceObjectSpec, time_range: AVTimeRange) -> str:

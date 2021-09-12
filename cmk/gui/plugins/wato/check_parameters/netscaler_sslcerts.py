@@ -14,34 +14,39 @@ from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_netscaler_sslcerts():
-    return Dictionary(elements=[
-        (
-            'age_levels',
-            Tuple(
-                title=_("Remaining days of validity"),
-                elements=[
-                    Integer(
-                        title=_("Warning below"),
-                        default_value=30,
-                        minvalue=0,
-                    ),
-                    Integer(
-                        title=_("Critical below"),
-                        default_value=10,
-                        minvalue=0,
-                    ),
-                ],
+    return Dictionary(
+        elements=[
+            (
+                "age_levels",
+                Tuple(
+                    title=_("Remaining days of validity"),
+                    elements=[
+                        Integer(
+                            title=_("Warning below"),
+                            default_value=30,
+                            minvalue=0,
+                        ),
+                        Integer(
+                            title=_("Critical below"),
+                            default_value=10,
+                            minvalue=0,
+                        ),
+                    ],
+                ),
             ),
-        ),
-    ],)
+        ],
+    )
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="netscaler_sslcerts",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Name of Certificate"),),
+        item_spec=lambda: TextInput(
+            title=_("Name of Certificate"),
+        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netscaler_sslcerts,
         title=lambda: _("Citrix Netscaler SSL certificates"),
-    ))
+    )
+)

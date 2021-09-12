@@ -16,16 +16,18 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 def _parameter_valuespec_cisco_prime_wifi_connections():
     return Dictionary(
         elements=[
-            ("levels_lower",
-             Tuple(
-                 title=_("Minimum number of connections"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
+            (
+                "levels_lower",
+                Tuple(
+                    title=_("Minimum number of connections"),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
+                ),
+            ),
         ],
-        required_keys=['levels_lower'],  # There is only one value, so its required
+        required_keys=["levels_lower"],  # There is only one value, so its required
     )
 
 
@@ -36,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cisco_prime_wifi_connections,
         title=lambda: _("Cisco Prime WiFi Connections"),
-    ))
+    )
+)

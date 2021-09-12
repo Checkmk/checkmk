@@ -30,7 +30,7 @@ def _parameter_valuespec_juniper_cpu_util():
                 ),
             ],
         ),
-        forth=lambda old: not old and {'levels': (80.0, 90.0)} or old,
+        forth=lambda old: not old and {"levels": (80.0, 90.0)} or old,
     )
 
 
@@ -38,8 +38,11 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="juniper_cpu_util",
         group=RulespecGroupCheckParametersOperatingSystem,
-        item_spec=lambda: TextInput(title=_("Operating CPU"),),
+        item_spec=lambda: TextInput(
+            title=_("Operating CPU"),
+        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_juniper_cpu_util,
         title=lambda: _("Juniper Processor Utilization of Operating CPU"),
-    ))
+    )
+)

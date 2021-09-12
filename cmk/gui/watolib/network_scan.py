@@ -58,8 +58,9 @@ def execute_network_scan_job() -> None:
     run_as = folder.attribute("network_scan")["run_as"]
     if not userdb.user_exists(run_as):
         raise MKGeneralException(
-            _("The user %s used by the network "
-              "scan of the folder %s does not exist.") % (run_as, folder.title()))
+            _("The user %s used by the network " "scan of the folder %s does not exist.")
+            % (run_as, folder.title())
+        )
 
     with UserContext(run_as):
         result: NetworkScanResult = {
@@ -78,23 +79,28 @@ def execute_network_scan_job() -> None:
             if site_is_local(folder.site_id()):
                 found = _do_network_scan(folder)
             else:
-                found = do_remote_automation(get_site_config(folder.site_id()), "network-scan",
-                                             [("folder", folder.path())])
+                found = do_remote_automation(
+                    get_site_config(folder.site_id()), "network-scan", [("folder", folder.path())]
+                )
 
             if not isinstance(found, list):
                 raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
 
             _add_scanned_hosts_to_folder(folder, found)
 
-            result.update({
-                "state": True,
-                "output": _("The network scan found %d new hosts.") % len(found),
-            })
+            result.update(
+                {
+                    "state": True,
+                    "output": _("The network scan found %d new hosts.") % len(found),
+                }
+            )
         except Exception as e:
-            result.update({
-                "state": False,
-                "output": _("An exception occured: %s") % e,
-            })
+            result.update(
+                {
+                    "state": False,
+                    "output": _("An exception occured: %s") % e,
+                }
+            )
             logger.error("Exception in network scan:\n%s", traceback.format_exc())
 
         result["end"] = time.time()
@@ -102,7 +108,7 @@ def execute_network_scan_job() -> None:
         _save_network_scan_result(folder, result)
 
 
-def _find_folder_to_scan() -> Optional['CREFolder']:
+def _find_folder_to_scan() -> Optional["CREFolder"]:
     """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
     for folder in Folder.all_folders().values():
@@ -115,7 +121,7 @@ def _find_folder_to_scan() -> Optional['CREFolder']:
     return folder_to_scan
 
 
-def _add_scanned_hosts_to_folder(folder: 'CREFolder', found: NetworkScanFoundHosts) -> None:
+def _add_scanned_hosts_to_folder(folder: "CREFolder", found: NetworkScanFoundHosts) -> None:
     network_scan_properties = folder.attribute("network_scan")
 
     translation = network_scan_properties.get("translate_names", {})
@@ -140,7 +146,7 @@ def _add_scanned_hosts_to_folder(folder: 'CREFolder', found: NetworkScanFoundHos
         folder.save()
 
 
-def _save_network_scan_result(folder: 'CREFolder', result: NetworkScanResult) -> None:
+def _save_network_scan_result(folder: "CREFolder", result: NetworkScanResult) -> None:
     # Reload the folder, lock WATO before to protect against concurrency problems.
     with store.lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the
@@ -210,7 +216,7 @@ def _ip_addresses_of_ranges(ip_ranges):
     return addresses
 
 
-_FULL_IPV4 = (2**32) - 1
+_FULL_IPV4 = (2 ** 32) - 1
 
 
 def _ip_addresses_of_range(spec):
@@ -304,7 +310,8 @@ def _scan_ip_addresses(folder, ip_addresses):
 
     # dont start more threads than needed
     parallel_pings = min(
-        folder.attribute("network_scan").get("max_parallel_pings", 100), num_addresses)
+        folder.attribute("network_scan").get("max_parallel_pings", 100), num_addresses
+    )
 
     # Initalize all workers
     threads = []
@@ -339,8 +346,13 @@ def _ping_worker(addresses: List[HostAddress], hosts: List[Tuple[HostName, HostA
 
 
 def _ping(address: HostAddress) -> bool:
-    return subprocess.Popen(['ping', '-c2', '-w2', address],
-                            stdout=open(os.devnull, "a"),
-                            stderr=subprocess.STDOUT,
-                            encoding="utf-8",
-                            close_fds=True).wait() == 0
+    return (
+        subprocess.Popen(
+            ["ping", "-c2", "-w2", address],
+            stdout=open(os.devnull, "a"),
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            close_fds=True,
+        ).wait()
+        == 0
+    )

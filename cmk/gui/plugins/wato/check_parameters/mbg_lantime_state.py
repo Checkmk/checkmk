@@ -17,36 +17,40 @@ def _parameter_valuespec_mbg_lantime_state():
     return Dictionary(
         title=_("Meinberg Lantime State"),
         elements=[
-            ("stratum",
-             Tuple(
-                 title=_("Warning levels for Stratum"),
-                 elements=[
-                     Integer(
-                         title=_("Warning at"),
-                         default_value=2,
-                     ),
-                     Integer(
-                         title=_("Critical at"),
-                         default_value=3,
-                     ),
-                 ],
-             )),
-            ("offset",
-             Tuple(
-                 title=_("Warning levels for Time Offset"),
-                 elements=[
-                     Integer(
-                         title=_("Warning at"),
-                         unit=_("microseconds"),
-                         default_value=10,
-                     ),
-                     Integer(
-                         title=_("Critical at"),
-                         unit=_("microseconds"),
-                         default_value=20,
-                     ),
-                 ],
-             )),
+            (
+                "stratum",
+                Tuple(
+                    title=_("Warning levels for Stratum"),
+                    elements=[
+                        Integer(
+                            title=_("Warning at"),
+                            default_value=2,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            default_value=3,
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "offset",
+                Tuple(
+                    title=_("Warning levels for Time Offset"),
+                    elements=[
+                        Integer(
+                            title=_("Warning at"),
+                            unit=_("microseconds"),
+                            default_value=10,
+                        ),
+                        Integer(
+                            title=_("Critical at"),
+                            unit=_("microseconds"),
+                            default_value=20,
+                        ),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -58,4 +62,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mbg_lantime_state,
         title=lambda: _("Meinberg Lantime State"),
-    ))
+    )
+)

@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import graph_info, metric_info
 
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -82,7 +82,7 @@ metric_info["apache_state_keep_alive"] = {
     "color": "53/b",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |

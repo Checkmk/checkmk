@@ -19,9 +19,11 @@ mailqueue_elements: typing.List[typing.Tuple[str, ValueSpec]] = [
         "deferred",
         Tuple(
             title=_("Mails in outgoing mail queue/deferred mails"),
-            help=_("This rule is applied to the number of E-Mails currently "
-                   "in the deferred mail queue, or in the general outgoing mail "
-                   "queue, if such a distinction is not available."),
+            help=_(
+                "This rule is applied to the number of E-Mails currently "
+                "in the deferred mail queue, or in the general outgoing mail "
+                "queue, if such a distinction is not available."
+            ),
             elements=[
                 Integer(title=_("Warning at"), unit=_("mails"), default_value=10),
                 Integer(title=_("Critical at"), unit=_("mails"), default_value=20),
@@ -32,8 +34,10 @@ mailqueue_elements: typing.List[typing.Tuple[str, ValueSpec]] = [
         "active",
         Tuple(
             title=_("Mails in active mail queue"),
-            help=_("This rule is applied to the number of E-Mails currently "
-                   "in the active mail queue"),
+            help=_(
+                "This rule is applied to the number of E-Mails currently "
+                "in the active mail queue"
+            ),
             elements=[
                 Integer(title=_("Warning at"), unit=_("mails"), default_value=800),
                 Integer(title=_("Critical at"), unit=_("mails"), default_value=1000),
@@ -63,4 +67,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mailqueue_length,
         title=lambda: _("Mails in outgoing mail queue"),
-    ))
+    )
+)

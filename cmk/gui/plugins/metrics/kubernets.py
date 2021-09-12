@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import graph_info, metric_info
 
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -174,7 +174,7 @@ metric_info["k8s_daemon_pods_unavailable"] = {
     "color": "14/a",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -202,7 +202,7 @@ graph_info["k8s_resources.pod"] = {
         ("k8s_pods_capacity", "line"),
         ("k8s_pods_running", "area"),
         ("k8s_pods_pending", "stack"),
-    ]
+    ],
 }
 
 graph_info["k8s_resources.cpu"] = {

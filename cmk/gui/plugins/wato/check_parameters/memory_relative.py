@@ -14,13 +14,17 @@ from cmk.gui.valuespec import Integer, OptionalDropdownChoice, Tuple
 
 
 def _parameter_valuespec_memory_relative():
-    return OptionalDropdownChoice(title=_("Memory usage"),
-                                  choices=[(None, _("Do not impose levels"))],
-                                  otherlabel=_("Percentual levels ->"),
-                                  explicit=Tuple(elements=[
-                                      Integer(title=_("Warning at"), default_value=85, unit="%"),
-                                      Integer(title=_("Critical at"), default_value=90, unit="%"),
-                                  ],))
+    return OptionalDropdownChoice(
+        title=_("Memory usage"),
+        choices=[(None, _("Do not impose levels"))],
+        otherlabel=_("Percentual levels ->"),
+        explicit=Tuple(
+            elements=[
+                Integer(title=_("Warning at"), default_value=85, unit="%"),
+                Integer(title=_("Critical at"), default_value=90, unit="%"),
+            ],
+        ),
+    )
 
 
 rulespec_registry.register(
@@ -29,4 +33,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_memory_relative,
         title=lambda: _("Main memory usage for Brocade fibre channel switches"),
-    ))
+    )
+)

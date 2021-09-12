@@ -17,17 +17,20 @@ def _valuespec_discovery_netapp_api_psu_rules():
     return Dictionary(
         title=_("Netapp power supply unit discovery"),
         elements=[
-            ("mode",
-             CascadingDropdown(
-                 title=_("Specify discovery mode"),
-                 help=
-                 _("Option which allows to specify whether all power supply units will be grouped into one service (summary) or each unit gets allocated one individual service (single)."
-                  ),
-                 orientation="vertical",
-                 choices=[
-                     ("summarize", _("Summary")),
-                     ("single", _("Single")),
-                 ])),
+            (
+                "mode",
+                CascadingDropdown(
+                    title=_("Specify discovery mode"),
+                    help=_(
+                        "Option which allows to specify whether all power supply units will be grouped into one service (summary) or each unit gets allocated one individual service (single)."
+                    ),
+                    orientation="vertical",
+                    choices=[
+                        ("summarize", _("Summary")),
+                        ("single", _("Single")),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -38,4 +41,5 @@ rulespec_registry.register(
         match_type="dict",
         name="discovery_netapp_api_psu_rules",
         valuespec=_valuespec_discovery_netapp_api_psu_rules,
-    ))
+    )
+)

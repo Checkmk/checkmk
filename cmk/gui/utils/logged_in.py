@@ -32,6 +32,7 @@ class LoggedInUser:
     This objects intention is currently only to handle the currently logged in user after
     authentication.
     """
+
     def __init__(self, user_id: Optional[str]) -> None:
         self.id = UserId(user_id) if user_id else None
 
@@ -74,9 +75,12 @@ class LoggedInUser:
             return {"roles": role_ids}
         attributes = self.load_file("cached_profile", None)
         if attributes is None:
-            attributes = config.multisite_users.get(user_id, {
-                "roles": role_ids,
-            })
+            attributes = config.multisite_users.get(
+                user_id,
+                {
+                    "roles": role_ids,
+                },
+            )
         return attributes
 
     def get_attribute(self, key: str, deflt: Any = None) -> Any:
@@ -264,20 +268,21 @@ class LoggedInUser:
         vo = self.load_file("rowselection/%s" % selection_id, {})
         return vo.get(identifier, [])
 
-    def set_rowselection(self, selection_id: str, identifier: str, rows: List[str],
-                         action: str) -> None:
+    def set_rowselection(
+        self, selection_id: str, identifier: str, rows: List[str], action: str
+    ) -> None:
         vo = self.load_file("rowselection/%s" % selection_id, {}, lock=True)
 
-        if action == 'set':
+        if action == "set":
             vo[identifier] = rows
 
-        elif action == 'add':
+        elif action == "add":
             vo[identifier] = list(set(vo.get(identifier, [])).union(rows))
 
-        elif action == 'del':
+        elif action == "del":
             vo[identifier] = list(set(vo.get(identifier, [])) - set(rows))
 
-        elif action == 'unset':
+        elif action == "unset":
             del vo[identifier]
 
         self.save_file("rowselection/%s" % selection_id, vo)
@@ -287,11 +292,11 @@ class LoggedInUser:
         if self.confdir is None:
             return
 
-        path = self.confdir + '/rowselection'
+        path = self.confdir + "/rowselection"
         try:
             for f in os.listdir(path):
-                if f[1] != '.' and f.endswith('.mk'):
-                    p = path + '/' + f
+                if f[1] != "." and f.endswith(".mk"):
+                    p = path + "/" + f
                     if time.time() - os.stat(p).st_mtime > config.selection_livetime:
                         os.unlink(p)
         except OSError:
@@ -322,9 +327,9 @@ class LoggedInUser:
         if self.id:
             self.save_file("transids", transids)
 
-    def authorized_sites(self,
-                         unfiltered_sites: Optional[SiteConfigurations] = None
-                        ) -> SiteConfigurations:
+    def authorized_sites(
+        self, unfiltered_sites: Optional[SiteConfigurations] = None
+    ) -> SiteConfigurations:
         if unfiltered_sites is None:
             unfiltered_sites = sites.allsites()
 
@@ -333,15 +338,14 @@ class LoggedInUser:
             return dict(unfiltered_sites)
 
         return {
-            site_id: s  #
-            for site_id, s in unfiltered_sites.items()
-            if site_id in authorized_sites
+            site_id: s for site_id, s in unfiltered_sites.items() if site_id in authorized_sites  #
         }
 
     def authorized_login_sites(self) -> SiteConfigurations:
         login_site_ids = sites.get_login_slave_sites()
         return self.authorized_sites(
-            {site_id: s for site_id, s in sites.allsites().items() if site_id in login_site_ids})
+            {site_id: s for site_id, s in sites.allsites().items() if site_id in login_site_ids}
+        )
 
     def may(self, pname: str) -> bool:
         if pname in self._permissions:
@@ -354,10 +358,14 @@ class LoggedInUser:
         if not self.may(pname):
             perm = permissions.permission_registry[pname]
             raise MKAuthException(
-                _("We are sorry, but you lack the permission "
-                  "for this operation. If you do not like this "
-                  "then please ask your administrator to provide you with "
-                  "the following permission: '<b>%s</b>'.") % perm.title)
+                _(
+                    "We are sorry, but you lack the permission "
+                    "for this operation. If you do not like this "
+                    "then please ask your administrator to provide you with "
+                    "the following permission: '<b>%s</b>'."
+                )
+                % perm.title
+            )
 
     def load_file(self, name: str, deflt: Any, lock: bool = False) -> Any:
         if self.confdir is None:

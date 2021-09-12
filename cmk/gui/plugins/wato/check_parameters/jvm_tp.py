@@ -25,32 +25,36 @@ def _parameter_valuespec_jvm_tp() -> Dictionary:
     return Dictionary(
         help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
         elements=[
-            ("currentThreadCount",
-             Alternative(
-                 title=_("Current thread count levels"),
-                 elements=[
-                     Tuple(
-                         title=_("Percentage levels of current thread count in threadpool"),
-                         elements=[
-                             Integer(title=_("Warning at"), unit=_("%")),
-                             Integer(title=_("Critical at"), unit=_("%")),
-                         ],
-                     )
-                 ],
-             )),
-            ("currentThreadsBusy",
-             Alternative(
-                 title=_("Current threads busy levels"),
-                 elements=[
-                     Tuple(
-                         title=_("Percentage of current threads busy in threadpool"),
-                         elements=[
-                             Integer(title=_("Warning at"), unit=_("%")),
-                             Integer(title=_("Critical at"), unit=_("%")),
-                         ],
-                     )
-                 ],
-             )),
+            (
+                "currentThreadCount",
+                Alternative(
+                    title=_("Current thread count levels"),
+                    elements=[
+                        Tuple(
+                            title=_("Percentage levels of current thread count in threadpool"),
+                            elements=[
+                                Integer(title=_("Warning at"), unit=_("%")),
+                                Integer(title=_("Critical at"), unit=_("%")),
+                            ],
+                        )
+                    ],
+                ),
+            ),
+            (
+                "currentThreadsBusy",
+                Alternative(
+                    title=_("Current threads busy levels"),
+                    elements=[
+                        Tuple(
+                            title=_("Percentage of current threads busy in threadpool"),
+                            elements=[
+                                Integer(title=_("Warning at"), unit=_("%")),
+                                Integer(title=_("Critical at"), unit=_("%")),
+                            ],
+                        )
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -63,4 +67,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_jvm_tp,
         title=lambda: _("JVM tomcat threadpool levels"),
-    ))
+    )
+)

@@ -31,43 +31,45 @@ from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, requ
 from cmk.gui.plugins.openapi.utils import ProblemException
 
 SERVICE_DESCRIPTION = {
-    'service_description': fields.String(
+    "service_description": fields.String(
         description="The service description.",
         example="Memory",
     )
 }
 
 
-@Endpoint(constructors.collection_href('acknowledge', 'host'),
-          'cmk/create',
-          method='post',
-          tag_group='Monitoring',
-          skip_locking=True,
-          additional_status_codes=[422],
-          status_descriptions={
-              422: 'The query yielded no result.',
-          },
-          request_schema=request_schemas.AcknowledgeHostRelatedProblem,
-          output_empty=True)
+@Endpoint(
+    constructors.collection_href("acknowledge", "host"),
+    "cmk/create",
+    method="post",
+    tag_group="Monitoring",
+    skip_locking=True,
+    additional_status_codes=[422],
+    status_descriptions={
+        422: "The query yielded no result.",
+    },
+    request_schema=request_schemas.AcknowledgeHostRelatedProblem,
+    output_empty=True,
+)
 def set_acknowledgement_on_hosts(params):
     """Set acknowledgement on related hosts"""
-    body = params['body']
+    body = params["body"]
     live = sites.live()
 
-    sticky = body['sticky']
-    notify = body['notify']
-    persistent = body['persistent']
-    comment = body['comment']
+    sticky = body["sticky"]
+    notify = body["notify"]
+    persistent = body["persistent"]
+    comment = body["comment"]
 
-    acknowledge_type = body['acknowledge_type']
+    acknowledge_type = body["acknowledge_type"]
 
-    if acknowledge_type == 'host':
-        name = body['host_name']
+    if acknowledge_type == "host":
+        name = body["host_name"]
         host_state = Query([Hosts.state], Hosts.name == name).value(live)
         if not host_state:
             raise ProblemException(
                 status=422,
-                title=f'Host {name!r} has no problem.',
+                title=f"Host {name!r} has no problem.",
             )
         acknowledge_host_problem(
             live,
@@ -78,8 +80,8 @@ def set_acknowledgement_on_hosts(params):
             user=user.ident,
             comment=comment,
         )
-    elif acknowledge_type == 'hostgroup':
-        host_group = body['hostgroup_name']
+    elif acknowledge_type == "hostgroup":
+        host_group = body["hostgroup_name"]
         try:
             acknowledge_hostgroup_problem(
                 live,
@@ -96,8 +98,8 @@ def set_acknowledgement_on_hosts(params):
                 title="Hostgroup could not be found.",
                 detail=f"Unknown hostgroup: {host_group}",
             )
-    elif acknowledge_type == 'host_by_query':
-        query = body['query']
+    elif acknowledge_type == "host_by_query":
+        query = body["query"]
         hosts = Query([Hosts.name], query).fetchall(live)
         if not hosts:
             raise ProblemException(
@@ -124,43 +126,46 @@ def set_acknowledgement_on_hosts(params):
     return http.Response(status=204)
 
 
-@Endpoint(constructors.collection_href('acknowledge', 'service'),
-          'cmk/create_service',
-          method='post',
-          tag_group='Monitoring',
-          skip_locking=True,
-          additional_status_codes=[422],
-          status_descriptions={
-              422: 'Service was not in a problem state.',
-          },
-          request_schema=request_schemas.AcknowledgeServiceRelatedProblem,
-          output_empty=True)
+@Endpoint(
+    constructors.collection_href("acknowledge", "service"),
+    "cmk/create_service",
+    method="post",
+    tag_group="Monitoring",
+    skip_locking=True,
+    additional_status_codes=[422],
+    status_descriptions={
+        422: "Service was not in a problem state.",
+    },
+    request_schema=request_schemas.AcknowledgeServiceRelatedProblem,
+    output_empty=True,
+)
 def set_acknowledgement_on_services(params):
     """Set acknowledgement on related services"""
-    body = params['body']
+    body = params["body"]
     live = sites.live()
 
-    sticky = body['sticky']
-    notify = body['notify']
-    persistent = body['persistent']
-    comment = body['comment']
-    acknowledge_type = body['acknowledge_type']
+    sticky = body["sticky"]
+    notify = body["notify"]
+    persistent = body["persistent"]
+    comment = body["comment"]
+    acknowledge_type = body["acknowledge_type"]
 
-    if acknowledge_type == 'service':
-        description = unquote(body['service_description'])
-        host_name = body['host_name']
-        service = Query([Services.host_name, Services.description, Services.state],
-                        And(Services.host_name == host_name,
-                            Services.description == description)).first(live)
+    if acknowledge_type == "service":
+        description = unquote(body["service_description"])
+        host_name = body["host_name"]
+        service = Query(
+            [Services.host_name, Services.description, Services.state],
+            And(Services.host_name == host_name, Services.description == description),
+        ).first(live)
         if not service:
             raise ProblemException(
                 status=400,
-                title=f'Service {description!r}@{host_name!r} could not be found.',
+                title=f"Service {description!r}@{host_name!r} could not be found.",
             )
         if not service.state:
             raise ProblemException(
                 status=422,
-                title=f'Service {description!r}@{host_name!r} has no problem.',
+                title=f"Service {description!r}@{host_name!r} has no problem.",
             )
         acknowledge_service_problem(
             live,
@@ -172,8 +177,8 @@ def set_acknowledgement_on_services(params):
             user=user.ident,
             comment=comment,
         )
-    elif acknowledge_type == 'servicegroup':
-        service_group = body['servicegroup_name']
+    elif acknowledge_type == "servicegroup":
+        service_group = body["servicegroup_name"]
         try:
             acknowledge_servicegroup_problem(
                 live,
@@ -190,16 +195,16 @@ def set_acknowledgement_on_services(params):
                 title="Servicegroup could not be found.",
                 detail=f"Unknown servicegroup: {service_group}",
             )
-    elif acknowledge_type == 'service_by_query':
+    elif acknowledge_type == "service_by_query":
         services = Query(
             [Services.host_name, Services.description, Services.state],
-            body['query'],
+            body["query"],
         ).fetchall(live)
         if not services:
             raise ProblemException(
                 status=422,
-                title='No services with problems found.',
-                detail='All queried services are OK.',
+                title="No services with problems found.",
+                detail="All queried services are OK.",
             )
 
         for service in services:

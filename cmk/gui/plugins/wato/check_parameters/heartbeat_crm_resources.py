@@ -37,4 +37,5 @@ rulespec_registry.register(
         item_spec=_item_spec_heartbeat_crm_resources,
         parameter_valuespec=_parameter_valuespec_heartbeat_crm_resources,
         title=lambda: _("Heartbeat CRM resource status"),
-    ))
+    )
+)

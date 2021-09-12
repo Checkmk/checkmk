@@ -14,10 +14,12 @@ from cmk.gui.valuespec import Integer, Tuple
 
 
 def _parameter_valuespec_blank_tapes():
-    return Tuple(elements=[
-        Integer(title=_("Warning below"), default_value=5),
-        Integer(title=_("Critical below"), default_value=1),
-    ],)
+    return Tuple(
+        elements=[
+            Integer(title=_("Warning below"), default_value=5),
+            Integer(title=_("Critical below"), default_value=1),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -26,4 +28,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         parameter_valuespec=_parameter_valuespec_blank_tapes,
         title=lambda: _("DIVA CSM: remaining blank tapes"),
-    ))
+    )
+)

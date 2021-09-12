@@ -64,7 +64,8 @@ class FilterWatoFolder(Filter):
         # Permissions in this case means, that the user has view permissions for at
         # least one host in that folder.
         result = sites.live().query(
-            "GET hosts\nCache: reload\nColumns: filename\nStats: state >= 0\n")
+            "GET hosts\nCache: reload\nColumns: filename\nStats: state >= 0\n"
+        )
         allowed_folders = {""}  # The root(Main directory)
         for path, _host_count in result:
             # convert '/wato/server/hosts.mk' to 'server'
@@ -119,12 +120,15 @@ class FilterWatoFolder(Filter):
 
 
 filter_registry.register(
-    FilterWatoFolder(ident="wato_folder",
-                     title=_("Folder"),
-                     sort_index=10,
-                     info="host",
-                     htmlvars=["wato_folder"],
-                     link_columns=[]),)
+    FilterWatoFolder(
+        ident="wato_folder",
+        title=_("Folder"),
+        sort_index=10,
+        info="host",
+        htmlvars=["wato_folder"],
+        link_columns=[],
+    ),
+)
 
 
 class FilterMultipleWatoFolder(FilterWatoFolder):
@@ -158,15 +162,24 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
     def heading_info(self, value: FilterHTTPVariables) -> Optional[str]:
         self.check_wato_data_update()
         return ", ".join(
-            filter(None, (self.path_to_tree.get(folder)
-                          for folder in self._to_list(value)
-                          if folder and folder != "/")))
+            filter(
+                None,
+                (
+                    self.path_to_tree.get(folder)
+                    for folder in self._to_list(value)
+                    if folder and folder != "/"
+                ),
+            )
+        )
 
 
 filter_registry.register(
-    FilterMultipleWatoFolder(ident="wato_folders",
-                             title=_("Multiple WATO Folders"),
-                             sort_index=20,
-                             info="host",
-                             htmlvars=["wato_folders"],
-                             link_columns=[]),)
+    FilterMultipleWatoFolder(
+        ident="wato_folders",
+        title=_("Multiple WATO Folders"),
+        sort_index=20,
+        info="host",
+        htmlvars=["wato_folders"],
+        link_columns=[],
+    ),
+)

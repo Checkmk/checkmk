@@ -32,12 +32,15 @@ def levels_absolute_or_dynamic(name, value):
                         # xgettext: no-python-format
                         unit=_("% used"),
                     ),
-                ]),
-            Tuple(title=_("Absolute %s space") % value,
-                  elements=[
-                      Integer(title=_("Warning at"), unit=_("MB"), default_value=500),
-                      Integer(title=_("Critical at"), unit=_("MB"), default_value=1000),
-                  ]),
+                ],
+            ),
+            Tuple(
+                title=_("Absolute %s space") % value,
+                elements=[
+                    Integer(title=_("Warning at"), unit=_("MB"), default_value=500),
+                    Integer(title=_("Critical at"), unit=_("MB"), default_value=1000),
+                ],
+            ),
             ListOf(
                 Tuple(
                     orientation="horizontal",
@@ -59,30 +62,39 @@ def levels_absolute_or_dynamic(name, value):
                                             # xgettext: no-python-format
                                             unit=_("% used"),
                                         ),
-                                    ]),
-                                Tuple(title=_("Absolute free space"),
-                                      elements=[
-                                          Integer(title=_("Warning at"), unit=_("MB")),
-                                          Integer(title=_("Critical at"), unit=_("MB")),
-                                      ]),
-                            ]),
+                                    ],
+                                ),
+                                Tuple(
+                                    title=_("Absolute free space"),
+                                    elements=[
+                                        Integer(title=_("Warning at"), unit=_("MB")),
+                                        Integer(title=_("Critical at"), unit=_("MB")),
+                                    ],
+                                ),
+                            ],
+                        ),
                     ],
                 ),
-                title=_('Dynamic levels'),
+                title=_("Dynamic levels"),
             ),
-        ])
+        ],
+    )
 
 
 def _parameter_valuespec_mssql_datafiles():
     return Dictionary(
         title=_("File Size Levels"),
-        help=_("Specify levels for datafiles of a database. Please note that relative "
-               "levels will only work if there is a max_size set for the file on the database "
-               "side."),
+        help=_(
+            "Specify levels for datafiles of a database. Please note that relative "
+            "levels will only work if there is a max_size set for the file on the database "
+            "side."
+        ),
         elements=[
             ("used_levels", levels_absolute_or_dynamic(_("Datafile"), _("used"))),
-            ("allocated_used_levels",
-             levels_absolute_or_dynamic(_("Datafile"), _("used of allocation"))),
+            (
+                "allocated_used_levels",
+                levels_absolute_or_dynamic(_("Datafile"), _("used of allocation")),
+            ),
             ("allocated_levels", levels_absolute_or_dynamic(_("Datafile"), _("allocated"))),
         ],
     )
@@ -96,4 +108,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_datafiles,
         title=lambda: _("MSSQL Datafile Sizes"),
-    ))
+    )
+)

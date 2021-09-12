@@ -144,7 +144,8 @@ class ModeAuditLog(WatoMode):
                     make_confirm_link(
                         url=makeactionuri(request, transactions, [("_action", "clear")]),
                         message=_("Do you really want to clear the audit log?"),
-                    )),
+                    )
+                ),
             )
 
     def _page_menu_entries_export(self) -> Iterator[PageMenuEntry]:
@@ -182,7 +183,8 @@ class ModeAuditLog(WatoMode):
                         is_shortcut=True,
                     ),
                 ],
-            ))
+            ),
+        )
 
         display_dropdown.topics.insert(
             0,
@@ -193,14 +195,20 @@ class ModeAuditLog(WatoMode):
                         title=_("Show details"),
                         icon_name="checked_checkbox" if self._show_details else "checkbox",
                         item=make_simple_link(
-                            makeactionuri(request, transactions, [
-                                ("show_details", "0" if self._show_details else "1"),
-                            ])),
+                            makeactionuri(
+                                request,
+                                transactions,
+                                [
+                                    ("show_details", "0" if self._show_details else "1"),
+                                ],
+                            )
+                        ),
                         name="show_details",
                         css_classes=["toggle"],
                     )
                 ],
-            ))
+            ),
+        )
 
     def _render_filter_form(self) -> HTML:
         with output_funnel.plugged():
@@ -268,27 +276,31 @@ class ModeAuditLog(WatoMode):
 
         if display_options.enabled(display_options.T):
             html.h3(
-                _("Audit log for %s and %d days ago") %
-                (render.date(self._get_start_date()), self._options["display"][1]))
+                _("Audit log for %s and %d days ago")
+                % (render.date(self._get_start_date()), self._options["display"][1])
+            )
 
         self._display_log(log)
 
     def _display_log(self, log):
-        with table_element(css="data wato auditlog audit",
-                           limit=None,
-                           sortable=False,
-                           searchable=False) as table:
+        with table_element(
+            css="data wato auditlog audit", limit=None, sortable=False, searchable=False
+        ) as table:
             for entry in log:
                 table.row()
-                table.cell(_("Time"),
-                           html.render_nobr(render.date_and_time(float(entry.time))),
-                           css="narrow")
-                user_txt = ('<i>%s</i>' % _('internal')) if entry.user_id == '-' else entry.user_id
+                table.cell(
+                    _("Time"),
+                    html.render_nobr(render.date_and_time(float(entry.time))),
+                    css="narrow",
+                )
+                user_txt = ("<i>%s</i>" % _("internal")) if entry.user_id == "-" else entry.user_id
                 table.cell(_("User"), user_txt, css="nobreak narrow")
 
-                table.cell(_("Object type"),
-                           entry.object_ref.object_type.name if entry.object_ref else "",
-                           css="narrow")
+                table.cell(
+                    _("Object type"),
+                    entry.object_ref.object_type.name if entry.object_ref else "",
+                    css="narrow",
+                )
                 table.cell(_("Object"), render_object_ref(entry.object_ref) or "", css="narrow")
 
                 text = HTML(escaping.escape_text(entry.text).replace("\n", "<br>\n"))
@@ -296,8 +308,10 @@ class ModeAuditLog(WatoMode):
 
                 if self._show_details:
                     diff_text = HTML(
-                        escaping.escape_text(entry.diff_text).replace("\n", "<br>\n") if entry.
-                        diff_text else "")
+                        escaping.escape_text(entry.diff_text).replace("\n", "<br>\n")
+                        if entry.diff_text
+                        else ""
+                    )
                     table.cell(_("Details"), diff_text)
 
     def _get_next_daily_paged_log(self, log):
@@ -314,14 +328,13 @@ class ModeAuditLog(WatoMode):
         if self._options["start"] == "now":
             st = time.localtime()
             return int(
-                time.mktime(time.struct_time(
-                    (st.tm_year, st.tm_mon, st.tm_mday, 0, 0, 0, 0, 0, 0))))
+                time.mktime(time.struct_time((st.tm_year, st.tm_mon, st.tm_mday, 0, 0, 0, 0, 0, 0)))
+            )
         return int(self._options["start"][1])
 
     def _get_multiple_days_log_entries(self, log):
         start_time = self._get_start_date() + 86399
-        end_time = start_time \
-            - ((self._options["display"][1] * 86400) + 86399)
+        end_time = start_time - ((self._options["display"][1] * 86400) + 86399)
 
         logs = []
 
@@ -360,8 +373,12 @@ class ModeAuditLog(WatoMode):
         if last_log_index is None:
             last_log_index = len(log)
 
-        return log[first_log_index:last_log_index], (start_time, end_time, previous_log_time,
-                                                     next_log_time)
+        return log[first_log_index:last_log_index], (
+            start_time,
+            end_time,
+            previous_log_time,
+            next_log_time,
+        )
 
     def _display_page_controls(self, start_time, end_time, previous_log_time, next_log_time):
         html.open_div(class_="paged_controls")
@@ -375,20 +392,33 @@ class ModeAuditLog(WatoMode):
             ]
 
         if next_log_time is not None:
-            html.icon_button(makeactionuri(request, transactions, [
-                ("options_start_sel", "0"),
-            ]), _("Most recent events"), "start")
+            html.icon_button(
+                makeactionuri(
+                    request,
+                    transactions,
+                    [
+                        ("options_start_sel", "0"),
+                    ],
+                ),
+                _("Most recent events"),
+                "start",
+            )
 
-            html.icon_button(makeactionuri(request, transactions, time_url_args(next_log_time)),
-                             "%s: %s" % (_("Newer events"), render.date(next_log_time)), "back")
+            html.icon_button(
+                makeactionuri(request, transactions, time_url_args(next_log_time)),
+                "%s: %s" % (_("Newer events"), render.date(next_log_time)),
+                "back",
+            )
         else:
             html.empty_icon_button()
             html.empty_icon_button()
 
         if previous_log_time is not None:
-            html.icon_button(makeactionuri(request, transactions, time_url_args(previous_log_time)),
-                             "%s: %s" % (_("Older events"), render.date(previous_log_time)),
-                             "forth")
+            html.icon_button(
+                makeactionuri(request, transactions, time_url_args(previous_log_time)),
+                "%s: %s" % (_("Older events"), render.date(previous_log_time)),
+                "forth",
+            )
         else:
             html.empty_icon_button()
 
@@ -397,7 +427,8 @@ class ModeAuditLog(WatoMode):
     def _get_timerange(self, t):
         st = time.localtime(int(t))
         start = int(
-            time.mktime(time.struct_time((st[0], st[1], st[2], 0, 0, 0, st[6], st[7], st[8]))))
+            time.mktime(time.struct_time((st[0], st[1], st[2], 0, 0, 0, st[6], st[7], st[8])))
+        )
         end = start + 86399
         return start, end
 
@@ -437,11 +468,19 @@ class ModeAuditLog(WatoMode):
         ] + [(t.name, t.name) for t in ObjectRefType]
 
         return [
-            ("object_type", DropdownChoice(
-                title=_("Object type"),
-                choices=object_types,
-            )),
-            ("object_ident", TextInput(title=_("Object"),)),
+            (
+                "object_type",
+                DropdownChoice(
+                    title=_("Object type"),
+                    choices=object_types,
+                ),
+            ),
+            (
+                "object_ident",
+                TextInput(
+                    title=_("Object"),
+                ),
+            ),
             (
                 "user_id",
                 UserSelection(
@@ -450,35 +489,45 @@ class ModeAuditLog(WatoMode):
                     none=_("All users"),
                 ),
             ),
-            ("filter_regex", RegExp(
-                title=_("Filter pattern (RegExp)"),
-                mode="infix",
-            )),
-            ("start",
-             CascadingDropdown(
-                 title=_("Start log from"),
-                 default_value="now",
-                 orientation="horizontal",
-                 choices=[
-                     ("now", _("Current date")),
-                     ("time", _("Specific date"), AbsoluteDate()),
-                 ],
-             )),
-            ("display",
-             CascadingDropdown(
-                 title=_("Display mode of entries"),
-                 default_value="daily",
-                 orientation="horizontal",
-                 choices=[
-                     ("daily", _("Daily paged display")),
-                     ("number_of_days", _("Number of days from now (single page)"),
-                      Integer(
-                          minvalue=1,
-                          unit=_("days"),
-                          default_value=1,
-                      )),
-                 ],
-             )),
+            (
+                "filter_regex",
+                RegExp(
+                    title=_("Filter pattern (RegExp)"),
+                    mode="infix",
+                ),
+            ),
+            (
+                "start",
+                CascadingDropdown(
+                    title=_("Start log from"),
+                    default_value="now",
+                    orientation="horizontal",
+                    choices=[
+                        ("now", _("Current date")),
+                        ("time", _("Specific date"), AbsoluteDate()),
+                    ],
+                ),
+            ),
+            (
+                "display",
+                CascadingDropdown(
+                    title=_("Display mode of entries"),
+                    default_value="daily",
+                    orientation="horizontal",
+                    choices=[
+                        ("daily", _("Daily paged display")),
+                        (
+                            "number_of_days",
+                            _("Number of days from now (single page)"),
+                            Integer(
+                                minvalue=1,
+                                unit=_("days"),
+                                default_value=1,
+                            ),
+                        ),
+                    ],
+                ),
+            ),
         ]
 
     def _clear_audit_log_after_confirm(self) -> ActionResult:
@@ -493,30 +542,34 @@ class ModeAuditLog(WatoMode):
         response.set_content_type("text/csv")
 
         if self._options["display"] == "daily":
-            filename = "wato-auditlog-%s_%s.csv" % (render.date(
-                time.time()), render.time_of_day(time.time()))
+            filename = "wato-auditlog-%s_%s.csv" % (
+                render.date(time.time()),
+                render.time_of_day(time.time()),
+            )
         else:
-            filename = "wato-auditlog-%s_%s_days.csv" % (render.date(
-                time.time()), self._options["display"][1])
+            filename = "wato-auditlog-%s_%s_days.csv" % (
+                render.date(time.time()),
+                self._options["display"][1],
+            )
 
-        response.headers["Content-Disposition"] = "attachment; filename=\"%s\"" % filename
+        response.headers["Content-Disposition"] = 'attachment; filename="%s"' % filename
 
         titles = [
-            _('Date'),
-            _('Time'),
-            _('Object type'),
-            _('Object'),
-            _('User'),
-            _('Action'),
-            _('Summary'),
+            _("Date"),
+            _("Time"),
+            _("Object type"),
+            _("Object"),
+            _("User"),
+            _("Action"),
+            _("Summary"),
         ]
 
         if self._show_details:
-            titles.append(_('Details'))
+            titles.append(_("Details"))
 
         resp = []
 
-        resp.append(','.join(titles) + '\n')
+        resp.append(",".join(titles) + "\n")
         for entry in audit:
             columns = [
                 render.date(int(entry.time)),
@@ -531,7 +584,7 @@ class ModeAuditLog(WatoMode):
             if self._show_details:
                 columns.append('"' + escaping.strip_tags(entry.diff_text).replace('"', "'") + '"')
 
-            resp.append(','.join(columns) + '\n')
+            resp.append(",".join(columns) + "\n")
 
         response.set_data("".join(resp))
 
@@ -544,14 +597,16 @@ class ModeAuditLog(WatoMode):
         if self._options["object_type"] != "":
             if entry.object_ref is None and self._options["object_type"] is not None:
                 return False
-            if (entry.object_ref and
-                    entry.object_ref.object_type.name != self._options["object_type"]):
+            if (
+                entry.object_ref
+                and entry.object_ref.object_type.name != self._options["object_type"]
+            ):
                 return False
 
         if self._options["object_ident"] != "":
             if entry.object_ref is None and self._options["object_ident"] is not None:
                 return False
-            if (entry.object_ref and entry.object_ref.ident != self._options["object_ident"]):
+            if entry.object_ref and entry.object_ref.ident != self._options["object_ident"]:
                 return False
 
         if self._options["user_id"] is not None:
@@ -561,6 +616,7 @@ class ModeAuditLog(WatoMode):
         if self._options["filter_regex"]:
             return any(
                 re.search(self._options["filter_regex"], val)
-                for val in [entry.user_id, entry.action, entry.text])
+                for val in [entry.user_id, entry.action, entry.text]
+            )
 
         return True

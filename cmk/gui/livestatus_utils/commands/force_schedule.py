@@ -34,12 +34,14 @@ def force_schedule_host_check(connection, host_name: str, check_time: dt.datetim
         ...     force_schedule_host_check(live, 'example.com', _check_time)
 
     """
-    return send_command(connection, "SCHEDULE_FORCED_HOST_CHECK",
-                        [host_name, to_timestamp(check_time)])
+    return send_command(
+        connection, "SCHEDULE_FORCED_HOST_CHECK", [host_name, to_timestamp(check_time)]
+    )
 
 
-def force_schedule_service_check(connection, host_name: str, service_description: str,
-                                 check_time: dt.datetime):
+def force_schedule_service_check(
+    connection, host_name: str, service_description: str, check_time: dt.datetime
+):
     """Schedule a forced active check of a particular service
 
     Args:
@@ -66,5 +68,7 @@ def force_schedule_service_check(connection, host_name: str, service_description
     """
 
     return send_command(
-        connection, "SCHEDULE_FORCED_SVC_CHECK",
-        [host_name, service_description, to_timestamp(check_time)])
+        connection,
+        "SCHEDULE_FORCED_SVC_CHECK",
+        [host_name, service_description, to_timestamp(check_time)],
+    )

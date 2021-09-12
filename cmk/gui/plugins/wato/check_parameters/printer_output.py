@@ -16,16 +16,18 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 def _parameter_valuespec_printer_output():
     return Dictionary(
         elements=[
-            ('capacity_levels',
-             Tuple(
-                 title=_('Capacity filled'),
-                 elements=[
-                     Percentage(title=_("Warning at"), default_value=0.0),
-                     Percentage(title=_("Critical at"), default_value=0.0),
-                 ],
-             )),
+            (
+                "capacity_levels",
+                Tuple(
+                    title=_("Capacity filled"),
+                    elements=[
+                        Percentage(title=_("Warning at"), default_value=0.0),
+                        Percentage(title=_("Critical at"), default_value=0.0),
+                    ],
+                ),
+            ),
         ],
-        default_keys=['capacity_levels'],
+        default_keys=["capacity_levels"],
     )
 
 
@@ -33,8 +35,9 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="printer_output",
         group=RulespecGroupCheckParametersPrinters,
-        item_spec=lambda: TextInput(title=_('Unit Name'), allow_empty=True),
+        item_spec=lambda: TextInput(title=_("Unit Name"), allow_empty=True),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_printer_output,
         title=lambda: _("Printer Output Units"),
-    ))
+    )
+)

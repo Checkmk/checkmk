@@ -34,8 +34,9 @@ def _load_prediction_information(
     now = time.time()
     for tg_info in prediction_store.available_predictions():
         timegroups.append(tg_info)
-        if tg_info.name == tg_name or (tg_name is None and
-                                       (tg_info.range[0] <= now <= tg_info.range[1])):
+        if tg_info.name == tg_name or (
+            tg_name is None and (tg_info.range[0] <= now <= tg_info.range[1])
+        ):
             selected_timegroup = tg_info
 
     timegroups.sort(key=lambda x: x.range[0])
@@ -43,7 +44,8 @@ def _load_prediction_information(
     if selected_timegroup is None:
         if not timegroups:
             raise MKGeneralException(
-                _("There is currently no prediction information available for this service."))
+                _("There is currently no prediction information available for this service.")
+            )
         selected_timegroup = timegroups[0]
 
     return selected_timegroup, [(tg.name, tg.name.title()) for tg in timegroups]
@@ -70,10 +72,9 @@ def page_graph():
 
     html.begin_form("prediction")
     html.write_text(_("Show prediction for "))
-    html.dropdown("timegroup",
-                  choices,
-                  deflt=timegroup.name,
-                  onchange="document.prediction.submit();")
+    html.dropdown(
+        "timegroup", choices, deflt=timegroup.name, onchange="document.prediction.submit();"
+    )
     html.hidden_fields()
     html.end_form()
 
@@ -125,8 +126,9 @@ def page_graph():
     from_time, until_time = timegroup.range
     now = time.time()
     if from_time <= now <= until_time:
-        timeseries = prediction.get_rrd_data(host_name, service, dsname, "MAX", from_time,
-                                             until_time)
+        timeseries = prediction.get_rrd_data(
+            host_name, service, dsname, "MAX", from_time, until_time
+        )
         rrd_data = timeseries.values
 
         render_curve(rrd_data, "#0000ff", 2)
@@ -138,14 +140,14 @@ def page_graph():
 
 
 vranges = [
-    ('n', 1024.0**-3),
-    ('u', 1024.0**-2),
-    ('m', 1024.0**-1),
-    ('', 1024.0**0),
-    ('K', 1024.0**1),
-    ('M', 1024.0**2),
-    ('G', 1024.0**3),
-    ('T', 1024.0**4),
+    ("n", 1024.0 ** -3),
+    ("u", 1024.0 ** -2),
+    ("m", 1024.0 ** -1),
+    ("", 1024.0 ** 0),
+    ("K", 1024.0 ** 1),
+    ("M", 1024.0 ** 2),
+    ("G", 1024.0 ** 3),
+    ("T", 1024.0 ** 4),
 ]
 
 
@@ -155,8 +157,8 @@ def compute_vertical_scala(low, high):
         if m <= 99 * factor:
             break
     else:
-        letter = 'P'
-        factor = 1024.0**5
+        letter = "P"
+        factor = 1024.0 ** 5
 
     v = 0.0
     vert_scala: List[List[Any]] = []
@@ -194,7 +196,8 @@ def compute_vertical_scala(low, high):
 def get_current_perfdata(host: HostName, service: str, dsname: str) -> Optional[float]:
     perf_data = sites.live().query_value(
         "GET services\nFilter: host_name = %s\nFilter: description = %s\n"
-        "Columns: perf_data" % (livestatus.lqencode(str(host)), livestatus.lqencode(service)))
+        "Columns: perf_data" % (livestatus.lqencode(str(host)), livestatus.lqencode(service))
+    )
 
     for part in perf_data.split():
         name, rest = part.split("=")
@@ -249,12 +252,14 @@ def create_graph(name, size, bounds, v_range, legend):
     html.open_table(class_="prediction")
     html.open_tr()
     html.open_td()
-    html.canvas("",
-                class_="prediction",
-                id_="content_%s" % name,
-                style="width: %dpx; height: %dpx;" % (int(size[0] / 2.0), int(size[1] / 2.0)),
-                width=size[0],
-                height=size[1])
+    html.canvas(
+        "",
+        class_="prediction",
+        id_="content_%s" % name,
+        style="width: %dpx; height: %dpx;" % (int(size[0] / 2.0), int(size[1] / 2.0)),
+        width=size[0],
+        height=size[1],
+    )
     html.close_td()
     html.close_tr()
     html.open_tr()
@@ -265,35 +270,47 @@ def create_graph(name, size, bounds, v_range, legend):
     html.close_td()
     html.close_tr()
     html.close_table()
-    html.javascript('cmk.prediction.create_graph("content_%s", %.4f, %.4f, %.4f, %.4f);' %
-                    (name, bounds[0], bounds[1], v_range[0], v_range[1]))
+    html.javascript(
+        'cmk.prediction.create_graph("content_%s", %.4f, %.4f, %.4f, %.4f);'
+        % (name, bounds[0], bounds[1], v_range[0], v_range[1])
+    )
 
 
 def render_coordinates(v_scala, t_scala):
-    html.javascript('cmk.prediction.render_coordinates(%s, %s);' %
-                    (json.dumps(v_scala), json.dumps(t_scala)))
+    html.javascript(
+        "cmk.prediction.render_coordinates(%s, %s);" % (json.dumps(v_scala), json.dumps(t_scala))
+    )
 
 
 def render_curve(points, color, width=1, square=False):
-    html.javascript('cmk.prediction.render_curve(%s, %s, %d, %d);' %
-                    (json.dumps(points), json.dumps(color), width, square and 1 or 0))
+    html.javascript(
+        "cmk.prediction.render_curve(%s, %s, %d, %d);"
+        % (json.dumps(points), json.dumps(color), width, square and 1 or 0)
+    )
 
 
 def render_point(t, v, color):
-    html.javascript('cmk.prediction.render_point(%s, %s, %s);' %
-                    (json.dumps(t), json.dumps(v), json.dumps(color)))
+    html.javascript(
+        "cmk.prediction.render_point(%s, %s, %s);"
+        % (json.dumps(t), json.dumps(v), json.dumps(color))
+    )
 
 
 def render_area(points, color, alpha=1.0):
-    html.javascript('cmk.prediction.render_area(%s, %s, %f);' %
-                    (json.dumps(points), json.dumps(color), alpha))
+    html.javascript(
+        "cmk.prediction.render_area(%s, %s, %f);" % (json.dumps(points), json.dumps(color), alpha)
+    )
 
 
 def render_area_reverse(points, color, alpha=1.0):
-    html.javascript('cmk.prediction.render_area_reverse(%s, %s, %f);' %
-                    (json.dumps(points), json.dumps(color), alpha))
+    html.javascript(
+        "cmk.prediction.render_area_reverse(%s, %s, %f);"
+        % (json.dumps(points), json.dumps(color), alpha)
+    )
 
 
 def render_dual_area(lower_points, upper_points, color, alpha=1.0):
-    html.javascript('cmk.prediction.render_dual_area(%s, %s, %s, %f);' %
-                    (json.dumps(lower_points), json.dumps(upper_points), json.dumps(color), alpha))
+    html.javascript(
+        "cmk.prediction.render_dual_area(%s, %s, %s, %f);"
+        % (json.dumps(lower_points), json.dumps(upper_points), json.dumps(color), alpha)
+    )

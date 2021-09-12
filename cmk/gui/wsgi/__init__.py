@@ -20,4 +20,4 @@ def make_app(debug=False):
     )
 
 
-__all__ = ['make_app']
+__all__ = ["make_app"]

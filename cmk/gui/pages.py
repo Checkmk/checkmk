@@ -55,6 +55,7 @@ class Page(abc.ABC):
 # TODO: Clean up implicit _from_vars() procotocol
 class AjaxPage(Page, abc.ABC):
     """Generic page handler that wraps page() calls into AJAX respones"""
+
     def __init__(self):
         super().__init__()
         self._from_vars()
@@ -74,6 +75,7 @@ class AjaxPage(Page, abc.ABC):
     def _handle_exc(self, method) -> None:
         # FIXME: cyclical link between crash_reporting.py and pages.py
         from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
+
         try:
             # FIXME: These methods write to the response themselves. This needs to be refactored.
             method()
@@ -95,6 +97,7 @@ class AjaxPage(Page, abc.ABC):
         """The page handler, called by the page registry"""
         # FIXME: cyclical link between crash_reporting.py and pages.py
         from cmk.gui.crash_reporting import handle_exception_as_gui_crash_report
+
         response.set_content_type("application/json")
         try:
             action_response = self.page()
@@ -150,12 +153,17 @@ def register(path: str) -> Callable[[PageHandlerFunc], PageHandlerFunc]:
 
     It is essentially a decorator that calls register_page_handler().
     """
+
     def wrap(wrapped_callable: PageHandlerFunc) -> PageHandlerFunc:
         cls_name = "PageClass%s" % path.title().replace(":", "")
-        LegacyPageClass = type(cls_name, (Page,), {
-            "_wrapped_callable": (wrapped_callable,),
-            "page": lambda self: self._wrapped_callable[0]()
-        })
+        LegacyPageClass = type(
+            cls_name,
+            (Page,),
+            {
+                "_wrapped_callable": (wrapped_callable,),
+                "page": lambda self: self._wrapped_callable[0](),
+            },
+        )
 
         page_registry.register_page(path)(LegacyPageClass)
         return lambda: LegacyPageClass().handle_page()
@@ -170,8 +178,9 @@ def register_page_handler(path: str, page_func: PageHandlerFunc) -> PageHandlerF
     return wrap(page_func)
 
 
-def get_page_handler(name: str,
-                     dflt: Optional[PageHandlerFunc] = None) -> Optional[PageHandlerFunc]:
+def get_page_handler(
+    name: str, dflt: Optional[PageHandlerFunc] = None
+) -> Optional[PageHandlerFunc]:
     """Returns either the page handler registered for the given name or None
 
     In case dflt is given it returns dflt instead of None when there is no

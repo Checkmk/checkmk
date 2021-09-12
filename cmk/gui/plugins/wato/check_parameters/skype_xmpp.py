@@ -14,32 +14,62 @@ from cmk.gui.valuespec import Dictionary, Float, Tuple
 
 
 def _parameter_valuespec_skype_xmpp():
-    return Dictionary(elements=[
-        ('failed_outbound_streams',
-         Dictionary(
-             title=_("XMPP Failed outbound stream establishes"),
-             elements=[
-                 ("upper",
-                  Tuple(elements=[
-                      Float(title=_("Warning at"), unit=_("per second"), default_value=0.01),
-                      Float(title=_("Critical at"), unit=_("per second"), default_value=0.02),
-                  ],)),
-             ],
-             optional_keys=[],
-         )),
-        ('failed_inbound_streams',
-         Dictionary(
-             title=_("XMPP Failed inbound stream establishes"),
-             elements=[
-                 ("upper",
-                  Tuple(elements=[
-                      Float(title=_("Warning at"), unit=_("per second"), default_value=0.01),
-                      Float(title=_("Critical at"), unit=_("per second"), default_value=0.02),
-                  ],)),
-             ],
-             optional_keys=[],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "failed_outbound_streams",
+                Dictionary(
+                    title=_("XMPP Failed outbound stream establishes"),
+                    elements=[
+                        (
+                            "upper",
+                            Tuple(
+                                elements=[
+                                    Float(
+                                        title=_("Warning at"),
+                                        unit=_("per second"),
+                                        default_value=0.01,
+                                    ),
+                                    Float(
+                                        title=_("Critical at"),
+                                        unit=_("per second"),
+                                        default_value=0.02,
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ],
+                    optional_keys=[],
+                ),
+            ),
+            (
+                "failed_inbound_streams",
+                Dictionary(
+                    title=_("XMPP Failed inbound stream establishes"),
+                    elements=[
+                        (
+                            "upper",
+                            Tuple(
+                                elements=[
+                                    Float(
+                                        title=_("Warning at"),
+                                        unit=_("per second"),
+                                        default_value=0.01,
+                                    ),
+                                    Float(
+                                        title=_("Critical at"),
+                                        unit=_("per second"),
+                                        default_value=0.02,
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ],
+                    optional_keys=[],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -49,4 +79,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_skype_xmpp,
         title=lambda: _("Skype for Business XMPP"),
-    ))
+    )
+)

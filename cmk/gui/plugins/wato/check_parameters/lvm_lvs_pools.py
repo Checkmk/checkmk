@@ -21,26 +21,32 @@ def _item_spec_lvm_lvs_pools():
 
 
 def _parameter_valuespec_lvm_lvs_pools():
-    return Dictionary(elements=[
-        (
-            "levels_meta",
-            Tuple(title=_("Levels for Meta"),
-                  default_value=(80.0, 90.0),
-                  elements=[
-                      Percentage(title=_("Warning at"), unit=_("%")),
-                      Percentage(title=_("Critical at"), unit=_("%"))
-                  ]),
-        ),
-        (
-            "levels_data",
-            Tuple(title=_("Levels for Data"),
-                  default_value=(80.0, 90.0),
-                  elements=[
-                      Percentage(title=_("Warning at"), unit=_("%")),
-                      Percentage(title=_("Critical at"), unit=_("%"))
-                  ]),
-        ),
-    ])
+    return Dictionary(
+        elements=[
+            (
+                "levels_meta",
+                Tuple(
+                    title=_("Levels for Meta"),
+                    default_value=(80.0, 90.0),
+                    elements=[
+                        Percentage(title=_("Warning at"), unit=_("%")),
+                        Percentage(title=_("Critical at"), unit=_("%")),
+                    ],
+                ),
+            ),
+            (
+                "levels_data",
+                Tuple(
+                    title=_("Levels for Data"),
+                    default_value=(80.0, 90.0),
+                    elements=[
+                        Percentage(title=_("Warning at"), unit=_("%")),
+                        Percentage(title=_("Critical at"), unit=_("%")),
+                    ],
+                ),
+            ),
+        ]
+    )
 
 
 rulespec_registry.register(
@@ -51,4 +57,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_lvm_lvs_pools,
         title=lambda: _("Logical Volume Pools (LVM)"),
-    ))
+    )
+)

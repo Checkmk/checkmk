@@ -96,32 +96,33 @@ class ListNode(Node):
 def make_grammar():
     name_expr = pp.Word(pp.alphas + "_").setName("Name")
     table_expr = pp.Word(pp.alphas + "_").setName("Table")
-    column_expr = (table_expr - pp.Suppress(".") -
-                   name_expr).setName("Column").setParseAction(ColumnNode)
+    column_expr = (
+        (table_expr - pp.Suppress(".") - name_expr).setName("Column").setParseAction(ColumnNode)
+    )
 
     number_expr = pp.Word(pp.nums).setName("number expression").setParseAction(IntNode)
-    string_expr = pp.QuotedString(quoteChar='"',
-                                  endQuoteChar='"',
-                                  escChar='\\',
-                                  unquoteResults=True).setParseAction(StringNode)
+    string_expr = pp.QuotedString(
+        quoteChar='"', endQuoteChar='"', escChar="\\", unquoteResults=True
+    ).setParseAction(StringNode)
     iso_date_time_expr = pp.pyparsing_common.iso8601_datetime.copy().setParseAction(DateTimeNode)
 
     list_expr = pp.Forward()
-    value = (string_expr | iso_date_time_expr | number_expr | list_expr)
+    value = string_expr | iso_date_time_expr | number_expr | list_expr
     list_expr <<= pp.nestedExpr(opener="[", closer="]", content=pp.delimitedList(value))
     list_expr.setName("list expression, starting with [ ending with ]")
     list_expr.setParseAction(ListNode)
 
-    infix_op = pp.oneOf("< > = ~").setName('infix_op').setParseAction(InfixOpNode)
+    infix_op = pp.oneOf("< > = ~").setName("infix_op").setParseAction(InfixOpNode)
 
-    regexp_expr = pp.QuotedString(quoteChar='/',
-                                  endQuoteChar='/',
-                                  escChar='\\',
-                                  unquoteResults=True).setParseAction(RegexpNode)
+    regexp_expr = pp.QuotedString(
+        quoteChar="/", endQuoteChar="/", escChar="\\", unquoteResults=True
+    ).setParseAction(RegexpNode)
 
     binary_expression = (
-        column_expr - infix_op -
-        (value | regexp_expr)).setName("binary expression").setParseAction(BinaryNode)
+        (column_expr - infix_op - (value | regexp_expr))
+        .setName("binary expression")
+        .setParseAction(BinaryNode)
+    )
 
     logical_expression = pp.Forward()
 
@@ -142,7 +143,7 @@ def make_grammar():
     not_expression = _logical_expr("not", base_expr, NotNode, single_argument=True)
 
     log_expression = and_expression | or_expression | not_expression
-    logical_expression <<= log_expression.setName('logical expression')
+    logical_expression <<= log_expression.setName("logical expression")
     base_expr <<= logical_expression | binary_expression
 
     return base_expr

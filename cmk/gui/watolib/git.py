@@ -45,10 +45,16 @@ def do_git_commit():
 
         _write_gitignore_files()
         _git_add_files()
-        _git_command([
-            "commit", "--untracked-files=no", "--author", author, "-m",
-            _("Initialized GIT for Checkmk")
-        ])
+        _git_command(
+            [
+                "commit",
+                "--untracked-files=no",
+                "--author",
+                author,
+                "-m",
+                _("Initialized GIT for Checkmk"),
+            ]
+        )
 
     if _git_has_pending_changes():
         logger.debug("GIT: Found pending changes - Update gitignore file")
@@ -76,35 +82,44 @@ def _git_add_files():
 
 def _git_command(args):
     command = ["git"] + [ensure_str(a) for a in args]
-    logger.debug("GIT: Execute in %s: %s", cmk.utils.paths.default_config_dir,
-                 subprocess.list2cmdline(command))
+    logger.debug(
+        "GIT: Execute in %s: %s",
+        cmk.utils.paths.default_config_dir,
+        subprocess.list2cmdline(command),
+    )
     try:
-        p = subprocess.Popen(command,
-                             cwd=cmk.utils.paths.default_config_dir,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
-                             encoding="utf-8")
+        p = subprocess.Popen(
+            command,
+            cwd=cmk.utils.paths.default_config_dir,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+        )
     except OSError as e:
         if e.errno == errno.ENOENT:
             raise MKGeneralException(
-                _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
-                (subprocess.list2cmdline(command), e))
+                _("Error executing GIT command <tt>%s</tt>:<br><br>%s")
+                % (subprocess.list2cmdline(command), e)
+            )
         raise
 
     status = p.wait()
     if status != 0:
-        out = u"" if p.stdout is None else ensure_str(p.stdout.read())
+        out = "" if p.stdout is None else ensure_str(p.stdout.read())
         raise MKGeneralException(
-            _("Error executing GIT command <tt>%s</tt>:<br><br>%s") %
-            (subprocess.list2cmdline(command), out.replace("\n", "<br>\n")))
+            _("Error executing GIT command <tt>%s</tt>:<br><br>%s")
+            % (subprocess.list2cmdline(command), out.replace("\n", "<br>\n"))
+        )
 
 
 def _git_has_pending_changes():
     try:
-        p = subprocess.Popen(["git", "status", "--porcelain"],
-                             cwd=cmk.utils.paths.default_config_dir,
-                             stdout=subprocess.PIPE,
-                             encoding="utf-8")
+        p = subprocess.Popen(
+            ["git", "status", "--porcelain"],
+            cwd=cmk.utils.paths.default_config_dir,
+            stdout=subprocess.PIPE,
+            encoding="utf-8",
+        )
         return p.stdout is not None and p.stdout.read() != ""
     except OSError as e:
         if e.errno == errno.ENOENT:
@@ -121,14 +136,16 @@ def _write_gitignore_files():
     config_dir = Path(cmk.utils.paths.default_config_dir)
 
     with config_dir.joinpath(".gitignore").open("w", encoding="utf-8") as f:
-        f.write("# This file is under control of Checkmk. Please don't modify it.\n"
-                "# Your changes will be overwritten.\n"
-                "\n"
-                "*\n"
-                "!*.d\n"
-                "!.gitignore\n"
-                "*swp\n"
-                "*.mk.new\n")
+        f.write(
+            "# This file is under control of Checkmk. Please don't modify it.\n"
+            "# Your changes will be overwritten.\n"
+            "\n"
+            "*\n"
+            "!*.d\n"
+            "!.gitignore\n"
+            "*swp\n"
+            "*.mk.new\n"
+        )
 
     for subdir in config_dir.iterdir():
         if not subdir.name.endswith(".d"):

@@ -85,17 +85,23 @@ def make_topic_breadcrumb(menu: MegaMenu, topic: "PagetypeTopics") -> Breadcrumb
     breadcrumb = make_main_menu_breadcrumb(menu)
 
     # 2. Topic level
-    breadcrumb.append(BreadcrumbItem(
-        title=topic.title(),
-        url=None,
-    ))
+    breadcrumb.append(
+        BreadcrumbItem(
+            title=topic.title(),
+            url=None,
+        )
+    )
 
     return breadcrumb
 
 
 def make_main_menu_breadcrumb(menu: MegaMenu) -> Breadcrumb:
     """Create a breadcrumb for the main menu level"""
-    return Breadcrumb([BreadcrumbItem(
-        title=menu.title,
-        url=None,
-    )])
+    return Breadcrumb(
+        [
+            BreadcrumbItem(
+                title=menu.title,
+                url=None,
+            )
+        ]
+    )

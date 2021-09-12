@@ -14,16 +14,20 @@ from cmk.gui.valuespec import Dictionary, Percentage, Tuple
 
 
 def _parameter_valuespec_varnish_cache_hit_ratio():
-    return Dictionary(elements=[
-        ("levels_lower",
-         Tuple(
-             title=_("Lower levels"),
-             elements=[
-                 Percentage(title=_("Warning if below"), default_value=70.0),
-                 Percentage(title=_("Critical if below"), default_value=60.0),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels_lower",
+                Tuple(
+                    title=_("Lower levels"),
+                    elements=[
+                        Percentage(title=_("Warning if below"), default_value=70.0),
+                        Percentage(title=_("Critical if below"), default_value=60.0),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -33,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_varnish_cache_hit_ratio,
         title=lambda: _("Varnish Cache Hit Ratio"),
-    ))
+    )
+)

@@ -14,22 +14,28 @@ from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOf, MonitoringStat
 
 
 def _parameter_valuespec_websphere_mq_instance():
-    return Dictionary(elements=[
-        ("map_instance_states",
-         ListOf(
-             Tuple(
-                 orientation="horizontal",
-                 elements=[
-                     DropdownChoice(choices=[
-                         ('active', _('Active')),
-                         ('standby', _('Standby')),
-                     ],),
-                     MonitoringState(),
-                 ],
-             ),
-             title=_('Map instance state'),
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "map_instance_states",
+                ListOf(
+                    Tuple(
+                        orientation="horizontal",
+                        elements=[
+                            DropdownChoice(
+                                choices=[
+                                    ("active", _("Active")),
+                                    ("standby", _("Standby")),
+                                ],
+                            ),
+                            MonitoringState(),
+                        ],
+                    ),
+                    title=_("Map instance state"),
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -40,4 +46,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_websphere_mq_instance,
         title=lambda: _("Websphere MQ Instance"),
-    ))
+    )
+)

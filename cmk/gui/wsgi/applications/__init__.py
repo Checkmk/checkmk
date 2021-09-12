@@ -8,6 +8,6 @@ from cmk.gui.wsgi.applications.checkmk import CheckmkApp
 from cmk.gui.wsgi.applications.rest_api import CheckmkRESTAPI
 
 __all__ = [
-    'CheckmkApp',
-    'CheckmkRESTAPI',
+    "CheckmkApp",
+    "CheckmkRESTAPI",
 ]

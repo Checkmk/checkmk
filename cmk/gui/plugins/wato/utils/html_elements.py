@@ -25,24 +25,28 @@ def initialize_wato_html_head():
     _html_head_open = False
 
 
-def wato_html_head(*,
-                   title: str,
-                   breadcrumb: Breadcrumb,
-                   page_menu: Optional[PageMenu] = None,
-                   show_body_start: bool = True,
-                   show_top_heading: bool = True) -> None:
+def wato_html_head(
+    *,
+    title: str,
+    breadcrumb: Breadcrumb,
+    page_menu: Optional[PageMenu] = None,
+    show_body_start: bool = True,
+    show_top_heading: bool = True,
+) -> None:
     global _html_head_open
 
     if _html_head_open:
         return
 
     _html_head_open = True
-    html.header(title=title,
-                breadcrumb=breadcrumb,
-                page_menu=page_menu,
-                page_state=_make_wato_page_state(),
-                show_body_start=show_body_start,
-                show_top_heading=show_top_heading)
+    html.header(
+        title=title,
+        breadcrumb=breadcrumb,
+        page_menu=page_menu,
+        page_state=_make_wato_page_state(),
+        show_body_start=show_body_start,
+        show_top_heading=show_top_heading,
+    )
     html.open_div(class_="wato")
 
 
@@ -63,12 +67,17 @@ def _make_wato_page_state() -> PageState:
             text=html.render_span(changes_info, id_=span_id),
             icon_name="pending_changes",
             url=changelog_url,
-            tooltip_text=(_tooltip_changes_info(changes_info) + "\n" +
-                          _("Click here to go to pending changes.")),
+            tooltip_text=(
+                _tooltip_changes_info(changes_info)
+                + "\n"
+                + _("Click here to go to pending changes.")
+            ),
         )
-    return PageState(text=html.render_span(_("No pending changes"), id_=span_id),
-                     url=changelog_url,
-                     tooltip_text=_("Click here to see the activation status per site."))
+    return PageState(
+        text=html.render_span(_("No pending changes"), id_=span_id),
+        url=changelog_url,
+        tooltip_text=_("Click here to see the activation status per site."),
+    )
 
 
 def _tooltip_changes_info(info: str) -> str:
@@ -79,5 +88,8 @@ def _tooltip_changes_info(info: str) -> str:
     'Currently there are 4 changes to activate.'
     """
     n_changes = int(re.findall(r"\d+", info)[0])
-    return (_("Currently there is one change to activate.")
-            if n_changes == 1 else _("Currently there are %s to activate.") % info)
+    return (
+        _("Currently there is one change to activate.")
+        if n_changes == 1
+        else _("Currently there are %s to activate.") % info
+    )

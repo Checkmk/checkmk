@@ -79,9 +79,10 @@ class ModeGroups(WatoMode, abc.ABC):
                                     title=_("Add group"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        watolib.folder_preserving_link([
-                                            ("mode", "edit_%s_group" % self.type_name)
-                                        ])),
+                                        watolib.folder_preserving_link(
+                                            [("mode", "edit_%s_group" % self.type_name)]
+                                        )
+                                    ),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -120,14 +121,15 @@ class ModeGroups(WatoMode, abc.ABC):
         if not transactions.check_transaction():
             return redirect(mode_url("%s_groups" % self.type_name))
 
-        if request.var('_delete'):
+        if request.var("_delete"):
             delname = request.get_ascii_input_mandatory("_delete")
             usages = watolib.find_usages_of_group(delname, self.type_name)
 
             if usages:
-                message = "<b>%s</b><br>%s:<ul>" % \
-                            (_("You cannot delete this %s group.") % self.type_name,
-                             _("It is still in use by"))
+                message = "<b>%s</b><br>%s:<ul>" % (
+                    _("You cannot delete this %s group.") % self.type_name,
+                    _("It is still in use by"),
+                )
                 for title, link in usages:
                     message += '<li><a href="%s">%s</a></li>\n' % (link, title)
                 message += "</ul>"
@@ -146,19 +148,22 @@ class ModeGroups(WatoMode, abc.ABC):
 
     def _show_row_cells(self, table, name, group):
         table.cell(_("Actions"), css="buttons")
-        edit_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
-                                                   ("edit", name)])
+        edit_url = watolib.folder_preserving_link(
+            [("mode", "edit_%s_group" % self.type_name), ("edit", name)]
+        )
         delete_url = make_confirm_link(
             url=makeactionuri(request, transactions, [("_delete", name)]),
-            message=_('Do you really want to delete the %s group "%s"?') % (self.type_name, name))
-        clone_url = watolib.folder_preserving_link([("mode", "edit_%s_group" % self.type_name),
-                                                    ("clone", name)])
+            message=_('Do you really want to delete the %s group "%s"?') % (self.type_name, name),
+        )
+        clone_url = watolib.folder_preserving_link(
+            [("mode", "edit_%s_group" % self.type_name), ("clone", name)]
+        )
         html.icon_button(edit_url, _("Properties"), "edit")
         html.icon_button(clone_url, _("Create a copy of this group"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
 
         table.cell(_("Name"), name)
-        table.cell(_("Alias"), group['alias'])
+        table.cell(_("Alias"), group["alias"])
 
     def page(self) -> None:
         if not self._groups:
@@ -168,7 +173,7 @@ class ModeGroups(WatoMode, abc.ABC):
         self._collect_additional_data()
 
         with table_element(self.type_name + "groups") as table:
-            for name, group in sorted(self._groups.items(), key=lambda x: x[1]['alias']):
+            for name, group in sorted(self._groups.items(), key=lambda x: x[1]["alias"]):
                 table.row()
                 self._show_row_cells(table, name, group)
 
@@ -238,18 +243,20 @@ class ABCModeEditGroup(WatoMode, abc.ABC):
         pass
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Group"),
-                                          breadcrumb,
-                                          form_name="group",
-                                          button_name="save")
+        return make_simple_form_page_menu(
+            _("Group"), breadcrumb, form_name="group", button_name="save"
+        )
 
     def page(self) -> None:
         html.begin_form("group")
         forms.header(_("Properties"))
         forms.section(_("Name"), simple=not self._new, is_required=True)
         html.help(
-            _("The name of the group is used as an internal key. It cannot be "
-              "changed later. It is also visible in the status GUI."))
+            _(
+                "The name of the group is used as an internal key. It cannot be "
+                "changed later. It is also visible in the status GUI."
+            )
+        )
         if self._new:
             html.text_input("name")
             html.set_focus("name")
@@ -296,8 +303,9 @@ class ModeHostgroups(ModeGroups):
         )
 
     def _rules_url(self) -> str:
-        return watolib.folder_preserving_link([("mode", "edit_ruleset"),
-                                               ("varname", "host_groups")])
+        return watolib.folder_preserving_link(
+            [("mode", "edit_ruleset"), ("varname", "host_groups")]
+        )
 
 
 @mode_registry.register
@@ -328,8 +336,9 @@ class ModeServicegroups(ModeGroups):
         )
 
     def _rules_url(self) -> str:
-        return watolib.folder_preserving_link([("mode", "edit_ruleset"),
-                                               ("varname", "service_groups")])
+        return watolib.folder_preserving_link(
+            [("mode", "edit_ruleset"), ("varname", "service_groups")]
+        )
 
 
 @mode_registry.register
@@ -361,8 +370,9 @@ class ModeContactgroups(ModeGroups):
         )
 
     def _rules_url(self) -> str:
-        return watolib.folder_preserving_link([("mode", "rule_search"), ("filled_in", "search"),
-                                               ("search", "contactgroups")])
+        return watolib.folder_preserving_link(
+            [("mode", "rule_search"), ("filled_in", "search"), ("search", "contactgroups")]
+        )
 
     def _collect_additional_data(self):
         users = userdb.load_users()
@@ -370,18 +380,24 @@ class ModeContactgroups(ModeGroups):
         for userid, user in users.items():
             cgs = user.get("contactgroups", [])
             for cg in cgs:
-                self._members.setdefault(cg, []).append((userid, user.get('alias', userid)))
+                self._members.setdefault(cg, []).append((userid, user.get("alias", userid)))
 
     def _show_row_cells(self, table, name, group):
         super()._show_row_cells(table, name, group)
         table.cell(_("Members"))
         html.write_html(
-            HTML(", ").join([
-                html.render_a(alias,
-                              href=watolib.folder_preserving_link([("mode", "edit_user"),
-                                                                   ("edit", userid)]))
-                for userid, alias in self._members.get(name, [])
-            ]))
+            HTML(", ").join(
+                [
+                    html.render_a(
+                        alias,
+                        href=watolib.folder_preserving_link(
+                            [("mode", "edit_user"), ("edit", userid)]
+                        ),
+                    )
+                    for userid, alias in self._members.get(name, [])
+                ]
+            )
+        )
 
 
 @mode_registry.register
@@ -468,14 +484,16 @@ class ModeEditContactgroup(ABCModeEditGroup):
         super()._determine_additional_group_data()
 
         permitted_inventory_paths = self._vs_inventory_paths_and_keys().from_html_vars(
-            'inventory_paths')
-        self._vs_inventory_paths_and_keys().validate_value(permitted_inventory_paths,
-                                                           'inventory_paths')
+            "inventory_paths"
+        )
+        self._vs_inventory_paths_and_keys().validate_value(
+            permitted_inventory_paths, "inventory_paths"
+        )
         if permitted_inventory_paths:
-            self.group['inventory_paths'] = permitted_inventory_paths
+            self.group["inventory_paths"] = permitted_inventory_paths
 
-        permitted_maps = self._vs_nagvis_maps().from_html_vars('nagvis_maps')
-        self._vs_nagvis_maps().validate_value(permitted_maps, 'nagvis_maps')
+        permitted_maps = self._vs_nagvis_maps().from_html_vars("nagvis_maps")
+        self._vs_nagvis_maps().validate_value(permitted_maps, "nagvis_maps")
         if permitted_maps:
             self.group["nagvis_maps"] = permitted_maps
 
@@ -484,13 +502,14 @@ class ModeEditContactgroup(ABCModeEditGroup):
 
         forms.header(_("Permissions"))
         forms.section(_("Permitted HW/SW inventory paths"))
-        self._vs_inventory_paths_and_keys().render_input('inventory_paths',
-                                                         self.group.get('inventory_paths'))
+        self._vs_inventory_paths_and_keys().render_input(
+            "inventory_paths", self.group.get("inventory_paths")
+        )
 
         if self._get_nagvis_maps():
             forms.section(_("Access to NagVis Maps"))
             html.help(_("Configure access permissions to NagVis maps."))
-            self._vs_nagvis_maps().render_input('nagvis_maps', self.group.get('nagvis_maps', []))
+            self._vs_nagvis_maps().render_input("nagvis_maps", self.group.get("nagvis_maps", []))
 
     def _vs_inventory_paths_and_keys(self):
         def vs_choices(title):
@@ -498,12 +517,15 @@ class ModeEditContactgroup(ABCModeEditGroup):
                 title=title,
                 choices=[
                     ("nothing", _("Restrict all")),
-                    ("choices", _("Restrict the following keys"),
-                     ListOfStrings(
-                         orientation="horizontal",
-                         size=15,
-                         allow_empty=True,
-                     )),
+                    (
+                        "choices",
+                        _("Restrict the following keys"),
+                        ListOfStrings(
+                            orientation="horizontal",
+                            size=15,
+                            allow_empty=True,
+                        ),
+                    ),
                 ],
                 default_value="nothing",
             )
@@ -512,28 +534,33 @@ class ModeEditContactgroup(ABCModeEditGroup):
             choices=[
                 ("allow_all", _("Allowed to see the whole tree")),
                 ("forbid_all", _("Forbid to see the whole tree")),
-                ("paths", _("Allowed to see parts of the tree"),
-                 ListOf(
-                     Dictionary(
-                         elements=[
-                             vs_element_inventory_visible_raw_path(),
-                             ("attributes", vs_choices(_("Restrict single values"))),
-                             ("columns", vs_choices(_("Restrict table columns"))),
-                             ("nodes", vs_choices(_("Restrict subcategories"))),
-                         ],
-                         optional_keys=["attributes", "columns", "nodes"],
-                     ),
-                     help=vs_inventory_path_or_keys_help() +
-                     _("<br>If single values, table columns or subcategories are not"
-                       " restricted, then all entries are added respectively."),
-                 )),
+                (
+                    "paths",
+                    _("Allowed to see parts of the tree"),
+                    ListOf(
+                        Dictionary(
+                            elements=[
+                                vs_element_inventory_visible_raw_path(),
+                                ("attributes", vs_choices(_("Restrict single values"))),
+                                ("columns", vs_choices(_("Restrict table columns"))),
+                                ("nodes", vs_choices(_("Restrict subcategories"))),
+                            ],
+                            optional_keys=["attributes", "columns", "nodes"],
+                        ),
+                        help=vs_inventory_path_or_keys_help()
+                        + _(
+                            "<br>If single values, table columns or subcategories are not"
+                            " restricted, then all entries are added respectively."
+                        ),
+                    ),
+                ),
             ],
             default_value="allow_all",
         )
 
     def _vs_nagvis_maps(self):
         return ListChoice(
-            title=_('NagVis Maps'),
+            title=_("NagVis Maps"),
             choices=self._get_nagvis_maps,
             toggle_all=True,
         )
@@ -543,8 +570,8 @@ class ModeEditContactgroup(ABCModeEditGroup):
         # for each map. When no maps can be found skip this problem silently.
         # This only works in OMD environments.
         maps = []
-        nagvis_maps_path = cmk.utils.paths.omd_root + '/etc/nagvis/maps'
+        nagvis_maps_path = cmk.utils.paths.omd_root + "/etc/nagvis/maps"
         for f in os.listdir(nagvis_maps_path):
-            if f[0] != '.' and f.endswith('.cfg'):
+            if f[0] != "." and f.endswith(".cfg"):
                 maps.append((f[:-4], f[:-4]))
         return sorted(maps)

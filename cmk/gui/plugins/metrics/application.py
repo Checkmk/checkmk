@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import graph_info, metric_info
 
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -283,10 +283,10 @@ metric_info["messages_in_queue"] = {
     "color": "16/a",
 }
 
-metric_info['service_costs_eur'] = {
-    'title': _('Service Costs per Day'),
-    'unit': 'EUR',
-    'color': '35/a',
+metric_info["service_costs_eur"] = {
+    "title": _("Service Costs per Day"),
+    "unit": "EUR",
+    "color": "35/a",
 }
 
 metric_info["elapsed_time"] = {
@@ -386,67 +386,67 @@ metric_info["num_user"] = {
 }
 
 # DRBD metrics
-metric_info['activity_log_updates'] = {
+metric_info["activity_log_updates"] = {
     "title": _("Activity log updates"),
     "unit": "count",
     "color": "31/a",
 }
 
-metric_info['bit_map_updates'] = {
+metric_info["bit_map_updates"] = {
     "title": _("Bit map updates"),
     "unit": "count",
     "color": "32/a",
 }
 
-metric_info['local_count_requests'] = {
+metric_info["local_count_requests"] = {
     "title": _("Local count requests"),
     "unit": "count",
     "color": "24/b",
 }
 
-metric_info['pending_requests'] = {
+metric_info["pending_requests"] = {
     "title": _("Pending requests"),
     "unit": "count",
     "color": "16/a",
 }
 
-metric_info['unacknowledged_requests'] = {
+metric_info["unacknowledged_requests"] = {
     "title": _("Unacknowledged requests"),
     "unit": "count",
     "color": "16/b",
 }
 
-metric_info['application_pending_requests'] = {
+metric_info["application_pending_requests"] = {
     "title": _("Application pending requests"),
     "unit": "count",
     "color": "23/a",
 }
 
-metric_info['epoch_objects'] = {
+metric_info["epoch_objects"] = {
     "title": _("Epoch objects"),
     "unit": "count",
     "color": "42/a",
 }
 
-metric_info['graylog_input'] = {
+metric_info["graylog_input"] = {
     "title": _("Input traffic"),
     "unit": "bytes",
     "color": "16/b",
 }
 
-metric_info['graylog_output'] = {
+metric_info["graylog_output"] = {
     "title": _("Output traffic"),
     "unit": "bytes",
     "color": "23/a",
 }
 
-metric_info['graylog_decoded'] = {
+metric_info["graylog_decoded"] = {
     "title": _("Decoded traffic"),
     "unit": "bytes",
     "color": "42/a",
 }
 
-metric_info['graylog_diff'] = {
+metric_info["graylog_diff"] = {
     "title": _("Number of messages in defined timespan"),
     "unit": "count",
     "color": "11/a",
@@ -492,121 +492,121 @@ metric_info["fetched_items"] = {
     "color": "23/b",
 }
 
-metric_info['jira_count'] = {
+metric_info["jira_count"] = {
     "title": _("Number of issues"),
     "unit": "count",
     "color": "14/a",
 }
 
-metric_info['jira_sum'] = {
+metric_info["jira_sum"] = {
     "title": _("Result of summed up values"),
     "unit": "count",
     "color": "14/a",
 }
 
-metric_info['jira_avg'] = {
+metric_info["jira_avg"] = {
     "title": _("Average value"),
     "unit": "count",
     "color": "14/a",
 }
 
-metric_info['jira_diff'] = {
+metric_info["jira_diff"] = {
     "title": _("Difference"),
     "unit": "count",
     "color": "11/a",
 }
 
-metric_info['consumers'] = {
+metric_info["consumers"] = {
     "title": _("Consumers"),
     "unit": "count",
     "color": "21/a",
 }
 
-metric_info['exchanges'] = {
+metric_info["exchanges"] = {
     "title": _("Exchanges"),
     "unit": "count",
     "color": "26/a",
 }
 
-metric_info['queues'] = {
+metric_info["queues"] = {
     "title": _("Queues"),
     "unit": "count",
     "color": "31/a",
 }
 
-metric_info['messages_rate'] = {
+metric_info["messages_rate"] = {
     "title": _("Message Rate"),
     "unit": "1/s",
     "color": "42/a",
 }
 
-metric_info['messages_ready'] = {
+metric_info["messages_ready"] = {
     "title": _("Ready messages"),
     "unit": "count",
     "color": "11/a",
 }
 
-metric_info['messages_unacknowledged'] = {
+metric_info["messages_unacknowledged"] = {
     "title": _("Unacknowledged messages"),
     "unit": "count",
     "color": "14/a",
 }
 
-metric_info['messages_publish'] = {
+metric_info["messages_publish"] = {
     "title": _("Published messages"),
     "unit": "count",
     "color": "31/a",
 }
 
-metric_info['messages_publish_rate'] = {
+metric_info["messages_publish_rate"] = {
     "title": _("Published message rate"),
     "unit": "1/s",
     "color": "21/a",
 }
 
-metric_info['messages_deliver'] = {
+metric_info["messages_deliver"] = {
     "title": _("Delivered messages"),
     "unit": "count",
     "color": "26/a",
 }
 
-metric_info['messages_deliver_rate'] = {
+metric_info["messages_deliver_rate"] = {
     "title": _("Delivered message rate"),
     "unit": "1/s",
     "color": "53/a",
 }
 
-metric_info['gc_runs'] = {
+metric_info["gc_runs"] = {
     "title": _("GC runs"),
     "unit": "count",
     "color": "31/a",
 }
 
-metric_info['gc_runs_rate'] = {
+metric_info["gc_runs_rate"] = {
     "title": _("GC runs rate"),
     "unit": "1/s",
     "color": "53/a",
 }
 
-metric_info['runtime_run_queue'] = {
+metric_info["runtime_run_queue"] = {
     "title": _("Runtime run queue"),
     "unit": "count",
     "color": "21/a",
 }
 
-metric_info['gc_bytes'] = {
+metric_info["gc_bytes"] = {
     "title": _("Bytes reclaimed by GC"),
     "unit": "bytes",
     "color": "32/a",
 }
 
-metric_info['gc_bytes_rate'] = {
+metric_info["gc_bytes_rate"] = {
     "title": _("Bytes reclaimed by GC rate"),
     "unit": "bytes/s",
     "color": "42/a",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -624,7 +624,9 @@ graph_info["replicas"] = {
         ("ready_replicas", "area"),
         ("total_replicas", "line"),
     ],
-    "scalars": ["ready_replicas:crit",]
+    "scalars": [
+        "ready_replicas:crit",
+    ],
 }
 
 # TODO: Warum ist hier überall line? Default ist Area.
@@ -665,7 +667,9 @@ graph_info["licenses"] = {
 
 graph_info["current_users"] = {
     "title": _("Number of signed-in users"),
-    "metrics": [("current_users", "area"),],
+    "metrics": [
+        ("current_users", "area"),
+    ],
     "scalars": [
         "current_users:warn",
         "current_users:crit",

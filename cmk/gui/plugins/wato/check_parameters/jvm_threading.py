@@ -23,17 +23,25 @@ def _item_spec_jvm_threading():
 
 
 def _parameter_valuespec_jvm_threading():
-    return Dictionary(elements=[
-        ("threadcount_levels", Levels(
-            title=_("Maximal number of threads"),
-            default_value=None,
-        )),
-        ("threadrate_levels", Levels(
-            title=_("Maximal rate of thread count"),
-            default_value=None,
-        )),
-        ("daemonthreadcount_levels", Levels(title=_("Maximal number of daemon threads"))),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "threadcount_levels",
+                Levels(
+                    title=_("Maximal number of threads"),
+                    default_value=None,
+                ),
+            ),
+            (
+                "threadrate_levels",
+                Levels(
+                    title=_("Maximal rate of thread count"),
+                    default_value=None,
+                ),
+            ),
+            ("daemonthreadcount_levels", Levels(title=_("Maximal number of daemon threads"))),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -43,4 +51,5 @@ rulespec_registry.register(
         item_spec=_item_spec_jvm_threading,
         parameter_valuespec=_parameter_valuespec_jvm_threading,
         title=lambda: _("JVM threading"),
-    ))
+    )
+)

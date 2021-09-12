@@ -20,7 +20,7 @@ def ajax_tree_openclose() -> None:
 
     user.set_tree_state(tree, name, request.get_str_input("state"))
     user.save_tree_states()
-    response.set_data('OK')  # Write out something to make debugging easier
+    response.set_data("OK")  # Write out something to make debugging easier
 
 
 #   .--Row Selector--------------------------------------------------------.
@@ -43,27 +43,27 @@ def init_selection() -> None:
 
 def selection_id() -> str:
     """Generates a selection id or uses the given one"""
-    if not request.has_var('selection'):
+    if not request.has_var("selection"):
         sel_id = utils.gen_id()
-        request.set_var('selection', sel_id)
+        request.set_var("selection", sel_id)
         return sel_id
 
-    sel_id = request.get_str_input_mandatory('selection')
+    sel_id = request.get_str_input_mandatory("selection")
 
     # Avoid illegal file access by introducing .. or /
     if not re.match("^[-0-9a-zA-Z]+$", sel_id):
         new_id = utils.gen_id()
-        request.set_var('selection', new_id)
+        request.set_var("selection", new_id)
         return new_id
     return sel_id
 
 
 @cmk.gui.pages.register("ajax_set_rowselection")
 def ajax_set_rowselection() -> None:
-    ident = request.get_str_input_mandatory('id')
-    action = request.get_str_input_mandatory('action', 'set')
-    if action not in ['add', 'del', 'set', 'unset']:
-        raise MKUserError(None, _('Invalid action'))
+    ident = request.get_str_input_mandatory("id")
+    action = request.get_str_input_mandatory("action", "set")
+    if action not in ["add", "del", "set", "unset"]:
+        raise MKUserError(None, _("Invalid action"))
 
-    rows = request.get_str_input_mandatory('rows', '').split(',')
+    rows = request.get_str_input_mandatory("rows", "").split(",")
     user.set_rowselection(selection_id(), ident, rows, action)

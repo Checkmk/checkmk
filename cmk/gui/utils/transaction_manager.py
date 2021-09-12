@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 class TransactionManager:
     """Manages the handling of transaction IDs used by the GUI to prevent against
     performing the same action multiple times."""
+
     def __init__(self, request: Request, user: LoggedInUser) -> None:
         self._request = request
         self._user = user
@@ -84,10 +85,10 @@ class TransactionManager:
             return False
 
         transid = self._request.get_str_input_mandatory("_transid", "")
-        if self._ignore_transids and (not transid or transid == '-1'):
+        if self._ignore_transids and (not transid or transid == "-1"):
             return True  # automation
 
-        if '/' not in transid:
+        if "/" not in transid:
             return False
 
         # Normal user/password auth user handling

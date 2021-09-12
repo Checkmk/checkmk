@@ -59,11 +59,11 @@ class ACResult:
 
     def status_name(self) -> str:
         if self.status is None:
-            return u""
+            return ""
         return cmk.utils.defines.short_service_state_name(self.status)
 
     @classmethod
-    def from_repr(cls, repr_data: Dict[str, Any]) -> 'ACResult':
+    def from_repr(cls, repr_data: Dict[str, Any]) -> "ACResult":
         result_class_name = repr_data.pop("class_name")
         result = globals()[result_class_name](repr_data["text"])
 
@@ -73,18 +73,20 @@ class ACResult:
         return result
 
     def __repr__(self) -> str:
-        return repr({
-            "site_id": self.site_id,
-            "class_name": self.__class__.__name__,
-            "text": self.text,
-            # These fields are be static - at least for the current version, but
-            # we transfer them to the central system to be able to handle test
-            # results of tests not known to the central site.
-            "test_id": self.test_id,
-            "category": self.category,
-            "title": self.title,
-            "help": self.help,
-        })
+        return repr(
+            {
+                "site_id": self.site_id,
+                "class_name": self.__class__.__name__,
+                "text": self.text,
+                # These fields are be static - at least for the current version, but
+                # we transfer them to the central system to be able to handle test
+                # results of tests not known to the central site.
+                "test_id": self.test_id,
+                "category": self.category,
+                "title": self.title,
+                "help": self.help,
+            }
+        )
 
 
 class ACResultNone(ACResult):
@@ -174,8 +176,10 @@ class ACTest:
         except Exception:
             logger.exception("error executing configuration test %s", self.__class__.__name__)
             result = ACResultCRIT(
-                "<pre>%s</pre>" % _("Failed to execute the test %s: %s") %
-                (escaping.escape_attribute(self.__class__.__name__), traceback.format_exc()))
+                "<pre>%s</pre>"
+                % _("Failed to execute the test %s: %s")
+                % (escaping.escape_attribute(self.__class__.__name__), traceback.format_exc())
+            )
             result.from_test(self)
             yield result
 

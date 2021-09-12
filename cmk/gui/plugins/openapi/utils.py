@@ -25,19 +25,19 @@ def problem(
     ext: Optional[Dict[str, Any]] = None,
 ):
     problem_dict = {
-        'title': title,
-        'status': status,
+        "title": title,
+        "status": status,
     }
     if detail is not None:
-        problem_dict['detail'] = detail
+        problem_dict["detail"] = detail
     if type_ is not None:
-        problem_dict['type'] = type_
+        problem_dict["type"] = type_
 
     if isinstance(ext, dict):
         problem_dict.update(ext)
     else:
         if ext:
-            problem_dict['ext'] = ext
+            problem_dict["ext"] = ext
 
     response = Response()
     response.status_code = status
@@ -84,7 +84,7 @@ class ProblemException(HTTPException):
 def param_description(
     string: Optional[str],
     param_name: str,
-    errors: Literal['raise', 'ignore'] = 'raise',
+    errors: Literal["raise", "ignore"] = "raise",
 ) -> Optional[str]:
     """Get a param description of a docstring.
 
@@ -130,7 +130,7 @@ def param_description(
 
     """
     if string is None:
-        if errors == 'raise':
+        if errors == "raise":
             raise ValueError("No docstring was given.")
         return None
 
@@ -138,7 +138,7 @@ def param_description(
     for param in docstring.params:
         if param.arg_name == param_name:
             return param.description.replace("\n", " ")
-    if errors == 'raise':
+    if errors == "raise":
         raise ValueError(f"Parameter {param_name!r} not found in docstring.")
     return None
 
@@ -169,8 +169,8 @@ def create_url(site: SiteId, query: Query) -> str:
     table = cast(str, query.table.__tablename__)
     try:
         domain_type = {
-            'hosts': 'host',
-            'services': 'service',
+            "hosts": "host",
+            "services": "service",
         }[table]
     except KeyError:
         raise ValueError(f"Could not find a domain-type for table {table}.")

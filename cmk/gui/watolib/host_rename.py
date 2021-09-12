@@ -42,6 +42,7 @@ def perform_rename_hosts(renamings, job_interface=None):
             only relevant for WATO interaction, allows to update the interface with the current
             update info
     """
+
     def update_interface(message: str) -> None:
         if job_interface is None:
             return
@@ -129,18 +130,21 @@ def _rename_host_in_rulesets(folder, oldname, newname):
                 if rule.replace_explicit_host_condition(oldname, newname):
                     changed_folder_rulesets.append(varname)
 
-                    log_audit("edit-rule",
-                              _("Renamed host condition from \"%s\" to \"%s\"") %
-                              (oldname, newname),
-                              diff_text=make_diff_text(orig_rule.to_web_api(), rule.to_web_api()),
-                              object_ref=rule.object_ref())
+                    log_audit(
+                        "edit-rule",
+                        _('Renamed host condition from "%s" to "%s"') % (oldname, newname),
+                        diff_text=make_diff_text(orig_rule.to_web_api(), rule.to_web_api()),
+                        object_ref=rule.object_ref(),
+                    )
 
         if changed_folder_rulesets:
-            add_change("edit-ruleset",
-                       _("Renamed host in %d rulesets of folder %s") %
-                       (len(changed_folder_rulesets), folder.title()),
-                       object_ref=folder.object_ref(),
-                       sites=folder.all_site_ids())
+            add_change(
+                "edit-ruleset",
+                _("Renamed host in %d rulesets of folder %s")
+                % (len(changed_folder_rulesets), folder.title()),
+                object_ref=folder.object_ref(),
+                sites=folder.all_site_ids(),
+            )
             rulesets.save()
 
         changed_rulesets.extend(changed_folder_rulesets)
@@ -163,20 +167,21 @@ def _rename_host_in_bi(oldname, newname):
 
 
 def _rename_hosts_in_check_mk(
-        renamings: List[_Tuple[CREFolder, HostName, HostName]]) -> Dict[str, int]:
+    renamings: List[_Tuple[CREFolder, HostName, HostName]]
+) -> Dict[str, int]:
     action_counts: Dict[str, int] = {}
     for site_id, name_pairs in _group_renamings_by_site(renamings).items():
         message = _("Renamed host %s") % ", ".join(
-            [_("%s into %s") % (oldname, newname) for (oldname, newname) in name_pairs])
+            [_("%s into %s") % (oldname, newname) for (oldname, newname) in name_pairs]
+        )
 
         # Restart is done by remote automation (below), so don't do it during rename/sync
         # The sync is automatically done by the remote automation call
         add_change("renamed-hosts", message, sites=[site_id], need_restart=False)
 
-        new_counts = check_mk_automation(site_id,
-                                         "rename-hosts", [],
-                                         name_pairs,
-                                         non_blocking_http=True)
+        new_counts = check_mk_automation(
+            site_id, "rename-hosts", [], name_pairs, non_blocking_http=True
+        )
 
         _merge_action_counts(action_counts, new_counts)
     return action_counts

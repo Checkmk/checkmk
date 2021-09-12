@@ -14,14 +14,17 @@ from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _item_spec_evolt():
-    return TextInput(title=_("Phase"),
-                     help=_("The identifier of the phase the power is related to."))
+    return TextInput(
+        title=_("Phase"), help=_("The identifier of the phase the power is related to.")
+    )
 
 
 def _parameter_valuespec_evolt():
     return Tuple(
-        help=_("Voltage Levels for devices like UPS or PDUs. "
-               "Several phases may be addressed independently."),
+        help=_(
+            "Voltage Levels for devices like UPS or PDUs. "
+            "Several phases may be addressed independently."
+        ),
         elements=[
             Integer(title=_("warning if below"), unit="V", default_value=210),
             Integer(title=_("critical if below"), unit="V", default_value=180),
@@ -36,4 +39,5 @@ rulespec_registry.register(
         item_spec=_item_spec_evolt,
         parameter_valuespec=_parameter_valuespec_evolt,
         title=lambda: _("Voltage levels (UPS / PDU / Other Devices)"),
-    ))
+    )
+)

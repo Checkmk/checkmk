@@ -58,20 +58,22 @@ if TYPE_CHECKING:
 #   '----------------------------------------------------------------------'
 
 
-def live(user: Optional[LoggedInUser] = None,
-         force_authuser: Optional[UserId] = None) -> MultiSiteConnection:
+def live(
+    user: Optional[LoggedInUser] = None, force_authuser: Optional[UserId] = None
+) -> MultiSiteConnection:
     """Get Livestatus connection object matching the current site configuration
-       and user settings. On the first call the actual connection is being made."""
+    and user settings. On the first call the actual connection is being made."""
     _ensure_connected(user, force_authuser)
     return g.live
 
 
-SiteStatus = NewType('SiteStatus', Dict[str, Any])
-SiteStates = NewType('SiteStates', Dict[SiteId, SiteStatus])
+SiteStatus = NewType("SiteStatus", Dict[str, Any])
+SiteStates = NewType("SiteStates", Dict[SiteId, SiteStatus])
 
 
-def states(user: Optional[LoggedInUser] = None,
-           force_authuser: Optional[UserId] = None) -> SiteStates:
+def states(
+    user: Optional[LoggedInUser] = None, force_authuser: Optional[UserId] = None
+) -> SiteStates:
     """Returns dictionary of all known site states."""
     _ensure_connected(user, force_authuser)
     return g.site_status
@@ -97,8 +99,8 @@ def disconnect() -> None:
     logger.debug("Disconnecing site connections")
     if "live" in g:
         g.live.disconnect()
-    g.pop('live', None)
-    g.pop('site_status', None)
+    g.pop("live", None)
+    g.pop("site_status", None)
 
 
 # TODO: This should live somewhere else, it's just a random helper...
@@ -110,16 +112,16 @@ def all_groups(what: str) -> List[Tuple[str, str]]:
     query = "GET %sgroups\nCache: reload\nColumns: name alias\n" % what
     groups = cast(List[Tuple[str, str]], live().query(query))
     # The dict() removes duplicate group names. Aliases don't need be deduplicated.
-    return sorted([(name, alias or name) for name, alias in dict(groups).items()],
-                  key=lambda e: e[1].lower())
+    return sorted(
+        [(name, alias or name) for name, alias in dict(groups).items()], key=lambda e: e[1].lower()
+    )
 
 
 # TODO: this too does not really belong here...
 def get_alias_of_host(site_id: Optional[SiteId], host_name: str) -> str:
-    query = ("GET hosts\n"
-             "Cache: reload\n"
-             "Columns: alias\n"
-             "Filter: name = %s" % lqencode(host_name))
+    query = (
+        "GET hosts\n" "Cache: reload\n" "Columns: alias\n" "Filter: name = %s" % lqencode(host_name)
+    )
 
     with only_sites(site_id):
         try:
@@ -136,7 +138,7 @@ def get_alias_of_host(site_id: Optional[SiteId], host_name: str) -> str:
             return host_name
 
 
-#.
+# .
 #   .--Internal------------------------------------------------------------.
 #   |                ___       _                        _                  |
 #   |               |_ _|_ __ | |_ ___ _ __ _ __   __ _| |                 |
@@ -161,7 +163,7 @@ def get_alias_of_host(site_id: Optional[SiteId], host_name: str) -> str:
 
 def _ensure_connected(user: Optional[LoggedInUser], force_authuser: Optional[UserId]) -> None:
     """Build up a connection to livestatus to either a single site or multiple sites."""
-    if 'live' in g:
+    if "live" in g:
         return
 
     if user is None:
@@ -171,8 +173,11 @@ def _ensure_connected(user: Optional[LoggedInUser], force_authuser: Optional[Use
         request_force_authuser = request.get_unicode_input("force_authuser")
         force_authuser = UserId(request_force_authuser) if request_force_authuser else None
 
-    logger.debug("Initializing livestatus connections as user %s (forced auth user: %s)", user.id,
-                 force_authuser)
+    logger.debug(
+        "Initializing livestatus connections as user %s (forced auth user: %s)",
+        user.id,
+        force_authuser,
+    )
 
     g.site_status = {}
     _connect_multiple_sites(user)
@@ -187,6 +192,7 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
 
     if is_managed_edition():
         import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+
         g.live = managed.CMEMultiSiteConnection(enabled_sites, disabled_sites)
     else:
         g.live = MultiSiteConnection(enabled_sites, disabled_sites)
@@ -195,10 +201,11 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
     # This may be cached by a proxy for up to the next configuration reload.
     g.live.set_prepend_site(True)
     for response in g.live.query(
-            "GET status\n"
-            "Cache: reload\n"
-            "Columns: livestatus_version program_version program_start num_hosts num_services "
-            "core_pid"):
+        "GET status\n"
+        "Cache: reload\n"
+        "Columns: livestatus_version program_version program_start num_hosts num_services "
+        "core_pid"
+    ):
 
         try:
             site_id, v1, v2, ps, num_hosts, num_services, pid = response
@@ -206,23 +213,27 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
             e = MKLivestatusQueryError("Invalid response to status query: %s" % response)
 
             site_id = response[0]
-            g.site_status[site_id].update({
-                "exception": e,
-                "status_host_state": None,
-                "state": _status_host_state_name(None),
-            })
+            g.site_status[site_id].update(
+                {
+                    "exception": e,
+                    "status_host_state": None,
+                    "state": _status_host_state_name(None),
+                }
+            )
             continue
 
-        g.site_status[site_id].update({
-            "state": "online",
-            "livestatus_version": v1,
-            "program_version": v2,
-            "program_start": ps,
-            "num_hosts": num_hosts,
-            "num_services": num_services,
-            "core": v2.startswith("Check_MK") and "cmc" or "nagios",
-            "core_pid": pid,
-        })
+        g.site_status[site_id].update(
+            {
+                "state": "online",
+                "livestatus_version": v1,
+                "program_version": v2,
+                "program_start": ps,
+                "num_hosts": num_hosts,
+                "num_services": num_services,
+                "core": v2.startswith("Check_MK") and "cmc" or "nagios",
+                "core_pid": pid,
+            }
+        )
     g.live.set_prepend_site(False)
 
     # TODO(lm): Find a better way to make the Livestatus object trigger the update
@@ -231,7 +242,8 @@ def _connect_multiple_sites(user: LoggedInUser) -> None:
 
 
 def _get_enabled_and_disabled_sites(
-        user: LoggedInUser) -> Tuple[SiteConfigurations, SiteConfigurations]:
+    user: LoggedInUser,
+) -> Tuple[SiteConfigurations, SiteConfigurations]:
     enabled_sites: SiteConfigurations = {}
     disabled_sites: SiteConfigurations = {}
 
@@ -291,11 +303,13 @@ def update_site_states_from_dead_sites() -> None:
     # Get exceptions in case of dead sites
     for site_id, deadinfo in live().dead_sites().items():
         status_host_state = cast(Optional[int], deadinfo.get("status_host_state"))
-        g.site_status[site_id].update({
-            "exception": deadinfo["exception"],
-            "status_host_state": status_host_state,
-            "state": _status_host_state_name(status_host_state),
-        })
+        g.site_status[site_id].update(
+            {
+                "exception": deadinfo["exception"],
+                "status_host_state": status_host_state,
+                "state": _status_host_state_name(status_host_state),
+            }
+        )
 
 
 def _status_host_state_name(shs: Optional[int]) -> str:
@@ -322,8 +336,9 @@ def site_state_titles() -> Dict[str, str]:
     }
 
 
-def _set_initial_site_states(enabled_sites: SiteConfigurations,
-                             disabled_sites: SiteConfigurations) -> None:
+def _set_initial_site_states(
+    enabled_sites: SiteConfigurations, disabled_sites: SiteConfigurations
+) -> None:
     for site_id, site_spec in enabled_sites.items():
         g.site_status[site_id] = {"state": "dead", "site": site_spec}
 
@@ -336,19 +351,19 @@ def _set_initial_site_states(enabled_sites: SiteConfigurations,
 def _set_livestatus_auth(user: LoggedInUser, force_authuser: Optional[UserId]) -> None:
     user_id = _livestatus_auth_user(user, force_authuser)
     if user_id is not None:
-        g.live.set_auth_user('read', user_id)
-        g.live.set_auth_user('action', user_id)
+        g.live.set_auth_user("read", user_id)
+        g.live.set_auth_user("action", user_id)
 
     # May the user see all objects in BI aggregations or only some?
     if not user.may("bi.see_all"):
-        g.live.set_auth_user('bi', user_id)
+        g.live.set_auth_user("bi", user_id)
 
     # May the user see all Event Console events or only some?
     if not user.may("mkeventd.seeall"):
-        g.live.set_auth_user('ec', user_id)
+        g.live.set_auth_user("ec", user_id)
 
     # Default auth domain is read. Please set to None to switch off authorization
-    g.live.set_auth_domain('read')
+    g.live.set_auth_domain("read")
 
 
 # Returns either None when no auth user shal be set or the name of the user
@@ -422,15 +437,15 @@ class GroupedSiteState(NamedTuple):
 
 def get_grouped_site_states() -> Dict[str, GroupedSiteState]:
     grouped_states = {
-        'ok': GroupedSiteState(
+        "ok": GroupedSiteState(
             readable=_("OK"),
             site_ids=[],
         ),
-        'disabled': GroupedSiteState(
+        "disabled": GroupedSiteState(
             readable=_("disabled"),
             site_ids=[],
         ),
-        'error': GroupedSiteState(
+        "error": GroupedSiteState(
             readable=_("disconnected"),
             site_ids=[],
         ),
@@ -441,11 +456,11 @@ def get_grouped_site_states() -> Dict[str, GroupedSiteState]:
 
 
 def _map_site_state(state: str) -> str:
-    if state in ('online', 'waiting'):
-        return 'ok'
-    if state == 'disabled':
-        return 'disabled'
-    return 'error'
+    if state in ("online", "waiting"):
+        return "ok"
+    if state == "disabled":
+        return "disabled"
+    return "error"
 
 
 def filter_available_site_choices(choices: List[Tuple[SiteId, str]]) -> List[Tuple[SiteId, str]]:
@@ -490,8 +505,10 @@ def is_wato_slave_site() -> bool:
 
 
 def _has_distributed_wato_file() -> bool:
-    return os.path.exists(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk") \
+    return (
+        os.path.exists(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk")
         and os.stat(cmk.utils.paths.check_mk_config_dir + "/distributed_wato.mk").st_size != 0
+    )
 
 
 def get_login_sites() -> List[SiteId]:
@@ -505,22 +522,20 @@ def get_login_slave_sites() -> List[SiteId]:
     """Returns a list of site ids which are WATO slave sites and users can login"""
     login_sites = []
     for site_id, site_spec in wato_slave_sites().items():
-        if site_spec.get('user_login', True) and not site_is_local(site_id):
+        if site_spec.get("user_login", True) and not site_is_local(site_id):
             login_sites.append(site_id)
     return login_sites
 
 
 def wato_slave_sites() -> SiteConfigurations:
-    return {
-        site_id: s  #
-        for site_id, s in config.sites.items()
-        if s.get("replication")
-    }
+    return {site_id: s for site_id, s in config.sites.items() if s.get("replication")}  #
 
 
 def sorted_sites() -> List[Tuple[SiteId, str]]:
-    return sorted([(site_id, s['alias']) for site_id, s in global_user.authorized_sites().items()],
-                  key=lambda k: k[1].lower())
+    return sorted(
+        [(site_id, s["alias"]) for site_id, s in global_user.authorized_sites().items()],
+        key=lambda k: k[1].lower(),
+    )
 
 
 def get_site_config(site_id: SiteId) -> SiteConfiguration:
@@ -586,12 +601,15 @@ def site_choices(site_configs: SiteConfigurations) -> List[Tuple[SiteId, str]]:
 
 
 def get_event_console_site_choices() -> List[Tuple[SiteId, str]]:
-    return site_choices({
-        site_id: site
-        for site_id, site in global_user.authorized_sites(
-            unfiltered_sites=configured_sites()).items()
-        if site_is_local(site_id) or site.get("replicate_ec", False)
-    })
+    return site_choices(
+        {
+            site_id: site
+            for site_id, site in global_user.authorized_sites(
+                unfiltered_sites=configured_sites()
+            ).items()
+            if site_is_local(site_id) or site.get("replicate_ec", False)
+        }
+    )
 
 
 def get_activation_site_choices() -> List[Tuple[SiteId, str]]:
@@ -606,6 +624,7 @@ def activation_sites() -> SiteConfigurations:
     return {
         site_id: site
         for site_id, site in global_user.authorized_sites(
-            unfiltered_sites=configured_sites()).items()
+            unfiltered_sites=configured_sites()
+        ).items()
         if site_is_local(site_id) or site.get("replication")
     }

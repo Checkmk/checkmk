@@ -14,23 +14,25 @@ from cmk.gui.valuespec import Age, Dictionary, Transform, Tuple
 
 
 def _parameter_valuespec_systemtime():
-    return Transform(Dictionary(
-        title="Time offset",
-        elements=[
-            (
-                "levels",
-                Tuple(
-                    title=_("Levels on time offset"),
-                    elements=[
-                        Age(title=_("Warning at"), default_value=30),
-                        Age(title=_("Critical at"), default_value=60),
-                    ],
+    return Transform(
+        Dictionary(
+            title="Time offset",
+            elements=[
+                (
+                    "levels",
+                    Tuple(
+                        title=_("Levels on time offset"),
+                        elements=[
+                            Age(title=_("Warning at"), default_value=30),
+                            Age(title=_("Critical at"), default_value=60),
+                        ],
+                    ),
                 ),
-            ),
-        ],
-        optional_keys=False,
-    ),
-                     forth=lambda v: {'levels': v} if isinstance(v, tuple) else v)
+            ],
+            optional_keys=False,
+        ),
+        forth=lambda v: {"levels": v} if isinstance(v, tuple) else v,
+    )
 
 
 rulespec_registry.register(
@@ -39,4 +41,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_systemtime,
         title=lambda: _("Windows system time offset"),
-    ))
+    )
+)

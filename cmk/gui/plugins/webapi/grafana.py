@@ -77,9 +77,11 @@ class APICallGrafanaConnector(APICallCollection):
         if not host_name:
             return {}
 
-        query = ("GET services\n"
-                 "Columns: description check_command metrics\n"
-                 "Filter: host_name = %s\n" % livestatus.lqencode(host_name))
+        query = (
+            "GET services\n"
+            "Columns: description check_command metrics\n"
+            "Filter: host_name = %s\n" % livestatus.lqencode(host_name)
+        )
 
         response = {}
 
@@ -121,7 +123,7 @@ class APICallGrafanaConnector(APICallCollection):
             raise MKGeneralException(_("Currently not supported with this Checkmk Edition"))
 
         if "presentation" not in request:
-            request['presentation'] = 'sum'
+            request["presentation"] = "sum"
         presentation = request["presentation"]
         if presentation not in combined_graph_presentations:
             raise MKGeneralException(_("The requested item %s does not exist") % presentation)
@@ -132,13 +134,16 @@ class APICallGrafanaConnector(APICallCollection):
         response = []
         for graph_identification in matching_combined_graphs(request):
             graph_template_id = graph_identification[1]["graph_template"]
-            graph_title = dict(get_graph_template_choices()).get(graph_template_id,
-                                                                 graph_template_id)
+            graph_title = dict(get_graph_template_choices()).get(
+                graph_template_id, graph_template_id
+            )
 
-            response.append({
-                "identification": graph_identification,
-                "title": graph_title,
-            })
+            response.append(
+                {
+                    "identification": graph_identification,
+                    "title": graph_title,
+                }
+            )
         return response
 
     def _get_graph_annotations(self, request):
@@ -147,11 +152,11 @@ class APICallGrafanaConnector(APICallCollection):
         else:
             single_infos = []
 
-        context = cleaup_context_filters(request['context'], single_infos)
+        context = cleaup_context_filters(request["context"], single_infos)
 
-        filter_headers, only_sites = self._get_filter_headers_of_context(datasource_name="services",
-                                                                         context=context,
-                                                                         single_infos=single_infos)
+        filter_headers, only_sites = self._get_filter_headers_of_context(
+            datasource_name="services", context=context, single_infos=single_infos
+        )
 
         return {
             "availability_timelines": self._get_availability_timelines(
@@ -187,7 +192,7 @@ class APICallGrafanaConnector(APICallCollection):
             avoptions=avoptions,
         )
 
-        av_data = availability.compute_availability(what="service",
-                                                    av_rawdata=av_rawdata,
-                                                    avoptions=avoptions)
+        av_data = availability.compute_availability(
+            what="service", av_rawdata=av_rawdata, avoptions=avoptions
+        )
         return av_data

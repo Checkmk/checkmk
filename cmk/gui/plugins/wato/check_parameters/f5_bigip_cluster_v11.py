@@ -38,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_f5_bigip_cluster_v11,
         title=lambda: _("F5 BigIP configuration sync status"),
-    ))
+    )
+)

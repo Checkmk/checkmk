@@ -127,7 +127,8 @@ def physical_precision_list(values, precision, unit_symbol):
         reference = min([abs(v) for v in values])
 
     scale_symbol, places_after_comma, scale_factor = cmk.utils.render.calculate_physical_precision(
-        reference, precision)
+        reference, precision
+    )
 
     scaled_values = ["%.*f" % (places_after_comma, float(value) / scale_factor) for value in values]
 
@@ -165,15 +166,16 @@ unit_info["bytes/d"] = {
     "symbol": _("B/d"),
     "render": lambda v: cmk.utils.render.fmt_bytes(v * 86400.0) + "/d",
     "js_render": "v => cmk.number_format.fmt_bytes(v * 86400) + '/d'",
-    "graph_unit": lambda values: bytes_human_readable_list([v * 86400.0 for v in values],
-                                                           unit=_("B/d")),
+    "graph_unit": lambda values: bytes_human_readable_list(
+        [v * 86400.0 for v in values], unit=_("B/d")
+    ),
     "stepping": "binary",  # for vertical graph labels
 }
 
 unit_info["c"] = {
     "title": _("Degree Celsius"),
-    "symbol": u"°C",
-    "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), u"°C"),
+    "symbol": "°C",
+    "render": lambda v: "%s %s" % (cmk.utils.render.drop_dotzero(v), "°C"),
     "js_render": "v => cmk.number_format.drop_dotzero(v) + ' °C'",
 }
 
@@ -277,22 +279,22 @@ unit_info["rpm"] = {
     "js_render": "v => cmk.number_format.physical_precision(v, 4, 'rpm')",
 }
 
-unit_info['bytes/op'] = {
-    'title': _('Read size per operation'),
-    'symbol': 'bytes/op',
-    'color': '#4080c0',
+unit_info["bytes/op"] = {
+    "title": _("Read size per operation"),
+    "symbol": "bytes/op",
+    "color": "#4080c0",
     "render": cmk.utils.render.fmt_bytes,
     "js_render": "cmk.number_format.fmt_bytes",
 }
 
-unit_info['EUR'] = {
+unit_info["EUR"] = {
     "title": _("Euro"),
-    "symbol": u"€",
-    "render": lambda v: u"%s €" % v,
+    "symbol": "€",
+    "render": lambda v: "%s €" % v,
     "js_render": "v => v.toFixed(2) + ' €'",
 }
 
-unit_info['RCU'] = {
+unit_info["RCU"] = {
     "title": _("RCU"),
     "symbol": _("RCU"),
     "description": _("Read Capacity Units"),
@@ -300,7 +302,7 @@ unit_info['RCU'] = {
     "js_render": "v => cmk.number_format.fmt_number_with_precision(v, 1000, 3, false, 'RCU')",
 }
 
-unit_info['WCU'] = {
+unit_info["WCU"] = {
     "title": _("WCU"),
     "symbol": _("WCU"),
     "description": _("Write Capacity Units"),

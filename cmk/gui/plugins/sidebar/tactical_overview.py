@@ -79,49 +79,79 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
     @classmethod
     def vs_parameters(cls):
         return [
-            ("rows",
-             ListOf(
-                 Dictionary(
-                     elements=[
-                         ("title", TextInput(
-                             title=_("Title"),
-                             allow_empty=False,
-                         )),
-                         ("query",
-                          CascadingDropdown(
-                              orientation="horizontal",
-                              title=_("Query"),
-                              label=_("Table") + ": ",
-                              choices=[
-                                  ("hosts", _("Hosts"), visuals.VisualFilterList(info_list=["host"
-                                                                                           ],)),
-                                  ("services", _("Services"),
-                                   visuals.VisualFilterList(info_list=["host", "service"],)),
-                                  ("events", _("Events"),
-                                   visuals.VisualFilterList(info_list=["host", "event"],)),
-                              ])),
-                     ],
-                     optional_keys=[],
-                 ),
-                 title=_("Rows"),
-                 add_label=_("Add new row"),
-                 del_label=_("Delete this row"),
-                 allow_empty=False,
-             )),
-            ("show_stale", Checkbox(
-                title=_("Show stale hosts and services"),
-                default_value=True,
-            )),
-            ("show_failed_notifications",
-             Checkbox(
-                 title=_("Show failed notifications"),
-                 default_value=True,
-             )),
-            ("show_sites_not_connected",
-             Checkbox(
-                 title=_("Display a message if sites are not connected"),
-                 default_value=True,
-             )),
+            (
+                "rows",
+                ListOf(
+                    Dictionary(
+                        elements=[
+                            (
+                                "title",
+                                TextInput(
+                                    title=_("Title"),
+                                    allow_empty=False,
+                                ),
+                            ),
+                            (
+                                "query",
+                                CascadingDropdown(
+                                    orientation="horizontal",
+                                    title=_("Query"),
+                                    label=_("Table") + ": ",
+                                    choices=[
+                                        (
+                                            "hosts",
+                                            _("Hosts"),
+                                            visuals.VisualFilterList(
+                                                info_list=["host"],
+                                            ),
+                                        ),
+                                        (
+                                            "services",
+                                            _("Services"),
+                                            visuals.VisualFilterList(
+                                                info_list=["host", "service"],
+                                            ),
+                                        ),
+                                        (
+                                            "events",
+                                            _("Events"),
+                                            visuals.VisualFilterList(
+                                                info_list=["host", "event"],
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                            ),
+                        ],
+                        optional_keys=[],
+                    ),
+                    title=_("Rows"),
+                    add_label=_("Add new row"),
+                    del_label=_("Delete this row"),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "show_stale",
+                Checkbox(
+                    title=_("Show stale hosts and services"),
+                    default_value=True,
+                ),
+            ),
+            (
+                "show_failed_notifications",
+                Checkbox(
+                    title=_("Show failed notifications"),
+                    default_value=True,
+                ),
+            ),
+            (
+                "show_sites_not_connected",
+                Checkbox(
+                    title=_("Display a message if sites are not connected"),
+                    default_value=True,
+                ),
+            ),
         ]
 
     @classmethod
@@ -130,16 +160,11 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "show_stale": True,
             "show_failed_notifications": True,
             "show_sites_not_connected": True,
-            "rows": [{
-                "query": ("hosts", {}),
-                "title": u"Hosts"
-            }, {
-                'query': ('services', {}),
-                'title': u'Services'
-            }, {
-                'query': ('events', {}),
-                'title': u'Events'
-            }]
+            "rows": [
+                {"query": ("hosts", {}), "title": "Hosts"},
+                {"query": ("services", {}), "title": "Services"},
+                {"query": ("events", {}), "title": "Events"},
+            ],
         }
 
     def show(self):
@@ -157,7 +182,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         html.open_table(class_=["tacticaloverview"], cellspacing="2", cellpadding="0", border="0")
 
         show_stales = self.parameters()["show_stale"] and user.may(
-            "general.see_stales_in_tactical_overview")
+            "general.see_stales_in_tactical_overview"
+        )
         has_stale_objects = bool([r for r in rows if r.what != "events" and r.stats[-1]])
 
         for row in rows:
@@ -177,13 +203,14 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             html.th(row.title)
             html.th(_("Problems"), class_="show_more_mode")
             html.th(
-                html.render_span(_("Unhandled"), class_="more") +
-                html.render_span(_("Unhandled p."), class_="less"))
+                html.render_span(_("Unhandled"), class_="more")
+                + html.render_span(_("Unhandled p."), class_="less")
+            )
             if show_stales and has_stale_objects:
                 html.th(_("Stale"))
             html.close_tr()
 
-            td_class = 'col4' if has_stale_objects else 'col3'
+            td_class = "col4" if has_stale_objects else "col3"
 
             html.open_tr()
             url = makeuri_contextless(request, row.views.total + context_vars, filename="view.py")
@@ -197,10 +224,13 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                     getattr(row.views, ty) + context_vars,
                     filename="view.py",
                 )
-                html.open_td(class_=[
-                    td_class, "states prob" if value != 0 else None, "show_more_mode" if ty ==
-                    "handled" else "basic"
-                ])
+                html.open_td(
+                    class_=[
+                        td_class,
+                        "states prob" if value != 0 else None,
+                        "show_more_mode" if ty == "handled" else "basic",
+                    ]
+                )
                 link(str(value), url)
                 html.close_td()
 
@@ -237,7 +267,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                     context=context,
                     stats=stats,
                     views=self._row_views(what),
-                ))
+                )
+            )
 
         return rows
 
@@ -248,14 +279,14 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
                     ("view_name", "allhosts"),
                 ],
                 handled=[
-                    ("view_name", 'hostproblems'),
+                    ("view_name", "hostproblems"),
                 ],
                 unhandled=[
                     ("view_name", "hostproblems"),
                     ("is_host_acknowledged", 0),
                 ],
                 stale=[
-                    ("view_name", 'stale_hosts'),
+                    ("view_name", "stale_hosts"),
                 ],
             )
 
@@ -302,23 +333,23 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
 
     def _get_stats(self, what, context):
         if what == "hosts":
-            context_filters, only_sites = visuals.get_filter_headers(table="hosts",
-                                                                     infos=["host"],
-                                                                     context=context)
+            context_filters, only_sites = visuals.get_filter_headers(
+                table="hosts", infos=["host"], context=context
+            )
 
             query = self._get_host_stats_query(context_filters)
 
         elif what == "services":
-            context_filters, only_sites = visuals.get_filter_headers(table="services",
-                                                                     infos=["host", "service"],
-                                                                     context=context)
+            context_filters, only_sites = visuals.get_filter_headers(
+                table="services", infos=["host", "service"], context=context
+            )
 
             query = self._get_service_stats_query(context_filters)
 
         elif what == "events":
-            context_filters, only_sites = visuals.get_filter_headers(table="eventconsoleevents",
-                                                                     infos=["host", "event"],
-                                                                     context=context)
+            context_filters, only_sites = visuals.get_filter_headers(
+                table="eventconsoleevents", infos=["host", "event"], context=context
+            )
 
             query = self._get_event_stats_query(context_filters)
         else:
@@ -332,62 +363,57 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
         )
 
     def _get_host_stats_query(self, context_filters):
-        return ("GET hosts\n"
-                # Total
-                "Stats: state >= 0\n"
-
-                # Handled problems
-                "Stats: state > 0\n"
-                "Stats: scheduled_downtime_depth = 0\n"
-                "StatsAnd: 2\n"
-
-                # Unhandled problems
-                "Stats: state > 0\n"
-                "Stats: scheduled_downtime_depth = 0\n"
-                "Stats: acknowledged = 0\n"
-                "StatsAnd: 3\n"
-
-                # Stale
-                "Stats: host_staleness >= %s\n"
-                "Stats: host_scheduled_downtime_depth = 0\n"
-                "StatsAnd: 2\n"
-                "%s") % (config.staleness_threshold, context_filters)
+        return (
+            "GET hosts\n"
+            # Total
+            "Stats: state >= 0\n"
+            # Handled problems
+            "Stats: state > 0\n"
+            "Stats: scheduled_downtime_depth = 0\n"
+            "StatsAnd: 2\n"
+            # Unhandled problems
+            "Stats: state > 0\n"
+            "Stats: scheduled_downtime_depth = 0\n"
+            "Stats: acknowledged = 0\n"
+            "StatsAnd: 3\n"
+            # Stale
+            "Stats: host_staleness >= %s\n"
+            "Stats: host_scheduled_downtime_depth = 0\n"
+            "StatsAnd: 2\n"
+            "%s"
+        ) % (config.staleness_threshold, context_filters)
 
     def _get_service_stats_query(self, context_filters):
-        return ("GET services\n"
-                # Total
-                "Stats: state >= 0\n"
-
-                # Handled problems
-                "Stats: state > 0\n"
-                "Stats: scheduled_downtime_depth = 0\n"
-                "Stats: host_scheduled_downtime_depth = 0\n"
-                "Stats: host_state = 0\n"
-                "StatsAnd: 4\n"
-
-                # Unhandled problems
-                "Stats: state > 0\n"
-                "Stats: scheduled_downtime_depth = 0\n"
-                "Stats: host_scheduled_downtime_depth = 0\n"
-                "Stats: acknowledged = 0\n"
-                "Stats: host_state = 0\n"
-                "StatsAnd: 5\n"
-
-                # Stale
-                "Stats: service_staleness >= %s\n"
-                "Stats: host_scheduled_downtime_depth = 0\n"
-                "Stats: service_scheduled_downtime_depth = 0\n"
-                "StatsAnd: 3\n"
-                "%s") % (config.staleness_threshold, context_filters)
+        return (
+            "GET services\n"
+            # Total
+            "Stats: state >= 0\n"
+            # Handled problems
+            "Stats: state > 0\n"
+            "Stats: scheduled_downtime_depth = 0\n"
+            "Stats: host_scheduled_downtime_depth = 0\n"
+            "Stats: host_state = 0\n"
+            "StatsAnd: 4\n"
+            # Unhandled problems
+            "Stats: state > 0\n"
+            "Stats: scheduled_downtime_depth = 0\n"
+            "Stats: host_scheduled_downtime_depth = 0\n"
+            "Stats: acknowledged = 0\n"
+            "Stats: host_state = 0\n"
+            "StatsAnd: 5\n"
+            # Stale
+            "Stats: service_staleness >= %s\n"
+            "Stats: host_scheduled_downtime_depth = 0\n"
+            "Stats: service_scheduled_downtime_depth = 0\n"
+            "StatsAnd: 3\n"
+            "%s"
+        ) % (config.staleness_threshold, context_filters)
 
     def _get_event_stats_query(self, context_filters):
         # In case the user is not allowed to see unrelated events
         ec_filters = ""
         if not user.may("mkeventd.seeall") and not user.may("mkeventd.seeunrelated"):
-            ec_filters = (  #
-                "Filter: event_contact_groups != \n"
-                "Filter: host_name != \n"
-                "Or: 2\n")
+            ec_filters = "Filter: event_contact_groups != \nFilter: host_name != \nOr: 2\n"
 
         event_query = (
             # "Events" column
@@ -405,12 +431,17 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "Stats: event_phase = open\n"
             "Stats: event_state != 0\n"
             "Stats: event_host_in_downtime != 1\n"
-            "StatsAnd: 3\n" + ec_filters + context_filters)
+            "StatsAnd: 3\n" + ec_filters + context_filters
+        )
 
         # Do not mark the site as dead in case the Event Console is not available.
-        return livestatus.Query(event_query,
-                                suppress_exceptions=(livestatus.MKLivestatusTableNotFoundError,
-                                                     livestatus.MKLivestatusBadGatewayError))
+        return livestatus.Query(
+            event_query,
+            suppress_exceptions=(
+                livestatus.MKLivestatusTableNotFoundError,
+                livestatus.MKLivestatusBadGatewayError,
+            ),
+        )
 
     def _execute_stats_query(self, query, auth_domain="read", only_sites=None, deflt=None):
         try:
@@ -430,7 +461,8 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             return
 
         failed_notifications = notifications.number_of_failed_notifications(
-            after=notifications.acknowledged_time())
+            after=notifications.acknowledged_time()
+        )
         if not failed_notifications:
             return
 
@@ -478,8 +510,10 @@ class TacticalOverviewSnapin(CustomizableSidebarSnapin):
             "Associated hosts, services and events are not included "
             "in the Tactical Overview. The %s site is %s.",
             "Associated hosts, services and events are not included "
-            "in the Tactical Overview. The %s sites are %s.", len(site_ids))
-        tooltip = tooltip_template % (site_status, ', '.join(site_ids))
+            "in the Tactical Overview. The %s sites are %s.",
+            len(site_ids),
+        )
+        tooltip = tooltip_template % (site_status, ", ".join(site_ids))
 
         if user.may("wato.sites"):
             url = makeuri_contextless(request, [("mode", "sites")], filename="wato.py")

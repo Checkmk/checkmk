@@ -14,14 +14,18 @@ from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_hw_temperature():
-    return Tuple(help=_("Temperature levels for hardware devices like "
-                        "Brocade switches with (potentially) several "
-                        "temperature sensors. Sensor IDs can be selected "
-                        "in the rule."),
-                 elements=[
-                     Integer(title=_("warning at"), unit=u"°C", default_value=35),
-                     Integer(title=_("critical at"), unit=u"°C", default_value=40),
-                 ])
+    return Tuple(
+        help=_(
+            "Temperature levels for hardware devices like "
+            "Brocade switches with (potentially) several "
+            "temperature sensors. Sensor IDs can be selected "
+            "in the rule."
+        ),
+        elements=[
+            Integer(title=_("warning at"), unit="°C", default_value=35),
+            Integer(title=_("critical at"), unit="°C", default_value=40),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -29,8 +33,10 @@ rulespec_registry.register(
         check_group_name="hw_temperature",
         group=RulespecGroupCheckParametersEnvironment,
         is_deprecated=True,
-        item_spec=lambda: TextInput(title=_("Sensor ID"),
-                                    help=_("The identifier of the thermal sensor.")),
+        item_spec=lambda: TextInput(
+            title=_("Sensor ID"), help=_("The identifier of the thermal sensor.")
+        ),
         parameter_valuespec=_parameter_valuespec_hw_temperature,
         title=lambda: _("Hardware temperature, multiple sensors"),
-    ))
+    )
+)

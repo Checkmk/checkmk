@@ -14,26 +14,32 @@ from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_huawei_osn_laser():
-    return Dictionary(elements=[
-        ('levels_low_in',
-         Tuple(
-             title=_('Levels for laser input'),
-             default_value=(-160.0, -180.0),
-             elements=[
-                 Integer(title=_("Warning below")),
-                 Integer(title=_("Critical below")),
-             ],
-         )),
-        ('levels_low_out',
-         Tuple(
-             title=_('Levels for laser output'),
-             default_value=(-160.0, -180.0),
-             elements=[
-                 Integer(title=_("Warning below")),
-                 Integer(title=_("Critical below")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels_low_in",
+                Tuple(
+                    title=_("Levels for laser input"),
+                    default_value=(-160.0, -180.0),
+                    elements=[
+                        Integer(title=_("Warning below")),
+                        Integer(title=_("Critical below")),
+                    ],
+                ),
+            ),
+            (
+                "levels_low_out",
+                Tuple(
+                    title=_("Levels for laser output"),
+                    default_value=(-160.0, -180.0),
+                    elements=[
+                        Integer(title=_("Warning below")),
+                        Integer(title=_("Critical below")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -44,4 +50,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_huawei_osn_laser,
         title=lambda: _("OSN Laser attenuation"),
-    ))
+    )
+)

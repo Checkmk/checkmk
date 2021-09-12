@@ -14,18 +14,24 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_cisco_fw_connections():
-    return Dictionary(elements=[
-        ("connections",
-         Tuple(
-             help=_("This rule sets limits to the current number of connections through "
-                    "a Cisco ASA firewall."),
-             title=_("Maximum number of firewall connections"),
-             elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "connections",
+                Tuple(
+                    help=_(
+                        "This rule sets limits to the current number of connections through "
+                        "a Cisco ASA firewall."
+                    ),
+                    title=_("Maximum number of firewall connections"),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -35,4 +41,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_cisco_fw_connections,
         title=lambda: _("Cisco ASA Firewall Connections"),
-    ))
+    )
+)

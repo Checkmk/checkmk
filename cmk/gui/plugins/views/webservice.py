@@ -27,10 +27,12 @@ def _export_python_raw(view: "View", rows: Rows) -> None:
     response.set_data(repr(rows))
 
 
-exporter_registry.register(Exporter(
-    name="python-raw",
-    handler=_export_python_raw,
-))
+exporter_registry.register(
+    Exporter(
+        name="python-raw",
+        handler=_export_python_raw,
+    )
+)
 
 
 def _export_python(view: "View", rows: Rows) -> None:
@@ -57,10 +59,12 @@ def _export_python(view: "View", rows: Rows) -> None:
     response.set_data("".join(resp))
 
 
-exporter_registry.register(Exporter(
-    name="python",
-    handler=_export_python,
-))
+exporter_registry.register(
+    Exporter(
+        name="python",
+        handler=_export_python,
+    )
+)
 
 
 def _get_json_body(view: "View", rows: Rows) -> str:
@@ -95,35 +99,44 @@ def _export_json(view: "View", rows: Rows) -> None:
     response.set_data(_get_json_body(view, rows))
 
 
-exporter_registry.register(Exporter(
-    name="json",
-    handler=_export_json,
-))
+exporter_registry.register(
+    Exporter(
+        name="json",
+        handler=_export_json,
+    )
+)
 
 
 def _export_json_export(view: "View", rows: Rows) -> None:
-    filename = '%s-%s.json' % (view.name,
-                               time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-    response.headers["Content-Disposition"] = "Attachment; filename=\"%s\"" % filename
+    filename = "%s-%s.json" % (
+        view.name,
+        time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime(time.time())),
+    )
+    response.headers["Content-Disposition"] = 'Attachment; filename="%s"' % filename
 
     response.set_data(_get_json_body(view, rows))
 
 
-exporter_registry.register(Exporter(
-    name="json_export",
-    handler=_export_json_export,
-))
+exporter_registry.register(
+    Exporter(
+        name="json_export",
+        handler=_export_json_export,
+    )
+)
 
 
 def _export_jsonp(view: "View", rows: Rows) -> None:
-    response.set_data("%s(\n%s);\n" %
-                      (request.var('jsonp', 'myfunction'), _get_json_body(view, rows)))
+    response.set_data(
+        "%s(\n%s);\n" % (request.var("jsonp", "myfunction"), _get_json_body(view, rows))
+    )
 
 
-exporter_registry.register(Exporter(
-    name="jsonp",
-    handler=_export_jsonp,
-))
+exporter_registry.register(
+    Exporter(
+        name="jsonp",
+        handler=_export_jsonp,
+    )
+)
 
 
 class CSVRenderer:
@@ -156,9 +169,9 @@ class CSVRenderer:
     def _format_for_csv(self, raw_data: ExportCellContent) -> str:
         # raw_data can also be int, float, dict (labels)
         if isinstance(raw_data, dict):
-            return ', '.join(["%s: %s" % (key, value) for key, value in raw_data.items()])
+            return ", ".join(["%s: %s" % (key, value) for key, value in raw_data.items()])
 
-        return escaping.strip_tags(raw_data).replace('\n', '').replace('"', '""')
+        return escaping.strip_tags(raw_data).replace("\n", "").replace('"', '""')
 
 
 def _export_csv_export(view: "View", rows: Rows) -> None:
@@ -166,17 +179,21 @@ def _export_csv_export(view: "View", rows: Rows) -> None:
     CSVRenderer().show(view, rows)
 
 
-exporter_registry.register(Exporter(
-    name="csv_export",
-    handler=_export_csv_export,
-))
+exporter_registry.register(
+    Exporter(
+        name="csv_export",
+        handler=_export_csv_export,
+    )
+)
 
 
 def _export_csv(view: "View", rows: Rows) -> None:
     CSVRenderer().show(view, rows)
 
 
-exporter_registry.register(Exporter(
-    name="csv",
-    handler=_export_csv,
-))
+exporter_registry.register(
+    Exporter(
+        name="csv",
+        handler=_export_csv,
+    )
+)

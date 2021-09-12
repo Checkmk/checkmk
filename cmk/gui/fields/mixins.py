@@ -11,8 +11,8 @@ from marshmallow import fields, post_load, pre_dump, ValidationError
 
 
 class Converter(metaclass=abc.ABCMeta):
-    """A converter class to map values from and to Checkmk
-    """
+    """A converter class to map values from and to Checkmk"""
+
     def to_checkmk(self, data):
         raise NotImplementedError()
 
@@ -60,7 +60,8 @@ class CheckmkTuple:
                     except KeyError as exc:
                         raise KeyError(f"{field} not in {data}") from exc
                     _result.append(
-                        converter.to_checkmk(entry) if isinstance(converter, Converter) else entry)
+                        converter.to_checkmk(entry) if isinstance(converter, Converter) else entry
+                    )
             return tuple(_result)
 
         return _convert_to_tuple(self.tuple_fields, self.converter, [])
@@ -70,10 +71,10 @@ class CheckmkTuple:
         # We use result as the aggregation variable. In this case a dict we pass around everywhere.
         def _convert_tuple(_fields, _data, _converter, _result):
             for field, value, converter in itertools.zip_longest(
-                    _fields,
-                    _data,
-                    _converter,
-                    fillvalue=None,
+                _fields,
+                _data,
+                _converter,
+                fillvalue=None,
             ):
                 if isinstance(field, tuple):
                     # Recursive call
@@ -81,9 +82,11 @@ class CheckmkTuple:
                 else:
                     if field not in self.declared_fields:
                         raise ValidationError(
-                            f"Field {field!r} not declared in schema {self.__class__.__name__}")
-                    _result[field] = (converter.from_checkmk(value) if isinstance(
-                        converter, Converter) else value)
+                            f"Field {field!r} not declared in schema {self.__class__.__name__}"
+                        )
+                    _result[field] = (
+                        converter.from_checkmk(value) if isinstance(converter, Converter) else value
+                    )
 
             return _result
 

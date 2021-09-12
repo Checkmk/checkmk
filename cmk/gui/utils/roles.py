@@ -68,11 +68,13 @@ def roles_of_user(user_id: Optional[UserId]) -> List[str]:
         return ["guest"]
     if config.users is not None and user_id in config.users:
         return ["user"]
-    if user_id is not None and cmk.utils.paths.profile_dir.joinpath(user_id,
-                                                                    "automation.secret").exists():
+    if (
+        user_id is not None
+        and cmk.utils.paths.profile_dir.joinpath(user_id, "automation.secret").exists()
+    ):
         return ["guest"]  # unknown user with automation account
-    if 'roles' in config.default_user_profile:
-        return existing_role_ids(config.default_user_profile['roles'])
+    if "roles" in config.default_user_profile:
+        return existing_role_ids(config.default_user_profile["roles"])
     if config.default_user_role:
         return existing_role_ids([config.default_user_role])
     return []

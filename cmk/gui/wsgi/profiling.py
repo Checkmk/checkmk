@@ -24,6 +24,7 @@ class ProfileSwitcher:
         * "enable_by_var":  profiling enabled when "_profile" query parameter present in request
 
     """
+
     def __init__(self, app, profile_file: Optional[pathlib.Path] = None):
         self.app = app
         if profile_file is None:
@@ -33,8 +34,8 @@ class ProfileSwitcher:
         # on every request.
         self.accumulate = False
         self.profile_file = profile_file
-        self.cachegrind_file = profile_file.with_suffix('.cachegrind')
-        self.script_file = self.profile_file.with_suffix('.py')
+        self.cachegrind_file = profile_file.with_suffix(".cachegrind")
+        self.script_file = self.profile_file.with_suffix(".py")
         self.profiled_app = ProfileMiddleware(
             app,
             log_filename=profile_file,
@@ -46,10 +47,12 @@ class ProfileSwitcher:
 
         if not self.script_file.exists():
             with self.script_file.open("w", encoding="utf-8") as f:
-                f.write("#!/usr/bin/env python3\n"
-                        "import pstats\n"
-                        f'stats = pstats.Stats("{self.profile_file}")\n'
-                        "stats.sort_stats('cumtime').print_stats()\n")
+                f.write(
+                    "#!/usr/bin/env python3\n"
+                    "import pstats\n"
+                    f'stats = pstats.Stats("{self.profile_file}")\n'
+                    "stats.sort_stats('cumtime').print_stats()\n"
+                )
             self.script_file.chmod(0o755)
             cmk.utils.log.logger.info("Created profile dump script: %s", self.script_file)
 
@@ -77,7 +80,7 @@ def _profiling_enabled(environ) -> bool:
 
     if profile_setting == "enable_by_var":
         req = Request(environ)
-        if '_profile' not in req.args:
+        if "_profile" not in req.args:
             return False
 
     return True
@@ -96,10 +99,10 @@ def _load_profiling_setting() -> Union[bool, Literal["enable_by_var"]]:
     We only process the WATO written global settings file to get the WATO
     settings. Which should be enough for the most cases.
     """
-    settings = store.load_mk_file(cmk.utils.paths.default_config_dir +
-                                  "/multisite.d/wato/global.mk",
-                                  default={})
+    settings = store.load_mk_file(
+        cmk.utils.paths.default_config_dir + "/multisite.d/wato/global.mk", default={}
+    )
     return settings.get("profile", False)
 
 
-__all__ = ['ProfileSwitcher']
+__all__ = ["ProfileSwitcher"]

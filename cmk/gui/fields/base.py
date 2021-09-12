@@ -11,8 +11,10 @@ from marshmallow.decorators import post_dump, post_load
 
 class BaseSchema(Schema):
     """The Base Schema for all request and response schemas."""
+
     class Meta:
         """Holds configuration for marshmallow"""
+
         ordered = True  # we want to have documentation in definition-order
 
     cast_to_dict: bool = False

@@ -6,12 +6,16 @@
 
 from cmk.utils.plugin_loader import load_plugins
 
-from cmk.gui.plugins.userdb.utils import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    CheckCredentialsResult, get_user_attributes, user_attribute_registry, user_connector_registry,
-    UserAttribute, UserConnector,
+from cmk.gui.plugins.userdb.utils import (  # noqa: F401 # pylint: disable=unused-import
+    CheckCredentialsResult,
+    get_user_attributes,
+    user_attribute_registry,
+    user_connector_registry,
+    UserAttribute,
+    UserConnector,
 )
 
-#.
+# .
 #   .--Plugin API----------------------------------------------------------.
 #   |           ____  _             _            _    ____ ___             |
 #   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
@@ -21,7 +25,7 @@ from cmk.gui.plugins.userdb.utils import (  # noqa: F401 # pylint: disable=unuse
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-#.
+# .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |

@@ -39,9 +39,9 @@ class ABCViewDashlet(IFrameDashlet):
         if not is_reload:
             view_display_options += "HR"
 
-        request.set_var('display_options', view_display_options)
-        request.set_var('_display_options', view_display_options)
-        html.add_body_css_class('dashlet')
+        request.set_var("display_options", view_display_options)
+        request.set_var("_display_options", view_display_options)
+        html.add_body_css_class("dashlet")
 
         # Need to be loaded before processing the painter_options below.
         # TODO: Make this dependency explicit
@@ -71,6 +71,7 @@ class ABCViewDashlet(IFrameDashlet):
 @dashlet_registry.register
 class ViewDashlet(ABCViewDashlet):
     """Dashlet that displays a Check_MK view"""
+
     @classmethod
     def type_name(cls):
         return "view"
@@ -91,27 +92,28 @@ class ViewDashlet(ABCViewDashlet):
             return views.render_view_config(dashlet)
 
         def _handle_input(ident, dashlet):
-            dashlet['name'] = 'dashlet_%d' % ident
-            dashlet.setdefault('title', _('View'))
+            dashlet["name"] = "dashlet_%d" % ident
+            dashlet.setdefault("title", _("View"))
             return views.create_view_from_valuespec(dashlet, dashlet)
 
         return _render_input, _handle_input
 
     @classmethod
     def add_url(cls):
-        return 'create_view_dashlet.py?name=%s&mode=create&back=%s' % \
-            (urlencode(request.var('name')),
-             urlencode(makeuri(request, [('edit', '1')])))
+        return "create_view_dashlet.py?name=%s&mode=create&back=%s" % (
+            urlencode(request.var("name")),
+            urlencode(makeuri(request, [("edit", "1")])),
+        )
 
     def update(self):
         self._show_view_as_dashlet(self._dashlet_spec)
-        html.javascript("cmk.utils.add_simplebar_scrollbar(\"dashlet_content_wrapper\");")
+        html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
     def infos(self):
         # Hack for create mode of dashlet editor. The user first selects a datasource and then the
         # single contexts, the dashlet editor needs to use these information.
         if requested_file_name(request) == "edit_dashlet" and request.has_var("datasource"):
-            ds_name = request.get_str_input_mandatory('datasource')
+            ds_name = request.get_str_input_mandatory("datasource")
             return views.data_source_registry[ds_name]().infos
 
         return self._get_infos_from_view_spec(self._dashlet_spec)
@@ -120,6 +122,7 @@ class ViewDashlet(ABCViewDashlet):
 @dashlet_registry.register
 class LinkedViewDashlet(ABCViewDashlet):
     """Dashlet that displays a Check_MK view without embedding it's definition into the dashboard"""
+
     @classmethod
     def type_name(cls):
         return "linked_view"
@@ -139,12 +142,13 @@ class LinkedViewDashlet(ABCViewDashlet):
                 "name",
                 DropdownChoice(
                     title=_("View name"),
-                    help=
-                    _("Choose the view you would like to show. Please note that, depending on the, "
-                      "logged in user viewing this dashboard, the view being displayed may "
-                      "differ. For example when another user has created a view with the same name. "
-                      "In case a user is not permitted to see a view, an error message will be "
-                      "displayed."),
+                    help=_(
+                        "Choose the view you would like to show. Please note that, depending on the, "
+                        "logged in user viewing this dashboard, the view being displayed may "
+                        "differ. For example when another user has created a view with the same name. "
+                        "In case a user is not permitted to see a view, an error message will be "
+                        "displayed."
+                    ),
                     choices=views.view_choices,
                     sorted=True,
                 ),
@@ -153,9 +157,10 @@ class LinkedViewDashlet(ABCViewDashlet):
 
     @classmethod
     def add_url(cls):
-        return 'create_link_view_dashlet.py?name=%s&mode=create&back=%s' % \
-            (urlencode(request.var('name')),
-             urlencode(makeuri(request, [('edit', '1')])))
+        return "create_link_view_dashlet.py?name=%s&mode=create&back=%s" % (
+            urlencode(request.var("name")),
+            urlencode(makeuri(request, [("edit", "1")])),
+        )
 
     def _get_view_spec(self) -> ViewSpec:
         view_name = self._dashlet_spec["name"]
@@ -177,13 +182,13 @@ class LinkedViewDashlet(ABCViewDashlet):
         view_name = self._dashlet_spec["name"]
         return makeuri_contextless(
             request,
-            [('view_name', view_name)] + self._dashlet_context_vars(),
-            filename='view.py',
+            [("view_name", view_name)] + self._dashlet_context_vars(),
+            filename="view.py",
         )
 
     def update(self):
         self._show_view_as_dashlet(self._get_view_spec())
-        html.javascript("cmk.utils.add_simplebar_scrollbar(\"dashlet_content_wrapper\");")
+        html.javascript('cmk.utils.add_simplebar_scrollbar("dashlet_content_wrapper");')
 
     def infos(self):
         return self._get_infos_from_view_spec(self._get_view_spec())

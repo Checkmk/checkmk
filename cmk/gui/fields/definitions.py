@@ -113,38 +113,39 @@ The maximum length is 3.
             marshmallow.exceptions.ValidationError: 'H' is bigger than the maximum (G).
 
     """
+
     default_error_messages = {
-        'enum': "{value!r} is not one of the enum values: {enum!r}",
-        'pattern': "{value!r} does not match pattern {pattern!r}.",
-        'maxLength': "string {value!r} is too long. The maximum length is {maxLength}.",
-        'minLength': "string {value!r} is too short. The minimum length is {minLength}.",
-        'maximum': "{value!r} is bigger than the maximum ({maximum}).",
-        'minimum': "{value!r} is smaller than the minimum ({minimum}).",
+        "enum": "{value!r} is not one of the enum values: {enum!r}",
+        "pattern": "{value!r} does not match pattern {pattern!r}.",
+        "maxLength": "string {value!r} is too long. The maximum length is {maxLength}.",
+        "minLength": "string {value!r} is too short. The minimum length is {minLength}.",
+        "maximum": "{value!r} is bigger than the maximum ({maximum}).",
+        "minimum": "{value!r} is smaller than the minimum ({minimum}).",
     }
 
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
-        enum = self.metadata.get('enum')
+        enum = self.metadata.get("enum")
         if enum and value not in enum:
             raise self.make_error("enum", value=value, enum=enum)
 
-        pattern = self.metadata.get('pattern')
+        pattern = self.metadata.get("pattern")
         if pattern is not None and not re.match("^(:?" + pattern + ")$", value):
             raise self.make_error("pattern", value=value, pattern=pattern)
 
-        max_length = self.metadata.get('maxLength')
+        max_length = self.metadata.get("maxLength")
         if max_length is not None and len(value) > max_length:
             raise self.make_error("maxLength", value=value, maxLength=max_length)
 
-        min_length = self.metadata.get('minLength')
+        min_length = self.metadata.get("minLength")
         if min_length is not None and len(value) < min_length:
             raise self.make_error("minLength", value=value, minLength=min_length)
 
-        maximum = self.metadata.get('maximum')
+        maximum = self.metadata.get("maximum")
         if maximum is not None and value > maximum:
             raise self.make_error("maximum", value=value, maximum=maximum)
 
-        minimum = self.metadata.get('minimum')
+        minimum = self.metadata.get("minimum")
         if minimum is not None and value < minimum:
             raise self.make_error("minimum", value=value, minimum=minimum)
 
@@ -201,43 +202,44 @@ class Integer(_fields.Integer):
             marshmallow.exceptions.ValidationError: 5 is not a multiple of 2.
 
     """
+
     default_error_messages = {
-        'enum': "{value!r} is not one of the enum values: {enum!r}",
-        'maximum': "{value!r} is bigger than the maximum ({maximum}).",
-        'minimum': "{value!r} is smaller than the minimum ({minimum}).",
-        'exclusiveMaximum': "{value!r} is bigger or equal than the maximum ({exclusiveMaximum}).",
-        'exclusiveMinimum': "{value!r} is smaller or equal than the minimum ({exclusiveMinimum}).",
-        'multipleOf': "{value!r} is not a multiple of {multipleOf!r}."
+        "enum": "{value!r} is not one of the enum values: {enum!r}",
+        "maximum": "{value!r} is bigger than the maximum ({maximum}).",
+        "minimum": "{value!r} is smaller than the minimum ({minimum}).",
+        "exclusiveMaximum": "{value!r} is bigger or equal than the maximum ({exclusiveMaximum}).",
+        "exclusiveMinimum": "{value!r} is smaller or equal than the minimum ({exclusiveMinimum}).",
+        "multipleOf": "{value!r} is not a multiple of {multipleOf!r}.",
     }
 
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
 
-        enum = self.metadata.get('enum')
+        enum = self.metadata.get("enum")
         if enum and value not in enum:
             raise self.make_error("enum", value=value, enum=enum)
 
-        maximum = self.metadata.get('maximum')
+        maximum = self.metadata.get("maximum")
         if maximum is not None and value > maximum:
             raise self.make_error("maximum", value=value, maximum=maximum)
 
-        minimum = self.metadata.get('minimum')
+        minimum = self.metadata.get("minimum")
         if minimum is not None and value < minimum:
             raise self.make_error("minimum", value=value, minimum=minimum)
 
-        exclusive_maximum = self.metadata.get('exclusiveMaximum')
+        exclusive_maximum = self.metadata.get("exclusiveMaximum")
         if exclusive_maximum is not None and value >= exclusive_maximum:
-            raise self.make_error("exclusiveMaximum",
-                                  value=value,
-                                  exclusiveMaximum=exclusive_maximum)
+            raise self.make_error(
+                "exclusiveMaximum", value=value, exclusiveMaximum=exclusive_maximum
+            )
 
-        exclusive_minimum = self.metadata.get('exclusiveMinimum')
+        exclusive_minimum = self.metadata.get("exclusiveMinimum")
         if exclusive_minimum is not None and value <= exclusive_minimum:
-            raise self.make_error("exclusiveMinimum",
-                                  value=value,
-                                  exclusiveMinimum=exclusive_minimum)
+            raise self.make_error(
+                "exclusiveMinimum", value=value, exclusiveMinimum=exclusive_minimum
+            )
 
-        multiple_of = self.metadata.get('multipleOf')
+        multiple_of = self.metadata.get("multipleOf")
         if multiple_of is not None and value % multiple_of != 0:
             raise self.make_error("multipleOf", value=value, multipleOf=multiple_of)
 
@@ -265,9 +267,11 @@ def _freeze(obj: Any, partial: Optional[Tuple[str, ...]] = None):
 
     """
     if isinstance(obj, collections.abc.Mapping):
-        return frozenset((_freeze(key), _freeze(value))
-                         for key, value in obj.items()
-                         if not partial or key in partial)
+        return frozenset(
+            (_freeze(key), _freeze(value))
+            for key, value in obj.items()
+            if not partial or key in partial
+        )
 
     if isinstance(obj, list):
         return tuple(_freeze(entry) for entry in obj)
@@ -286,10 +290,12 @@ class UniqueFields:
     Currently supported Fields are `List` and `Nested(..., many=True, ...)`
 
     """
+
     default_error_messages = {
-        'duplicate': "Duplicate entry found at entry #{idx}: {entry!r}",
-        'duplicate_vary': ("Duplicate entry found at entry #{idx}: {entry!r} "
-                           "(optional fields {optional!r})"),
+        "duplicate": "Duplicate entry found at entry #{idx}: {entry!r}",
+        "duplicate_vary": (
+            "Duplicate entry found at entry #{idx}: {entry!r} " "(optional fields {optional!r})"
+        ),
     }
 
     def _verify_unique_schema_entries(self: HasMakeError, value, fields):
@@ -313,10 +319,9 @@ class UniqueFields:
                         else:
                             optional_values[key] = _value
 
-                    raise self.make_error("duplicate_vary",
-                                          idx=idx,
-                                          optional=optional_values,
-                                          entry=required_values)
+                    raise self.make_error(
+                        "duplicate_vary", idx=idx, optional=optional_values, entry=required_values
+                    )
                 raise self.make_error("duplicate", idx=idx, entry=dict(sorted(entry.items())))
 
             seen.add(entry_hash)
@@ -389,9 +394,10 @@ class List(_fields.List, UniqueFields):
 {'description': 'CPU load', 'host': 'example'} (optional fields {'recur': 'day'})"]}
 
     """
+
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
-        if self.metadata.get('uniqueItems'):
+        if self.metadata.get("uniqueItems"):
             if isinstance(self.inner, Nested):
                 self._verify_unique_schema_entries(value, self.inner.schema.fields)
             else:
@@ -453,7 +459,7 @@ class Nested(_fields.Nested, UniqueFields):
             _miss = self.missing
             value = _miss() if callable(_miss) else _miss
         value = super()._deserialize(value, attr, data)
-        if self.many and self.metadata.get('uniqueItems'):
+        if self.many and self.metadata.get("uniqueItems"):
             self._verify_unique_schema_entries(value, self.schema.fields)
 
         return value
@@ -469,20 +475,22 @@ class FolderField(String):
 
     It will return a Folder instance, ready to use.
     """
+
     default_error_messages = {
-        'not_found': "The folder {folder_id!r} could not be found.",
+        "not_found": "The folder {folder_id!r} could not be found.",
     }
 
     def __init__(
         self,
         **kwargs,
     ):
-        if 'description' not in kwargs:
-            kwargs['description'] = "The path name of the folder."
+        if "description" not in kwargs:
+            kwargs["description"] = "The path name of the folder."
 
-        kwargs['description'] += (
+        kwargs["description"] += (
             "\n\nPath delimiters can be either `~`, `/` or `\\`. Please use the one most "
-            "appropriate for your quoting/escaping needs. A good default choice is `~`.")
+            "appropriate for your quoting/escaping needs. A good default choice is `~`."
+        )
         super().__init__(pattern=FOLDER_PATTERN, **kwargs)
 
     @classmethod
@@ -515,7 +523,7 @@ class FolderField(String):
 
         """
         prev = folder_id
-        separators = ['\\', '~']
+        separators = ["\\", "~"]
         while True:
             for sep in separators:
                 folder_id = folder_id.replace(sep, "/")
@@ -533,7 +541,7 @@ class FolderField(String):
             except ValueError:
                 return False
 
-        if folder_id == '/':
+        if folder_id == "/":
             folder = watolib.Folder.root_folder()
         elif _ishexdigit(folder_id):
             folder = watolib.Folder.by_id(folder_id)
@@ -560,12 +568,14 @@ class BinaryExprSchema(BaseSchema):
     >>> assert result == q
 
     """
+
     op = String(description="The operator.")
-    left = String(description="The LiveStatus column name.",
-                  pattern=r"([a-z]+\.)?[_a-z]+",
-                  example="name")
+    left = String(
+        description="The LiveStatus column name.", pattern=r"([a-z]+\.)?[_a-z]+", example="name"
+    )
     right = String(
-        description="The value to compare the column to.")  # should be AnyOf(all openapi types)
+        description="The value to compare the column to."
+    )  # should be AnyOf(all openapi types)
 
 
 class NotExprSchema(BaseSchema):
@@ -589,15 +599,16 @@ class NotExprSchema(BaseSchema):
 
 
 class LogicalExprSchema(BaseSchema):
-    """Expression combining multiple other query expressions.
-    """
+    """Expression combining multiple other query expressions."""
+
     op = String(description="The operator.")
     # many=True does not work here for some reason.
     expr = List(
         Nested(
             lambda *a, **kw: ExprSchema(*a, **kw),  # pylint: disable=unnecessary-lambda
             description="A list of query expressions to combine.",
-        ))
+        )
+    )
 
 
 class ExprSchema(OneOfSchema):
@@ -627,26 +638,27 @@ class ExprSchema(OneOfSchema):
         marshmallow.exceptions.ValidationError: Table 'hosts' has no column 'foo'.
 
     """
-    type_field = 'op'
+
+    type_field = "op"
     type_field_remove = False
     type_schemas = {
-        'and': LogicalExprSchema,
-        'or': LogicalExprSchema,
-        'not': NotExprSchema,
-        '=': BinaryExprSchema,
-        '~': BinaryExprSchema,
-        '~~': BinaryExprSchema,
-        '<': BinaryExprSchema,
-        '>': BinaryExprSchema,
-        '>=': BinaryExprSchema,
-        '<=': BinaryExprSchema,
-        '!=': BinaryExprSchema,
-        '!~': BinaryExprSchema,
-        '!~~': BinaryExprSchema,
-        '!<': BinaryExprSchema,
-        '!>': BinaryExprSchema,
-        '!>=': BinaryExprSchema,
-        '!<=': BinaryExprSchema,
+        "and": LogicalExprSchema,
+        "or": LogicalExprSchema,
+        "not": NotExprSchema,
+        "=": BinaryExprSchema,
+        "~": BinaryExprSchema,
+        "~~": BinaryExprSchema,
+        "<": BinaryExprSchema,
+        ">": BinaryExprSchema,
+        ">=": BinaryExprSchema,
+        "<=": BinaryExprSchema,
+        "!=": BinaryExprSchema,
+        "!~": BinaryExprSchema,
+        "!~~": BinaryExprSchema,
+        "!<": BinaryExprSchema,
+        "!>": BinaryExprSchema,
+        "!>=": BinaryExprSchema,
+        "!<=": BinaryExprSchema,
     }
 
     def load(self, data, *, many=None, partial=None, unknown=None, **kwargs):
@@ -656,23 +668,25 @@ class ExprSchema(OneOfSchema):
             try:
                 data = json.loads(data)
             except json.decoder.JSONDecodeError as exc:
-                raise ValidationError({
-                    '_schema': [
-                        f"Invalid JSON value: '{data}'",
-                        str(exc),
-                    ],
-                })
+                raise ValidationError(
+                    {
+                        "_schema": [
+                            f"Invalid JSON value: '{data}'",
+                            str(exc),
+                        ],
+                    }
+                )
         elif isinstance(data, QueryExpression):
             return data
 
-        if not self.context or 'table' not in self.context:
+        if not self.context or "table" not in self.context:
             raise RuntimeError(f"No table in context for field {self}")
 
         if not data:
             return NothingExpression()
 
         try:
-            tree_to_expr(data, self.context['table'])
+            tree_to_expr(data, self.context["table"])
         except ValueError as e:
             raise ValidationError(str(e)) from e
         return super().load(data, many=many, partial=partial, unknown=unknown, **kwargs)
@@ -681,7 +695,7 @@ class ExprSchema(OneOfSchema):
 class _ExprNested(Nested):
     def _load(self, value, data, partial=None):
         _data = super()._load(value, data, partial=partial)
-        return tree_to_expr(_data, table=self.metadata['table'])
+        return tree_to_expr(_data, table=self.metadata["table"])
 
 
 def query_field(table: typing.Type[Table], required: bool = False, example=None) -> Nested:
@@ -701,26 +715,24 @@ def query_field(table: typing.Type[Table], required: bool = False, example=None)
     """
 
     if example is None:
-        example = json.dumps({
-            'op': 'and',
-            'expr': [{
-                'op': '=',
-                'left': 'name',
-                'right': 'example.com'
-            }, {
-                'op': '!=',
-                'left': 'state',
-                'right': '0'
-            }],
-        })
+        example = json.dumps(
+            {
+                "op": "and",
+                "expr": [
+                    {"op": "=", "left": "name", "right": "example.com"},
+                    {"op": "!=", "left": "state", "right": "0"},
+                ],
+            }
+        )
 
     return _ExprNested(
-        ExprSchema(context={'table': table}),
+        ExprSchema(context={"table": table}),
         table=table,
         description=(
             f"An query expression of the Livestatus {table.__tablename__!r} table in nested "
             "dictionary form. If you want to use multiple expressions, nest them with the "
-            "AND/OR operators."),
+            "AND/OR operators."
+        ),
         many=False,
         example=example,
         required=required,
@@ -734,7 +746,7 @@ def column_field(
     table: typing.Type[Table],
     required: bool = False,
     mandatory: Optional[typing.List[ColumnTypes]] = None,
-) -> '_ListOfColumns':
+) -> "_ListOfColumns":
     column_names: typing.List[str] = []
     if mandatory is not None:
         for col in mandatory:
@@ -785,22 +797,25 @@ class _ListOfColumns(List):
         OrderedDict([('columns', [Column(hosts.name: string), Column(hosts.alias: string)])])
 
     """
+
     default_error_messages = {
-        'unknown_column': "Unknown default column: {table_name}.{column_name}",
+        "unknown_column": "Unknown default column: {table_name}.{column_name}",
     }
 
     def __init__(self, cls_or_instance: typing.Union[_fields.Field, type], **kwargs):
         super().__init__(cls_or_instance, **kwargs)
-        table = self.metadata['table']
-        for column in self.metadata.get('mandatory', []):
+        table = self.metadata["table"]
+        for column in self.metadata.get("mandatory", []):
             if column not in table.__columns__():
-                raise ValueError(f"Column {column!r} in parameter 'mandatory' is not a column "
-                                 f"of table {table.__tablename__!r}")
+                raise ValueError(
+                    f"Column {column!r} in parameter 'mandatory' is not a column "
+                    f"of table {table.__tablename__!r}"
+                )
 
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data)
-        table = self.metadata['table']
-        for column in reversed(self.metadata.get('mandatory', [])):
+        table = self.metadata["table"]
+        for column in reversed(self.metadata.get("mandatory", [])):
             if isinstance(column, Column):
                 column_name = column.name
             else:
@@ -826,41 +841,41 @@ class _LiveStatusColumn(String):
         ['Unknown column: hosts.bar']
 
     """
+
     default_error_messages = {
-        'unknown_column': "Unknown column: {table_name}.{column_name}",
+        "unknown_column": "Unknown column: {table_name}.{column_name}",
     }
 
     def _deserialize(self, value, attr, data, **kwargs):
-        table = self.metadata['table']
+        table = self.metadata["table"]
         if value not in table.__columns__():
-            raise self.make_error("unknown_column",
-                                  table_name=table.__tablename__,
-                                  column_name=value)
+            raise self.make_error(
+                "unknown_column", table_name=table.__tablename__, column_name=value
+            )
         return value
 
 
-HOST_NAME_REGEXP = '[-0-9a-zA-Z_.]+'
+HOST_NAME_REGEXP = "[-0-9a-zA-Z_.]+"
 
 
 class HostField(String):
-    """A field representing a hostname.
+    """A field representing a hostname."""
 
-    """
     default_error_messages = {
-        'should_exist': 'Host not found: {host_name!r}',
-        'should_not_exist': 'Host {host_name!r} already exists.',
-        'should_be_monitored': 'Host {host_name!r} exists, but is not monitored. '
-                               'Activate the configuration?',
-        'should_not_be_monitored': 'Host {host_name!r} exists, but should not be monitored. '
-                                   'Activate the configuration?',
-        'should_be_cluster': 'Host {host_name!r} is not a cluster host, but needs to be.',
-        'should_not_be_cluster': "Host {host_name!r} may not be a cluster host, but is.",
-        'invalid_name': 'The provided name for host {host_name!r} is invalid: {invalid_reason!r}',
+        "should_exist": "Host not found: {host_name!r}",
+        "should_not_exist": "Host {host_name!r} already exists.",
+        "should_be_monitored": "Host {host_name!r} exists, but is not monitored. "
+        "Activate the configuration?",
+        "should_not_be_monitored": "Host {host_name!r} exists, but should not be monitored. "
+        "Activate the configuration?",
+        "should_be_cluster": "Host {host_name!r} is not a cluster host, but needs to be.",
+        "should_not_be_cluster": "Host {host_name!r} may not be a cluster host, but is.",
+        "invalid_name": "The provided name for host {host_name!r} is invalid: {invalid_reason!r}",
     }
 
     def __init__(
         self,
-        example='example.com',
+        example="example.com",
         pattern=HOST_NAME_REGEXP,
         required=True,
         validate=None,
@@ -916,10 +931,11 @@ class HostField(String):
 def group_is_monitored(group_type, group_name):
     # Danke mypy
     rv: bool
-    if group_type == 'service':
+    if group_type == "service":
         rv = bool(
-            Query([Servicegroups.name], Servicegroups.name == group_name).first_value(sites.live()))
-    elif group_type == 'host':
+            Query([Servicegroups.name], Servicegroups.name == group_name).first_value(sites.live())
+        )
+    elif group_type == "host":
         rv = bool(Query([Hostgroups.name], Hostgroups.name == group_name).first_value(sites.live()))
     else:
         raise ValueError("Unknown group type.")
@@ -930,14 +946,16 @@ def host_is_monitored(host_name: str) -> bool:
     return bool(Query([Hosts.name], Hosts.name == host_name).first_value(sites.live()))
 
 
-def attributes_field(object_type: ObjectType,
-                     object_context: ObjectContext,
-                     description: Optional[str] = None,
-                     example: Optional[Any] = None,
-                     required: bool = False,
-                     missing: Any = utils.missing,
-                     many: bool = False,
-                     names_only: bool = False) -> _fields.Field:
+def attributes_field(
+    object_type: ObjectType,
+    object_context: ObjectContext,
+    description: Optional[str] = None,
+    example: Optional[Any] = None,
+    required: bool = False,
+    missing: Any = utils.missing,
+    many: bool = False,
+    names_only: bool = False,
+) -> _fields.Field:
     if description is None:
         # SPEC won't validate without description, though the error message is very obscure.
         raise ValueError("description is necessary.")
@@ -968,7 +986,8 @@ def attributes_field(object_type: ObjectType,
 
 class SiteField(_fields.String):
     """A field representing a site name."""
-    default_error_messages = {'unknown_site': 'Unknown site {site!r}'}
+
+    default_error_messages = {"unknown_site": "Unknown site {site!r}"}
 
     def _validate(self, value):
         if value not in allsites().keys():
@@ -983,15 +1002,16 @@ def customer_field(**kw):
 
 class _CustomerField(_fields.String):
     """A field representing a customer"""
+
     default_error_messages = {
-        'invalid_global': 'Invalid customer: global',
-        'should_exist': 'Customer missing: {customer!r}',
-        'should_not_exist': 'Customer {customer!r} already exists.',
+        "invalid_global": "Invalid customer: global",
+        "should_exist": "Customer missing: {customer!r}",
+        "should_not_exist": "Customer {customer!r} already exists.",
     }
 
     def __init__(
         self,
-        example='provider',
+        example="provider",
         description="By specifying a customer, you configure on which sites the user object will be "
         "available. 'global' will make the object available on all sites.",
         required=True,
@@ -1035,16 +1055,15 @@ def verify_group_exists(group_type: str, name):
 
 
 class GroupField(String):
-    """A field representing a group.
+    """A field representing a group."""
 
-    """
     default_error_messages = {
-        'should_exist': 'Group missing: {name!r}',
-        'should_not_exist': 'Group {name!r} already exists.',
-        'should_be_monitored': 'Group {host_name!r} exists, but is not monitored. '
-                               'Activate the configuration?',
-        'should_not_be_monitored': 'Group {host_name!r} exists, but should not be monitored. '
-                                   'Activate the configuration?',
+        "should_exist": "Group missing: {name!r}",
+        "should_not_exist": "Group {name!r} already exists.",
+        "should_be_monitored": "Group {host_name!r} exists, but is not monitored. "
+        "Activate the configuration?",
+        "should_not_be_monitored": "Group {host_name!r} exists, but should not be monitored. "
+        "Activate the configuration?",
     }
 
     def __init__(
@@ -1093,8 +1112,8 @@ class PasswordIdent(String):
     """A field representing a password identifier"""
 
     default_error_messages = {
-        'should_exist': 'Identifier missing: {name!r}',
-        'should_not_exist': 'Identifier {name!r} already exists.',
+        "should_exist": "Identifier missing: {name!r}",
+        "should_not_exist": "Identifier {name!r} already exists.",
     }
 
     def __init__(
@@ -1128,7 +1147,7 @@ class PasswordOwner(String):
     """A field representing a password owner group"""
 
     default_error_messages = {
-        'invalid': 'Specified owner value is not valid: {name!r}',
+        "invalid": "Specified owner value is not valid: {name!r}",
     }
 
     def __init__(
@@ -1164,7 +1183,7 @@ class PasswordShare(String):
     """A field representing a password share group"""
 
     default_error_messages = {
-        'invalid': 'The password cannot be shared with specified group: {name!r}',
+        "invalid": "The password cannot be shared with specified group: {name!r}",
     }
 
     def __init__(
@@ -1231,9 +1250,10 @@ class Timestamp(_fields.DateTime):
         marshmallow.exceptions.ValidationError: ...
 
     """
-    OBJ_TYPE = 'timestamp'
 
-    default_error_messages = {'invalid': 'Not a valid timestamp: {input!r}'}
+    OBJ_TYPE = "timestamp"
+
+    default_error_messages = {"invalid": "Not a valid timestamp: {input!r}"}
 
     def _serialize(self, value, attr, obj, **kwargs):
         if value is None:
@@ -1247,22 +1267,22 @@ class Timestamp(_fields.DateTime):
 
 
 __all__ = [
-    'attributes_field',
-    'customer_field',
-    'column_field',
-    'ExprSchema',
-    'FolderField',
-    'FOLDER_PATTERN',
-    'GroupField',
-    'HostField',
-    'Integer',
-    'List',
-    'Nested',
-    'PasswordIdent',
-    'PasswordOwner',
-    'PasswordShare',
-    'query_field',
-    'SiteField',
-    'String',
-    'Timestamp',
+    "attributes_field",
+    "customer_field",
+    "column_field",
+    "ExprSchema",
+    "FolderField",
+    "FOLDER_PATTERN",
+    "GroupField",
+    "HostField",
+    "Integer",
+    "List",
+    "Nested",
+    "PasswordIdent",
+    "PasswordOwner",
+    "PasswordShare",
+    "query_field",
+    "SiteField",
+    "String",
+    "Timestamp",
 ]

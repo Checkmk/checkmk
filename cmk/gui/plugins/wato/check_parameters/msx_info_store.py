@@ -16,36 +16,45 @@ from cmk.gui.valuespec import Dictionary, Float, Integer, TextInput, Tuple
 def _item_spec_msx_info_store():
     return TextInput(
         title=_("Store"),
-        help=_("Specify the name of a store (This is either a mailbox or public folder)"))
+        help=_("Specify the name of a store (This is either a mailbox or public folder)"),
+    )
 
 
 def _parameter_valuespec_msx_info_store():
     return Dictionary(
         title=_("Set Levels"),
-        elements=[('store_latency',
-                   Tuple(
-                       title=_("Average latency for store requests"),
-                       elements=[
-                           Float(title=_("Warning at"), unit=_('ms'), default_value=40.0),
-                           Float(title=_("Critical at"), unit=_('ms'), default_value=50.0)
-                       ],
-                   )),
-                  ('clienttype_latency',
-                   Tuple(
-                       title=_("Average latency for client type requests"),
-                       elements=[
-                           Float(title=_("Warning at"), unit=_('ms'), default_value=40.0),
-                           Float(title=_("Critical at"), unit=_('ms'), default_value=50.0)
-                       ],
-                   )),
-                  ('clienttype_requests',
-                   Tuple(
-                       title=_("Maximum number of client type requests per second"),
-                       elements=[
-                           Integer(title=_("Warning at"), unit=_('requests'), default_value=60),
-                           Integer(title=_("Critical at"), unit=_('requests'), default_value=70)
-                       ],
-                   ))],
+        elements=[
+            (
+                "store_latency",
+                Tuple(
+                    title=_("Average latency for store requests"),
+                    elements=[
+                        Float(title=_("Warning at"), unit=_("ms"), default_value=40.0),
+                        Float(title=_("Critical at"), unit=_("ms"), default_value=50.0),
+                    ],
+                ),
+            ),
+            (
+                "clienttype_latency",
+                Tuple(
+                    title=_("Average latency for client type requests"),
+                    elements=[
+                        Float(title=_("Warning at"), unit=_("ms"), default_value=40.0),
+                        Float(title=_("Critical at"), unit=_("ms"), default_value=50.0),
+                    ],
+                ),
+            ),
+            (
+                "clienttype_requests",
+                Tuple(
+                    title=_("Maximum number of client type requests per second"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("requests"), default_value=60),
+                        Integer(title=_("Critical at"), unit=_("requests"), default_value=70),
+                    ],
+                ),
+            ),
+        ],
         optional_keys=[],
     )
 
@@ -58,4 +67,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_msx_info_store,
         title=lambda: _("MS Exchange Information Store"),
-    ))
+    )
+)

@@ -25,6 +25,7 @@ class HTML:
     This way we can implement escaping while still allowing HTML code. This is useful when one needs
     to print out HTML tables in messages or help texts.
     """
+
     def __init__(self, value: HTMLInput = "") -> None:
         # Type hints are not used everywhere. So better be sure that we really have
         # the types we want.
@@ -39,7 +40,7 @@ class HTML:
         return self.value
 
     def __repr__(self) -> str:
-        return "HTML(\"%s\")" % self.value
+        return 'HTML("%s")' % self.value
 
     def __hash__(self) -> int:
         return hash(self.value)
@@ -74,16 +75,14 @@ class HTML:
     def __contains__(self, item: HTMLInput) -> bool:
         return self._ensure_str(item) in self.value
 
-    def count(self,
-              x: HTMLInput,
-              __start: Optional[int] = None,
-              __end: Optional[int] = None) -> int:
+    def count(
+        self, x: HTMLInput, __start: Optional[int] = None, __end: Optional[int] = None
+    ) -> int:
         return self.value.count(self._ensure_str(x), __start, __end)
 
-    def index(self,
-              sub: HTMLInput,
-              __start: Optional[int] = None,
-              __end: Optional[int] = None) -> int:
+    def index(
+        self, sub: HTMLInput, __start: Optional[int] = None, __end: Optional[int] = None
+    ) -> int:
         return self.value.index(self._ensure_str(sub), __start, __end)
 
     def lstrip(self, chars: Optional[HTMLInput] = None) -> HTML:
@@ -101,8 +100,7 @@ class HTML:
     def upper(self) -> HTML:
         return HTML(self.value.upper())
 
-    def startswith(self,
-                   prefix: HTMLInput,
-                   start: Optional[int] = None,
-                   end: Optional[int] = None) -> bool:
+    def startswith(
+        self, prefix: HTMLInput, start: Optional[int] = None, end: Optional[int] = None
+    ) -> bool:
         return self.value.startswith(self._ensure_str(prefix), start, end)

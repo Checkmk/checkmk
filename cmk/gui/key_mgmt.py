@@ -112,7 +112,8 @@ class PageKeyManagement:
                                     title=_("Add key"),
                                     icon_name="new",
                                     item=make_simple_link(
-                                        makeuri_contextless(request, [("mode", self.edit_mode)])),
+                                        makeuri_contextless(request, [("mode", self.edit_mode)])
+                                    ),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -120,7 +121,8 @@ class PageKeyManagement:
                                     title=_("Upload key"),
                                     icon_name="upload",
                                     item=make_simple_link(
-                                        makeuri_contextless(request, [("mode", self.upload_mode)])),
+                                        makeuri_contextless(request, [("mode", self.upload_mode)])
+                                    ),
                                     is_shortcut=True,
                                     is_suggested=True,
                                 ),
@@ -176,8 +178,10 @@ class PageKeyManagement:
                 if self._may_edit_config():
                     message = self._delete_confirm_msg()
                     if key["owner"] != user.id:
-                        message += _("<br><b>Note</b>: this key has created by user <b>%s</b>"
-                                    ) % key["owner"]
+                        message += (
+                            _("<br><b>Note</b>: this key has created by user <b>%s</b>")
+                            % key["owner"]
+                        )
 
                     delete_url = make_confirm_link(
                         url=makeactionuri(request, transactions, [("_delete", key_id)]),
@@ -208,11 +212,9 @@ class PageEditKey:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Key"),
-                                          breadcrumb,
-                                          form_name="key",
-                                          button_name="create",
-                                          save_title=_("Create"))
+        return make_simple_form_page_menu(
+            _("Key"), breadcrumb, form_name="key", button_name="create", save_title=_("Create")
+        )
 
     def action(self) -> ActionResult:
         if transactions.check_transaction():
@@ -244,8 +246,9 @@ class PageEditKey:
         cert = create_self_signed_cert(pkey)
         return {
             "certificate": crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
-            "private_key": crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey, "AES256",
-                                                  passphrase.encode("utf-8")).decode("ascii"),
+            "private_key": crypto.dump_privatekey(
+                crypto.FILETYPE_PEM, pkey, "AES256", passphrase.encode("utf-8")
+            ).decode("ascii"),
             "alias": alias,
             "owner": user.id,
             "date": time.time(),
@@ -264,19 +267,24 @@ class PageEditKey:
         return Dictionary(
             title=_("Properties"),
             elements=[
-                ("alias", TextInput(
-                    title=_("Description or comment"),
-                    size=64,
-                    allow_empty=False,
-                )),
-                ("passphrase",
-                 Password(
-                     title=_("Passphrase"),
-                     help=self._passphrase_help(),
-                     allow_empty=False,
-                     is_stored_plain=False,
-                     minlen=self._minlen,
-                 )),
+                (
+                    "alias",
+                    TextInput(
+                        title=_("Description or comment"),
+                        size=64,
+                        allow_empty=False,
+                    ),
+                ),
+                (
+                    "passphrase",
+                    Password(
+                        title=_("Passphrase"),
+                        help=self._passphrase_help(),
+                        allow_empty=False,
+                        is_stored_plain=False,
+                        minlen=self._minlen,
+                    ),
+                ),
             ],
             optional_keys=False,
             render="form",
@@ -296,11 +304,9 @@ class PageUploadKey:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Key"),
-                                          breadcrumb,
-                                          form_name="key",
-                                          button_name="upload",
-                                          save_title=_("Upload"))
+        return make_simple_form_page_menu(
+            _("Key"), breadcrumb, form_name="key", button_name="upload", save_title=_("Upload")
+        )
 
     def action(self) -> ActionResult:
         if transactions.check_transaction():
@@ -312,10 +318,12 @@ class PageUploadKey:
             if not key_file:
                 raise MKUserError(None, _("You need to provide a key file."))
 
-            if not key_file.startswith("-----BEGIN ENCRYPTED PRIVATE KEY-----\n") \
-               or "-----END ENCRYPTED PRIVATE KEY-----\n" not in key_file \
-               or "-----BEGIN CERTIFICATE-----\n" not in key_file \
-               or not key_file.endswith("-----END CERTIFICATE-----\n"):
+            if (
+                not key_file.startswith("-----BEGIN ENCRYPTED PRIVATE KEY-----\n")
+                or "-----END ENCRYPTED PRIVATE KEY-----\n" not in key_file
+                or "-----BEGIN CERTIFICATE-----\n" not in key_file
+                or not key_file.endswith("-----END CERTIFICATE-----\n")
+            ):
                 raise MKUserError(None, _("The file does not look like a valid key file."))
 
             self._upload_key(key_file, value)
@@ -344,15 +352,17 @@ class PageUploadKey:
             if other_digest == this_digest:
                 raise MKUserError(
                     None,
-                    _("The key / certificate already exists (Key: %d, "
-                      "Description: %s)") % (key_id, key["alias"]))
+                    _("The key / certificate already exists (Key: %d, " "Description: %s)")
+                    % (key_id, key["alias"]),
+                )
 
         # Use time from certificate
         def parse_asn1_generalized_time(timestr):
             return time.strptime(timestr, "%Y%m%d%H%M%SZ")
 
         created = time.mktime(
-            parse_asn1_generalized_time(certificate.get_notBefore().decode("ascii")))
+            parse_asn1_generalized_time(certificate.get_notBefore().decode("ascii"))
+        )
 
         # Check for valid passphrase
         decrypt_private_key(key_file, value["passphrase"])
@@ -385,24 +395,33 @@ class PageUploadKey:
         return Dictionary(
             title=_("Properties"),
             elements=[
-                ("alias", TextInput(
-                    title=_("Description or comment"),
-                    size=64,
-                    allow_empty=False,
-                )),
-                ("passphrase",
-                 Password(
-                     title=_("Passphrase"),
-                     help=self._passphrase_help(),
-                     allow_empty=False,
-                     is_stored_plain=False,
-                 )),
-                ("key_file",
-                 CascadingDropdown(title=_("Key"),
-                                   choices=[
-                                       ("upload", _("Upload CRT/PEM File"), FileUpload()),
-                                       ("text", _("Paste PEM Content"), TextAreaUnicode()),
-                                   ])),
+                (
+                    "alias",
+                    TextInput(
+                        title=_("Description or comment"),
+                        size=64,
+                        allow_empty=False,
+                    ),
+                ),
+                (
+                    "passphrase",
+                    Password(
+                        title=_("Passphrase"),
+                        help=self._passphrase_help(),
+                        allow_empty=False,
+                        is_stored_plain=False,
+                    ),
+                ),
+                (
+                    "key_file",
+                    CascadingDropdown(
+                        title=_("Key"),
+                        choices=[
+                            ("upload", _("Upload CRT/PEM File"), FileUpload()),
+                            ("text", _("Paste PEM Content"), TextAreaUnicode()),
+                        ],
+                    ),
+                ),
             ],
             optional_keys=False,
             render="form",
@@ -422,11 +441,9 @@ class PageDownloadKey:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Key"),
-                                          breadcrumb,
-                                          form_name="key",
-                                          button_name="download",
-                                          save_title=_("Download"))
+        return make_simple_form_page_menu(
+            _("Key"), breadcrumb, form_name="key", button_name="download", save_title=_("Download")
+        )
 
     def action(self) -> ActionResult:
         if transactions.check_transaction():
@@ -456,7 +473,8 @@ class PageDownloadKey:
     def _send_download(self, keys, key_id):
         key = keys[key_id]
         response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
-            key_id, key)
+            key_id, key
+        )
         response.headers["Content-type"] = "application/x-pem-file"
         response.set_data(key["private_key"] + key["certificate"])
 
@@ -465,9 +483,12 @@ class PageDownloadKey:
 
     def page(self):
         html.p(
-            _("To be able to download the key, you need to unlock the key by entering the "
-              "passphrase. This is only done to verify that you are allowed to download the key. "
-              "The key will be downloaded in encrypted form."))
+            _(
+                "To be able to download the key, you need to unlock the key by entering the "
+                "passphrase. This is only done to verify that you are allowed to download the key. "
+                "The key will be downloaded in encrypted form."
+            )
+        )
         html.begin_form("key", method="POST")
         html.prevent_password_auto_completion()
         self._vs_key().render_input("key", {})
@@ -479,12 +500,14 @@ class PageDownloadKey:
         return Dictionary(
             title=_("Properties"),
             elements=[
-                ("passphrase",
-                 Password(
-                     title=_("Passphrase"),
-                     allow_empty=False,
-                     is_stored_plain=False,
-                 )),
+                (
+                    "passphrase",
+                    Password(
+                        title=_("Passphrase"),
+                        allow_empty=False,
+                        is_stored_plain=False,
+                    ),
+                ),
             ],
             optional_keys=False,
             render="form",
@@ -500,14 +523,15 @@ def create_self_signed_cert(pkey):
     cert.gmtime_adj_notAfter(30 * 365 * 24 * 60 * 60)  # valid for 30 years.
     cert.set_issuer(cert.get_subject())
     cert.set_pubkey(pkey)
-    cert.sign(pkey, 'sha1')
+    cert.sign(pkey, "sha1")
 
     return cert
 
 
 def decrypt_private_key(encrypted_private_key, passphrase):
     try:
-        return crypto.load_privatekey(crypto.FILETYPE_PEM, encrypted_private_key,
-                                      passphrase.encode("utf-8"))
+        return crypto.load_privatekey(
+            crypto.FILETYPE_PEM, encrypted_private_key, passphrase.encode("utf-8")
+        )
     except crypto.Error:
         raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))

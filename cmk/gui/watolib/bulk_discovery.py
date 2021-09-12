@@ -41,8 +41,11 @@ def get_tasks(hosts_to_discover: List[DiscoveryHost], bulk_size: int) -> List[Di
     tasks: List[DiscoveryTask] = []
 
     for site_id, folder_path, host_name in sorted(hosts_to_discover):
-        if not tasks or (site_id, folder_path) != current_site_and_folder or \
-           len(tasks[-1].host_names) >= bulk_size:
+        if (
+            not tasks
+            or (site_id, folder_path) != current_site_and_folder
+            or len(tasks[-1].host_names) >= bulk_size
+        ):
             tasks.append(DiscoveryTask(site_id, folder_path, [host_name]))
         else:
             tasks[-1].host_names.append(host_name)
@@ -57,8 +60,9 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
         selection_elements.append(Checkbox(label=_("Include all subfolders"), default_value=True))
 
     selection_elements += [
-        Checkbox(label=_("Only include hosts that failed on previous discovery"),
-                 default_value=False),
+        Checkbox(
+            label=_("Only include hosts that failed on previous discovery"), default_value=False
+        ),
         Checkbox(label=_("Only include hosts with a failed discovery check"), default_value=False),
         Checkbox(label=_("Exclude hosts where the agent is unreachable"), default_value=False),
     ]
@@ -67,32 +71,44 @@ def vs_bulk_discovery(render_form=False, include_subfolders=True):
         title=_("Bulk discovery"),
         render="form" if render_form else "normal",
         elements=[
-            ("mode",
-             DropdownChoice(
-                 title=_("Mode"),
-                 default_value="new",
-                 choices=[
-                     ("new", _("Add unmonitored services and new host labels")),
-                     ("remove", _("Remove vanished services")),
-                     ("fixall",
-                      _("Add unmonitored services and new host labels, remove vanished services")),
-                     ("refresh", _("Refresh all services (tabula rasa), add new host labels")),
-                     ("only-host-labels", _("Only discover new host labels")),
-                 ],
-             )),
+            (
+                "mode",
+                DropdownChoice(
+                    title=_("Mode"),
+                    default_value="new",
+                    choices=[
+                        ("new", _("Add unmonitored services and new host labels")),
+                        ("remove", _("Remove vanished services")),
+                        (
+                            "fixall",
+                            _(
+                                "Add unmonitored services and new host labels, remove vanished services"
+                            ),
+                        ),
+                        ("refresh", _("Refresh all services (tabula rasa), add new host labels")),
+                        ("only-host-labels", _("Only discover new host labels")),
+                    ],
+                ),
+            ),
             ("selection", Tuple(title=_("Selection"), elements=selection_elements)),
-            ("performance",
-             Tuple(title=_("Performance options"),
-                   elements=[
-                       Checkbox(label=_("Do a full service scan"), default_value=True),
-                       Integer(label=_("Number of hosts to handle at once"), default_value=10),
-                   ])),
-            ("error_handling",
-             Checkbox(
-                 title=_("Error handling"),
-                 label=_("Ignore errors in single check plugins"),
-                 default_value=True,
-             )),
+            (
+                "performance",
+                Tuple(
+                    title=_("Performance options"),
+                    elements=[
+                        Checkbox(label=_("Do a full service scan"), default_value=True),
+                        Integer(label=_("Number of hosts to handle at once"), default_value=10),
+                    ],
+                ),
+            ),
+            (
+                "error_handling",
+                Checkbox(
+                    title=_("Error handling"),
+                    label=_("Ignore errors in single check plugins"),
+                    default_value=True,
+                ),
+            ),
         ],
         optional_keys=[],
     )
@@ -119,7 +135,9 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         return Folder.current().url()
 
     def do_execute(self, mode, do_scan, error_handling, tasks, job_interface=None):
-        self._initialize_statistics(num_hosts_total=sum(len(task.host_names) for task in tasks),)
+        self._initialize_statistics(
+            num_hosts_total=sum(len(task.host_names) for task in tasks),
+        )
         job_interface.send_progress_update(_("Bulk discovery started..."))
 
         for task in tasks:
@@ -128,16 +146,27 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         job_interface.send_progress_update(_("Bulk discovery finished."))
 
         job_interface.send_progress_update(
-            _("Hosts: %d total (%d succeeded, %d skipped, %d failed)") %
-            (self._num_hosts_total, self._num_hosts_succeeded, self._num_hosts_skipped,
-             self._num_hosts_failed))
+            _("Hosts: %d total (%d succeeded, %d skipped, %d failed)")
+            % (
+                self._num_hosts_total,
+                self._num_hosts_succeeded,
+                self._num_hosts_skipped,
+                self._num_hosts_failed,
+            )
+        )
         job_interface.send_progress_update(
-            _("Host labels: %d total (%d added)") %
-            (self._num_host_labels_total, self._num_host_labels_added))
+            _("Host labels: %d total (%d added)")
+            % (self._num_host_labels_total, self._num_host_labels_added)
+        )
         job_interface.send_progress_update(
-            _("Services: %d total (%d added, %d removed, %d kept)") %
-            (self._num_services_total, self._num_services_added, self._num_services_removed,
-             self._num_services_kept))
+            _("Services: %d total (%d added, %d removed, %d kept)")
+            % (
+                self._num_services_total,
+                self._num_services_added,
+                self._num_services_removed,
+                self._num_services_kept,
+            )
+        )
 
         job_interface.send_result_message(_("Bulk discovery successful"))
 
@@ -162,16 +191,19 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         except Exception:
             self._num_hosts_failed += len(task.host_names)
             if task.site_id:
-                msg = _("Error during discovery of %s on site %s") % \
-                    (", ".join(task.host_names), task.site_id)
+                msg = _("Error during discovery of %s on site %s") % (
+                    ", ".join(task.host_names),
+                    task.site_id,
+                )
             else:
                 msg = _("Error during discovery of %s") % (", ".join(task.host_names))
             self._logger.exception(msg)
 
         self._num_hosts_processed += len(task.host_names)
 
-    def _execute_discovery(self, task, mode, do_scan,
-                           error_handling) -> AutomationDiscoveryResponse:
+    def _execute_discovery(
+        self, task, mode, do_scan, error_handling
+    ) -> AutomationDiscoveryResponse:
         arguments = [mode] + task.host_names
 
         if do_scan:
@@ -181,13 +213,13 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
 
         timeout = request.request_timeout - 2
 
-        return execute_automation_discovery(site_id=task.site_id,
-                                            args=arguments,
-                                            timeout=timeout,
-                                            non_blocking_http=True)
+        return execute_automation_discovery(
+            site_id=task.site_id, args=arguments, timeout=timeout, non_blocking_http=True
+        )
 
-    def _process_discovery_results(self, task, job_interface,
-                                   response: AutomationDiscoveryResponse) -> None:
+    def _process_discovery_results(
+        self, task, job_interface, response: AutomationDiscoveryResponse
+    ) -> None:
         # The following code updates the host config. The progress from loading the WATO folder
         # until it has been saved needs to be locked.
         with store.lock_checkmk_configuration():
@@ -195,10 +227,12 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
             folder = Folder.folder(task.folder_path)
             for count, hostname in enumerate(task.host_names, self._num_hosts_processed + 1):
                 self._process_service_counts_for_host(response.results[hostname])
-                msg = self._process_discovery_result_for_host(folder.host(hostname),
-                                                              response.results[hostname])
+                msg = self._process_discovery_result_for_host(
+                    folder.host(hostname), response.results[hostname]
+                )
                 job_interface.send_progress_update(
-                    f"[{count}/{self._num_hosts_total}] {hostname}: {msg}")
+                    f"[{count}/{self._num_hosts_total}] {hostname}: {msg}"
+                )
 
     def _process_service_counts_for_host(self, result: DiscoveryResult) -> None:
         self._num_services_added += result.self_new
@@ -224,11 +258,21 @@ class BulkDiscoveryBackgroundJob(WatoBackgroundJob):
         add_service_change(
             host,
             "bulk-discovery",
-            _("Did service discovery on host %s: %d added, %d removed, %d kept, "
-              "%d total services and %d host labels added, %d host labels total") %
-            (host.name(), result.self_new, result.self_removed, result.self_kept, result.self_total,
-             result.self_new_host_labels, result.self_total_host_labels),
-            diff_text=result.diff_text)
+            _(
+                "Did service discovery on host %s: %d added, %d removed, %d kept, "
+                "%d total services and %d host labels added, %d host labels total"
+            )
+            % (
+                host.name(),
+                result.self_new,
+                result.self_removed,
+                result.self_kept,
+                result.self_total,
+                result.self_new_host_labels,
+                result.self_total_host_labels,
+            ),
+            diff_text=result.diff_text,
+        )
 
         if not host.locked():
             host.clear_discovery_failed()

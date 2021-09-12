@@ -16,31 +16,29 @@ from cmk.gui.utils.transaction_manager import TransactionManager
 
 QueryVars = Mapping[str, Sequence[str]]
 
-_ALWAYS_SAFE = frozenset(b'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-                         b'abcdefghijklmnopqrstuvwxyz'
-                         b'0123456789'
-                         b'_.-~'
-                         b' ')
+_ALWAYS_SAFE = frozenset(
+    b"ABCDEFGHIJKLMNOPQRSTUVWXYZ" b"abcdefghijklmnopqrstuvwxyz" b"0123456789" b"_.-~" b" "
+)
 _ALWAYS_SAFE_BYTES = bytes(_ALWAYS_SAFE)
-_QUOTED = {b: chr(b) if b in _ALWAYS_SAFE else '%{:02X}'.format(b) for b in range(256)}
+_QUOTED = {b: chr(b) if b in _ALWAYS_SAFE else "%{:02X}".format(b) for b in range(256)}
 
 
 def quote(string: str) -> str:
     """More performant version of urllib.parse equivalent to the call quote(string, safe=' ')."""
     if not string:
         return string
-    bs = string.encode('utf-8', 'strict')
+    bs = string.encode("utf-8", "strict")
     if not bs.rstrip(_ALWAYS_SAFE_BYTES):
         return bs.decode()
-    return ''.join([_QUOTED[char] for char in bs])
+    return "".join([_QUOTED[char] for char in bs])
 
 
 @lru_cache(maxsize=4096)
 def quote_plus(string: str) -> str:
     """More performant version of urllib.parse equivalent to the call quote_plus(string)."""
-    if ' ' not in string:
+    if " " not in string:
         return quote(string)
-    return quote(string).replace(' ', '+')
+    return quote(string).replace(" ", "+")
 
 
 def _quote_pair(varname: str, value: Union[None, int, str]):
@@ -59,7 +57,7 @@ def _quote_pair(varname: str, value: Union[None, int, str]):
 # TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless
 def urlencode_vars(vars_: HTTPVariables) -> str:
     """Convert a mapping object or a sequence of two-element tuples to a “percent-encoded” string"""
-    return '&'.join([_quote_pair(var, val) for var, val in sorted(vars_)])
+    return "&".join([_quote_pair(var, val) for var, val in sorted(vars_)])
 
 
 # TODO: Inspect call sites to this function: Most of them can be replaced with makeuri_contextless
@@ -95,9 +93,11 @@ def makeuri(
     delvars: Optional[Sequence[str]] = None,
 ) -> str:
     new_vars = [nv[0] for nv in addvars]
-    vars_: HTTPVariables = [(v, val)
-                            for v, val in request.itervars()
-                            if v[0] != "_" and v not in new_vars and not (delvars and v in delvars)]
+    vars_: HTTPVariables = [
+        (v, val)
+        for v, val in request.itervars()
+        if v[0] != "_" and v not in new_vars and not (delvars and v in delvars)
+    ]
     if remove_prefix is not None:
         vars_ = [i for i in vars_ if not i[0].startswith(remove_prefix)]
     vars_ = vars_ + addvars
@@ -114,7 +114,7 @@ def makeuri_contextless(
     filename: Optional[str] = None,
 ) -> str:
     if not filename:
-        filename = requested_file_name(request) + '.py'
+        filename = requested_file_name(request) + ".py"
     if vars_:
         return filename + "?" + urlencode_vars(vars_)
     return filename
@@ -154,8 +154,8 @@ def makeuri_contextless_rulespec_group(
 ):
     return makeuri_contextless(
         request,
-        [('group', group_name), ('mode', 'rulesets')],
-        filename='wato.py',
+        [("group", group_name), ("mode", "rulesets")],
+        filename="wato.py",
     )
 
 

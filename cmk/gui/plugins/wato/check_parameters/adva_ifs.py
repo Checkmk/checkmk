@@ -21,24 +21,30 @@ def _item_spec_adva_ifs():
 
 
 def _parameter_valuespec_adva_ifs():
-    return Dictionary(elements=[
-        ("limits_output_power",
-         Tuple(
-             title=_("Sending Power"),
-             elements=[
-                 Float(title=_("lower limit"), unit="dBm"),
-                 Float(title=_("upper limit"), unit="dBm"),
-             ],
-         )),
-        ("limits_input_power",
-         Tuple(
-             title=_("Received Power"),
-             elements=[
-                 Float(title=_("lower limit"), unit="dBm"),
-                 Float(title=_("upper limit"), unit="dBm"),
-             ],
-         )),
-    ])
+    return Dictionary(
+        elements=[
+            (
+                "limits_output_power",
+                Tuple(
+                    title=_("Sending Power"),
+                    elements=[
+                        Float(title=_("lower limit"), unit="dBm"),
+                        Float(title=_("upper limit"), unit="dBm"),
+                    ],
+                ),
+            ),
+            (
+                "limits_input_power",
+                Tuple(
+                    title=_("Received Power"),
+                    elements=[
+                        Float(title=_("lower limit"), unit="dBm"),
+                        Float(title=_("upper limit"), unit="dBm"),
+                    ],
+                ),
+            ),
+        ]
+    )
 
 
 rulespec_registry.register(
@@ -49,4 +55,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_adva_ifs,
         title=lambda: _("Adva Optical Transport Laser Power"),
-    ))
+    )
+)

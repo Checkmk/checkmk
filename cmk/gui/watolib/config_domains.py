@@ -51,13 +51,16 @@ class ConfigDomainCore(ABCConfigDomain):
     def activate(self):
         # TODO: Cleanup
         from cmk.gui.watolib.automations import check_mk_local_automation
+
         return check_mk_local_automation(config.wato_activation_method)
 
     def default_globals(self):
         # TODO: Cleanup
         from cmk.gui.watolib.automations import check_mk_local_automation
-        return check_mk_local_automation("get-configuration", [],
-                                         self._get_global_config_var_names())
+
+        return check_mk_local_automation(
+            "get-configuration", [], self._get_global_config_var_names()
+        )
 
 
 @config_domain_registry.register
@@ -129,8 +132,12 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
         except Exception as e:
             logger.exception("error reloading liveproxyd")
             raise MKGeneralException(
-                _("Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log "
-                  "for further information.") % e)
+                _(
+                    "Could not reload Livestatus Proxy: %s. See web.log and liveproxyd.log "
+                    "for further information."
+                )
+                % e
+            )
 
     # TODO: Move default values to common module to share
     # the defaults between the GUI code an liveproxyd.
@@ -139,8 +146,7 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
             "liveproxyd_log_levels": {
                 "cmk.liveproxyd": logging.INFO,
             },
-            "liveproxyd_default_connection_params":
-                ConfigDomainLiveproxy.connection_params_defaults(),
+            "liveproxyd_default_connection_params": ConfigDomainLiveproxy.connection_params_defaults(),
         }
 
     @staticmethod
@@ -176,7 +182,7 @@ class ConfigDomainEventConsole(ABCConfigDomain):
         if getattr(config, "mkeventd_enabled", False):
             mkeventd.execute_command("RELOAD", site=omd_site())
             log_audit("mkeventd-activate", _("Activated changes of event console configuration"))
-            if hooks.registered('mkeventd-activate-changes'):
+            if hooks.registered("mkeventd-activate-changes"):
                 hooks.call("mkeventd-activate-changes")
 
     def default_globals(self):
@@ -200,8 +206,9 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         "/etc/pki/tls/certs",  # CentOS/RedHat
     ]
 
-    _PEM_RE = re.compile(b"-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?"
-                         b"", re.DOTALL)
+    _PEM_RE = re.compile(
+        b"-----BEGIN CERTIFICATE-----\r?.+?\r?-----END CERTIFICATE-----\r?\n?" b"", re.DOTALL
+    )
 
     @classmethod
     def ident(cls) -> ConfigDomainName:
@@ -218,10 +225,13 @@ class ConfigDomainCACertificates(ABCConfigDomain):
     def save(self, settings, site_specific=False, custom_site_path=None):
         super().save(settings, site_specific=site_specific, custom_site_path=custom_site_path)
 
-        current_config = settings.get("trusted_certificate_authorities", {
-            "use_system_wide_cas": True,
-            "trusted_cas": [],
-        })
+        current_config = settings.get(
+            "trusted_certificate_authorities",
+            {
+                "use_system_wide_cas": True,
+                "trusted_cas": [],
+            },
+        )
 
         # We need to activate this immediately to make syncs to WATO slave sites
         # possible right after changing the option
@@ -241,8 +251,8 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         except Exception:
             logger.exception("error updating trusted CAs")
             return [
-                "Failed to create trusted CA file '%s': %s" %
-                (self.trusted_cas_file, traceback.format_exc())
+                "Failed to create trusted CA file '%s': %s"
+                % (self.trusted_cas_file, traceback.format_exc())
             ]
 
     def _update_trusted_cas(self, current_config):
@@ -288,8 +298,10 @@ class ConfigDomainCACertificates(ABCConfigDomain):
 
                     logger.exception("Error reading certificates from %s", cert_file_path)
 
-                    errors.append("Failed to add certificate '%s' to trusted CA certificates. "
-                                  "See web.log for details." % cert_file_path)
+                    errors.append(
+                        "Failed to add certificate '%s' to trusted CA certificates. "
+                        "See web.log for details." % cert_file_path
+                    )
 
             break
 
@@ -361,7 +373,7 @@ class ConfigDomainOMD(ABCConfigDomain):
             self._logger.debug("Got no config change commands...")
             return
 
-        self._logger.debug("Executing \"omd config change\"")
+        self._logger.debug('Executing "omd config change"')
         self._logger.debug("  Commands: %r" % config_change_commands)
         p = subprocess.Popen(
             ["omd", "config", "change"],
@@ -376,9 +388,12 @@ class ConfigDomainOMD(ABCConfigDomain):
         self._logger.debug("  Output: %r" % stdout)
         if p.returncode != 0:
             raise MKGeneralException(
-                _("Failed to activate changed site "
-                  "configuration.\nExit code: %d\nConfig: %s\nOutput: %s") %
-                (p.returncode, config_change_commands, stdout))
+                _(
+                    "Failed to activate changed site "
+                    "configuration.\nExit code: %d\nConfig: %s\nOutput: %s"
+                )
+                % (p.returncode, config_change_commands, stdout)
+            )
 
     def _load_site_config(self):
         return self._load_omd_config("%s/site.conf" % self.omd_config_dir)
@@ -443,8 +458,9 @@ class ConfigDomainOMD(ABCConfigDomain):
                 settings.setdefault("LIVESTATUS_TCP_ONLY_FROM", "0.0.0.0")
 
                 if settings["LIVESTATUS_TCP_ONLY_FROM"] != "0.0.0.0":
-                    settings["LIVESTATUS_TCP"]["only_from"] = \
-                        settings["LIVESTATUS_TCP_ONLY_FROM"].split()
+                    settings["LIVESTATUS_TCP"]["only_from"] = settings[
+                        "LIVESTATUS_TCP_ONLY_FROM"
+                    ].split()
 
                 del settings["LIVESTATUS_TCP_ONLY_FROM"]
             else:
@@ -484,7 +500,8 @@ class ConfigDomainOMD(ABCConfigDomain):
 
                 if "only_from" in settings["LIVESTATUS_TCP"]:
                     settings["LIVESTATUS_TCP_ONLY_FROM"] = " ".join(
-                        settings["LIVESTATUS_TCP"]["only_from"])
+                        settings["LIVESTATUS_TCP"]["only_from"]
+                    )
                 else:
                     settings["LIVESTATUS_TCP_ONLY_FROM"] = "0.0.0.0"
 

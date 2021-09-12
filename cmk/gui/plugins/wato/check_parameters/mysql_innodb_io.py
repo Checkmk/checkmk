@@ -21,33 +21,45 @@ def _item_spec_mysql_innodb_io():
 
 
 def _parameter_valuespec_mysql_innodb_io():
-    return Dictionary(elements=[
-        ("read",
-         Tuple(
-             title=_("Read throughput"),
-             elements=[
-                 Float(title=_("warning at"), unit=_("MB/s")),
-                 Float(title=_("critical at"), unit=_("MB/s"))
-             ],
-         )),
-        ("write",
-         Tuple(
-             title=_("Write throughput"),
-             elements=[
-                 Float(title=_("warning at"), unit=_("MB/s")),
-                 Float(title=_("critical at"), unit=_("MB/s"))
-             ],
-         )),
-        ("average",
-         Integer(title=_("Average"),
-                 help=_("When averaging is set, a floating average value "
+    return Dictionary(
+        elements=[
+            (
+                "read",
+                Tuple(
+                    title=_("Read throughput"),
+                    elements=[
+                        Float(title=_("warning at"), unit=_("MB/s")),
+                        Float(title=_("critical at"), unit=_("MB/s")),
+                    ],
+                ),
+            ),
+            (
+                "write",
+                Tuple(
+                    title=_("Write throughput"),
+                    elements=[
+                        Float(title=_("warning at"), unit=_("MB/s")),
+                        Float(title=_("critical at"), unit=_("MB/s")),
+                    ],
+                ),
+            ),
+            (
+                "average",
+                Integer(
+                    title=_("Average"),
+                    help=_(
+                        "When averaging is set, a floating average value "
                         "of the disk throughput is computed and the levels for read "
                         "and write will be applied to the average instead of the current "
-                        "value."),
-                 minvalue=1,
-                 default_value=5,
-                 unit=_("minutes")))
-    ],)
+                        "value."
+                    ),
+                    minvalue=1,
+                    default_value=5,
+                    unit=_("minutes"),
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -58,4 +70,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mysql_innodb_io,
         title=lambda: _("MySQL InnoDB Throughput"),
-    ))
+    )
+)

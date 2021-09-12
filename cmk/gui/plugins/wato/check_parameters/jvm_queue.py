@@ -23,10 +23,12 @@ def _item_spec_jvm_queue():
 
 def _parameter_valuespec_jvm_queue():
     return Tuple(
-        help=_("The BEA application servers have 'Execute Queues' "
-               "in which requests are processed. This rule allows to set "
-               "warn and crit levels for the number of requests that are "
-               "being queued for processing."),
+        help=_(
+            "The BEA application servers have 'Execute Queues' "
+            "in which requests are processed. This rule allows to set "
+            "warn and crit levels for the number of requests that are "
+            "being queued for processing."
+        ),
         elements=[
             Integer(
                 title=_("Warning at"),
@@ -49,4 +51,5 @@ rulespec_registry.register(
         item_spec=_item_spec_jvm_queue,
         parameter_valuespec=_parameter_valuespec_jvm_queue,
         title=lambda: _("JVM Execute Queue Count"),
-    ))
+    )
+)

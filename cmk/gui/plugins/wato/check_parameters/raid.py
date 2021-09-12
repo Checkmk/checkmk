@@ -16,9 +16,11 @@ from cmk.gui.valuespec import TextInput
 def _item_spec_raid():
     return TextInput(
         title=_("Name of the device"),
-        help=_("For Linux MD specify the device name without the "
-               "<tt>/dev/</tt>, e.g. <tt>md0</tt>, for hardware raids "
-               "please refer to the manual of the actual check being used."),
+        help=_(
+            "For Linux MD specify the device name without the "
+            "<tt>/dev/</tt>, e.g. <tt>md0</tt>, for hardware raids "
+            "please refer to the manual of the actual check being used."
+        ),
     )
 
 
@@ -28,4 +30,5 @@ rulespec_registry.register(
         group=RulespecGroupEnforcedServicesStorage,
         item_spec=_item_spec_raid,
         title=lambda: _("RAID: overall state"),
-    ))
+    )
+)

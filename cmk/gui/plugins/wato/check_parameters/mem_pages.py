@@ -14,16 +14,20 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_mem_pages():
-    return Dictionary(elements=[(
-        "pages_per_second",
-        Tuple(
-            title=_("Pages per second"),
-            elements=[
-                Integer(title=_("Warning at"), unit=_("pages/s")),
-                Integer(title=_("Critical at"), unit=_("pages/s")),
-            ],
-        ),
-    )],)
+    return Dictionary(
+        elements=[
+            (
+                "pages_per_second",
+                Tuple(
+                    title=_("Pages per second"),
+                    elements=[
+                        Integer(title=_("Warning at"), unit=_("pages/s")),
+                        Integer(title=_("Critical at"), unit=_("pages/s")),
+                    ],
+                ),
+            )
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -33,4 +37,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mem_pages,
         title=lambda: _("Memory Pages Statistics"),
-    ))
+    )
+)

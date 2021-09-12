@@ -14,18 +14,24 @@ from cmk.gui.valuespec import Dictionary, MonitoringState
 
 
 def _parameter_valuespec_apt():
-    return Dictionary(elements=[
-        ("normal",
-         MonitoringState(
-             title=_("State when normal updates are pending"),
-             default_value=1,
-         )),
-        ("security",
-         MonitoringState(
-             title=_("State when security updates are pending"),
-             default_value=2,
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "normal",
+                MonitoringState(
+                    title=_("State when normal updates are pending"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "security",
+                MonitoringState(
+                    title=_("State when security updates are pending"),
+                    default_value=2,
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -35,4 +41,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_apt,
         title=lambda: _("APT Updates"),
-    ))
+    )
+)

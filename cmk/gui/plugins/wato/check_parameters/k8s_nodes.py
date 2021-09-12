@@ -14,24 +14,30 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_k8s_nodes():
-    return Dictionary(elements=[
-        ('levels',
-         Tuple(
-             title=_('Upper levels'),
-             elements=[
-                 Integer(title=_("Warning above")),
-                 Integer(title=_("Critical above")),
-             ],
-         )),
-        ('levels_lower',
-         Tuple(
-             title=_('Lower levels'),
-             elements=[
-                 Integer(title=_("Warning below")),
-                 Integer(title=_("Critical below")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Upper levels"),
+                    elements=[
+                        Integer(title=_("Warning above")),
+                        Integer(title=_("Critical above")),
+                    ],
+                ),
+            ),
+            (
+                "levels_lower",
+                Tuple(
+                    title=_("Lower levels"),
+                    elements=[
+                        Integer(title=_("Warning below")),
+                        Integer(title=_("Critical below")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -41,4 +47,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_k8s_nodes,
         title=lambda: _("Kubernetes nodes"),
-    ))
+    )
+)

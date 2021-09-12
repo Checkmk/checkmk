@@ -45,11 +45,10 @@ from cmk.gui.watolib.tags import (
 
 
 class HostTagGroupName(fields.String):
-    """A field representing the host tag group
+    """A field representing the host tag group"""
 
-    """
     default_error_messages = {
-        'should_exist': 'Host tag group missing: {name!r}',
+        "should_exist": "Host tag group missing: {name!r}",
     }
 
     def _validate(self, value):
@@ -60,75 +59,75 @@ class HostTagGroupName(fields.String):
 
 
 HOST_TAG_GROUP_NAME = {
-    'name': HostTagGroupName(
+    "name": HostTagGroupName(
         description="The name of the host tag group",
-        example='datasource',
-        pattern='[a-zA-Z_]+[-0-9a-zA-Z_]*',
+        example="datasource",
+        pattern="[a-zA-Z_]+[-0-9a-zA-Z_]*",
         required=True,
     )
 }
 
 
 @Endpoint(
-    constructors.collection_href('host_tag_group'),
-    'cmk/create',
-    method='post',
-    etag='output',
+    constructors.collection_href("host_tag_group"),
+    "cmk/create",
+    method="post",
+    etag="output",
     request_schema=request_schemas.InputHostTagGroup,
     response_schema=response_schemas.DomainObject,
 )
 def create_host_tag_group(params):
     """Create a host tag group"""
-    host_tag_group_details = params['body']
+    host_tag_group_details = params["body"]
     save_tag_group(TagGroup(host_tag_group_details))
-    return _serve_host_tag_group(_retrieve_group(host_tag_group_details['id']).get_dict_format())
+    return _serve_host_tag_group(_retrieve_group(host_tag_group_details["id"]).get_dict_format())
 
 
 @Endpoint(
-    constructors.object_href('host_tag_group', '{name}'),
-    'cmk/show',
-    method='get',
-    etag='output',
+    constructors.object_href("host_tag_group", "{name}"),
+    "cmk/show",
+    method="get",
+    etag="output",
     path_params=[HOST_TAG_GROUP_NAME],
     response_schema=response_schemas.ConcreteHostTagGroup,
 )
 def show_host_tag_group(params):
     """Show a host tag group"""
-    ident = params['name']
+    ident = params["name"]
     tag_group = _retrieve_group(ident=ident)
     return _serve_host_tag_group(tag_group.get_dict_format())
 
 
-@Endpoint(constructors.collection_href('host_tag_group'),
-          '.../collection',
-          method='get',
-          response_schema=response_schemas.DomainObjectCollection)
+@Endpoint(
+    constructors.collection_href("host_tag_group"),
+    ".../collection",
+    method="get",
+    response_schema=response_schemas.DomainObjectCollection,
+)
 def list_host_tag_groups(params):
     """Show all host tag groups"""
     tag_config = load_tag_config()
     tag_config += BuiltinTagConfig()
     tag_groups_collection = {
-        'id': 'host_tag',
-        'domainType': 'host_tag_group',
-        'value': [
+        "id": "host_tag",
+        "domainType": "host_tag_group",
+        "value": [
             constructors.collection_item(
-                domain_type='host_tag_group',
-                obj={
-                    'title': tag_group_obj.title,
-                    'id': tag_group_obj.id
-                },
-            ) for tag_group_obj in tag_config.get_tag_groups()
+                domain_type="host_tag_group",
+                obj={"title": tag_group_obj.title, "id": tag_group_obj.id},
+            )
+            for tag_group_obj in tag_config.get_tag_groups()
         ],
-        'links': [constructors.link_rel('self', constructors.collection_href('host_tag_group'))]
+        "links": [constructors.link_rel("self", constructors.collection_href("host_tag_group"))],
     }
     return constructors.serve_json(tag_groups_collection)
 
 
 @Endpoint(
-    constructors.object_href('host_tag_group', '{name}'),
-    '.../update',
-    method='put',
-    etag='both',
+    constructors.object_href("host_tag_group", "{name}"),
+    ".../update",
+    method="put",
+    etag="both",
     path_params=[HOST_TAG_GROUP_NAME],
     additional_status_codes=[405],
     request_schema=request_schemas.UpdateHostTagGroup,
@@ -137,8 +136,8 @@ def list_host_tag_groups(params):
 def update_host_tag_group(params):
     """Update a host tag group"""
     # TODO: ident verification mechanism with ParamDict replacement
-    body = params['body']
-    ident = params['name']
+    body = params["body"]
+    ident = params["name"]
     if is_builtin(ident):
         return problem(
             status=405,
@@ -151,20 +150,22 @@ def update_host_tag_group(params):
     group_details = tag_group.get_dict_format()
     group_details.update(updated_details)
     try:
-        edit_tag_group(ident, TagGroup(group_details), allow_repair=body['repair'])
+        edit_tag_group(ident, TagGroup(group_details), allow_repair=body["repair"])
     except RepairError:
         return problem(
-            401, f'Updating this host tag group "{ident}" requires additional authorization',
-            'The host tag group you intend to edit is used by other instances. You must authorize Checkmk '
-            'to update the relevant instances using the repair parameter')
+            401,
+            f'Updating this host tag group "{ident}" requires additional authorization',
+            "The host tag group you intend to edit is used by other instances. You must authorize Checkmk "
+            "to update the relevant instances using the repair parameter",
+        )
     updated_tag_group = _retrieve_group(ident)
     return _serve_host_tag_group(updated_tag_group.get_dict_format())
 
 
 @Endpoint(
-    constructors.object_href('host_tag_group', '{name}'),
-    '.../delete',
-    method='delete',
+    constructors.object_href("host_tag_group", "{name}"),
+    ".../delete",
+    method="delete",
     path_params=[HOST_TAG_GROUP_NAME],
     additional_status_codes=[405],
     query_params=[request_schemas.DeleteHostTagGroup],
@@ -172,7 +173,7 @@ def update_host_tag_group(params):
 )
 def delete_host_tag_group(params):
     """Delete a host tag group"""
-    ident = params['name']
+    ident = params["name"]
     if is_builtin(ident):
         return problem(
             status=405,
@@ -180,17 +181,21 @@ def delete_host_tag_group(params):
             detail=f"The built-in host tag group {ident} cannot be deleted",
         )
 
-    affected = change_host_tags_in_folders(OperationRemoveTagGroup(ident), TagCleanupMode.CHECK,
-                                           watolib.Folder.root_folder())
+    affected = change_host_tags_in_folders(
+        OperationRemoveTagGroup(ident), TagCleanupMode.CHECK, watolib.Folder.root_folder()
+    )
     if any(affected):
         if not params["repair"]:
             return problem(
-                401, f'Deleting this host tag group "{ident}" requires additional authorization',
-                'The host tag group you intend to delete is used by other instances. You must authorize Checkmk '
-                'to update the relevant instances using the repair parameter')
+                401,
+                f'Deleting this host tag group "{ident}" requires additional authorization',
+                "The host tag group you intend to delete is used by other instances. You must authorize Checkmk "
+                "to update the relevant instances using the repair parameter",
+            )
         watolib.host_attributes.undeclare_host_tag_attribute(ident)
-        _ = change_host_tags_in_folders(OperationRemoveTagGroup(ident), TagCleanupMode("delete"),
-                                        watolib.Folder.root_folder())
+        _ = change_host_tags_in_folders(
+            OperationRemoveTagGroup(ident), TagCleanupMode("delete"), watolib.Folder.root_folder()
+        )
 
     tag_config = load_tag_config()
     tag_config.remove_tag_group(ident)
@@ -211,22 +216,23 @@ def _retrieve_group(ident: str) -> TagGroup:
 def _serve_host_tag_group(tag_details: Dict[str, Any]) -> Response:
     response = Response()
     response.set_data(json.dumps(serialize_host_tag_group(tag_details)))
-    response.set_content_type('application/json')
-    response.headers.add('ETag', constructors.etag_of_dict(tag_details).to_header())
+    response.set_content_type("application/json")
+    response.headers.add("ETag", constructors.etag_of_dict(tag_details).to_header())
     return response
 
 
 def serialize_host_tag_group(details: Dict[str, Any]):
     return constructors.domain_object(
-        domain_type='host_tag_group',
-        identifier=details['id'],
-        title=details['title'],
+        domain_type="host_tag_group",
+        identifier=details["id"],
+        title=details["title"],
         members={
             "title": constructors.object_property(
-                name='title',
-                value=details['title'],
-                prop_format='string',
-                base=constructors.object_href('host_tag_group', details['id']),
+                name="title",
+                value=details["title"],
+                prop_format="string",
+                base=constructors.object_href("host_tag_group", details["id"]),
             )
         },
-        extensions={key: details[key] for key in details if key in ('topic', 'tags')})
+        extensions={key: details[key] for key in details if key in ("topic", "tags")},
+    )

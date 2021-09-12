@@ -16,21 +16,23 @@ from cmk.gui.valuespec import Age, Dictionary, Transform, Tuple
 def _transform_mcafee_av_client(params):
     if isinstance(params, dict):
         return params
-    return {'signature_age': params}
+    return {"signature_age": params}
 
 
 def _parameter_valuespec_mcafee_av_client():
     return Transform(
         Dictionary(
             elements=[
-                ('signature_age',
-                 Tuple(
-                     title=_('Time Settings for Signature'),
-                     elements=[
-                         Age(title=_("Warning at"), default_value=86400),
-                         Age(title=_("Critical at"), default_value=7 * 86400),
-                     ],
-                 )),
+                (
+                    "signature_age",
+                    Tuple(
+                        title=_("Time Settings for Signature"),
+                        elements=[
+                            Age(title=_("Warning at"), default_value=86400),
+                            Age(title=_("Critical at"), default_value=7 * 86400),
+                        ],
+                    ),
+                ),
             ],
             optional_keys=[],
         ),
@@ -44,4 +46,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_mcafee_av_client,
         title=lambda: _("McAfee Anti-Virus Time Settings"),
-    ))
+    )
+)

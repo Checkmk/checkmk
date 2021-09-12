@@ -23,8 +23,9 @@ def _item_spec_jvm_threads():
 
 def _parameter_valuespec_jvm_threads():
     return Tuple(
-        help=_("This rule sets the warn and crit levels for the number of threads "
-               "running in a JVM."),
+        help=_(
+            "This rule sets the warn and crit levels for the number of threads " "running in a JVM."
+        ),
         elements=[
             Integer(
                 title=_("Warning at"),
@@ -48,4 +49,5 @@ rulespec_registry.register(
         item_spec=_item_spec_jvm_threads,
         parameter_valuespec=_parameter_valuespec_jvm_threads,
         title=lambda: _("JVM threads"),
-    ))
+    )
+)

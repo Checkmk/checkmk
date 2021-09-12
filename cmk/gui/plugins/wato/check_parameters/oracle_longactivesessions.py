@@ -14,16 +14,20 @@ from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_oracle_longactivesessions():
-    return Dictionary(elements=[("levels",
-                                 Tuple(
-                                     title=_("Levels of active sessions"),
-                                     elements=[
-                                         Integer(title=_("Warning if more than"),
-                                                 unit=_("sessions")),
-                                         Integer(title=_("Critical if more than"),
-                                                 unit=_("sessions")),
-                                     ],
-                                 ))],)
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Levels of active sessions"),
+                    elements=[
+                        Integer(title=_("Warning if more than"), unit=_("sessions")),
+                        Integer(title=_("Critical if more than"), unit=_("sessions")),
+                    ],
+                ),
+            )
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -34,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_longactivesessions,
         title=lambda: _("Oracle Long Active Sessions"),
-    ))
+    )
+)

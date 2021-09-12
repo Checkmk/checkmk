@@ -38,27 +38,27 @@ from cmk.gui.wsgi.middleware import OverrideRequestMethod, with_context_middlewa
 from cmk.gui.wsgi.type_defs import RFC7662
 from cmk.gui.wsgi.wrappers import ParameterDict
 
-ARGS_KEY = 'CHECK_MK_REST_API_ARGS'
+ARGS_KEY = "CHECK_MK_REST_API_ARGS"
 
-logger = logging.getLogger('cmk.gui.wsgi.rest_api')
+logger = logging.getLogger("cmk.gui.wsgi.rest_api")
 
 EXCEPTION_STATUS: Dict[Type[Exception], int] = {
     MKUserError: 400,
     MKAuthException: 401,
 }
 
-SpecExtension = Literal['json', 'yaml']
+SpecExtension = Literal["json", "yaml"]
 WSGIEnvironment = Dict[str, Any]
 
 
 def _verify_user(environ) -> RFC7662:
     verified: List[RFC7662] = []
 
-    auth_header = environ.get('HTTP_AUTHORIZATION', '')
+    auth_header = environ.get("HTTP_AUTHORIZATION", "")
     basic_user = None
     if auth_header:
         auth_type, _ = auth_header.split(None, 1)
-        if auth_type == 'Bearer':
+        if auth_type == "Bearer":
             user_id, secret = user_from_bearer_header(auth_header)
             automation_user = automation_auth(user_id, secret)
             if automation_user:
@@ -69,24 +69,24 @@ def _verify_user(environ) -> RFC7662:
                 gui_user = gui_user_auth(user_id, secret)
                 if gui_user:
                     verified.append(gui_user)
-        elif auth_type == 'Basic':
+        elif auth_type == "Basic":
             # We store this for sanity checking below, once we get a REMOTE_USER key.
             # If we don't get a REMOTE_USER key, this value will be ignored.
             basic_user = user_from_basic_header(auth_header)
         else:
             raise MKAuthException(f"Unsupported Auth Type: {auth_type}")
 
-    remote_user = environ.get('REMOTE_USER', '')
+    remote_user = environ.get("REMOTE_USER", "")
     if remote_user and userdb.user_exists(UserId(remote_user)):
         if basic_user and basic_user[0] != remote_user:
             raise MKAuthException("Mismatch in authentication headers.")
-        verified.append(rfc7662_subject(UserId(remote_user), 'webserver'))
+        verified.append(rfc7662_subject(UserId(remote_user), "webserver"))
 
     cookie = Request(environ).cookies.get(f"auth_{omd_site()}")
     if cookie:
         user_id, session_id, cookie_hash = user_from_cookie(cookie)
         check_parsed_auth_cookie(user_id, session_id, cookie_hash)
-        verified.append(rfc7662_subject(user_id, 'cookie'))
+        verified.append(rfc7662_subject(user_id, "cookie"))
 
     if not verified:
         raise MKAuthException("You need to be authenticated to use the REST API.")
@@ -94,10 +94,10 @@ def _verify_user(environ) -> RFC7662:
     # We pick the first successful authentication method, which means the precedence is the same
     # as the oder in the code.
     final_candidate = verified[0]
-    if not userdb.is_customer_user_allowed_to_login(final_candidate['sub']):
+    if not userdb.is_customer_user_allowed_to_login(final_candidate["sub"]):
         raise MKAuthException(f"{final_candidate['sub']} may not log in here.")
 
-    if userdb.user_locked(final_candidate['sub']):
+    if userdb.user_locked(final_candidate["sub"]):
         raise MKAuthException(f"{final_candidate['sub']} not authorized.")
 
     return final_candidate
@@ -137,7 +137,7 @@ def user_from_basic_header(auth_header: str) -> Tuple[UserId, str]:
         raise MKAuthException("Not a valid Basic token.")
 
     try:
-        user_entry = base64.b64decode(token.strip()).decode('latin1')
+        user_entry = base64.b64decode(token.strip()).decode("latin1")
     except binascii.Error as exc:
         raise MKAuthException("Not a valid Basic token.") from exc
 
@@ -168,7 +168,7 @@ def user_from_bearer_header(auth_header: str) -> Tuple[UserId, str]:
     except ValueError:
         raise MKAuthException(f"Not a valid Bearer token: {auth_header}")
     try:
-        user_id, secret = token.strip().split(' ', 1)
+        user_id, secret = token.strip().split(" ", 1)
     except ValueError:
         raise MKAuthException("No user/password combination in Bearer token.")
     if not secret:
@@ -189,6 +189,7 @@ class Authenticate:
     because we have multiple endpoints without authentication in this app. A refactoring to lower
     the memory foot-print of this is feasible and should be done if a good way has been found.
     """
+
     def __init__(self, func):
         self.func = func
 
@@ -203,7 +204,7 @@ class Authenticate:
                 title=str(exc),
             )(environ, start_response)
 
-        with set_user_context(rfc7662['sub'], rfc7662):
+        with set_user_context(rfc7662["sub"], rfc7662):
             wsgi_app = self.func(ParameterDict(path_args))
             return wsgi_app(environ, start_response)
 
@@ -217,7 +218,7 @@ def serve_file(file_name: str, content: bytes) -> Response:
     resp.direct_passthrough = True
     resp.data = content
     if content_type is not None:
-        resp.headers['Content-Type'] = content_type
+        resp.headers["Content-Type"] = content_type
     resp.freeze()
     return resp
 
@@ -252,10 +253,10 @@ def get_url(environ: WSGIEnvironment) -> str:
     # We construct a protocol relative URL so we don't need to know if we are on HTTP or HTTPs.
     # This is important if we are behind a SSL terminating HTTP application proxy, which doesn't
     # forward the protocol used. This solution is more robust in those circumstances.
-    if environ.get('HTTP_HOST'):
-        host_name = environ['HTTP_HOST']
+    if environ.get("HTTP_HOST"):
+        host_name = environ["HTTP_HOST"]
     else:
-        host_name = environ['SERVER_NAME']
+        host_name = environ["SERVER_NAME"]
 
     return f"//{host_name}{urllib.parse.quote(environ.get('PATH_INFO', ''))}"
 
@@ -269,11 +270,14 @@ def serve_spec(
     serializer: Callable[[Dict[str, Any]], str],
 ) -> Response:
     data = generate_data(target=target)
-    data.setdefault('servers', [])
-    add_once(data['servers'], {
-        'url': url,
-        'description': f"Site: {site}",
-    })
+    data.setdefault("servers", [])
+    add_once(
+        data["servers"],
+        {
+            "url": url,
+            "description": f"Site: {site}",
+        },
+    )
     response = Response(status=200)
     response.data = serializer(data)
     response.content_type = content_type
@@ -282,26 +286,26 @@ def serve_spec(
 
 
 class ServeSwaggerUI:
-    def __init__(self, prefix=''):
+    def __init__(self, prefix=""):
         self.prefix = prefix
         self.data: Optional[Dict[str, Any]] = None
 
     def _site(self, environ: WSGIEnvironment):
-        path_info = environ['PATH_INFO'].split("/")
+        path_info = environ["PATH_INFO"].split("/")
         return path_info[1]
 
     def _url(self, environ: WSGIEnvironment):
-        return '/'.join(get_url(environ).split("/")[:-1])
+        return "/".join(get_url(environ).split("/")[:-1])
 
     def serve_spec(self, target: EndpointTarget, extension: SpecExtension):
         def _serve(environ: WSGIEnvironment, start_response):
             serializers = {
-                'yaml': dict_to_yaml,
-                'json': json.dumps,
+                "yaml": dict_to_yaml,
+                "json": json.dumps,
             }
             content_types = {
-                'json': 'application/json',
-                'yaml': 'application/x-yaml; charset=utf-8'
+                "json": "application/json",
+                "yaml": "application/x-yaml; charset=utf-8",
             }
             return serve_spec(
                 site=self._site(environ),
@@ -314,8 +318,8 @@ class ServeSwaggerUI:
         return _serve
 
     def _relative_path(self, environ: WSGIEnvironment):
-        path_info = environ['PATH_INFO']
-        relative_path = re.sub(self.prefix, '', path_info)
+        path_info = environ["PATH_INFO"]
+        relative_path = re.sub(self.prefix, "", path_info)
         if relative_path == "/":
             relative_path = "/index.html"
         return relative_path
@@ -335,7 +339,7 @@ class ServeSwaggerUI:
         if not os.path.exists(file_path):
             return NotFound()(environ, start_response)
 
-        with open(file_path, 'rb') as fh:
+        with open(file_path, "rb") as fh:
             content: bytes = fh.read()
 
         if file_path.endswith("/index.html"):
@@ -346,13 +350,13 @@ class ServeSwaggerUI:
                 elif b"favicon" in line:
                     continue
                 elif b"petstore.swagger.io" in line:
-                    page.append(f'        url: "{yaml_file}",'.encode('utf-8'))
-                    page.append(b'        validatorUrl: null,')
-                    page.append(b'        displayOperationId: false,')
+                    page.append(f'        url: "{yaml_file}",'.encode("utf-8"))
+                    page.append(b"        validatorUrl: null,")
+                    page.append(b"        displayOperationId: false,")
                 else:
                     page.append(line)
 
-            content = b'\n'.join(page)
+            content = b"\n".join(page)
 
         return serve_file(file_path, content)(environ, start_response)
 
@@ -367,28 +371,37 @@ class CheckmkRESTAPI:
                 _ = endpoint.to_operation_dict()
 
             rules.append(
-                Rule(endpoint.default_path,
-                     methods=[endpoint.method],
-                     endpoint=Authenticate(endpoint.wrapped)))
+                Rule(
+                    endpoint.default_path,
+                    methods=[endpoint.method],
+                    endpoint=Authenticate(endpoint.wrapped),
+                )
+            )
 
         swagger_ui = ServeSwaggerUI(prefix="/[^/]+/check_mk/api/[^/]+/ui")
 
-        self.url_map = Map([
-            Submount(
-                "/<path:_path>",
-                [
-                    Rule("/ui/", endpoint=swagger_ui),
-                    Rule("/ui/<path:path>", endpoint=swagger_ui),
-                    Rule("/openapi-swagger-ui.yaml",
-                         endpoint=swagger_ui.serve_spec('swagger-ui', 'yaml')),
-                    Rule("/openapi-swagger-ui.json",
-                         endpoint=swagger_ui.serve_spec('swagger-ui', 'json')),
-                    Rule("/openapi-doc.yaml", endpoint=swagger_ui.serve_spec('doc', 'yaml')),
-                    Rule("/openapi-doc.json", endpoint=swagger_ui.serve_spec('doc', 'json')),
-                    *rules,
-                ],
-            ),
-        ])
+        self.url_map = Map(
+            [
+                Submount(
+                    "/<path:_path>",
+                    [
+                        Rule("/ui/", endpoint=swagger_ui),
+                        Rule("/ui/<path:path>", endpoint=swagger_ui),
+                        Rule(
+                            "/openapi-swagger-ui.yaml",
+                            endpoint=swagger_ui.serve_spec("swagger-ui", "yaml"),
+                        ),
+                        Rule(
+                            "/openapi-swagger-ui.json",
+                            endpoint=swagger_ui.serve_spec("swagger-ui", "json"),
+                        ),
+                        Rule("/openapi-doc.yaml", endpoint=swagger_ui.serve_spec("doc", "yaml")),
+                        Rule("/openapi-doc.json", endpoint=swagger_ui.serve_spec("doc", "json")),
+                        *rules,
+                    ],
+                ),
+            ]
+        )
         self.wsgi_app = with_context_middleware(OverrideRequestMethod(self._wsgi_app))
 
     def __call__(self, environ: WSGIEnvironment, start_response):
@@ -400,7 +413,7 @@ class CheckmkRESTAPI:
             wsgi_app, path_args = urls.match()
 
             # Remove this again (see Submount above), so the validators don't go crazy.
-            del path_args['_path']
+            del path_args["_path"]
 
             # This is an implicit dependency, as we only know the args at runtime, but the
             # function at setup-time.
@@ -432,22 +445,24 @@ class CheckmkRESTAPI:
 
             request = Request(environ)
             site = config.omd_site()
-            query_string = urllib.parse.urlencode([
-                ("crash_id", (crash.ident_to_text())),
-                ("site", site),
-            ])
+            query_string = urllib.parse.urlencode(
+                [
+                    ("crash_id", (crash.ident_to_text())),
+                    ("site", site),
+                ]
+            )
             crash_url = f"{request.host_url}{site}/check_mk/crash.py?{query_string}"
             crash_details = {
-                'crash_id': (crash.ident_to_text()),
-                'crash_report': {
-                    'href': crash_url,
-                    'method': 'get',
-                    'rel': 'cmk/crash-report',
-                    'type': 'text/html',
+                "crash_id": (crash.ident_to_text()),
+                "crash_report": {
+                    "href": crash_url,
+                    "method": "get",
+                    "rel": "cmk/crash-report",
+                    "type": "text/html",
                 },
             }
             if user.may("general.see_crash_reports"):
-                crash_details['stack_trace'] = traceback.format_exc().split("\n")
+                crash_details["stack_trace"] = traceback.format_exc().split("\n")
 
             return problem(
                 status=500,
@@ -458,8 +473,8 @@ class CheckmkRESTAPI:
 
 
 class APICrashReport(crash_reporting.ABCCrashReport):
-    """API specific crash reporting class.
-    """
+    """API specific crash reporting class."""
+
     @classmethod
     def type(cls):
         return "rest_api"

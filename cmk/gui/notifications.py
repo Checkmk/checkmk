@@ -40,7 +40,12 @@ class FailedNotificationTimes(NamedTuple):
 
 
 g_columns: List[str] = [
-    "time", "contact_name", "type", "host_name", "service_description", "comment"
+    "time",
+    "contact_name",
+    "type",
+    "host_name",
+    "service_description",
+    "comment",
 ]
 
 
@@ -67,8 +72,9 @@ def load_plugins(force: bool) -> None:
         if name[0] == ".":
             continue
 
-        declare_permission("notification_plugin.%s" % name, _u(attrs["title"]), u"",
-                           ["admin", "user"])
+        declare_permission(
+            "notification_plugin.%s" % name, _u(attrs["title"]), "", ["admin", "user"]
+        )
 
 
 def _acknowledge_failed_notifications(timestamp: float, now: float) -> None:
@@ -93,8 +99,9 @@ def acknowledged_time() -> float:
             # be searched when retrieving the list
             _acknowledge_failed_notifications(now, now)
         else:
-            g.failed_notification_times = FailedNotificationTimes(user.acknowledged_notifications,
-                                                                  now)
+            g.failed_notification_times = FailedNotificationTimes(
+                user.acknowledged_notifications, now
+            )
 
     return g.failed_notification_times.acknowledged_unitl
 
@@ -103,10 +110,9 @@ def number_of_failed_notifications(after: Optional[float]) -> int:
     if not _may_see_failed_notifications():
         return 0
 
-    query_txt = _failed_notification_query(before=None,
-                                           after=after,
-                                           extra_headers=None,
-                                           stat_only=True)
+    query_txt = _failed_notification_query(
+        before=None, after=after, extra_headers=None, stat_only=True
+    )
 
     try:
         result: int = sites.live().query_summed_stats(query_txt)[0]
@@ -132,7 +138,8 @@ def load_failed_notifications(
         return LivestatusResponse([])
 
     return sites.live().query(
-        _failed_notification_query(before, after, extra_headers, stat_only=False))
+        _failed_notification_query(before, after, extra_headers, stat_only=False)
+    )
 
 
 def _failed_notification_query(
@@ -149,12 +156,14 @@ def _failed_notification_query(
         query.append("Columns: %s" % " ".join(g_columns))
         query.append("Filter: log_state != 0")
 
-    query.extend([
-        "Filter: class = 3",
-        "Filter: log_type = SERVICE NOTIFICATION RESULT",
-        "Filter: log_type = HOST NOTIFICATION RESULT",
-        "Or: 2",
-    ])
+    query.extend(
+        [
+            "Filter: class = 3",
+            "Filter: log_type = SERVICE NOTIFICATION RESULT",
+            "Filter: log_type = HOST NOTIFICATION RESULT",
+            "Or: 2",
+        ]
+    )
 
     if before is not None:
         query.append("Filter: time <= %d" % before)
@@ -176,8 +185,9 @@ def _failed_notification_query(
 
 
 def _may_see_failed_notifications() -> bool:
-    return (user.may("general.see_failed_notifications") or
-            user.may("general.see_failed_notifications_24h"))
+    return user.may("general.see_failed_notifications") or user.may(
+        "general.see_failed_notifications_24h"
+    )
 
 
 @page_registry.register_page("clear_failed_notifications")
@@ -187,29 +197,32 @@ class ClearFailedNotificationPage(Page):
             raise MKAuthException(_("You are not allowed to view the failed notifications."))
 
     def page(self) -> None:
-        acktime = request.get_float_input_mandatory('acktime', time.time())
-        if request.var('_confirm'):
+        acktime = request.get_float_input_mandatory("acktime", time.time())
+        if request.var("_confirm"):
             _acknowledge_failed_notifications(acktime, time.time())
 
             if user.authorized_login_sites():
                 watolib.init_wato_datastructures(with_wato_lock=True)
 
-                title = _('Replicate user profile')
-                breadcrumb = make_simple_page_breadcrumb(mega_menu_registry.menu_monitoring(),
-                                                         title)
+                title = _("Replicate user profile")
+                breadcrumb = make_simple_page_breadcrumb(
+                    mega_menu_registry.menu_monitoring(), title
+                )
                 html.header(title, breadcrumb)
 
                 for message in get_flashed_messages():
                     html.show_message(message)
                 # This local import is needed for the moment
                 import cmk.gui.wato.user_profile  # pylint: disable=redefined-outer-name
+
                 cmk.gui.wato.user_profile.user_profile_async_replication_page(
-                    back_url="clear_failed_notifications.py")
+                    back_url="clear_failed_notifications.py"
+                )
                 return
 
         failed_notifications = load_failed_notifications(before=acktime, after=acknowledged_time())
         self._show_page(acktime, failed_notifications)
-        if request.var('_confirm'):
+        if request.var("_confirm"):
             html.reload_whole_page()
 
     # TODO: We should really recode this to use the view and a normal view command / action
@@ -230,23 +243,27 @@ class ClearFailedNotificationPage(Page):
             header = {name: idx for idx, name in enumerate(g_columns)}
             for row in failed_notifications:
                 table.row()
-                table.cell(_("Time"),
-                           cmk.utils.render.approx_age(time.time() - row[header['time']]))
-                table.cell(_("Contact"), row[header['contact_name']])
-                table.cell(_("Plugin"), row[header['type']])
-                table.cell(_("Host"), row[header['host_name']])
-                table.cell(_("Service"), row[header['service_description']])
-                table.cell(_("Output"), row[header['comment']])
+                table.cell(
+                    _("Time"), cmk.utils.render.approx_age(time.time() - row[header["time"]])
+                )
+                table.cell(_("Contact"), row[header["contact_name"]])
+                table.cell(_("Plugin"), row[header["type"]])
+                table.cell(_("Host"), row[header["host_name"]])
+                table.cell(_("Service"), row[header["service_description"]])
+                table.cell(_("Output"), row[header["comment"]])
 
-    def _page_menu(self, acktime: float, failed_notifications: LivestatusResponse,
-                   breadcrumb: Breadcrumb) -> PageMenu:
+    def _page_menu(
+        self, acktime: float, failed_notifications: LivestatusResponse, breadcrumb: Breadcrumb
+    ) -> PageMenu:
         confirm_url = make_simple_link(
             make_confirm_link(
-                url=makeactionuri(request, transactions, [("acktime", str(acktime)),
-                                                          ("_confirm", "1")]),
-                message=_("Do you really want to acknowledge all failed notifications up to %s?") %
-                cmk.utils.render.date_and_time(acktime),
-            ))
+                url=makeactionuri(
+                    request, transactions, [("acktime", str(acktime)), ("_confirm", "1")]
+                ),
+                message=_("Do you really want to acknowledge all failed notifications up to %s?")
+                % cmk.utils.render.date_and_time(acktime),
+            )
+        )
 
         return PageMenu(
             dropdowns=[

@@ -12,7 +12,7 @@ from flask_babel.speaklater import LazyString  # type: ignore[import]
 
 import cmk.utils.paths
 
-#.
+# .
 #   .--Gettext i18n--------------------------------------------------------.
 #   |           ____      _   _            _     _ _  ___                  |
 #   |          / ___| ___| |_| |_ _____  _| |_  (_) |( _ ) _ __            |
@@ -107,13 +107,17 @@ def get_languages() -> List[Tuple[str, str]]:
     # Add the hard coded english language to the language list
     # It must be choosable even if the administrator changed the default
     # language to a custom value
-    languages = {('', _('English'))}
+    languages = {("", _("English"))}
 
     for lang_dir in _get_language_dirs():
         try:
-            languages.update([(val.name, _("%s") % get_language_alias(val.name))
-                              for val in lang_dir.iterdir()
-                              if val.name != "packages" and val.is_dir()])
+            languages.update(
+                [
+                    (val.name, _("%s") % get_language_alias(val.name))
+                    for val in lang_dir.iterdir()
+                    if val.name != "packages" and val.is_dir()
+                ]
+            )
         except OSError:
             # Catch "OSError: [Errno 2] No such file or
             # directory:" when directory not exists
@@ -149,9 +153,9 @@ def _init_language(lang: str) -> Optional[gettext_module.NullTranslations]:
     translations: List[gettext_module.NullTranslations] = []
     for locale_base_dir in _get_language_dirs():
         try:
-            translation = gettext_module.translation("multisite",
-                                                     str(locale_base_dir),
-                                                     languages=[lang])
+            translation = gettext_module.translation(
+                "multisite", str(locale_base_dir), languages=[lang]
+            )
 
         except IOError:
             continue
@@ -171,7 +175,7 @@ def initialize() -> None:
     unlocalize()
 
 
-#.
+# .
 #   .--User i18n-----------------------------------------------------------.
 #   |                _   _                 _ _  ___                        |
 #   |               | | | |___  ___ _ __  (_) |( _ ) _ __                  |

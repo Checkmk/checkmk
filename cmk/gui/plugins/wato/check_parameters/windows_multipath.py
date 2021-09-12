@@ -37,4 +37,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         parameter_valuespec=_parameter_valuespec_windows_multipath,
         title=lambda: _("Windows Multipath Count"),
-    ))
+    )
+)

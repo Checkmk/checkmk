@@ -22,12 +22,16 @@ def _item_spec_mysql_db_size():
 
 def _parameter_valuespec_mysql_db_size():
     return Optional(
-        Tuple(elements=[
-            Filesize(title=_("warning at")),
-            Filesize(title=_("critical at")),
-        ],),
-        help=_("The check will trigger a warning or critical state if the size of the "
-               "database exceeds these levels."),
+        Tuple(
+            elements=[
+                Filesize(title=_("warning at")),
+                Filesize(title=_("critical at")),
+            ],
+        ),
+        help=_(
+            "The check will trigger a warning or critical state if the size of the "
+            "database exceeds these levels."
+        ),
         title=_("Impose limits on the size of the database"),
     )
 
@@ -39,4 +43,5 @@ rulespec_registry.register(
         item_spec=_item_spec_mysql_db_size,
         parameter_valuespec=_parameter_valuespec_mysql_db_size,
         title=lambda: _("MySQL database sizes"),
-    ))
+    )
+)

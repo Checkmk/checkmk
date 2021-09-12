@@ -18,40 +18,45 @@ def _parameter_valuespec_mssql_file_sizes():
     return Dictionary(
         title=_("File Size Levels"),
         elements=[
-            ("data_files",
-             Tuple(
-                 title=_("Total data file size: Absolute upper levels"),
-                 elements=[
-                     Filesize(title=_("Warning at")),
-                     Filesize(title=_("Critical at")),
-                 ],
-             )),
-            ("log_files",
-             Tuple(
-                 title=_("Total log file size: Absolute upper levels"),
-                 elements=[Filesize(title=_("Warning at")),
-                           Filesize(title=_("Critical at"))],
-             )),
-            ("log_files_used",
-             Alternative(
-                 title=_("Used log files: Absolute or relative upper levels"),
-                 elements=[
-                     Tuple(
-                         title=_("Upper absolute levels"),
-                         elements=[
-                             Filesize(title=_("Warning at")),
-                             Filesize(title=_("Critical at"))
-                         ],
-                     ),
-                     Tuple(
-                         title=_("Upper percentage levels"),
-                         elements=[
-                             Percentage(title=_("Warning at")),
-                             Percentage(title=_("Critical at"))
-                         ],
-                     ),
-                 ],
-             )),
+            (
+                "data_files",
+                Tuple(
+                    title=_("Total data file size: Absolute upper levels"),
+                    elements=[
+                        Filesize(title=_("Warning at")),
+                        Filesize(title=_("Critical at")),
+                    ],
+                ),
+            ),
+            (
+                "log_files",
+                Tuple(
+                    title=_("Total log file size: Absolute upper levels"),
+                    elements=[Filesize(title=_("Warning at")), Filesize(title=_("Critical at"))],
+                ),
+            ),
+            (
+                "log_files_used",
+                Alternative(
+                    title=_("Used log files: Absolute or relative upper levels"),
+                    elements=[
+                        Tuple(
+                            title=_("Upper absolute levels"),
+                            elements=[
+                                Filesize(title=_("Warning at")),
+                                Filesize(title=_("Critical at")),
+                            ],
+                        ),
+                        Tuple(
+                            title=_("Upper percentage levels"),
+                            elements=[
+                                Percentage(title=_("Warning at")),
+                                Percentage(title=_("Critical at")),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -64,4 +69,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_file_sizes,
         title=lambda: _("MSSQL Log and Data File Sizes"),
-    ))
+    )
+)

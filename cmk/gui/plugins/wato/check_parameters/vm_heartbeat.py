@@ -17,30 +17,38 @@ def _parameter_valuespec_vm_heartbeat():
     return Dictionary(
         optional_keys=False,
         elements=[
-            ("heartbeat_missing",
-             MonitoringState(
-                 title=_("No heartbeat"),
-                 help=_("Guest operating system may have stopped responding."),
-                 default_value=2,
-             )),
-            ("heartbeat_intermittend",
-             MonitoringState(
-                 title=_("Intermittent heartbeat"),
-                 help=_("May be due to high guest load."),
-                 default_value=1,
-             )),
-            ("heartbeat_no_tools",
-             MonitoringState(
-                 title=_("Heartbeat tools missing or not installed"),
-                 help=_("No VMWare Tools installed."),
-                 default_value=1,
-             )),
-            ("heartbeat_ok",
-             MonitoringState(
-                 title=_("Heartbeat OK"),
-                 help=_("Guest operating system is responding normally."),
-                 default_value=0,
-             )),
+            (
+                "heartbeat_missing",
+                MonitoringState(
+                    title=_("No heartbeat"),
+                    help=_("Guest operating system may have stopped responding."),
+                    default_value=2,
+                ),
+            ),
+            (
+                "heartbeat_intermittend",
+                MonitoringState(
+                    title=_("Intermittent heartbeat"),
+                    help=_("May be due to high guest load."),
+                    default_value=1,
+                ),
+            ),
+            (
+                "heartbeat_no_tools",
+                MonitoringState(
+                    title=_("Heartbeat tools missing or not installed"),
+                    help=_("No VMWare Tools installed."),
+                    default_value=1,
+                ),
+            ),
+            (
+                "heartbeat_ok",
+                MonitoringState(
+                    title=_("Heartbeat OK"),
+                    help=_("Guest operating system is responding normally."),
+                    default_value=0,
+                ),
+            ),
         ],
     )
 
@@ -52,4 +60,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_vm_heartbeat,
         title=lambda: _("Virtual machine (for example ESX) heartbeat status"),
-    ))
+    )
+)

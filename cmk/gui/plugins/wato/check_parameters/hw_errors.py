@@ -16,4 +16,5 @@ rulespec_registry.register(
         check_group_name="hw_errors",
         group=RulespecGroupEnforcedServicesHardware,
         title=lambda: _("Simple checks for BIOS/Hardware errors"),
-    ))
+    )
+)

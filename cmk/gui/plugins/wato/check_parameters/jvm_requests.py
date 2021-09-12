@@ -23,8 +23,10 @@ def _item_spec_jvm_requests():
 
 def _parameter_valuespec_jvm_requests():
     return Tuple(
-        help=_("This rule sets the warn and crit levels for the number "
-               "of incoming requests to a JVM application server."),
+        help=_(
+            "This rule sets the warn and crit levels for the number "
+            "of incoming requests to a JVM application server."
+        ),
         elements=[
             Integer(
                 title=_("Warning if below"),
@@ -57,4 +59,5 @@ rulespec_registry.register(
         item_spec=_item_spec_jvm_requests,
         parameter_valuespec=_parameter_valuespec_jvm_requests,
         title=lambda: _("JVM request count"),
-    ))
+    )
+)

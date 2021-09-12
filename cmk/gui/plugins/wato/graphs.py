@@ -24,14 +24,24 @@ class ConfigVariableGraphTimeranges(ConfigVariable):
 
     def valuespec(self):
         return ListOf(
-            Dictionary(optional_keys=[],
-                       elements=[
-                           ('title', TextInput(
-                               title=_('Title'),
-                               allow_empty=False,
-                           )),
-                           ('duration', Age(title=_("Duration"),)),
-                       ]),
+            Dictionary(
+                optional_keys=[],
+                elements=[
+                    (
+                        "title",
+                        TextInput(
+                            title=_("Title"),
+                            allow_empty=False,
+                        ),
+                    ),
+                    (
+                        "duration",
+                        Age(
+                            title=_("Duration"),
+                        ),
+                    ),
+                ],
+            ),
             title=_("Custom graph timeranges"),
             movable=True,
             totext=_("%d timeranges"),

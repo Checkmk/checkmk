@@ -61,8 +61,8 @@ from cmk.gui.valuespec import (
 )
 
 LegacyPerfometer = Tuple[str, Any]
-Atom = TypeVar('Atom')
-TransformedAtom = TypeVar('TransformedAtom')
+Atom = TypeVar("Atom")
+TransformedAtom = TypeVar("TransformedAtom")
 StackElement = Union[Atom, TransformedAtom]
 GraphTemplate = Dict[str, Any]
 GraphRecipe = Dict[str, Any]
@@ -71,6 +71,7 @@ GraphRecipe = Dict[str, Any]
 class AutomaticDict(OrderedDict):
     """Dictionary class with the ability of appending items like provided
     by a list."""
+
     def __init__(self, list_identifier=None, start_index=None):
         super().__init__(self)
         self._list_identifier = list_identifier or "item"
@@ -88,9 +89,9 @@ check_metrics: Dict[str, Dict[str, Any]] = {}
 perfometer_info: List[Union[LegacyPerfometer, PerfometerSpec]] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
-graph_info: 'OrderedDict[str, GraphTemplate]' = AutomaticDict("manual_graph_template")
+graph_info: "OrderedDict[str, GraphTemplate]" = AutomaticDict("manual_graph_template")
 
-#.
+# .
 #   .--Constants-----------------------------------------------------------.
 #   |              ____                _              _                    |
 #   |             / ___|___  _ __  ___| |_ __ _ _ __ | |_ ___              |
@@ -194,11 +195,11 @@ def indexed_color(idx, total):
 
 
 def parse_perf_values(
-    data_str: str
+    data_str: str,
 ) -> Tuple[str, str, Tuple[Optional[str], Optional[str], Optional[str], Optional[str]]]:
     "convert perf str into a tuple with values"
     varname, values = data_str.split("=", 1)
-    varname = cmk.utils.pnp_cleanup(varname.replace("\"", "").replace("\'", ""))
+    varname = cmk.utils.pnp_cleanup(varname.replace('"', "").replace("'", ""))
 
     value_parts = values.split(";")
     value = value_parts.pop(0)
@@ -223,7 +224,7 @@ def split_unit(value_text: str) -> Tuple[Optional[float], Optional[str]]:
 
     def digit_unit_split(value_text: str) -> int:
         for i, char in enumerate(value_text):
-            if char not in '0123456789.,-':
+            if char not in "0123456789.,-":
                 return i
         return len(value_text)
 
@@ -236,13 +237,14 @@ def split_unit(value_text: str) -> Tuple[Optional[float], Optional[str]]:
     return None, unit_name
 
 
-def parse_perf_data(perf_data_string: str,
-                    check_command: Optional[str] = None) -> Tuple[Perfdata, str]:
-    """ Convert perf_data_string into perf_data, extract check_command"""
+def parse_perf_data(
+    perf_data_string: str, check_command: Optional[str] = None
+) -> Tuple[Perfdata, str]:
+    """Convert perf_data_string into perf_data, extract check_command"""
     # Strip away arguments like in "check_http!-H checkmk.com"
     if check_command is None:
         check_command = ""
-    elif hasattr(check_command, 'split'):
+    elif hasattr(check_command, "split"):
         check_command = check_command.split("!")[0]
 
     # Split the perf data string into parts. Preserve quoted strings!
@@ -267,15 +269,17 @@ def parse_perf_data(perf_data_string: str,
             if value is None or unit_name is None:
                 continue  # ignore useless empty variable
 
-            perf_data.append((
-                varname,
-                value,
-                unit_name,
-                _float_or_int(value_parts[0]),
-                _float_or_int(value_parts[1]),
-                _float_or_int(value_parts[2]),
-                _float_or_int(value_parts[3]),
-            ))
+            perf_data.append(
+                (
+                    varname,
+                    value,
+                    unit_name,
+                    _float_or_int(value_parts[0]),
+                    _float_or_int(value_parts[1]),
+                    _float_or_int(value_parts[2]),
+                    _float_or_int(value_parts[3]),
+                )
+            )
         except Exception as exc:
             logger.exception("Failed to parse perfdata '%s'", perf_data_string)
             if config.debug:
@@ -285,7 +289,7 @@ def parse_perf_data(perf_data_string: str,
 
 
 def _float_or_int(val: Optional[str]) -> Union[int, float, None]:
-    """"45.0" -> 45.0, "45" -> 45"""
+    """ "45.0" -> 45.0, "45" -> 45"""
     if val is None:
         return None
 
@@ -310,8 +314,9 @@ def perfvar_translation(perfvar_name, check_command):
 
     if not translation_entry:
         for orig_varname, te in cm.items():
-            if orig_varname[0] == "~" and cmk.utils.regex.regex(
-                    orig_varname[1:]).match(perfvar_name):  # Regex entry
+            if orig_varname[0] == "~" and cmk.utils.regex.regex(orig_varname[1:]).match(
+                perfvar_name
+            ):  # Regex entry
                 translation_entry = te
                 break
 
@@ -404,7 +409,7 @@ def perf_data_string_from_metric_names(metric_names):
             continue
 
         if " " in var_name:
-            parts.append("\"%s\"=1" % var_name)
+            parts.append('"%s"=1' % var_name)
         else:
             parts.append("%s=1" % var_name)
     return " ".join(parts)
@@ -446,7 +451,7 @@ def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
     return available_metrics_translated(perf_data_string, rrd_metrics, check_command)
 
 
-#.
+# .
 #   .--Evaluation----------------------------------------------------------.
 #   |          _____            _             _   _                        |
 #   |         | ____|_   ____ _| |_   _  __ _| |_(_) ___  _ __             |
@@ -507,20 +512,28 @@ def _evaluate_rpn(
     translated_metrics: TranslatedMetrics,
 ) -> Tuple[float, Dict[str, Any], str]:
     # stack of (value, unit, color)
-    return stack_resolver(expression.split(","), lambda x: x in rpn_operators,
-                          lambda op, a, b: rpn_operators[op](a, b),
-                          lambda x: _evaluate_literal(x, translated_metrics))
+    return stack_resolver(
+        expression.split(","),
+        lambda x: x in rpn_operators,
+        lambda op, a, b: rpn_operators[op](a, b),
+        lambda x: _evaluate_literal(x, translated_metrics),
+    )
 
 
-def stack_resolver(elements: List[Atom], is_operator: Callable[[Atom], bool],
-                   apply_operator: Callable[[Atom, StackElement, StackElement], StackElement],
-                   apply_element: Callable[[Atom], StackElement]) -> StackElement:
+def stack_resolver(
+    elements: List[Atom],
+    is_operator: Callable[[Atom], bool],
+    apply_operator: Callable[[Atom, StackElement, StackElement], StackElement],
+    apply_element: Callable[[Atom], StackElement],
+) -> StackElement:
     stack: List[StackElement] = []
     for element in elements:
         if is_operator(element):
             if len(stack) < 2:
-                raise MKGeneralException("Syntax error in expression '%s': too few operands" %
-                                         ", ".join(map(str, elements)))
+                raise MKGeneralException(
+                    "Syntax error in expression '%s': too few operands"
+                    % ", ".join(map(str, elements))
+                )
             op2 = stack.pop()
             op1 = stack.pop()
             stack.append(apply_operator(element, op1, op2))
@@ -528,8 +541,10 @@ def stack_resolver(elements: List[Atom], is_operator: Callable[[Atom], bool],
             stack.append(apply_element(element))
 
     if len(stack) != 1:
-        raise MKGeneralException("Syntax error in expression '%s': too many operands left" %
-                                 ", ".join(map(str, elements)))
+        raise MKGeneralException(
+            "Syntax error in expression '%s': too many operands left"
+            % ", ".join(map(str, elements))
+        )
 
     return stack[0]
 
@@ -540,8 +555,11 @@ rpn_operators = {
     "-": lambda a, b: ((a[0] - b[0]), _unit_sub(a[1], b[1]), _choose_operator_color(a[2], b[2])),
     "*": lambda a, b: ((a[0] * b[0]), _unit_add(a[1], b[1]), _choose_operator_color(a[2], b[2])),
     # Handle zero division by always adding a tiny bit to the divisor
-    "/": lambda a, b: ((a[0] /
-                        (b[0] + 1e-16)), _unit_div(a[1], b[1]), _choose_operator_color(a[2], b[2])),
+    "/": lambda a, b: (
+        (a[0] / (b[0] + 1e-16)),
+        _unit_div(a[1], b[1]),
+        _choose_operator_color(a[2], b[2]),
+    ),
     ">": lambda a, b: ((a[0] > b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
     "<": lambda a, b: ((a[0] < b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
     ">=": lambda a, b: ((a[0] >= b[0] and 1.0 or 0.0), unit_info[""], "#000000"),
@@ -553,7 +571,7 @@ rpn_operators = {
 
 # TODO: real unit computation!
 def _unit_mult(u1: Dict[str, Any], u2: Dict[str, Any]) -> Dict[str, Any]:
-    return u2 if u1 in (unit_info[''], unit_info['count']) else u1
+    return u2 if u1 in (unit_info[""], unit_info["count"]) else u1
 
 
 _unit_div: Callable[[Dict[str, Any], Dict[str, Any]], Dict[str, Any]] = _unit_mult
@@ -630,7 +648,7 @@ def _evaluate_literal(
     return value, unit, color
 
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -650,14 +668,17 @@ def get_graph_range(graph_template, translated_metrics):
         return None, None  # Compute range of displayed data points
 
     try:
-        return evaluate(graph_template["range"][0], translated_metrics)[0], \
-               evaluate(graph_template["range"][1], translated_metrics)[0]
+        return (
+            evaluate(graph_template["range"][0], translated_metrics)[0],
+            evaluate(graph_template["range"][1], translated_metrics)[0],
+        )
     except Exception:
         return None, None
 
 
 def replace_expressions(text, translated_metrics):
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
+
     def eval_to_string(match):
         expression = match.group()[2:-1]
         value, unit, _color = evaluate(expression, translated_metrics)
@@ -686,11 +707,13 @@ def get_graph_template(template_id):
 def generic_graph_template(metric_name: str) -> GraphTemplate:
     return {
         "id": "METRIC_" + metric_name,
-        "metrics": [(metric_name, "area"),],
+        "metrics": [
+            (metric_name, "area"),
+        ],
         "scalars": [
             metric_name + ":warn",
             metric_name + ":crit",
-        ]
+        ],
     }
 
 
@@ -740,7 +763,7 @@ def metrics_used_in_expression(metric_expression: str) -> Iterator[str]:
 
 
 def drop_metric_consolidation_advice(expression: str) -> str:
-    if any(expression.endswith(cf) for cf in ['.max', '.min', '.average']):
+    if any(expression.endswith(cf) for cf in [".max", ".min", ".average"]):
         return expression.rsplit(".", 1)[0]
     return expression
 
@@ -756,8 +779,12 @@ def graph_template_for_metrics(
 
     try:
         reduced_metrics = list(
-            _filter_renderable_graph_metrics(graph_template['metrics'], translated_metrics,
-                                             graph_template.get('optional_metrics', [])))
+            _filter_renderable_graph_metrics(
+                graph_template["metrics"],
+                translated_metrics,
+                graph_template.get("optional_metrics", []),
+            )
+        )
     except KeyError:
         return {}
 
@@ -782,17 +809,17 @@ def _filter_renderable_graph_metrics(metric_definitions, translated_metrics, opt
 
 
 def get_graph_data_from_livestatus(only_sites, host_name, service_description):
-    columns = [u'perf_data', u'metrics', u'check_command']
+    columns = ["perf_data", "metrics", "check_command"]
     query = livestatus_lql([host_name], columns, service_description)
-    what = 'host' if service_description == "_HOST_" else 'service'
-    labels = [u"site"] + [u"%s_%s" % (what, col) for col in columns]
+    what = "host" if service_description == "_HOST_" else "service"
+    labels = ["site"] + ["%s_%s" % (what, col) for col in columns]
 
     with sites.only_sites(only_sites), sites.prepend_site():
         info = dict(zip(labels, sites.live().query_row(query)))
 
-    info['host_name'] = host_name
-    if what == 'service':
-        info['service_description'] = service_description
+    info["host_name"] = host_name
+    if what == "service":
+        info["service_description"] = service_description
 
     return info
 
@@ -842,12 +869,14 @@ def horizontal_rules_from_thresholds(
         try:
             value, unit, color = evaluate(expression, translated_metrics)
             if value:
-                horizontal_rules.append((
-                    value,
-                    unit["render"](value),
-                    color,
-                    title,
-                ))
+                horizontal_rules.append(
+                    (
+                        value,
+                        unit["render"](value),
+                        color,
+                        title,
+                    )
+                )
         # Scalar value like min and max are always optional. This makes configuration
         # of graphs easier.
         except Exception:
@@ -856,7 +885,7 @@ def horizontal_rules_from_thresholds(
     return horizontal_rules
 
 
-#.
+# .
 #   .--Colors--------------------------------------------------------------.
 #   |                      ____      _                                     |
 #   |                     / ___|___ | | ___  _ __ ___                      |
@@ -952,14 +981,14 @@ scalar_colors = {
 }
 
 
-def get_palette_color_by_index(i: int, shading='a') -> str:
+def get_palette_color_by_index(i: int, shading="a") -> str:
     color_key = sorted(_cmk_color_palette.keys())[i % len(_cmk_color_palette)]
     return "%s/%s" % (color_key, shading)
 
 
 def get_next_random_palette_color():
     keys = list(_cmk_color_palette.keys())
-    if 'random_color_index' in g:
+    if "random_color_index" in g:
         last_index = g.random_color_index
     else:
         last_index = random.randint(0, len(keys))
@@ -1006,7 +1035,7 @@ def parse_color_into_hexrgb(color_string: str) -> str:
         # Colors of the yellow ("2") and green ("3") area need to be darkened (in third place of the hsv tuple),
         # colors of the red and blue area need to be brightened (in second place of the hsv tuple).
         # For both shadings we need different factors.
-        if color_shading == 'b':
+        if color_shading == "b":
             factors = (1.0, 1.0, 0.8) if cmk_color_index[0] in ["2", "3"] else (1.0, 0.6, 1.0)
             hsv = _pointwise_multiplication(hsv, factors)
 
@@ -1016,8 +1045,9 @@ def parse_color_into_hexrgb(color_string: str) -> str:
     return "#808080"
 
 
-def _pointwise_multiplication(c1: Tuple[float, float, float],
-                              c2: Tuple[float, float, float]) -> Tuple[float, float, float]:
+def _pointwise_multiplication(
+    c1: Tuple[float, float, float], c2: Tuple[float, float, float]
+) -> Tuple[float, float, float]:
     components = list(x * y for x, y in zip(c1, c2))
     return components[0], components[1], components[2]
 
@@ -1049,6 +1079,7 @@ def fade_color(rgb, v):
 
 def darken_color(rgb, v):
     """Make a color darker. v ranges from 0 (not darker) to 1 (black)"""
+
     def darken(x, v):
         return x * (1.0 - v)
 
@@ -1057,6 +1088,7 @@ def darken_color(rgb, v):
 
 def lighten_color(rgb, v):
     """Make a color lighter. v ranges from 0 (not lighter) to 1 (white)"""
+
     def lighten(x, v):
         return x + ((1.0 - x) * v)
 
@@ -1074,11 +1106,12 @@ def _mix_colors(a, b):
 
 def render_color_icon(color: str) -> HTML:
     return html.render_div(
-        '',
+        "",
         class_="color",
         # NOTE: When we drop support for IE11 we can use #%s4c instead of rgba(...)
-        style="background-color: rgba(%d, %d, %d, 0.3); border-color: %s;" %
-        (*hex_color_to_rgb_color(color), color))
+        style="background-color: rgba(%d, %d, %d, 0.3); border-color: %s;"
+        % (*hex_color_to_rgb_color(color), color),
+    )
 
 
 @MemoizeCache
@@ -1089,7 +1122,7 @@ def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]
 
     for trans in check_metrics.values():
         for metric, options in trans.items():
-            if options.get('name', '') == canonical_name:
+            if options.get("name", "") == canonical_name:
                 if "deprecated" in options:
                     # From version check used unified metric, and thus deprecates old translation
                     # added a complete stable release, that gives the customer about a year of data
@@ -1100,21 +1133,24 @@ def reverse_translate_metric_name(canonical_name: str) -> List[Tuple[str, float]
                     migration_end = current_version
 
                 if migration_end >= current_version:
-                    possible_translations.append((metric, options.get('scale', 1.0)))
+                    possible_translations.append((metric, options.get("scale", 1.0)))
 
     return [(canonical_name, 1.0)] + sorted(set(possible_translations))
 
 
-def find_host_services(host_name: str,
-                       service_description: str = "") -> Iterator[Tuple[str, str, Tuple[str, ...]]]:
+def find_host_services(
+    host_name: str, service_description: str = ""
+) -> Iterator[Tuple[str, str, Tuple[str, ...]]]:
     if not host_name and not service_description:  # optimization: avoid query with empty result
         return
     # TODO: site hint!
 
     # Also fetch host data with the *same* query. This saves one round trip. And head
     # host has at least one service
-    query = "GET services\n" \
-            "Columns: description check_command perf_data metrics host_check_command host_metrics \n"
+    query = (
+        "GET services\n"
+        "Columns: description check_command perf_data metrics host_check_command host_metrics \n"
+    )
 
     if host_name:
         query += "Filter: host_name = %s\n" % livestatus.lqencode(host_name)
@@ -1123,8 +1159,14 @@ def find_host_services(host_name: str,
         query += "Filter: service_description = %s\n" % livestatus.lqencode(service_description)
 
     host_check_command, host_metrics = None, None
-    for svc_desc, check_command, perf_data, rrd_metrics, \
-        host_check_command, host_metrics in sites.live().query(query):
+    for (
+        svc_desc,
+        check_command,
+        perf_data,
+        rrd_metrics,
+        host_check_command,
+        host_metrics,
+    ) in sites.live().query(query):
         parsed_perf_data, check_command = parse_perf_data(perf_data, check_command)
         known_metrics = set([perf[0] for perf in parsed_perf_data] + rrd_metrics)
         yield svc_desc, check_command, tuple(known_metrics)
@@ -1144,6 +1186,7 @@ def metric_choices(check_command: str, perfvars: Tuple[str, ...]) -> Iterator[Tu
 @autocompleter_registry.register
 class MetricName(DropdownChoiceWithHostAndServiceHints):
     """Factory of a Dropdown menu from all known metric names"""
+
     ident = "monitored_metrics"
 
     def __init__(self, **kwargs: Any):
@@ -1159,9 +1202,11 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
             **kwargs,
         }
         super().__init__(**kwargs_with_defaults)
-        self._regex: re.Pattern = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
-        self._regex_error = _("Metric names must only consist of letters, digits and "
-                              "underscores and they must start with a letter.")
+        self._regex: re.Pattern = re.compile("^[a-zA-Z][a-zA-Z0-9_]*$")
+        self._regex_error = _(
+            "Metric names must only consist of letters, digits and "
+            "underscores and they must start with a letter."
+        )
 
     def _validate_value(self, value: DropdownChoiceValue, varprefix: str) -> None:
         if value is not None and not self._regex.match(ensure_str(value)):
@@ -1172,9 +1217,14 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
             return self.choices()
         # Need to create an on the fly metric option
         return [
-            next(((metric_id, metric_detail['title'])
-                  for metric_id, metric_detail in metric_info.items()
-                  if metric_id == value), (value, value.title()))
+            next(
+                (
+                    (metric_id, metric_detail["title"])
+                    for metric_id, metric_detail in metric_info.items()
+                    if metric_id == value
+                ),
+                (value, value.title()),
+            )
         ]
 
     # This class in to use them Text autocompletion ajax handler. Valuespec is not used on html
@@ -1182,21 +1232,24 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
     def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
         """Return the matching list of dropdown choices
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+
         def metrics():
             options = set(find_host_services(params.get("host", ""), params.get("service", "")))
             for _unused, check_command, metrics in options:
                 yield from metric_choices(check_command, metrics)
 
         if not params.get("host") and not params.get("service"):
-            choices: Choices = [(metric_id, metric_detail['title'])
-                                for metric_id, metric_detail in metric_info.items()]
+            choices: Choices = [
+                (metric_id, metric_detail["title"])
+                for metric_id, metric_detail in metric_info.items()
+            ]
         else:
             choices = list(set(metrics()))
 
         return sorted(v for v in choices if value.lower() in v[1].lower())
 
 
-#.
+# .
 #   .--Definitions---------------------------------------------------------.
 #   |            ____        __ _       _ _   _                            |
 #   |           |  _ \  ___ / _(_)_ __ (_) |_(_) ___  _ __  ___            |

@@ -18,7 +18,9 @@ rulespec_registry.register(
             "Enabling this option will result in an additional service for every RMON-capable "
             "switch port. This service will provide detailed information on the distribution of "
             "packet sizes transferred over the port. Note: currently, this additional RMON check "
-            "does not honor the inventory settings for switch ports."),
+            "does not honor the inventory settings for switch ports."
+        ),
         name="rmon_discovery",
         title=lambda: _("RMON statistics"),
-    ))
+    )
+)

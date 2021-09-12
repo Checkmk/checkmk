@@ -29,4 +29,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_mail_latency,
         title=lambda: _("Mail latency"),
-    ))
+    )
+)

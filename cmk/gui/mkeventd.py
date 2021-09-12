@@ -41,9 +41,9 @@ def mib_upload_dir() -> Path:
 def mib_dirs() -> List[Tuple[Path, str]]:
     # ASN1 MIB source directory candidates. Non existing dirs are ok.
     return [
-        (mib_upload_dir(), _('Custom MIBs')),
-        (cmk.utils.paths.mib_dir, _('MIBs shipped with Checkmk')),
-        (Path('/usr/share/snmp/mibs'), _('System MIBs')),
+        (mib_upload_dir(), _("Custom MIBs")),
+        (cmk.utils.paths.mib_dir, _("MIBs shipped with Checkmk")),
+        (Path("/usr/share/snmp/mibs"), _("System MIBs")),
     ]
 
 
@@ -87,18 +87,19 @@ syslog_facilities: DropdownChoices = [
 ]
 
 phase_names = {
-    'counting': _("counting"),
-    'delayed': _("delayed"),
-    'open': _("open"),
-    'ack': _("acknowledged"),
-    'closed': _("closed"),
+    "counting": _("counting"),
+    "delayed": _("delayed"),
+    "open": _("open"),
+    "ack": _("acknowledged"),
+    "closed": _("closed"),
 }
 
 action_whats = {
     "ORPHANED": _("Event deleted in counting state because rule was deleted."),
     "NOCOUNT": _("Event deleted in counting state because rule does not count anymore"),
-    "DELAYOVER":
-        _("Event opened because the delay time has elapsed before cancelling event arrived."),
+    "DELAYOVER": _(
+        "Event opened because the delay time has elapsed before cancelling event arrived."
+    ),
     "EXPIRED": _("Event deleted because its livetime expired"),
     "COUNTREACHED": _("Event deleted because required count had been reached"),
     "COUNTFAILED": _("Event created by required count was not reached in time"),
@@ -136,18 +137,20 @@ def action_choices(omit_hidden=False) -> List[Tuple[str, str]]:
     # not in multisite.mk (like the service levels). That
     # way we have not direct access to them but need
     # to load them from the configuration.
-    return ([("@NOTIFY", _("Send monitoring notification"))] +
-            [(a["id"], a["title"])
-             for a in _eventd_configuration().get("actions", [])
-             if not omit_hidden or not a.get("hidden")])
+    return [("@NOTIFY", _("Send monitoring notification"))] + [
+        (a["id"], a["title"])
+        for a in _eventd_configuration().get("actions", [])
+        if not omit_hidden or not a.get("hidden")
+    ]
 
 
 def _eventd_configuration() -> ec.ConfigFromWATO:
     if "eventd_configuration" in g:
         return g.eventd_configuration
 
-    settings = ec.settings('', Path(cmk.utils.paths.omd_root),
-                           Path(cmk.utils.paths.default_config_dir), [''])
+    settings = ec.settings(
+        "", Path(cmk.utils.paths.omd_root), Path(cmk.utils.paths.default_config_dir), [""]
+    )
     cfg = ec.load_config(settings)
     g.eventd_configuration = cfg
     return cfg
@@ -168,7 +171,8 @@ def send_event(event) -> str:
             text=event["text"],
             ip_address=event["ipaddress"],
             service_level=event["sl"],
-        ))
+        )
+    )
 
     execute_command("CREATE", [syslog_message_str], site=event["site"])
 
@@ -211,17 +215,18 @@ def query_ec_directly(query):
         return ast.literal_eval(ensure_str(response_text))
     except SyntaxError:
         raise MKGeneralException(
-            _("Invalid response from event daemon: "
-              "<pre>%s</pre>") % response_text)
+            _("Invalid response from event daemon: " "<pre>%s</pre>") % response_text
+        )
 
     except Exception as e:
         raise MKGeneralException(
-            _("Cannot connect to event daemon via %s: %s") % (_socket_path(), e))
+            _("Cannot connect to event daemon via %s: %s") % (_socket_path(), e)
+        )
 
 
-def execute_command(name: str,
-                    args: Optional[List[str]] = None,
-                    site: Optional[SiteId] = None) -> None:
+def execute_command(
+    name: str, args: Optional[List[str]] = None, site: Optional[SiteId] = None
+) -> None:
     if args:
         formated_args = ";" + ";".join(args)
     else:
@@ -268,8 +273,9 @@ def get_total_stats(only_sites):
         ]:
             total_stats.setdefault(time_key, 0.0)
             if total_stats[in_relation_to]:  # avoid division by zero
-                my_weight = row[in_relation_to] / total_stats[
-                    in_relation_to]  # fixed: true-division
+                my_weight = (
+                    row[in_relation_to] / total_stats[in_relation_to]
+                )  # fixed: true-division
                 total_stats[time_key] += my_weight * row[time_key]
 
     total_sync_time = 0.0
@@ -289,9 +295,13 @@ def get_stats_per_site(only_sites, stats_keys):
     try:
         sites.live().set_only_sites(only_sites)
         # Do not mark the site as dead in case the Event Console is not available.
-        query = livestatus.Query("GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys),
-                                 suppress_exceptions=(livestatus.MKLivestatusTableNotFoundError,
-                                                      livestatus.MKLivestatusBadGatewayError))
+        query = livestatus.Query(
+            "GET eventconsolestatus\nColumns: %s" % " ".join(stats_keys),
+            suppress_exceptions=(
+                livestatus.MKLivestatusTableNotFoundError,
+                livestatus.MKLivestatusBadGatewayError,
+            ),
+        )
         for list_row in sites.live().query(query):
             yield dict(zip(stats_keys, list_row))
     finally:
@@ -371,6 +381,7 @@ def event_rule_matches_non_inverted(rule_pack, rule, event):
 
     if cmk_version.is_managed_edition():
         import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module,import-outside-toplevel
+
         if "customer" in rule_pack:
             rule_customer_id = rule_pack["customer"]
         else:
@@ -408,7 +419,7 @@ def match(pattern, text, complete=True):
         return True
     if complete:
         if not pattern.endswith("$"):
-            pattern += '$'
+            pattern += "$"
         m = re.compile(pattern, re.IGNORECASE).match(text)
     else:
         m = re.compile(pattern, re.IGNORECASE).search(text)

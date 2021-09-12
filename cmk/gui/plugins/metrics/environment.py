@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import graph_info, indexed_color, metric_info
 
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -274,7 +274,7 @@ metric_info["fan_perc"] = {
     "color": "16/b",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -286,7 +286,12 @@ metric_info["fan_perc"] = {
 #   |  Definitions of time series graphs                                   |
 #   '----------------------------------------------------------------------'
 
-graph_info["fan_speed"] = {"title": _("Fan speed"), "metrics": [("fan_speed", "area"),]}
+graph_info["fan_speed"] = {
+    "title": _("Fan speed"),
+    "metrics": [
+        ("fan_speed", "area"),
+    ],
+}
 
 graph_info["battery_currents"] = {
     "title": _("Battery currents"),
@@ -298,26 +303,30 @@ graph_info["battery_currents"] = {
 
 graph_info["battery_capacity"] = {
     "title": _("Battery capacity"),
-    "metrics": [("battery_capacity", "area"),],
+    "metrics": [
+        ("battery_capacity", "area"),
+    ],
     "range": (0, 100),
 }
 
 graph_info["optical_signal_power"] = {
     "title": _("Optical Signal Power"),
-    "metrics": [("rx_light", "line"), ("tx_light", "line")]
+    "metrics": [("rx_light", "line"), ("tx_light", "line")],
 }
 
 for i in range(10):
     graph_info["optical_signal_power_lane_%d" % i] = {
         "title": _("Optical Signal Power Lane %d") % i,
-        "metrics": [("rx_light_%d" % i, "line"), ("tx_light_%d" % i, "line")]
+        "metrics": [("rx_light_%d" % i, "line"), ("tx_light_%d" % i, "line")],
     }
 
 graph_info["temperature"] = {
     "title": _("Temperature"),
-    "metrics": [("temp", "area"),],
+    "metrics": [
+        ("temp", "area"),
+    ],
     "scalars": [
         "temp:warn",
         "temp:crit",
-    ]
+    ],
 }

@@ -29,4 +29,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_sp_util,
         title=lambda: _("Storage Processor Utilization"),
-    ))
+    )
+)

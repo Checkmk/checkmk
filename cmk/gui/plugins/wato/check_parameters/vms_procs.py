@@ -15,10 +15,12 @@ from cmk.gui.valuespec import Integer, Optional, Tuple
 
 def _parameter_valuespec_vms_procs():
     return Optional(
-        Tuple(elements=[
-            Integer(title=_("Warning at"), unit=_("processes"), default_value=100),
-            Integer(title=_("Critical at"), unit=_("processes"), default_value=200)
-        ],),
+        Tuple(
+            elements=[
+                Integer(title=_("Warning at"), unit=_("processes"), default_value=100),
+                Integer(title=_("Critical at"), unit=_("processes"), default_value=200),
+            ],
+        ),
         title=_("Impose levels on number of processes"),
     )
 
@@ -29,4 +31,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_vms_procs,
         title=lambda: _("OpenVMS processes"),
-    ))
+    )
+)

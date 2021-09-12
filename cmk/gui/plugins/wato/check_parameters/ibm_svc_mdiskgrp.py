@@ -20,20 +20,27 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Transform, Tupl
 def _parameter_valuespec_ibm_svc_mdiskgrp():
     return Transform(
         Dictionary(
-            elements=filesystem_elements + [
-                ("provisioning_levels",
-                 Tuple(
-                     title=_("Provisioning Levels"),
-                     help=_("A provisioning of over 100% means over provisioning."),
-                     elements=[
-                         Percentage(title=_("Warning at a provisioning of"),
-                                    default_value=110.0,
-                                    maxvalue=None),
-                         Percentage(title=_("Critical at a provisioning of"),
-                                    default_value=120.0,
-                                    maxvalue=None),
-                     ],
-                 )),
+            elements=filesystem_elements
+            + [
+                (
+                    "provisioning_levels",
+                    Tuple(
+                        title=_("Provisioning Levels"),
+                        help=_("A provisioning of over 100% means over provisioning."),
+                        elements=[
+                            Percentage(
+                                title=_("Warning at a provisioning of"),
+                                default_value=110.0,
+                                maxvalue=None,
+                            ),
+                            Percentage(
+                                title=_("Critical at a provisioning of"),
+                                default_value=120.0,
+                                maxvalue=None,
+                            ),
+                        ],
+                    ),
+                ),
             ],
             hidden_keys=["flex_levels"],
         ),
@@ -49,4 +56,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ibm_svc_mdiskgrp,
         title=lambda: _("IBM SVC Pool Capacity"),
-    ))
+    )
+)

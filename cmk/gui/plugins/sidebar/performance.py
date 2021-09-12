@@ -45,31 +45,36 @@ class Performance(SidebarSnapin):
 
         try:
             sites.live().set_only_sites(only_sites)
-            data = sites.live().query("GET status\nColumns: service_checks_rate host_checks_rate "
-                                      "external_commands_rate connections_rate forks_rate "
-                                      "log_messages_rate cached_log_messages\n")
+            data = sites.live().query(
+                "GET status\nColumns: service_checks_rate host_checks_rate "
+                "external_commands_rate connections_rate forks_rate "
+                "log_messages_rate cached_log_messages\n"
+            )
         finally:
             sites.live().set_only_sites(None)
 
-        for what, show_more, col, format_str in \
-            [("Service checks",         False, 0, "%.2f/s"),
-             ("Host checks",            False, 1, "%.2f/s"),
-             ("External commands",      True, 2, "%.2f/s"),
-             ("Livestatus-conn.",       True, 3, "%.2f/s"),
-             ("Process creations",      True, 4, "%.2f/s"),
-             ("New log messages",       True, 5, "%.2f/s"),
-             ("Cached log messages",    True, 6, "%d")]:
+        for what, show_more, col, format_str in [
+            ("Service checks", False, 0, "%.2f/s"),
+            ("Host checks", False, 1, "%.2f/s"),
+            ("External commands", True, 2, "%.2f/s"),
+            ("Livestatus-conn.", True, 3, "%.2f/s"),
+            ("Process creations", True, 4, "%.2f/s"),
+            ("New log messages", True, 5, "%.2f/s"),
+            ("Cached log messages", True, 6, "%d"),
+        ]:
             write_line(what + ":", format_str % sum(row[col] for row in data), show_more=show_more)
 
         if only_sites is None and len(sites.allsites()) == 1:
             try:
-                data = sites.live().query("GET status\nColumns: external_command_buffer_slots "
-                                          "external_command_buffer_max\n")
+                data = sites.live().query(
+                    "GET status\nColumns: external_command_buffer_slots "
+                    "external_command_buffer_max\n"
+                )
             finally:
                 sites.live().set_only_sites(None)
             size = sum([row[0] for row in data])
             maxx = sum([row[1] for row in data])
-            write_line(_('Com. buf. max/total'), "%d / %d" % (maxx, size), show_more=True)
+            write_line(_("Com. buf. max/total"), "%d / %d" % (maxx, size), show_more=True)
 
         html.close_table()
 

@@ -29,14 +29,18 @@ class APICallBulkDiscovery(APICallCollection):
                 "handler": self._bulk_discovery_start,
                 "required_keys": ["hostnames"],
                 "optional_keys": [
-                    "mode", "use_cache", "do_scan", "ignore_single_check_errors", "bulk_size"
+                    "mode",
+                    "use_cache",
+                    "do_scan",
+                    "ignore_single_check_errors",
+                    "bulk_size",
                 ],
                 "required_permissions": ["wato.services"],
             },
             "bulk_discovery_status": {
                 "handler": self._bulk_discovery_status,
                 "required_permissions": ["wato.services"],
-            }
+            },
         }
 
     def _bulk_discovery_start(self, request):
@@ -44,8 +48,11 @@ class APICallBulkDiscovery(APICallCollection):
         if job.is_active():
             raise MKUserError(
                 None,
-                _("A bulk discovery job is already running. Please use the "
-                  "\"bulk_discovery_status\" call to get the curent status."))
+                _(
+                    "A bulk discovery job is already running. Please use the "
+                    '"bulk_discovery_status" call to get the curent status.'
+                ),
+            )
 
         mode, do_scan, bulk_size, error_handling = self._get_parameters_from_request(request)
         tasks = get_tasks(self._get_hosts_from_request(request), bulk_size)
@@ -76,8 +83,9 @@ class APICallBulkDiscovery(APICallCollection):
             int(request.get("bulk_size", params["performance"][1])),
         )
 
-        params["error_handling"] = request.get("ignore_single_check_errors",
-                                               params["error_handling"])
+        params["error_handling"] = request.get(
+            "ignore_single_check_errors", params["error_handling"]
+        )
 
         vs_bulk_discovery().validate_value(params, "")
         return (

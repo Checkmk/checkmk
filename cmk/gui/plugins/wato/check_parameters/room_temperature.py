@@ -15,12 +15,14 @@ from cmk.gui.valuespec import Integer, TextInput, Tuple
 
 def _parameter_valuespec_room_temperature():
     return Tuple(
-        help=_("Temperature levels for external thermometers that are used "
-               "for monitoring the temperature of a datacenter. An example "
-               "is the webthem from W&T."),
+        help=_(
+            "Temperature levels for external thermometers that are used "
+            "for monitoring the temperature of a datacenter. An example "
+            "is the webthem from W&T."
+        ),
         elements=[
-            Integer(title=_("warning at"), unit=u"°C", default_value=26),
-            Integer(title=_("critical at"), unit=u"°C", default_value=30),
+            Integer(title=_("warning at"), unit="°C", default_value=26),
+            Integer(title=_("critical at"), unit="°C", default_value=30),
         ],
     )
 
@@ -30,8 +32,10 @@ rulespec_registry.register(
         check_group_name="room_temperature",
         group=RulespecGroupCheckParametersEnvironment,
         is_deprecated=True,
-        item_spec=lambda: TextInput(title=_("Sensor ID"),
-                                    help=_("The identifier of the thermal sensor.")),
+        item_spec=lambda: TextInput(
+            title=_("Sensor ID"), help=_("The identifier of the thermal sensor.")
+        ),
         parameter_valuespec=_parameter_valuespec_room_temperature,
         title=lambda: _("Room temperature (external thermal sensors)"),
-    ))
+    )
+)

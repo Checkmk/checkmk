@@ -14,7 +14,7 @@ from flask_babel.speaklater import LazyString  # type: ignore[import]
 
 from cmk.gui.utils.html import HTML
 
-#.
+# .
 #   .--Escaper-------------------------------------------------------------.
 #   |                 _____                                                |
 #   |                | ____|___  ___ __ _ _ __   ___ _ __                  |
@@ -31,9 +31,10 @@ from cmk.gui.utils.html import HTML
 EscapableEntity = Union[None, int, HTML, str, LazyString]
 
 _UNESCAPER_TEXT = re.compile(
-    r'&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;')
+    r"&lt;(/?)(h1|h2|b|tt|i|u|br(?: /)?|nobr(?: /)?|pre|a|sup|p|li|ul|ol)&gt;"
+)
 _A_HREF = re.compile(
-    r'&lt;a href=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;))(?: target=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;)))?&gt;'
+    r"&lt;a href=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;))(?: target=(?:(?:&quot;|&#x27;)(.*?)(?:&quot;|&#x27;)))?&gt;"
 )
 
 
@@ -78,20 +79,22 @@ def escape_attribute(value: EscapableEntity) -> str:
     if isinstance(value, HTML):
         return str(value)  # HTML code which must not be escaped
     if value is None:
-        return ''
+        return ""
     if isinstance(value, (int, float)):
         return str(value)
     if isinstance(value, LazyString):
         return html_escape(str(value), quote=True)
-    raise TypeError(f'Unsupported type {type(value)}')
+    raise TypeError(f"Unsupported type {type(value)}")
 
 
 def unescape_attributes(value: str) -> str:
     # In python3 use html.unescape
-    return (value.replace("&amp;", "&")  #
-            .replace("&quot;", "\"")  #
-            .replace("&lt;", "<")  #
-            .replace("&gt;", ">"))
+    return (
+        value.replace("&amp;", "&")  #
+        .replace("&quot;", '"')  #
+        .replace("&lt;", "<")  #
+        .replace("&gt;", ">")
+    )
 
 
 def escape_text(text: EscapableEntity) -> str:
@@ -122,7 +125,7 @@ def escape_text(text: EscapableEntity) -> str:
         return str(text)
 
     text = escape_attribute(text)
-    text = _UNESCAPER_TEXT.sub(r'<\1\2>', text)
+    text = _UNESCAPER_TEXT.sub(r"<\1\2>", text)
     for a_href in _A_HREF.finditer(text):
         href = a_href.group(1)
 
@@ -133,12 +136,12 @@ def escape_text(text: EscapableEntity) -> str:
         target = a_href.group(2)
 
         if target:
-            unescaped_tag = "<a href=\"%s\" target=\"%s\">" % (href, target)
+            unescaped_tag = '<a href="%s" target="%s">' % (href, target)
         else:
-            unescaped_tag = "<a href=\"%s\">" % href
+            unescaped_tag = '<a href="%s">' % href
 
         text = text.replace(a_href.group(0), unescaped_tag)
-    return text.replace("&amp;nbsp;", u"&nbsp;")
+    return text.replace("&amp;nbsp;", "&nbsp;")
 
 
 def strip_scripts(ht: str) -> str:
@@ -168,13 +171,13 @@ def strip_scripts(ht: str) -> str:
     prev = None
     while prev != ht:
         prev = ht
-        x = ht.lower().find('<script')
+        x = ht.lower().find("<script")
         if x == -1:
             break
-        y = ht.lower().find('</script')
+        y = ht.lower().find("</script")
         if y == -1:
             break
-        ht = ht[0:x] + ht[y + 9:]
+        ht = ht[0:x] + ht[y + 9 :]
 
     return ht
 
@@ -205,11 +208,11 @@ def strip_tags(ht: EscapableEntity) -> str:
         return str(ht)
 
     while True:
-        x = ht.find('<')
+        x = ht.find("<")
         if x == -1:
             break
-        y = ht.find('>', x)
+        y = ht.find(">", x)
         if y == -1:
             break
-        ht = ht[0:x] + ht[y + 1:]
+        ht = ht[0:x] + ht[y + 1 :]
     return ht.replace("&nbsp;", " ")

@@ -14,17 +14,21 @@ from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 
 def _parameter_valuespec_docsis_channels_downstream():
-    return Dictionary(elements=[
-        ("power",
-         Tuple(
-             title=_("Transmit Power"),
-             help=_("The operational transmit power"),
-             elements=[
-                 Float(title=_("warning at or below"), unit="dBmV", default_value=5.0),
-                 Float(title=_("critical at or below"), unit="dBmV", default_value=1.0),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "power",
+                Tuple(
+                    title=_("Transmit Power"),
+                    help=_("The operational transmit power"),
+                    elements=[
+                        Float(title=_("warning at or below"), unit="dBmV", default_value=5.0),
+                        Float(title=_("critical at or below"), unit="dBmV", default_value=1.0),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -35,4 +39,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_docsis_channels_downstream,
         title=lambda: _("Docsis Downstream Channels"),
-    ))
+    )
+)

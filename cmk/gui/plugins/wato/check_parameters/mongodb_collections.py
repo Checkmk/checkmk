@@ -24,37 +24,42 @@ def _mongodb_collections_size_tuple(title: str, unit: str) -> Tuple:
 
 
 def _parameter_valuespec_mongodb_collections() -> Dictionary:
-    return Dictionary(elements=[
-        (
-            "levels_size",
-            _mongodb_collections_size_tuple(
-                _("Uncompressed size in memory"),
-                _("MiB"),
+    return Dictionary(
+        elements=[
+            (
+                "levels_size",
+                _mongodb_collections_size_tuple(
+                    _("Uncompressed size in memory"),
+                    _("MiB"),
+                ),
             ),
-        ),
-        (
-            "levels_storageSize",
-            _mongodb_collections_size_tuple(
-                _("Allocated for document storage"),
-                _("MiB"),
+            (
+                "levels_storageSize",
+                _mongodb_collections_size_tuple(
+                    _("Allocated for document storage"),
+                    _("MiB"),
+                ),
             ),
-        ),
-        (
-            "levels_totalIndexSize",
-            _mongodb_collections_size_tuple(
-                _("Total size of all indexes for the collection"),
-                _("KByte"),
+            (
+                "levels_totalIndexSize",
+                _mongodb_collections_size_tuple(
+                    _("Total size of all indexes for the collection"),
+                    _("KByte"),
+                ),
             ),
-        ),
-    ])
+        ]
+    )
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="mongodb_collections",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextInput(title=_("MongoDB Collection Size"),),
+        item_spec=lambda: TextInput(
+            title=_("MongoDB Collection Size"),
+        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mongodb_collections,
         title=lambda: _("MongoDB Collection Size"),
-    ))
+    )
+)

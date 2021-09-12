@@ -14,19 +14,21 @@ from cmk.gui.valuespec import Dictionary, Percentage, Tuple
 
 
 def _parameter_valuespec_filehandler():
-    return Dictionary(elements=[
-        (
-            "levels",
-            Tuple(
-                title=_("Levels"),
-                default_value=(80.0, 90.0),
-                elements=[
-                    Percentage(title=_("Warning at"), unit=_("%")),
-                    Percentage(title=_("Critical at"), unit=_("%"))
-                ],
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Levels"),
+                    default_value=(80.0, 90.0),
+                    elements=[
+                        Percentage(title=_("Warning at"), unit=_("%")),
+                        Percentage(title=_("Critical at"), unit=_("%")),
+                    ],
+                ),
             ),
-        ),
-    ],)
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -36,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_filehandler,
         title=lambda: _("Filehandler"),
-    ))
+    )
+)

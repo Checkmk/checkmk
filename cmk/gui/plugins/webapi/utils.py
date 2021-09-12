@@ -40,7 +40,7 @@ class APICallCollectionRegistry(cmk.utils.plugin_registry.Registry[Type[APICallC
 
 api_call_collection_registry = APICallCollectionRegistry()
 
-#.
+# .
 #   .--API Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
@@ -65,8 +65,9 @@ def check_hostname(hostname, should_exist=True):
         if watolib.Host.host_exists(hostname):
             raise MKUserError(
                 None,
-                _("Host %s already exists in the folder %s") %
-                (hostname, watolib.Host.host(hostname).folder().path()))
+                _("Host %s already exists in the folder %s")
+                % (hostname, watolib.Host.host(hostname).folder().path()),
+            )
 
 
 def validate_config_hash(hash_value, entity):
@@ -74,10 +75,13 @@ def validate_config_hash(hash_value, entity):
     if hash_value != entity_hash:
         raise MKUserError(
             None,
-            _("The configuration has changed in the meantime. "
-              "You need to load the configuration and start another update. "
-              "If the existing configuration should not be checked, you can "
-              "remove the configuration_hash value from the request object."))
+            _(
+                "The configuration has changed in the meantime. "
+                "You need to load the configuration and start another update. "
+                "If the existing configuration should not be checked, you can "
+                "remove the configuration_hash value from the request object."
+            ),
+        )
 
 
 def add_configuration_hash(response, configuration_object):
@@ -97,9 +101,11 @@ def compute_config_hash(entity):
 
 def validate_host_attributes(attributes, new=False):
     _validate_general_host_attributes(
-        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")), new)
+        dict((key, value) for key, value in attributes.items() if not key.startswith("tag_")), new
+    )
     _validate_host_tags(
-        dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_")))
+        dict((key[4:], value) for key, value in attributes.items() if key.startswith("tag_"))
+    )
 
 
 # Check if the given attribute name exists, no type check
@@ -137,5 +143,6 @@ def _validate_host_tags(host_tags):
                     raise MKUserError(None, _("Unknown tag %s") % escaping.escape_attribute(tag_id))
                 break
         else:
-            raise MKUserError(None,
-                              _("Unknown tag group %s") % escaping.escape_attribute(tag_group_id))
+            raise MKUserError(
+                None, _("Unknown tag group %s") % escaping.escape_attribute(tag_group_id)
+            )

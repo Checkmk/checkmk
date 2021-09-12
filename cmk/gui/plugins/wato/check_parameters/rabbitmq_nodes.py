@@ -14,14 +14,24 @@ from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _parameter_valuespec_rabbitmq_nodes():
-    return Dictionary(elements=[
-        ("state", MonitoringState(title=_("State if node is not in state running"),
-                                  default_value=2)),
-        ("disk_free_alarm",
-         MonitoringState(title=_("State if node has disk free alarm in effect"), default_value=2)),
-        ("mem_alarm",
-         MonitoringState(title=_("State if node has mem alarm in effect"), default_value=2)),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "state",
+                MonitoringState(title=_("State if node is not in state running"), default_value=2),
+            ),
+            (
+                "disk_free_alarm",
+                MonitoringState(
+                    title=_("State if node has disk free alarm in effect"), default_value=2
+                ),
+            ),
+            (
+                "mem_alarm",
+                MonitoringState(title=_("State if node has mem alarm in effect"), default_value=2),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -32,4 +42,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_rabbitmq_nodes,
         title=lambda: _("RabbitMQ nodes"),
-    ))
+    )
+)

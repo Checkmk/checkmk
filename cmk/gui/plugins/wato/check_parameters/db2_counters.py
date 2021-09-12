@@ -14,14 +14,17 @@ from cmk.gui.valuespec import Dictionary, Float, TextInput, Tuple
 
 
 def _item_spec_db2_counters():
-    return TextInput(title=_("Instance"),
-                     help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
+    return TextInput(
+        title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
+    )
 
 
 def _parameter_valuespec_db2_counters():
     return Dictionary(
-        help=_("This rule allows you to configure limits for the deadlocks and lockwaits "
-               "counters of a DB2."),
+        help=_(
+            "This rule allows you to configure limits for the deadlocks and lockwaits "
+            "counters of a DB2."
+        ),
         elements=[
             (
                 "deadlocks",
@@ -55,4 +58,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_db2_counters,
         title=lambda: _("DB2 Counters"),
-    ))
+    )
+)

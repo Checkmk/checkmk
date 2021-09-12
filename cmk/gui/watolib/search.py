@@ -52,7 +52,7 @@ from cmk.gui.watolib.utils import may_edit_ruleset
 if TYPE_CHECKING:
     from cmk.utils.redis import RedisDecoded
 
-_NAME_DEFAULT_LANGUAGE = 'default'
+_NAME_DEFAULT_LANGUAGE = "default"
 
 
 class IndexNotFoundException(MKGeneralException):
@@ -111,7 +111,8 @@ class IndexBuilder:
     def __init__(self, registry: MatchItemGeneratorRegistry) -> None:
         self._registry = registry
         self._all_languages = {
-            name: name or _NAME_DEFAULT_LANGUAGE for language in get_languages()
+            name: name or _NAME_DEFAULT_LANGUAGE
+            for language in get_languages()
             for name in [language[0]]
         }
         self._redis_client = get_redis_client()
@@ -147,7 +148,8 @@ class IndexBuilder:
                     filter(
                         lambda match_item_gen: not match_item_gen.is_localization_dependent,
                         match_item_generators,
-                    )),
+                    )
+                ),
                 pipeline,
             )
             self._add_language_dependent_item_generators_to_redis(
@@ -155,7 +157,8 @@ class IndexBuilder:
                     filter(
                         lambda match_item_gen: match_item_gen.is_localization_dependent,
                         match_item_generators,
-                    )),
+                    )
+                ),
                 pipeline,
             )
             pipeline.execute()
@@ -250,17 +253,21 @@ class IndexBuilder:
         self._mark_index_as_built()
 
     def build_changed_sub_indices(self, change_action_name: str) -> None:
-        self._build_index(match_item_generator for match_item_generator in self._registry.values()
-                          if match_item_generator.is_affected_by_change(change_action_name))
+        self._build_index(
+            match_item_generator
+            for match_item_generator in self._registry.values()
+            if match_item_generator.is_affected_by_change(change_action_name)
+        )
 
     @classmethod
-    def index_is_built(cls, client: Optional['RedisDecoded'] = None) -> bool:
+    def index_is_built(cls, client: Optional["RedisDecoded"] = None) -> bool:
         return (client or get_redis_client()).exists(cls._KEY_INDEX_BUILT) == 1
 
 
 class URLChecker:
     def __init__(self) -> None:
         from cmk.gui.wato.pages.hosts import ModeEditHost
+
         self._mode_edit_host = ModeEditHost
 
     @staticmethod
@@ -320,7 +327,7 @@ class PermissionsHandler:
     @staticmethod
     def _permissions_rule(url: str) -> bool:
         _, query_vars = file_name_and_query_vars_from_url(url)
-        return may_edit_ruleset(query_vars['varname'][0])
+        return may_edit_ruleset(query_vars["varname"][0])
 
     def _permissions_url(self, url: str) -> bool:
         return self._url_checker.is_permitted(url)
@@ -331,9 +338,10 @@ class PermissionsHandler:
     def permissions_for_items(self) -> Mapping[str, Callable[[str], bool]]:
         return {
             "rules": self._permissions_rule,
-            "hosts": lambda url:
-                     (any(user.may(perm) for perm in ("wato.all_folders", "wato.see_all_folders"))
-                      or self._permissions_url(url)),
+            "hosts": lambda url: (
+                any(user.may(perm) for perm in ("wato.all_folders", "wato.see_all_folders"))
+                or self._permissions_url(url)
+            ),
             "setup": self._permissions_url,
         }
 
@@ -356,13 +364,13 @@ class IndexSearcher:
         _theme.from_config(config.ui_theme)
         _config = make_config_object(asdict(local.config))
         with RequestContext(
-                req=_request,
-                resp=_response,
-                funnel=_funnel,
-                config_obj=_config,
-                html_obj=html(_request, _response, _funnel, output_format="html"),
-                display_options=DisplayOptions(),
-                theme=_theme,
+            req=_request,
+            resp=_response,
+            funnel=_funnel,
+            config_obj=_config,
+            html_obj=html(_request, _response, _funnel, output_format="html"),
+            display_options=DisplayOptions(),
+            theme=_theme,
         ), UserContext(self._user_id):
             yield
 
@@ -415,11 +423,12 @@ class IndexSearcher:
             permissions_check = self._may_see_item_func.get(category, lambda _: True)
 
             for _matched_text, idx_matched_item in self._redis_client.hscan_iter(
-                    IndexBuilder.key_match_texts(prefix_category),
-                    match=query,
+                IndexBuilder.key_match_texts(prefix_category),
+                match=query,
             ):
                 match_item_dict = self._redis_client.hgetall(
-                    IndexBuilder.add_to_prefix(prefix_category, idx_matched_item))
+                    IndexBuilder.add_to_prefix(prefix_category, idx_matched_item)
+                )
 
                 if not permissions_check(match_item_dict["url"]):
                     continue
@@ -430,11 +439,15 @@ class IndexSearcher:
                 # results, such as hosts, they are not. For example, "Hosts" in French is "Hôtes".
                 # Without this call to i18n._, found hosts would be displayed under the topic
                 # "Hosts" instead of "Hôtes" in the setup search.
-                results[_(match_item_dict["topic"])].append(  # pylint: disable=translation-of-non-string
+                # pylint: disable=translation-of-non-string
+                results[
+                    _(match_item_dict["topic"])
+                ].append(
                     SearchResult(
                         match_item_dict["title"],
                         match_item_dict["url"],
-                    ))
+                    )
+                )
 
     @classmethod
     def _sort_search_results(
@@ -444,14 +457,18 @@ class IndexSearcher:
         first_topics = cls._first_topics()
         last_topics = cls._last_topics()
         middle_topics = sorted(set(results.keys()) - set(first_topics) - set(last_topics))
-        yield from ((
-            topic,
-            results[topic],
-        ) for topic in chain(
-            first_topics,
-            middle_topics,
-            last_topics,
-        ) if topic in results)
+        yield from (
+            (
+                topic,
+                results[topic],
+            )
+            for topic in chain(
+                first_topics,
+                middle_topics,
+                last_topics,
+            )
+            if topic in results
+        )
 
     @staticmethod
     def _first_topics() -> Iterable[str]:
@@ -498,13 +515,16 @@ def _build_index_background(
             break
         except redis.ConnectionError:
             job_interface.send_progress_update(
-                _("Connection attempt %d / %d to Redis failed") % (
+                _("Connection attempt %d / %d to Redis failed")
+                % (
                     n_attempts,
                     n_attempts_redis_connection,
-                ))
+                )
+            )
             if n_attempts == n_attempts_redis_connection:
                 job_interface.send_result_message(
-                    _("Maximum number of allowed connection attempts reached, terminating"))
+                    _("Maximum number of allowed connection attempts reached, terminating")
+                )
                 raise
             job_interface.send_progress_update(_("Will wait for %d seconds and retry") % sleep_time)
             sleep(sleep_time)
@@ -521,7 +541,8 @@ def build_index_background(
             _build_index_background,
             n_attempts_redis_connection=n_attempts_redis_connection,
             sleep_time=sleep_time,
-        ))
+        )
+    )
     with suppress(BackgroundJobAlreadyRunning):
         build_job.start()
 

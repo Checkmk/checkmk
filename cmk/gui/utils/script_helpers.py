@@ -42,14 +42,14 @@ def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
     resp = Response(mimetype="text/html")
     funnel = OutputFunnel(resp)
     with RequestContext(
-            req=req,
-            resp=resp,
-            funnel=funnel,
-            config_obj=make_config_object(get_default_config()),
-            html_obj=html(req, resp, funnel, output_format="html"),
-            display_options=DisplayOptions(),
-            theme=Theme(),
-            prefix_logs_with_url=False,
+        req=req,
+        resp=resp,
+        funnel=funnel,
+        config_obj=make_config_object(get_default_config()),
+        html_obj=html(req, resp, funnel, output_format="html"),
+        display_options=DisplayOptions(),
+        theme=Theme(),
+        prefix_logs_with_url=False,
     ):
         yield
 
@@ -57,7 +57,7 @@ def request_context(environ: Mapping[str, Any]) -> Iterator[None]:
 @contextmanager
 def application_and_request_context(environ: Optional[Mapping[str, Any]] = None) -> Iterator[None]:
     if environ is None:
-        environ = dict(create_environ(), REQUEST_URI='')
+        environ = dict(create_environ(), REQUEST_URI="")
     with application_context(environ), request_context(environ):
         yield
 

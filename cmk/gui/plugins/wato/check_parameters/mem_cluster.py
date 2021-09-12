@@ -17,14 +17,18 @@ from cmk.gui.valuespec import Integer, ListOf, Percentage, Tuple
 
 def _parameter_valuespec_mem_cluster():
     return ListOf(
-        Tuple(elements=[
-            Integer(title=_("Equal or more than"), unit=_("nodes")),
-            Tuple(title=_("Percentage of total RAM"),
-                  elements=[
-                      Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
-                      Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
-                  ])
-        ]),
+        Tuple(
+            elements=[
+                Integer(title=_("Equal or more than"), unit=_("nodes")),
+                Tuple(
+                    title=_("Percentage of total RAM"),
+                    elements=[
+                        Percentage(title=_("Warning at a RAM usage of"), default_value=80.0),
+                        Percentage(title=_("Critical at a RAM usage of"), default_value=90.0),
+                    ],
+                ),
+            ]
+        ),
         help=_("Here you can specify the total memory usage levels for clustered hosts."),
         title=_("Memory Usage"),
         add_label=_("Add limits"),
@@ -38,4 +42,5 @@ rulespec_registry.register(
         parameter_valuespec=_parameter_valuespec_mem_cluster,
         title=lambda: _("Memory Usage of Clusters"),
         is_deprecated=True,
-    ))
+    )
+)

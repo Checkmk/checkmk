@@ -68,7 +68,7 @@ def get(name: str) -> List[Hook]:
 
 
 def registered(name: str) -> bool:
-    """ Returns True if at least one function is registered for the given hook """
+    """Returns True if at least one function is registered for the given hook"""
     return hooks.get(name, []) != []
 
 
@@ -82,23 +82,25 @@ def call(name: str, *args: Any) -> None:
             if config.debug:
                 t, v, tb = sys.exc_info()
                 msg = "".join(traceback.format_exception(t, v, tb, None))
-                html.show_error("<h1>" + _("Error executing hook") + " %s #%d: %s</h1>"
-                                "<pre>%s</pre>" % (name, n, e, msg))
+                html.show_error(
+                    "<h1>" + _("Error executing hook") + " %s #%d: %s</h1>"
+                    "<pre>%s</pre>" % (name, n, e, msg)
+                )
             raise
 
 
 ClearEvent = Literal[
-    'activate-changes',
-    'pre-activate-changes',
-    'all-hosts-changed',
-    'contactgroups-saved',
-    'hosts-changed',
-    'ldap-sync-finished',
-    'request-start',
-    'request-end',
-    'roles-saved',
-    'users-saved',
-]  # yapf: disable
+    "activate-changes",
+    "pre-activate-changes",
+    "all-hosts-changed",
+    "contactgroups-saved",
+    "hosts-changed",
+    "ldap-sync-finished",
+    "request-start",
+    "request-end",
+    "roles-saved",
+    "users-saved",
+]
 
 ClearEvents = Union[List[ClearEvent], ClearEvent]
 
@@ -159,4 +161,4 @@ def request_memoize(maxsize: int = 128, typed: bool = False):
         A `_scoped_memoize` decorator which clears on every request-start.
 
     """
-    return _scoped_memoize(clear_events=['request-end'], maxsize=maxsize, typed=typed)
+    return _scoped_memoize(clear_events=["request-end"], maxsize=maxsize, typed=typed)

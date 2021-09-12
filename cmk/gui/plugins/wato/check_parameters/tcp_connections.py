@@ -31,8 +31,10 @@ def _item_spec_tcp_connections():
 
 def _parameter_valuespec_tcp_connections():
     return Dictionary(
-        help=_("This rule allows to monitor the existence of specific TCP connections or "
-               "TCP/UDP listeners."),
+        help=_(
+            "This rule allows to monitor the existence of specific TCP connections or "
+            "TCP/UDP listeners."
+        ),
         elements=[
             (
                 "proto",
@@ -44,42 +46,48 @@ def _parameter_valuespec_tcp_connections():
             ),
             (
                 "state",
-                DropdownChoice(title=_("State"),
-                               choices=[
-                                   ("ESTABLISHED", "ESTABLISHED"),
-                                   ("LISTENING", "LISTENING"),
-                                   ("SYN_SENT", "SYN_SENT"),
-                                   ("SYN_RECV", "SYN_RECV"),
-                                   ("LAST_ACK", "LAST_ACK"),
-                                   ("CLOSE_WAIT", "CLOSE_WAIT"),
-                                   ("TIME_WAIT", "TIME_WAIT"),
-                                   ("CLOSED", "CLOSED"),
-                                   ("CLOSING", "CLOSING"),
-                                   ("FIN_WAIT1", "FIN_WAIT1"),
-                                   ("FIN_WAIT2", "FIN_WAIT2"),
-                                   ("BOUND", "BOUND"),
-                               ]),
+                DropdownChoice(
+                    title=_("State"),
+                    choices=[
+                        ("ESTABLISHED", "ESTABLISHED"),
+                        ("LISTENING", "LISTENING"),
+                        ("SYN_SENT", "SYN_SENT"),
+                        ("SYN_RECV", "SYN_RECV"),
+                        ("LAST_ACK", "LAST_ACK"),
+                        ("CLOSE_WAIT", "CLOSE_WAIT"),
+                        ("TIME_WAIT", "TIME_WAIT"),
+                        ("CLOSED", "CLOSED"),
+                        ("CLOSING", "CLOSING"),
+                        ("FIN_WAIT1", "FIN_WAIT1"),
+                        ("FIN_WAIT2", "FIN_WAIT2"),
+                        ("BOUND", "BOUND"),
+                    ],
+                ),
             ),
             ("local_ip", IPv4Address(title=_("Local IP address"))),
             ("local_port", NetworkPort(title=_("Local port number"))),
             ("remote_ip", IPv4Address(title=_("Remote IP address"))),
             ("remote_port", NetworkPort(title=_("Remote port number"))),
-            ("max_states",
-             Tuple(
-                 title=_("Maximum number of connections or listeners"),
-                 elements=[
-                     Integer(title=_("Warning at")),
-                     Integer(title=_("Critical at")),
-                 ],
-             )),
-            ("min_states",
-             Tuple(
-                 title=_("Minimum number of connections or listeners"),
-                 elements=[
-                     Integer(title=_("Warning if below")),
-                     Integer(title=_("Critical if below")),
-                 ],
-             )),
+            (
+                "max_states",
+                Tuple(
+                    title=_("Maximum number of connections or listeners"),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
+                ),
+            ),
+            (
+                "min_states",
+                Tuple(
+                    title=_("Minimum number of connections or listeners"),
+                    elements=[
+                        Integer(title=_("Warning if below")),
+                        Integer(title=_("Critical if below")),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -91,4 +99,5 @@ rulespec_registry.register(
         item_spec=_item_spec_tcp_connections,
         parameter_valuespec=_parameter_valuespec_tcp_connections,
         title=lambda: _("Monitor specific TCP/UDP connections and listeners"),
-    ))
+    )
+)

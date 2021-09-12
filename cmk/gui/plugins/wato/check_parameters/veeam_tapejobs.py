@@ -27,7 +27,10 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="veeam_tapejobs",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextInput(title=_("Name of the tape job"),),
+        item_spec=lambda: TextInput(
+            title=_("Name of the tape job"),
+        ),
         parameter_valuespec=_parameter_valuespec_veeam_tapejobs,
         title=lambda: _("VEEAM tape backup jobs"),
-    ))
+    )
+)

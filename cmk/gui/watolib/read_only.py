@@ -18,8 +18,8 @@ def message():
     if config.wato_read_only["enabled"] is True:
         text += _("The read only mode is enabled until it is turned of manually. ")
 
-    elif isinstance(config.wato_read_only['enabled'], tuple):
-        end_time = config.wato_read_only['enabled'][1]
+    elif isinstance(config.wato_read_only["enabled"], tuple):
+        end_time = config.wato_read_only["enabled"][1]
         text += _("The read only mode is enabled until %s. ") % render.date_and_time(end_time)
 
     if may_override():
@@ -35,12 +35,13 @@ def is_enabled():
         return False
     if config.wato_read_only["enabled"] is True:
         return True
-    if isinstance(config.wato_read_only['enabled'], tuple):
-        start_time, end_time = config.wato_read_only['enabled']
+    if isinstance(config.wato_read_only["enabled"], tuple):
+        start_time, end_time = config.wato_read_only["enabled"]
         return start_time <= time.time() <= end_time
     return False
 
 
 def may_override():
-    return user.id in config.wato_read_only["rw_users"] \
-            or (request.var("mode") == "read_only" and user.may("wato.set_read_only"))
+    return user.id in config.wato_read_only["rw_users"] or (
+        request.var("mode") == "read_only" and user.may("wato.set_read_only")
+    )

@@ -29,4 +29,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_domino_transactions,
         title=lambda: _("Lotus Domino Transactions"),
-    ))
+    )
+)

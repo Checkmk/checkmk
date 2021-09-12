@@ -21,4 +21,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=vs_filesystem,
         title=lambda: _("3PAR CPG (used space and growth)"),
-    ))
+    )
+)

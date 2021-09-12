@@ -38,5 +38,5 @@ def _get_start_url() -> str:
 
 def get_page_heading() -> str:
     if "%s" in config.page_heading:
-        return config.page_heading % (get_site_config(omd_site()).get('alias', _("GUI")))
+        return config.page_heading % (get_site_config(omd_site()).get("alias", _("GUI")))
     return config.page_heading

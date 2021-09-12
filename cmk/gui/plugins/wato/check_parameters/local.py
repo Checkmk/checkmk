@@ -21,32 +21,39 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Name of local item")),
         parameter_valuespec=lambda: Transform(Dictionary(elements=[]), forth=lambda p: {}),
         title=lambda: _("Local checks"),
-    ))
+    )
+)
 
 # We only need the above, there are no "true" parameters to this check plugin.
 
 
 def _deprecation_message() -> str:
     return _('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.') % _(
-        "Aggregation options for clustered services")
+        "Aggregation options for clustered services"
+    )
 
 
 def _parameter_valuespec_local():
-    return Dictionary(elements=[
-        ("outcome_on_cluster",
-         DropdownChoice(
-             choices=[
-                 ("worst", _("Worst state")),
-                 ("best", _("Best state")),
-             ],
-             title="%s - %s %s" % (
-                 _("Clusters: Preferred check result of local checks"),
-                 _deprecation_message(),
-                 _("Old setting"),
-             ),
-             default_value="worst",
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "outcome_on_cluster",
+                DropdownChoice(
+                    choices=[
+                        ("worst", _("Worst state")),
+                        ("best", _("Best state")),
+                    ],
+                    title="%s - %s %s"
+                    % (
+                        _("Clusters: Preferred check result of local checks"),
+                        _deprecation_message(),
+                        _("Old setting"),
+                    ),
+                    default_value="worst",
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -58,4 +65,5 @@ rulespec_registry.register(
         parameter_valuespec=_parameter_valuespec_local,
         title=lambda: _("Local checks in Checkmk clusters") + " - " + _("Deprecated"),
         is_deprecated=True,
-    ))
+    )
+)

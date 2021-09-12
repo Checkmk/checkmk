@@ -14,15 +14,17 @@ from cmk.gui.valuespec import Percentage, Transform, Tuple
 
 
 def _parameter_valuespec_citrix_load():
-    return Transform(Tuple(
-        title=_("Citrix Server load"),
-        elements=[
-            Percentage(title=_("Warning at"), default_value=85.0, unit="percent"),
-            Percentage(title=_("Critical at"), default_value=95.0, unit="percent"),
-        ],
-    ),
-                     forth=lambda x: (x[0] / 100.0, x[1] / 100.0),
-                     back=lambda x: (int(x[0] * 100), int(x[1] * 100)))
+    return Transform(
+        Tuple(
+            title=_("Citrix Server load"),
+            elements=[
+                Percentage(title=_("Warning at"), default_value=85.0, unit="percent"),
+                Percentage(title=_("Critical at"), default_value=95.0, unit="percent"),
+            ],
+        ),
+        forth=lambda x: (x[0] / 100.0, x[1] / 100.0),
+        back=lambda x: (int(x[0] * 100), int(x[1] * 100)),
+    )
 
 
 rulespec_registry.register(
@@ -31,4 +33,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_citrix_load,
         title=lambda: _("Load of Citrix Server"),
-    ))
+    )
+)

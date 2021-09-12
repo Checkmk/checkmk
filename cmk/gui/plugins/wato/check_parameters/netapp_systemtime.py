@@ -21,18 +21,24 @@ def _item_spec_netapp_systemtime():
 
 
 def _parameter_valuespec_netapp_systemtime():
-    return Dictionary(elements=[
-        ("levels",
-         Tuple(
-             title=_("Set upper levels for the time difference"),
-             help=_("Here you can Set upper levels for the time difference "
-                    "between agent and system time."),
-             elements=[
-                 Age(title=_("Warning if at")),
-                 Age(title=_("Critical if at")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Set upper levels for the time difference"),
+                    help=_(
+                        "Here you can Set upper levels for the time difference "
+                        "between agent and system time."
+                    ),
+                    elements=[
+                        Age(title=_("Warning if at")),
+                        Age(title=_("Critical if at")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -43,4 +49,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_netapp_systemtime,
         title=lambda: _("Netapp systemtime"),
-    ))
+    )
+)

@@ -83,6 +83,7 @@ class AppContext:
         https://flask.palletsprojects.com/en/1.1.x/appcontext/
         https://flask.palletsprojects.com/en/1.1.x/reqcontext/
     """
+
     def __init__(self, app):
         self.app = app
         self.g = _AppCtxGlobals()
@@ -149,6 +150,7 @@ class RequestContext:
         https://flask.palletsprojects.com/en/1.1.x/appcontext/
         https://flask.palletsprojects.com/en/1.1.x/reqcontext/
     """
+
     def __init__(
         self,
         req: http.Request,
@@ -177,6 +179,7 @@ class RequestContext:
 
         # TODO: cyclical import with config -> globals -> config -> ...
         from cmk.gui.utils.logged_in import LoggedInNobody
+
         self._user: LoggedInUser = LoggedInNobody()
         # TODO: This needs to be a helper of LoggedInUser
         self.transactions = TransactionManager(req, self._user)
@@ -238,16 +241,16 @@ def request_local_attr(name=None):
 # tools in general.
 
 local: RequestContext = request_local_attr()  # None as name will get the whole object.
-user: LoggedInUser = request_local_attr('user')
-request: http.Request = request_local_attr('request')
-response: http.Response = request_local_attr('response')
-output_funnel: OutputFunnel = request_local_attr('output_funnel')
-config: Config = request_local_attr('config')
-session: userdb.Session = request_local_attr('session')
-user_errors: UserErrors = request_local_attr('user_errors')
+user: LoggedInUser = request_local_attr("user")
+request: http.Request = request_local_attr("request")
+response: http.Response = request_local_attr("response")
+output_funnel: OutputFunnel = request_local_attr("output_funnel")
+config: Config = request_local_attr("config")
+session: userdb.Session = request_local_attr("session")
+user_errors: UserErrors = request_local_attr("user_errors")
 
-html: htmllib.html = request_local_attr('html')
-timeout_manager: TimeoutManager = request_local_attr('timeout_manager')
-theme: Theme = request_local_attr('theme')
-transactions: TransactionManager = request_local_attr('transactions')
-display_options: DisplayOptions = request_local_attr('display_options')
+html: htmllib.html = request_local_attr("html")
+timeout_manager: TimeoutManager = request_local_attr("timeout_manager")
+theme: Theme = request_local_attr("theme")
+transactions: TransactionManager = request_local_attr("transactions")
+display_options: DisplayOptions = request_local_attr("display_options")

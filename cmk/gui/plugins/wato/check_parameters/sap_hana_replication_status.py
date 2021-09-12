@@ -14,23 +14,47 @@ from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 
 def _parameter_valuespec_sap_hana_replication_status():
-    return Dictionary(elements=[
-        ("state_unknown",
-         MonitoringState(title=_("State in case of unknown status from replication script"),
-                         default_value=3)),
-        ("state_no_replication",
-         MonitoringState(title=_("State in case of no system replication"), default_value=2)),
-        ("state_error",
-         MonitoringState(title=_("State when replication state is error"), default_value=2)),
-        ("state_replication_unknown",
-         MonitoringState(title=_("State when replication state is unknown"), default_value=2)),
-        ("state_initializing",
-         MonitoringState(title=_("State when replication state is intializing"), default_value=1)),
-        ("state_syncing",
-         MonitoringState(title=_("State when replication state is syncing"), default_value=0)),
-        ("state_active",
-         MonitoringState(title=_("State when replication state is active"), default_value=0)),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "state_unknown",
+                MonitoringState(
+                    title=_("State in case of unknown status from replication script"),
+                    default_value=3,
+                ),
+            ),
+            (
+                "state_no_replication",
+                MonitoringState(title=_("State in case of no system replication"), default_value=2),
+            ),
+            (
+                "state_error",
+                MonitoringState(title=_("State when replication state is error"), default_value=2),
+            ),
+            (
+                "state_replication_unknown",
+                MonitoringState(
+                    title=_("State when replication state is unknown"), default_value=2
+                ),
+            ),
+            (
+                "state_initializing",
+                MonitoringState(
+                    title=_("State when replication state is intializing"), default_value=1
+                ),
+            ),
+            (
+                "state_syncing",
+                MonitoringState(
+                    title=_("State when replication state is syncing"), default_value=0
+                ),
+            ),
+            (
+                "state_active",
+                MonitoringState(title=_("State when replication state is active"), default_value=0),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -41,4 +65,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_sap_hana_replication_status,
         title=lambda: _("SAP HANA replication status"),
-    ))
+    )
+)

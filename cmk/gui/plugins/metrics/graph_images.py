@@ -40,7 +40,8 @@ from cmk.gui.utils.logged_in import SuperUserContext
 def ajax_graph_images_for_notifications():
     if request.remote_ip not in ["127.0.0.1", "::1"]:
         raise MKUnauthenticatedException(
-            _("You are not allowed to access this page (%s).") % request.remote_ip)
+            _("You are not allowed to access this page (%s).") % request.remote_ip
+        )
 
     with SuperUserContext():
         _answer_graph_image_request()
@@ -50,14 +51,14 @@ def _answer_graph_image_request() -> None:
     try:
         host_name = request.var("host")
         if not host_name:
-            raise MKGeneralException(_("Missing mandatory \"host\" parameter"))
+            raise MKGeneralException(_('Missing mandatory "host" parameter'))
 
         service_description = request.var("service", "_HOST_")
 
         site = request.var("site")
         # FIXME: We should really enforce site here. But it seems that the notification context
         # has no idea about the site of the host. This could be optimized later.
-        #if not site:
+        # if not site:
         #    raise MKGeneralException("Missing mandatory \"site\" parameter")
         try:
             row = get_graph_data_from_livestatus(site, host_name, service_description)
@@ -65,8 +66,9 @@ def _answer_graph_image_request() -> None:
             if config.debug:
                 raise
             raise Exception(
-                _("Cannot render graph: host %s, service %s not found.") %
-                (host_name, service_description))
+                _("Cannot render graph: host %s, service %s not found.")
+                % (host_name, service_description)
+            )
 
         site = row["site"]
 
@@ -83,17 +85,20 @@ def _answer_graph_image_request() -> None:
                 "host_name": host_name,
                 "service_description": service_description,
                 "graph_index": None,  # all graphs
-            })
+            },
+        )
 
         graph_data_range = graph_image_data_range(graph_render_options, start_time, end_time)
         graph_recipes = graph_identification_types.create_graph_recipes(
-            graph_identification, destination=html_render.GraphDestinations.notification)
+            graph_identification, destination=html_render.GraphDestinations.notification
+        )
         num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
 
         graphs = []
         for graph_recipe in graph_recipes[:num_graphs]:
-            graph_artwork = artwork.compute_graph_artwork(graph_recipe, graph_data_range,
-                                                          graph_render_options)
+            graph_artwork = artwork.compute_graph_artwork(
+                graph_recipe, graph_data_range, graph_render_options
+            )
             graph_png = render_graph_image(graph_artwork, graph_data_range, graph_render_options)
 
             graphs.append(base64.b64encode(graph_png).decode("ascii"))
@@ -128,8 +133,9 @@ def graph_image_render_options(api_request=None):
     }
 
     # Populate missing keys
-    graph_render_options = artwork.add_default_render_options(graph_render_options,
-                                                              render_unthemed=True)
+    graph_render_options = artwork.add_default_render_options(
+        graph_render_options, render_unthemed=True
+    )
 
     # Enforce settings optionally setable via request
     if api_request and api_request.get("render_options"):
@@ -146,32 +152,36 @@ def render_graph_image(graph_artwork, graph_data_range, graph_render_options):
     image_height = (height_ex * mm_per_ex) + legend_height
 
     # TODO: Better use reporting.get_report_instance()
-    doc = pdf.Document(font_family="Helvetica",
-                       font_size=graph_render_options["font_size"],
-                       lineheight=1.2,
-                       pagesize=(width_ex * mm_per_ex, image_height),
-                       margins=(0, 0, 0, 0))
+    doc = pdf.Document(
+        font_family="Helvetica",
+        font_size=graph_render_options["font_size"],
+        lineheight=1.2,
+        pagesize=(width_ex * mm_per_ex, image_height),
+        margins=(0, 0, 0, 0),
+    )
     instance = {
         "document": doc,
         "options": {},
         # Keys not set here. Do we need them?
-        #instance["range"] = from_until
-        #instance["range_title"] = range_title
-        #instance["macros"] = create_report_macros(report, from_until, range_title)
-        #instance["report"] = report
+        # instance["range"] = from_until
+        # instance["range_title"] = range_title
+        # instance["macros"] = create_report_macros(report, from_until, range_title)
+        # instance["report"] = report
     }
 
-    render_graph_pdf(instance,
-                     graph_artwork,
-                     graph_data_range,
-                     graph_render_options,
-                     pos_left=0.0,
-                     pos_top=0.0,
-                     total_width=(width_ex * mm_per_ex),
-                     total_height=image_height)
+    render_graph_pdf(
+        instance,
+        graph_artwork,
+        graph_data_range,
+        graph_render_options,
+        pos_left=0.0,
+        pos_top=0.0,
+        total_width=(width_ex * mm_per_ex),
+        total_height=image_height,
+    )
 
     pdf_graph = doc.end(do_send=False)
-    #open("/tmp/x.pdf", "w").write(pdf_graph)
+    # open("/tmp/x.pdf", "w").write(pdf_graph)
     return pdf.pdf2png(pdf_graph)
 
 

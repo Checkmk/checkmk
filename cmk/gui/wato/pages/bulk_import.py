@@ -79,11 +79,13 @@ class ModeBulkImport(WatoMode):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         if not request.has_var("file_id"):
-            return make_simple_form_page_menu(_("Hosts"),
-                                              breadcrumb,
-                                              form_name="upload",
-                                              button_name="_do_upload",
-                                              save_title=_("Upload"))
+            return make_simple_form_page_menu(
+                _("Hosts"),
+                breadcrumb,
+                form_name="upload",
+                button_name="_do_upload",
+                save_title=_("Upload"),
+            )
 
         # preview phase, after first upload
         return PageMenu(
@@ -173,7 +175,8 @@ class ModeBulkImport(WatoMode):
             csv_file = self._file_path().open(encoding="utf-8")
         except IOError:
             raise MKUserError(
-                None, _("Failed to read the previously uploaded CSV file. Please upload it again."))
+                None, _("Failed to read the previously uploaded CSV file. Please upload it again.")
+            )
 
         if list(request.itervars(prefix="_preview")):
             params = self._vs_parse_params().from_html_vars("_preview")
@@ -228,11 +231,12 @@ class ModeBulkImport(WatoMode):
                     bake_hosts=False,
                 )
                 imported_hosts.append(host_name)
-                selected.append('_c_%s' % host_name)
+                selected.append("_c_%s" % host_name)
                 num_succeeded += 1
             except Exception as e:
                 fail_messages.append(
-                    _("Failed to create a host from line %d: %s") % (csv_reader.line_num, e))
+                    _("Failed to create a host from line %d: %s") % (csv_reader.line_num, e)
+                )
                 num_failed += 1
 
         watolib.hosts_and_folders.try_bake_agents_for_hosts(imported_hosts)
@@ -252,17 +256,18 @@ class ModeBulkImport(WatoMode):
             # Create a new selection for performing the bulk discovery
             user.set_rowselection(
                 weblib.selection_id(),
-                'wato-folder-/' + folder_path,
+                "wato-folder-/" + folder_path,
                 selected,
                 "set",
             )
             return redirect(
                 mode_url(
                     "bulkinventory",
-                    _bulk_inventory='1',
-                    show_checkboxes='1',
+                    _bulk_inventory="1",
+                    show_checkboxes="1",
                     selection=weblib.selection_id(),
-                ))
+                )
+            )
         flash(msg)
         return redirect(mode_url("folder", folder=folder_path))
 
@@ -285,9 +290,13 @@ class ModeBulkImport(WatoMode):
                 if attribute in attributes:
                     raise MKUserError(
                         None,
-                        _("The attribute \"%s\" is assigned to multiple columns. "
-                          "You can not populate one attribute from multiple columns. "
-                          "The column to attribute associations need to be unique.") % attribute)
+                        _(
+                            'The attribute "%s" is assigned to multiple columns. '
+                            "You can not populate one attribute from multiple columns. "
+                            "The column to attribute associations need to be unique."
+                        )
+                        % attribute,
+                    )
 
                 attr = host_attribute_registry[attribute]()
 
@@ -303,16 +312,18 @@ class ModeBulkImport(WatoMode):
                     if not value.isascii():
                         raise MKUserError(
                             None,
-                            _("Non-ASCII characters are not allowed in the "
-                              "attribute \"%s\".") % attribute)
+                            _("Non-ASCII characters are not allowed in the " 'attribute "%s".')
+                            % attribute,
+                        )
 
                     try:
                         attr.validate_input(value, "")
                     except MKUserError as e:
                         raise MKUserError(
                             None,
-                            _("Invalid value in column %d (%s) of row %d: %s") %
-                            (col_num, attribute, row_num, e))
+                            _("Invalid value in column %d (%s) of row %d: %s")
+                            % (col_num, attribute, row_num, e),
+                        )
 
                     attributes[attribute] = value
 
@@ -330,10 +341,12 @@ class ModeBulkImport(WatoMode):
     def _upload_form(self) -> None:
         html.begin_form("upload", method="POST")
         html.p(
-            _("Using this page you can import several hosts at once into the choosen folder. You can "
-              "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
-              "into the textarea or simply enter a list of hostnames (one per line) to the textarea."
-             ))
+            _(
+                "Using this page you can import several hosts at once into the choosen folder. You can "
+                "choose a CSV file from your workstation to be uploaded, paste a CSV files contents "
+                "into the textarea or simply enter a list of hostnames (one per line) to the textarea."
+            )
+        )
 
         self._vs_upload().render_input("_upload", None)
         html.hidden_fields()
@@ -342,11 +355,19 @@ class ModeBulkImport(WatoMode):
     def _vs_upload(self):
         return Dictionary(
             elements=[
-                ("file", UploadOrPasteTextFile(
-                    title=_("Import Hosts"),
-                    file_title=_("CSV File"),
-                )),
-                ("do_service_detection", Checkbox(title=_("Perform automatic service discovery"),)),
+                (
+                    "file",
+                    UploadOrPasteTextFile(
+                        title=_("Import Hosts"),
+                        file_title=_("CSV File"),
+                    ),
+                ),
+                (
+                    "do_service_detection",
+                    Checkbox(
+                        title=_("Perform automatic service discovery"),
+                    ),
+                ),
             ],
             render="form",
             title=_("Import Hosts"),
@@ -366,20 +387,30 @@ class ModeBulkImport(WatoMode):
 
         html.h2(_("Preview"))
         attribute_list = "<ul>%s</ul>" % "".join(
-            ["<li>%s (%s)</li>" % a for a in attributes if a[0] is not None])
+            ["<li>%s (%s)</li>" % a for a in attributes if a[0] is not None]
+        )
         html.help(
-            _("This list shows you the first 10 rows from your CSV file in the way the import is "
-              "currently parsing it. If the lines are not splitted correctly or the title line is "
-              "not shown as title of the table, you may change the import settings above and try "
-              "again.") + "<br><br>" +
-            _("The first row below the titles contains fields to specify which column of the "
-              "CSV file should be imported to which attribute of the created hosts. The import "
-              "progress is trying to match the columns to attributes automatically by using the "
-              "titles found in the title row (if you have some). "
-              "If you use the correct titles, the attributes can be mapped automatically. The "
-              "currently available attributes are:") + attribute_list +
-            _("You can change these assignments according to your needs and then start the "
-              "import by clicking on the <i>Import</i> button above."))
+            _(
+                "This list shows you the first 10 rows from your CSV file in the way the import is "
+                "currently parsing it. If the lines are not splitted correctly or the title line is "
+                "not shown as title of the table, you may change the import settings above and try "
+                "again."
+            )
+            + "<br><br>"
+            + _(
+                "The first row below the titles contains fields to specify which column of the "
+                "CSV file should be imported to which attribute of the created hosts. The import "
+                "progress is trying to match the columns to attributes automatically by using the "
+                "titles found in the title row (if you have some). "
+                "If you use the correct titles, the attributes can be mapped automatically. The "
+                "currently available attributes are:"
+            )
+            + attribute_list
+            + _(
+                "You can change these assignments according to your needs and then start the "
+                "import by clicking on the <i>Import</i> button above."
+            )
+        )
 
         # Wenn bei einem Host ein Fehler passiert, dann wird die Fehlermeldung zu dem Host angezeigt, so dass man sehen kann, was man anpassen muss.
         # Die problematischen Zeilen sollen angezeigt werden, so dass man diese als Block in ein neues CSV-File eintragen kann und dann diese Datei
@@ -397,8 +428,9 @@ class ModeBulkImport(WatoMode):
         # Determine how many columns should be rendered by using the longest column
         num_columns = max([len(r) for r in [headers] + rows])
 
-        with table_element(sortable=False, searchable=False,
-                           omit_headers=not self._has_title_line) as table:
+        with table_element(
+            sortable=False, searchable=False, omit_headers=not self._has_title_line
+        ) as table:
 
             # Render attribute selection fields
             table.row()
@@ -412,10 +444,9 @@ class ModeBulkImport(WatoMode):
                     attribute_method = self._try_detect_default_attribute(attributes, header)
                     request.del_var(attribute_varname)
 
-                html.dropdown("attribute_%d" % col_num,
-                              attributes,
-                              deflt=attribute_method,
-                              autocomplete="off")
+                html.dropdown(
+                    "attribute_%d" % col_num, attributes, deflt=attribute_method, autocomplete="off"
+                )
 
             # Render sample rows
             for row in rows:
@@ -436,19 +467,23 @@ class ModeBulkImport(WatoMode):
     def _vs_parse_params(self):
         return Dictionary(
             elements=[
-                ("field_delimiter",
-                 TextInput(
-                     title=_("Set field delimiter"),
-                     default_value=";",
-                     size=1,
-                     allow_empty=False,
-                 )),
-                ("has_title_line",
-                 FixedValue(
-                     True,
-                     title=_("Has title line"),
-                     totext=_("The first line in the file contains titles."),
-                 )),
+                (
+                    "field_delimiter",
+                    TextInput(
+                        title=_("Set field delimiter"),
+                        default_value=";",
+                        size=1,
+                        allow_empty=False,
+                    ),
+                ),
+                (
+                    "has_title_line",
+                    FixedValue(
+                        True,
+                        title=_("Has title line"),
+                        totext=_("The first line in the file contains titles."),
+                    ),
+                ),
             ],
             render="form",
             title=_("File Parsing Settings"),
@@ -473,7 +508,7 @@ class ModeBulkImport(WatoMode):
 
         # Add custom attributes
         for entry in ModeCustomHostAttrs().get_attributes():
-            name = entry['name']
+            name = entry["name"]
             attributes.append((name, _("Custom variable: %s") % name))
 
         return attributes
@@ -493,7 +528,9 @@ class ModeBulkImport(WatoMode):
             if key is not None:
                 key_match_score = similarity(key, header)
                 title_match_score = similarity(title, header)
-                score = key_match_score if key_match_score > title_match_score else title_match_score
+                score = (
+                    key_match_score if key_match_score > title_match_score else title_match_score
+                )
 
                 if score > 0.6 and score > highscore:
                     best_key = key

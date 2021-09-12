@@ -16,18 +16,32 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 def _parameter_valuespec_skype_edgeauth():
     return Dictionary(
         elements=[
-            ('bad_requests',
-             Dictionary(
-                 title=_("Bad Requests Received"),
-                 elements=[
-                     ("upper",
-                      Tuple(elements=[
-                          Integer(title=_("Warning at"), unit=_("per second"), default_value=20),
-                          Integer(title=_("Critical at"), unit=_("per second"), default_value=40),
-                      ],)),
-                 ],
-                 optional_keys=[],
-             )),
+            (
+                "bad_requests",
+                Dictionary(
+                    title=_("Bad Requests Received"),
+                    elements=[
+                        (
+                            "upper",
+                            Tuple(
+                                elements=[
+                                    Integer(
+                                        title=_("Warning at"),
+                                        unit=_("per second"),
+                                        default_value=20,
+                                    ),
+                                    Integer(
+                                        title=_("Critical at"),
+                                        unit=_("per second"),
+                                        default_value=40,
+                                    ),
+                                ],
+                            ),
+                        ),
+                    ],
+                    optional_keys=[],
+                ),
+            ),
         ],
         optional_keys=[],
     )
@@ -40,4 +54,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_skype_edgeauth,
         title=lambda: _("Skype for Business Edge Auth"),
-    ))
+    )
+)

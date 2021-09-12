@@ -35,6 +35,7 @@ class TagConfigFile(WatoSimpleConfigFile):
     When saving the configuration it also writes out the tags.mk for
     the cmk.base world.
     """
+
     def __init__(self):
         file_path = Path(multisite_dir()) / "tags.mk"
         super().__init__(config_file_path=file_path, config_variable="wato_tags")
@@ -48,16 +49,18 @@ class TagConfigFile(WatoSimpleConfigFile):
         return Path(multisite_dir(), "hosttags.mk")
 
     def _load_pre_16_config(self, lock):
-        legacy_cfg = store.load_mk_file(str(self._pre_16_hosttags_path()), {
-            "wato_host_tags": [],
-            "wato_aux_tags": []
-        },
-                                        lock=lock)
+        legacy_cfg = store.load_mk_file(
+            str(self._pre_16_hosttags_path()),
+            {"wato_host_tags": [], "wato_aux_tags": []},
+            lock=lock,
+        )
 
-        _migrate_old_sample_config_tag_groups(legacy_cfg["wato_host_tags"],
-                                              legacy_cfg["wato_aux_tags"])
-        return cmk.utils.tags.transform_pre_16_tags(legacy_cfg["wato_host_tags"],
-                                                    legacy_cfg["wato_aux_tags"])
+        _migrate_old_sample_config_tag_groups(
+            legacy_cfg["wato_host_tags"], legacy_cfg["wato_aux_tags"]
+        )
+        return cmk.utils.tags.transform_pre_16_tags(
+            legacy_cfg["wato_host_tags"], legacy_cfg["wato_aux_tags"]
+        )
 
     def save(self, cfg):
         super().save(cfg)
@@ -73,8 +76,9 @@ class TagConfigFile(WatoSimpleConfigFile):
         _export_hosttags_to_php(cfg)
 
     def _save_base_config(self, cfg):
-        base_config_file = WatoSimpleConfigFile(config_file_path=Path(wato_root_dir()) / "tags.mk",
-                                                config_variable="tag_config")
+        base_config_file = WatoSimpleConfigFile(
+            config_file_path=Path(wato_root_dir()) / "tags.mk", config_variable="tag_config"
+        )
         base_config_file.save(cfg)
 
 
@@ -236,8 +240,9 @@ def identify_modified_tags(updated_group: TagGroup, old_group: TagGroup):
                 continue
 
         # Detect removal
-        if former_tag.id is not None \
-            and former_tag.id not in [tmp_tag.id for tmp_tag in updated_group.tags]:
+        if former_tag.id is not None and former_tag.id not in [
+            tmp_tag.id for tmp_tag in updated_group.tags
+        ]:
             # remove explicit tag (hosts/folders) or remove it from tag specs (rules)
             remove_tag_ids.append(former_tag.id)
     return remove_tag_ids, replace_tag_ids
@@ -253,6 +258,7 @@ class TagCleanupMode(Enum):
 
 class ABCOperation(abc.ABC):
     """Base for all tag cleanup operations"""
+
     @abc.abstractmethod
     def confirm_title(self) -> str:
         raise NotImplementedError()
@@ -275,8 +281,12 @@ class OperationRemoveAuxTag(ABCTagGroupOperation):
 
 
 class OperationReplaceGroupedTags(ABCOperation):
-    def __init__(self, tag_group_id: str, remove_tag_ids: List[Optional[str]],
-                 replace_tag_ids: Dict[str, str]) -> None:
+    def __init__(
+        self,
+        tag_group_id: str,
+        remove_tag_ids: List[Optional[str]],
+        replace_tag_ids: Dict[str, str],
+    ) -> None:
         super().__init__()
         self.tag_group_id = tag_group_id
         self.remove_tag_ids = remove_tag_ids
@@ -308,7 +318,8 @@ def change_host_tags_in_folders(operation, mode, folder):
 
         for subfolder in folder.subfolders():
             aff_folders, aff_hosts, aff_rulespecs = change_host_tags_in_folders(
-                operation, mode, subfolder)
+                operation, mode, subfolder
+            )
             affected_folders += aff_folders
             affected_hosts += aff_hosts
             affected_rulesets += aff_rulespecs
@@ -428,7 +439,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
             continue
 
         current_value = rule.conditions.host_tags[operation.tag_group_id]
-        if current_value not in (old_tag, {'$ne': old_tag}):
+        if current_value not in (old_tag, {"$ne": old_tag}):
             continue  # old_tag id is not configured
 
         affected_rulesets.add(ruleset)
@@ -466,14 +477,14 @@ def _migrate_old_sample_config_tag_groups(host_tags, aux_tags_):
 
 def _remove_old_sample_config_tag_groups(host_tags, aux_tags_):
     legacy_tag_group_default = (
-        'agent',
-        u'Agent type',
+        "agent",
+        "Agent type",
         [
-            ('cmk-agent', u'Check_MK Agent (Server)', ['tcp']),
-            ('snmp-only', u'SNMP (Networking device, Appliance)', ['snmp']),
-            ('snmp-v1', u'Legacy SNMP device (using V1)', ['snmp']),
-            ('snmp-tcp', u'Dual: Check_MK Agent + SNMP', ['snmp', 'tcp']),
-            ('ping', u'No Agent', []),
+            ("cmk-agent", "Check_MK Agent (Server)", ["tcp"]),
+            ("snmp-only", "SNMP (Networking device, Appliance)", ["snmp"]),
+            ("snmp-v1", "Legacy SNMP device (using V1)", ["snmp"]),
+            ("snmp-tcp", "Dual: Check_MK Agent + SNMP", ["snmp", "tcp"]),
+            ("ping", "No Agent", []),
         ],
     )
 
@@ -482,15 +493,16 @@ def _remove_old_sample_config_tag_groups(host_tags, aux_tags_):
 
         # Former tag choices (see above) are added as aux tags to allow the user to migrate
         # these tags and the objects that use them
-        aux_tags_.insert(0,
-                         ("snmp-only", "Data sources/Legacy: SNMP (Networking device, Appliance)"))
+        aux_tags_.insert(
+            0, ("snmp-only", "Data sources/Legacy: SNMP (Networking device, Appliance)")
+        )
         aux_tags_.insert(0, ("snmp-tcp", "Data sources/Legacy: Dual: Check_MK Agent + SNMP"))
     except ValueError:
         pass  # Not there or modified
 
     legacy_aux_tag_ids = [
-        'snmp',
-        'tcp',
+        "snmp",
+        "tcp",
     ]
 
     for aux_tag in aux_tags_[:]:
@@ -544,15 +556,18 @@ def _extend_user_modified_tag_groups(host_tags):
 
     if "special-agents" not in tag_choices:
         tag_group[2].insert(
-            0, ("special-agents", _("Configured API integrations, no Checkmk agent"), ["tcp"]))
+            0, ("special-agents", _("Configured API integrations, no Checkmk agent"), ["tcp"])
+        )
 
     if "all-agents" not in tag_choices:
         tag_group[2].insert(
-            0, ("all-agents", _("Configured API integrations and Checkmk agent"), ["tcp"]))
+            0, ("all-agents", _("Configured API integrations and Checkmk agent"), ["tcp"])
+        )
 
     if "cmk-agent" not in tag_choices:
         tag_group[2].insert(
-            0, ("cmk-agent", _("API integrations if configured, else Checkmk agent"), ["tcp"]))
+            0, ("cmk-agent", _("API integrations if configured, else Checkmk agent"), ["tcp"])
+        )
     else:
         # Change title of cmk-agent tag choice and move to top
         for index, tag_choice in enumerate(tag_group[2]):
@@ -584,7 +599,7 @@ def _extend_user_modified_tag_groups(host_tags):
 #
 def _export_hosttags_to_php(cfg):
     php_api_dir = Path(cmk.utils.paths.var_dir) / "wato/php-api"
-    path = php_api_dir / 'hosttags.php'
+    path = php_api_dir / "hosttags.php"
     store.mkdir(php_api_dir)
 
     tag_config = cmk.utils.tags.TagConfig()
@@ -602,7 +617,7 @@ def _export_hosttags_to_php(cfg):
 
     auxtags_dict = dict(tag_config.aux_tag_list.get_choices())
 
-    content = u'''<?php
+    content = """<?php
 // Created by WATO
 global $mk_hosttags, $mk_auxtags;
 $mk_hosttags = %s;
@@ -648,31 +663,39 @@ function all_taggroup_choices($object_tags) {
 }
 
 ?>
-''' % (_format_php(hosttags_dict), _format_php(auxtags_dict))
+""" % (
+        _format_php(hosttags_dict),
+        _format_php(auxtags_dict),
+    )
 
     store.save_text_to_file(path, content)
 
 
 # TODO: Fix copy-n-paste with cmk.gui.watolib.auth_pnp.
 def _format_php(data, lvl=1):
-    s = ''
+    s = ""
     if isinstance(data, (list, tuple)):
-        s += 'array(\n'
+        s += "array(\n"
         for item in data:
-            s += '    ' * lvl + _format_php(item, lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
+            s += "    " * lvl + _format_php(item, lvl + 1) + ",\n"
+        s += "    " * (lvl - 1) + ")"
     elif isinstance(data, dict):
-        s += 'array(\n'
+        s += "array(\n"
         for key, val in data.items():
-            s += '    ' * lvl + _format_php(key, lvl + 1) + ' => ' + _format_php(val,
-                                                                                 lvl + 1) + ',\n'
-        s += '    ' * (lvl - 1) + ')'
+            s += (
+                "    " * lvl
+                + _format_php(key, lvl + 1)
+                + " => "
+                + _format_php(val, lvl + 1)
+                + ",\n"
+            )
+        s += "    " * (lvl - 1) + ")"
     elif isinstance(data, str):
-        s += '\'%s\'' % ensure_str(data).replace('\'', '\\\'')
+        s += "'%s'" % ensure_str(data).replace("'", "\\'")
     elif isinstance(data, bool):
-        s += data and 'true' or 'false'
+        s += data and "true" or "false"
     elif data is None:
-        s += 'null'
+        s += "null"
     else:
         s += str(data)
 

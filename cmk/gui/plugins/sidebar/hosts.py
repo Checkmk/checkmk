@@ -27,9 +27,11 @@ class HostSnapin(SidebarSnapin, abc.ABC):
         if mode == "problems":
             view = "problemsofhost"
             # Exclude hosts and services in downtime
-            svc_query = "GET services\nColumns: host_name\n"\
-                        "Filter: state > 0\nFilter: scheduled_downtime_depth = 0\n"\
-                        "Filter: host_scheduled_downtime_depth = 0\nAnd: 3"
+            svc_query = (
+                "GET services\nColumns: host_name\n"
+                "Filter: state > 0\nFilter: scheduled_downtime_depth = 0\n"
+                "Filter: host_scheduled_downtime_depth = 0\nAnd: 3"
+            )
             problem_hosts = {x[1] for x in sites.live().query(svc_query)}
 
             query += "Filter: state > 0\nFilter: scheduled_downtime_depth = 0\nAnd: 2\n"
@@ -67,16 +69,18 @@ class HostSnapin(SidebarSnapin, abc.ABC):
             html.open_div(class_=["statebullet", "state%d" % statecolor])
             html.nbsp()
             html.close_div()
-            link(text=host,
-                 url=makeuri_contextless(
-                     request,
-                     [
-                         ("view_name", view),
-                         ("host", host),
-                         ("site", site),
-                     ],
-                     filename="view.py",
-                 ))
+            link(
+                text=host,
+                url=makeuri_contextless(
+                    request,
+                    [
+                        ("view_name", view),
+                        ("host", host),
+                        ("site", site),
+                    ],
+                    filename="view.py",
+                ),
+            )
             html.close_td()
             if col == num_columns:
                 html.close_tr()
@@ -126,8 +130,10 @@ class ProblemHosts(HostSnapin):
 
     @classmethod
     def description(cls) -> str:
-        return _("A summary state of all hosts that have a problem, with "
-                 "links to problems of those hosts")
+        return _(
+            "A summary state of all hosts that have a problem, with "
+            "links to problems of those hosts"
+        )
 
     @classmethod
     def refresh_regularly(cls) -> bool:

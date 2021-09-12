@@ -21,17 +21,20 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb import CheckCredentialsResult, user_connector_registry, UserConnector
 
-crypt_context = CryptContext(schemes=[
-    "sha256_crypt",
-    # Kept for compatibility with Checkmk < 1.6
-    "md5_crypt",
-    "apr_md5_crypt",
-    "des_crypt",
-])
+crypt_context = CryptContext(
+    schemes=[
+        "sha256_crypt",
+        # Kept for compatibility with Checkmk < 1.6
+        "md5_crypt",
+        "apr_md5_crypt",
+        "des_crypt",
+    ]
+)
 
 
 class Htpasswd:
     """Thin wrapper for loading and saving the htpasswd file"""
+
     def __init__(self, path: Path) -> None:
         super().__init__()
         self._path = path
@@ -42,11 +45,11 @@ class Htpasswd:
 
         with self._path.open(encoding="utf-8") as f:
             for l in f:
-                if ':' not in l:
+                if ":" not in l:
                     continue
 
-                user_id, pw_hash = l.split(':', 1)
-                entries[user_id] = pw_hash.rstrip('\n')
+                user_id, pw_hash = l.split(":", 1)
+                entries[user_id] = pw_hash.rstrip("\n")
 
         return entries
 
@@ -56,8 +59,12 @@ class Htpasswd:
 
     def save(self, entries: Dict[str, str]) -> None:
         """Save the dictionary entries (unicode username and hash) to the htpasswd file"""
-        output = u"\n".join(u"%s:%s" % (ensure_str(e[0]), ensure_str(e[1]))
-                            for e in sorted(entries.items())) + u"\n"
+        output = (
+            "\n".join(
+                "%s:%s" % (ensure_str(e[0]), ensure_str(e[1])) for e in sorted(entries.items())
+            )
+            + "\n"
+        )
         store.save_text_to_file("%s" % self._path, output)
 
 
@@ -87,15 +94,15 @@ def hash_password(password):
 class HtpasswdUserConnector(UserConnector):
     @classmethod
     def type(cls):
-        return 'htpasswd'
+        return "htpasswd"
 
     @classmethod
     def title(cls):
-        return _('Apache Local Password File (htpasswd)')
+        return _("Apache Local Password File (htpasswd)")
 
     @classmethod
     def short_title(cls):
-        return _('htpasswd')
+        return _("htpasswd")
 
     #
     # USERDB API METHODS
@@ -117,8 +124,9 @@ class HtpasswdUserConnector(UserConnector):
         return False
 
     def _is_automation_user(self, user_id):
-        return os.path.isfile(cmk.utils.paths.var_dir + "/web/" + ensure_str(user_id) +
-                              "/automation.secret")
+        return os.path.isfile(
+            cmk.utils.paths.var_dir + "/web/" + ensure_str(user_id) + "/automation.secret"
+        )
 
     # Validate hashes taken from the htpasswd file. For the moment this function
     # needs to be able to deal with des_crypt and apr-md5 hashes which were used
@@ -143,12 +151,11 @@ class HtpasswdUserConnector(UserConnector):
 
         for uid, user in users.items():
             # only process users which are handled by htpasswd connector
-            if user.get('connector', 'htpasswd') != 'htpasswd':
+            if user.get("connector", "htpasswd") != "htpasswd":
                 continue
 
             if user.get("password"):
-                entries[uid] = "%s%s" % \
-                    ("!" if user.get("locked", False) else "", user["password"])
+                entries[uid] = "%s%s" % ("!" if user.get("locked", False) else "", user["password"])
 
         self._get_htpasswd().save(entries)
 

@@ -24,27 +24,41 @@ def _parameter_valuespec_storcli_vdrives():
     return Dictionary(
         title=_("Evaluation of VDrive States"),
         elements=[
-            ("Optimal", MonitoringState(
-                title=_("State for <i>Optimal</i>"),
-                default_value=0,
-            )),
-            ("Partially Degraded",
-             MonitoringState(
-                 title=_("State for <i>Partially Degraded</i>"),
-                 default_value=1,
-             )),
-            ("Degraded", MonitoringState(
-                title=_("State for <i>Degraded</i>"),
-                default_value=2,
-            )),
-            ("Offline", MonitoringState(
-                title=_("State for <i>Offline</i>"),
-                default_value=1,
-            )),
-            ("Recovery", MonitoringState(
-                title=_("State for <i>Recovery</i>"),
-                default_value=1,
-            )),
+            (
+                "Optimal",
+                MonitoringState(
+                    title=_("State for <i>Optimal</i>"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "Partially Degraded",
+                MonitoringState(
+                    title=_("State for <i>Partially Degraded</i>"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "Degraded",
+                MonitoringState(
+                    title=_("State for <i>Degraded</i>"),
+                    default_value=2,
+                ),
+            ),
+            (
+                "Offline",
+                MonitoringState(
+                    title=_("State for <i>Offline</i>"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "Recovery",
+                MonitoringState(
+                    title=_("State for <i>Recovery</i>"),
+                    default_value=1,
+                ),
+            ),
         ],
     )
 
@@ -57,4 +71,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_storcli_vdrives,
         title=lambda: _("LSI RAID VDrives (StorCLI)"),
-    ))
+    )
+)

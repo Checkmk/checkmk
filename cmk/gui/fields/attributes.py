@@ -46,14 +46,16 @@ class RegexpRewrites(BaseSchema, CheckmkTuple):
         ('()()()', '\\1, \\3')
 
     """
-    tuple_fields = ('search', 'replace_with')
+    tuple_fields = ("search", "replace_with")
     cast_to_dict = True
 
     search = String(
-        description=("The search regexp. May contain match-groups, conditional matches, etc. "
-                     "This follows the Python regular expression syntax.\n\n"
-                     "For details see:\n\n"
-                     " * https://docs.python.org/3/library/re.html"),
+        description=(
+            "The search regexp. May contain match-groups, conditional matches, etc. "
+            "This follows the Python regular expression syntax.\n\n"
+            "For details see:\n\n"
+            " * https://docs.python.org/3/library/re.html"
+        ),
         maxLength=30,
         validate=IsValidRegexp(),
         required=True,
@@ -68,8 +70,8 @@ class RegexpRewrites(BaseSchema, CheckmkTuple):
 
     @validates_schema
     def validate_replacement(self, data, **kwargs):
-        search = re.compile(data['search'])
-        replace_groups = list(set(re.findall(r"\\((?:[1-9]|\d\d)+)", data['replace_with'])))
+        search = re.compile(data["search"])
+        replace_groups = list(set(re.findall(r"\\((?:[1-9]|\d\d)+)", data["replace_with"])))
         replace_groups.sort()
 
         # NOTE
@@ -83,7 +85,7 @@ class RegexpRewrites(BaseSchema, CheckmkTuple):
                     f"regexp only contains {search.groups} match groups, but a match group with "
                     f"index {highest_replacement_group} (\\{highest_replacement_group}) was used "
                     "in the replacement string.",
-                    field_name='replace_with',
+                    field_name="replace_with",
                 )
 
 
@@ -99,12 +101,13 @@ class IPAddressRange(BaseSchema, CheckmkTuple):
     ('ip_range', ('127.0.0.1', '127.0.0.2'))
 
     """
-    tuple_fields = ('type', ('from_address', 'to_address'))
+
+    tuple_fields = ("type", ("from_address", "to_address"))
     cast_to_dict = True
 
     type = _fields.Constant(
         description="A range of addresses.",
-        constant='ip_range',
+        constant="ip_range",
     )
     from_address = String(
         description="The first IPv4 address of this range.",
@@ -117,18 +120,20 @@ class IPAddressRange(BaseSchema, CheckmkTuple):
 
 
 class IPNetwork(BaseSchema, CheckmkTuple):
-    tuple_fields = ('type', 'network')
+    tuple_fields = ("type", "network")
     cast_to_dict = True
 
     type = _fields.Constant(
         description="A single IPv4 network in CIDR notation.",
-        constant='ip_network',
+        constant="ip_network",
     )
     network = String(
-        description=("A IPv4 network in CIDR notation. Minimum prefix length is 8 bit, "
-                     "maximum prefix length is 30 bit.\n\nValid examples:\n\n"
-                     " * `192.168.0.0/24`\n"
-                     " * `192.168.0.0/255.255.255.0`"),
+        description=(
+            "A IPv4 network in CIDR notation. Minimum prefix length is 8 bit, "
+            "maximum prefix length is 30 bit.\n\nValid examples:\n\n"
+            " * `192.168.0.0/24`\n"
+            " * `192.168.0.0/255.255.255.0`"
+        ),
         validate=ValidateIPv4Network(min_prefix=8, max_prefix=30),
     )
 
@@ -145,14 +150,19 @@ class IPAddresses(BaseSchema, CheckmkTuple):
     ('ip_list', ['127.0.0.1', '127.0.0.2'])
 
     """
-    tuple_fields = ('type', 'addresses')
+
+    tuple_fields = ("type", "addresses")
     cast_to_dict = True
 
     type = _fields.Constant(
         description="A list of single IPv4 addresses.",
-        constant='ip_list',
+        constant="ip_list",
     )
-    addresses = List(String(validate=ValidateIPv4(),))
+    addresses = List(
+        String(
+            validate=ValidateIPv4(),
+        )
+    )
 
 
 class IPRegexp(BaseSchema, CheckmkTuple):
@@ -164,17 +174,20 @@ class IPRegexp(BaseSchema, CheckmkTuple):
     ('ip_regex_list', ['127.0.[0-9].1', '127.0.[0-9].2'])
 
     """
-    tuple_fields = ('type', 'regexp_list')
+
+    tuple_fields = ("type", "regexp_list")
     cast_to_dict = True
 
     type = _fields.Constant(
         description="IPv4 addresses which match a regexp pattern",
-        constant='ip_regex_list',
+        constant="ip_regex_list",
     )
     regexp_list = List(
         String(validate=IsValidRegexp()),
-        description=("A list of regular expressions which are matched against the found "
-                     "IP addresses. The matches will be excluded from the result."),
+        description=(
+            "A list of regular expressions which are matched against the found "
+            "IP addresses. The matches will be excluded from the result."
+        ),
     )
 
 
@@ -207,38 +220,39 @@ class IPRange(OneOfSchema):
         marshmallow.exceptions.ValidationError: {'network': ['Prefix of ...
 
     """
+
     type_field_remove = False
     type_schemas = {
-        'address_range': IPAddressRange,
-        'network_range': IPNetwork,
-        'explicit_addresses': IPAddresses,
+        "address_range": IPAddressRange,
+        "network_range": IPNetwork,
+        "explicit_addresses": IPAddresses,
     }
 
     def get_obj_type(self, obj):
         return {
-            'ip_range': 'address_range',
-            'ip_network': 'network_range',
-            'ip_list': 'explicit_addresses',
+            "ip_range": "address_range",
+            "ip_network": "network_range",
+            "ip_list": "explicit_addresses",
         }[obj[0]]
 
 
 class IPRangeWithRegexp(OneOfSchema):
     type_field_remove = False
     type_schemas = {
-        'address_range': IPAddressRange,
-        'network_range': IPNetwork,
-        'explicit_addresses': IPAddresses,
-        'exclude_by_regexp': IPRegexp,
+        "address_range": IPAddressRange,
+        "network_range": IPNetwork,
+        "explicit_addresses": IPAddresses,
+        "exclude_by_regexp": IPRegexp,
     }
 
     def get_obj_type(self, obj):
         if isinstance(obj, dict):
-            return obj['type']
+            return obj["type"]
         return {
-            'ip_range': 'address_range',
-            'ip_network': 'network_range',
-            'ip_list': 'explicit_addresses',
-            'ip_regex_list': 'exclude_by_regexp',
+            "ip_range": "address_range",
+            "ip_network": "network_range",
+            "ip_list": "explicit_addresses",
+            "ip_regex_list": "exclude_by_regexp",
         }[obj[0]]
 
 
@@ -266,13 +280,18 @@ class TimeAllowedRange(BaseSchema, CheckmkTuple):
     ((12, 0), (23, 59))
 
     """
-    tuple_fields = ('start', 'end')
+
+    tuple_fields = ("start", "end")
     converter = (DateConverter(), DateConverter())
 
-    start = Time(description=("The start time of day. Inclusive. "
-                              "Use ISO8601 format. Seconds are stripped."))
-    end = Time(description=("The end time of day. Inclusive. "
-                            "Use ISO8601 format. Seconds are stripped."))
+    start = Time(
+        description=(
+            "The start time of day. Inclusive. " "Use ISO8601 format. Seconds are stripped."
+        )
+    )
+    end = Time(
+        description=("The end time of day. Inclusive. " "Use ISO8601 format. Seconds are stripped.")
+    )
 
 
 def _active_users(user):
@@ -297,7 +316,7 @@ def _enum_options(options: typing.List[typing.Tuple[str, str]]) -> str:
 
 
 class DirectMapping(BaseSchema, CheckmkTuple):
-    tuple_fields = ('hostname', 'replace_with')
+    tuple_fields = ("hostname", "replace_with")
 
     hostname = _fields.String(
         description="The hostname to be replaced.",
@@ -311,89 +330,100 @@ class DirectMapping(BaseSchema, CheckmkTuple):
 
 class TranslateNames(BaseSchema):
     case = String(
-        data_key='convert_case',
-        description="Convert all detected hostnames to upper- or lower-case.\n\n" + _enum_options([
-            ('nop', 'Do not convert anything'),
-            ('lower', 'Convert all hostnames to lowercase.'),
-            ('upper', 'Convert all hostnames to uppercase.'),
-        ]),
-        enum=['nop', 'lower', 'upper'],
-        missing='nop',
+        data_key="convert_case",
+        description="Convert all detected hostnames to upper- or lower-case.\n\n"
+        + _enum_options(
+            [
+                ("nop", "Do not convert anything"),
+                ("lower", "Convert all hostnames to lowercase."),
+                ("upper", "Convert all hostnames to uppercase."),
+            ]
+        ),
+        enum=["nop", "lower", "upper"],
+        missing="nop",
     )
     drop_domain = _fields.Boolean(
-        description=("Drop the rest of the domain, only keep the hostname. Will not affect "
-                     "IP addresses.\n\n"
-                     "Examples:\n\n"
-                     " * `192.168.0.1` -> `192.168.0.1`\n"
-                     " * `foobar.example.com` -> `foobar`\n"
-                     " * `example.com` -> `example`\n"
-                     " * `example` -> `example`\n\n"
-                     "This will be executed **after**:\n\n"
-                     " * `convert_case`\n"),)
+        description=(
+            "Drop the rest of the domain, only keep the hostname. Will not affect "
+            "IP addresses.\n\n"
+            "Examples:\n\n"
+            " * `192.168.0.1` -> `192.168.0.1`\n"
+            " * `foobar.example.com` -> `foobar`\n"
+            " * `example.com` -> `example`\n"
+            " * `example` -> `example`\n\n"
+            "This will be executed **after**:\n\n"
+            " * `convert_case`\n"
+        ),
+    )
     regex = List(
         Nested(RegexpRewrites),
-        data_key='regexp_rewrites',
-        description=("Rewrite discovered hostnames with multiple regular expressions. The "
-                     "replacements will be done one after another in the order they appear "
-                     "in the list. If not anchored at the end by a `$` character, the regexp"
-                     "will be anchored at the end implicitly by adding a `$` character.\n\n"
-                     "These will be executed **after**:\n\n"
-                     " * `convert_case`\n"
-                     " * `drop_domain`\n"),
+        data_key="regexp_rewrites",
+        description=(
+            "Rewrite discovered hostnames with multiple regular expressions. The "
+            "replacements will be done one after another in the order they appear "
+            "in the list. If not anchored at the end by a `$` character, the regexp"
+            "will be anchored at the end implicitly by adding a `$` character.\n\n"
+            "These will be executed **after**:\n\n"
+            " * `convert_case`\n"
+            " * `drop_domain`\n"
+        ),
     )
     mapping = List(
         Nested(DirectMapping),
-        data_key='hostname_replacement',
-        description=("Replace one value with another.\n\n"
-                     "These will be executed **after**:\n\n"
-                     " * `convert_case`\n"
-                     " * `drop_domain`\n"
-                     " * `regexp_rewrites`\n"),
+        data_key="hostname_replacement",
+        description=(
+            "Replace one value with another.\n\n"
+            "These will be executed **after**:\n\n"
+            " * `convert_case`\n"
+            " * `drop_domain`\n"
+            " * `regexp_rewrites`\n"
+        ),
     )
 
 
 class NetworkScan(BaseSchema):
     """
 
-        >>> schema = NetworkScan()
-        >>> settings = {
-        ...     'exclude_ranges': [('ip_list', ['192.168.0.2']),
-        ...                        ('ip_regex_list', ['192.168.[02].*'])],
-        ...     'ip_ranges': [('ip_range', ('192.168.0.10', '192.168.0.244')),
-        ...                   ('ip_regex_list', ['192.168.[01].*']),
-        ...                   ('ip_list', ['192.168.0.2'])],
-        ...     'max_parallel_pings': 100,
-        ... #   This is disabled, due to "running outside app context", duh.
-        ... #   'run_as': 'cmkadmin',
-        ...     'scan_interval': 86400,
-        ...     'set_ipaddress': True,
-        ...     'time_allowed': [((12, 0), (23, 59))],
-        ...     'translate_names': {
-        ...         'case': 'lower',
-        ...         'drop_domain': True,
-        ...         'mapping': [('example.com', 'www.example.com')],
-        ...         'regex': [('.*', 'mehrfacheregulaere')]}}
-        >>> result = schema.dump(settings)
-        >>> assert len(result['addresses']) == 3
-        >>> assert len(result['exclude_addresses']) == 2
-        >>> assert len(result['time_allowed'][0]) == 2
-        >>> assert len(result['translate_names']) == 4
+    >>> schema = NetworkScan()
+    >>> settings = {
+    ...     'exclude_ranges': [('ip_list', ['192.168.0.2']),
+    ...                        ('ip_regex_list', ['192.168.[02].*'])],
+    ...     'ip_ranges': [('ip_range', ('192.168.0.10', '192.168.0.244')),
+    ...                   ('ip_regex_list', ['192.168.[01].*']),
+    ...                   ('ip_list', ['192.168.0.2'])],
+    ...     'max_parallel_pings': 100,
+    ... #   This is disabled, due to "running outside app context", duh.
+    ... #   'run_as': 'cmkadmin',
+    ...     'scan_interval': 86400,
+    ...     'set_ipaddress': True,
+    ...     'time_allowed': [((12, 0), (23, 59))],
+    ...     'translate_names': {
+    ...         'case': 'lower',
+    ...         'drop_domain': True,
+    ...         'mapping': [('example.com', 'www.example.com')],
+    ...         'regex': [('.*', 'mehrfacheregulaere')]}}
+    >>> result = schema.dump(settings)
+    >>> assert len(result['addresses']) == 3
+    >>> assert len(result['exclude_addresses']) == 2
+    >>> assert len(result['time_allowed'][0]) == 2
+    >>> assert len(result['translate_names']) == 4
 
-        >>> import unittest
-        >>> test_case = unittest.TestCase()
-        >>> test_case.maxDiff = None
-        >>> test_case.assertDictEqual(settings, schema.load(result))
+    >>> import unittest
+    >>> test_case = unittest.TestCase()
+    >>> test_case.maxDiff = None
+    >>> test_case.assertDictEqual(settings, schema.load(result))
 
     """
+
     ip_ranges = List(
         Nested(IPRangeWithRegexp()),
-        data_key='addresses',
+        data_key="addresses",
         required=True,
         description="IPv4 addresses to include.",
     )
     exclude_ranges = List(
         Nested(IPRangeWithRegexp()),
-        data_key='exclude_addresses',
+        data_key="exclude_addresses",
         description="IPv4 addresses to exclude.",
     )
     scan_interval = Integer(
@@ -407,7 +437,7 @@ class NetworkScan(BaseSchema):
         required=True,
     )
     set_ipaddress = _fields.Boolean(
-        data_key='set_ip_address',
+        data_key="set_ip_address",
         description="When set, the found IPv4 address is set on the discovered host.",
         missing=True,
     )
@@ -419,8 +449,10 @@ class NetworkScan(BaseSchema):
         missing=100,
     )
     run_as = String(
-        description=("Execute the network scan in the Checkmk user context of the chosen user. "
-                     "This user needs the permission to add new hosts to this folder."),
+        description=(
+            "Execute the network scan in the Checkmk user context of the chosen user. "
+            "This user needs the permission to add new hosts to this folder."
+        ),
         required=False,
         validate=_active_users,
     )
@@ -428,39 +460,39 @@ class NetworkScan(BaseSchema):
 
 
 class NetworkScanResult(BaseSchema):
-    start = _fields.DateTime(description='When the scan started')
+    start = _fields.DateTime(description="When the scan started")
     end = _fields.DateTime(
-        description='When the scan finished. Will be Null if not yet run.',
+        description="When the scan finished. Will be Null if not yet run.",
         allow_none=True,
     )
     state = _fields.String(
         description="Last scan result",
         enum=[
-            'not_started',
-            'running',
-            'succeeded',
-            'failed',
+            "not_started",
+            "running",
+            "succeeded",
+            "failed",
         ],
     )
 
 
 AUTH_PROT_MAP = {
-    'MD5-96': 'md5',
-    'SHA-1-96': 'sha',
-    'SHA-2-224': 'SHA-224',
-    'SHA-2-256': 'SHA-256',
-    'SHA-2-384': 'SHA-384',
-    'SHA-2-512': 'SHA-512',
+    "MD5-96": "md5",
+    "SHA-1-96": "sha",
+    "SHA-2-224": "SHA-224",
+    "SHA-2-256": "SHA-256",
+    "SHA-2-384": "SHA-384",
+    "SHA-2-512": "SHA-512",
 }
 
 PRIV_PROT_MAP = {
-    'CBC-DES': 'DES',
-    'AES-128': 'AES',
-    '3DES-EDE': '3DES-EDE',
-    'AES-192': 'AES-192',
-    'AES-256': 'AES-256',
-    'AES-192-Blumenthal': 'AES-192-Blumenthal',
-    'AES-256-Blumenthal': 'AES-256-Blumenthal',
+    "CBC-DES": "DES",
+    "AES-128": "AES",
+    "3DES-EDE": "3DES-EDE",
+    "AES-192": "AES-192",
+    "AES-256": "AES-256",
+    "AES-192-Blumenthal": "AES-192-Blumenthal",
+    "AES-256-Blumenthal": "AES-256-Blumenthal",
 }
 
 
@@ -491,6 +523,7 @@ class MappingConverter(Converter):
         KeyError: 'a'
 
     """
+
     def __init__(self, mapping):
         self.mapping = mapping
 
@@ -507,43 +540,45 @@ class MappingConverter(Converter):
 class SNMPCommunity(BaseSchema):
     cast_to_dict = True
 
-    type = _fields.Constant(constant='v1_v2_community')
-    community = _fields.String(description="SNMP community (SNMP Versions 1 and 2c)",)
+    type = _fields.Constant(constant="v1_v2_community")
+    community = _fields.String(
+        description="SNMP community (SNMP Versions 1 and 2c)",
+    )
 
     @post_load
     def to_checkmk_str(self, data, **kwargs):
-        return data['community']
+        return data["community"]
 
     @pre_dump
     def from_tuple(self, data, **kwargs):
         """
 
-     v1 'community'
-     v3 ('noAuthNoPriv', 'sicherheitsname')
-     v3 ('authNoPriv', 'SHA-512', 'sicherheitsname', 'passwort')
-     v3 ('authPriv', 'SHA-512', 'sicherheitsname', 'passwort', 'DES', 'privacypasswort')
+        v1 'community'
+        v3 ('noAuthNoPriv', 'sicherheitsname')
+        v3 ('authNoPriv', 'SHA-512', 'sicherheitsname', 'passwort')
+        v3 ('authPriv', 'SHA-512', 'sicherheitsname', 'passwort', 'DES', 'privacypasswort')
 
-        Args:
-            data:
-            **kwargs:
+           Args:
+               data:
+               **kwargs:
 
-        Returns:
+           Returns:
 
         """
         if isinstance(data, str):
             return {
-                'type': 'v1_v2_community',
-                'community': data,
+                "type": "v1_v2_community",
+                "community": data,
             }
 
 
 class SNMPv3NoAuthNoPrivacy(BaseSchema, CheckmkTuple):
-    tuple_fields = ('type', 'security_name')
+    tuple_fields = ("type", "security_name")
     cast_to_dict = True
 
     type = _fields.Constant(
         description="The type of credentials to use.",
-        constant='noAuthNoPriv',
+        constant="noAuthNoPriv",
     )
     security_name = String(
         description="Security name",
@@ -552,13 +587,13 @@ class SNMPv3NoAuthNoPrivacy(BaseSchema, CheckmkTuple):
 
 
 class SNMPv3AuthNoPrivacy(BaseSchema, CheckmkTuple):
-    tuple_fields = ('type', 'auth_protocol', 'security_name', 'auth_password')
+    tuple_fields = ("type", "auth_protocol", "security_name", "auth_password")
     converter = (None, MappingConverter(AUTH_PROT_MAP), None, None)
     cast_to_dict = True
 
     type = _fields.Constant(
         description="The type of credentials to use.",
-        constant='authNoPriv',
+        constant="authNoPriv",
     )
     auth_protocol = String(
         description="Authentication protocol.",
@@ -577,15 +612,27 @@ class SNMPv3AuthNoPrivacy(BaseSchema, CheckmkTuple):
 
 
 class SNMPv3AuthPrivacy(BaseSchema, CheckmkTuple):
-    tuple_fields = ('type', 'auth_protocol', 'security_name', 'auth_password', 'privacy_protocol',
-                    'privacy_password')
-    converter = (None, MappingConverter(AUTH_PROT_MAP), None, None, MappingConverter(PRIV_PROT_MAP),
-                 None)
+    tuple_fields = (
+        "type",
+        "auth_protocol",
+        "security_name",
+        "auth_password",
+        "privacy_protocol",
+        "privacy_password",
+    )
+    converter = (
+        None,
+        MappingConverter(AUTH_PROT_MAP),
+        None,
+        None,
+        MappingConverter(PRIV_PROT_MAP),
+        None,
+    )
     cast_to_dict = True
 
     type = _fields.Constant(
         description="SNMPv3 with authentication and privacy.",
-        constant='authPriv',
+        constant="authPriv",
     )
     auth_protocol = String(
         description="Authentication protocol.",
@@ -602,15 +649,18 @@ class SNMPv3AuthPrivacy(BaseSchema, CheckmkTuple):
         required=True,
     )
     privacy_protocol = String(
-        description=("The privacy protocol. "
-                     "The only supported values in the Raw Edition are CBC-DES and AES-128. "
-                     "If selected, privacy_password needs to be supplied as well."),
+        description=(
+            "The privacy protocol. "
+            "The only supported values in the Raw Edition are CBC-DES and AES-128. "
+            "If selected, privacy_password needs to be supplied as well."
+        ),
         required=True,
         enum=list(PRIV_PROT_MAP.keys()),
     )
     privacy_password = String(
-        description=("Privacy pass phrase. "
-                     "If filled, privacy_protocol needs to be selected as well."),
+        description=(
+            "Privacy pass phrase. " "If filled, privacy_protocol needs to be selected as well."
+        ),
         required=True,
         minLength=8,
     )
@@ -667,20 +717,21 @@ class SNMPCredentials(OneOfSchema):
         ('authPriv', 'md5', 'foo', 'barbarbar', 'DES', 'barbaric')
 
     """
+
     type_schemas = {
-        'v1_v2_community': SNMPCommunity,
-        'v3_no_auth_no_privacy': SNMPv3NoAuthNoPrivacy,
-        'v3_auth_no_privacy': SNMPv3AuthNoPrivacy,
-        'v3_auth_privacy': SNMPv3AuthPrivacy,
+        "v1_v2_community": SNMPCommunity,
+        "v3_no_auth_no_privacy": SNMPv3NoAuthNoPrivacy,
+        "v3_auth_no_privacy": SNMPv3AuthNoPrivacy,
+        "v3_auth_privacy": SNMPv3AuthPrivacy,
     }
 
     def get_obj_type(self, obj):
         if isinstance(obj, str):
             return "v1_v2_community"
         return {
-            'authNoAuthNoPriv': 'v3_no_auth_no_privacy',
-            'authNoPriv': 'v3_auth_no_privacy',
-            'authPriv': 'v3_auth_privacy',
+            "authNoAuthNoPriv": "v3_no_auth_no_privacy",
+            "authNoPriv": "v3_auth_no_privacy",
+            "authPriv": "v3_auth_privacy",
         }[obj[0]]
 
 
@@ -690,6 +741,12 @@ class IPMIParameters(BaseSchema):
 
 
 class MetaData(BaseSchema):
-    created_at = Timestamp(description="When has this object been created.",)
-    updated_at = Timestamp(description="When this object was last changed.",)
-    created_by = String(description="The user id under which this object has been created.",)
+    created_at = Timestamp(
+        description="When has this object been created.",
+    )
+    updated_at = Timestamp(
+        description="When this object was last changed.",
+    )
+    created_by = String(
+        description="The user id under which this object has been created.",
+    )

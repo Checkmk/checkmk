@@ -9,8 +9,15 @@ from cmk.gui.plugins.wato import register_check_parameters, RulespecGroupCheckPa
 from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
 register_check_parameters(
-    RulespecGroupCheckParametersApplications, "oracle_sql", _("Oracle Custom SQLs"),
-    Dictionary(elements=[
-        ("instance_error_state", MonitoringState(title=_("Instance error state"))),
-        ("perfdata_error_state", MonitoringState(title=_("Perfdata error state"))),
-    ],), TextInput(title=_("Custom SQL")), "dict")
+    RulespecGroupCheckParametersApplications,
+    "oracle_sql",
+    _("Oracle Custom SQLs"),
+    Dictionary(
+        elements=[
+            ("instance_error_state", MonitoringState(title=_("Instance error state"))),
+            ("perfdata_error_state", MonitoringState(title=_("Perfdata error state"))),
+        ],
+    ),
+    TextInput(title=_("Custom SQL")),
+    "dict",
+)

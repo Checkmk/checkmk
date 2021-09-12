@@ -22,13 +22,15 @@ def _parameter_valuespec_juniper_mem():
                 # xgettext: no-python-format
                 unit=_("% of RAM"),
                 default_value=80.0,
-                maxvalue=100.0),
+                maxvalue=100.0,
+            ),
             Percentage(
                 title=_("Critical at a usage of"),
                 # xgettext: no-python-format
                 unit=_("% of RAM"),
                 default_value=90.0,
-                maxvalue=100.0)
+                maxvalue=100.0,
+            ),
         ],
     )
 
@@ -39,4 +41,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_juniper_mem,
         title=lambda: _("Juniper Memory Usage"),
-    ))
+    )
+)

@@ -38,4 +38,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersOperatingSystem,
         parameter_valuespec=_parameter_valuespec_fortimail_cpu_load,
         title=lambda: _("Fortinet FortiMail CPU load"),
-    ))
+    )
+)

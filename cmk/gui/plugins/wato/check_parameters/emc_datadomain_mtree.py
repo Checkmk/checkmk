@@ -12,21 +12,36 @@ from cmk.gui.plugins.wato import (
 )
 from cmk.gui.valuespec import Dictionary, MonitoringState, TextInput
 
-STATES_CHECK_RES = [("deleted", 2), ("read-only", 1), ("read-write", 0),
-                    ("replication destination", 0), ("retention lock disabled", 0),
-                    ("retention lock enabled", 0), ("unknown", 3)]
+STATES_CHECK_RES = [
+    ("deleted", 2),
+    ("read-only", 1),
+    ("read-write", 0),
+    ("replication destination", 0),
+    ("retention lock disabled", 0),
+    ("retention lock enabled", 0),
+    ("unknown", 3),
+]
 
 
 def _parameter_valuespec_emc_datadomain_mtree() -> Dictionary:
     return Dictionary(
         title=_("Mapping of MTree state to monitoring state"),
-        help=_("Define a translation of the possible states of the MTree to monitoring "
-               "states, i.e. to the result of the check. This overwrites the default "
-               "mapping used by the check."),
-        elements=[(state,
-                   MonitoringState(title=_("Monitoring state if MTree state is '%s'") % state,
-                                   default_value=check_res))
-                  for state, check_res in STATES_CHECK_RES])
+        help=_(
+            "Define a translation of the possible states of the MTree to monitoring "
+            "states, i.e. to the result of the check. This overwrites the default "
+            "mapping used by the check."
+        ),
+        elements=[
+            (
+                state,
+                MonitoringState(
+                    title=_("Monitoring state if MTree state is '%s'") % state,
+                    default_value=check_res,
+                ),
+            )
+            for state, check_res in STATES_CHECK_RES
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -37,4 +52,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_emc_datadomain_mtree,
         title=lambda: _("EMC Data Domain MTree state"),
-    ))
+    )
+)

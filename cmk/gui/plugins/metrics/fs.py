@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import graph_info, metric_info
 
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -70,7 +70,7 @@ metric_info["fs_provisioning"] = {
     "color": "#ff8000",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -115,20 +115,26 @@ graph_info["fs_used_2"] = {
 
 graph_info["growing"] = {
     "title": _("Growing"),
-    "metrics": [(
-        "fs_growth.max,0,MAX",
-        "area",
-        _("Growth"),
-    ),],
+    "metrics": [
+        (
+            "fs_growth.max,0,MAX",
+            "area",
+            _("Growth"),
+        ),
+    ],
 }
 
 graph_info["shrinking"] = {
     "title": _("Shrinking"),
     "consolidation_function": "min",
-    "metrics": [("fs_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage")),],
+    "metrics": [
+        ("fs_growth.min,0,MIN,-1,*#299dcf", "-area", _("Shrinkage")),
+    ],
 }
 
 graph_info["fs_trend"] = {
     "title": _("Trend of filesystem growth"),
-    "metrics": [("fs_trend", "line"),],
+    "metrics": [
+        ("fs_trend", "line"),
+    ],
 }

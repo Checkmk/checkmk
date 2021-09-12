@@ -22,12 +22,11 @@ class WatoIcon(Icon):
         return _("Wato")
 
     def host_columns(self):
-        return ['filename']
+        return ["filename"]
 
     def render(self, what, row, tags, custom_vars):
         def may_see_hosts():
-            return user.may("wato.use") and \
-                (user.may("wato.seeall") or user.may("wato.hosts"))
+            return user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts"))
 
         if not may_see_hosts() or is_mobile(request, response):
             return None
@@ -47,8 +46,7 @@ class WatoIcon(Icon):
             return None
 
         if display_options.enabled(display_options.X):
-            url = "wato.py?folder=%s&host=%s" % \
-                (urlencode(folder), urlencode(hostname))
+            url = "wato.py?folder=%s&host=%s" % (urlencode(folder), urlencode(hostname))
             if where == "inventory":
                 url += "&mode=inventory"
                 help_txt = _("Edit services")
@@ -65,6 +63,7 @@ class WatoIcon(Icon):
 @icon_and_action_registry.register
 class DownloadAgentOutputIcon(Icon):
     """Action for downloading the current agent output."""
+
     @classmethod
     def ident(cls):
         return "download_agent_output"
@@ -80,12 +79,15 @@ class DownloadAgentOutputIcon(Icon):
         return ["filename", "check_type"]
 
     def render(self, what, row, tags, custom_vars):
-        return _paint_download_host_info(what, row, tags, custom_vars, ty="agent")  # pylint: disable=no-value-for-parameter
+        return _paint_download_host_info(
+            what, row, tags, custom_vars, ty="agent"
+        )  # pylint: disable=no-value-for-parameter
 
 
 @icon_and_action_registry.register
 class DownloadSnmpWalkIcon(Icon):
     """Action for downloading the current snmp output."""
+
     @classmethod
     def ident(cls):
         return "download_snmp_walk"
@@ -101,13 +103,17 @@ class DownloadSnmpWalkIcon(Icon):
         return 50
 
     def render(self, what, row, tags, custom_vars):
-        return _paint_download_host_info(what, row, tags, custom_vars, ty="walk")  # pylint: disable=no-value-for-parameter
+        return _paint_download_host_info(
+            what, row, tags, custom_vars, ty="walk"
+        )  # pylint: disable=no-value-for-parameter
 
 
 def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
-    if (what == "host" or (what == "service" and row["service_description"] == "Check_MK")) \
-       and user.may("wato.download_agent_output") \
-       and not row["host_check_type"] == 2:  # Not for shadow hosts
+    if (
+        (what == "host" or (what == "service" and row["service_description"] == "Check_MK"))
+        and user.may("wato.download_agent_output")
+        and not row["host_check_type"] == 2
+    ):  # Not for shadow hosts
 
         # Not 100% acurate to use the tags here, but this is the best we can do
         # with the available information.

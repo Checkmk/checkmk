@@ -18,33 +18,40 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Transform, Tupl
 
 
 def _item_spec_esx_vsphere_datastores():
-    return TextInput(title=_("Datastore Name"),
-                     help=_("The name of the Datastore"),
-                     allow_empty=False)
+    return TextInput(
+        title=_("Datastore Name"), help=_("The name of the Datastore"), allow_empty=False
+    )
 
 
 def _parameter_valuespec_esx_vsphere_datastores():
     return Transform(
         Dictionary(
-            elements=filesystem_elements + [
-                ("provisioning_levels",
-                 Tuple(
-                     title=_("Provisioning Levels"),
-                     help=
-                     _("A provisioning of more than 100% is called "
-                       "over provisioning and can be a useful strategy for saving disk space. But you cannot guarantee "
-                       "any longer that every VM can really use all space that it was assigned. Here you can "
-                       "set levels for the maximum provisioning. A warning level of 150% will warn at 50% over provisioning."
-                      ),
-                     elements=[
-                         Percentage(title=_("Warning at a provisioning of"),
-                                    maxvalue=None,
-                                    default_value=120.0),
-                         Percentage(title=_("Critical at a provisioning of"),
-                                    maxvalue=None,
-                                    default_value=150.0),
-                     ],
-                 )),
+            elements=filesystem_elements
+            + [
+                (
+                    "provisioning_levels",
+                    Tuple(
+                        title=_("Provisioning Levels"),
+                        help=_(
+                            "A provisioning of more than 100% is called "
+                            "over provisioning and can be a useful strategy for saving disk space. But you cannot guarantee "
+                            "any longer that every VM can really use all space that it was assigned. Here you can "
+                            "set levels for the maximum provisioning. A warning level of 150% will warn at 50% over provisioning."
+                        ),
+                        elements=[
+                            Percentage(
+                                title=_("Warning at a provisioning of"),
+                                maxvalue=None,
+                                default_value=120.0,
+                            ),
+                            Percentage(
+                                title=_("Critical at a provisioning of"),
+                                maxvalue=None,
+                                default_value=150.0,
+                            ),
+                        ],
+                    ),
+                ),
             ],
             hidden_keys=["flex_levels"],
         ),
@@ -60,4 +67,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_esx_vsphere_datastores,
         title=lambda: _("ESX Datastores (used space and growth)"),
-    ))
+    )
+)

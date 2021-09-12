@@ -24,72 +24,84 @@ from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Dictionary, DropdownChoice, Transform
 
-multisite_builtin_views.update({
-    'service_graphs': {
-        'browser_reload': 30,
-        'column_headers': 'off',
-        'datasource': 'services',
-        'description': _('Shows all graphs including timerange selections '
-                         'of a collection of services.'),
-        'group_painters': [
-            ('sitealias', 'sitehosts'),
-            ('host_with_state', 'host'),
-            ('service_description', 'service'),
-        ],
-        'hard_filters': [],
-        'hard_filtervars': [],
-        'hidden': True,
-        'hide_filters': ['siteopt', 'service', 'host'],
-        'layout': 'boxed_graph',
-        'mustsearch': False,
-        'name': 'service_graphs',
-        'num_columns': 1,
-        'owner': '',
-        'painters': [('service_graphs', None),],
-        'public': True,
-        'show_filters': [],
-        'sorters': [],
-        'icon': 'service_graph',
-        'title': _('Service Graphs'),
-        "topic": "history",
-    },
-    'host_graphs': {
-        'browser_reload': 30,
-        'column_headers': 'off',
-        'datasource': 'hosts',
-        'description': _('Shows host graphs including timerange selections '
-                         'of a collection of hosts.'),
-        'group_painters': [
-            ('sitealias', 'sitehosts'),
-            ('host_with_state', 'host'),
-        ],
-        'hard_filters': [],
-        'hard_filtervars': [],
-        'hidden': True,
-        'hide_filters': ['siteopt', 'host'],
-        'layout': 'boxed_graph',
-        'mustsearch': False,
-        'name': 'host_graphs',
-        'num_columns': 1,
-        'owner': '',
-        'painters': [('host_graphs', None),],
-        'public': True,
-        'show_filters': [],
-        'sorters': [],
-        'icon': 'graph',
-        'title': _('Host graphs'),
-        "topic": "history",
-    },
-})
+multisite_builtin_views.update(
+    {
+        "service_graphs": {
+            "browser_reload": 30,
+            "column_headers": "off",
+            "datasource": "services",
+            "description": _(
+                "Shows all graphs including timerange selections " "of a collection of services."
+            ),
+            "group_painters": [
+                ("sitealias", "sitehosts"),
+                ("host_with_state", "host"),
+                ("service_description", "service"),
+            ],
+            "hard_filters": [],
+            "hard_filtervars": [],
+            "hidden": True,
+            "hide_filters": ["siteopt", "service", "host"],
+            "layout": "boxed_graph",
+            "mustsearch": False,
+            "name": "service_graphs",
+            "num_columns": 1,
+            "owner": "",
+            "painters": [
+                ("service_graphs", None),
+            ],
+            "public": True,
+            "show_filters": [],
+            "sorters": [],
+            "icon": "service_graph",
+            "title": _("Service Graphs"),
+            "topic": "history",
+        },
+        "host_graphs": {
+            "browser_reload": 30,
+            "column_headers": "off",
+            "datasource": "hosts",
+            "description": _(
+                "Shows host graphs including timerange selections " "of a collection of hosts."
+            ),
+            "group_painters": [
+                ("sitealias", "sitehosts"),
+                ("host_with_state", "host"),
+            ],
+            "hard_filters": [],
+            "hard_filtervars": [],
+            "hidden": True,
+            "hide_filters": ["siteopt", "host"],
+            "layout": "boxed_graph",
+            "mustsearch": False,
+            "name": "host_graphs",
+            "num_columns": 1,
+            "owner": "",
+            "painters": [
+                ("host_graphs", None),
+            ],
+            "public": True,
+            "show_filters": [],
+            "sorters": [],
+            "icon": "graph",
+            "title": _("Host graphs"),
+            "topic": "history",
+        },
+    }
+)
 
 service_graph_overview_settings = {
-    "painters": [("service_graphs", None),],
+    "painters": [
+        ("service_graphs", None),
+    ],
     "num_columns": 1,
     "layout": "boxed_graph",
 }
 
 host_graph_overview_settings = {
-    "painters": [("host_graphs", None),],
+    "painters": [
+        ("host_graphs", None),
+    ],
     "num_columns": 1,
     "layout": "boxed_graph",
 }
@@ -103,11 +115,14 @@ multisite_builtin_views["searchpnp"].update(service_graph_overview_settings)
 
 
 def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
-    graph_identification = ("template", {
-        "site": row["site"],
-        "host_name": row["host_name"],
-        "service_description": row.get("service_description", "_HOST_"),
-    })
+    graph_identification = (
+        "template",
+        {
+            "site": row["site"],
+            "host_name": row["host_name"],
+            "service_description": row.get("service_description", "_HOST_"),
+        },
+    )
 
     # Load the graph render options from
     # a) the painter parameters configured in the view
@@ -141,16 +156,18 @@ def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
         graph_data_range["time_range"] = get_graph_timerange_from_painter_options()
 
     if is_mobile(request, response):
-        graph_render_options.update({
-            "interaction": False,
-            "show_controls": False,
-            "show_pin": False,
-            "show_graph_time": False,
-            "show_time_range_previews": False,
-            "show_legend": False,
-            # Would be much better to autodetect the possible size (like on dashboard)
-            "size": (27, 18),  # ex
-        })
+        graph_render_options.update(
+            {
+                "interaction": False,
+                "show_controls": False,
+                "show_pin": False,
+                "show_graph_time": False,
+                "show_time_range_previews": False,
+                "show_legend": False,
+                # Would be much better to autodetect the possible size (like on dashboard)
+                "size": (27, 18),  # ex
+            }
+        )
 
     if "host_metrics" in row:
         available_metrics = row["host_metrics"]
@@ -160,27 +177,32 @@ def paint_time_graph_cmk(row, cell, override_graph_render_options=None):
         perf_data = row["service_perf_data"]
 
     if not available_metrics and perf_data:
-        return "", _("No historic metrics recorded but performance data is available. "
-                     "Maybe performance data processing is disabled.")
+        return "", _(
+            "No historic metrics recorded but performance data is available. "
+            "Maybe performance data processing is disabled."
+        )
 
-    return "", html_render.render_graphs_from_specification_html(graph_identification,
-                                                                 graph_data_range,
-                                                                 graph_render_options)
+    return "", html_render.render_graphs_from_specification_html(
+        graph_identification, graph_data_range, graph_render_options
+    )
 
 
 def paint_cmk_graphs_with_timeranges(row, cell):
-    return paint_time_graph_cmk(row,
-                                cell,
-                                override_graph_render_options={"show_time_range_previews": True})
+    return paint_time_graph_cmk(
+        row, cell, override_graph_render_options={"show_time_range_previews": True}
+    )
 
 
 def cmk_time_graph_params():
     elements = [
-        ("set_default_time_range",
-         DropdownChoice(
-             title=_("Set default time range"),
-             choices=[(entry["duration"], entry["title"]) for entry in config.graph_timeranges],
-         )), ("graph_render_options", vs_graph_render_options())
+        (
+            "set_default_time_range",
+            DropdownChoice(
+                title=_("Set default time range"),
+                choices=[(entry["duration"], entry["title"]) for entry in config.graph_timeranges],
+            ),
+        ),
+        ("graph_render_options", vs_graph_render_options()),
     ]
 
     return Transform(
@@ -219,20 +241,20 @@ class PainterServiceGraphs(Painter):
     @property
     def columns(self):
         return [
-            'host_name',
-            'service_description',
-            'service_perf_data',
-            'service_metrics',
-            'service_check_command',
+            "host_name",
+            "service_description",
+            "service_perf_data",
+            "service_metrics",
+            "service_check_command",
         ]
 
     @property
     def printable(self):
-        return 'time_graph'
+        return "time_graph"
 
     @property
     def painter_options(self):
-        return ['pnp_timerange', 'graph_render_options']
+        return ["pnp_timerange", "graph_render_options"]
 
     @property
     def parameters(self):
@@ -253,15 +275,15 @@ class PainterHostGraphs(Painter):
 
     @property
     def columns(self):
-        return ['host_name', 'host_perf_data', 'host_metrics', 'host_check_command']
+        return ["host_name", "host_perf_data", "host_metrics", "host_check_command"]
 
     @property
     def printable(self):
-        return 'time_graph'
+        return "time_graph"
 
     @property
     def painter_options(self):
-        return ['pnp_timerange', 'graph_render_options']
+        return ["pnp_timerange", "graph_render_options"]
 
     @property
     def parameters(self):

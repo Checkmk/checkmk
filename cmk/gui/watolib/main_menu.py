@@ -69,13 +69,23 @@ class MenuItem:
 
     def get_url(self):
         mode_or_url = self.mode_or_url
-        if '?' in mode_or_url or '/' in mode_or_url or mode_or_url.endswith(".py"):
+        if "?" in mode_or_url or "/" in mode_or_url or mode_or_url.endswith(".py"):
             return mode_or_url
         return makeuri_contextless(request, [("mode", mode_or_url)], filename="wato.py")
 
     def __repr__(self):
-        return "%s(mode_or_url=%r, title=%r, icon=%r, permission=%r, description=%r, sort_index=%r)" % \
-            (self.__class__.__name__, self.mode_or_url, self.title, self.icon, self.permission, self.description, self.sort_index)
+        return (
+            "%s(mode_or_url=%r, title=%r, icon=%r, permission=%r, description=%r, sort_index=%r)"
+            % (
+                self.__class__.__name__,
+                self.mode_or_url,
+                self.title,
+                self.icon,
+                self.permission,
+                self.description,
+                self.sort_index,
+            )
+        )
 
 
 class MainModuleTopic(NamedTuple):

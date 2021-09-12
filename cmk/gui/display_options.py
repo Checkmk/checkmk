@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     import cmk.gui.htmllib as htmllib
     from cmk.gui.http import Request
 
-#.
+# .
 #   .--Display Opts.-------------------------------------------------------.
 #   |       ____  _           _                ___        _                |
 #   |      |  _ \(_)___ _ __ | | __ _ _   _   / _ \ _ __ | |_ ___          |
@@ -82,9 +82,10 @@ class DisplayOptions:
         # a special var _display_options for defining the display_options for rendering
         # the data table to be reloaded. The contents of "display_options" are used for
         # linking to other views.
-        if request.has_var('_display_options'):
+        if request.has_var("_display_options"):
             self.options = self._merge_with_defaults(
-                request.get_ascii_input_mandatory("_display_options", ""))
+                request.get_ascii_input_mandatory("_display_options", "")
+            )
 
         # But there is one special case: Links to other views (sorter header links, painter column
         # links). These links need to know about the provided display_option parameter. The links

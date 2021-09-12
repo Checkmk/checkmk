@@ -30,4 +30,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Port index or 'Total'")),
         parameter_valuespec=_parameter_valuespec_read_hits,
         title=lambda: _("DDN S2A read prefetch hits"),
-    ))
+    )
+)

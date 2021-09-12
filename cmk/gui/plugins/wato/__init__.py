@@ -153,7 +153,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
-#.
+# .
 #   .--Plugin API----------------------------------------------------------.
 #   |           ____  _             _            _    ____ ___             |
 #   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
@@ -163,7 +163,7 @@ from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-#.
+# .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |

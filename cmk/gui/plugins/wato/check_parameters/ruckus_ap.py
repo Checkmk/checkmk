@@ -21,24 +21,34 @@ def _item_spec_ruckus_ap():
 
 
 def _parameter_valuespec_ruckus_ap():
-    return Tuple(elements=[
-        Optional(Tuple(elements=[
-            Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
-            Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
-        ],),
-                 sameline=True,
-                 label=_("Levels for <i>device time drifted</i>"),
-                 none_label=_("No levels set"),
-                 none_value=(None, None)),
-        Optional(Tuple(elements=[
-            Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
-            Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
-        ],),
-                 sameline=True,
-                 label=_("Levels for <i>device not responding</i>"),
-                 none_label=_("No levels set"),
-                 none_value=(None, None)),
-    ],)
+    return Tuple(
+        elements=[
+            Optional(
+                Tuple(
+                    elements=[
+                        Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
+                        Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
+                    ],
+                ),
+                sameline=True,
+                label=_("Levels for <i>device time drifted</i>"),
+                none_label=_("No levels set"),
+                none_value=(None, None),
+            ),
+            Optional(
+                Tuple(
+                    elements=[
+                        Integer(title=_("Warning at"), default_value=1, unit=_("devices")),
+                        Integer(title=_("Critical at"), default_value=1, unit=_("devices")),
+                    ],
+                ),
+                sameline=True,
+                label=_("Levels for <i>device not responding</i>"),
+                none_label=_("No levels set"),
+                none_value=(None, None),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -48,4 +58,5 @@ rulespec_registry.register(
         item_spec=_item_spec_ruckus_ap,
         parameter_valuespec=_parameter_valuespec_ruckus_ap,
         title=lambda: _("Ruckus Spot Access Points"),
-    ))
+    )
+)

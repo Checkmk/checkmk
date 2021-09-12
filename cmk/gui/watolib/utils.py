@@ -51,8 +51,8 @@ def rename_host_in_list(thelist, oldname, newname):
         if element == oldname:
             thelist[nr] = newname
             did_rename = True
-        elif element == '!' + oldname:
-            thelist[nr] = '!' + newname
+        elif element == "!" + oldname:
+            thelist[nr] = "!" + newname
             did_rename = True
     return did_rename
 
@@ -70,7 +70,8 @@ LegacyContactGroupSpec = Tuple[bool, List[ContactgroupName]]
 
 # TODO: Find a better place later
 def convert_cgroups_from_tuple(
-        value: Union[HostContactGroupSpec, LegacyContactGroupSpec]) -> HostContactGroupSpec:
+    value: Union[HostContactGroupSpec, LegacyContactGroupSpec]
+) -> HostContactGroupSpec:
     """Convert old tuple representation to new dict representation of folder's group settings"""
     if isinstance(value, dict):
         if "use_for_services" in value:
@@ -121,7 +122,8 @@ def mk_eval(s: Union[bytes, str]) -> Any:
         return ast.literal_eval(ensure_str(base64.b64decode(s)))
     except Exception:
         raise MKGeneralException(
-            _('Unable to parse provided data: %s') % escape_html_permissive(repr(s)))
+            _("Unable to parse provided data: %s") % escape_html_permissive(repr(s))
+        )
 
 
 def has_agent_bakery():
@@ -131,6 +133,7 @@ def has_agent_bakery():
 def try_bake_agents_for_hosts(hosts: List[HostName]) -> None:
     if has_agent_bakery():
         import cmk.gui.cee.plugins.wato.agent_bakery.misc as agent_bakery  # pylint: disable=import-error,no-name-in-module
+
         try:
             agent_bakery.start_bake_agents(host_names=hosts, signing_credentials=None)
         except BackgroundJobAlreadyRunning:
@@ -138,10 +141,10 @@ def try_bake_agents_for_hosts(hosts: List[HostName]) -> None:
 
 
 def site_neutral_path(path):
-    if path.startswith('/omd'):
-        parts = path.split('/')
-        parts[3] = '[SITE_ID]'
-        return '/'.join(parts)
+    if path.startswith("/omd"):
+        parts = path.split("/")
+        parts[3] = "[SITE_ID]"
+        return "/".join(parts)
     return path
 
 
@@ -149,12 +152,12 @@ def may_edit_ruleset(varname: str) -> bool:
     if varname == "ignored_services":
         return user.may("wato.services") or user.may("wato.rulesets")
     if varname in [
-            "custom_checks",
-            "datasource_programs",
-            "agent_config:mrpe",
-            "agent_config:agent_paths",
-            "agent_config:runas",
-            "agent_config:only_from",
+        "custom_checks",
+        "datasource_programs",
+        "agent_config:mrpe",
+        "agent_config:agent_paths",
+        "agent_config:runas",
+        "agent_config:only_from",
     ]:
         return user.may("wato.rulesets") and user.may("wato.add_or_modify_executables")
     if varname == "agent_config:custom_files":

@@ -23,11 +23,12 @@ def _item_spec_msexch_copyqueue():
 def _parameter_valuespec_msexch_copyqueue():
     return Tuple(
         title=_("Upper Levels for CopyQueue Length"),
-        help=_("This rule sets upper levels to the number of transaction logs waiting to be copied "
-               "and inspected on your Exchange Mailbox Servers in a Database Availability Group "
-               "(DAG). This is also known as the CopyQueue length."),
-        elements=[Integer(title=_("Warning at")),
-                  Integer(title=_("Critical at"))],
+        help=_(
+            "This rule sets upper levels to the number of transaction logs waiting to be copied "
+            "and inspected on your Exchange Mailbox Servers in a Database Availability Group "
+            "(DAG). This is also known as the CopyQueue length."
+        ),
+        elements=[Integer(title=_("Warning at")), Integer(title=_("Critical at"))],
     )
 
 
@@ -38,4 +39,5 @@ rulespec_registry.register(
         item_spec=_item_spec_msexch_copyqueue,
         parameter_valuespec=_parameter_valuespec_msexch_copyqueue,
         title=lambda: _("MS Exchange DAG CopyQueue"),
-    ))
+    )
+)

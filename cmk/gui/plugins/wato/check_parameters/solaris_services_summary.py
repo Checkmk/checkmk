@@ -14,13 +14,17 @@ from cmk.gui.valuespec import Dictionary, MonitoringState
 
 
 def _parameter_valuespec_solaris_services_summary():
-    return Dictionary(elements=[
-        ('maintenance_state',
-         MonitoringState(
-             title=_("State if 'maintenance' services are found"),
-             default_value=0,
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "maintenance_state",
+                MonitoringState(
+                    title=_("State if 'maintenance' services are found"),
+                    default_value=0,
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -30,4 +34,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_solaris_services_summary,
         title=lambda: _("Solaris Services Summary"),
-    ))
+    )
+)

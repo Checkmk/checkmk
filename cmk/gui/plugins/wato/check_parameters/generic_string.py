@@ -14,22 +14,33 @@ from cmk.gui.valuespec import Dictionary, ListOf, MonitoringState, TextInput, Tu
 
 
 def _parameter_valuespec_generic_string():
-    return Dictionary(elements=[
-        ("default_status", MonitoringState(title=_("Default Status"))),
-        ("match_strings",
-         ListOf(Tuple(elements=[
-             TextInput(title=_("Search string")),
-             MonitoringState(),
-         ],))),
-    ],)
+    return Dictionary(
+        elements=[
+            ("default_status", MonitoringState(title=_("Default Status"))),
+            (
+                "match_strings",
+                ListOf(
+                    Tuple(
+                        elements=[
+                            TextInput(title=_("Search string")),
+                            MonitoringState(),
+                        ],
+                    )
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="generic_string",
         group=RulespecGroupCheckParametersApplications,
-        item_spec=lambda: TextInput(title=_("Item"),),
+        item_spec=lambda: TextInput(
+            title=_("Item"),
+        ),
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_generic_string,
         title=lambda: _("Generic string"),
-    ))
+    )
+)

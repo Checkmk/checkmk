@@ -14,24 +14,30 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_mcafee_web_gateway_misc():
-    return Dictionary(elements=[
-        ("clients",
-         Tuple(
-             title=_("Upper levels for clients"),
-             elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
-             ],
-         )),
-        ("network_sockets",
-         Tuple(
-             title=_("Upper levels for open network sockets"),
-             elements=[
-                 Integer(title=_("Warning at")),
-                 Integer(title=_("Critical at")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "clients",
+                Tuple(
+                    title=_("Upper levels for clients"),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
+                ),
+            ),
+            (
+                "network_sockets",
+                Tuple(
+                    title=_("Upper levels for open network sockets"),
+                    elements=[
+                        Integer(title=_("Warning at")),
+                        Integer(title=_("Critical at")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -41,4 +47,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mcafee_web_gateway_misc,
         title=lambda: _("McAfee web gateway miscellaneous"),
-    ))
+    )
+)

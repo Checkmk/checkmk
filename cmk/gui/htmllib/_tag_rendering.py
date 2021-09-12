@@ -30,21 +30,28 @@ __all__ = [
 ]
 
 
-def render_start_tag(tag_name: HTMLTagName,
-                     close_tag: bool = False,
-                     **attrs: HTMLTagAttributeValue) -> HTML:
-    """ You have to replace attributes which are also python elements such as
-        'class', 'id', 'for' or 'type' using a trailing underscore (e.g. 'class_' or 'id_'). """
-    return HTML("<%s%s%s>" % (tag_name, '' if not attrs else ''.join(_render_attributes(**attrs)),
-                              '' if not close_tag else ' /'))
+def render_start_tag(
+    tag_name: HTMLTagName, close_tag: bool = False, **attrs: HTMLTagAttributeValue
+) -> HTML:
+    """You have to replace attributes which are also python elements such as
+    'class', 'id', 'for' or 'type' using a trailing underscore (e.g. 'class_' or 'id_')."""
+    return HTML(
+        "<%s%s%s>"
+        % (
+            tag_name,
+            "" if not attrs else "".join(_render_attributes(**attrs)),
+            "" if not close_tag else " /",
+        )
+    )
 
 
 def render_end_tag(tag_name: HTMLTagName) -> HTML:
     return HTML("</%s>" % (tag_name))
 
 
-def render_element(tag_name: HTMLTagName, tag_content: HTMLContent,
-                   **attrs: HTMLTagAttributeValue) -> HTML:
+def render_element(
+    tag_name: HTMLTagName, tag_content: HTMLContent, **attrs: HTMLTagAttributeValue
+) -> HTML:
     open_tag = render_start_tag(tag_name, close_tag=False, **attrs)
 
     if not tag_content:
@@ -64,7 +71,7 @@ def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
     options = []
 
     # Links require href to be first attribute
-    href = attrs.pop('href', None)
+    href = attrs.pop("href", None)
     if href:
         attributes = list(attrs.items())
         attributes.insert(0, ("href", href))
@@ -76,12 +83,12 @@ def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
         if v is None:
             continue
 
-        key = escaping.escape_attribute(key_unescaped.rstrip('_'))
+        key = escaping.escape_attribute(key_unescaped.rstrip("_"))
 
-        if key.startswith('data_'):
-            key = key.replace('_', '-', 1)  # HTML data attribute: 'data-name'
+        if key.startswith("data_"):
+            key = key.replace("_", "-", 1)  # HTML data attribute: 'data-name'
 
-        if v == '':
+        if v == "":
             options.append(key)
             continue
 
@@ -89,25 +96,25 @@ def _render_attributes(**attrs: HTMLTagAttributeValue) -> Iterator[str]:
             v = escaping.escape_attribute(v)
         else:
             if key == "class":
-                sep = ' '
-            elif key == "style" or key.startswith('on'):
-                sep = '; '
+                sep = " "
+            elif key == "style" or key.startswith("on"):
+                sep = "; "
             else:
                 # TODO: Can we drop this special Feature? No idea what it is used for.
-                sep = '_'
+                sep = "_"
 
             joined_value = sep.join([a for a in (escaping.escape_attribute(vi) for vi in v) if a])
 
             # TODO: Can we drop this special feature? Find an cleanup the call sites
-            if sep.startswith(';'):
-                joined_value = re.sub(';+', ';', joined_value)
+            if sep.startswith(";"):
+                joined_value = re.sub(";+", ";", joined_value)
 
             v = joined_value
 
-        yield ' %s=\"%s\"' % (key, v)
+        yield ' %s="%s"' % (key, v)
 
     for k in options:
-        yield " %s=\'\'" % k
+        yield " %s=''" % k
 
 
 def normalize_css_spec(css_classes: CSSSpec) -> List[str]:

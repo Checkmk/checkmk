@@ -15,28 +15,46 @@ from cmk.gui.valuespec import Dictionary
 
 
 def _parameter_valuespec_checkpoint_packets():
-    return Dictionary(elements=[
-        ("accepted",
-         Levels(title=_("Maximum Rate of Accepted Packets"),
-                default_value=None,
-                default_levels=(100000, 200000),
-                unit="pkts/sec")),
-        ("rejected",
-         Levels(title=_("Maximum Rate of Rejected Packets"),
-                default_value=None,
-                default_levels=(100000, 200000),
-                unit="pkts/sec")),
-        ("dropped",
-         Levels(title=_("Maximum Rate of Dropped Packets"),
-                default_value=None,
-                default_levels=(100000, 200000),
-                unit="pkts/sec")),
-        ("logged",
-         Levels(title=_("Maximum Rate of Logged Packets"),
-                default_value=None,
-                default_levels=(100000, 200000),
-                unit="pkts/sec")),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "accepted",
+                Levels(
+                    title=_("Maximum Rate of Accepted Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec",
+                ),
+            ),
+            (
+                "rejected",
+                Levels(
+                    title=_("Maximum Rate of Rejected Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec",
+                ),
+            ),
+            (
+                "dropped",
+                Levels(
+                    title=_("Maximum Rate of Dropped Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec",
+                ),
+            ),
+            (
+                "logged",
+                Levels(
+                    title=_("Maximum Rate of Logged Packets"),
+                    default_value=None,
+                    default_levels=(100000, 200000),
+                    unit="pkts/sec",
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -46,4 +64,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_checkpoint_packets,
         title=lambda: _("Checkpoint Firewall Packet Rates"),
-    ))
+    )
+)

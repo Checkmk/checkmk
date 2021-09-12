@@ -15,18 +15,24 @@ from cmk.gui.valuespec import DropdownChoice
 
 
 def _item_spec_vm_counter():
-    return DropdownChoice(title=_("kernel counter"),
-                          choices=[("Context Switches", _("Context Switches")),
-                                   ("Process Creations", _("Process Creations")),
-                                   ("Major Page Faults", _("Major Page Faults"))])
+    return DropdownChoice(
+        title=_("kernel counter"),
+        choices=[
+            ("Context Switches", _("Context Switches")),
+            ("Process Creations", _("Process Creations")),
+            ("Major Page Faults", _("Major Page Faults")),
+        ],
+    )
 
 
 def _parameter_valuespec_vm_counter():
     return Levels(
-        help=_("This ruleset applies to several similar checks measing various kernel "
-               "events like context switches, process creations and major page faults. "
-               "Please create separate rules for each type of kernel counter you "
-               "want to set levels for."),
+        help=_(
+            "This ruleset applies to several similar checks measing various kernel "
+            "events like context switches, process creations and major page faults. "
+            "Please create separate rules for each type of kernel counter you "
+            "want to set levels for."
+        ),
         unit=_("events per second"),
         default_levels=(1000, 5000),
         default_difference=(500.0, 1000.0),
@@ -42,4 +48,5 @@ rulespec_registry.register(
         item_spec=_item_spec_vm_counter,
         parameter_valuespec=_parameter_valuespec_vm_counter,
         title=lambda: _("Number of kernel events per second"),
-    ))
+    )
+)

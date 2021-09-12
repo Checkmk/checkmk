@@ -64,7 +64,8 @@ class ACTestPersistentConnections(ACTest):
             "apache process that is running is keeping a persistent connection to each configured "
             "site via Livestatus open. This means you need to balance the maximum apache "
             "processes with the maximum parallel livestatus connections. Otherwise livestatus "
-            "requests will be blocked by existing and possibly idle connections.")
+            "requests will be blocked by existing and possibly idle connections."
+        )
 
     def is_relevant(self) -> bool:
         # This check is only executed on the central instance of multisite setups
@@ -82,16 +83,22 @@ class ACTestPersistentConnections(ACTest):
 
         if persist and _site_is_using_livestatus_proxy(site_id):
             yield ACResultWARN(
-                _("Persistent connections are nearly useless "
-                  "with Livestatus Proxy Daemon. Better disable it."))
+                _(
+                    "Persistent connections are nearly useless "
+                    "with Livestatus Proxy Daemon. Better disable it."
+                )
+            )
 
         elif persist:
             # TODO: At least for the local site we could calculate this.
             #       Or should we get the apache config from the remote site via automation?
             yield ACResultWARN(
-                _("Either disable persistent connections or "
-                  "carefully review maximum number of apache processes and "
-                  "possible livestatus connections."))
+                _(
+                    "Either disable persistent connections or "
+                    "carefully review maximum number of apache processes and "
+                    "possible livestatus connections."
+                )
+            )
 
         else:
             yield ACResultOK(_("Is not using persistent connections."))
@@ -110,7 +117,8 @@ class ACTestLiveproxyd(ACTest):
             "The Livestatus Proxy Daemon is available with the Checkmk Enterprise Edition "
             "and improves the management of the inter site connections using livestatus. Using "
             "the Livestatus Proxy Daemon improves the responsiveness and performance of your "
-            "GUI and will decrease resource usage.")
+            "GUI and will decrease resource usage."
+        )
 
     def is_relevant(self) -> bool:
         # This check is only executed on the central instance of multisite setups
@@ -128,8 +136,11 @@ class ACTestLiveproxyd(ACTest):
 
         elif not watolib.is_wato_slave_site():
             yield ACResultWARN(
-                _("The Livestatus Proxy is not only good for slave sites, "
-                  "enable it for your master site"))
+                _(
+                    "The Livestatus Proxy is not only good for slave sites, "
+                    "enable it for your master site"
+                )
+            )
 
         else:
             yield ACResultWARN(_("Use the Livestatus Proxy Daemon for your site"))
@@ -145,15 +156,17 @@ class ACTestLivestatusUsage(ACTest):
 
     def help(self) -> str:
         # xgettext: no-python-format
-        return _("<p>Livestatus is used by several components, for example the GUI, to gather "
-                 "information about the monitored objects from the monitoring core. It is "
-                 "very important for the overall performance of the monitoring system that "
-                 "livestatus is a reliable and performant.</p>"
-                 "<p>There should always be enough free livestatus slots to serve new "
-                 "incoming queries.</p>"
-                 "<p>You should never reach a livestatus usage of 100% for a longer time. "
-                 "Consider increasing number of parallel livestatus connections or track down "
-                 "the clients to check whether or not you can reduce the usage somehow.</p>")
+        return _(
+            "<p>Livestatus is used by several components, for example the GUI, to gather "
+            "information about the monitored objects from the monitoring core. It is "
+            "very important for the overall performance of the monitoring system that "
+            "livestatus is a reliable and performant.</p>"
+            "<p>There should always be enough free livestatus slots to serve new "
+            "incoming queries.</p>"
+            "<p>You should never reach a livestatus usage of 100% for a longer time. "
+            "Consider increasing number of parallel livestatus connections or track down "
+            "the clients to check whether or not you can reduce the usage somehow.</p>"
+        )
 
     def is_relevant(self) -> bool:
         return True
@@ -199,11 +212,13 @@ class ACTestTmpfs(ACTest):
         return _("Temporary filesystem mounted")
 
     def help(self) -> str:
-        return _("<p>By default each Checkmk site has it's own temporary filesystem "
-                 "(a ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not "
-                 "possible Checkmk starts without this temporary filesystem.</p>"
-                 "<p>Even if this is possible, it is not recommended to use Checkmk this "
-                 "way because it may reduce the overall performance of Checkmk.</p>")
+        return _(
+            "<p>By default each Checkmk site has it's own temporary filesystem "
+            "(a ramdisk) mounted to <tt>[SITE]/tmp</tt>. In case the mount is not "
+            "possible Checkmk starts without this temporary filesystem.</p>"
+            "<p>Even if this is possible, it is not recommended to use Checkmk this "
+            "way because it may reduce the overall performance of Checkmk.</p>"
+        )
 
     def is_relevant(self) -> bool:
         return True
@@ -213,8 +228,11 @@ class ACTestTmpfs(ACTest):
             yield ACResultOK(_("The temporary filesystem is mounted"))
         else:
             yield ACResultWARN(
-                _("The temporary filesystem is not mounted. Your installation "
-                  "may work with degraded performance."))
+                _(
+                    "The temporary filesystem is not mounted. Your installation "
+                    "may work with degraded performance."
+                )
+            )
 
     def _tmpfs_mounted(self, site_id):
         # Borrowed from omd binary
@@ -226,7 +244,7 @@ class ACTestTmpfs(ACTest):
         for line in Path("/proc/mounts").open(encoding="utf-8"):
             try:
                 _device, mp, fstype, _options, _dump, _fsck = line.split()
-                if mp.endswith(path_suffix) and fstype == 'tmpfs':
+                if mp.endswith(path_suffix) and fstype == "tmpfs":
                     return True
             except Exception:
                 continue
@@ -242,10 +260,12 @@ class ACTestLDAPSecured(ACTest):
         return _("Secure LDAP")
 
     def help(self) -> str:
-        return _("When using the regular LDAP protocol all data transfered between the Checkmk "
-                 "and LDAP servers is sent over the network in plain text (unencrypted). This also "
-                 "includes the passwords users enter to authenticate with the LDAP Server. It is "
-                 "highly recommended to enable SSL for securing the transported data.")
+        return _(
+            "When using the regular LDAP protocol all data transfered between the Checkmk "
+            "and LDAP servers is sent over the network in plain text (unencrypted). This also "
+            "includes the passwords users enter to authenticate with the LDAP Server. It is "
+            "highly recommended to enable SSL for securing the transported data."
+        )
 
     # TODO: Only test master site?
     def is_relevant(self) -> bool:
@@ -263,8 +283,9 @@ class ACTestLDAPSecured(ACTest):
 
             else:
                 yield ACResultWARN(
-                    _("%s: Not using SSL. Consider enabling it in the "
-                      "connection settings.") % connection_id)
+                    _("%s: Not using SSL. Consider enabling it in the " "connection settings.")
+                    % connection_id
+                )
 
 
 @ac_test_registry.register
@@ -281,9 +302,10 @@ class ACTestLivestatusSecured(ACTest):
             "gathered in one site to the central site. Since Checkmk 1.6 it is natively "
             "possible and highly recommended to encrypt this Livestatus traffic.</p> "
             "<p>This can be enabled using the global setting "
-            "<a href=\"wato.py?mode=edit_configvar&varname=site_livestatus_tcp\">Access to Livestatus via TCP</a>. Before enabling this you should ensure that all your Livestatus clients "
+            '<a href="wato.py?mode=edit_configvar&varname=site_livestatus_tcp">Access to Livestatus via TCP</a>. Before enabling this you should ensure that all your Livestatus clients '
             "are able to handle the SSL encrypted Livestatus communication. Have a look at "
-            "<a href=\"werk.py?werk=7017\">werk #7017</a> for further information.</p>")
+            '<a href="werk.py?werk=7017">werk #7017</a> for further information.</p>'
+        )
 
     def is_relevant(self) -> bool:
         cfg = ConfigDomainOMD().default_globals()
@@ -308,11 +330,13 @@ class ACTestNumberOfUsers(ACTest):
         return _("Number of users")
 
     def help(self) -> str:
-        return _("<p>Having a large number of users configured in Checkmk may decrease the "
-                 "performance of the Web GUI.</p>"
-                 "<p>It may be possible that you are using the LDAP sync to create the users. "
-                 "Please review the filter configuration of the LDAP sync. Maybe you can "
-                 "decrease the sync scope to get a smaller number of users.</p>")
+        return _(
+            "<p>Having a large number of users configured in Checkmk may decrease the "
+            "performance of the Web GUI.</p>"
+            "<p>It may be possible that you are using the LDAP sync to create the users. "
+            "Please review the filter configuration of the LDAP sync. Maybe you can "
+            "decrease the sync scope to get a smaller number of users.</p>"
+        )
 
     def is_relevant(self) -> bool:
         return True
@@ -326,8 +350,12 @@ class ACTestNumberOfUsers(ACTest):
             yield ACResultOK(_("You have %d users configured") % num_users)
         else:
             yield ACResultWARN(
-                _("You have %d users configured. Please review the number of "
-                  "users you have configured in Checkmk.") % num_users)
+                _(
+                    "You have %d users configured. Please review the number of "
+                    "users you have configured in Checkmk."
+                )
+                % num_users
+            )
 
 
 @ac_test_registry.register
@@ -339,15 +367,20 @@ class ACTestHTTPSecured(ACTest):
         return _("Secure GUI (HTTP)")
 
     def help(self) -> str:
-        return \
-            _("When using the regular HTTP protocol all data transfered between the Checkmk "
-              "and the clients using the GUI is sent over the network in plain text (unencrypted). "
-              "This includes the passwords users enter to authenticate with Checkmk and other "
-              "sensitive information. It is highly recommended to enable SSL for securing the "
-              "transported data.") \
-            + " " \
-            + _("Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto \"https\"</tt> in "
-                "your system apache configuration to tell the Checkmk GUI about the SSL setup.")
+        return (
+            _(
+                "When using the regular HTTP protocol all data transfered between the Checkmk "
+                "and the clients using the GUI is sent over the network in plain text (unencrypted). "
+                "This includes the passwords users enter to authenticate with Checkmk and other "
+                "sensitive information. It is highly recommended to enable SSL for securing the "
+                "transported data."
+            )
+            + " "
+            + _(
+                'Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "https"</tt> in '
+                "your system apache configuration to tell the Checkmk GUI about the SSL setup."
+            )
+        )
 
     def is_relevant(self) -> bool:
         return True
@@ -368,20 +401,29 @@ class ACTestOldDefaultCredentials(ACTest):
         return _("Default credentials")
 
     def help(self) -> str:
-        return _("In versions prior to version 1.4.0 the first administrative user of the "
-                 "site was named <tt>omdadmin</tt> with the standard password <tt>omd</tt>. "
-                 "This test warns you in case the site uses these standard credentials. "
-                 "It is highly recommended to change this password.")
+        return _(
+            "In versions prior to version 1.4.0 the first administrative user of the "
+            "site was named <tt>omdadmin</tt> with the standard password <tt>omd</tt>. "
+            "This test warns you in case the site uses these standard credentials. "
+            "It is highly recommended to change this password."
+        )
 
     def is_relevant(self) -> bool:
         return userdb.user_exists(UserId("omdadmin"))
 
     def execute(self) -> Iterator[ACResult]:
-        if cmk.gui.plugins.userdb.htpasswd.HtpasswdUserConnector({}).check_credentials(
-                "omdadmin", "omd") == "omdadmin":
+        if (
+            cmk.gui.plugins.userdb.htpasswd.HtpasswdUserConnector({}).check_credentials(
+                "omdadmin", "omd"
+            )
+            == "omdadmin"
+        ):
             yield ACResultCRIT(
-                _("Found <tt>omdadmin</tt> with default password. "
-                  "It is highly recommended to change this password."))
+                _(
+                    "Found <tt>omdadmin</tt> with default password. "
+                    "It is highly recommended to change this password."
+                )
+            )
         else:
             yield ACResultOK(_("Found <tt>omdadmin</tt> using custom password."))
 
@@ -404,7 +446,8 @@ class ACTestBackupConfigured(ACTest):
             "reliably backed up or not up-to-date in the moment of the backup.</p>"
             "<p>It is recommended to use the Checkmk backup to create a backup of the runnning "
             "site to be sure that the data is consistent. If you need to, you can then use "
-            "the 3rd party tool to archive the Checkmk backups.</p>")
+            "the 3rd party tool to archive the Checkmk backups.</p>"
+        )
 
     def is_relevant(self) -> bool:
         return True
@@ -426,10 +469,12 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
         return _("Encrypt backups")
 
     def help(self) -> str:
-        return _("Please check whether or not your backups are stored securely. In "
-                 "case you are storing your backup on a storage system the storage may "
-                 "already be secure enough without extra backup encryption. But in "
-                 "some cases it may be a good idea to store the backup encrypted.")
+        return _(
+            "Please check whether or not your backups are stored securely. In "
+            "case you are storing your backup on a storage system the storage may "
+            "already be secure enough without extra backup encryption. But in "
+            "some cases it may be a good idea to store the backup encrypted."
+        )
 
     def is_relevant(self) -> bool:
         return True
@@ -438,9 +483,9 @@ class ACTestBackupNotEncryptedConfigured(ACTest):
         jobs = SiteBackupJobs()
         for job in jobs.objects.values():
             if job.is_encrypted():
-                yield ACResultOK(_("The job \"%s\" is encrypted") % job.title())
+                yield ACResultOK(_('The job "%s" is encrypted') % job.title())
             else:
-                yield ACResultWARN(_("There job \"%s\" is not encrypted") % job.title())
+                yield ACResultWARN(_('There job "%s" is not encrypted') % job.title())
 
 
 @ac_test_registry.register
@@ -462,7 +507,8 @@ class ACTestEscapeHTMLDisabled(ACTest):
             "execute arbritary Javascript, even for injection attacks.<br>"
             "For this reason, you should only disable this for a small, very specific number of "
             "services, to be sure that not every random check plugin can make produce code "
-            "which your browser interprets.")
+            "which your browser interprets."
+        )
 
     def is_relevant(self) -> bool:
         return True
@@ -470,21 +516,28 @@ class ACTestEscapeHTMLDisabled(ACTest):
     def execute(self) -> Iterator[ACResult]:
         if not self._get_effective_global_setting("escape_plugin_output"):
             yield ACResultCRIT(
-                _("Please consider configuring the host or service rulesets "
-                  "<a href=\"%s\">Escape HTML in service output</a> or "
-                  "<a href=\"%s\">Escape HTML in host output</a> instead "
-                  "of <a href=\"%s\">disabling escaping globally</a>") %
-                ("wato.py?mode=edit_ruleset&varname=extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
-                 "wato.py?mode=edit_ruleset&varname=extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
-                 "wato.py?mode=edit_configvar&varname=escape_plugin_output"))
+                _(
+                    "Please consider configuring the host or service rulesets "
+                    '<a href="%s">Escape HTML in service output</a> or '
+                    '<a href="%s">Escape HTML in host output</a> instead '
+                    'of <a href="%s">disabling escaping globally</a>'
+                )
+                % (
+                    "wato.py?mode=edit_ruleset&varname=extra_service_conf:_ESCAPE_PLUGIN_OUTPUT",
+                    "wato.py?mode=edit_ruleset&varname=extra_host_conf:_ESCAPE_PLUGIN_OUTPUT",
+                    "wato.py?mode=edit_configvar&varname=escape_plugin_output",
+                )
+            )
         else:
             yield ACResultOK(
-                _("Escaping is <a href=\"%s\">enabled globally</a>") %
-                "wato.py?mode=edit_configvar&varname=escape_plugin_output")
+                _('Escaping is <a href="%s">enabled globally</a>')
+                % "wato.py?mode=edit_configvar&varname=escape_plugin_output"
+            )
 
 
 class ABCACApacheTest(ACTest, abc.ABC):
     """Abstract base class for apache related tests"""
+
     def _get_number_of_idle_processes(self):
         apache_status = self._get_apache_status()
 
@@ -530,13 +583,14 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             "<p>Please note that this value is only a rough estimation, because the memory "
             "usage of the apache processes may vary with the requests being processed.</p>"
             "<p>Possible actions:<ul>"
-            "<li>Change the <a href=\"wato.py?mode=edit_configvar&varname=apache_process_tuning\">number of apache processes</a></li>"
+            '<li>Change the <a href="wato.py?mode=edit_configvar&varname=apache_process_tuning">number of apache processes</a></li>'
             "</ul>"
             "</p>"
             "<p>Once you have verified your settings, you can acknowledge this test. The "
             "test will not automatically turn to OK, because it can not exactly estimate "
             "the required memory needed by the apache processes."
-            "</p>")
+            "</p>"
+        )
 
     def is_relevant(self) -> bool:
         return True
@@ -548,11 +602,18 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
         estimated_memory_size = process_limit * (average_process_size * 1.2)
 
         yield ACResultWARN(
-            _("The apache may start up to %d processes while the current "
-              "average process size is %s. With this numbers the apache may "
-              "use up to %s RAM. Please ensure that your system is able to "
-              "handle this.") % (process_limit, cmk.utils.render.fmt_bytes(average_process_size),
-                                 cmk.utils.render.fmt_bytes(estimated_memory_size)))
+            _(
+                "The apache may start up to %d processes while the current "
+                "average process size is %s. With this numbers the apache may "
+                "use up to %s RAM. Please ensure that your system is able to "
+                "handle this."
+            )
+            % (
+                process_limit,
+                cmk.utils.render.fmt_bytes(average_process_size),
+                cmk.utils.render.fmt_bytes(estimated_memory_size),
+            )
+        )
 
     def _get_average_process_size(self):
         try:
@@ -563,8 +624,9 @@ class ACTestApacheNumberOfProcesses(ABCACApacheTest):
             raise MKGeneralException(_("Failed to read the apache process ID"))
 
         sizes = []
-        for pid in subprocess.check_output(["ps", "--ppid",
-                                            "%d" % ppid, "h", "o", "pid"]).splitlines():
+        for pid in subprocess.check_output(
+            ["ps", "--ppid", "%d" % ppid, "h", "o", "pid"]
+        ).splitlines():
             sizes.append(self._get_process_size(pid))
 
         if not sizes:
@@ -604,11 +666,13 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
         return _("Apache process usage")
 
     def help(self) -> str:
-        return _("The apache has a number maximum processes it can start in case of high "
-                 "load situations. The usage of these processes should not be too high "
-                 "in normal situations. Otherwise, if all processes are in use, the "
-                 "users of the GUI might have to wait too long for a free process, which "
-                 "would result in a slow GUI.")
+        return _(
+            "The apache has a number maximum processes it can start in case of high "
+            "load situations. The usage of these processes should not be too high "
+            "in normal situations. Otherwise, if all processes are in use, the "
+            "users of the GUI might have to wait too long for a free process, which "
+            "would result in a slow GUI."
+        )
 
     def is_relevant(self) -> bool:
         return True
@@ -629,8 +693,11 @@ class ACTestApacheProcessUsage(ABCACApacheTest):
             cls = ACResultOK
 
         yield cls(
-            _("%d of %d the configured maximum of processes are started. This is a usage of %0.2f %%."
-             ) % (used_slots, total_slots, usage))
+            _(
+                "%d of %d the configured maximum of processes are started. This is a usage of %0.2f %%."
+            )
+            % (used_slots, total_slots, usage)
+        )
 
 
 @ac_test_registry.register
@@ -652,8 +719,8 @@ class ACTestCheckMKHelperUsage(ACTest):
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
-            "<li>Check which checks / plugins are <a href=\"view.py?view_name=service_check_durations\">consuming most helper process time</a></li>"
-            "<li>Increase the <a href=\"wato.py?mode=edit_configvar&varname=cmc_cmk_helpers\">number of Checkmk helpers</a></li>"
+            '<li>Check which checks / plugins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
+            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_cmk_helpers">number of Checkmk helpers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
@@ -661,7 +728,8 @@ class ACTestCheckMKHelperUsage(ACTest):
             "to be able to handle the memory demand for all of them at once. An additional "
             "problem is that the Checkmk helpers are initialized in parallel during startup "
             "of the Microcore, which may cause load peaks when having "
-            "a lot of Checkmk helper processes configured.</p>")
+            "a lot of Checkmk helper processes configured.</p>"
+        )
 
     def is_relevant(self) -> bool:
         return self._uses_microcore()
@@ -669,7 +737,8 @@ class ACTestCheckMKHelperUsage(ACTest):
     def execute(self) -> Iterator[ACResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
-            "GET status\nColumns: helper_usage_cmk average_latency_cmk\n")
+            "GET status\nColumns: helper_usage_cmk average_latency_cmk\n"
+        )
 
         helper_usage_perc = 100 * row[0]
         check_latecy_cmk = row[1]
@@ -683,16 +752,26 @@ class ACTestCheckMKHelperUsage(ACTest):
             cls = ACResultOK
 
         yield cls(
-            _("The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
-              "average check latency of %.3fs.") % (helper_usage_perc, check_latecy_cmk))
+            _(
+                "The current Checkmk helper usage is %.2f%%. The Checkmk services have an "
+                "average check latency of %.3fs."
+            )
+            % (helper_usage_perc, check_latecy_cmk)
+        )
 
         # Only report this as warning in case the user increased the default helper configuration
         default_values = watolib.ABCConfigDomain.get_all_default_globals()
-        if self._get_effective_global_setting(
-                "cmc_cmk_helpers") > default_values["cmc_cmk_helpers"] and helper_usage_perc < 50:
+        if (
+            self._get_effective_global_setting("cmc_cmk_helpers")
+            > default_values["cmc_cmk_helpers"]
+            and helper_usage_perc < 50
+        ):
             yield ACResultWARN(
-                _("The helper usage is below 50%, you may decrease the number of "
-                  "Checkmk helpers to reduce the memory consumption."))
+                _(
+                    "The helper usage is below 50%, you may decrease the number of "
+                    "Checkmk helpers to reduce the memory consumption."
+                )
+            )
 
 
 @ac_test_registry.register
@@ -713,15 +792,16 @@ class ACTestCheckMKFetcherUsage(ACTest):
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
-            "<li>Check which checks / plugins are <a href=\"view.py?view_name=service_check_durations\">consuming most helper process time</a></li>"
-            "<li>Increase the <a href=\"wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers\">number of Checkmk fetchers</a></li>"
+            '<li>Check which checks / plugins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
+            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_fetcher_helpers">number of Checkmk fetchers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
             "fetcher helpers, because they consume resources. An additional "
             "problem is that the Checkmk fetchers are initialized in parallel during startup "
             "of the Microcore, which may cause load peaks when having "
-            "a lot of Checkmk helper processes configured.</p>")
+            "a lot of Checkmk helper processes configured.</p>"
+        )
 
     def is_relevant(self) -> bool:
         return self._uses_microcore()
@@ -729,7 +809,8 @@ class ACTestCheckMKFetcherUsage(ACTest):
     def execute(self) -> Iterator[ACResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
-            "GET status\nColumns: helper_usage_fetcher average_latency_fetcher\n")
+            "GET status\nColumns: helper_usage_fetcher average_latency_fetcher\n"
+        )
 
         fetcher_usage_perc = 100 * row[0]
         fetcher_latency = row[1]
@@ -743,17 +824,26 @@ class ACTestCheckMKFetcherUsage(ACTest):
             cls = ACResultOK
 
         yield cls(
-            _("The current fetcher usage is %.2f%%."
-              " The checks have an average check latency of %.3fs.") %
-            (fetcher_usage_perc, fetcher_latency))
+            _(
+                "The current fetcher usage is %.2f%%."
+                " The checks have an average check latency of %.3fs."
+            )
+            % (fetcher_usage_perc, fetcher_latency)
+        )
 
         # Only report this as warning in case the user increased the default helper configuration
         default_values = watolib.ABCConfigDomain.get_all_default_globals()
-        if self._get_effective_global_setting("cmc_fetcher_helpers") > default_values[
-                "cmc_fetcher_helpers"] and fetcher_usage_perc < 50:
+        if (
+            self._get_effective_global_setting("cmc_fetcher_helpers")
+            > default_values["cmc_fetcher_helpers"]
+            and fetcher_usage_perc < 50
+        ):
             yield ACResultWARN(
-                _("The fetcher usage is below 50%, you may decrease the number of "
-                  "fetchers to reduce the memory consumption."))
+                _(
+                    "The fetcher usage is below 50%, you may decrease the number of "
+                    "fetchers to reduce the memory consumption."
+                )
+            )
 
 
 @ac_test_registry.register
@@ -775,8 +865,8 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
-            "<li>Check which checks / plugins are <a href=\"view.py?view_name=service_check_durations\">consuming most helper process time</a></li>"
-            "<li>Increase the <a href=\"wato.py?mode=edit_configvar&varname=cmc_checker_helpers\">number of Checkmk checkers</a></li>"
+            '<li>Check which checks / plugins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
+            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_checker_helpers">number of Checkmk checkers</a></li>'
             "</ul>"
             "</p>"
             "<p>But you need to be careful that you don't configure too many Checkmk "
@@ -784,7 +874,8 @@ class ACTestCheckMKCheckerUsage(ACTest):
             "to be able to handle the memory demand for all of them at once. An additional "
             "problem is that the Checkmk helpers are initialized in parallel during startup "
             "of the Microcore, which may cause load peaks when having "
-            "a lot of Checkmk helper processes configured.</p>")
+            "a lot of Checkmk helper processes configured.</p>"
+        )
 
     def is_relevant(self) -> bool:
         return self._uses_microcore()
@@ -792,7 +883,8 @@ class ACTestCheckMKCheckerUsage(ACTest):
     def execute(self) -> Iterator[ACResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
-            "GET status\nColumns: helper_usage_checker average_latency_fetcher\n")
+            "GET status\nColumns: helper_usage_checker average_latency_fetcher\n"
+        )
 
         checker_usage_perc = 100 * row[0]
         fetcher_latency = row[1]
@@ -806,17 +898,26 @@ class ACTestCheckMKCheckerUsage(ACTest):
             cls = ACResultOK
 
         yield cls(
-            _("The current checker usage is %.2f%%,"
-              " The checks have an average check latency of %.3fs.") %
-            (checker_usage_perc, fetcher_latency))
+            _(
+                "The current checker usage is %.2f%%,"
+                " The checks have an average check latency of %.3fs."
+            )
+            % (checker_usage_perc, fetcher_latency)
+        )
 
         # Only report this as warning in case the user increased the default helper configuration
         default_values = watolib.ABCConfigDomain.get_all_default_globals()
-        if self._get_effective_global_setting("cmc_checker_helpers") > default_values[
-                "cmc_checker_helpers"] and checker_usage_perc < 50:
+        if (
+            self._get_effective_global_setting("cmc_checker_helpers")
+            > default_values["cmc_checker_helpers"]
+            and checker_usage_perc < 50
+        ):
             yield ACResultWARN(
-                _("The checker usage is below 50%, you may decrease the number of "
-                  "checkers to reduce the memory consumption."))
+                _(
+                    "The checker usage is below 50%, you may decrease the number of "
+                    "checkers to reduce the memory consumption."
+                )
+            )
 
 
 @ac_test_registry.register
@@ -831,8 +932,9 @@ class ACTestAlertHandlerEventTypes(ACTest):
         return _(
             "In general it will result in a significantly increased load when alert handlers are "
             "configured to handle all check executions. It is highly recommended to "
-            "<a href=\"wato.py?mode=edit_configvar&varname=alert_handler_event_types\">disable "
-            "this</a> in most cases.")
+            '<a href="wato.py?mode=edit_configvar&varname=alert_handler_event_types">disable '
+            "this</a> in most cases."
+        )
 
     def is_relevant(self) -> bool:
         return self._uses_microcore()
@@ -862,10 +964,11 @@ class ACTestGenericCheckHelperUsage(ACTest):
             "time, the check latency will grow and the states are not up to date.</p>"
             "<p>Possible actions:<ul>"
             "<li>Check whether or not you can decrease check timeouts</li>"
-            "<li>Check which checks / plugins are <a href=\"view.py?view_name=service_check_durations\">consuming most helper process time</a></li>"
-            "<li>Increase the <a href=\"wato.py?mode=edit_configvar&varname=cmc_check_helpers\">number of check helpers</a></li>"
+            '<li>Check which checks / plugins are <a href="view.py?view_name=service_check_durations">consuming most helper process time</a></li>'
+            '<li>Increase the <a href="wato.py?mode=edit_configvar&varname=cmc_check_helpers">number of check helpers</a></li>'
             "</ul>"
-            "</p>")
+            "</p>"
+        )
 
     def is_relevant(self) -> bool:
         return self._uses_microcore()
@@ -873,7 +976,8 @@ class ACTestGenericCheckHelperUsage(ACTest):
     def execute(self) -> Iterator[ACResult]:
         local_connection = LocalConnection()
         row = local_connection.query_row(
-            "GET status\nColumns: helper_usage_generic average_latency_generic\n")
+            "GET status\nColumns: helper_usage_generic average_latency_generic\n"
+        )
 
         helper_usage_perc = 100 * row[0]
         check_latency_generic = row[1]
@@ -892,8 +996,9 @@ class ACTestGenericCheckHelperUsage(ACTest):
         else:
             cls = ACResultOK
         yield cls(
-            _("The active check services have an average check latency of %.3fs.") %
-            (check_latency_generic))
+            _("The active check services have an average check latency of %.3fs.")
+            % (check_latency_generic)
+        )
 
 
 @ac_test_registry.register
@@ -905,12 +1010,14 @@ class ACTestSizeOfExtensions(ACTest):
         return _("Size of extensions")
 
     def help(self) -> str:
-        return _("<p>In distributed WATO setups it is possible to synchronize the "
-                 "extensions (MKPs and files in <tt>~/local/</tt>) to the slave sites. "
-                 "These files are synchronized on every replication with a slave site and "
-                 "can possibly slow down the synchronization in case the files are large. "
-                 "You could either disable the MKP sync or check whether or not you need "
-                 "all the extensions.</p>")
+        return _(
+            "<p>In distributed WATO setups it is possible to synchronize the "
+            "extensions (MKPs and files in <tt>~/local/</tt>) to the slave sites. "
+            "These files are synchronized on every replication with a slave site and "
+            "can possibly slow down the synchronization in case the files are large. "
+            "You could either disable the MKP sync or check whether or not you need "
+            "all the extensions.</p>"
+        )
 
     def is_relevant(self) -> bool:
         return has_wato_slave_sites() and self._replicates_mkps()
@@ -936,8 +1043,8 @@ class ACTestSizeOfExtensions(ACTest):
 
     def _size_of_extensions(self):
         return int(
-            subprocess.check_output(["du", "-sb",
-                                     "%s/local" % cmk.utils.paths.omd_root]).split()[0])
+            subprocess.check_output(["du", "-sb", "%s/local" % cmk.utils.paths.omd_root]).split()[0]
+        )
 
 
 @ac_test_registry.register
@@ -952,7 +1059,8 @@ class ACTestBrokenGUIExtension(ACTest):
         return _(
             "Since 1.6.0i1 broken GUI extensions don't block the whole GUI initialization anymore. "
             "Instead of this, the errors are logged in <tt>var/log/web.log</tt>. In addition to this, "
-            "the errors are displayed here.")
+            "the errors are displayed here."
+        )
 
     def is_relevant(self) -> bool:
         return True
@@ -963,7 +1071,7 @@ class ACTestBrokenGUIExtension(ACTest):
             yield ACResultOK(_("No broken extensions were found."))
 
         for plugin_path, e in errors:
-            yield ACResultCRIT(_("Loading \"%s\" failed: %s") % (plugin_path, e))
+            yield ACResultCRIT(_('Loading "%s" failed: %s') % (plugin_path, e))
 
 
 @ac_test_registry.register
@@ -975,16 +1083,18 @@ class ACTestESXDatasources(ACTest):
         return _("The Checkmk agent is queried via the ESX datasource program")
 
     def help(self) -> str:
-        return _("The Checkmk agent is queried via the datasource program for ESX systems. "
-                 "This is option will be deleted in a future release. Please configure the "
-                 "host to contact the Checkmk agent and the configured datasource programs "
-                 "instead.")
+        return _(
+            "The Checkmk agent is queried via the datasource program for ESX systems. "
+            "This is option will be deleted in a future release. Please configure the "
+            "host to contact the Checkmk agent and the configured datasource programs "
+            "instead."
+        )
 
     def _get_rules(self):
-        collection = watolib.SingleRulesetRecursively('special_agents:vsphere')
+        collection = watolib.SingleRulesetRecursively("special_agents:vsphere")
         collection.load()
 
-        ruleset = collection.get('special_agents:vsphere')
+        ruleset = collection.get("special_agents:vsphere")
         return ruleset.get_rules()
 
     def is_relevant(self) -> bool:
@@ -993,11 +1103,12 @@ class ACTestESXDatasources(ACTest):
     def execute(self) -> Iterator[ACResult]:
         all_rules_ok = True
         for folder, rule_index, rule in self._get_rules():
-            vsphere_queries_agent = (rule.value.get('direct') in ['agent', 'hostsystem_agent'])
+            vsphere_queries_agent = rule.value.get("direct") in ["agent", "hostsystem_agent"]
             if vsphere_queries_agent:
                 all_rules_ok = False
                 yield ACResultCRIT(
-                    _("Rule %d in Folder %s is affected") % (rule_index + 1, folder.title()))
+                    _("Rule %d in Folder %s is affected") % (rule_index + 1, folder.title())
+                )
 
         if all_rules_ok:
             yield ACResultOK(_("No configured rules are affected"))
@@ -1015,14 +1126,15 @@ class ACTestRulebasedNotifications(ACTest):
         return _(
             "Flexible and plain email notifications are considered deprecated in version 1.5.0 and "
             " will be removed in Checkmk version 1.6.0. Please consider to switch to rulebased "
-            "notifications.")
+            "notifications."
+        )
 
     def is_relevant(self) -> bool:
         return True
 
     def execute(self) -> Iterator[ACResult]:
         if not rulebased_notifications_enabled():
-            yield ACResultCRIT('Rulebased notifications are deactivated in the global settings')
+            yield ACResultCRIT("Rulebased notifications are deactivated in the global settings")
         else:
             yield ACResultOK(_("Rulebased notifications are activated"))
 
@@ -1069,7 +1181,8 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
             "this setting back to it's original value. "
             "Background: With IP access lists you can control which servers are allowed to talk "
             "to these agents. Thus it's a security issue and should not be disabled or set to "
-            "<b>OK</b> permanently.")
+            "<b>OK</b> permanently."
+        )
 
     def is_relevant(self) -> bool:
         return bool(self._get_rules())
@@ -1078,20 +1191,23 @@ class ACTestUnexpectedAllowedIPRanges(ACTest):
         rules = self._get_rules()
         if not bool(rules):
             yield ACResultOK(
-                _("No ruleset <b>State in case of restricted address missmatch</b> is configured"))
+                _("No ruleset <b>State in case of restricted address missmatch</b> is configured")
+            )
             return
 
         for folder_title, rule_state in rules:
             yield ACResultCRIT("Rule in <b>%s</b> has value <b>%s</b>" % (folder_title, rule_state))
 
     def _get_rules(self):
-        collection = watolib.SingleRulesetRecursively('check_mk_exit_status')
+        collection = watolib.SingleRulesetRecursively("check_mk_exit_status")
         collection.load()
-        ruleset = collection.get('check_mk_exit_status')
+        ruleset = collection.get("check_mk_exit_status")
         state_map = {0: "OK", 1: "WARN", 2: "CRIT", 3: "UNKNOWN"}
-        return [(folder.title(), state_map[rule.value.get('restricted_address_mismatch', 1)])
-                for folder, _rule_index, rule in ruleset.get_rules()
-                if rule.value.get('restricted_address_mismatch') != '1']
+        return [
+            (folder.title(), state_map[rule.value.get("restricted_address_mismatch", 1)])
+            for folder, _rule_index, rule in ruleset.get_rules()
+            if rule.value.get("restricted_address_mismatch") != "1"
+        ]
 
 
 @ac_test_registry.register
@@ -1108,7 +1224,8 @@ class ACTestCheckMKCheckerNumber(ACTest):
             "from the Checkmk fetchers. Since the checker processes are not IO bound, they are "
             "most effective when each checker gets a dedicated CPU. Configuring more checkers than "
             "the number of available CPUs has a negative effect, because it increases the "
-            "the amount of context switches.")
+            "the amount of context switches."
+        )
 
     def is_relevant(self) -> bool:
         return self._uses_microcore()
@@ -1118,13 +1235,18 @@ class ACTestCheckMKCheckerNumber(ACTest):
             num_cpu = multiprocessing.cpu_count()
         except NotImplementedError:
             yield ACResultOK(
-                _("Cannot test. Unable to determine the number of CPUs on target system."))
+                _("Cannot test. Unable to determine the number of CPUs on target system.")
+            )
             return
 
         if self._get_effective_global_setting("cmc_checker_helpers") > num_cpu:
             yield ACResultWARN(
-                _("Configuring more checkers than the number of available CPUs (%d) have "
-                  "a detrimental effect, since they are not IO bound.") % num_cpu)
+                _(
+                    "Configuring more checkers than the number of available CPUs (%d) have "
+                    "a detrimental effect, since they are not IO bound."
+                )
+                % num_cpu
+            )
             return
 
         yield ACResultOK(_("Number of Checkmk checkers is less than number of CPUs"))

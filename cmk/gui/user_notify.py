@@ -68,7 +68,7 @@ def _page_menu_entries_related() -> Iterator[PageMenuEntry]:
         item=make_simple_link("user_profile.py"),
     )
 
-    if rulebased_notifications_enabled() and user.may('general.edit_notifications'):
+    if rulebased_notifications_enabled() and user.may("general.edit_notifications"):
         yield PageMenuEntry(
             title=_("Notification rules"),
             icon_name="topic_events",
@@ -78,8 +78,9 @@ def _page_menu_entries_related() -> Iterator[PageMenuEntry]:
 
 def render_user_notification_table(what: str) -> None:
     html.open_div(class_="notify_users")
-    with table_element("notify_users", sortable=False, searchable=False,
-                       omit_if_empty=True) as table:
+    with table_element(
+        "notify_users", sortable=False, searchable=False, omit_if_empty=True
+    ) as table:
 
         for entry in sorted(notify.get_gui_messages(), key=lambda e: e["time"], reverse=True):
             if what not in entry["methods"]:
@@ -88,12 +89,16 @@ def render_user_notification_table(what: str) -> None:
             table.row()
 
             msg_id = entry["id"]
-            datetime = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(entry['time']))
+            datetime = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(entry["time"]))
             message = entry["text"].replace("\n", " ")
 
             table.cell(_("Actions"), css="buttons", sortable=False)
-            onclick = "cmk.utils.delete_user_notification('%s', this);cmk.utils.reload_whole_page();" % msg_id \
-                    if what == "gui_hint" else "cmk.utils.delete_user_notification('%s', this);" % msg_id
+            onclick = (
+                "cmk.utils.delete_user_notification('%s', this);cmk.utils.reload_whole_page();"
+                % msg_id
+                if what == "gui_hint"
+                else "cmk.utils.delete_user_notification('%s', this);" % msg_id
+            )
             html.icon_button(
                 "",
                 _("Delete"),

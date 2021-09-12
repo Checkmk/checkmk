@@ -58,12 +58,15 @@ permission_registry.register(
         section=PermissionSectionBI,
         name="see_all",
         title=_l("See all hosts and services"),
-        description=_l("With this permission set, the BI aggregation rules are applied to all "
-                       "hosts and services - not only those the user is a contact for. If you "
-                       "remove this permissions then the user will see incomplete aggregation "
-                       "trees with status based only on those items."),
+        description=_l(
+            "With this permission set, the BI aggregation rules are applied to all "
+            "hosts and services - not only those the user is a contact for. If you "
+            "remove this permissions then the user will see incomplete aggregation "
+            "trees with status based only on those items."
+        ),
         defaults=["admin", "guest"],
-    ))
+    )
+)
 
 
 def is_part_of_aggregation(host, service):
@@ -82,12 +85,13 @@ def get_aggregation_group_trees():
 
 
 def aggregation_group_choices() -> List[DropdownChoiceEntry]:
-    """ Returns a sorted list of aggregation group names """
+    """Returns a sorted list of aggregation group names"""
     return get_cached_bi_packs().get_aggregation_group_choices()
 
 
-def api_get_aggregation_state(filter_names: Optional[List[str]] = None,
-                              filter_groups: Optional[List[str]] = None):
+def api_get_aggregation_state(
+    filter_names: Optional[List[str]] = None, filter_groups: Optional[List[str]] = None
+):
     bi_manager = BIManager()
     bi_aggregation_filter = BIAggregationFilter(
         [],
@@ -123,8 +127,10 @@ def api_get_aggregation_state(filter_names: Optional[List[str]] = None,
             own_infos["error"] = {"state": actual_result.state, "output": ", ".join(line_tokens)}
 
         nested_infos = [
-            x for y in node_result_bundle.nested_results
-            for x in [collect_infos(y, is_single_host_aggregation)] if x is not None
+            x
+            for y in node_result_bundle.nested_results
+            for x in [collect_infos(y, is_single_host_aggregation)]
+            if x is not None
         ]
 
         if own_infos or nested_infos:
@@ -146,7 +152,7 @@ def api_get_aggregation_state(filter_names: Optional[List[str]] = None,
                 "acknowledged": node_result_bundle.actual_result.acknowledged,
                 "in_downtime": node_result_bundle.actual_result.downtime_state != 0,
                 "in_service_period": node_result_bundle.actual_result.in_service_period,
-                "infos": collect_infos(node_result_bundle, is_single_host_aggregation)
+                "infos": collect_infos(node_result_bundle, is_single_host_aggregation),
             }
 
     have_sites = {x[0] for x in bi_manager.status_fetcher.states}
@@ -177,11 +183,14 @@ def check_title_uniqueness(forest):
             title = aggr["title"]
             if title in known_titles:
                 raise MKConfigError(
-                    _("Duplicate BI aggregation with the title \"<b>%s</b>\". "
-                      "Please check your BI configuration and make sure that within each group no aggregation has "
-                      "the same title as any other. Note: you can use arguments in the top level "
-                      "aggregation rule, like <tt>Host $HOST$</tt>.") %
-                    (escaping.escape_attribute(title)))
+                    _(
+                        'Duplicate BI aggregation with the title "<b>%s</b>". '
+                        "Please check your BI configuration and make sure that within each group no aggregation has "
+                        "the same title as any other. Note: you can use arguments in the top level "
+                        "aggregation rule, like <tt>Host $HOST$</tt>."
+                    )
+                    % (escaping.escape_attribute(title))
+                )
             known_titles.add(title)
 
 
@@ -191,16 +200,20 @@ def check_aggregation_title_uniqueness(aggregations):
         title = attrs["title"]
         if title in known_titles:
             raise MKConfigError(
-                _("Duplicate BI aggregation with the title \"<b>%s</b>\". "
-                  "Please check your BI configuration and make sure that within each group no aggregation has "
-                  "the same title as any other. Note: you can use arguments in the top level "
-                  "aggregation rule, like <tt>Host $HOST$</tt>.") %
-                (escaping.escape_attribute(title)))
+                _(
+                    'Duplicate BI aggregation with the title "<b>%s</b>". '
+                    "Please check your BI configuration and make sure that within each group no aggregation has "
+                    "the same title as any other. Note: you can use arguments in the top level "
+                    "aggregation rule, like <tt>Host $HOST$</tt>."
+                )
+                % (escaping.escape_attribute(title))
+            )
         known_titles.add(title)
 
 
-def _get_state_assumption_key(site: Any, host: Any,
-                              service: Any) -> Union[Tuple[Any, Any], Tuple[Any, Any, Any]]:
+def _get_state_assumption_key(
+    site: Any, host: Any, service: Any
+) -> Union[Tuple[Any, Any], Tuple[Any, Any, Any]]:
     if service:
         return (site, host, service)
     return (site, host)
@@ -212,7 +225,7 @@ def ajax_set_assumption() -> None:
     host = request.get_unicode_input("host")
     service = request.get_unicode_input("service")
     state = request.var("state")
-    if state == 'none':
+    if state == "none":
         del user.bi_assumptions[_get_state_assumption_key(site, host, service)]
     elif state is not None:
         user.bi_assumptions[_get_state_assumption_key(site, host, service)] = int(state)
@@ -228,8 +241,8 @@ def ajax_save_treestate():
     current_ex_level = int(current_ex_level_str)
 
     if user.bi_expansion_level != current_ex_level:
-        user.set_tree_states('bi', {})
-    user.set_tree_state('bi', path, request.var("state") == "open")
+        user.set_tree_states("bi", {})
+    user.set_tree_state("bi", path, request.var("state") == "open")
     user.save_tree_states()
 
     user.bi_expansion_level = current_ex_level
@@ -246,9 +259,14 @@ def ajax_render_tree():
     bi_manager = BIManager()
     bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
     aggregation_id = request.get_str_input_mandatory("aggregation_id")
-    bi_aggregation_filter = BIAggregationFilter([], [], [aggregation_id],
-                                                [aggr_title] if aggr_title is not None else [],
-                                                [aggr_group] if aggr_group is not None else [], [])
+    bi_aggregation_filter = BIAggregationFilter(
+        [],
+        [],
+        [aggregation_id],
+        [aggr_title] if aggr_title is not None else [],
+        [aggr_group] if aggr_group is not None else [],
+        [],
+    )
     rows = bi_manager.computer.compute_legacy_result_for_filter(bi_aggregation_filter)
 
     # TODO: Cleanup the renderer to use a class registry for lookup
@@ -264,21 +282,23 @@ def ajax_render_tree():
     else:
         raise NotImplementedError()
 
-    renderer = renderer_cls(rows[0],
-                            omit_root=omit_root,
-                            expansion_level=user.bi_expansion_level,
-                            only_problems=only_problems,
-                            lazy=False)
+    renderer = renderer_cls(
+        rows[0],
+        omit_root=omit_root,
+        expansion_level=user.bi_expansion_level,
+        only_problems=only_problems,
+        lazy=False,
+    )
     html.write_html(renderer.render())
 
 
 def render_tree_json(row):
     expansion_level = request.get_integer_input_mandatory("expansion_level", 999)
 
-    treestate = user.get_tree_states('bi')
+    treestate = user.get_tree_states("bi")
     if expansion_level != user.bi_expansion_level:
         treestate = {}
-        user.set_tree_states('bi', treestate)
+        user.set_tree_states("bi", treestate)
         user.save_tree_states()
 
     def render_node_json(tree, show_host):
@@ -371,10 +391,10 @@ class ABCFoldableTreeRenderer(abc.ABC):
         self._load_tree_state()
 
     def _load_tree_state(self):
-        self._treestate = user.get_tree_states('bi')
+        self._treestate = user.get_tree_states("bi")
         if self._expansion_level != user.bi_expansion_level:
             self._treestate = {}
-            user.set_tree_states('bi', self._treestate)
+            user.set_tree_states("bi", self._treestate)
             user.save_tree_states()
 
     @abc.abstractmethod
@@ -392,15 +412,17 @@ class ABCFoldableTreeRenderer(abc.ABC):
         title = self._row["aggr_tree"]["title"]
         group = self._row["aggr_group"]
 
-        url_id = urlencode_vars([
-            ("aggregation_id", self._row["aggr_tree"]["aggregation_id"]),
-            ("group", group),
-            ("title", title),
-            ("omit_root", "yes" if self._omit_root else ""),
-            ("renderer", self.__class__.__name__),
-            ("only_problems", "yes" if self._only_problems else ""),
-            ("reqhosts", ",".join('%s#%s' % sitehost for sitehost in affected_hosts)),
-        ])
+        url_id = urlencode_vars(
+            [
+                ("aggregation_id", self._row["aggr_tree"]["aggregation_id"]),
+                ("group", group),
+                ("title", title),
+                ("omit_root", "yes" if self._omit_root else ""),
+                ("renderer", self.__class__.__name__),
+                ("only_problems", "yes" if self._only_problems else ""),
+                ("reqhosts", ",".join("%s#%s" % sitehost for sitehost in affected_hosts)),
+            ]
+        )
 
         html.open_div(id_=url_id, class_="bi_tree_container")
         self._show_subtree(tree, path=[tree[2]["title"]], show_host=len(affected_hosts) > 1)
@@ -506,8 +528,8 @@ class ABCFoldableTreeRenderer(abc.ABC):
             url=None,
             title=_("Assume another state for this item (reload page to activate)"),
             icon="assume_%s" % current_state,
-            onclick="cmk.bi.toggle_assumption(this, '%s', '%s', '%s');" %
-            (site, host, service.replace('\\', '\\\\') if service else ''),
+            onclick="cmk.bi.toggle_assumption(this, '%s', '%s', '%s');"
+            % (site, host, service.replace("\\", "\\\\") if service else ""),
             cssclass="assumption",
         )
 
@@ -546,22 +568,26 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
         css_class = "open" if self._is_open(path) else "closed"
 
         with self._show_node(tree, show_host, mousecode=mc, img_class=css_class):
-            if tree[2].get('icon'):
-                html.write_html(html.render_icon(tree[2]['icon']))
+            if tree[2].get("icon"):
+                html.write_html(html.render_icon(tree[2]["icon"]))
                 html.write_text("&nbsp;")
 
             if tree[2].get("docu_url"):
-                html.icon_button(tree[2]["docu_url"],
-                                 _("Context information about this rule"),
-                                 "url",
-                                 target="_blank")
+                html.icon_button(
+                    tree[2]["docu_url"],
+                    _("Context information about this rule"),
+                    "url",
+                    target="_blank",
+                )
                 html.write_text("&nbsp;")
 
             html.write_text(tree[2]["title"])
 
         if not is_empty:
-            html.open_ul(id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
-                         class_=["subtree", css_class])
+            html.open_ul(
+                id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                class_=["subtree", css_class],
+            )
 
             if not self._omit_content(path):
                 for node in tree[3]:
@@ -589,7 +615,7 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             "content",  #
             "state",
             "state%d" % (effective_state["state"] if effective_state["state"] is not None else -1),
-            addclass
+            addclass,
         ]
         html.open_span(class_=class_)
         html.write_text(self._render_bi_state(effective_state["state"]))
@@ -597,9 +623,11 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
 
         if mousecode:
             if img_class:
-                html.img(src=theme.url("images/tree_closed.svg"),
-                         class_=["treeangle", img_class],
-                         onclick=mousecode)
+                html.img(
+                    src=theme.url("images/tree_closed.svg"),
+                    class_=["treeangle", img_class],
+                    onclick=mousecode,
+                )
 
             html.open_span(class_=["content", "name"])
 
@@ -634,7 +662,8 @@ class FoldableTreeRendererTree(ABCFoldableTreeRenderer):
             html.close_span()
 
         output: HTML = cmk.gui.view_utils.format_plugin_output(
-            effective_state["output"], shall_escape=config.escape_plugin_output)
+            effective_state["output"], shall_escape=config.escape_plugin_output
+        )
         if output:
             output = html.render_b(HTML("&diams;"), class_="bullet") + output
         else:
@@ -678,9 +707,11 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
 
         omit = self._omit_root and len(path) == 1
         if not omit:
-            html.open_span(id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
-                           class_=classes,
-                           onclick=mc)
+            html.open_span(
+                id_="%d:%s" % (self._expansion_level or 0, self._path_id(path)),
+                class_=classes,
+                onclick=mc,
+            )
 
             if is_leaf:
                 self._show_leaf(tree, show_host)
@@ -690,8 +721,10 @@ class FoldableTreeRendererBoxes(ABCFoldableTreeRenderer):
             html.close_span()
 
         if not is_leaf and not self._omit_content(path):
-            html.open_span(class_="bibox",
-                           style="display: none;" if not self._is_open(path) and not omit else "")
+            html.open_span(
+                class_="bibox",
+                style="display: none;" if not self._is_open(path) and not omit else "",
+            )
             for node in tree[3]:
                 new_path = path + [node[2]["title"]]
                 self._show_subtree(node, new_path, show_host)
@@ -806,8 +839,9 @@ class FoldableTreeRendererTopDown(ABCFoldableTreeRendererTable):
     _mirror = True
 
 
-def compute_bi_aggregation_filter(context: VisualContext,
-                                  all_active_filters: Iterable[Filter]) -> BIAggregationFilter:
+def compute_bi_aggregation_filter(
+    context: VisualContext, all_active_filters: Iterable[Filter]
+) -> BIAggregationFilter:
     only_hosts = []
     only_group = []
     only_service = []
@@ -837,12 +871,12 @@ def compute_bi_aggregation_filter(context: VisualContext,
                 group_prefix = [group_name]
 
     # BIAggregationFilter
-    #("hosts", List[HostName]),
-    #("services", List[Tuple[HostName, ServiceName]]),
-    #("aggr_ids", List[str]),
-    #("aggr_names", List[str]),
-    #("aggr_groups", List[str]),
-    #("aggr_paths", List[List[str]]),
+    # ("hosts", List[HostName]),
+    # ("services", List[Tuple[HostName, ServiceName]]),
+    # ("aggr_ids", List[str]),
+    # ("aggr_names", List[str]),
+    # ("aggr_groups", List[str]),
+    # ("aggr_paths", List[List[str]]),
     return BIAggregationFilter(
         only_hosts,  # hosts
         only_service,  # services
@@ -869,40 +903,26 @@ def table(
 
 def hostname_table(view, columns, query, only_sites, limit, all_active_filters):
     """Table of all host aggregations, i.e. aggregations using data from exactly one host"""
-    return singlehost_table(view,
-                            columns,
-                            query,
-                            only_sites,
-                            limit,
-                            all_active_filters,
-                            joinbyname=True,
-                            bygroup=False)
+    return singlehost_table(
+        view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=False
+    )
 
 
 def hostname_by_group_table(view, columns, query, only_sites, limit, all_active_filters):
-    return singlehost_table(view,
-                            columns,
-                            query,
-                            only_sites,
-                            limit,
-                            all_active_filters,
-                            joinbyname=True,
-                            bygroup=True)
+    return singlehost_table(
+        view, columns, query, only_sites, limit, all_active_filters, joinbyname=True, bygroup=True
+    )
 
 
 def host_table(view, columns, query, only_sites, limit, all_active_filters):
-    return singlehost_table(view,
-                            columns,
-                            query,
-                            only_sites,
-                            limit,
-                            all_active_filters,
-                            joinbyname=False,
-                            bygroup=False)
+    return singlehost_table(
+        view, columns, query, only_sites, limit, all_active_filters, joinbyname=False, bygroup=False
+    )
 
 
-def singlehost_table(view, columns, query, only_sites, limit, all_active_filters, joinbyname,
-                     bygroup):
+def singlehost_table(
+    view, columns, query, only_sites, limit, all_active_filters, joinbyname, bygroup
+):
 
     filterheaders = "".join(get_livestatus_filter_headers(view.context, all_active_filters))
     host_columns = [c for c in columns if c.startswith("host_")]
@@ -912,12 +932,14 @@ def singlehost_table(view, columns, query, only_sites, limit, all_active_filters
     bi_manager.status_fetcher.set_assumed_states(user.bi_assumptions)
     bi_aggregation_filter = compute_bi_aggregation_filter(view.context, all_active_filters)
     required_aggregations = bi_manager.computer.get_required_aggregations(bi_aggregation_filter)
-    bi_manager.status_fetcher.update_states_filtered(filterheaders, only_sites, limit, host_columns,
-                                                     bygroup, required_aggregations)
+    bi_manager.status_fetcher.update_states_filtered(
+        filterheaders, only_sites, limit, host_columns, bygroup, required_aggregations
+    )
 
     aggregation_results = bi_manager.computer.compute_results(required_aggregations)
-    legacy_results = bi_manager.computer.convert_to_legacy_results(aggregation_results,
-                                                                   bi_aggregation_filter)
+    legacy_results = bi_manager.computer.convert_to_legacy_results(
+        aggregation_results, bi_aggregation_filter
+    )
 
     for site_host_name, values in bi_manager.status_fetcher.states.items():
         for legacy_result in legacy_results:
@@ -966,14 +988,14 @@ def get_cached_bi_compiler() -> BICompiler:
 
 
 def bi_livestatus_query(
-        query: str,
-        only_sites: Optional[List[SiteId]] = None,
-        output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON
+    query: str,
+    only_sites: Optional[List[SiteId]] = None,
+    output_format: LivestatusOutputFormat = LivestatusOutputFormat.PYTHON,
 ) -> LivestatusResponse:
 
     with sites.output_format(output_format), sites.only_sites(only_sites), sites.prepend_site():
         try:
-            sites.live().set_auth_domain('bi')
+            sites.live().set_auth_domain("bi")
             return sites.live().query(query)
         finally:
-            sites.live().set_auth_domain('read')
+            sites.live().set_auth_domain("read")

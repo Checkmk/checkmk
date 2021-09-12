@@ -135,54 +135,72 @@ class ModeAnalyzeConfig(WatoMode):
     def page(self):
         if not self._analyze_sites():
             html.show_message(
-                _("Analyze configuration can only be used with the local site and "
-                  "distributed WATO slave sites. You currently have no such site configured."))
+                _(
+                    "Analyze configuration can only be used with the local site and "
+                    "distributed WATO slave sites. You currently have no such site configured."
+                )
+            )
             return
 
         results_by_category = self._perform_tests()
 
         site_ids = sorted(self._analyze_sites())
 
-        for category_name, results_by_test in sorted(results_by_category.items(),
-                                                     key=lambda x: ACTestCategories.title(x[0])):
-            with table_element(title=ACTestCategories.title(category_name),
-                               css="data analyze_config",
-                               sortable=False,
-                               searchable=False) as table:
+        for category_name, results_by_test in sorted(
+            results_by_category.items(), key=lambda x: ACTestCategories.title(x[0])
+        ):
+            with table_element(
+                title=ACTestCategories.title(category_name),
+                css="data analyze_config",
+                sortable=False,
+                searchable=False,
+            ) as table:
 
-                for test_id, test_results_by_site in sorted(results_by_test.items(),
-                                                            key=lambda x: x[1]["test"]["title"]):
+                for test_id, test_results_by_site in sorted(
+                    results_by_test.items(), key=lambda x: x[1]["test"]["title"]
+                ):
                     self._show_test_row(table, test_id, test_results_by_site, site_ids)
 
     def _show_test_row(self, table, test_id, test_results_by_site, site_ids):
         table.row()
 
         table.cell(_("Actions"), css="buttons", sortable=False)
-        html.icon_button(None,
-                         _("Toggle result details"),
-                         "toggle_details",
-                         onclick="cmk.wato.toggle_container('test_result_details_%s')" % test_id)
+        html.icon_button(
+            None,
+            _("Toggle result details"),
+            "toggle_details",
+            onclick="cmk.wato.toggle_container('test_result_details_%s')" % test_id,
+        )
 
-        worst_result = sorted(test_results_by_site["site_results"].values(),
-                              key=lambda result: result.status)[0]
+        worst_result = sorted(
+            test_results_by_site["site_results"].values(), key=lambda result: result.status
+        )[0]
 
         # Disabling of test in total
         is_test_disabled = self._is_test_disabled(test_id)
         if is_test_disabled:
             html.icon_button(
-                makeactionuri(request, transactions, [
-                    ("_do", "enable"),
-                    ("_test_id", worst_result.test_id),
-                ]),
+                makeactionuri(
+                    request,
+                    transactions,
+                    [
+                        ("_do", "enable"),
+                        ("_test_id", worst_result.test_id),
+                    ],
+                ),
                 _("Reenable this test"),
                 "enable_test",
             )
         else:
             html.icon_button(
-                makeactionuri(request, transactions, [
-                    ("_do", "disable"),
-                    ("_test_id", worst_result.test_id),
-                ]),
+                makeactionuri(
+                    request,
+                    transactions,
+                    [
+                        ("_do", "disable"),
+                        ("_test_id", worst_result.test_id),
+                    ],
+                ),
                 _("Disable this test"),
                 "disable_test",
             )
@@ -221,23 +239,31 @@ class ModeAnalyzeConfig(WatoMode):
             if result.status != 0:
                 if is_acknowledged:
                     html.icon_button(
-                        makeactionuri(request, transactions, [
-                            ("_do", "unack"),
-                            ("_site_id", result.site_id),
-                            ("_status_id", result.status),
-                            ("_test_id", result.test_id),
-                        ]),
+                        makeactionuri(
+                            request,
+                            transactions,
+                            [
+                                ("_do", "unack"),
+                                ("_site_id", result.site_id),
+                                ("_status_id", result.status),
+                                ("_test_id", result.test_id),
+                            ],
+                        ),
                         _("Unacknowledge this test result for site %s") % site_id,
                         "unacknowledge_test",
                     )
                 else:
                     html.icon_button(
-                        makeactionuri(request, transactions, [
-                            ("_do", "ack"),
-                            ("_site_id", result.site_id),
-                            ("_status_id", result.status),
-                            ("_test_id", result.test_id),
-                        ]),
+                        makeactionuri(
+                            request,
+                            transactions,
+                            [
+                                ("_do", "ack"),
+                                ("_site_id", result.site_id),
+                                ("_status_id", result.status),
+                                ("_test_id", result.test_id),
+                            ],
+                        ),
                         _("Acknowledge this test result for site %s") % site_id,
                         "acknowledge_test",
                     )
@@ -278,8 +304,9 @@ class ModeAnalyzeConfig(WatoMode):
         processes = []
         site_id = SiteId("unknown_site")
         for site_id in test_sites:
-            process = multiprocessing.Process(target=self._perform_tests_for_site,
-                                              args=(site_id, result_queue))
+            process = multiprocessing.Process(
+                target=self._perform_tests_for_site, args=(site_id, result_queue)
+            )
             process.start()
             processes.append((site_id, process))
 
@@ -328,13 +355,16 @@ class ModeAnalyzeConfig(WatoMode):
         for site_id, results in results_by_site.items():
             for result in results:
                 category_results = results_by_category.setdefault(result.category, {})
-                test_results_by_site = category_results.setdefault(result.test_id, {
-                    "site_results": {},
-                    "test": {
-                        "title": result.title,
-                        "help": result.help,
-                    }
-                })
+                test_results_by_site = category_results.setdefault(
+                    result.test_id,
+                    {
+                        "site_results": {},
+                        "test": {
+                            "title": result.title,
+                            "help": result.help,
+                        },
+                    },
+                )
 
                 test_results_by_site["site_results"][result.site_id] = result
 
@@ -345,14 +375,15 @@ class ModeAnalyzeConfig(WatoMode):
 
     # Executes the tests on the site. This method is executed in a dedicated
     # subprocess (One per site)
-    def _perform_tests_for_site(self, site_id: SiteId,
-                                result_queue: 'multiprocessing.Queue[Tuple[SiteId, str]]') -> None:
+    def _perform_tests_for_site(
+        self, site_id: SiteId, result_queue: "multiprocessing.Queue[Tuple[SiteId, str]]"
+    ) -> None:
         self._logger.debug("[%s] Starting" % site_id)
         try:
             # Would be better to clean all open fds that are not needed, but we don't
             # know the FDs of the result_queue pipe. Can we find it out somehow?
             # Cleanup resources of the apache
-            #for x in range(3, 256):
+            # for x in range(3, 256):
             #    try:
             #        os.close(x)
             #    except OSError, e:
@@ -369,9 +400,12 @@ class ModeAnalyzeConfig(WatoMode):
                 results_data = automation.execute(automation.get_request())
 
             else:
-                results_data = watolib.do_remote_automation(get_site_config(site_id),
-                                                            "check-analyze-config", [],
-                                                            timeout=request.request_timeout - 10)
+                results_data = watolib.do_remote_automation(
+                    get_site_config(site_id),
+                    "check-analyze-config",
+                    [],
+                    timeout=request.request_timeout - 10,
+                )
 
             self._logger.debug("[%s] Finished" % site_id)
 

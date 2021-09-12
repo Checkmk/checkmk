@@ -57,10 +57,12 @@ from cmk.gui.watolib import automation_command_registry, AutomationCommand, do_r
 from cmk.gui.watolib.automations import check_mk_automation
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
 
-_CHECKMK_FILES_NOTE = _("<br>Note: Some files may contain highly sensitive data like"
-                        " passwords. These files are marked with 'H'."
-                        " Other files may include IP adresses, hostnames, usernames,"
-                        " mail adresses or phone numbers and are marked with 'M'.")
+_CHECKMK_FILES_NOTE = _(
+    "<br>Note: Some files may contain highly sensitive data like"
+    " passwords. These files are marked with 'H'."
+    " Other files may include IP adresses, hostnames, usernames,"
+    " mail adresses or phone numbers and are marked with 'M'."
+)
 
 
 @mode_registry.register
@@ -89,11 +91,13 @@ class ModeDiagnostics(WatoMode):
         return _("Support diagnostics")
 
     def page_menu(self, breadcrumb) -> PageMenu:
-        menu = make_simple_form_page_menu(_("Diagnostics"),
-                                          breadcrumb,
-                                          form_name="diagnostics",
-                                          button_name="_collect_dump",
-                                          save_title=_("Collect diagnostics"))
+        menu = make_simple_form_page_menu(
+            _("Diagnostics"),
+            breadcrumb,
+            form_name="diagnostics",
+            button_name="_collect_dump",
+            save_title=_("Collect diagnostics"),
+        )
         menu.dropdowns.insert(
             1,
             PageMenuDropdown(
@@ -111,7 +115,8 @@ class ModeDiagnostics(WatoMode):
                         ],
                     ),
                 ],
-            ))
+            ),
+        )
         return menu
 
     def action(self) -> ActionResult:
@@ -144,110 +149,154 @@ class ModeDiagnostics(WatoMode):
             title=_("Collect diagnostic dump"),
             render="form",
             elements=[
-                ("site", DropdownChoice(
-                    title=_("Site"),
-                    choices=get_activation_site_choices(),
-                )),
-                ("general",
-                 FixedValue(True,
-                            title=_("General information"),
-                            totext=_("Collect information about OS and Checkmk version"),
-                            help=_("Collect information about OS, Checkmk version and edition, "
-                                   "Time, Core, Python version and paths, Architecture"))),
-                ("opt_info",
-                 Dictionary(
-                     title=_("Optional general information"),
-                     elements=self._get_optional_information_elements(),
-                 )),
-                ("comp_specific",
-                 Dictionary(
-                     title=_("Component specific information"),
-                     elements=self._get_component_specific_elements(),
-                 )),
+                (
+                    "site",
+                    DropdownChoice(
+                        title=_("Site"),
+                        choices=get_activation_site_choices(),
+                    ),
+                ),
+                (
+                    "general",
+                    FixedValue(
+                        True,
+                        title=_("General information"),
+                        totext=_("Collect information about OS and Checkmk version"),
+                        help=_(
+                            "Collect information about OS, Checkmk version and edition, "
+                            "Time, Core, Python version and paths, Architecture"
+                        ),
+                    ),
+                ),
+                (
+                    "opt_info",
+                    Dictionary(
+                        title=_("Optional general information"),
+                        elements=self._get_optional_information_elements(),
+                    ),
+                ),
+                (
+                    "comp_specific",
+                    Dictionary(
+                        title=_("Component specific information"),
+                        elements=self._get_component_specific_elements(),
+                    ),
+                ),
             ],
             optional_keys=False,
         )
 
     def _get_optional_information_elements(self) -> List[Tuple[str, ValueSpec]]:
         elements: List[Tuple[str, ValueSpec]] = [
-            (OPT_LOCAL_FILES,
-             FixedValue(
-                 True,
-                 totext="",
-                 title=_("Local Files"),
-                 help=_("List of installed, unpacked, optional files below OMD_ROOT/local. "
-                        "This also includes information about installed MKPs."),
-             )),
-            (OPT_OMD_CONFIG,
-             FixedValue(
-                 True,
-                 totext="",
-                 title=_("OMD Config"),
-                 help=_("Apache mode and TCP address and port, Core, "
+            (
+                OPT_LOCAL_FILES,
+                FixedValue(
+                    True,
+                    totext="",
+                    title=_("Local Files"),
+                    help=_(
+                        "List of installed, unpacked, optional files below OMD_ROOT/local. "
+                        "This also includes information about installed MKPs."
+                    ),
+                ),
+            ),
+            (
+                OPT_OMD_CONFIG,
+                FixedValue(
+                    True,
+                    totext="",
+                    title=_("OMD Config"),
+                    help=_(
+                        "Apache mode and TCP address and port, Core, "
                         "Liveproxy daemon and livestatus TCP mode, "
                         "Event daemon config, Multiste authorisation, "
-                        "NSCA mode, TMP filesystem mode"),
-             )),
-            (OPT_CHECKMK_OVERVIEW,
-             FixedValue(
-                 True,
-                 totext="",
-                 title=_("Checkmk Overview"),
-                 help=_("Checkmk Agent, Number, version and edition of sites, Cluster host; "
+                        "NSCA mode, TMP filesystem mode"
+                    ),
+                ),
+            ),
+            (
+                OPT_CHECKMK_OVERVIEW,
+                FixedValue(
+                    True,
+                    totext="",
+                    title=_("Checkmk Overview"),
+                    help=_(
+                        "Checkmk Agent, Number, version and edition of sites, Cluster host; "
                         "Number of hosts, services, CMK Helper, Live Helper, "
                         "Helper usage; State of daemons: Apache, Core, Crontag, "
                         "DCD, Liveproxyd, MKEventd, MKNotifyd, RRDCached "
-                        "(Agent plugin mk_inventory needs to be installed)"),
-             )),
-            (OPT_CHECKMK_CONFIG_FILES,
-             self._get_component_specific_checkmk_files_choices(
-                 _("Checkmk Configuration files"),
-                 [(f, get_checkmk_file_info(f)) for f in self._checkmk_config_files_map])),
+                        "(Agent plugin mk_inventory needs to be installed)"
+                    ),
+                ),
+            ),
+            (
+                OPT_CHECKMK_CONFIG_FILES,
+                self._get_component_specific_checkmk_files_choices(
+                    _("Checkmk Configuration files"),
+                    [(f, get_checkmk_file_info(f)) for f in self._checkmk_config_files_map],
+                ),
+            ),
         ]
 
         if not cmk_version.is_raw_edition():
             elements.append(
-                (OPT_PERFORMANCE_GRAPHS,
-                 FixedValue(
-                     True,
-                     totext="",
-                     title=_("Performance Graphs of Checkmk Server"),
-                     help=_("CPU load and utilization, Number of threads, Kernel Performance, "
+                (
+                    OPT_PERFORMANCE_GRAPHS,
+                    FixedValue(
+                        True,
+                        totext="",
+                        title=_("Performance Graphs of Checkmk Server"),
+                        help=_(
+                            "CPU load and utilization, Number of threads, Kernel Performance, "
                             "OMD, Filesystem, Apache Status, TCP Connections of the time ranges "
-                            "25 hours and 35 days"),
-                 )))
+                            "25 hours and 35 days"
+                        ),
+                    ),
+                )
+            )
         return elements
 
     def _get_component_specific_elements(self) -> List[Tuple[str, ValueSpec]]:
         elements: List[Tuple[str, ValueSpec]] = [
-            (OPT_COMP_GLOBAL_SETTINGS,
-             Dictionary(
-                 title=_("Global Settings"),
-                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s") %
-                 _CHECKMK_FILES_NOTE,
-                 elements=self._get_component_specific_checkmk_files_elements(
-                     OPT_COMP_GLOBAL_SETTINGS),
-                 default_keys=["config_files"],
-             )),
-            (OPT_COMP_HOSTS_AND_FOLDERS,
-             Dictionary(
-                 title=_("Hosts and Folders"),
-                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s") %
-                 _CHECKMK_FILES_NOTE,
-                 elements=self._get_component_specific_checkmk_files_elements(
-                     OPT_COMP_HOSTS_AND_FOLDERS),
-                 default_keys=["config_files"],
-             )),
-            (OPT_COMP_NOTIFICATIONS,
-             Dictionary(
-                 title=_("Notifications"),
-                 help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk"
-                        " or log files ('*.log' or '*.state') from var/log.%s") %
-                 _CHECKMK_FILES_NOTE,
-                 elements=self._get_component_specific_checkmk_files_elements(
-                     OPT_COMP_NOTIFICATIONS),
-                 default_keys=["config_files"],
-             )),
+            (
+                OPT_COMP_GLOBAL_SETTINGS,
+                Dictionary(
+                    title=_("Global Settings"),
+                    help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s")
+                    % _CHECKMK_FILES_NOTE,
+                    elements=self._get_component_specific_checkmk_files_elements(
+                        OPT_COMP_GLOBAL_SETTINGS
+                    ),
+                    default_keys=["config_files"],
+                ),
+            ),
+            (
+                OPT_COMP_HOSTS_AND_FOLDERS,
+                Dictionary(
+                    title=_("Hosts and Folders"),
+                    help=_("Configuration files ('*.mk' or '*.conf') from etc/check_mk.%s")
+                    % _CHECKMK_FILES_NOTE,
+                    elements=self._get_component_specific_checkmk_files_elements(
+                        OPT_COMP_HOSTS_AND_FOLDERS
+                    ),
+                    default_keys=["config_files"],
+                ),
+            ),
+            (
+                OPT_COMP_NOTIFICATIONS,
+                Dictionary(
+                    title=_("Notifications"),
+                    help=_(
+                        "Configuration files ('*.mk' or '*.conf') from etc/check_mk"
+                        " or log files ('*.log' or '*.state') from var/log.%s"
+                    )
+                    % _CHECKMK_FILES_NOTE,
+                    elements=self._get_component_specific_checkmk_files_elements(
+                        OPT_COMP_NOTIFICATIONS
+                    ),
+                    default_keys=["config_files"],
+                ),
+            ),
         ]
         return elements
 
@@ -256,24 +305,35 @@ class ModeDiagnostics(WatoMode):
         component,
     ) -> List[Tuple[str, ValueSpec]]:
         elements = []
-        config_files = [(f, fi)
-                        for f in self._checkmk_config_files_map
-                        for fi in [get_checkmk_file_info(f, component)]
-                        if component in fi.components]
+        config_files = [
+            (f, fi)
+            for f in self._checkmk_config_files_map
+            for fi in [get_checkmk_file_info(f, component)]
+            if component in fi.components
+        ]
         if config_files:
             elements.append(
-                ("config_files",
-                 self._get_component_specific_checkmk_files_choices(_("Configuration files"),
-                                                                    config_files)))
+                (
+                    "config_files",
+                    self._get_component_specific_checkmk_files_choices(
+                        _("Configuration files"), config_files
+                    ),
+                )
+            )
 
-        log_files = [(f, fi)
-                     for f in self._checkmk_log_files_map
-                     for fi in [get_checkmk_file_info(f, component)]
-                     if component in fi.components]
+        log_files = [
+            (f, fi)
+            for f in self._checkmk_log_files_map
+            for fi in [get_checkmk_file_info(f, component)]
+            if component in fi.components
+        ]
         if log_files:
             elements.append(
-                ("log_files",
-                 self._get_component_specific_checkmk_files_choices(_("Log files"), log_files)))
+                (
+                    "log_files",
+                    self._get_component_specific_checkmk_files_choices(_("Log files"), log_files),
+                )
+            )
         return elements
 
     def _get_component_specific_checkmk_files_choices(
@@ -292,52 +352,70 @@ class ModeDiagnostics(WatoMode):
             else:
                 insensitive_files.append((rel_filepath, file_info))
 
-        sorted_files = sorted(high_sensitive_files + sensitive_files + insensitive_files,
-                              key=lambda t: t[0])
-        sorted_non_high_sensitive_files = sorted(sensitive_files + insensitive_files,
-                                                 key=lambda t: t[0])
+        sorted_files = sorted(
+            high_sensitive_files + sensitive_files + insensitive_files, key=lambda t: t[0]
+        )
+        sorted_non_high_sensitive_files = sorted(
+            sensitive_files + insensitive_files, key=lambda t: t[0]
+        )
         sorted_insensitive_files = sorted(insensitive_files, key=lambda t: t[0])
         return CascadingDropdown(
             title=title,
             sorted=False,
             choices=[
-                ("all", _("Pack all files: High, Medium, Low sensitivity"),
-                 FixedValue(
-                     [f for f, fi in sorted_files],
-                     totext=self._list_of_files_to_text(sorted_files),
-                 )),
-                ("non_high_sensitive", _("Pack only Medium and Low sensitivity files"),
-                 FixedValue(
-                     [f for f, fi in sorted_non_high_sensitive_files],
-                     totext=self._list_of_files_to_text(sorted_non_high_sensitive_files),
-                 )),
-                ("insensitive", _("Pack only Low sensitivity files"),
-                 FixedValue(
-                     [f for f, fi in sorted_insensitive_files],
-                     totext=self._list_of_files_to_text(sorted_insensitive_files),
-                 )),
-                ("explicit_list_of_files", _("Select individual files from list"),
-                 DualListChoice(
-                     choices=self._list_of_files_choices(sorted_files),
-                     size=80,
-                     rows=10,
-                 )),
+                (
+                    "all",
+                    _("Pack all files: High, Medium, Low sensitivity"),
+                    FixedValue(
+                        [f for f, fi in sorted_files],
+                        totext=self._list_of_files_to_text(sorted_files),
+                    ),
+                ),
+                (
+                    "non_high_sensitive",
+                    _("Pack only Medium and Low sensitivity files"),
+                    FixedValue(
+                        [f for f, fi in sorted_non_high_sensitive_files],
+                        totext=self._list_of_files_to_text(sorted_non_high_sensitive_files),
+                    ),
+                ),
+                (
+                    "insensitive",
+                    _("Pack only Low sensitivity files"),
+                    FixedValue(
+                        [f for f, fi in sorted_insensitive_files],
+                        totext=self._list_of_files_to_text(sorted_insensitive_files),
+                    ),
+                ),
+                (
+                    "explicit_list_of_files",
+                    _("Select individual files from list"),
+                    DualListChoice(
+                        choices=self._list_of_files_choices(sorted_files),
+                        size=80,
+                        rows=10,
+                    ),
+                ),
             ],
             default_value="non_high_sensitive",
         )
 
     def _list_of_files_to_text(self, list_of_files: List[Tuple[str, CheckmkFileInfo]]) -> str:
-        return "<br>%s" % ",<br>".join([
-            get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info)
-            for rel_filepath, file_info in list_of_files
-        ])
+        return "<br>%s" % ",<br>".join(
+            [
+                get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info)
+                for rel_filepath, file_info in list_of_files
+            ]
+        )
 
     def _list_of_files_choices(
         self,
         files: List[Tuple[str, CheckmkFileInfo]],
     ) -> List[Tuple[str, str]]:
-        return [(rel_filepath, get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info))
-                for rel_filepath, file_info in files]
+        return [
+            (rel_filepath, get_checkmk_file_sensitivity_for_humans(rel_filepath, file_info))
+            for rel_filepath, file_info in files
+        ]
 
 
 @gui_background_job.job_registry.register
@@ -359,22 +437,27 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
     def _back_url(self) -> str:
         return makeuri(request, [])
 
-    def do_execute(self, diagnostics_parameters: DiagnosticsParameters,
-                   job_interface: BackgroundProcessInterface) -> None:
+    def do_execute(
+        self,
+        diagnostics_parameters: DiagnosticsParameters,
+        job_interface: BackgroundProcessInterface,
+    ) -> None:
         job_interface.send_progress_update(_("Diagnostics dump started..."))
 
         site = diagnostics_parameters["site"]
         timeout = request.request_timeout - 2
-        result = check_mk_automation(site,
-                                     "create-diagnostics-dump",
-                                     args=serialize_wato_parameters(diagnostics_parameters),
-                                     timeout=timeout,
-                                     non_blocking_http=True)
+        result = check_mk_automation(
+            site,
+            "create-diagnostics-dump",
+            args=serialize_wato_parameters(diagnostics_parameters),
+            timeout=timeout,
+            non_blocking_http=True,
+        )
 
         job_interface.send_progress_update(result["output"])
 
         if result["tarfile_created"]:
-            tarfile_path = result['tarfile_path']
+            tarfile_path = result["tarfile_path"]
             download_url = makeuri_contextless(
                 request,
                 [("site", site), ("tarfile_name", str(Path(tarfile_path).name))],
@@ -394,7 +477,8 @@ class PageDownloadDiagnosticsDump(Page):
     def page(self) -> None:
         if not user.may("wato.diagnostics"):
             raise MKAuthException(
-                _("Sorry, you lack the permission for downloading diagnostics dumps."))
+                _("Sorry, you lack the permission for downloading diagnostics dumps.")
+            )
 
         site = request.get_ascii_input_mandatory("site")
         tarfile_name = request.get_ascii_input_mandatory("tarfile_name")
@@ -408,9 +492,13 @@ class PageDownloadDiagnosticsDump(Page):
         if site_is_local(site):
             return _get_diagnostics_dump_file(tarfile_name)
 
-        return do_remote_automation(get_site_config(site), "diagnostics-dump-get-file", [
-            ("tarfile_name", tarfile_name),
-        ])
+        return do_remote_automation(
+            get_site_config(site),
+            "diagnostics-dump-get-file",
+            [
+                ("tarfile_name", tarfile_name),
+            ],
+        )
 
 
 @automation_command_registry.register
@@ -434,5 +522,5 @@ def _get_diagnostics_dump_file(tarfile_name: str) -> bytes:
 
 def _validate_diagnostics_dump_tarfile_name(tarfile_name: str) -> None:
     # Prevent downloading files like 'tarfile_name=../../../../../../../../../../etc/passwd'
-    if Path(tarfile_name).parent != Path('.'):
+    if Path(tarfile_name).parent != Path("."):
         raise MKUserError("_diagnostics_dump_file", _("Invalid file name for tarfile_name given."))

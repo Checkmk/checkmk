@@ -72,48 +72,60 @@ class BookmarkList(pagetypes.Overridable):
 
         parameters = super().parameters(mode)
 
-        parameters += [(
-            _("Bookmarks"),
-            [
-                # sort-index, key, valuespec
-                (2.5, "default_topic",
-                 TextInput(
-                     title=_("Default Topic") + "<sup>*</sup>",
-                     size=50,
-                     allow_empty=False,
-                 )),
-                (
-                    3.0,
-                    "bookmarks",
-                    ListOf(
-                        # For the editor we want a compact dialog. The tuple horizontal editin mechanism
-                        # is exactly the thing we want. But we want to store the data as dict. This is a
-                        # nasty hack to use the transform by default. Better would be to make Dict render
-                        # the same way the tuple is rendered.
-                        Transform(
-                            Tuple(
-                                elements=[
-                                    (TextInput(
-                                        title=_("Title") + "<sup>*</sup>",
-                                        size=30,
-                                        allow_empty=False,
-                                    )),
-                                    (TextInput(
-                                        title=_("URL"),
-                                        size=50,
-                                        allow_empty=False,
-                                        validate=cls.validate_url,
-                                    )),
-                                    (IconSelector(title=_("Icon"), with_emblem=False)),
-                                    (cls._vs_topic()),
-                                ],
-                                orientation="horizontal",
-                                title=_("Bookmarks"),
-                            ),
-                            forth=bookmark_config_to_vs,
-                            back=bookmark_vs_to_config,
-                        )))
-            ])]
+        parameters += [
+            (
+                _("Bookmarks"),
+                [
+                    # sort-index, key, valuespec
+                    (
+                        2.5,
+                        "default_topic",
+                        TextInput(
+                            title=_("Default Topic") + "<sup>*</sup>",
+                            size=50,
+                            allow_empty=False,
+                        ),
+                    ),
+                    (
+                        3.0,
+                        "bookmarks",
+                        ListOf(
+                            # For the editor we want a compact dialog. The tuple horizontal editin mechanism
+                            # is exactly the thing we want. But we want to store the data as dict. This is a
+                            # nasty hack to use the transform by default. Better would be to make Dict render
+                            # the same way the tuple is rendered.
+                            Transform(
+                                Tuple(
+                                    elements=[
+                                        (
+                                            TextInput(
+                                                title=_("Title") + "<sup>*</sup>",
+                                                size=30,
+                                                allow_empty=False,
+                                            )
+                                        ),
+                                        (
+                                            TextInput(
+                                                title=_("URL"),
+                                                size=50,
+                                                allow_empty=False,
+                                                validate=cls.validate_url,
+                                            )
+                                        ),
+                                        (IconSelector(title=_("Icon"), with_emblem=False)),
+                                        (cls._vs_topic()),
+                                    ],
+                                    orientation="horizontal",
+                                    title=_("Bookmarks"),
+                                ),
+                                forth=bookmark_config_to_vs,
+                                back=bookmark_vs_to_config,
+                            )
+                        ),
+                    ),
+                ],
+            )
+        ]
 
         return parameters
 
@@ -169,12 +181,12 @@ class BookmarkList(pagetypes.Overridable):
     @classmethod
     def add_default_bookmark_list(cls):
         attrs = {
-            "title": u"My Bookmarks",
+            "title": "My Bookmarks",
             "public": False,
             "owner": user.id,
             "name": "my_bookmarks",
-            "description": u"Your personal bookmarks",
-            "default_topic": u"My Bookmarks",
+            "description": "Your personal bookmarks",
+            "default_topic": "My Bookmarks",
             "bookmarks": [],
         }
 
@@ -243,18 +255,20 @@ class Bookmarks(SidebarSnapin):
 
     @classmethod
     def description(cls):
-        return _("A simple and yet practical snapin allowing to create "
-                 "bookmarks to views and other content in the main frame")
+        return _(
+            "A simple and yet practical snapin allowing to create "
+            "bookmarks to views and other content in the main frame"
+        )
 
     def show(self):
         for topic, bookmarks in self._get_bookmarks_by_topic():
             with foldable_container(
-                    treename="bookmarks",
-                    id_=topic,
-                    isopen=False,
-                    title=topic,
-                    indent=False,
-                    icon="foldable_sidebar",
+                treename="bookmarks",
+                id_=topic,
+                isopen=False,
+                title=topic,
+                indent=False,
+                icon="foldable_sidebar",
             ):
 
                 for bookmark in bookmarks:
@@ -320,21 +334,21 @@ class Bookmarks(SidebarSnapin):
                 referer = ref_p.path
                 url = url_p.path
                 if url_p.query:
-                    url += '?' + url_p.query
+                    url += "?" + url_p.query
                 removed = 0
-                while '/' in referer and referer.split('/')[0] == url.split('/')[0]:
-                    referer = referer.split('/', 1)[1]
-                    url = url.split('/', 1)[1]
+                while "/" in referer and referer.split("/")[0] == url.split("/")[0]:
+                    referer = referer.split("/", 1)[1]
+                    url = url.split("/", 1)[1]
                     removed += 1
 
                 if removed == 1:
                     # removed only the first "/". This should be an absolute path.
-                    url = '/' + url
-                elif '/' in referer:
+                    url = "/" + url
+                elif "/" in referer:
                     # there is at least one other directory layer in the path, make
                     # the link relative to the sidebar.py's topdir. e.g. for pnp
                     # links in OMD setups
-                    url = '../' + url
+                    url = "../" + url
         return url
 
     def page_handlers(self):

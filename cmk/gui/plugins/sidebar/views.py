@@ -75,10 +75,12 @@ def get_view_menu_items() -> List[TopicMenuTopic]:
                 page_type_items.append((page_type.type_name(), (page.name(), visual)))
 
     # Apply some view specific filters
-    views_to_show = [(name, view)
-                     for name, view in views.get_permitted_views().items()
-                     if (not config.visible_views or name in config.visible_views) and
-                     (not config.hidden_views or name not in config.hidden_views)]
+    views_to_show = [
+        (name, view)
+        for name, view in views.get_permitted_views().items()
+        if (not config.visible_views or name in config.visible_views)
+        and (not config.hidden_views or name not in config.hidden_views)
+    ]
 
     network_topology_visual_spec = ParentChildTopologyPage.visual_spec()
     pages_to_show = [(network_topology_visual_spec["name"], network_topology_visual_spec)]
@@ -103,4 +105,5 @@ mega_menu_registry.register(
         sort_index=5,
         topics=get_view_menu_items,
         search=search.MonitoringSearch("monitoring_search"),
-    ))
+    )
+)

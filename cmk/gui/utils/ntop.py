@@ -46,8 +46,11 @@ def is_ntop_configured() -> bool:
         # We currently have two options to get an ntop username
         # 1) User needs to define his own -> if this string is empty, declare ntop as not configured
         # 2) Take the checkmk username as ntop username -> always declare ntop as configured
-        return (bool(user.get_attribute(custom_attribute_name, '')) if isinstance(
-            custom_attribute_name, str) else not custom_attribute_name)
+        return (
+            bool(user.get_attribute(custom_attribute_name, ""))
+            if isinstance(custom_attribute_name, str)
+            else not custom_attribute_name
+        )
 
     return False
 
@@ -61,7 +64,9 @@ def get_ntop_misconfiguration_reason() -> str:
         return _("ntopng integration is not activated under global settings.")
     custom_attribute_name = ntop.get("use_custom_attribute_as_ntop_username", "")
     if custom_attribute_name and not user.get_attribute(custom_attribute_name, ""):
-        return _("The ntopng username should be derived from \'ntopng Username\' "
-                 "under the current's user settings (identity) but this is not "
-                 "set for the current user.")
+        return _(
+            "The ntopng username should be derived from 'ntopng Username' "
+            "under the current's user settings (identity) but this is not "
+            "set for the current user."
+        )
     return ""

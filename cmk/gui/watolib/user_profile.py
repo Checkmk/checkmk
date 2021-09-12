@@ -53,8 +53,10 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
 
     remote_sites = [(site_id, get_site_config(site_id)) for site_id in get_login_slave_sites()]
 
-    logger.info('Credentials changed for %s. Trying to sync to %d sites' %
-                (", ".join(profiles_to_synchronize.keys()), len(remote_sites)))
+    logger.info(
+        "Credentials changed for %s. Trying to sync to %d sites"
+        % (", ".join(profiles_to_synchronize.keys()), len(remote_sites))
+    )
 
     states = sites.states()
 
@@ -62,8 +64,10 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
     jobs = []
     for site_id, site in remote_sites:
         jobs.append(
-            pool.apply_async(_sychronize_profile_worker,
-                             (states, site_id, site, profiles_to_synchronize)))
+            pool.apply_async(
+                _sychronize_profile_worker, (states, site_id, site, profiles_to_synchronize)
+            )
+        )
 
     results = []
     start_time = time.time()
@@ -81,19 +85,22 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
     working_sites = {result.site_id for result in results}
     for site_id in contacted_sites - working_sites:
         results.append(
-            SynchronizationResult(site_id,
-                                  error_text=_("No response from update thread"),
-                                  failed=True))
+            SynchronizationResult(
+                site_id, error_text=_("No response from update thread"), failed=True
+            )
+        )
 
     for result in results:
         if result.error_text:
-            logger.info('  FAILED [%s]: %s' % (result.site_id, result.error_text))
+            logger.info("  FAILED [%s]: %s" % (result.site_id, result.error_text))
             if config.wato_enabled:
-                add_change("edit-users",
-                           _('Password changed (sync failed: %s)') % result.error_text,
-                           add_user=False,
-                           sites=[result.site_id],
-                           need_restart=False)
+                add_change(
+                    "edit-users",
+                    _("Password changed (sync failed: %s)") % result.error_text,
+                    add_user=False,
+                    sites=[result.site_id],
+                    need_restart=False,
+                )
 
     pool.terminate()
     pool.join()
@@ -101,8 +108,9 @@ def _synchronize_profiles_to_sites(logger, profiles_to_synchronize):
     num_failed = sum([1 for result in results if result.failed])
     num_disabled = sum([1 for result in results if result.disabled])
     num_succeeded = sum([1 for result in results if result.succeeded])
-    logger.info('  Disabled: %d, Succeeded: %d, Failed: %d' %
-                (num_disabled, num_succeeded, num_failed))
+    logger.info(
+        "  Disabled: %d, Succeeded: %d, Failed: %d" % (num_disabled, num_succeeded, num_failed)
+    )
 
 
 def _sychronize_profile_worker(states, site_id, site, profiles_to_synchronize):
@@ -114,9 +122,9 @@ def _sychronize_profile_worker(states, site_id, site, profiles_to_synchronize):
 
     status = states.get(site_id, {}).get("state", "unknown")
     if status == "dead":
-        return SynchronizationResult(site_id,
-                                     error_text=_("Site %s is dead") % site_id,
-                                     failed=True)
+        return SynchronizationResult(
+            site_id, error_text=_("Site %s is dead") % site_id, failed=True
+        )
 
     try:
         result = push_user_profiles_to_site_transitional_wrapper(site, profiles_to_synchronize)
@@ -160,20 +168,28 @@ def push_user_profiles_to_site_transitional_wrapper(site, user_profiles):
 
 
 def _legacy_push_user_profile_to_site(site, user_id, profile):
-    url = site["multisiteurl"] + "automation.py?" + urlencode_vars([
-        ("command", "push-profile"),
-        ("secret", site["secret"]),
-        ("siteid", site['id']),
-        ("debug", config.debug and "1" or ""),
-    ])
+    url = (
+        site["multisiteurl"]
+        + "automation.py?"
+        + urlencode_vars(
+            [
+                ("command", "push-profile"),
+                ("secret", site["secret"]),
+                ("siteid", site["id"]),
+                ("debug", config.debug and "1" or ""),
+            ]
+        )
+    )
 
-    response = get_url(url,
-                       site.get('insecure', False),
-                       data={
-                           'user_id': user_id,
-                           'profile': mk_repr(profile),
-                       },
-                       timeout=60)
+    response = get_url(
+        url,
+        site.get("insecure", False),
+        data={
+            "user_id": user_id,
+            "profile": mk_repr(profile),
+        },
+        timeout=60,
+    )
 
     if not response:
         raise MKAutomationException(_("Empty output from remote site."))
@@ -190,13 +206,13 @@ def push_user_profiles_to_site(site, user_profiles):
     def _serialize(user_profiles):
         """Do not synchronize user session information"""
         return {
-            user_id: {k: v for k, v in profile.items() if k != "session_info"
-                     } for user_id, profile in user_profiles.items()
+            user_id: {k: v for k, v in profile.items() if k != "session_info"}
+            for user_id, profile in user_profiles.items()
         }
 
-    return do_remote_automation(site,
-                                "push-profiles", [("profiles", repr(_serialize(user_profiles)))],
-                                timeout=60)
+    return do_remote_automation(
+        site, "push-profiles", [("profiles", repr(_serialize(user_profiles)))], timeout=60
+    )
 
 
 class PushUserProfilesRequest(NamedTuple):
@@ -209,14 +225,15 @@ class PushUserProfilesToSite(AutomationCommand):
         return "push-profiles"
 
     def get_request(self):
-        return PushUserProfilesRequest(ast.literal_eval(
-            request.get_str_input_mandatory("profiles")))
+        return PushUserProfilesRequest(
+            ast.literal_eval(request.get_str_input_mandatory("profiles"))
+        )
 
     def execute(self, api_request):
         user_profiles = api_request.user_profiles
 
         if not user_profiles:
-            raise MKGeneralException(_('Invalid call: No profiles set.'))
+            raise MKGeneralException(_("Invalid call: No profiles set."))
 
         users = userdb.load_users(lock=True)
         for user_id, profile in user_profiles.items():

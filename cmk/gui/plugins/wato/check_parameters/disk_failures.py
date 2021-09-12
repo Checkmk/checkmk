@@ -29,4 +29,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         parameter_valuespec=_parameter_valuespec_disk_failures,
         title=lambda: _("Number of disk failures"),
-    ))
+    )
+)

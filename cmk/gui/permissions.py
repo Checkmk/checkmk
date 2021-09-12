@@ -52,8 +52,14 @@ permission_section_registry = PermissionSectionRegistry()
 class Permission(abc.ABC):
     _sort_index = 0
 
-    def __init__(self, section: Type[PermissionSection], name: str, title: str, description: str,
-                 defaults: List[str]) -> None:
+    def __init__(
+        self,
+        section: Type[PermissionSection],
+        name: str,
+        title: str,
+        description: str,
+        defaults: List[str],
+    ) -> None:
         self._section = section
         self._name = name
         self._title = title
@@ -130,12 +136,16 @@ permission_registry = PermissionRegistry()
 
 # Kept for compatibility with pre 1.6 GUI plugins
 def declare_permission_section(name, title, prio=50, do_sort=False):
-    cls = type("LegacyPermissionSection%s" % name.title(), (PermissionSection,), {
-        "name": name,
-        "title": title,
-        "sort_index": prio,
-        "do_sort": do_sort,
-    })
+    cls = type(
+        "LegacyPermissionSection%s" % name.title(),
+        (PermissionSection,),
+        {
+            "name": name,
+            "title": title,
+            "sort_index": prio,
+            "do_sort": do_sort,
+        },
+    )
     permission_section_registry.register(cls)
 
 
@@ -154,7 +164,8 @@ def declare_permission(name, title, description, defaults):
             title=title,
             description=description,
             defaults=defaults,
-        ))
+        )
+    )
 
 
 _permission_declaration_functions = []

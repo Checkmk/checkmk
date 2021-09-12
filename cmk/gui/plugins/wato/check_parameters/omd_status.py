@@ -26,4 +26,5 @@ rulespec_registry.register(
         group=RulespecGroupEnforcedServicesApplications,
         item_spec=_item_spec_omd_status,
         title=lambda: _("OMD site status"),
-    ))
+    )
+)

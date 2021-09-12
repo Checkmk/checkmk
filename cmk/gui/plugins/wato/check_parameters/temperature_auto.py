@@ -27,4 +27,5 @@ rulespec_registry.register(
         is_deprecated=True,
         item_spec=_item_spec_temperature_auto,
         title=lambda: _("Temperature sensors with builtin levels"),
-    ))
+    )
+)

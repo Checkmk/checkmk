@@ -34,29 +34,33 @@ class HostStats(NamedTuple):
                 _("Up"),
                 "ok",
                 self.up,
-                view_url(general_url_vars +
-                         [("is_host_scheduled_downtime_depth", "0"), ("hst0", "on")]),
+                view_url(
+                    general_url_vars + [("is_host_scheduled_downtime_depth", "0"), ("hst0", "on")]
+                ),
             ),
             (
                 _("In downtime"),
                 "downtime",
                 self.downtime,
-                view_url(general_url_vars +
-                         [("search", "1"), ("is_host_scheduled_downtime_depth", "1")]),
+                view_url(
+                    general_url_vars + [("search", "1"), ("is_host_scheduled_downtime_depth", "1")]
+                ),
             ),
             (
                 _("Unreachable"),
                 "unknown",
                 self.unreachable,
-                view_url(general_url_vars +
-                         [("is_host_scheduled_downtime_depth", "0"), ("hst2", "on")]),
+                view_url(
+                    general_url_vars + [("is_host_scheduled_downtime_depth", "0"), ("hst2", "on")]
+                ),
             ),
             (
                 _("Down"),
                 "critical",
                 self.down,
-                view_url(general_url_vars +
-                         [("is_host_scheduled_downtime_depth", "0"), ("hst1", "on")]),
+                view_url(
+                    general_url_vars + [("is_host_scheduled_downtime_depth", "0"), ("hst1", "on")]
+                ),
             ),
         ]
 
@@ -75,8 +79,9 @@ class ServiceStats(NamedTuple):
                 _("OK"),
                 "ok",
                 self.ok,
-                view_url(general_url_vars +
-                         [("hst0", "on"), ("st0", "on"), ("is_in_downtime", "0")]),
+                view_url(
+                    general_url_vars + [("hst0", "on"), ("st0", "on"), ("is_in_downtime", "0")]
+                ),
             ),
             (
                 _("In downtime"),
@@ -88,29 +93,34 @@ class ServiceStats(NamedTuple):
                 _("On down host"),
                 "host_down",
                 self.host_down,
-                view_url(general_url_vars +
-                         [("hst1", "on"), ("hst2", "on"), ("hstp", "on"), ("is_in_downtime", "0")]),
+                view_url(
+                    general_url_vars
+                    + [("hst1", "on"), ("hst2", "on"), ("hstp", "on"), ("is_in_downtime", "0")]
+                ),
             ),
             (
                 _("Warning"),
                 "warning",
                 self.warning,
-                view_url(general_url_vars +
-                         [("hst0", "on"), ("st1", "on"), ("is_in_downtime", "0")]),
+                view_url(
+                    general_url_vars + [("hst0", "on"), ("st1", "on"), ("is_in_downtime", "0")]
+                ),
             ),
             (
                 _("Unknown"),
                 "unknown",
                 self.unknown,
-                view_url(general_url_vars +
-                         [("hst0", "on"), ("st3", "on"), ("is_in_downtime", "0")]),
+                view_url(
+                    general_url_vars + [("hst0", "on"), ("st3", "on"), ("is_in_downtime", "0")]
+                ),
             ),
             (
                 _("Critical"),
                 "critical",
                 self.critical,
-                view_url(general_url_vars +
-                         [("hst0", "on"), ("st2", "on"), ("is_in_downtime", "0")]),
+                view_url(
+                    general_url_vars + [("hst0", "on"), ("st2", "on"), ("is_in_downtime", "0")]
+                ),
             ),
         ]
 
@@ -204,9 +214,9 @@ class StatsDashletDataGenerator:
 
     @classmethod
     def _get_stats(cls, context, settings):
-        filter_headers, only_sites = visuals.get_filter_headers(table=cls._livestatus_table(),
-                                                                infos=settings["infos"],
-                                                                context=context)
+        filter_headers, only_sites = visuals.get_filter_headers(
+            table=cls._livestatus_table(), infos=settings["infos"], context=context
+        )
         query = cls._stats_query() + "\n" + filter_headers
         try:
             if only_sites:
@@ -220,8 +230,9 @@ class StatsDashletDataGenerator:
         return cls._named_stats(result)
 
     @classmethod
-    def _get_stats_element(cls, parts_data: List[Tuple[str, str, int, str]],
-                           general_url_vars: HTTPVariables) -> StatsElement:
+    def _get_stats_element(
+        cls, parts_data: List[Tuple[str, str, int, str]], general_url_vars: HTTPVariables
+    ) -> StatsElement:
         parts = []
         total_count = 0
         for title, css_class, count, url in parts_data:
@@ -272,30 +283,27 @@ class HostStatsDashletDataGenerator(StatsDashletDataGenerator):
 
     @classmethod
     def _stats_query(cls) -> str:
-        return "\n".join([
-            "GET hosts",
-
-            # Up
-            "Stats: state = 0",
-            "Stats: scheduled_downtime_depth = 0",
-            "StatsAnd: 2",
-
-            # Downtime
-            "Stats: scheduled_downtime_depth > 0",
-
-            # Unreachable
-            "Stats: state = 2",
-            "Stats: scheduled_downtime_depth = 0",
-            "StatsAnd: 2",
-
-            # Down
-            "Stats: state = 1",
-            "Stats: scheduled_downtime_depth = 0",
-            "StatsAnd: 2",
-
-            # Filter
-            "Filter: custom_variable_names < _REALNAME",
-        ])
+        return "\n".join(
+            [
+                "GET hosts",
+                # Up
+                "Stats: state = 0",
+                "Stats: scheduled_downtime_depth = 0",
+                "StatsAnd: 2",
+                # Downtime
+                "Stats: scheduled_downtime_depth > 0",
+                # Unreachable
+                "Stats: state = 2",
+                "Stats: scheduled_downtime_depth = 0",
+                "StatsAnd: 2",
+                # Down
+                "Stats: state = 1",
+                "Stats: scheduled_downtime_depth = 0",
+                "StatsAnd: 2",
+                # Filter
+                "Filter: custom_variable_names < _REALNAME",
+            ]
+        )
 
 
 class ServiceStatsDashletDataGenerator(StatsDashletDataGenerator):
@@ -319,55 +327,50 @@ class ServiceStatsDashletDataGenerator(StatsDashletDataGenerator):
 
     @classmethod
     def _stats_query(cls) -> str:
-        return "\n".join([
-            "GET services",
-
-            # OK
-            "Stats: state = 0",
-            "Stats: scheduled_downtime_depth = 0",
-            "Stats: host_scheduled_downtime_depth = 0",
-            "Stats: host_state = 0",
-            "Stats: host_has_been_checked = 1",
-            "StatsAnd: 5",
-
-            # Downtime
-            "Stats: scheduled_downtime_depth > 0",
-            "Stats: host_scheduled_downtime_depth > 0",
-            "StatsOr: 2",
-
-            # Down host
-            "Stats: scheduled_downtime_depth = 0",
-            "Stats: host_scheduled_downtime_depth = 0",
-            "Stats: host_state != 0",
-            "StatsAnd: 3",
-
-            # Warning
-            "Stats: state = 1",
-            "Stats: scheduled_downtime_depth = 0",
-            "Stats: host_scheduled_downtime_depth = 0",
-            "Stats: host_state = 0",
-            "Stats: host_has_been_checked = 1",
-            "StatsAnd: 5",
-
-            # Unknown
-            "Stats: state = 3",
-            "Stats: scheduled_downtime_depth = 0",
-            "Stats: host_scheduled_downtime_depth = 0",
-            "Stats: host_state = 0",
-            "Stats: host_has_been_checked = 1",
-            "StatsAnd: 5",
-
-            # Critical
-            "Stats: state = 2",
-            "Stats: scheduled_downtime_depth = 0",
-            "Stats: host_scheduled_downtime_depth = 0",
-            "Stats: host_state = 0",
-            "Stats: host_has_been_checked = 1",
-            "StatsAnd: 5",
-
-            # Filter
-            "Filter: host_custom_variable_names < _REALNAME",
-        ])
+        return "\n".join(
+            [
+                "GET services",
+                # OK
+                "Stats: state = 0",
+                "Stats: scheduled_downtime_depth = 0",
+                "Stats: host_scheduled_downtime_depth = 0",
+                "Stats: host_state = 0",
+                "Stats: host_has_been_checked = 1",
+                "StatsAnd: 5",
+                # Downtime
+                "Stats: scheduled_downtime_depth > 0",
+                "Stats: host_scheduled_downtime_depth > 0",
+                "StatsOr: 2",
+                # Down host
+                "Stats: scheduled_downtime_depth = 0",
+                "Stats: host_scheduled_downtime_depth = 0",
+                "Stats: host_state != 0",
+                "StatsAnd: 3",
+                # Warning
+                "Stats: state = 1",
+                "Stats: scheduled_downtime_depth = 0",
+                "Stats: host_scheduled_downtime_depth = 0",
+                "Stats: host_state = 0",
+                "Stats: host_has_been_checked = 1",
+                "StatsAnd: 5",
+                # Unknown
+                "Stats: state = 3",
+                "Stats: scheduled_downtime_depth = 0",
+                "Stats: host_scheduled_downtime_depth = 0",
+                "Stats: host_state = 0",
+                "Stats: host_has_been_checked = 1",
+                "StatsAnd: 5",
+                # Critical
+                "Stats: state = 2",
+                "Stats: scheduled_downtime_depth = 0",
+                "Stats: host_scheduled_downtime_depth = 0",
+                "Stats: host_state = 0",
+                "Stats: host_has_been_checked = 1",
+                "StatsAnd: 5",
+                # Filter
+                "Filter: host_custom_variable_names < _REALNAME",
+            ]
+        )
 
 
 class EventStatsDashletDataGenerator(StatsDashletDataGenerator):
@@ -402,19 +405,26 @@ class EventStatsDashletDataGenerator(StatsDashletDataGenerator):
         # In case the user is not allowed to see unrelated events
         ec_filters = ""
         if not user.may("mkeventd.seeall") and not user.may("mkeventd.seeunrelated"):
-            ec_filters = "\n".join([
-                "Filter: event_contact_groups != ",
-                "Filter: host_name != ",
-                "Or: 2",
-            ])
+            ec_filters = "\n".join(
+                [
+                    "Filter: event_contact_groups != ",
+                    "Filter: host_name != ",
+                    "Or: 2",
+                ]
+            )
 
-        return "\n".join([
-            "GET eventconsoleevents",
-            "Stats: event_state = 0",  # ok
-            "Stats: event_state = 1",  # warning
-            "Stats: event_state = 3",  # unknown
-            "Stats: event_state = 2",  # critical
-        ]) + ec_filters
+        return (
+            "\n".join(
+                [
+                    "GET eventconsoleevents",
+                    "Stats: event_state = 0",  # ok
+                    "Stats: event_state = 1",  # warning
+                    "Stats: event_state = 3",  # unknown
+                    "Stats: event_state = 2",  # critical
+                ]
+            )
+            + ec_filters
+        )
 
 
 @dashlet_registry.register
@@ -457,7 +467,8 @@ class ServiceStatsDashlet(ABCFigureDashlet):
     @classmethod
     def generate_response_data(cls, properties, context, settings):
         return ServiceStatsDashletDataGenerator.generate_response_data(
-            properties, context, settings)
+            properties, context, settings
+        )
 
     @classmethod
     def type_name(cls):

@@ -14,20 +14,27 @@ from cmk.gui.valuespec import Age, Optional, TextInput, Tuple
 
 
 def _item_spec_db2_backup():
-    return TextInput(title=_("Instance"),
-                     help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1"))
+    return TextInput(
+        title=_("Instance"), help=_("DB2 instance followed by database name, e.g db2taddm:CMDBS1")
+    )
 
 
 def _parameter_valuespec_db2_backup():
     return Optional(
-        Tuple(elements=[
-            Age(title=_("Warning at"),
-                display=["days", "hours", "minutes"],
-                default_value=86400 * 14),
-            Age(title=_("Critical at"),
-                display=["days", "hours", "minutes"],
-                default_value=86400 * 28)
-        ],),
+        Tuple(
+            elements=[
+                Age(
+                    title=_("Warning at"),
+                    display=["days", "hours", "minutes"],
+                    default_value=86400 * 14,
+                ),
+                Age(
+                    title=_("Critical at"),
+                    display=["days", "hours", "minutes"],
+                    default_value=86400 * 28,
+                ),
+            ],
+        ),
         title=_("Specify time since last successful backup"),
     )
 
@@ -39,4 +46,5 @@ rulespec_registry.register(
         item_spec=_item_spec_db2_backup,
         parameter_valuespec=_parameter_valuespec_db2_backup,
         title=lambda: _("DB2 Time since last database Backup"),
-    ))
+    )
+)

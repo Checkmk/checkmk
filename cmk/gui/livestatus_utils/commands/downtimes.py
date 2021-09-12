@@ -32,7 +32,7 @@ RecurMode = Literal[
     "weekday_start",
     "weekday_end",
     "day_of_month",
-]  # yapf: disable
+]
 
 
 class QueryException(Exception):
@@ -98,7 +98,7 @@ def delete_downtime_with_query(connection, query):
     q = Query([Downtimes.id, Downtimes.is_service]).filter(query)
 
     with detailed_connection(connection) as conn:
-        downtimes = [(row['site'], row['id'], row['is_service']) for row in q.iterate(conn)]
+        downtimes = [(row["site"], row["id"], row["is_service"]) for row in q.iterate(conn)]
 
     for site_id, downtime_id, is_service in downtimes:
         if is_service:
@@ -125,10 +125,10 @@ def schedule_services_downtimes_with_query(
     query: QueryExpression,
     start_time: dt.datetime,
     end_time: dt.datetime,
-    recur: RecurMode = 'fixed',
+    recur: RecurMode = "fixed",
     duration: int = 0,
-    user_id: str = '',
-    comment: str = '',
+    user_id: str = "",
+    comment: str = "",
 ):
     """Schedule downtimes for services based upon a query"""
 
@@ -137,7 +137,7 @@ def schedule_services_downtimes_with_query(
         query,
     )
     with detailed_connection(connection) as conn:
-        result = [(row['site'], row['host_name'], row['description']) for row in q.iterate(conn)]
+        result = [(row["site"], row["host_name"], row["description"]) for row in q.iterate(conn)]
 
     if not result:
         raise QueryException
@@ -169,11 +169,11 @@ def schedule_service_downtime(
     service_description: Union[List[str], str],
     start_time: dt.datetime,
     end_time: dt.datetime,
-    recur: RecurMode = 'fixed',
+    recur: RecurMode = "fixed",
     trigger_id: int = 0,
     duration: int = 0,
-    user_id: str = '',
-    comment: str = '',
+    user_id: str = "",
+    comment: str = "",
 ):
     """Schedule the downtime of a host.
 
@@ -276,11 +276,11 @@ def schedule_servicegroup_service_downtime(
     start_time: dt.datetime,
     end_time: dt.datetime,
     include_hosts: bool = False,
-    recur: RecurMode = 'fixed',
+    recur: RecurMode = "fixed",
     trigger_id: int = 0,
     duration: int = 0,
-    user_id: str = '',
-    comment: str = '',
+    user_id: str = "",
+    comment: str = "",
 ):
     """Schedules downtime for all hosts, which have services in a given servicegroup.
 
@@ -338,7 +338,8 @@ def schedule_servicegroup_service_downtime(
             Query(
                 [tables.Servicegroups.members],
                 tables.Servicegroups.name.equals(servicegroup_name),
-            ).iterate(conn))
+            ).iterate(conn)
+        )
     for entry in entries:
         site = entry["site"]
         for host_name, service_description in entry["members"]:
@@ -377,11 +378,11 @@ def schedule_hostgroup_host_downtime(
     start_time: dt.datetime,
     end_time: dt.datetime,
     include_all_services: bool = False,
-    recur: RecurMode = 'fixed',
+    recur: RecurMode = "fixed",
     trigger_id: int = 0,
     duration: int = 0,
-    user_id: str = '',
-    comment: str = '',
+    user_id: str = "",
+    comment: str = "",
 ):
     """Schedules downtime for all hosts in a given hostgroup.
 
@@ -436,8 +437,9 @@ def schedule_hostgroup_host_downtime(
       * https://assets.nagios.com/downloads/nagioscore/docs/externalcmds/cmdinfo.php?command_id=123
 
     """
-    result = Query([tables.Hostgroups.members],
-                   tables.Hostgroups.name.equals(hostgroup_name)).iterate(connection)
+    result = Query(
+        [tables.Hostgroups.members], tables.Hostgroups.name.equals(hostgroup_name)
+    ).iterate(connection)
 
     hosts = [host for entry in result for host in entry["members"]]
     schedule_host_downtime(
@@ -460,16 +462,16 @@ def schedule_hosts_downtimes_with_query(
     start_time: dt.datetime,
     end_time: dt.datetime,
     include_all_services=False,
-    recur: RecurMode = 'fixed',
+    recur: RecurMode = "fixed",
     duration: int = 0,
-    user_id: str = '',
-    comment: str = '',
+    user_id: str = "",
+    comment: str = "",
 ):
     """Schedule a downtimes for hosts based upon a query"""
 
     q = Query([Hosts.name]).filter(query)
 
-    hosts = [row['name'] for row in q.iterate(connection)]
+    hosts = [row["name"] for row in q.iterate(connection)]
 
     if not hosts:
         raise QueryException
@@ -496,11 +498,11 @@ def schedule_host_downtime(
     start_time: dt.datetime,
     end_time: dt.datetime,
     include_all_services: bool = False,
-    recur: RecurMode = 'fixed',
+    recur: RecurMode = "fixed",
     trigger_id: int = 0,
     duration: int = 0,
-    user_id: str = '',
-    comment: str = '',
+    user_id: str = "",
+    comment: str = "",
 ):
     """Schedule the downtime of a host.
 
@@ -586,9 +588,10 @@ def schedule_host_downtime(
 
     with detailed_connection(connection) as conn:
         host_entries = [
-            (entry['site'], entry['name'])
-            for entry in Query([Hosts.name], Or(
-                *[Hosts.name.equals(host) for host in hosts])).fetchall(conn)
+            (entry["site"], entry["name"])
+            for entry in Query(
+                [Hosts.name], Or(*[Hosts.name.equals(host) for host in hosts])
+            ).fetchall(conn)
         ]
 
     for _site, _host_name in host_entries:
@@ -609,10 +612,15 @@ def schedule_host_downtime(
 
     if include_all_services:
         with detailed_connection(connection) as conn:
-            services = Query([
-                tables.Services.host_name, tables.Services.description
-            ], Or(*[tables.Services.host_name.equals(_host_name)
-                    for _, _host_name in host_entries])).fetch_values(conn)
+            services = Query(
+                [tables.Services.host_name, tables.Services.description],
+                Or(
+                    *[
+                        tables.Services.host_name.equals(_host_name)
+                        for _, _host_name in host_entries
+                    ]
+                ),
+            ).fetch_values(conn)
 
         for _site, _host_name, service_description in services:
             schedule_service_downtime(
@@ -638,7 +646,7 @@ def _schedule_downtime(
     service_description: Optional[str],
     start_time: dt.datetime,
     end_time: dt.datetime,
-    recur: RecurMode = 'fixed',
+    recur: RecurMode = "fixed",
     trigger_id: int = 0,
     duration: int = 0,
     user_id: str = "",
@@ -654,9 +662,9 @@ def _schedule_downtime(
 
     recur_mode = _recur_mode(recur, duration)
 
-    if command == 'SCHEDULE_HOST_DOWNTIME':
+    if command == "SCHEDULE_HOST_DOWNTIME":
         params = [host_or_group]
-    elif command == 'SCHEDULE_SVC_DOWNTIME':
+    elif command == "SCHEDULE_SVC_DOWNTIME":
         if not service_description:
             raise ValueError("Service description necessary.")
         params = [host_or_group, service_description]
@@ -719,15 +727,15 @@ def _recur_mode(recur: RecurMode, duration: int) -> int:
 
     """
     mapping: Dict[str, int] = {
-        'fixed': 0,
-        'hour': 2,
-        'day': 4,
-        'week': 6,
-        'second_week': 8,
-        'fourth_week': 10,
-        'weekday_start': 12,
-        'weekday_end': 14,
-        'day_of_month': 16,
+        "fixed": 0,
+        "hour": 2,
+        "day": 4,
+        "week": 6,
+        "second_week": 8,
+        "fourth_week": 10,
+        "weekday_start": 12,
+        "weekday_end": 14,
+        "day_of_month": 16,
     }
     rv = mapping[recur]
     assert rv % 2 == 0, "Number is not even."  # This is intentional.

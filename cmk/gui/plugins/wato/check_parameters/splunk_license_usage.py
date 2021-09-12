@@ -16,26 +16,28 @@ from cmk.gui.valuespec import Alternative, Dictionary, Filesize, Percentage, Tup
 def _parameter_valuespec_splunk_license_usage():
     return Dictionary(
         elements=[
-            ("usage_bytes",
-             Alternative(
-                 title=_("Used quota: Absolute or relative upper levels"),
-                 elements=[
-                     Tuple(
-                         title=_("Upper absolute levels"),
-                         elements=[
-                             Filesize(title=_("Warning at")),
-                             Filesize(title=_("Critical at"))
-                         ],
-                     ),
-                     Tuple(
-                         title=_("Upper percentage levels"),
-                         elements=[
-                             Percentage(title=_("Warning at"), default_value=80.0),
-                             Percentage(title=_("Critical at"), default_value=90.0)
-                         ],
-                     ),
-                 ],
-             )),
+            (
+                "usage_bytes",
+                Alternative(
+                    title=_("Used quota: Absolute or relative upper levels"),
+                    elements=[
+                        Tuple(
+                            title=_("Upper absolute levels"),
+                            elements=[
+                                Filesize(title=_("Warning at")),
+                                Filesize(title=_("Critical at")),
+                            ],
+                        ),
+                        Tuple(
+                            title=_("Upper percentage levels"),
+                            elements=[
+                                Percentage(title=_("Warning at"), default_value=80.0),
+                                Percentage(title=_("Critical at"), default_value=90.0),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
         ],
         optional_keys=["usage_bytes"],
     )
@@ -48,4 +50,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_splunk_license_usage,
         title=lambda: _("Splunk License Usage"),
-    ))
+    )
+)

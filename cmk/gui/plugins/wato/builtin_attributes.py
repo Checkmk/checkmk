@@ -117,18 +117,20 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
     def valuespec(self):
         return HostAddress(
             title=_("IPv4 address"),
-            help=_("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
-                   "or DNS by your monitoring server, you can specify an explicit IP "
-                   "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
-                   "1. If you do not set this attribute, hostname resolution will be done when "
-                   "you activate the configuration. "
-                   "Check_MKs builtin DNS cache is activated per default in the global "
-                   "configuration to speed up the activation process. The cache is normally "
-                   "updated daily with a cron job. You can manually update the cache with the "
-                   "command <tt>cmk -v --update-dns-cache</tt>.<br>"
-                   "2. If you enter a DNS name here, the DNS resolution will be carried out "
-                   "each time the host is checked. Check_MKs DNS cache will NOT be queried. "
-                   "Use this only for hosts with dynamic IP addresses."),
+            help=_(
+                "In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
+                "or DNS by your monitoring server, you can specify an explicit IP "
+                "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
+                "1. If you do not set this attribute, hostname resolution will be done when "
+                "you activate the configuration. "
+                "Check_MKs builtin DNS cache is activated per default in the global "
+                "configuration to speed up the activation process. The cache is normally "
+                "updated daily with a cron job. You can manually update the cache with the "
+                "command <tt>cmk -v --update-dns-cache</tt>.<br>"
+                "2. If you enter a DNS name here, the DNS resolution will be carried out "
+                "each time the host is checked. Check_MKs DNS cache will NOT be queried. "
+                "Use this only for hosts with dynamic IP addresses."
+            ),
             allow_empty=False,
             allow_ipv6_address=False,
         )
@@ -136,10 +138,12 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
     def openapi_field(self) -> fields.Field:
         return fields.String(
             description="An IPv4 address.",
-            validate=validators.ValidateAnyOfValidators([
-                fields.ValidateIPv4(),
-                validators.ValidateHostName(),
-            ]),
+            validate=validators.ValidateAnyOfValidators(
+                [
+                    fields.ValidateIPv4(),
+                    validators.ValidateHostName(),
+                ]
+            ),
         )
 
 
@@ -164,18 +168,20 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
     def valuespec(self):
         return HostAddress(
             title=_("IPv6 Address"),
-            help=_("In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
-                   "or DNS by your monitoring server, you can specify an explicit IPv6 "
-                   "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
-                   "1. If you do not set this attribute, hostname resolution will be done when "
-                   "you activate the configuration. "
-                   "Check_MKs builtin DNS cache is activated per default in the global "
-                   "configuration to speed up the activation process. The cache is normally "
-                   "updated daily with a cron job. You can manually update the cache with the "
-                   "command <tt>cmk -v --update-dns-cache</tt>.<br>"
-                   "2. If you enter a DNS name here, the DNS resolution will be carried out "
-                   "each time the host is checked. Check_MKs DNS cache will NOT be queried. "
-                   "Use this only for hosts with dynamic IP addresses."),
+            help=_(
+                "In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
+                "or DNS by your monitoring server, you can specify an explicit IPv6 "
+                "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
+                "1. If you do not set this attribute, hostname resolution will be done when "
+                "you activate the configuration. "
+                "Check_MKs builtin DNS cache is activated per default in the global "
+                "configuration to speed up the activation process. The cache is normally "
+                "updated daily with a cron job. You can manually update the cache with the "
+                "command <tt>cmk -v --update-dns-cache</tt>.<br>"
+                "2. If you enter a DNS name here, the DNS resolution will be carried out "
+                "each time the host is checked. Check_MKs DNS cache will NOT be queried. "
+                "Use this only for hosts with dynamic IP addresses."
+            ),
             allow_empty=False,
             allow_ipv4_address=False,
         )
@@ -218,16 +224,22 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
                 allow_ipv6_address=False,
             ),
             title=_("Additional IPv4 addresses"),
-            help=_("Here you can specify additional IPv4 addresses. "
-                   "These can be used in some active checks like ICMP."),
+            help=_(
+                "Here you can specify additional IPv4 addresses. "
+                "These can be used in some active checks like ICMP."
+            ),
         )
 
     def openapi_field(self) -> fields.Field:
         return fields.List(
-            fields.String(validate=validators.ValidateAnyOfValidators([
-                fields.ValidateIPv4(),
-                validators.ValidateHostName(),
-            ])),
+            fields.String(
+                validate=validators.ValidateAnyOfValidators(
+                    [
+                        fields.ValidateIPv4(),
+                        validators.ValidateHostName(),
+                    ]
+                )
+            ),
             description="A list of IPv4 addresses.",
         )
 
@@ -263,8 +275,10 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
                 allow_ipv4_address=False,
             ),
             title=_("Additional IPv6 addresses"),
-            help=_("Here you can specify additional IPv6 addresses. "
-                   "These can be used in some active checks like ICMP."),
+            help=_(
+                "Here you can specify additional IPv6 addresses. "
+                "These can be used in some active checks like ICMP."
+            ),
         )
 
     def openapi_field(self) -> fields.Field:
@@ -297,25 +311,26 @@ class HostAttributeAgentConnection(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return DropdownChoice(
-            title=_('Checkmk agent connection mode'),
+            title=_("Checkmk agent connection mode"),
             choices=[
-                ('pull-agent', _('Pull: Checkmk server contacts the agent')),
-                ('push-agent', _('Push: Checkmk agent contacts the server')),
+                ("pull-agent", _("Pull: Checkmk server contacts the agent")),
+                ("push-agent", _("Push: Checkmk agent contacts the server")),
             ],
             help=_(  #
                 "By default the server will try to contact the monitored host and pull the"
                 " data by initializing a TCP connection. You can configure a push"
                 " configuration, where the monitored host is expected to send the data to"
-                " the monitoring server without being actively triggered."),
+                " the monitoring server without being actively triggered."
+            ),
         )
 
     def openapi_field(self) -> fields.Field:
         return fields.String(
             enum=["pull-agent", "push-agent"],
-            description=
-            ("This configures the communication direction of this host.\n"
-             " * `pull-agent` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection\n"
-             " * `push-agent` - the host is expected to send the data to the monitoring server without being triggered\n"
+            description=(
+                "This configures the communication direction of this host.\n"
+                " * `pull-agent` (default) - The server will try to contact the monitored host and pull the data by initializing a TCP connection\n"
+                " * `push-agent` - the host is expected to send the data to the monitoring server without being triggered\n"
             ),
         )
 
@@ -343,22 +358,25 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
 
     def valuespec(self):
         return SNMPCredentials(
-            help=
-            _("Using this option you can configure the community which should be used when "
-              "contacting this host via SNMP v1/v2 or v3. It is possible to configure the SNMP community by "
-              "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
-              "a community here, this will override the community defined by the rules.") %
-            "wato.py?mode=edit_ruleset&varname=snmp_communities",
+            help=_(
+                "Using this option you can configure the community which should be used when "
+                "contacting this host via SNMP v1/v2 or v3. It is possible to configure the SNMP community by "
+                'using the <a href="%s">SNMP Communities</a> ruleset, but when you configure '
+                "a community here, this will override the community defined by the rules."
+            )
+            % "wato.py?mode=edit_ruleset&varname=snmp_communities",
             default_value=None,
         )
 
     def openapi_field(self) -> fields.Field:
         return fields.Nested(
             fields.SNMPCredentials,
-            description=("The SNMP access configuration. A configured SNMP v1/v2 community here "
-                         "will have precedence over any configured SNMP community rule. For this "
-                         "attribute to take effect, the attribute `tag_snmp_ds` needs to be set "
-                         "first."),
+            description=(
+                "The SNMP access configuration. A configured SNMP v1/v2 community here "
+                "will have precedence over any configured SNMP community rule. For this "
+                "attribute to take effect, the attribute `tag_snmp_ds` needs to be set "
+                "first."
+            ),
         )
 
 
@@ -387,13 +405,15 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
         return ListOfStrings(
             valuespec=ConfigHostname(),
             title=_("Parents"),
-            help=_("Parents are used to configure the reachability of hosts by the "
-                   "monitoring server. A host is considered to be <b>unreachable</b> if all "
-                   "of its parents are unreachable or down. Unreachable hosts will not be "
-                   "actively monitored.<br><br><b>Clusters</b> automatically configure all "
-                   "of their nodes as parents, but only if you do not configure parents "
-                   "manually.<br><br>In a distributed setup make sure that the host and all "
-                   "of its parents are monitored by the same site."),
+            help=_(
+                "Parents are used to configure the reachability of hosts by the "
+                "monitoring server. A host is considered to be <b>unreachable</b> if all "
+                "of its parents are unreachable or down. Unreachable hosts will not be "
+                "actively monitored.<br><br><b>Clusters</b> automatically configure all "
+                "of their nodes as parents, but only if you do not configure parents "
+                "manually.<br><br>In a distributed setup make sure that the host and all "
+                "of its parents are monitored by the same site."
+            ),
             orientation="horizontal",
         )
 
@@ -431,24 +451,28 @@ def validate_host_parents(host):
     for parent_name in host.parents():
         if parent_name == host.name():
             raise MKUserError(
-                None, _("You configured the host to be it's own parent, which is not allowed."))
+                None, _("You configured the host to be it's own parent, which is not allowed.")
+            )
 
         parent = watolib.Host.host(parent_name)
         if not parent:
             raise MKUserError(
-                None,
-                _("You defined the non-existing host '%s' as a parent.") % parent_name)
+                None, _("You defined the non-existing host '%s' as a parent.") % parent_name
+            )
 
         if host.site_id() != parent.site_id():
             raise MKUserError(
                 None,
-                _("The parent '%s' is monitored on site '%s' while the host itself "
-                  "is monitored on site '%s'. Both must be monitored on the same site. Remember: The parent/child "
-                  "relation is used to describe the reachability of hosts by one monitoring daemon."
-                 ) % (parent_name, parent.site_id(), host.site_id()))
+                _(
+                    "The parent '%s' is monitored on site '%s' while the host itself "
+                    "is monitored on site '%s'. Both must be monitored on the same site. Remember: The parent/child "
+                    "relation is used to describe the reachability of hosts by one monitoring daemon."
+                )
+                % (parent_name, parent.site_id(), host.site_id()),
+            )
 
 
-hooks.register_builtin('validate-host', validate_host_parents)
+hooks.register_builtin("validate-host", validate_host_parents)
 
 
 @hooks.request_memoize()
@@ -497,11 +521,13 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         return Dictionary(
             elements=self._network_scan_elements,
             title=_("Network Scan"),
-            help=_("For each folder an automatic network scan can be configured. It will "
-                   "try to detect new hosts in the configured IP ranges by sending pings "
-                   "to each IP address to check whether or not a host is using this ip "
-                   "address. Each new found host will be added to the current folder by "
-                   "it's hostname, when resolvable via DNS, or by it's IP address."),
+            help=_(
+                "For each folder an automatic network scan can be configured. It will "
+                "try to detect new hosts in the configured IP ranges by sending pings "
+                "to each IP address to check whether or not a host is using this ip "
+                "address. Each new found host will be added to the current folder by "
+                "it's hostname, when resolvable via DNS, or by it's IP address."
+            ),
             optional_keys=["max_parallel_pings", "translate_names"],
             default_text=_("Not configured."),
         )
@@ -509,21 +535,25 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
     def openapi_field(self) -> fields.Field:
         return fields.Nested(
             fields.NetworkScan,
-            description=("Configuration for automatic network scan. Pings will be"
-                         "sent to each IP address in the configured ranges to check"
-                         "if a host is up or down. Each found host will be added to"
-                         "the folder by it's hostname (if possible) or IP address."),
+            description=(
+                "Configuration for automatic network scan. Pings will be"
+                "sent to each IP address in the configured ranges to check"
+                "if a host is up or down. Each found host will be added to"
+                "the folder by it's hostname (if possible) or IP address."
+            ),
         )
 
     def _network_scan_elements(self):
         elements = [
-            ("ip_ranges",
-             ListOf(
-                 self._vs_ip_range(),
-                 title=_("IP ranges to scan"),
-                 add_label=_("Add new IP range"),
-                 text_if_empty=_("No IP range configured"),
-             )),
+            (
+                "ip_ranges",
+                ListOf(
+                    self._vs_ip_range(),
+                    title=_("IP ranges to scan"),
+                    add_label=_("Add new IP range"),
+                    text_if_empty=_("No IP range configured"),
+                ),
+            ),
             (
                 "exclude_ranges",
                 ListOf(
@@ -531,7 +561,8 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                     title=_("IP ranges to exclude"),
                     add_label=_("Add new IP range"),
                     text_if_empty=_("No exclude range configured"),
-                )),
+                ),
+            ),
             (
                 "scan_interval",
                 Age(
@@ -539,58 +570,81 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                     display=["days", "hours"],
                     default_value=60 * 60 * 24,
                     minvalue=3600,  # 1 hour
-                )),
-            ("time_allowed",
-             Transform(
-                 ListOf(
-                     TimeofdayRange(allow_empty=False,),
-                     title=_("Time allowed"),
-                     help=_("Limit the execution of the scan to this time range."),
-                     allow_empty=False,
-                     style=ListOf.Style.FLOATING,
-                     movable=False,
-                     default_value=[((0, 0), (24, 0))],
-                 ),
-                 forth=lambda x: [x] if isinstance(x, tuple) else x,
-                 back=sorted,
-             )),
-            ("set_ipaddress",
-             Checkbox(
-                 title=_("Set IPv4 address"),
-                 help=_("Whether or not to configure the found IP address as the IPv4 "
-                        "address of the found hosts."),
-                 default_value=True,
-             )),
+                ),
+            ),
+            (
+                "time_allowed",
+                Transform(
+                    ListOf(
+                        TimeofdayRange(
+                            allow_empty=False,
+                        ),
+                        title=_("Time allowed"),
+                        help=_("Limit the execution of the scan to this time range."),
+                        allow_empty=False,
+                        style=ListOf.Style.FLOATING,
+                        movable=False,
+                        default_value=[((0, 0), (24, 0))],
+                    ),
+                    forth=lambda x: [x] if isinstance(x, tuple) else x,
+                    back=sorted,
+                ),
+            ),
+            (
+                "set_ipaddress",
+                Checkbox(
+                    title=_("Set IPv4 address"),
+                    help=_(
+                        "Whether or not to configure the found IP address as the IPv4 "
+                        "address of the found hosts."
+                    ),
+                    default_value=True,
+                ),
+            ),
         ]
 
         elements += self._optional_tag_criticality_element()
         elements += [
-            ("max_parallel_pings",
-             Integer(
-                 title=_("Parallel pings to send"),
-                 help=_("Set the maximum number of concurrent pings sent to target IP "
-                        "addresses."),
-                 minvalue=1,
-                 maxvalue=200,
-                 default_value=100,
-             )),
-            ("run_as",
-             DropdownChoice(
-                 title=_("Run as"),
-                 help=_("Execute the network scan in the Check_MK user context of the "
+            (
+                "max_parallel_pings",
+                Integer(
+                    title=_("Parallel pings to send"),
+                    help=_(
+                        "Set the maximum number of concurrent pings sent to target IP " "addresses."
+                    ),
+                    minvalue=1,
+                    maxvalue=200,
+                    default_value=100,
+                ),
+            ),
+            (
+                "run_as",
+                DropdownChoice(
+                    title=_("Run as"),
+                    help=_(
+                        "Execute the network scan in the Check_MK user context of the "
                         "choosen user. This user needs the permission to add new hosts "
-                        "to this folder."),
-                 choices=self._get_all_user_ids,
-                 default_value=lambda: user.id,
-             )),
-            ("translate_names", HostnameTranslation(title=_("Translate Hostnames"),)),
+                        "to this folder."
+                    ),
+                    choices=self._get_all_user_ids,
+                    default_value=lambda: user.id,
+                ),
+            ),
+            (
+                "translate_names",
+                HostnameTranslation(
+                    title=_("Translate Hostnames"),
+                ),
+            ),
         ]
 
         return elements
 
     def _get_all_user_ids(self):
-        return [(user_id, "%s (%s)" % (user_id, user.get("alias", user_id)))
-                for user_id, user in userdb.load_users(lock=False).items()]
+        return [
+            (user_id, "%s (%s)" % (user_id, user.get("alias", user_id)))
+            for user_id, user in userdb.load_users(lock=False).items()
+        ]
 
     def _optional_tag_criticality_element(self):
         """This element is optional. The user may have deleted the tag group criticality"""
@@ -598,57 +652,84 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
         if not choices:
             return []
 
-        return [("tag_criticality",
-                 DropdownChoice(
-                     title=_("Set criticality host tag"),
-                     help=_("Added hosts will be created as \"offline\" host by default. You "
-                            "can change this option to activate monitoring of new hosts after "
-                            "next activation of the configuration after the scan."),
-                     choices=choices,
-                     default_value="offline",
-                 ))]
+        return [
+            (
+                "tag_criticality",
+                DropdownChoice(
+                    title=_("Set criticality host tag"),
+                    help=_(
+                        'Added hosts will be created as "offline" host by default. You '
+                        "can change this option to activate monitoring of new hosts after "
+                        "next activation of the configuration after the scan."
+                    ),
+                    choices=choices,
+                    default_value="offline",
+                ),
+            )
+        ]
 
     def _vs_ip_range(self, with_regexp=False):
         # NOTE: The `ip_regex_list` choice is only used in the `exclude_ranges` key.
         options = [
-            ("ip_range", _("IP-Range"),
-             Tuple(
-                 elements=[
-                     IPv4Address(title=_("From:"),),
-                     IPv4Address(title=_("To:"),),
-                 ],
-                 orientation="horizontal",
-             )),
-            ("ip_network", _("IP Network"),
-             Tuple(
-                 elements=[
-                     IPv4Address(title=_("Network address:"),),
-                     Integer(
-                         title=_("Netmask"),
-                         minvalue=8,
-                         maxvalue=30,
-                         default_value=24,
-                     ),
-                 ],
-                 orientation="horizontal",
-                 help=_("Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
+            (
+                "ip_range",
+                _("IP-Range"),
+                Tuple(
+                    elements=[
+                        IPv4Address(
+                            title=_("From:"),
+                        ),
+                        IPv4Address(
+                            title=_("To:"),
+                        ),
+                    ],
+                    orientation="horizontal",
+                ),
+            ),
+            (
+                "ip_network",
+                _("IP Network"),
+                Tuple(
+                    elements=[
+                        IPv4Address(
+                            title=_("Network address:"),
+                        ),
+                        Integer(
+                            title=_("Netmask"),
+                            minvalue=8,
+                            maxvalue=30,
+                            default_value=24,
+                        ),
+                    ],
+                    orientation="horizontal",
+                    help=_(
+                        "Please avoid very large subnet sizes/ranges. A netmask value of /21 is "
                         "probably ok, while larger subnets (i.e. smaller netmask values) will lead "
-                        "to excessive runtimes."),
-             )),
-            ("ip_list", _("Explicit List of IP Addresses"),
-             ListOfStrings(
-                 valuespec=IPv4Address(),
-                 orientation="horizontal",
-             )),
+                        "to excessive runtimes."
+                    ),
+                ),
+            ),
+            (
+                "ip_list",
+                _("Explicit List of IP Addresses"),
+                ListOfStrings(
+                    valuespec=IPv4Address(),
+                    orientation="horizontal",
+                ),
+            ),
         ]
         regexp_exclude = (
             "ip_regex_list",
             _("List of patterns to exclude"),
             ListOfStrings(
-                valuespec=RegExp(mode=RegExp.prefix,),
+                valuespec=RegExp(
+                    mode=RegExp.prefix,
+                ),
                 orientation="horizontal",
-                help=_("A list of regular expressions which are matched against the found "
-                       "IP addresses to exclude them. The matched addresses are excluded."),
+                help=_(
+                    "A list of regular expressions which are matched against the found "
+                    "IP addresses to exclude them. The matched addresses are excluded."
+                ),
             ),
         )
         if with_regexp:
@@ -687,8 +768,9 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
         return False
 
     def openapi_field(self) -> fields.Field:
-        return fields.Nested(fields.NetworkScanResult,
-                             description="Read only access to the network scan result")
+        return fields.Nested(
+            fields.NetworkScanResult, description="Read only access to the network scan result"
+        )
 
     def valuespec(self):
         return Dictionary(
@@ -749,7 +831,12 @@ class HostAttributeNetworkScanResult(ABCHostAttributeValueSpec):
                         ],
                     ),
                 ),
-                ("output", TextInput(title=_("Output"),)),
+                (
+                    "output",
+                    TextInput(
+                        title=_("Output"),
+                    ),
+                ),
             ],
             title=_("Last Scan Result"),
             optional_keys=[],
@@ -778,19 +865,24 @@ class HostAttributeManagementAddress(ABCHostAttributeValueSpec):
     def valuespec(self):
         return HostAddress(
             title=_("Address"),
-            help=_("Address (IPv4 or IPv6) or dns name under which the "
-                   "management board can be reached. If this is not set, "
-                   "the same address as that of the host will be used."),
+            help=_(
+                "Address (IPv4 or IPv6) or dns name under which the "
+                "management board can be reached. If this is not set, "
+                "the same address as that of the host will be used."
+            ),
             allow_empty=False,
         )
 
     def openapi_field(self) -> fields.Field:
         return fields.String(
-            description='Address (IPv4 or IPv6) under which the management board can be reached.',
-            validate=fields.ValidateAnyOfValidators([
-                fields.ValidateIPv4(),
-                fields.ValidateIPv6(),
-            ]))
+            description="Address (IPv4 or IPv6) under which the management board can be reached.",
+            validate=fields.ValidateAnyOfValidators(
+                [
+                    fields.ValidateIPv4(),
+                    fields.ValidateIPv6(),
+                ]
+            ),
+        )
 
 
 @host_attribute_registry.register
@@ -819,30 +911,32 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
                 (None, _("No management board")),
                 ("snmp", _("SNMP")),
                 ("ipmi", _("IPMI")),
-                #("ping", _("Ping-only"))
+                # ("ping", _("Ping-only"))
             ],
         )
 
     def openapi_field(self) -> fields.Field:
         def to_disk(data):
-            val = data['management_protocol']
-            if val == 'none':
+            val = data["management_protocol"]
+            if val == "none":
                 return None
             return val
 
         def from_disk(data):
-            val = data.get('management_protocol', None)
+            val = data.get("management_protocol", None)
             if val is None:
-                return 'none'
+                return "none"
             return val
 
         return fields.Function(
-            description=("The protocol used to connect to the management board.\n\n"
-                         "Valid options are:\n\n"
-                         " * `none` - No management board\n"
-                         " * `snmp` - Connect using SNMP\n"
-                         " * `ipmi` - Connect using IPMI\n"),
-            enum=['none', 'snmp', 'ipmi'],
+            description=(
+                "The protocol used to connect to the management board.\n\n"
+                "Valid options are:\n\n"
+                " * `none` - No management board\n"
+                " * `snmp` - Connect using SNMP\n"
+                " * `ipmi` - Connect using IPMI\n"
+            ),
+            enum=["none", "snmp", "ipmi"],
             serialize=from_disk,
             deserialize=to_disk,
         )
@@ -950,12 +1044,14 @@ class HostAttributeSite(ABCHostAttributeValueSpec):
         return SetupSiteChoice(
             title=_("Monitored on site"),
             help=_("Specify the site that should monitor this host."),
-            invalid_choice_error=_("The configured site is not known to this site. In case you "
-                                   "are configuring in a distributed slave, this may be a host "
-                                   "monitored by another site. If you want to modify this "
-                                   "host, you will have to change the site attribute to the "
-                                   "local site. But this may make the host be monitored from "
-                                   "multiple sites."),
+            invalid_choice_error=_(
+                "The configured site is not known to this site. In case you "
+                "are configuring in a distributed slave, this may be a host "
+                "monitored by another site. If you want to modify this "
+                "host, you will have to change the site attribute to the "
+                "local site. But this may make the host be monitored from "
+                "multiple sites."
+            ),
         )
 
     def openapi_field(self) -> fields.Field:
@@ -1024,12 +1120,18 @@ class LockedByValuespec(Tuple):
             title_br=False,
             elements=[
                 SetupSiteChoice(),
-                ID(title=_("Program"),),
-                ID(title=_("Connection ID"),),
+                ID(
+                    title=_("Program"),
+                ),
+                ID(
+                    title=_("Connection ID"),
+                ),
             ],
             title=_("Locked by"),
-            help=_("The host is (partially) managed by an automatic data source like the "
-                   "Dynamic Configuration."),
+            help=_(
+                "The host is (partially) managed by an automatic data source like the "
+                "Dynamic Configuration."
+            ),
         )
 
     def value_to_text(self, value) -> ValueSpecText:
@@ -1161,8 +1263,9 @@ class HostAttributeMetaData(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> fields.Field:
-        return fields.Nested(fields.MetaData,
-                             description="Read only access to configured metadata.")
+        return fields.Nested(
+            fields.MetaData, description="Read only access to configured metadata."
+        )
 
 
 @host_attribute_registry.register
@@ -1181,11 +1284,13 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         return 190
 
     def help(self):
-        return _("With the help of labels you can flexibly group your hosts in "
-                 "order to refer to them later at other places in Check_MK, e.g. in rule chains. "
-                 "A label always consists of a combination of key and value in the format "
-                 "\"key:value\". A host can only have one value per key. Check_MK will not perform "
-                 "any validation on the labels you use.")
+        return _(
+            "With the help of labels you can flexibly group your hosts in "
+            "order to refer to them later at other places in Check_MK, e.g. in rule chains. "
+            "A label always consists of a combination of key and value in the format "
+            '"key:value". A host can only have one value per key. Check_MK will not perform '
+            "any validation on the labels you use."
+        )
 
     def show_in_table(self):
         return False
@@ -1197,7 +1302,9 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
         return Labels(world=Labels.World.CONFIG, label_source=Labels.Source.EXPLICIT)
 
     def openapi_field(self) -> fields.Field:
-        return fields.Dict(description=self.help(),)
+        return fields.Dict(
+            description=self.help(),
+        )
 
     def filter_matches(self, crit, value, hostname):
         return set(value).issuperset(set(crit))

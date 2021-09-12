@@ -43,11 +43,13 @@ class ModeIcons(WatoMode):
         return _("Custom icons")
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        return make_simple_form_page_menu(_("Icon"),
-                                          breadcrumb,
-                                          form_name="upload_form",
-                                          button_name="_do_upload",
-                                          save_title=_("Upload"))
+        return make_simple_form_page_menu(
+            _("Icon"),
+            breadcrumb,
+            form_name="upload_form",
+            button_name="_do_upload",
+            save_title=_("Upload"),
+        )
 
     def _load_custom_icons(self):
         s = IconSelector(show_builtin_icons=False, with_emblem=False)
@@ -55,34 +57,44 @@ class ModeIcons(WatoMode):
 
     def _vs_upload(self):
         return Dictionary(
-            title=_('Upload icon'),
+            title=_("Upload icon"),
             optional_keys=False,
             render="form",
             elements=[
-                ('icon',
-                 ImageUpload(
-                     title=_('Icon'),
-                     max_size=(80, 80),
-                     validate=self._validate_icon,
-                 )),
-                ('category',
-                 DropdownChoice(
-                     title=_('Category'),
-                     choices=config.wato_icon_categories,
-                     no_preselect=True,
-                 )),
+                (
+                    "icon",
+                    ImageUpload(
+                        title=_("Icon"),
+                        max_size=(80, 80),
+                        validate=self._validate_icon,
+                    ),
+                ),
+                (
+                    "category",
+                    DropdownChoice(
+                        title=_("Category"),
+                        choices=config.wato_icon_categories,
+                        no_preselect=True,
+                    ),
+                ),
             ],
         )
 
     def _validate_icon(self, value, varprefix):
         file_name = value[0]
         browser_url = theme.url("images/icon_%s" % file_name)
-        if os.path.exists("%s/share/check_mk/web/htdocs/%s" % (cmk.utils.paths.omd_root, browser_url)) \
-           or os.path.exists("%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.utils.paths.omd_root, file_name)):
+        if os.path.exists(
+            "%s/share/check_mk/web/htdocs/%s" % (cmk.utils.paths.omd_root, browser_url)
+        ) or os.path.exists(
+            "%s/share/check_mk/web/htdocs/images/icons/%s" % (cmk.utils.paths.omd_root, file_name)
+        ):
             raise MKUserError(
                 varprefix,
-                _('Your icon conflicts with a Check_MK builtin icon. Please '
-                  'choose another name for your icon.'))
+                _(
+                    "Your icon conflicts with a Check_MK builtin icon. Please "
+                    "choose another name for your icon."
+                ),
+            )
 
     def action(self) -> ActionResult:
         if not transactions.check_transaction():
@@ -91,21 +103,23 @@ class ModeIcons(WatoMode):
         if request.has_var("_delete"):
             icon_name = request.var("_delete")
             if icon_name in self._load_custom_icons():
-                os.remove("%s/local/share/check_mk/web/htdocs/images/icons/%s.png" %
-                          (cmk.utils.paths.omd_root, icon_name))
+                os.remove(
+                    "%s/local/share/check_mk/web/htdocs/images/icons/%s.png"
+                    % (cmk.utils.paths.omd_root, icon_name)
+                )
 
         elif request.has_var("_do_upload"):
             vs_upload = self._vs_upload()
-            icon_info = vs_upload.from_html_vars('_upload_icon')
-            vs_upload.validate_value(icon_info, '_upload_icon')
+            icon_info = vs_upload.from_html_vars("_upload_icon")
+            vs_upload.validate_value(icon_info, "_upload_icon")
             self._upload_icon(icon_info)
 
         return redirect(self.mode_url())
 
     def _upload_icon(self, icon_info):
         # Add the icon category to the PNG comment
-        im = Image.open(io.BytesIO(icon_info['icon'][2]))
-        im.info['Comment'] = icon_info['category']
+        im = Image.open(io.BytesIO(icon_info["icon"][2]))
+        im.info["Comment"] = icon_info["category"]
         meta = PngImagePlugin.PngInfo()
         for k, v in im.info.items():
             if isinstance(v, (bytes, str)):
@@ -115,22 +129,25 @@ class ModeIcons(WatoMode):
         dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.utils.paths.omd_root
         store.makedirs(dest_dir)
         try:
-            file_name = os.path.basename(icon_info['icon'][0])
-            im.save(dest_dir + '/' + file_name, 'PNG', pnginfo=meta)
+            file_name = os.path.basename(icon_info["icon"][0])
+            im.save(dest_dir + "/" + file_name, "PNG", pnginfo=meta)
         except IOError as e:
             # Might happen with interlaced PNG files and PIL version < 1.1.7
-            raise MKUserError(None, _('Unable to upload icon: %s') % e)
+            raise MKUserError(None, _("Unable to upload icon: %s") % e)
 
     def page(self) -> None:
         html.p(
-            _("Here you can add icons, for example to use them in bookmarks or "
-              "in custom actions of views. Allowed are single PNG image files "
-              "with a maximum size of 80x80 px. Custom actions have to be defined "
-              "in the global settings and can be used in the custom icons rules "
-              "of hosts and services."))
+            _(
+                "Here you can add icons, for example to use them in bookmarks or "
+                "in custom actions of views. Allowed are single PNG image files "
+                "with a maximum size of 80x80 px. Custom actions have to be defined "
+                "in the global settings and can be used in the custom icons rules "
+                "of hosts and services."
+            )
+        )
 
-        html.begin_form('upload_form', method='POST')
-        self._vs_upload().render_input('_upload_icon', None)
+        html.begin_form("upload_form", method="POST")
+        self._vs_upload().render_input("_upload_icon", None)
         html.hidden_fields()
         html.end_form()
 

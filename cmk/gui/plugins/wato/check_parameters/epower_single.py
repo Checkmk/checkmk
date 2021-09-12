@@ -29,4 +29,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_parameter_valuespec_epower_single,
         title=lambda: _("Electrical Power for Devices with only one phase"),
-    ))
+    )
+)

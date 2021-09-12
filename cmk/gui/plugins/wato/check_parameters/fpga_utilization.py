@@ -23,7 +23,7 @@ def _parameter_valuespec_fpga_utilization():
                     title=_("Alert on too high FPGA utilization"),
                     elements=[
                         Percentage(title=_("Warning at a utilization of"), default_value=80.0),
-                        Percentage(title=_("Critical at a utilization of"), default_value=90.0)
+                        Percentage(title=_("Critical at a utilization of"), default_value=90.0),
                     ],
                 ),
             ),
@@ -39,4 +39,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_fpga_utilization,
         title=lambda: _("FPGA utilization"),
-    ))
+    )
+)

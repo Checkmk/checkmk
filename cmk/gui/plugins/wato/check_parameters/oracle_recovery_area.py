@@ -14,16 +14,20 @@ from cmk.gui.valuespec import Dictionary, Percentage, TextInput, Tuple
 
 
 def _parameter_valuespec_oracle_recovery_area():
-    return Dictionary(elements=[
-        ("levels",
-         Tuple(
-             title=_("Levels for used space (reclaimable is considered as free)"),
-             elements=[
-                 Percentage(title=_("warning at"), default_value=70.0),
-                 Percentage(title=_("critical at"), default_value=90.0),
-             ],
-         ))
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "levels",
+                Tuple(
+                    title=_("Levels for used space (reclaimable is considered as free)"),
+                    elements=[
+                        Percentage(title=_("warning at"), default_value=70.0),
+                        Percentage(title=_("critical at"), default_value=90.0),
+                    ],
+                ),
+            )
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -34,4 +38,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_oracle_recovery_area,
         title=lambda: _("Oracle Recovery Area"),
-    ))
+    )
+)

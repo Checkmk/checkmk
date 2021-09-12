@@ -30,8 +30,10 @@ class SiteStatus(SidebarSnapin):
 
     @classmethod
     def description(cls):
-        return _("Connection state of each site and button for enabling "
-                 "and disabling the site connection")
+        return _(
+            "Connection state of each site and button for enabling "
+            "and disabling the site connection"
+        )
 
     def show(self) -> None:
         html.open_table(cellspacing="0", class_="sitestate")
@@ -54,8 +56,9 @@ class SiteStatus(SidebarSnapin):
                     text = escape_html_permissive(site["alias"])
                 else:
                     switch = "off"
-                    text = render_link(site["alias"],
-                                       "view.py?view_name=sitehosts&site=%s" % sitename)
+                    text = render_link(
+                        site["alias"], "view.py?view_name=sitehosts&site=%s" % sitename
+                    )
 
             html.open_tr()
             html.td(text, class_="left")
@@ -63,16 +66,20 @@ class SiteStatus(SidebarSnapin):
             if switch == "missing":
                 html.status_label(content=state, status=state, title=_("Site is missing"))
             else:
-                url = makeactionuri_contextless(request,
-                                                transactions, [
-                                                    ("_site_switch", "%s:%s" % (sitename, switch)),
-                                                ],
-                                                filename="switch_site.py")
+                url = makeactionuri_contextless(
+                    request,
+                    transactions,
+                    [
+                        ("_site_switch", "%s:%s" % (sitename, switch)),
+                    ],
+                    filename="switch_site.py",
+                )
                 html.status_label_button(
                     content=state,
                     status=state,
                     title=_("enable this site") if state == "disabled" else _("disable this site"),
-                    onclick="cmk.sidebar.switch_site(%s)" % (json.dumps(url)))
+                    onclick="cmk.sidebar.switch_site(%s)" % (json.dumps(url)),
+                )
             html.close_tr()
         html.close_table()
 

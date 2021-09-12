@@ -25,7 +25,8 @@ def make_host_status_link(host_name: str, view_name: str) -> PageMenuEntry:
                     ("site", ""),
                 ],
                 filename="view.py",
-            )),
+            )
+        ),
     )
 
 
@@ -42,7 +43,8 @@ def make_service_status_link(host_name: str, service_name: str) -> PageMenuEntry
                     ("service", service_name),
                 ],
                 filename="view.py",
-            )),
+            )
+        ),
     )
 
 
@@ -58,5 +60,6 @@ def make_folder_status_link(folder: watolib.CREFolder, view_name: str) -> PageMe
                     ("wato_folder", folder.path()),
                 ],
                 filename="view.py",
-            )),
+            )
+        ),
     )

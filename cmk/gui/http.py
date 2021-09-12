@@ -23,8 +23,8 @@ from cmk.gui.exceptions import MKGeneralException, MKUserError
 from cmk.gui.i18n import _
 
 UploadedFile = Tuple[str, str, bytes]
-T = TypeVar('T')
-Value = TypeVar('Value')
+T = TypeVar("T")
+Value = TypeVar("Value")
 
 
 class LegacyVarsMixin:
@@ -35,6 +35,7 @@ class LegacyVarsMixin:
     being removed, the variables from the request will show up again (given they were
     shadowed in the first place).
     """
+
     DELETED = object()
 
     def __init__(self, *args: Any, **kw: Any) -> None:
@@ -138,6 +139,7 @@ class LegacyDeprecatedMixin:
     They are to be removed as they provide no additional value over the already available
     methods and properties in Request itself.
     """
+
     def itervars(self, prefix: str = "") -> Iterator[Tuple[str, Optional[str]]]:
         # TODO: mypy does not know about the related mixin classes. This whole class can be cleaned
         # up with 1.7, once we have moved to python 3.
@@ -229,12 +231,17 @@ class LegacyDeprecatedMixin:
 
 def mandatory_parameter(varname: str, value: Optional[T]) -> T:
     if value is None:
-        raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+        raise MKUserError(varname, _('The parameter "%s" is missing.') % varname)
     return value
 
 
-class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
-              werkzeug.wrappers.json.JSONMixin, werkzeug.wrappers.Request):
+class Request(
+    LegacyVarsMixin,
+    LegacyUploadMixin,
+    LegacyDeprecatedMixin,
+    werkzeug.wrappers.json.JSONMixin,
+    werkzeug.wrappers.Request,
+):
     """Provides information about the users HTTP-request to the application
 
     This class essentially wraps the information provided with the WSGI environment
@@ -251,9 +258,12 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
     def _verify_not_using_threaded_mpm(self) -> None:
         if self.is_multithread:
             raise MKGeneralException(
-                _("You are trying to Checkmk together with a threaded Apache multiprocessing module (MPM). "
-                  "Check_MK is only working with the prefork module. Please change the MPM module to make "
-                  "Check_MK work."))
+                _(
+                    "You are trying to Checkmk together with a threaded Apache multiprocessing module (MPM). "
+                    "Check_MK is only working with the prefork module. Please change the MPM module to make "
+                    "Check_MK work."
+                )
+            )
 
     @property
     def request_timeout(self) -> int:
@@ -271,10 +281,16 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
         """
         trusted_proxies: List[str] = ["127.0.0.1", "::1"]
         remote_addr: str = self.remote_addr
-        forwarded_for = self.environ.get('HTTP_X_FORWARDED_FOR', '').split(',')
+        forwarded_for = self.environ.get("HTTP_X_FORWARDED_FOR", "").split(",")
         if remote_addr in trusted_proxies:
-            return next((ip for ip in reversed([x for x in [x.strip() for x in forwarded_for] if x])
-                         if ip not in trusted_proxies), remote_addr)
+            return next(
+                (
+                    ip
+                    for ip in reversed([x for x in [x.strip() for x in forwarded_for] if x])
+                    if ip not in trusted_proxies
+                ),
+                remote_addr,
+            )
         return self.remote_addr
 
     def get_str_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
@@ -286,8 +302,8 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
         except UnicodeDecodeError:
             raise MKUserError(
                 varname,
-                _("The given text is wrong encoded. "
-                  "You need to provide a UTF-8 encoded text."))
+                _("The given text is wrong encoded. " "You need to provide a UTF-8 encoded text."),
+            )
 
     def get_str_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
         return mandatory_parameter(varname, self.get_str_input(varname, deflt))
@@ -329,7 +345,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
         try:
             return int(value)
         except ValueError:
-            raise MKUserError(varname, _("The parameter \"%s\" is not an integer.") % varname)
+            raise MKUserError(varname, _('The parameter "%s" is not an integer.') % varname)
 
     def get_integer_input_mandatory(self, varname: str, deflt: Optional[int] = None) -> int:
         return mandatory_parameter(varname, self.get_integer_input(varname, deflt))
@@ -343,7 +359,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
         try:
             return float(value)
         except ValueError:
-            raise MKUserError(varname, _("The parameter \"%s\" is not a float.") % varname)
+            raise MKUserError(varname, _('The parameter "%s" is not a float.') % varname)
 
     def get_float_input_mandatory(self, varname: str, deflt: Optional[float] = None) -> float:
         return mandatory_parameter(varname, self.get_float_input(varname, deflt))
@@ -373,7 +389,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
         if not self.has_var(varname):
             if deflt is not None:
                 return deflt
-            raise MKUserError(varname, _("The parameter \"%s\" is missing.") % varname)
+            raise MKUserError(varname, _('The parameter "%s" is missing.') % varname)
 
         url = self.var(varname)
         assert url is not None
@@ -381,7 +397,7 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
         if not utils.is_allowed_url(url):
             if deflt:
                 return deflt
-            raise MKUserError(varname, _("The parameter \"%s\" is not a valid URL.") % varname)
+            raise MKUserError(varname, _('The parameter "%s" is not a valid URL.') % varname)
 
         return url
 
@@ -408,14 +424,14 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
         """
         # Filter the variables even if there are multiple copies of them (this is allowed).
         decoded_qs = [(key, value) for key, value in self.args.items(multi=True) if key != varname]
-        self.environ['QUERY_STRING'] = urllib.parse.urlencode(decoded_qs)
+        self.environ["QUERY_STRING"] = urllib.parse.urlencode(decoded_qs)
         # We remove the form entry. As this entity is never copied it will be modified within
         # it's cache.
         dict.pop(self.form, varname, None)
         # We remove the __dict__ entries to allow @cached_property to reload them from
         # the environment. The rest of the request object stays the same.
-        self.__dict__.pop('args', None)
-        self.__dict__.pop('values', None)
+        self.__dict__.pop("args", None)
+        self.__dict__.pop("values", None)
 
     # TODO: The mixture of request variables and json request argument is a nasty hack. Split this
     # up into explicit methods that either use the one or the other method, remove the call sites to
@@ -438,8 +454,8 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
                 request = ast.literal_eval(python_request)
             except (SyntaxError, ValueError) as e:
                 raise MKUserError(
-                    "request",
-                    _("Failed to parse Python request: '%s': %s") % (python_request, e))
+                    "request", _("Failed to parse Python request: '%s': %s") % (python_request, e)
+                )
         else:
             try:
                 json_request = self.var("request", "{}")
@@ -447,8 +463,9 @@ class Request(LegacyVarsMixin, LegacyUploadMixin, LegacyDeprecatedMixin,
                 request = json.loads(json_request)
                 request["request_format"] = "json"
             except ValueError as e:  # Python3: json.JSONDecodeError
-                raise MKUserError("request",
-                                  _("Failed to parse JSON request: '%s': %s") % (json_request, e))
+                raise MKUserError(
+                    "request", _("Failed to parse JSON request: '%s': %s") % (json_request, e)
+                )
 
         for key, val in self.itervars():
             if key not in ["request", "output_format"] + exclude_vars:

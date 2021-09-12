@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics import graph_info, metric_info
 
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -131,7 +131,7 @@ metric_info["emcvnx_dedupl_shared_capacity"] = {
     "color": "31/a",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -148,7 +148,7 @@ graph_info["emcvnx_storage_pools_capacity"] = {
     "metrics": [
         ("emcvnx_consumed_capacity", "area"),
         ("emcvnx_avail_capacity", "stack"),
-    ]
+    ],
 }
 
 graph_info["emcvnx_storage_pools_movement"] = {
@@ -157,7 +157,7 @@ graph_info["emcvnx_storage_pools_movement"] = {
         ("emcvnx_move_up", "area"),
         ("emcvnx_move_down", "stack"),
         ("emcvnx_move_within", "stack"),
-    ]
+    ],
 }
 
 graph_info["emcvnx_storage_pools_targeted"] = {
@@ -166,5 +166,5 @@ graph_info["emcvnx_storage_pools_targeted"] = {
         ("emcvnx_targeted_higher", "area"),
         ("emcvnx_targeted_lower", "stack"),
         ("emcvnx_targeted_within", "stack"),
-    ]
+    ],
 }

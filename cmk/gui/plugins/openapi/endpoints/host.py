@@ -61,6 +61,7 @@ class HostParameters(BaseSchema):
         []
 
     """
+
     sites = fields.List(
         fields.SiteField(),
         description="Restrict the query to this particular site.",
@@ -70,23 +71,25 @@ class HostParameters(BaseSchema):
     columns = fields.column_field(Hosts, mandatory=[Hosts.name])
 
 
-@Endpoint(constructors.collection_href('host'),
-          '.../collection',
-          method='get',
-          tag_group='Monitoring',
-          blacklist_in=['swagger-ui'],
-          query_params=[HostParameters],
-          response_schema=response_schemas.DomainObjectCollection)
+@Endpoint(
+    constructors.collection_href("host"),
+    ".../collection",
+    method="get",
+    tag_group="Monitoring",
+    blacklist_in=["swagger-ui"],
+    query_params=[HostParameters],
+    response_schema=response_schemas.DomainObjectCollection,
+)
 def list_hosts(param):
     """Show hosts of specific condition"""
     live = sites.live()
-    sites_to_query = param['sites']
+    sites_to_query = param["sites"]
     if sites_to_query:
         live.only_sites = sites_to_query
 
-    q = Query(param['columns'])
+    q = Query(param["columns"])
 
-    query_expr = param.get('query')
+    query_expr = param.get("query")
     if query_expr:
         q = q.filter(query_expr)
 
@@ -94,15 +97,17 @@ def list_hosts(param):
 
     return constructors.serve_json(
         constructors.collection_object(
-            domain_type='host',
+            domain_type="host",
             value=[
                 constructors.domain_object(
-                    domain_type='host',
+                    domain_type="host",
                     title=f"{entry['name']}",
-                    identifier=entry['name'],
+                    identifier=entry["name"],
                     editable=False,
                     deletable=False,
                     extensions=entry,
-                ) for entry in result
+                )
+                for entry in result
             ],
-        ))
+        )
+    )

@@ -57,8 +57,9 @@ class Theme:
         8. images/icons/[name].png in standard hierarchy
         """
         for theme_id in self.icon_themes():
-            if icon_path := self._find_icon_in_dir("themes/%s/images" % theme_id, icon_name,
-                                                   prefix):
+            if icon_path := self._find_icon_in_dir(
+                "themes/%s/images" % theme_id, icon_name, prefix
+            ):
                 return icon_path
 
         if icon_path := self._find_icon_in_dir("images/icons", icon_name, prefix=""):

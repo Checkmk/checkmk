@@ -62,7 +62,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
         child = parent.setdefault(this_node, {"__path__": path})
         children = group[1:]
         if children:
-            child = child.setdefault('__children__', {})
+            child = child.setdefault("__children__", {})
             self._build_tree(children, child, path)
 
     def _render_tree(self, tree):
@@ -77,19 +77,21 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
                 filename="view.py",
             )
 
-            if attrs.get('__children__'):
+            if attrs.get("__children__"):
                 with foldable_container(
-                        treename="bi_aggregation_group_trees",
-                        id_=aggr_group_tree,
-                        isopen=False,
-                        title=HTML(html.render_a(
+                    treename="bi_aggregation_group_trees",
+                    id_=aggr_group_tree,
+                    isopen=False,
+                    title=HTML(
+                        html.render_a(
                             group,
                             href=fetch_url,
                             target="main",
-                        )),
-                        icon="foldable_sidebar",
+                        )
+                    ),
+                    icon="foldable_sidebar",
                 ):
-                    self._render_tree(attrs['__children__'])
+                    self._render_tree(attrs["__children__"])
             else:
                 html.open_ul()
                 bulletlink(group, fetch_url)

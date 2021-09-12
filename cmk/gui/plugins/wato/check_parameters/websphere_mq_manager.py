@@ -14,47 +14,57 @@ from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOf, MonitoringStat
 
 
 def _parameter_valuespec_websphere_mq_manager():
-    return Dictionary(elements=[
-        ("map_manager_states",
-         ListOf(
-             Tuple(
-                 orientation="horizontal",
-                 elements=[
-                     DropdownChoice(choices=[
-                         ('starting', _('Starting')),
-                         ('running', _('Running')),
-                         ('running_as_stanby', _('Running as standby')),
-                         ('running_elsewhere', _('Running elsewhere')),
-                         ('quiescing', _('Quiescing')),
-                         ('ending_immediately', _('Ending immedtiately')),
-                         ('ending_pre_emptively', _('Ending pre-emptivley')),
-                         ('ended_normally', _('Ended normally')),
-                         ('ended_immediately', _('Ended immediately')),
-                         ('ended_unexpectedly', _('Ended unexpectedly')),
-                         ('ended_pre_emptively', _('Ended pre-emptively')),
-                         ('status_not_available', _('Status not available')),
-                     ],),
-                     MonitoringState(),
-                 ],
-             ),
-             title=_('Map manager state'),
-         )),
-        ("map_standby_states",
-         ListOf(
-             Tuple(
-                 orientation="horizontal",
-                 elements=[
-                     DropdownChoice(choices=[
-                         ('permitted', _('Permitted')),
-                         ('not_permitted', _('Not permitted')),
-                         ('not_applicable', _('Not applicable')),
-                     ],),
-                     MonitoringState(),
-                 ],
-             ),
-             title=_('Map standby state'),
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "map_manager_states",
+                ListOf(
+                    Tuple(
+                        orientation="horizontal",
+                        elements=[
+                            DropdownChoice(
+                                choices=[
+                                    ("starting", _("Starting")),
+                                    ("running", _("Running")),
+                                    ("running_as_stanby", _("Running as standby")),
+                                    ("running_elsewhere", _("Running elsewhere")),
+                                    ("quiescing", _("Quiescing")),
+                                    ("ending_immediately", _("Ending immedtiately")),
+                                    ("ending_pre_emptively", _("Ending pre-emptivley")),
+                                    ("ended_normally", _("Ended normally")),
+                                    ("ended_immediately", _("Ended immediately")),
+                                    ("ended_unexpectedly", _("Ended unexpectedly")),
+                                    ("ended_pre_emptively", _("Ended pre-emptively")),
+                                    ("status_not_available", _("Status not available")),
+                                ],
+                            ),
+                            MonitoringState(),
+                        ],
+                    ),
+                    title=_("Map manager state"),
+                ),
+            ),
+            (
+                "map_standby_states",
+                ListOf(
+                    Tuple(
+                        orientation="horizontal",
+                        elements=[
+                            DropdownChoice(
+                                choices=[
+                                    ("permitted", _("Permitted")),
+                                    ("not_permitted", _("Not permitted")),
+                                    ("not_applicable", _("Not applicable")),
+                                ],
+                            ),
+                            MonitoringState(),
+                        ],
+                    ),
+                    title=_("Map standby state"),
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -65,4 +75,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_websphere_mq_manager,
         title=lambda: _("Websphere MQ Manager"),
-    ))
+    )
+)

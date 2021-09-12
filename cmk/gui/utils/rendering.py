@@ -17,8 +17,10 @@ def text_with_links_to_user_translated_html(
     separator: str = "",
 ) -> HTML:
     return HTML(separator).join(
-        html.render_a(user_translation, href=url
-                     ) if url else escape_html_permissive(user_translation)
+        html.render_a(user_translation, href=url)
+        if url
+        else escape_html_permissive(user_translation)
         for txt, url in elements
         for user_translation in [_u(txt)]
-        if txt)
+        if txt
+    )

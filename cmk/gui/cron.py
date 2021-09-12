@@ -18,12 +18,13 @@ import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.globals import response
 from cmk.gui.log import logger
-from cmk.gui.utils.logged_in import SuperUserContext
 
 # Things imported here are used by pre legacy (pre 1.6) cron plugins
-from cmk.gui.plugins.cron import (  # noqa: F401 # pylint: disable=unused-import # isort: skip
-    multisite_cronjobs, register_job,
+from cmk.gui.plugins.cron import (  # noqa: F401 # pylint: disable=unused-import
+    multisite_cronjobs,
+    register_job,
 )
+from cmk.gui.utils.logged_in import SuperUserContext
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.cron  # pylint: disable=no-name-in-module

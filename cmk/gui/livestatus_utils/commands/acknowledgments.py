@@ -20,8 +20,8 @@ def acknowledge_service_problem(
     sticky: bool = False,
     notify: bool = False,
     persistent: bool = False,
-    user: str = '',
-    comment: str = '',
+    user: str = "",
+    comment: str = "",
 ):
     """Acknowledge the current problem for the given service.
 
@@ -239,8 +239,9 @@ def acknowledge_hostgroup_problem(
             when the Hostgroup in question doesn't exist.
 
     """
-    members: List[str] = Query([tables.Hostgroups.members],
-                               tables.Hostgroups.name.equals(hostgroup_name)).value(connection)
+    members: List[str] = Query(
+        [tables.Hostgroups.members], tables.Hostgroups.name.equals(hostgroup_name)
+    ).value(connection)
 
     acknowledgement = 2 if sticky else 1  # 1: normal, 2: sticky
 

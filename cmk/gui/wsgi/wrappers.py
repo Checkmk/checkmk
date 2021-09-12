@@ -39,6 +39,7 @@ class ParameterDict(dict):
             ...     pass
 
     """
+
     def __getitem__(self, key: str) -> Any:
         if key in self:
             rv = super().__getitem__(key)

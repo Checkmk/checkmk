@@ -44,6 +44,6 @@ class Dashboards(SidebarSnapin):
             footnotelinks(links)
 
     def _get_dashboard_menu_items(self) -> List[TopicMenuTopic]:
-        return make_topic_menu([
-            ("dashboards", e) for e in dashboard.get_permitted_dashboards().items()
-        ])
+        return make_topic_menu(
+            [("dashboards", e) for e in dashboard.get_permitted_dashboards().items()]
+        )

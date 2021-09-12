@@ -29,4 +29,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersEnvironment,
         parameter_valuespec=_parameter_valuespec_fan_failures,
         title=lambda: _("Number of fan failures"),
-    ))
+    )
+)

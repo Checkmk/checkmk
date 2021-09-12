@@ -15,32 +15,34 @@ from cmk.gui.valuespec import Dictionary, Optional, TextInput
 
 def _parameter_valuespec_proxmox_ve_node_info():
     # use Dictionary as Optional returning an empty dict if empty
-    return Dictionary(elements=[
-        (
-            "required_node_status",
-            Optional(
-                title=_("Node Status"),
-                label=_("Activate Check (off: ignore node status)"),
-                default_value=True,
-                valuespec=TextInput(
-                    title=_("Warn if node status value is not"),
-                    default_value="online",
+    return Dictionary(
+        elements=[
+            (
+                "required_node_status",
+                Optional(
+                    title=_("Node Status"),
+                    label=_("Activate Check (off: ignore node status)"),
+                    default_value=True,
+                    valuespec=TextInput(
+                        title=_("Warn if node status value is not"),
+                        default_value="online",
+                    ),
                 ),
             ),
-        ),
-        (
-            "required_subscription_status",
-            Optional(
-                title=_("Subscription Status"),
-                label=_("Activate Check (off: ignore subscription status)"),
-                default_value=True,
-                valuespec=TextInput(
-                    title=_("Warn if subscription status value is not"),
-                    default_value="Active",
+            (
+                "required_subscription_status",
+                Optional(
+                    title=_("Subscription Status"),
+                    label=_("Activate Check (off: ignore subscription status)"),
+                    default_value=True,
+                    valuespec=TextInput(
+                        title=_("Warn if subscription status value is not"),
+                        default_value="Active",
+                    ),
                 ),
             ),
-        ),
-    ])
+        ]
+    )
 
 
 rulespec_registry.register(
@@ -50,4 +52,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_proxmox_ve_node_info,
-    ))
+    )
+)

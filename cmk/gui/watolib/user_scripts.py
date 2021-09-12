@@ -62,7 +62,7 @@ def _load_user_scripts_from(adir):
                     with Path(path).open(encoding="utf-8") as lines:
                         next(lines)
                         line = next(lines).strip()
-                        if line.startswith("#") and re.search(r'coding[=:]\s*([-\w.]+)', line):
+                        if line.startswith("#") and re.search(r"coding[=:]\s*([-\w.]+)", line):
                             line = next(lines).strip()
                         if line.startswith("#"):
                             info["title"] = line.lstrip("#").strip().split("#", 1)[0]
@@ -73,7 +73,7 @@ def _load_user_scripts_from(adir):
                             key, value = line[1:].strip().split(":", 1)
                             value = value.strip()
                             if key.lower() == "bulk":
-                                info["bulk"] = (value == "yes")
+                                info["bulk"] = value == "yes"
 
                 except Exception:
                     pass

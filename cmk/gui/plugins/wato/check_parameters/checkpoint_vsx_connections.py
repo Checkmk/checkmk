@@ -15,8 +15,10 @@ from cmk.gui.valuespec import Dictionary, Integer, Percentage, TextInput, Tuple
 
 def _parameter_valuespec_checkpoint_vsx_connections():
     return Dictionary(
-        help=_("This rule allows you to configure the number of maximum "
-               "connections for a given VSID."),
+        help=_(
+            "This rule allows you to configure the number of maximum "
+            "connections for a given VSID."
+        ),
         elements=[
             (
                 "levels_perc",
@@ -34,15 +36,18 @@ def _parameter_valuespec_checkpoint_vsx_connections():
                             unit=_("% of maximum connections"),
                         ),
                     ],
-                )),
-            ("levels_abs",
-             Tuple(
-                 title=_("Absolute number of connections"),
-                 elements=[
-                     Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
-                     Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
-                 ],
-             )),
+                ),
+            ),
+            (
+                "levels_abs",
+                Tuple(
+                    title=_("Absolute number of connections"),
+                    elements=[
+                        Integer(title=_("Warning at"), minvalue=0, unit=_("connections")),
+                        Integer(title=_("Critical at"), minvalue=0, unit=_("connections")),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -54,4 +59,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("VSID")),
         parameter_valuespec=_parameter_valuespec_checkpoint_vsx_connections,
         title=lambda: _("Checkpoint VSID connections"),
-    ))
+    )
+)

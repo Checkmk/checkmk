@@ -14,6 +14,7 @@ import cmk.utils.version as cmk_version
 
 class AutomationCommand(abc.ABC):
     """Abstract base class for all automation commands"""
+
     @abc.abstractmethod
     def command_name(self) -> str:
         raise NotImplementedError()

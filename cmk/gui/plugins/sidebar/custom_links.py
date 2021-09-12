@@ -26,16 +26,24 @@ class CustomLinks(SidebarSnapin):
 
     @classmethod
     def description(cls):
-        return _("This snapin contains custom links which can be "
-                 "configured via the configuration variable "
-                 "<tt>custom_links</tt> in <tt>multisite.mk</tt>")
+        return _(
+            "This snapin contains custom links which can be "
+            "configured via the configuration variable "
+            "<tt>custom_links</tt> in <tt>multisite.mk</tt>"
+        )
 
     def show(self):
         links = config.custom_links.get(user.baserole_id)
         if not links:
-            html.write_text((_(
-                "Please edit <tt>%s</tt> in order to configure which links are shown in this snapin."
-            ) % (cmk.utils.paths.default_config_dir + "/multisite.mk")) + "\n")
+            html.write_text(
+                (
+                    _(
+                        "Please edit <tt>%s</tt> in order to configure which links are shown in this snapin."
+                    )
+                    % (cmk.utils.paths.default_config_dir + "/multisite.mk")
+                )
+                + "\n"
+            )
             return
 
         def render_list(ids, links):
@@ -45,12 +53,14 @@ class CustomLinks(SidebarSnapin):
                 try:
                     if isinstance(entry[1], type(True)):
                         idss = ids + [str(n)]
-                        id_ = '/'.join(idss)
-                        with foldable_container(treename="customlinks",
-                                                id_=id_,
-                                                isopen=entry[1],
-                                                title=entry[0],
-                                                icon="foldable_sidebar"):
+                        id_ = "/".join(idss)
+                        with foldable_container(
+                            treename="customlinks",
+                            id_=id_,
+                            isopen=entry[1],
+                            title=entry[0],
+                            icon="foldable_sidebar",
+                        ):
                             render_list(idss, entry[2])
                     elif isinstance(entry[1], str):
                         frame = entry[3] if len(entry) > 3 else "main"
@@ -72,8 +82,9 @@ class CustomLinks(SidebarSnapin):
                         simplelink(linktext, entry[1], frame)
                     else:
                         html.write_text(
-                            _("Second part of tuple must be list or string, not %s\n") %
-                            str(entry[1]))
+                            _("Second part of tuple must be list or string, not %s\n")
+                            % str(entry[1])
+                        )
                 except Exception as e:
                     html.write_text(_("invalid entry %s: %s<br>\n") % (entry, e))
 

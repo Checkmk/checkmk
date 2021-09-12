@@ -37,22 +37,26 @@ def _parameter_valuespec_jvm_gc():
         Dictionary(
             help=_("This ruleset also covers Tomcat, Jolokia and JMX. "),
             elements=[
-                ("collection_time",
-                 Tuple(
-                     title=_("Time spent collecting garbage in percent"),
-                     elements=[
-                         Percentage(title=_("Warning at")),
-                         Percentage(title=_("Critical at")),
-                     ],
-                 )),
-                ("collection_count",
-                 Tuple(
-                     title=_("Count of garbage collections per second"),
-                     elements=[
-                         Float(title=_("Warning at")),
-                         Float(title=_("Critical at")),
-                     ],
-                 )),
+                (
+                    "collection_time",
+                    Tuple(
+                        title=_("Time spent collecting garbage in percent"),
+                        elements=[
+                            Percentage(title=_("Warning at")),
+                            Percentage(title=_("Critical at")),
+                        ],
+                    ),
+                ),
+                (
+                    "collection_count",
+                    Tuple(
+                        title=_("Count of garbage collections per second"),
+                        elements=[
+                            Float(title=_("Warning at")),
+                            Float(title=_("Critical at")),
+                        ],
+                    ),
+                ),
             ],
         ),
         forth=transform_units,
@@ -67,4 +71,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_jvm_gc,
         title=lambda: _("JVM garbage collection levels"),
-    ))
+    )
+)

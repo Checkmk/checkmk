@@ -26,6 +26,7 @@ class OutputFunnel:
            html_code = html.drain()
         print(html_code)
     """
+
     def __init__(self, response: Response) -> None:
         self._response_stack: List[Response] = [response]
 

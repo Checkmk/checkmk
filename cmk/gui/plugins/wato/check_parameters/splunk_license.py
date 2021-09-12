@@ -17,15 +17,17 @@ def _parameter_valuespec_splunk_license_state():
     return Dictionary(
         elements=[
             ("state", MonitoringState(title=_("State if license is expired"), default_value=2)),
-            ("expiration_time",
-             Tuple(
-                 title=_("Time until license expiration"),
-                 help=_("Remaining days until the Windows license expires"),
-                 elements=[
-                     Age(title=_("Warning at"), default_value=14 * 24 * 60 * 60),
-                     Age(title=_("Critical at"), default_value=7 * 24 * 60 * 60)
-                 ],
-             )),
+            (
+                "expiration_time",
+                Tuple(
+                    title=_("Time until license expiration"),
+                    help=_("Remaining days until the Windows license expires"),
+                    elements=[
+                        Age(title=_("Warning at"), default_value=14 * 24 * 60 * 60),
+                        Age(title=_("Critical at"), default_value=7 * 24 * 60 * 60),
+                    ],
+                ),
+            ),
         ],
         optional_keys=["state", "expiration_time", "usage_bytes"],
     )
@@ -39,4 +41,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_splunk_license_state,
         title=lambda: _("Splunk License State"),
-    ))
+    )
+)

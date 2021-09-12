@@ -14,7 +14,7 @@ def add_host_comment(
     host_name: str,
     comment: str,
     persistent: bool = False,
-    user: str = '',
+    user: str = "",
 ):
     """Add a comment for a particular host.
 
@@ -79,9 +79,9 @@ def add_service_comment(
     service_description: str,
     comment: str,
     persistent: bool = False,
-    user: str = '',
+    user: str = "",
 ):
-    """ Add service comment
+    """Add service comment
 
     Args:
         connection:
@@ -113,8 +113,7 @@ def add_service_comment(
     return send_command(
         connection,
         "ADD_SVC_COMMENT",
-        [host_name, service_description,
-         int(persistent), user, comment],
+        [host_name, service_description, int(persistent), user, comment],
     )
 
 

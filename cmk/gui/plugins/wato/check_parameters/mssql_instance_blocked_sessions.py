@@ -15,29 +15,40 @@ from cmk.gui.valuespec import Dictionary, DualListChoice, Float, MonitoringState
 
 
 def _parameter_valuespec_mssql_instance_blocked_sessions():
-    return Dictionary(elements=[
-        ("state", MonitoringState(
-            title=_("State if at least one blocked session"),
-            default_value=2,
-        )),
-        ("waittime",
-         Tuple(
-             title=_("Levels for wait"),
-             help=_("The threshholds for wait_duration_ms. Will "
-                    "overwrite the default state set above."),
-             default_value=(0, 0),
-             elements=[
-                 Float(title=_("Warning at"), unit=_("seconds"), display_format="%.3f"),
-                 Float(title=_("Critical at"), unit=_("seconds"), display_format="%.3f"),
-             ],
-         )),
-        ("ignore_waittypes",
-         DualListChoice(
-             title=_("Ignore wait types"),
-             rows=40,
-             choices=[(entry, entry) for entry in mssql_waittypes],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "state",
+                MonitoringState(
+                    title=_("State if at least one blocked session"),
+                    default_value=2,
+                ),
+            ),
+            (
+                "waittime",
+                Tuple(
+                    title=_("Levels for wait"),
+                    help=_(
+                        "The threshholds for wait_duration_ms. Will "
+                        "overwrite the default state set above."
+                    ),
+                    default_value=(0, 0),
+                    elements=[
+                        Float(title=_("Warning at"), unit=_("seconds"), display_format="%.3f"),
+                        Float(title=_("Critical at"), unit=_("seconds"), display_format="%.3f"),
+                    ],
+                ),
+            ),
+            (
+                "ignore_waittypes",
+                DualListChoice(
+                    title=_("Ignore wait types"),
+                    rows=40,
+                    choices=[(entry, entry) for entry in mssql_waittypes],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -48,4 +59,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_mssql_instance_blocked_sessions,
         title=lambda: _("MSSQL Blocked Sessions"),
-    ))
+    )
+)

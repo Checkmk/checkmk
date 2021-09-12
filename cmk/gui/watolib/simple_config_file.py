@@ -16,6 +16,7 @@ class WatoSimpleConfigFile(abc.ABC):
     The file handling logic is inherited from cmk.utils.store.load_from_mk_file()
     and cmk.utils.store.save_to_mk_file().
     """
+
     def __init__(self, config_file_path: Path, config_variable: str) -> None:
         self._config_file_path = config_file_path
         self._config_variable = config_variable

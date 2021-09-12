@@ -23,8 +23,10 @@ def _parameter_valuespec_windows_updates():
             Integer(title=_("Warning if at least this number of optional updates are pending")),
             Integer(title=_("Critical if at least this number of optional updates are pending")),
             Age(title=_("Warning if time until forced reboot is less then"), default_value=604800),
-            Age(title=_("Critical if time time until forced reboot is less then"),
-                default_value=172800),
+            Age(
+                title=_("Critical if time time until forced reboot is less then"),
+                default_value=172800,
+            ),
             Checkbox(title=_("display all important updates verbosely"), default_value=True),
         ],
     )
@@ -36,4 +38,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_windows_updates,
         title=lambda: _("WSUS (Windows Updates)"),
-    ))
+    )
+)

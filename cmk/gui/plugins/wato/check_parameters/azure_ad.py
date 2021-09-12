@@ -14,16 +14,20 @@ from cmk.gui.valuespec import Age, Dictionary, Tuple
 
 
 def _parameter_valuespec_azure_ad():
-    return Dictionary(elements=[
-        ("age",
-         Tuple(
-             title=_("Time since last AD Connect sync"),
-             elements=[
-                 Age(title=_("Warning at"), default_value=1800),
-                 Age(title=_("Critical at"), default_value=3600)
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "age",
+                Tuple(
+                    title=_("Time since last AD Connect sync"),
+                    elements=[
+                        Age(title=_("Warning at"), default_value=1800),
+                        Age(title=_("Critical at"), default_value=3600),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -33,4 +37,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersNetworking,
         parameter_valuespec=_parameter_valuespec_azure_ad,
         title=lambda: _("Azure AD Connect"),
-    ))
+    )
+)

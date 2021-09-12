@@ -16,8 +16,10 @@ from cmk.gui.valuespec import Integer, TextInput, Tuple
 def _parameter_valuespec_hpux_multipath():
     return Tuple(
         title=_("Expected path situation"),
-        help=_("This rules sets the expected number of various paths for a multipath LUN "
-               "on HPUX servers"),
+        help=_(
+            "This rules sets the expected number of various paths for a multipath LUN "
+            "on HPUX servers"
+        ),
         elements=[
             Integer(title=_("Number of active paths")),
             Integer(title=_("Number of standby paths")),
@@ -34,4 +36,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("WWID of the LUN")),
         parameter_valuespec=_parameter_valuespec_hpux_multipath,
         title=lambda: _("HP-UX Multipath Count"),
-    ))
+    )
+)

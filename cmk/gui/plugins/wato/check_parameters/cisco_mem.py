@@ -48,23 +48,26 @@ def _parameter_valuespec_cisco_mem():
                                 title=_("Warning at a usage of"),
                                 # xgettext: no-python-format
                                 unit=_("% of RAM"),
-                                maxvalue=None),
+                                maxvalue=None,
+                            ),
                             Percentage(
                                 title=_("Critical at a usage of"),
                                 # xgettext: no-python-format
                                 unit=_("% of RAM"),
-                                maxvalue=None)
+                                maxvalue=None,
+                            ),
                         ],
                     ),
                     Tuple(
                         title=_("Specify levels in absolute usage values"),
                         elements=[
                             Integer(title=_("Warning at"), unit=_("MB")),
-                            Integer(title=_("Critical at"), unit=_("MB"))
+                            Integer(title=_("Critical at"), unit=_("MB")),
                         ],
                     ),
                 ],
-            )),
+            ),
+        ),
     ]
     return Transform(
         Dictionary(elements=elements + size_trend_elements),
@@ -79,4 +82,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Memory Pool Name"), allow_empty=False),
         parameter_valuespec=_parameter_valuespec_cisco_mem,
         title=lambda: _("Cisco Memory Usage"),
-    ))
+    )
+)

@@ -24,34 +24,48 @@ def _parameter_valuespec_storcli_pdisks():
     return Dictionary(
         title=_("Evaluation of PDisk States"),
         elements=[
-            ("Dedicated Hot Spare",
-             MonitoringState(
-                 title=_("State for <i>Dedicated Hot Spare</i>"),
-                 default_value=0,
-             )),
-            ("Global Hot Spare",
-             MonitoringState(
-                 title=_("State for <i>Global Hot Spare</i>"),
-                 default_value=0,
-             )),
-            ("Unconfigured Good",
-             MonitoringState(
-                 title=_("State for <i>Unconfigured Good</i>"),
-                 default_value=0,
-             )),
-            ("Unconfigured Bad",
-             MonitoringState(
-                 title=_("State for <i>Unconfigured Bad</i>"),
-                 default_value=1,
-             )),
-            ("Online", MonitoringState(
-                title=_("State for <i>Online</i>"),
-                default_value=0,
-            )),
-            ("Offline", MonitoringState(
-                title=_("State for <i>Offline</i>"),
-                default_value=2,
-            )),
+            (
+                "Dedicated Hot Spare",
+                MonitoringState(
+                    title=_("State for <i>Dedicated Hot Spare</i>"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "Global Hot Spare",
+                MonitoringState(
+                    title=_("State for <i>Global Hot Spare</i>"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "Unconfigured Good",
+                MonitoringState(
+                    title=_("State for <i>Unconfigured Good</i>"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "Unconfigured Bad",
+                MonitoringState(
+                    title=_("State for <i>Unconfigured Bad</i>"),
+                    default_value=1,
+                ),
+            ),
+            (
+                "Online",
+                MonitoringState(
+                    title=_("State for <i>Online</i>"),
+                    default_value=0,
+                ),
+            ),
+            (
+                "Offline",
+                MonitoringState(
+                    title=_("State for <i>Offline</i>"),
+                    default_value=2,
+                ),
+            ),
         ],
     )
 
@@ -64,4 +78,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_storcli_pdisks,
         title=lambda: _("LSI RAID physical disks (StorCLI)"),
-    ))
+    )
+)

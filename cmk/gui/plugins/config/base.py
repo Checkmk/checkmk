@@ -14,33 +14,49 @@ CustomLinkSpec = Tuple[str, bool, List[Tuple[str, str, Optional[str], str]]]
 
 # Links for everyone
 custom_links_guest: List[CustomLinkSpec] = [
-    ("Addons", True, [
-        ("NagVis", "../nagvis/", "icon_nagvis.png", "main"),
-    ]),
+    (
+        "Addons",
+        True,
+        [
+            ("NagVis", "../nagvis/", "icon_nagvis.png", "main"),
+        ],
+    ),
 ]
 
 # The members of the role 'user' get the same links as the guests
 # but some in addition
-custom_links_user: List[CustomLinkSpec] = [("Open Source Components", False, [
-    ("CheckMK", "https://checkmk.com", None, "_blank"),
-    ("Nagios", "https://www.nagios.org/", None, "_blank"),
-    ("NagVis", "https://nagvis.org/", None, "_blank"),
-    ("RRDTool", "https://oss.oetiker.ch/rrdtool/", None, "_blank"),
-])]
+custom_links_user: List[CustomLinkSpec] = [
+    (
+        "Open Source Components",
+        False,
+        [
+            ("CheckMK", "https://checkmk.com", None, "_blank"),
+            ("Nagios", "https://www.nagios.org/", None, "_blank"),
+            ("NagVis", "https://nagvis.org/", None, "_blank"),
+            ("RRDTool", "https://oss.oetiker.ch/rrdtool/", None, "_blank"),
+        ],
+    )
+]
 
 # The admins yet get further links
-custom_links_admin: List[CustomLinkSpec] = [("Support", False, [
-    ("CheckMK", "https://checkmk.com/", None, "_blank"),
-    ("CheckMK Mailinglists", "https://checkmk.com/community.php", None, "_blank"),
-    ("CheckMK Exchange", "https://checkmk.com/check_mk-exchange.php", None, "_blank"),
-])]
+custom_links_admin: List[CustomLinkSpec] = [
+    (
+        "Support",
+        False,
+        [
+            ("CheckMK", "https://checkmk.com/", None, "_blank"),
+            ("CheckMK Mailinglists", "https://checkmk.com/community.php", None, "_blank"),
+            ("CheckMK Exchange", "https://checkmk.com/check_mk-exchange.php", None, "_blank"),
+        ],
+    )
+]
 
 
 def make_default_user_profile() -> Dict[str, Any]:
     return {
-        'contactgroups': [],
-        'roles': ['user'],
-        'force_authuser': False,
+        "contactgroups": [],
+        "roles": ["user"],
+        "force_authuser": False,
     }
 
 
@@ -49,7 +65,7 @@ ActivateChangesCommentMode = Literal["enforce", "optional", "disabled"]
 
 @dataclass
 class CREConfig:
-    #.
+    # .
     #   .--Generic-------------------------------------------------------------.
     #   |                   ____                      _                        |
     #   |                  / ___| ___ _ __   ___ _ __(_) ___                   |
@@ -82,7 +98,8 @@ class CREConfig:
             "cmk.web.automations": 30,
             "cmk.web.background-job": 30,
             "cmk.web.slow-views": 30,
-        })
+        }
+    )
 
     slow_views_duration_threshold: int = 60
 
@@ -98,11 +115,13 @@ class CREConfig:
     #   |____/|_|\__,_|\___|_.__/ \__,_|_|
     #
 
-    sidebar: List[Tuple[str, str]] = field(default_factory=lambda: [
-        ('tactical_overview', 'open'),
-        ('bookmarks', 'open'),
-        ('master_control', 'closed'),
-    ])
+    sidebar: List[Tuple[str, str]] = field(
+        default_factory=lambda: [
+            ("tactical_overview", "open"),
+            ("bookmarks", "open"),
+            ("master_control", "closed"),
+        ]
+    )
 
     # Interval of snapin updates in seconds
     sidebar_update_interval: float = 30.0
@@ -117,13 +136,15 @@ class CREConfig:
     quicksearch_dropdown_limit: int = 80
 
     # Quicksearch search order
-    quicksearch_search_order: List[Tuple[str, str]] = field(default_factory=lambda: [
-        ("menu", "continue"),
-        ("h", "continue"),
-        ("al", "continue"),
-        ("ad", "continue"),
-        ("s", "continue"),
-    ])
+    quicksearch_search_order: List[Tuple[str, str]] = field(
+        default_factory=lambda: [
+            ("menu", "continue"),
+            ("h", "continue"),
+            ("al", "continue"),
+            ("ad", "continue"),
+            ("s", "continue"),
+        ]
+    )
 
     failed_notification_horizon: int = 7 * 60 * 60 * 24
 
@@ -146,13 +167,15 @@ class CREConfig:
 
     sound_url: str = "sounds/"
     enable_sounds: bool = False
-    sounds: List[Tuple[str, str]] = field(default_factory=lambda: [
-        ("down", "down.wav"),
-        ("critical", "critical.wav"),
-        ("unknown", "unknown.wav"),
-        ("warning", "warning.wav"),
-        # ( None,       "ok.wav" ),
-    ])
+    sounds: List[Tuple[str, str]] = field(
+        default_factory=lambda: [
+            ("down", "down.wav"),
+            ("critical", "critical.wav"),
+            ("unknown", "unknown.wav"),
+            ("warning", "warning.wav"),
+            # ( None,       "ok.wav" ),
+        ]
+    )
 
     #   __     ___                             _   _
     #   \ \   / (_) _____      __   ___  _ __ | |_(_) ___  _ __  ___
@@ -167,11 +190,13 @@ class CREConfig:
     # MISC
     doculink_urlformat: str = "https://checkmk.com/checkmk_%s.html"
 
-    view_action_defaults: Dict[str, bool] = field(default_factory=lambda: {
-        "ack_sticky": True,
-        "ack_notify": True,
-        "ack_persistent": False,
-    })
+    view_action_defaults: Dict[str, bool] = field(
+        default_factory=lambda: {
+            "ack_sticky": True,
+            "ack_notify": True,
+            "ack_persistent": False,
+        }
+    )
 
     #   ____          _                    _     _       _
     #  / ___|   _ ___| |_ ___  _ __ ___   | |   (_)_ __ | | _____
@@ -186,7 +211,8 @@ class CREConfig:
             "guest": custom_links_guest,
             "user": custom_links_guest + custom_links_user,
             "admin": custom_links_guest + custom_links_user + custom_links_admin,
-        })
+        }
+    )
 
     #  __     __         _
     #  \ \   / /_ _ _ __(_) ___  _   _ ___
@@ -244,7 +270,7 @@ class CREConfig:
     hide_languages: List[str] = field(default_factory=list)
 
     # Default timestamp format to be used in multisite
-    default_ts_format: str = 'mixed'
+    default_ts_format: str = "mixed"
 
     # Maximum livetime of unmodified selections
     selection_livetime: int = 3600
@@ -290,32 +316,20 @@ class CREConfig:
             "selection": (True, False, False, False),
             "performance": (True, 10),
             "error_handling": True,
-        })
+        }
+    )
 
     use_siteicons: bool = False
 
-    graph_timeranges: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {
-            'title': "The last 4 hours",
-            "duration": 4 * 60 * 60
-        },
-        {
-            'title': "The last 25 hours",
-            "duration": 25 * 60 * 60
-        },
-        {
-            'title': "The last 8 days",
-            "duration": 8 * 24 * 60 * 60
-        },
-        {
-            'title': "The last 35 days",
-            "duration": 35 * 24 * 60 * 60
-        },
-        {
-            'title': "The last 400 days",
-            "duration": 400 * 24 * 60 * 60
-        },
-    ])
+    graph_timeranges: List[Dict[str, Any]] = field(
+        default_factory=lambda: [
+            {"title": "The last 4 hours", "duration": 4 * 60 * 60},
+            {"title": "The last 25 hours", "duration": 25 * 60 * 60},
+            {"title": "The last 8 days", "duration": 8 * 24 * 60 * 60},
+            {"title": "The last 35 days", "duration": 35 * 24 * 60 * 60},
+            {"title": "The last 400 days", "duration": 400 * 24 * 60 * 60},
+        ]
+    )
 
     #     _   _               ____  ____
     #    | | | |___  ___ _ __|  _ \| __ )
@@ -345,58 +359,59 @@ class CREConfig:
 
     user_localizations: Dict[str, Dict[str, str]] = field(
         default_factory=lambda: {
-            u'Agent type': {
-                "de": u"Art des Agenten",
+            "Agent type": {
+                "de": "Art des Agenten",
             },
-            u'Business critical': {
-                "de": u"Geschäftskritisch",
+            "Business critical": {
+                "de": "Geschäftskritisch",
             },
-            u'Check_MK Agent (Server)': {
-                "de": u"Check_MK Agent (Server)",
+            "Check_MK Agent (Server)": {
+                "de": "Check_MK Agent (Server)",
             },
-            u'Criticality': {
-                "de": u"Kritikalität",
+            "Criticality": {
+                "de": "Kritikalität",
             },
-            u'DMZ (low latency, secure access)': {
-                "de": u"DMZ (geringe Latenz, hohe Sicherheit",
+            "DMZ (low latency, secure access)": {
+                "de": "DMZ (geringe Latenz, hohe Sicherheit",
             },
-            u'Do not monitor this host': {
-                "de": u"Diesen Host nicht überwachen",
+            "Do not monitor this host": {
+                "de": "Diesen Host nicht überwachen",
             },
-            u'Dual: Check_MK Agent + SNMP': {
-                "de": u"Dual: Check_MK Agent + SNMP",
+            "Dual: Check_MK Agent + SNMP": {
+                "de": "Dual: Check_MK Agent + SNMP",
             },
-            u'Legacy SNMP device (using V1)': {
-                "de": u"Alte SNMP-Geräte (mit Version 1)",
+            "Legacy SNMP device (using V1)": {
+                "de": "Alte SNMP-Geräte (mit Version 1)",
             },
-            u'Local network (low latency)': {
-                "de": u"Lokales Netzwerk (geringe Latenz)",
+            "Local network (low latency)": {
+                "de": "Lokales Netzwerk (geringe Latenz)",
             },
-            u'Networking Segment': {
-                "de": u"Netzwerksegment",
+            "Networking Segment": {
+                "de": "Netzwerksegment",
             },
-            u'No Agent': {
-                "de": u"Kein Agent",
+            "No Agent": {
+                "de": "Kein Agent",
             },
-            u'Productive system': {
-                "de": u"Produktivsystem",
+            "Productive system": {
+                "de": "Produktivsystem",
             },
-            u'Test system': {
-                "de": u"Testsystem",
+            "Test system": {
+                "de": "Testsystem",
             },
-            u'WAN (high latency)': {
-                "de": u"WAN (hohe Latenz)",
+            "WAN (high latency)": {
+                "de": "WAN (hohe Latenz)",
             },
-            u'monitor via Check_MK Agent': {
-                "de": u"Überwachung via Check_MK Agent",
+            "monitor via Check_MK Agent": {
+                "de": "Überwachung via Check_MK Agent",
             },
-            u'monitor via SNMP': {
-                "de": u"Überwachung via SNMP",
+            "monitor via SNMP": {
+                "de": "Überwachung via SNMP",
             },
-            u'SNMP (Networking device, Appliance)': {
-                "de": u"SNMP (Netzwerkgerät, Appliance)",
+            "SNMP (Networking device, Appliance)": {
+                "de": "SNMP (Netzwerkgerät, Appliance)",
             },
-        })
+        }
+    )
 
     # Contains user specified icons and actions for hosts and services
     user_icons_and_actions: Dict = field(default_factory=dict)
@@ -404,38 +419,27 @@ class CREConfig:
     # Defintions of custom attributes to be used for services
     custom_service_attributes: Dict = field(default_factory=dict)
 
-    user_downtime_timeranges: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {
-            'title': "2 hours",
-            'end': 2 * 60 * 60
-        },
-        {
-            'title': "Today",
-            'end': 'next_day'
-        },
-        {
-            'title': "This week",
-            'end': 'next_week'
-        },
-        {
-            'title': "This month",
-            'end': 'next_month'
-        },
-        {
-            'title': "This year",
-            'end': 'next_year'
-        },
-    ])
+    user_downtime_timeranges: List[Dict[str, Any]] = field(
+        default_factory=lambda: [
+            {"title": "2 hours", "end": 2 * 60 * 60},
+            {"title": "Today", "end": "next_day"},
+            {"title": "This week", "end": "next_week"},
+            {"title": "This month", "end": "next_month"},
+            {"title": "This year", "end": "next_year"},
+        ]
+    )
 
     # Override toplevel and sort_index settings of builtin icons
     builtin_icon_visibility: Dict = field(default_factory=dict)
 
-    trusted_certificate_authorities: Dict[str, Any] = field(default_factory=lambda: {
-        "use_system_wide_cas": True,
-        "trusted_cas": [],
-    })
+    trusted_certificate_authorities: Dict[str, Any] = field(
+        default_factory=lambda: {
+            "use_system_wide_cas": True,
+            "trusted_cas": [],
+        }
+    )
 
-    #.
+    # .
     #   .--EC------------------------------------------------------------------.
     #   |                             _____ ____                               |
     #   |                            | ____/ ___|                              |
@@ -447,7 +451,7 @@ class CREConfig:
 
     mkeventd_enabled: bool = True
     mkeventd_pprint_rules: bool = False
-    mkeventd_notify_contactgroup: str = ''
+    mkeventd_notify_contactgroup: str = ""
     mkeventd_notify_facility: int = 16
     mkeventd_notify_remotehost: Optional[str] = None
     mkeventd_connect_timeout: int = 10
@@ -455,14 +459,16 @@ class CREConfig:
     log_rulehits: bool = False
     rule_optimizer: bool = True
 
-    mkeventd_service_levels: List[Tuple[int, str]] = field(default_factory=lambda: [
-        (0, "(no Service level)"),
-        (10, "Silver"),
-        (20, "Gold"),
-        (30, "Platinum"),
-    ])
+    mkeventd_service_levels: List[Tuple[int, str]] = field(
+        default_factory=lambda: [
+            (0, "(no Service level)"),
+            (10, "Silver"),
+            (20, "Gold"),
+            (30, "Platinum"),
+        ]
+    )
 
-    #.
+    # .
     #   .--WATO----------------------------------------------------------------.
     #   |                     __        ___  _____ ___                         |
     #   |                     \ \      / / \|_   _/ _ \                        |
@@ -476,10 +482,12 @@ class CREConfig:
     wato_host_tags: List = field(default_factory=list)
     wato_aux_tags: List = field(default_factory=list)
     # Tag configuration variable since 1.6
-    wato_tags: Dict[str, List] = field(default_factory=lambda: {
-        "tag_groups": [],
-        "aux_tags": [],
-    })
+    wato_tags: Dict[str, List] = field(
+        default_factory=lambda: {
+            "tag_groups": [],
+            "aux_tags": [],
+        }
+    )
 
     wato_enabled: bool = True
     wato_hide_filenames: bool = True
@@ -491,7 +499,7 @@ class CREConfig:
     wato_max_snapshots: int = 50
     wato_num_hostspecs: int = 12
     wato_num_itemspecs: int = 15
-    wato_activation_method: str = 'restart'
+    wato_activation_method: str = "restart"
     wato_write_nagvis_auth: bool = False
     wato_use_git: bool = False
     wato_hidden_users: List = field(default_factory=list)
@@ -500,15 +508,17 @@ class CREConfig:
     wato_read_only: Dict = field(default_factory=dict)
     wato_hide_folders_without_read_permissions: bool = False
     wato_pprint_config: bool = False
-    wato_icon_categories: List[Tuple[str, str]] = field(default_factory=lambda: [
-        ("logos", u"Logos"),
-        ("parts", u"Parts"),
-        ("misc", u"Misc"),
-    ])
+    wato_icon_categories: List[Tuple[str, str]] = field(
+        default_factory=lambda: [
+            ("logos", "Logos"),
+            ("parts", "Parts"),
+            ("misc", "Misc"),
+        ]
+    )
 
     wato_activate_changes_comment_mode: ActivateChangesCommentMode = "disabled"
 
-    #.
+    # .
     #   .--REST API------------------------------------------------------------.
     #   |               ____  _____ ____ _____      _    ____ ___              |
     #   |              |  _ \| ____/ ___|_   _|    / \  |  _ \_ _|             |
@@ -520,7 +530,7 @@ class CREConfig:
 
     rest_api_etag_locking: bool = True
 
-    #.
+    # .
     #   .--BI------------------------------------------------------------------.
     #   |                              ____ ___                                |
     #   |                             | __ )_ _|                               |
@@ -535,14 +545,18 @@ class CREConfig:
     host_aggregations: List = field(default_factory=list)
     bi_packs: Dict = field(default_factory=dict)
 
-    default_bi_layout: Dict[str, str] = field(default_factory=lambda: {
-        "node_style": "builtin_hierarchy",
-        "line_style": "straight",
-    })
-    bi_layouts: Dict[str, Dict] = field(default_factory=lambda: {
-        "templates": {},
-        "aggregations": {},
-    })
+    default_bi_layout: Dict[str, str] = field(
+        default_factory=lambda: {
+            "node_style": "builtin_hierarchy",
+            "line_style": "straight",
+        }
+    )
+    bi_layouts: Dict[str, Dict] = field(
+        default_factory=lambda: {
+            "templates": {},
+            "aggregations": {},
+        }
+    )
 
     # Deprecated. Kept for compatibility.
     bi_compile_log: Optional[str] = None

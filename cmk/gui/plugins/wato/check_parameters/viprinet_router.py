@@ -14,19 +14,23 @@ from cmk.gui.valuespec import Dictionary, DropdownChoice
 
 
 def _parameter_valuespec_viprinet_router():
-    return Dictionary(elements=[
-        ("expect_mode",
-         DropdownChoice(
-             title=_("Set expected router mode"),
-             choices=[
-                 ("inv", _("Mode found during inventory")),
-                 ("0", _("Node")),
-                 ("1", _("Hub")),
-                 ("2", _("Hub running as HotSpare")),
-                 ("3", _("Hotspare-Hub replacing another router")),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "expect_mode",
+                DropdownChoice(
+                    title=_("Set expected router mode"),
+                    choices=[
+                        ("inv", _("Mode found during inventory")),
+                        ("0", _("Node")),
+                        ("1", _("Hub")),
+                        ("2", _("Hub running as HotSpare")),
+                        ("3", _("Hotspare-Hub replacing another router")),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -36,4 +40,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_viprinet_router,
         title=lambda: _("Viprinet router"),
-    ))
+    )
+)

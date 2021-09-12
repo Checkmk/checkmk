@@ -17,20 +17,25 @@ def _parameter_valuespec_iis_app_pool_state():
     return Dictionary(
         required_keys=["state_mapping"],
         elements=[
-            ("state_mapping",
-             Dictionary(
-                 title="Map of Application Pool States to Service States",
-                 optional_keys=[],
-                 elements=[
-                     ("Uninitialized", MonitoringState(default_value=2, title="Uninitialized")),
-                     ("Initialized", MonitoringState(default_value=1, title="Initialized")),
-                     ("Running", MonitoringState(default_value=0, title="Running")),
-                     ("Disabling", MonitoringState(default_value=2, title="Disabling")),
-                     ("Disabled", MonitoringState(default_value=2, title="Disabled")),
-                     ("ShutdownPending", MonitoringState(default_value=2, title="ShutdownPending")),
-                     ("DeletePending", MonitoringState(default_value=2, title="DeletePending")),
-                 ],
-             )),
+            (
+                "state_mapping",
+                Dictionary(
+                    title="Map of Application Pool States to Service States",
+                    optional_keys=[],
+                    elements=[
+                        ("Uninitialized", MonitoringState(default_value=2, title="Uninitialized")),
+                        ("Initialized", MonitoringState(default_value=1, title="Initialized")),
+                        ("Running", MonitoringState(default_value=0, title="Running")),
+                        ("Disabling", MonitoringState(default_value=2, title="Disabling")),
+                        ("Disabled", MonitoringState(default_value=2, title="Disabled")),
+                        (
+                            "ShutdownPending",
+                            MonitoringState(default_value=2, title="ShutdownPending"),
+                        ),
+                        ("DeletePending", MonitoringState(default_value=2, title="DeletePending")),
+                    ],
+                ),
+            ),
         ],
     )
 
@@ -43,4 +48,5 @@ rulespec_registry.register(
         item_spec=lambda: TextInput(title=_("Application Pool name")),
         parameter_valuespec=_parameter_valuespec_iis_app_pool_state,
         title=lambda: _("IIS Application Pool State Settings"),
-    ))
+    )
+)

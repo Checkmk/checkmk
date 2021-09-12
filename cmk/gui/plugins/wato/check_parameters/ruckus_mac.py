@@ -14,52 +14,66 @@ from cmk.gui.valuespec import Dictionary, Integer, Tuple
 
 
 def _parameter_valuespec_ruckus_mac():
-    return Dictionary(elements=[
-        ("inside",
-         Dictionary(
-             title=_("Inside unique MACs"),
-             elements=[
-                 ("levels_upper",
-                  Tuple(
-                      title=_("Upper levels"),
-                      elements=[
-                          Integer(title=_("Warning at")),
-                          Integer(title=_("Critical at")),
-                      ],
-                  )),
-                 ("levels_lower",
-                  Tuple(
-                      title=_("Lower levels"),
-                      elements=[
-                          Integer(title=_("Warning if below")),
-                          Integer(title=_("Critical if below")),
-                      ],
-                  )),
-             ],
-         )),
-        ("outside",
-         Dictionary(
-             title=_("Outside unique MACs"),
-             elements=[
-                 ("levels_upper",
-                  Tuple(
-                      title=_("Upper levels"),
-                      elements=[
-                          Integer(title=_("Warning at")),
-                          Integer(title=_("Critical at")),
-                      ],
-                  )),
-                 ("levels_lower",
-                  Tuple(
-                      title=_("Lower levels"),
-                      elements=[
-                          Integer(title=_("Warning if below")),
-                          Integer(title=_("Critical if below")),
-                      ],
-                  )),
-             ],
-         )),
-    ],)
+    return Dictionary(
+        elements=[
+            (
+                "inside",
+                Dictionary(
+                    title=_("Inside unique MACs"),
+                    elements=[
+                        (
+                            "levels_upper",
+                            Tuple(
+                                title=_("Upper levels"),
+                                elements=[
+                                    Integer(title=_("Warning at")),
+                                    Integer(title=_("Critical at")),
+                                ],
+                            ),
+                        ),
+                        (
+                            "levels_lower",
+                            Tuple(
+                                title=_("Lower levels"),
+                                elements=[
+                                    Integer(title=_("Warning if below")),
+                                    Integer(title=_("Critical if below")),
+                                ],
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "outside",
+                Dictionary(
+                    title=_("Outside unique MACs"),
+                    elements=[
+                        (
+                            "levels_upper",
+                            Tuple(
+                                title=_("Upper levels"),
+                                elements=[
+                                    Integer(title=_("Warning at")),
+                                    Integer(title=_("Critical at")),
+                                ],
+                            ),
+                        ),
+                        (
+                            "levels_lower",
+                            Tuple(
+                                title=_("Lower levels"),
+                                elements=[
+                                    Integer(title=_("Warning if below")),
+                                    Integer(title=_("Critical if below")),
+                                ],
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 rulespec_registry.register(
@@ -69,4 +83,5 @@ rulespec_registry.register(
         match_type="dict",
         parameter_valuespec=_parameter_valuespec_ruckus_mac,
         title=lambda: _("Ruckus Spot Unique MAC addresses"),
-    ))
+    )
+)

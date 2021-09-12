@@ -28,8 +28,8 @@ class Attr(NamedTuple):
     field: Optional[fields.Field] = None
 
 
-ObjectType = Literal['host', 'folder', 'cluster']
-ObjectContext = Literal['create', 'update']
+ObjectType = Literal["host", "folder", "cluster"]
+ObjectContext = Literal["create", "update"]
 
 
 def collect_attributes(
@@ -76,7 +76,7 @@ def collect_attributes(
         # >>> pprint.pprint(attrs)
 
     """
-    something = TypeVar('something')
+    something = TypeVar("something")
 
     def _ensure(optional: Optional[something]) -> something:
         if optional is None:
@@ -91,7 +91,7 @@ def collect_attributes(
         return func()
 
     result = []
-    new = context == 'create'
+    new = context == "create"
     for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(object_type, new):
         for attr in watolib.get_sorted_host_attributes_by_topic(topic_id):
             if not attr.is_visible(object_type, new):
@@ -103,7 +103,7 @@ def collect_attributes(
                 description=help_text,
                 section=topic_title,
                 mandatory=attr.is_mandatory(),
-                field=maybe_call(getattr(attr, 'openapi_field', None)),
+                field=maybe_call(getattr(attr, "openapi_field", None)),
             )
             result.append(attr_entry)
 
@@ -134,7 +134,8 @@ def collect_attributes(
                 description="\n\n".join(description),
                 enum=[tag.id for tag in tag_group.tags],
                 field=None,
-            ))
+            )
+        )
 
     return result
 
@@ -188,7 +189,7 @@ def _field_from_attr(attr):
             raise ValidationError(f"Site {site_name!r} does not exist.")
 
     validators = {
-        'site': site_exists,
+        "site": site_exists,
     }
 
     class FieldParams(TypedDict, total=False):
@@ -199,24 +200,24 @@ def _field_from_attr(attr):
         allow_none: bool
 
     kwargs: FieldParams = {
-        'required': attr.mandatory,
-        'description': attr.description,
+        "required": attr.mandatory,
+        "description": attr.description,
     }
     # If we would assign None to enum, this would lead to a broken OpenApi specification!
     if attr.enum is not None:
-        kwargs['enum'] = attr.enum
+        kwargs["enum"] = attr.enum
         if None in attr.enum:
-            kwargs['allow_none'] = True
+            kwargs["allow_none"] = True
 
     if attr.name in validators:
-        kwargs['validate'] = validators[attr.name]
+        kwargs["validate"] = validators[attr.name]
 
     return fields.String(**kwargs)
 
 
 def _schema_from_dict(name, schema_dict) -> Type[BaseSchema]:
     dict_ = schema_dict.copy()
-    dict_['cast_to_dict'] = True
+    dict_["cast_to_dict"] = True
     return type(name, (BaseSchema,), dict_)
 
 
@@ -272,5 +273,5 @@ def attr_openapi_schema(
     for attr in collect_attributes(object_type, context):
         schema[attr.name] = _field_from_attr(attr)
 
-    class_name = f'{object_type.title()}{context.title()}Attribute'
+    class_name = f"{object_type.title()}{context.title()}Attribute"
     return _schema_from_dict(class_name, schema)

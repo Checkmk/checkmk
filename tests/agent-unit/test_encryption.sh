@@ -13,7 +13,7 @@ MK_SOURCE_AGENT="true" source "$AGENT_LINUX"
 # mock openssl
 openssl() {
     if [ "${1}" = "version" ]; then
-        echo "OpenSSL 1.1.1f  31 Mar 2020"
+        printf "OpenSSL 1.1.1f  31 Mar 2020\n"
     else
         sed 's/plain/cipher/g'
     fi
@@ -24,7 +24,7 @@ test_unencrypted() {
 
     set_up_encryption
 
-    actual="$(echo "Hello plain world!" | optionally_encrypt)"
+    actual="$(printf "Hello plain world!\n" | optionally_encrypt)"
 
     assertEquals "Hello plain world!" "${actual}"
 }
@@ -35,9 +35,20 @@ test_encrypted() {
     ENCRYPTED="yes"
     set_up_encryption
 
-    actual="$(echo "Hello plain world!" | optionally_encrypt)"
+    actual="$(printf "Hello plain world!" | optionally_encrypt)"
 
     assertEquals "03Hello cipher world!" "${actual}"
+}
+
+test_encryption_does_not_strip_newlines() {
+    unset optionally_encrypt
+
+    ENCRYPTED="yes"
+    set_up_encryption
+
+    actual="$(printf "Hello plain world!\n" | optionally_encrypt | wc -c)"
+
+    assertEquals "22" "${actual}"
 }
 
 # shellcheck disable=SC1090

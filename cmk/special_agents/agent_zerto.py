@@ -85,9 +85,9 @@ class ZertoConnection:
             dataval = {"AuthenticationMethod": 1}
             LOGGER.debug("VCenter dataval: %r", dataval)
             headers = {"content-type": "application/json"}
-            response = requests.post(
+            response = requests.post(  # nosec
                 url, data=dataval, auth=self._credentials, headers=headers, verify=False
-            )  # nosec
+            )
 
         LOGGER.debug("Response status code: %s", response.status_code)
 

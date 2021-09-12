@@ -1739,11 +1739,11 @@ def restart_apache(version_info: VersionInfo) -> None:
         sys.stdout.write("Restarting Apache...")
         sys.stdout.flush()
         show_success(
-            os.system(
+            os.system(  # nosec
                 init_cmd(version_info, version_info.APACHE_INIT_NAME, "restart") + " >/dev/null"
             )
             >> 8
-        )  # nosec
+        )
 
 
 def replace_tags(content: bytes, replacements: Replacements) -> bytes:

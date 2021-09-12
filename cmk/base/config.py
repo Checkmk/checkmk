@@ -4153,8 +4153,8 @@ class CEEConfigCache(ConfigCache):
             hostname,
             description,
             cmc_service_check_timeout,  # type: ignore[name-defined] # pylint: disable=undefined-variable
-            deflt=cmc_check_timeout,
-        )  # type: ignore[name-defined] # pylint: disable=undefined-variable
+            deflt=cmc_check_timeout,  # type: ignore[name-defined] # pylint: disable=undefined-variable
+        )
 
     def graphite_metrics_of_service(
         self,

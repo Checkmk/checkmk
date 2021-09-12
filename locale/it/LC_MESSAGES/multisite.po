@@ -51116,7 +51116,7 @@ msgstr "Questo evento non ha ancora raggiunto il numero di obiettivi."
 msgid "This expression must match the value of the variable"
 msgstr "Questa espressione deve corrispondere al valore della variabile"
 
-#, no-python-format
+#, python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -53679,7 +53679,7 @@ msgstr ""
 "notare che questa impostazione non funziona per le interfacce raggruppate, "
 "poiché le informazioni aggiuntive delle interfacce raggruppate sono diverse"
 
-#, no-python-format
+#, python-format
 msgid ""
 "This setting controls the distance of text lines, in relation to the font "
 "width. A setting of 1.2 thus means that the line spacing is 120% of the font "

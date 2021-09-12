@@ -51003,7 +51003,7 @@ msgstr "Dit evenement heeft het doelaantal nog niet bereikt."
 msgid "This expression must match the value of the variable"
 msgstr "Deze expressie moet overeenkomen met de waarde van de variabele"
 
-#, no-python-format
+#, fuzzy, python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -53552,7 +53552,7 @@ msgstr ""
 "niet werkt voor gegroepeerde interfaces, aangezien de bijkomende informatie "
 "van gegroepeerde interfaces verschillend is"
 
-#, no-python-format
+#, fuzzy, python-format
 msgid ""
 "This setting controls the distance of text lines, in relation to the font "
 "width. A setting of 1.2 thus means that the line spacing is 120% of the font "

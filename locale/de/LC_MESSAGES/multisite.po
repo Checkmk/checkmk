@@ -50999,7 +50999,7 @@ msgstr "Das Ereignis hat den Ziel-Zähler noch nicht erreicht."
 msgid "This expression must match the value of the variable"
 msgstr "Dieser Ausdruck muss auf den Wert der Variable matchen."
 
-#, no-python-format
+#, python-format
 msgid ""
 "This feature allows the distribution of the config generation workload over "
 "several CPUs. Depending on the number of available CPU cores, it can "
@@ -53536,7 +53536,7 @@ msgstr ""
 "Sie, dass dies nicht für gruppierte Interfaces gilt, da die zusätzliche "
 "Information von gruppierten Interfaces sich hiervon unterscheiden."
 
-#, no-python-format
+#, python-format
 msgid ""
 "This setting controls the distance of text lines, in relation to the font "
 "width. A setting of 1.2 thus means that the line spacing is 120% of the font "

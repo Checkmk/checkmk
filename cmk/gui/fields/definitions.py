@@ -1268,8 +1268,8 @@ class Timestamp(_fields.DateTime):
 
 __all__ = [
     "attributes_field",
-    "customer_field",
     "column_field",
+    "customer_field",
     "ExprSchema",
     "FolderField",
     "FOLDER_PATTERN",

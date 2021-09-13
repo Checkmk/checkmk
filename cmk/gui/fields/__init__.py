@@ -23,6 +23,7 @@ from marshmallow.fields import (
 )
 
 from cmk.gui.fields.attributes import (
+    HostAttributeManagementBoardField,
     IPMIParameters,
     MetaData,
     NetworkScan,
@@ -73,6 +74,7 @@ __all__ = [
     "FOLDER_PATTERN",
     "Function",
     "GroupField",
+    "HostAttributeManagementBoardField",
     "HostField",
     "Int",
     "Integer",

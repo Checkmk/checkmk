@@ -910,30 +910,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> fields.Field:
-        def to_disk(data):
-            val = data["management_protocol"]
-            if val == "none":
-                return None
-            return val
-
-        def from_disk(data):
-            val = data.get("management_protocol", None)
-            if val is None:
-                return "none"
-            return val
-
-        return fields.Function(
-            description=(
-                "The protocol used to connect to the management board.\n\n"
-                "Valid options are:\n\n"
-                " * `none` - No management board\n"
-                " * `snmp` - Connect using SNMP\n"
-                " * `ipmi` - Connect using IPMI\n"
-            ),
-            enum=["none", "snmp", "ipmi"],
-            serialize=from_disk,
-            deserialize=to_disk,
-        )
+        return fields.HostAttributeManagementBoardField()
 
 
 @host_attribute_registry.register

@@ -13,18 +13,17 @@
 #include <utility>
 
 #include "RRDColumn.h"
-#include "nagios.h"
 #include "pnp4nagios.h"
 
 template <>
 [[nodiscard]] inline std::pair<std::string, std::string>
-RRDDataMaker::getHostNameServiceDesc(const host& row) {
+detail::RRDDataMaker::getHostNameServiceDesc(const host& row) {
     return {row.name, dummy_service_description()};
 }
 
 template <>
 [[nodiscard]] inline std::pair<std::string, std::string>
-RRDDataMaker::getHostNameServiceDesc(const service& row) {
+detail::RRDDataMaker::getHostNameServiceDesc(const service& row) {
     return {row.host_name, row.description};
 }
 

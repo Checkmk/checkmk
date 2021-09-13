@@ -120,8 +120,9 @@ std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
 // and that have a different syntax then we have in our metrics system.
 // >= --> GE. Or should we also go with GE instead of >=?
 // Look at http://oss.oetiker.ch/rrdtool/doc/rrdgraph_rpn.en.html for details!
-detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
-                                    &host_name_service_description) const {
+detail::Data detail::RRDDataMaker::make(
+    const std::pair<std::string, std::string> &host_name_service_description)
+    const {
     // Prepare the arguments for rrdtool xport in a dynamic array of strings.
     // Note: The actual step might be different!
     std::vector<std::string> argv_s{
@@ -284,7 +285,7 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
     }
 
     // Since we have exactly one XPORT command, we expect exactly one column
-    detail::Data data;
+    Data data;
     if (col_cnt != 1) {
         Error(logger) << "rrd_xport returned " << col_cnt
                       << " columns, but exactly one was expected.";

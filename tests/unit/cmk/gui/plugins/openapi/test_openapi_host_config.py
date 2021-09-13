@@ -156,6 +156,74 @@ def test_openapi_hosts(wsgi_app, with_automation_user, suppress_automation_calls
     )
 
 
+def test_openapi_host_update_after_move(
+    wsgi_app,
+    with_automation_user,
+    suppress_automation_calls,
+    with_host,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
+        params='{"name": "new_folder", "title": "bar", "parent": "/"}',
+        status=200,
+        content_type='application/json',
+    )
+
+    heute = wsgi_app.call_method(
+        'get',
+        "/NO_SITE/check_mk/api/1.0/objects/host_config/heute",
+    )
+
+    moved_heute = wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/1.0/objects/host_config/heute/actions/move/invoke",
+        params='{"target_folder": "/new_folder"}',
+        headers={'If-Match': heute.headers['ETag']},
+        content_type='application/json',
+        status=200,
+    )
+
+    example = wsgi_app.call_method(
+        'get',
+        "/NO_SITE/check_mk/api/1.0/objects/host_config/example.com",
+    )
+
+    moved_example = wsgi_app.call_method(
+        'post',
+        "/NO_SITE/check_mk/api/1.0/objects/host_config/example.com/actions/move/invoke",
+        params='{"target_folder": "/new_folder"}',
+        headers={'If-Match': example.headers['ETag']},
+        content_type='application/json',
+        status=200,
+    )
+
+    wsgi_app.follow_link(
+        moved_example,
+        '.../update',
+        status=200,
+        params=json.dumps({'attributes': {
+            "alias": "foo"
+        }}),
+        headers={'If-Match': example.headers['ETag']},
+        content_type='application/json',
+    )
+
+    wsgi_app.follow_link(
+        moved_heute,
+        '.../update',
+        status=200,
+        params=json.dumps({'attributes': {
+            "alias": "foo"
+        }}),
+        headers={'If-Match': heute.headers['ETag']},
+        content_type='application/json',
+    )
+
+
 def test_openapi_bulk_hosts(
     wsgi_app,
     with_automation_user,

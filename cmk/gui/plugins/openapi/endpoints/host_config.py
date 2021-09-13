@@ -44,8 +44,6 @@ import itertools
 import json
 import operator
 
-from werkzeug.datastructures import ETags
-
 from cmk.gui import watolib
 from cmk.gui.exceptions import MKUserError, MKAuthException
 from cmk.gui.http import Response
@@ -180,7 +178,7 @@ def update_nodes(params):
     body = params['body']
     nodes = body['nodes']
     host: watolib.CREHost = watolib.Host.host(host_name)
-    constructors.require_etag(etag_of_host(host))
+    _require_host_etag(host)
     host.edit(host.attributes(), nodes)
 
     return constructors.serve_json(
@@ -208,7 +206,7 @@ def update_host(params):
     remove_attributes = body['remove_attributes']
     check_hostname(host_name, should_exist=True)
     host: watolib.CREHost = watolib.Host.host(host_name)
-    constructors.require_etag(etag_of_host(host))
+    _require_host_etag(host)
 
     if new_attributes:
         host.edit(new_attributes, None)
@@ -421,7 +419,7 @@ def _serve_host(host, effective_attributes=False):
     response = Response()
     response.set_data(json.dumps(serialize_host(host, effective_attributes)))
     response.set_content_type('application/json')
-    etag = etag_of_host(host)
+    etag = constructors.etag_of_dict(_host_etag_values(host))
     response.headers.add('ETag', etag.to_header())
     return response
 
@@ -472,12 +470,20 @@ def _except_keys(dict_: Dict[str, Any], exclude_keys: List[str]) -> Dict[str, An
     return {key: value for key, value in dict_.items() if key not in exclude_keys}
 
 
-def etag_of_host(host: watolib.CREHost) -> ETags:
+def _require_host_etag(host):
+    etag_values = _host_etag_values(host)
+    constructors.require_etag(
+        constructors.etag_of_dict(etag_values),
+        error_details=etag_values,
+    )
+
+
+def _host_etag_values(host):
     # FIXME: Through some not yet fully explored effect, we do not get the actual persisted
     #        timestamp in the meta_data section but rather some other timestamp. This makes the
     #        reported ETag a different one than the one which is accepted by the endpoint.
-    return constructors.etag_of_dict({
+    return {
         'name': host.name(),
         'attributes': _except_keys(host.attributes(), ['meta_data']),
         'cluster_nodes': host.cluster_nodes(),
-    })
+    }

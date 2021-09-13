@@ -6,7 +6,19 @@
 
 from cmk.utils.plugin_loader import load_plugins
 
-#.
+from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
+    Filter,
+    filter_registry,
+    FilterTime,
+    FilterTristate,
+    get_only_sites_from_context,
+    visual_info_registry,
+    visual_type_registry,
+    VisualInfo,
+    VisualType,
+)
+
+# .
 #   .--Plugin API----------------------------------------------------------.
 #   |           ____  _             _            _    ____ ___             |
 #   |          |  _ \| |_   _  __ _(_)_ __      / \  |  _ \_ _|            |
@@ -16,12 +28,7 @@ from cmk.utils.plugin_loader import load_plugins
 #   |                         |___/                                        |
 #   '----------------------------------------------------------------------'
 
-from cmk.gui.plugins.visuals.utils import (  # noqa: F401 # pylint: disable=unused-import
-    Filter, FilterTime, FilterTristate, filter_registry, get_only_sites_from_context, VisualType,
-    visual_type_registry, VisualInfo, visual_info_registry,
-)
-
-#.
+# .
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |

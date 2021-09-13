@@ -34,11 +34,11 @@ def check_netapp_vfiler(item, _no_params, info):
 # get the vfName and vfState from the vfEntry table
 
 check_info["netapp_vfiler"] = {
-    'check_function': check_netapp_vfiler,
-    'inventory_function': inventory_netapp_vfiler,
-    'service_description': 'vFiler Status %s',
+    "check_function": check_netapp_vfiler,
+    "inventory_function": inventory_netapp_vfiler,
+    "service_description": "vFiler Status %s",
     # get the vfName and vfState from the vfEntry table
-    'snmp_info': ('.1.3.6.1.4.1.789.1.16.3.1', ['2', '9']),
-    'snmp_scan_function': lambda oid: "netapp release" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
-                                        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.789"),
+    "snmp_info": (".1.3.6.1.4.1.789.1.16.3.1", ["2", "9"]),
+    "snmp_scan_function": lambda oid: "netapp release" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    and oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.789"),
 }

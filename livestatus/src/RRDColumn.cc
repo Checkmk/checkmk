@@ -13,6 +13,7 @@
 #include <ctime>
 #include <filesystem>
 #include <set>
+#include <stdexcept>
 #include <type_traits>
 
 #include "Logger.h"
@@ -20,6 +21,60 @@
 #include "MonitoringCore.h"
 #include "strutil.h"
 
+RRDColumnArgs::RRDColumnArgs(const std::string &arguments,
+                             const std::string &column_name) {
+    auto invalid = [&column_name](const std::string &message) {
+        throw std::runtime_error("invalid arguments for column '" +
+                                 column_name + ": " + message);
+    };
+    // We expect the following arguments: RPN:START_TIME:END_TIME:RESOLUTION
+    // Example: fs_used,1024,/:1426411073:1426416473:5
+    std::vector<char> args(arguments.begin(), arguments.end());
+    args.push_back('\0');
+    char *scan = &args[0];
+
+    // Reverse Polish Notation Expression for extraction start RRD
+    char *rpn = next_token(&scan, ':');
+    if (rpn == nullptr || rpn[0] == 0) {
+        invalid("missing RPN expression for RRD");
+    }
+    this->rpn = rpn;
+
+    // Start time of queried range - UNIX time stamp
+    char *start_time = next_token(&scan, ':');
+    if (start_time == nullptr || start_time[0] == 0 || atol(start_time) <= 0) {
+        invalid("missing, negative or overflowed start time");
+    }
+    this->start_time = atol(start_time);
+
+    // End time - UNIX time stamp
+    char *end_time = next_token(&scan, ':');
+    if (end_time == nullptr || end_time[0] == 0 || atol(end_time) <= 0) {
+        invalid(" missing, negative or overflowed end time");
+    }
+    this->end_time = atol(end_time);
+
+    // Resolution in seconds - might output less
+    char *resolution = next_token(&scan, ':');
+    if (resolution == nullptr || resolution[0] == 0 || atoi(resolution) <= 0) {
+        invalid("missing or negative resolution");
+    }
+    this->resolution = atoi(resolution);
+
+    // Optional limit of data points
+    const char *max_entries = next_token(&scan, ':');
+    if (max_entries == nullptr) {
+        max_entries = "400";  // RRDTool default
+    }
+    if (max_entries[0] == 0 || atoi(max_entries) < 10) {
+        invalid("Wrong input for max rows");
+    }
+    this->max_entries = atoi(max_entries);
+
+    if (next_token(&scan, ':') != nullptr) {
+        invalid("too many arguments");
+    }
+}
 namespace {
 bool isVariableName(const std::string &token) {
     auto is_operator = [](char c) { return strchr("+-/*", c) != nullptr; };
@@ -65,9 +120,8 @@ std::pair<Metric::Name, std::string> getVarAndCF(const std::string &str) {
 // and that have a different syntax then we have in our metrics system.
 // >= --> GE. Or should we also go with GE instead of >=?
 // Look at http://oss.oetiker.ch/rrdtool/doc/rrdgraph_rpn.en.html for details!
-detail::RRDDataMaker::Data detail::RRDDataMaker::make(
-    const std::pair<std::string, std::string> &host_name_service_description)
-    const {
+detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
+                                    &host_name_service_description) const {
     // Prepare the arguments for rrdtool xport in a dynamic array of strings.
     // Note: The actual step might be different!
     std::vector<std::string> argv_s{
@@ -230,7 +284,7 @@ detail::RRDDataMaker::Data detail::RRDDataMaker::make(
     }
 
     // Since we have exactly one XPORT command, we expect exactly one column
-    Data data;
+    detail::Data data;
     if (col_cnt != 1) {
         Error(logger) << "rrd_xport returned " << col_cnt
                       << " columns, but exactly one was expected.";

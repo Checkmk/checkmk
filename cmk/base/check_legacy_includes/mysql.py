@@ -11,11 +11,11 @@ import functools
 def mysql_parse_per_item(parse_function):
     @functools.wraps(parse_function)
     def wrapped_parse_function(info):
-        item = 'mysql'
+        item = "mysql"
         grouped = {}
         for line in info:
-            if line[0].startswith('[['):
-                item = ' '.join(line).strip('[ ]') or item
+            if line[0].startswith("[["):
+                item = " ".join(line).strip("[ ]") or item
                 continue
             grouped.setdefault(item, []).append(line)
         return {k: parse_function(grouped[k]) for k in grouped}

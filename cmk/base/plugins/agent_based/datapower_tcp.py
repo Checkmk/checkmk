@@ -16,39 +16,39 @@
 # .1.3.6.1.4.1.14685.3.1.12.10.0 24 --> DATAPOWER-STATUS-MIB::dpStatusTCPSummarylisten.0
 # .1.3.6.1.4.1.14685.3.1.12.11.0 0 --> DATAPOWER-STATUS-MIB::dpStatusTCPSummaryclosing.0
 from typing import List
-from .agent_based_api.v1.type_defs import StringTable
 
-from .agent_based_api.v1 import register, OIDEnd, SNMPTree
-from .utils import tcp_connections, datapower
+from .agent_based_api.v1 import OIDEnd, register, SNMPTree
+from .agent_based_api.v1.type_defs import StringTable
+from .utils import datapower, tcp_connections
 
 
 def parse_datapower_tcp(string_table: List[StringTable]) -> tcp_connections.TCPConnections:
     """
-        >>> from pprint import pprint
-        >>> pprint(parse_datapower_tcp([[
-        ...     [u'1.0', u'10'],
-        ...     [u'2.0', u'2'],
-        ...     [u'3.0', u'0'],
-        ...     [u'4.0', u'0'],
-        ...     [u'5.0', u'0'],
-        ...     [u'6.0', u'15'],
-        ...     [u'7.0', u'0'],
-        ...     [u'8.0', u'0'],
-        ...     [u'9.0', u'0'],
-        ...     [u'10.0', u'24'],
-        ...     [u'11.0', u'0']
-        ... ]]))
-        {'CLOSED': 0,
-         'CLOSE_WAIT': 0,
-         'CLOSING': 0,
-         'ESTABLISHED': 10,
-         'FIN_WAIT1': 0,
-         'FIN_WAIT2': 0,
-         'LAST_ACK': 0,
-         'LISTEN': 24,
-         'SYN_RECV': 0,
-         'SYN_SENT': 2,
-         'TIME_WAIT': 15}
+    >>> from pprint import pprint
+    >>> pprint(parse_datapower_tcp([[
+    ...     [u'1.0', u'10'],
+    ...     [u'2.0', u'2'],
+    ...     [u'3.0', u'0'],
+    ...     [u'4.0', u'0'],
+    ...     [u'5.0', u'0'],
+    ...     [u'6.0', u'15'],
+    ...     [u'7.0', u'0'],
+    ...     [u'8.0', u'0'],
+    ...     [u'9.0', u'0'],
+    ...     [u'10.0', u'24'],
+    ...     [u'11.0', u'0']
+    ... ]]))
+    {'CLOSED': 0,
+     'CLOSE_WAIT': 0,
+     'CLOSING': 0,
+     'ESTABLISHED': 10,
+     'FIN_WAIT1': 0,
+     'FIN_WAIT2': 0,
+     'LAST_ACK': 0,
+     'LISTEN': 24,
+     'SYN_RECV': 0,
+     'SYN_SENT': 2,
+     'TIME_WAIT': 15}
 
     """
     section = tcp_connections.empty_stats()
@@ -61,8 +61,8 @@ def parse_datapower_tcp(string_table: List[StringTable]) -> tcp_connections.TCPC
 
 
 register.snmp_section(
-    name='datapower_tcp',
-    parsed_section_name='tcp_conn_stats',
+    name="datapower_tcp",
+    parsed_section_name="tcp_conn_stats",
     parse_function=parse_datapower_tcp,
     fetch=[
         SNMPTree(

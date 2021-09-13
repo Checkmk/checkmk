@@ -21,5 +21,5 @@ description:
 item:
  The ID of the RAID Array as delivered by lsarray command.
 
-inventory:
+discovery:
  One service is created for each RAID Array.

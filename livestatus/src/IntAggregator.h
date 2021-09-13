@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <functional>
+#include <utility>
 #include <variant>
 
 #include "Aggregator.h"
@@ -24,8 +25,8 @@ class IntAggregator : public Aggregator {
     using function_type = std::variant<f0_t, f1_t>;
 
 public:
-    IntAggregator(const AggregationFactory &factory, const function_type &f)
-        : _aggregation{factory()}, f_{f} {}
+    IntAggregator(const AggregationFactory &factory, function_type f)
+        : _aggregation{factory()}, f_{std::move(f)} {}
 
     void consume(Row row, const contact *auth_user,
                  std::chrono::seconds /* timezone_offset*/) override {

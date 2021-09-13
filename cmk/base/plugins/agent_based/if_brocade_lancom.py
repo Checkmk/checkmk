@@ -4,28 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable, List, Union, Mapping
+from typing import Iterable, List, Mapping, Union
 
+from .agent_based_api.v1 import all_of, any_of, contains, OIDEnd, register, SNMPTree
 from .agent_based_api.v1.type_defs import StringByteTable
-from .agent_based_api.v1 import (
-    all_of,
-    any_of,
-    contains,
-    register,
-    SNMPTree,
-    OIDEnd,
-)
 from .utils import if64, interfaces
 
 StringByteLine = List[Union[str, List[int]]]
 
 IF64_BASE_TREE = SNMPTree(
     base=if64.BASE_OID,
-    oids=if64.END_OIDS[:1] + [
+    oids=if64.END_OIDS[:1]
+    + [
         "31.1.1.1.1",  #  1 ifName (brocade and lancom have no useful information in ifDescr)
-    ] + if64.END_OIDS[2:3] + [
+    ]
+    + if64.END_OIDS[2:3]
+    + [
         "31.1.1.1.15",  # 3 ifHighSpeed, 1000 means 1Gbit
-    ] + if64.END_OIDS[4:-1] + [
+    ]
+    + if64.END_OIDS[4:-1]
+    + [
         "2.2.1.2",  #    -1 ifDescr, used in order to ignore some logical NICs
     ],
 )
@@ -93,14 +91,23 @@ def _fix_line(
     return [
         index,
         # augment name - applies to Lancom routers only
-        "".join((
-            name,
-            (f" Logical {name_map.get(name, '')}"
-             if description.startswith('Logical Network') else ''),
-            (f" maps to {port_map.get(name, '')}" if name in port_map else
-             f" belongs to {', '.join(k for k, v in port_map.items() if v == name )}"
-             if name in port_map.values() else ""),
-        )),
+        "".join(
+            (
+                name,
+                (
+                    f" Logical {name_map.get(name, '')}"
+                    if description.startswith("Logical Network")
+                    else ""
+                ),
+                (
+                    f" maps to {port_map.get(name, '')}"
+                    if name in port_map
+                    else f" belongs to {', '.join(k for k, v in port_map.items() if v == name )}"
+                    if name in port_map.values()
+                    else ""
+                ),
+            )
+        ),
         type_str,
         if64.fix_if_64_highspeed(str(speed)),  # apllies to Brocade routers only
         *rest,
@@ -126,12 +133,16 @@ def parse_if_brocade_lancom(
     ...   print(result.descr, result.alias, result.speed)
     eth0 Logical LAN eth1 30000000
     """
-    return if64.generic_parse_if64([[
-        _fix_line(line, description, name_map, port_map)
-        for *line, description in if_table
-        if isinstance(description, str)
-        if not any(description.startswith(d) for d in ignore_descriptions)
-    ]])
+    return if64.generic_parse_if64(
+        [
+            [
+                _fix_line(line, description, name_map, port_map)
+                for *line, description in if_table
+                if isinstance(description, str)
+                if not any(description.startswith(d) for d in ignore_descriptions)
+            ]
+        ]
+    )
 
 
 def parse_if_brocade(string_table: StringByteTable) -> interfaces.Section:
@@ -162,7 +173,7 @@ register.snmp_section(
         contains(".1.3.6.1.2.1.1.1.0", "Brocade VDX Switch"),
         if64.HAS_ifHCInOctets,
     ),
-    supersedes=['if', 'if64'],
+    supersedes=["if", "if64"],
 )
 
 register.snmp_section(
@@ -190,11 +201,12 @@ register.snmp_section(
     ],
     detect=any_of(
         any_of(
-            *(contains(".1.3.6.1.2.1.1.1.0", name) for name in ("LANCOM", "ELSA", "T-Systems")),),
+            *(contains(".1.3.6.1.2.1.1.1.0", name) for name in ("LANCOM", "ELSA", "T-Systems")),
+        ),
         all_of(
             contains(".1.3.6.1.2.1.1.1.0", "LAN R800V"),
             if64.HAS_ifHCInOctets,
         ),
     ),
-    supersedes=['if', 'if64'],
+    supersedes=["if", "if64"],
 )

@@ -4,40 +4,38 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
-from typing import Any, Dict, IO, List, Literal, Optional
+import socket
+from typing import Any, Dict, Optional
 
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.type_defs import HostAddress
 
-import cmk.base.config as config
+import cmk.base.core_config as core_config
+from cmk.base.config import HostConfig
 
-from ._abstract import Mode
 from ._checkers import make_sources
 
-__all__ = ["dump", "dumps"]
+__all__ = ["fetchers", "clusters"]
 
 
-def dump(hostname: HostName, ipaddress: Optional[HostAddress], file_: IO[str]) -> None:
-    """Dump the configuration to `hostname` fetchers into `file_`."""
-    file_.write(dumps(hostname, ipaddress))
+def get_ip_address(host_config: HostConfig) -> Optional[HostAddress]:
+    if host_config.is_ipv6_primary:
+        return core_config.ip_address_of(host_config, socket.AF_INET6)
+
+    return core_config.ip_address_of(host_config, socket.AF_INET)
 
 
-def dumps(hostname: HostName, ipaddress: Optional[HostAddress]) -> str:
-    """Return the configuration to `hostname` fetchers."""
-    return json.dumps(_make(hostname, ipaddress))
-
-
-def _make(
-    hostname: HostName,
-    ipaddress: Optional[HostAddress],
-) -> Dict[Literal["fetchers"], List[Dict[str, Any]]]:
+def fetchers(host_config: HostConfig) -> Dict[str, Any]:
+    ipaddress = get_ip_address(host_config)
     return {
-        "fetchers": [{
-            "fetcher_type": c.fetcher_type.name,
-            "fetcher_params": c.fetcher_configuration,
-        } for c in make_sources(
-            config.HostConfig.make_host_config(hostname),
-            ipaddress,
-            mode=Mode.NONE,
-        )]
+        "fetchers": [
+            {
+                "fetcher_type": c.fetcher_type.name,
+                "fetcher_params": c.fetcher_configuration,
+            }
+            for c in make_sources(host_config, ipaddress)
+        ]
     }
+
+
+def clusters(host_config: HostConfig) -> Dict[str, Any]:
+    return {"clusters": {"nodes": host_config.nodes or ()}}

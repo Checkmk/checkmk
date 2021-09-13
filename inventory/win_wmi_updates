@@ -5,13 +5,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Example output
-#<<<win_wmi_updates:sep(44):cached(1494868004,3600)>>>
-#Node,Description,HotFixID,InstalledOn^M
-#S050MWSIZ001,Update,KB2849697,5/10/2017^M
-#S050MWSIZ001,Update,KB2849697,5/10/2017^M
-#S050MWSIZ001,Update,KB2849696,5/10/2017^M
-#S050MWSIZ001,Update,KB2849696,5/10/2017^M
-#S050MWSIZ001,Update,KB2841134,5/10/2017^M
+# <<<win_wmi_updates:sep(44):cached(1494868004,3600)>>>
+# Node,Description,HotFixID,InstalledOn^M
+# S050MWSIZ001,Update,KB2849697,5/10/2017^M
+# S050MWSIZ001,Update,KB2849697,5/10/2017^M
+# S050MWSIZ001,Update,KB2849696,5/10/2017^M
+# S050MWSIZ001,Update,KB2849696,5/10/2017^M
+# S050MWSIZ001,Update,KB2841134,5/10/2017^M
 # Microsoft Office Professional Plus 2010|Microsoft Corporation|14.0.7015.1000
 
 # InstalledOn may have different formats, see
@@ -34,7 +34,7 @@ def _parse_install_date(install_date_str):
     # Contains a 64-bit value representing the number of 100-nanosecond intervals
     # since January 1, 1601 (UTC).
     try:
-        return 1.0 * int(install_date_str, 16) / 10**7
+        return 1.0 * int(install_date_str, 16) / 10 ** 7
     except ValueError:
         pass
     return
@@ -47,18 +47,20 @@ def inv_win_wmi_updates(info):
             continue
 
         _id, description, knowledge_base, install_date_str = line
-        parsed_packages.append({
-            "name": "Windows Update " + knowledge_base,
-            "version": knowledge_base,
-            "vendor": "Microsoft " + description,
-            "install_date": _parse_install_date(install_date_str),
-            "package_type": "wmi",
-        })
+        parsed_packages.append(
+            {
+                "name": "Windows Update " + knowledge_base,
+                "version": knowledge_base,
+                "vendor": "Microsoft " + description,
+                "install_date": _parse_install_date(install_date_str),
+                "package_type": "wmi",
+            }
+        )
 
     paclist = inv_tree_list("software.packages:")
-    paclist.extend(sorted(parsed_packages, key=lambda r: r.get('name')))
+    paclist.extend(sorted(parsed_packages, key=lambda r: r.get("name")))
 
 
-inv_info['win_wmi_updates'] = {
+inv_info["win_wmi_updates"] = {
     "inv_function": inv_win_wmi_updates,
 }

@@ -12,9 +12,11 @@ from cmk.base.check_legacy_includes.fsc import *  # pylint: disable=wildcard-imp
 
 
 def inventory_fsc_subsystems(info):
-    yield from ((line[0], line[1], (int(line[1]) * 0.9, int(line[1]) * 0.8))
-                for line in info
-                if int(line[1]) > 0)
+    yield from (
+        (line[0], line[1], (int(line[1]) * 0.9, int(line[1]) * 0.8))
+        for line in info
+        if int(line[1]) > 0
+    )
 
 
 def check_fsc_subsystems(item, params, info):
@@ -22,16 +24,12 @@ def check_fsc_subsystems(item, params, info):
         name = line[0]
         if name != item:
             continue
-        if line[1] == u"":
+        if line[1] == "":
             return 3, "Status not found in SNMP data"
         status = int(line[1])
-        statusname = {
-            1: 'ok',
-            2: 'degraded',
-            3: 'error',
-            4: 'failed',
-            5: 'unknown-init'
-        }.get(status, 'invalid')
+        statusname = {1: "ok", 2: "degraded", 3: "error", 4: "failed", 5: "unknown-init"}.get(
+            status, "invalid"
+        )
         if status in {1, 5}:
             return (0, "%s - no problems" % statusname)
         if 2 <= status <= 4:
@@ -40,9 +38,9 @@ def check_fsc_subsystems(item, params, info):
 
 
 check_info["fsc_subsystems"] = {
-    'check_function': check_fsc_subsystems,
-    'inventory_function': inventory_fsc_subsystems,
-    'service_description': 'FSC %s',
-    'snmp_info': ('.1.3.6.1.4.1.231.2.10.2.11.3.1.1', [2, 3]),
-    'snmp_scan_function': is_fsc,
+    "check_function": check_fsc_subsystems,
+    "inventory_function": inventory_fsc_subsystems,
+    "service_description": "FSC %s",
+    "snmp_info": (".1.3.6.1.4.1.231.2.10.2.11.3.1.1", [2, 3]),
+    "snmp_scan_function": is_fsc,
 }

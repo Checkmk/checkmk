@@ -22,10 +22,13 @@ def inv_solaris_addresses(info, params, inventory_tree):
     for line in info:
         if line[0][-1] == ":":
             dev_name = line[0][:-1]
-            parsed.setdefault(dev_name, {
-                "description": dev_name,
-                "index": int(line[-1]),
-            })
+            parsed.setdefault(
+                dev_name,
+                {
+                    "description": dev_name,
+                    "index": int(line[-1]),
+                },
+            )
         elif "ether" in line and dev_name:
             parsed[dev_name]["phys_address"] = line[1]
         else:
@@ -39,34 +42,40 @@ def inv_solaris_addresses(info, params, inventory_tree):
     interfaces = []
     for device, attrs in parsed.items():
         if attrs.get("phys_address"):
-            interfaces.append({
-                "index": attrs.get("index"),
-                "description": device,
-                "alias": device,
-                "speed": 0,
-                "phys_address": attrs.get("phys_address", ""),
-                "port_type": 6,
-            })
+            interfaces.append(
+                {
+                    "index": attrs.get("index"),
+                    "description": device,
+                    "alias": device,
+                    "speed": 0,
+                    "phys_address": attrs.get("phys_address", ""),
+                    "port_type": 6,
+                }
+            )
 
     node = inventory_tree.get_list("networking.interfaces:")
-    node.extend(sorted(interfaces, key=lambda r: r.get('index')))
+    node.extend(sorted(interfaces, key=lambda r: r.get("index")))
 
     addresses = inventory_tree.get_list("networking.addresses:")
     for device, attrs in parsed.items():
         address = {"device": device}
         if "IPv4" in attrs:
-            address.update({
-                "address": attrs["IPv4"],
-                "type": "IPv4",
-            })
+            address.update(
+                {
+                    "address": attrs["IPv4"],
+                    "type": "IPv4",
+                }
+            )
         elif "IPv6" in attrs:
-            address.update({
-                "address": attrs["IPv6"],
-                "type": "IPv6",
-            })
+            address.update(
+                {
+                    "address": attrs["IPv6"],
+                    "type": "IPv6",
+                }
+            )
         addresses.append(address)
 
 
-inv_info['solaris_addresses'] = {
-    'inv_function': inv_solaris_addresses,
+inv_info["solaris_addresses"] = {
+    "inv_function": inv_solaris_addresses,
 }

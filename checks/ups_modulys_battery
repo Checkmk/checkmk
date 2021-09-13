@@ -9,7 +9,8 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['ups_modulys_battery_default_levels'] = {"capacity": (95, 90), "battime": (0, 0)}
+
+factory_settings["ups_modulys_battery_default_levels"] = {"capacity": (95, 90), "battime": (0, 0)}
 
 
 def inventory_ups_modulys_battery(info):
@@ -61,12 +62,18 @@ def check_ups_modulys_battery(item, params, info):
         infotext = ""
 
         if remaining_min < warn_left:
-            infotext = "%d minutes remaining (warn/crit at %d/%d min)" %\
-                (remaining_min, warn_left, crit_left)
+            infotext = "%d minutes remaining (warn/crit at %d/%d min)" % (
+                remaining_min,
+                warn_left,
+                crit_left,
+            )
 
         if capacity < warn_perc:
-            infotext = "%d percent charged (warn/crit at %d/%d perc)" %\
-                (capacity, warn_perc, crit_perc)
+            infotext = "%d percent charged (warn/crit at %d/%d perc)" % (
+                capacity,
+                warn_perc,
+                crit_perc,
+            )
 
         yield status, infotext
 
@@ -85,7 +92,8 @@ check_info["ups_modulys_battery"] = {
             "5",  # dupsBatteryEstimatedTime
             "8",  # dupsBatteryCapacity
             "9",  # dupsBatteryTemperature
-        ]),
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.2254.2.4",
 }
 

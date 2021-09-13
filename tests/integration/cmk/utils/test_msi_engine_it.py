@@ -7,7 +7,7 @@
 import shutil
 from pathlib import Path
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.utils.msi_engine as msi_engine
 
@@ -42,7 +42,7 @@ def _get_msi_file_path(site):
 def test_export_msi_file(site, tmp_path):
     msi_file = _get_msi_file_path(site=site)
 
-    out_dir = tmp_path / 'idts'
+    out_dir = tmp_path / "idts"
     bin_path = site.path("bin/")
     try:
         out_dir.mkdir()
@@ -108,14 +108,14 @@ def test_copy_or_create(tmp_path: Path) -> None:
     dst_file = tmp_path / "temp.x.out"
 
     # file doesn't exist, check file created
-    msi_engine.copy_or_create(src_file, dst_file, u"!!!")
+    msi_engine.copy_or_create(src_file, dst_file, "!!!")
     assert dst_file.exists()
     content = dst_file.read_text()
     assert content == "!!!"
 
     # files exists check file copied
-    src_file.write_text(u"+++")
-    msi_engine.copy_or_create(src_file, dst_file, u"!!!")
+    src_file.write_text("+++")
+    msi_engine.copy_or_create(src_file, dst_file, "!!!")
     assert dst_file.exists()
     content = dst_file.read_text()
     assert content == "+++"
@@ -137,11 +137,11 @@ def test_generate_product_versions():
 
 def test_make_msi_copy(tmp_path: Path) -> None:
     src_file = Path(tmp_path, "temp.in")
-    with src_file.open('w') as s:
+    with src_file.open("w") as s:
         s.write("+++")
     dst_file = Path(tmp_path, "temp.out")
     assert msi_engine.copy_file_safe(src_file, dst_file)
     assert dst_file.exists()
-    with dst_file.open('r') as d:
+    with dst_file.open("r") as d:
         content = d.read()
     assert content == "+++"

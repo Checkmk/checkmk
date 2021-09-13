@@ -41,6 +41,6 @@ description:
 item:
  The job name (optional), separated by {{.}}
 
-inventory:
+discovery:
  A seperate service is created for each job.
 

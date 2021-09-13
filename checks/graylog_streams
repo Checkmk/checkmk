@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<graylog_streams>>>
 # {"total": 5, "streams": [{"remove_matches_from_default_stream": false,
 # "is_default": false, "index_set_id": "5da58758e2847e0602771f2a",
@@ -47,8 +50,6 @@ from cmk.base.check_legacy_includes.graylog import *  # pylint: disable=wildcard
 # "alert_receivers": {"emails": [], "users": []}, "id":
 # "000000000000000000000003"}]}
 
-import json
-
 
 def parse_graylog_streams(info):
     parsed = {}
@@ -68,10 +69,12 @@ def parse_graylog_streams(info):
                 continue
 
             parsed.setdefault(
-                stream_title, {
+                stream_title,
+                {
                     "disabled": stream.get("disabled", False),
                     "is_default": stream.get("is_default", False),
-                })
+                },
+            )
 
     return parsed
 
@@ -91,14 +94,16 @@ def check_graylog_streams(_no_item, params, parsed):
         return
 
     stream_count = len(parsed)
-    stream_nr_levels = params.get('stream_count_upper', (None, None))
-    stream_nr_levels_lower = params.get('stream_count_lower', (None, None))
+    stream_nr_levels = params.get("stream_count_upper", (None, None))
+    stream_nr_levels_lower = params.get("stream_count_lower", (None, None))
 
-    yield check_levels(stream_count,
-                       "num_streams",
-                       stream_nr_levels + stream_nr_levels_lower,
-                       human_readable_func=int,
-                       infoname="Number of streams")
+    yield check_levels(
+        stream_count,
+        "num_streams",
+        stream_nr_levels + stream_nr_levels_lower,
+        human_readable_func=int,
+        infoname="Number of streams",
+    )
 
     long_output = []
     for stream, values in parsed.items():

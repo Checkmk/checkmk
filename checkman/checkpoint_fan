@@ -13,6 +13,6 @@ description:
  will only assume the values {OK}, {CRIT} or, in case of a reading error,
  {UNKNOWN}.
 
-inventory:
+discovery:
  One service is created for each case fan.
 

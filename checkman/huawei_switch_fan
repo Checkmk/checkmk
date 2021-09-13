@@ -15,5 +15,5 @@ item:
  The stack member number, followed by slash (/), followed by a consecutive number for each
  fan of this member.
 
-inventory:
+discovery:
  One service is created for each fan of each stack member.

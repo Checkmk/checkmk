@@ -9,29 +9,33 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fsc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fsc_sc2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
-check_info['fsc_sc2_power_consumption'] = {
-    'parse_function': parse_fsc_sc2_power_consumption,
-    'inventory_function': inventory_elphase,
-    'check_function': check_elphase,
-    'service_description': 'Power Comsumption %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.231.2.10.2.2.10.6.7.1',
+
+check_info["fsc_sc2_power_consumption"] = {
+    "parse_function": parse_fsc_sc2_power_consumption,
+    "inventory_function": discover(),
+    "check_function": check_elphase,
+    "service_description": "Power Comsumption %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.231.2.10.2.2.10.6.7.1",
         [
-            '4',  #sc2cpcDesignation
-            '5',  #sc2cpcCurrentValue
-        ]),
-    'snmp_scan_function': is_fsc_sc2,
-    'has_perfdata': True,
-    'group': 'el_inphase',
+            "4",  # sc2cpcDesignation
+            "5",  # sc2cpcCurrentValue
+        ],
+    ),
+    "snmp_scan_function": is_fsc_sc2,
+    "has_perfdata": True,
+    "group": "el_inphase",
     "management_board": HOST_ONLY,
 }

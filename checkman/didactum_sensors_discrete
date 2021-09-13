@@ -15,5 +15,5 @@ description:
 item:
  The discrete sensor identifier.
 
-inventory:
+discovery:
  One service is created for each sensor.

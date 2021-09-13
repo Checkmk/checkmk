@@ -1,0 +1,61 @@
+---
+# requirements: ansible-galaxy collection install community.general
+- name: Enable the Apache2 module headers
+  community.general.apache2_module:
+    state: present
+    name: headers
+
+- name: Enable the Apache2 module ssl
+  community.general.apache2_module:
+    state: present
+    name: ssl
+
+- name: Copy apache 000-default.conf
+  template:
+    src: files/000-default.conf.j2
+    dest: /etc/apache2/sites-available/000-default.conf
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+- name: Copy apache default_site.conf
+  template:
+    src: files/default_site.conf.j2
+    dest: /etc/apache2/sites-available/default_site.conf
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+- name: Copy set default site script
+  template:
+    src: files/set_default_site.sh.j2
+    dest: set_default_site.sh
+    owner: "root"
+    group: "root"
+    mode: "0750"
+
+- name: Copy create certificate script
+  template:
+    src: files/create_certificate.sh.j2
+    dest: create_certificate.sh
+    owner: "root"
+    group: "root"
+    mode: "0750"
+
+- name: Copy systemd service script
+  template:
+    src: files/certificate.service.j2
+    dest: /etc/systemd/system/certificate.service
+    owner: "root"
+    group: "root"
+    mode: "0644"
+
+- name: create certificate with IP address
+  ansible.builtin.systemd:
+    state: started
+    name: certificate
+
+- name: ensure apache is running
+  service:
+    name: apache2
+    state: started

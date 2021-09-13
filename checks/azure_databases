@@ -9,73 +9,73 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # https://www.unigma.com/2016/07/11/best-practices-for-monitoring-microsoft-azure/
 factory_settings["azure_databases_default_levels"] = {
-    "storage_percent_levels": (85., 95.),
-    "cpu_percent_levels": (85., 95.),
-    "dtu_percent_levels": (85., 95.),
+    "storage_percent_levels": (85.0, 95.0),
+    "cpu_percent_levels": (85.0, 95.0),
+    "dtu_percent_levels": (85.0, 95.0),
 }
 
 
 @get_data_or_go_stale
 def check_azure_databases_storage(_item, params, resource):
 
-    cmk_key = 'storage_percent'
+    cmk_key = "storage_percent"
     levels = params.get("%s_levels" % cmk_key)
-    mcheck = check_azure_metric(resource,
-                                'average_storage_percent',
-                                cmk_key,
-                                'Storage',
-                                levels=levels)
+    mcheck = check_azure_metric(
+        resource, "average_storage_percent", cmk_key, "Storage", levels=levels
+    )
     if mcheck:
         state, text, perf = mcheck
-        abs_storage_metric = resource.get('metrics', {}).get('average_storage')
+        abs_storage_metric = resource.get("metrics", {}).get("average_storage")
         if abs_storage_metric is not None:
             text += " (%s)" % get_bytes_human_readable(abs_storage_metric.value)
         yield state, text, perf
 
 
-check_info['azure_databases.storage'] = {
-    'inventory_function': discover_azure_by_metrics('average_storage_percent'),
-    'check_function': check_azure_databases_storage,
-    'has_perfdata': True,
-    'service_description': "DB %s Storage",
-    'default_levels_variable': 'azure_databases_default_levels',
-    'group': 'azure_databases',
+check_info["azure_databases.storage"] = {
+    "inventory_function": discover_azure_by_metrics("average_storage_percent"),
+    "check_function": check_azure_databases_storage,
+    "has_perfdata": True,
+    "service_description": "DB %s Storage",
+    "default_levels_variable": "azure_databases_default_levels",
+    "group": "azure_databases",
 }
 
 
 @get_data_or_go_stale
 def check_azure_databases_deadlock(_item, params, resource):
 
-    cmk_key = 'deadlocks'
+    cmk_key = "deadlocks"
     levels = params.get("%s_levels" % cmk_key)
-    mcheck = check_azure_metric(resource, 'average_deadlock', cmk_key, 'Deadlocks', levels=levels)
+    mcheck = check_azure_metric(resource, "average_deadlock", cmk_key, "Deadlocks", levels=levels)
     if mcheck:
         yield mcheck
 
 
-check_info['azure_databases.deadlock'] = {
-    'inventory_function': discover_azure_by_metrics('average_deadlock'),
-    'check_function': check_azure_databases_deadlock,
-    'has_perfdata': True,
-    'service_description': "DB %s Deadlocks",
-    'default_levels_variable': 'azure_databases_default_levels',
-    'group': 'azure_databases',
+check_info["azure_databases.deadlock"] = {
+    "inventory_function": discover_azure_by_metrics("average_deadlock"),
+    "check_function": check_azure_databases_deadlock,
+    "has_perfdata": True,
+    "service_description": "DB %s Deadlocks",
+    "default_levels_variable": "azure_databases_default_levels",
+    "group": "azure_databases",
 }
 
 
 @get_data_or_go_stale
 def check_azure_databases_cpu(_item, params, resource):
 
-    metrics = resource.get('metrics', {})
+    metrics = resource.get("metrics", {})
 
-    cpu_percent = metrics.get('average_cpu_percent')
+    cpu_percent = metrics.get("average_cpu_percent")
     util_params = {}
     if cpu_percent is not None:
         if "cpu_percent_levels" in params:
@@ -84,37 +84,39 @@ def check_azure_databases_cpu(_item, params, resource):
             yield y
 
 
-check_info['azure_databases.cpu'] = {
-    'inventory_function': discover_azure_by_metrics('average_cpu_percent'),
-    'check_function': check_azure_databases_cpu,
-    'has_perfdata': True,
-    'service_description': "DB %s CPU",
-    'default_levels_variable': 'azure_databases_default_levels',
-    'group': 'azure_databases',
+check_info["azure_databases.cpu"] = {
+    "inventory_function": discover_azure_by_metrics("average_cpu_percent"),
+    "check_function": check_azure_databases_cpu,
+    "has_perfdata": True,
+    "service_description": "DB %s CPU",
+    "default_levels_variable": "azure_databases_default_levels",
+    "group": "azure_databases",
 }
 
 
 @get_data_or_go_stale
 def check_azure_databases_dtu(_item, params, resource):
 
-    cmk_key = 'dtu_percent'
+    cmk_key = "dtu_percent"
     levels = params.get("%s_levels" % cmk_key)
-    mcheck = check_azure_metric(resource,
-                                'average_dtu_consumption_percent',
-                                cmk_key,
-                                'Database throughput units',
-                                levels=levels)
+    mcheck = check_azure_metric(
+        resource,
+        "average_dtu_consumption_percent",
+        cmk_key,
+        "Database throughput units",
+        levels=levels,
+    )
     if mcheck:
         yield mcheck
 
 
-check_info['azure_databases.dtu'] = {
-    'inventory_function': discover_azure_by_metrics('average_dtu_consumption_percent'),
-    'check_function': check_azure_databases_dtu,
-    'has_perfdata': True,
-    'service_description': "DB %s DTU",
-    'default_levels_variable': 'azure_databases_default_levels',
-    'group': 'azure_databases',
+check_info["azure_databases.dtu"] = {
+    "inventory_function": discover_azure_by_metrics("average_dtu_consumption_percent"),
+    "check_function": check_azure_databases_dtu,
+    "has_perfdata": True,
+    "service_description": "DB %s DTU",
+    "default_levels_variable": "azure_databases_default_levels",
+    "group": "azure_databases",
 }
 
 _AZURE_CONNECTIONS_METRICS = (
@@ -134,14 +136,15 @@ def check_azure_databases_connections(_item, params, resource):
             yield mcheck
 
 
-check_info['azure_databases.connections'] = {
-    'inventory_function': discover_azure_by_metrics('average_connection_successful',
-                                                    'average_connection_failed'),
-    'check_function': check_azure_databases_connections,
-    'has_perfdata': True,
-    'service_description': "DB %s Connections",
-    'default_levels_variable': 'azure_databases_default_levels',
-    'group': 'azure_databases',
+check_info["azure_databases.connections"] = {
+    "inventory_function": discover_azure_by_metrics(
+        "average_connection_successful", "average_connection_failed"
+    ),
+    "check_function": check_azure_databases_connections,
+    "has_perfdata": True,
+    "service_description": "DB %s Connections",
+    "default_levels_variable": "azure_databases_default_levels",
+    "group": "azure_databases",
 }
 
 
@@ -151,11 +154,11 @@ def check_azure_databases(_item, _no_params, resource):
         yield 0, "%s: %s" % (k, v)
 
 
-check_info['azure_databases'] = {
-    'parse_function': parse_azure,
-    'inventory_function': discover(),
-    'check_function': check_azure_databases,
-    'service_description': "DB %s",
-    'default_levels_variable': 'azure_databases_default_levels',
-    'group': 'azure_databases',
+check_info["azure_databases"] = {
+    "parse_function": parse_azure,
+    "inventory_function": discover(),
+    "check_function": check_azure_databases,
+    "service_description": "DB %s",
+    "default_levels_variable": "azure_databases_default_levels",
+    "group": "azure_databases",
 }

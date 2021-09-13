@@ -9,13 +9,15 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fsc import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['fsc_fans_default_levels'] = {
-    'lower': (2000, 1000),
+
+factory_settings["fsc_fans_default_levels"] = {
+    "lower": (2000, 1000),
 }
 
 
@@ -37,18 +39,18 @@ def inventory_fsc_fans(parsed):
 @get_parsed_item_data
 def check_fsc_fans(item, params, data):
     if isinstance(params, tuple):
-        params = {'lower': params}
+        params = {"lower": params}
     return check_fan(data, params)
 
 
 check_info["fsc_fans"] = {
-    'parse_function': parse_fsc_fans,
-    'inventory_function': inventory_fsc_fans,
-    'check_function': check_fsc_fans,
-    'service_description': 'FSC %s',
-    'snmp_info': ('.1.3.6.1.4.1.231.2.10.2.2.5.2.2.1', [16, 8]),
-    'snmp_scan_function': is_fsc_fans_prefer_sc2,
-    'has_perfdata': True,
-    'group': "hw_fans",
-    'default_levels_variable': 'fsc_fans_default_levels',
+    "parse_function": parse_fsc_fans,
+    "inventory_function": inventory_fsc_fans,
+    "check_function": check_fsc_fans,
+    "service_description": "FSC %s",
+    "snmp_info": (".1.3.6.1.4.1.231.2.10.2.2.5.2.2.1", [16, 8]),
+    "snmp_scan_function": is_fsc_fans_prefer_sc2,
+    "has_perfdata": True,
+    "group": "hw_fans",
+    "default_levels_variable": "fsc_fans_default_levels",
 }

@@ -11,7 +11,7 @@
 
 
 def parse_hyperv_vmstatus(info):
-    return {line[0]: ' '.join(line[1:]) for line in info}
+    return {line[0]: " ".join(line[1:]) for line in info}
 
 
 def check_hyperv_vmstatus(_no_item, _no_params, parsed):
@@ -19,7 +19,7 @@ def check_hyperv_vmstatus(_no_item, _no_params, parsed):
     # According to microsoft 'Protocol_Mismatch' is OK:
     #   The secondary status [...] includes an error string that sounds alarming
     #   but that you can safely ignore. [...] This behavior is by design.
-    state = 0 if int_state in ('Ok', 'Protocol_Mismatch') else 2
+    state = 0 if int_state in ("Ok", "Protocol_Mismatch") else 2
     return state, "Integration Service State: %s" % int_state
 
 

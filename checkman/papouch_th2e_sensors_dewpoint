@@ -16,5 +16,5 @@ description:
 item:
  The dew point sensor identifier.
 
-inventory:
+discovery:
  One service is created for each sensor.

@@ -22,6 +22,8 @@ We call "message" a header followed by the corresponding payload.
 
 """
 
+from __future__ import annotations
+
 import abc
 import enum
 import json
@@ -52,6 +54,7 @@ __all__ = [
 
 class CMCLogLevel(str, enum.Enum):
     """The CMC logging level from `Logger.h::LogLevel`."""
+
     EMERGENCY = "emergenc"  # truncated!
     ALERT = "alert"
     CRITICAL = "critical"
@@ -62,7 +65,7 @@ class CMCLogLevel(str, enum.Enum):
     DEBUG = "debug"
 
     @staticmethod
-    def from_level(level: int) -> "CMCLogLevel":
+    def from_level(level: int) -> CMCLogLevel:
         # Table from `cmk.utils.log._level`.
         return {
             logging.CRITICAL: CMCLogLevel.CRITICAL,
@@ -93,7 +96,7 @@ class ResultMessage(Protocol):
 
     @property
     @abc.abstractmethod
-    def payload_type(self) -> "PayloadType":
+    def payload_type(self) -> PayloadType:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -112,7 +115,7 @@ class ResultStats(Protocol):
         yield json.dumps({"duration": self.duration.serialize()}).encode("ascii")
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "ResultStats":
+    def from_bytes(cls, data: bytes) -> ResultStats:
         return ResultStats(Snapshot.deserialize(json.loads(data.decode("ascii"))["duration"]))
 
 
@@ -151,13 +154,13 @@ class AgentResultMessage(ResultMessage):
         return self._value
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "AgentResultMessage":
+    def from_bytes(cls, data: bytes) -> AgentResultMessage:
         _type, length, *_rest = struct.unpack(
             ResultMessage.fmt,
-            data[:ResultMessage.length],
+            data[: ResultMessage.length],
         )
         try:
-            return cls(AgentRawData(data[ResultMessage.length:ResultMessage.length + length]))
+            return cls(AgentRawData(data[ResultMessage.length : ResultMessage.length + length]))
         except SyntaxError as exc:
             raise ValueError(repr(data)) from exc
 
@@ -187,13 +190,13 @@ class SNMPResultMessage(ResultMessage):
         return self._serialize(self._value)
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "SNMPResultMessage":
+    def from_bytes(cls, data: bytes) -> SNMPResultMessage:
         _type, length, *_rest = struct.unpack(
             ResultMessage.fmt,
-            data[:ResultMessage.length],
+            data[: ResultMessage.length],
         )
         try:
-            return cls(cls._deserialize(data[ResultMessage.length:ResultMessage.length + length]))
+            return cls(cls._deserialize(data[ResultMessage.length : ResultMessage.length + length]))
         except SyntaxError as exc:
             raise ValueError(repr(data)) from exc
 
@@ -231,13 +234,13 @@ class ErrorResultMessage(ResultMessage):
         return self._serialize(self._error)
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "ErrorResultMessage":
+    def from_bytes(cls, data: bytes) -> ErrorResultMessage:
         _type, length, *_rest = struct.unpack(
             ResultMessage.fmt,
-            data[:ResultMessage.length],
+            data[: ResultMessage.length],
         )
         try:
-            return cls(cls._deserialize(data[ResultMessage.length:ResultMessage.length + length]))
+            return cls(cls._deserialize(data[ResultMessage.length : ResultMessage.length + length]))
         except SyntaxError as exc:
             raise ValueError(repr(data)) from exc
 
@@ -266,6 +269,7 @@ class FetcherHeader(Header):
     from the fetcher to the checker.
 
     """
+
     fmt = "!HHHII"
     length = struct.calcsize(fmt)
 
@@ -312,11 +316,11 @@ class FetcherHeader(Header):
         )
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> 'FetcherHeader':
+    def from_bytes(cls, data: bytes) -> FetcherHeader:
         try:
             fetcher_type, payload_type, status, payload_length, stats_length = struct.unpack(
                 FetcherHeader.fmt,
-                data[:cls.length],
+                data[: cls.length],
             )
             return cls(
                 FetcherType(fetcher_type),
@@ -352,12 +356,19 @@ class FetcherMessage(Protocol):
         yield from self.stats
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "FetcherMessage":
+    def from_bytes(cls, data: bytes) -> FetcherMessage:
         header = FetcherHeader.from_bytes(data)
         payload = header.payload_type.make().from_bytes(
-            data[len(header):len(header) + header.payload_length],)
-        stats = ResultStats.from_bytes(data[len(header) + header.payload_length:len(header) +
-                                            header.payload_length + header.stats_length])
+            data[len(header) : len(header) + header.payload_length],
+        )
+        stats = ResultStats.from_bytes(
+            data[
+                len(header)
+                + header.payload_length : len(header)
+                + header.payload_length
+                + header.stats_length
+            ]
+        )
         return cls(header, payload, stats)
 
     @classmethod
@@ -366,7 +377,7 @@ class FetcherMessage(Protocol):
         raw_data: result.Result[AbstractRawData, Exception],
         duration: Snapshot,
         fetcher_type: FetcherType,
-    ) -> "FetcherMessage":
+    ) -> FetcherMessage:
         stats = ResultStats(duration)
         if raw_data.is_error():
             error_payload = ErrorResultMessage(raw_data.error)
@@ -375,7 +386,8 @@ class FetcherMessage(Protocol):
                     fetcher_type,
                     payload_type=PayloadType.ERROR,
                     status=logging.INFO
-                    if isinstance(raw_data.error, MKFetcherError) else logging.CRITICAL,
+                    if isinstance(raw_data.error, MKFetcherError)
+                    else logging.CRITICAL,
                     payload_length=len(error_payload),
                     stats_length=len(stats),
                 ),
@@ -413,7 +425,7 @@ class FetcherMessage(Protocol):
         )
 
     @classmethod
-    def error(cls, fetcher_type: FetcherType, exc: Exception) -> "FetcherMessage":
+    def error(cls, fetcher_type: FetcherType, exc: Exception) -> FetcherMessage:
         stats = ResultStats(Snapshot.null())
         payload = ErrorResultMessage(exc)
         return cls(
@@ -434,7 +446,7 @@ class FetcherMessage(Protocol):
         fetcher_type: FetcherType,
         exc: MKTimeout,
         duration: Snapshot,
-    ) -> "FetcherMessage":
+    ) -> FetcherMessage:
         stats = ResultStats(duration)
         payload = ErrorResultMessage(exc)
         return cls(
@@ -477,6 +489,7 @@ class CMCHeader(Header):
     - provide centralized logging facility if the field loglevel is not empty
     ATTENTION: This protocol must 100% of time synchronised with microcore code.
     """
+
     class State(str, enum.Enum):
         RESULT = "RESULT "
         LOG = "LOG    "
@@ -488,7 +501,7 @@ class CMCHeader(Header):
     def __init__(
         self,
         name: str,
-        state: Union['CMCHeader.State', str],
+        state: Union[CMCHeader.State, str],
         log_level: str,
         payload_length: int,
     ) -> None:
@@ -519,10 +532,10 @@ class CMCHeader(Header):
         ).encode("ascii")
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> 'CMCHeader':
+    def from_bytes(cls, data: bytes) -> CMCHeader:
         try:
             # to simplify parsing we are using ':' as a splitter
-            name, state, log_level, payload_length = data[:CMCHeader.length].split(b":")[:4]
+            name, state, log_level, payload_length = data[: CMCHeader.length].split(b":")[:4]
             return cls(
                 name.decode("ascii"),
                 state.decode("ascii"),
@@ -532,7 +545,7 @@ class CMCHeader(Header):
         except ValueError as exc:
             raise ValueError(data) from exc
 
-    def clone(self) -> 'CMCHeader':
+    def clone(self) -> CMCHeader:
         return CMCHeader(self.name, self.state, self.log_level, self.payload_length)
 
     @staticmethod
@@ -565,14 +578,14 @@ class CMCMessage(Protocol):
                 yield msg.encode("utf-8")
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "CMCMessage":
+    def from_bytes(cls, data: bytes) -> CMCMessage:
         header = CMCHeader.from_bytes(data)
         if header.state is CMCHeader.State.RESULT:
             return CMCMessage(header, *cls._parse_result(header, data))
         if header.state is CMCHeader.State.LOG:
             return CMCMessage(
                 header,
-                *(data[len(header):len(header) + header.payload_length].decode("utf-8")),
+                *(data[len(header) : len(header) + header.payload_length].decode("utf-8")),
             )
         assert header.state is CMCHeader.State.END_OF_REPLY
         return CMCMessage(header, *())
@@ -588,17 +601,19 @@ class CMCMessage(Protocol):
         return messages
 
     @classmethod
-    def result_answer(cls, *messages: FetcherMessage) -> "CMCMessage":
+    def result_answer(cls, *messages: FetcherMessage) -> CMCMessage:
         return cls(
             CMCHeader(
                 name=CMCHeader.default_protocol_name(),
                 state=CMCHeader.State.RESULT,
                 log_level=" ",
                 payload_length=sum(len(msg) for msg in messages),
-            ), *messages)
+            ),
+            *messages,
+        )
 
     @classmethod
-    def log_answer(cls, message: str, level: int) -> "CMCMessage":
+    def log_answer(cls, message: str, level: int) -> CMCMessage:
         """Logs data using logging facility of the microcore.
 
         Args:
@@ -612,10 +627,12 @@ class CMCMessage(Protocol):
                 state=CMCHeader.State.LOG,
                 log_level=CMCLogLevel.from_level(level),
                 payload_length=len(message),
-            ), message)
+            ),
+            message,
+        )
 
     @classmethod
-    def end_of_reply(cls) -> "CMCMessage":
+    def end_of_reply(cls) -> CMCMessage:
         return _END_OF_REPLY
 
 
@@ -625,4 +642,6 @@ _END_OF_REPLY = CMCMessage(  # Singleton
         state=CMCHeader.State.END_OF_REPLY,
         log_level=" ",
         payload_length=0,
-    ), *())
+    ),
+    *(),
+)

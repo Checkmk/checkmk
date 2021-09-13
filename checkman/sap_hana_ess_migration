@@ -15,5 +15,5 @@ description:
 item:
  The sid instance name
 
-inventory:
+discovery:
  One service is created for each instance.

@@ -10,5 +10,5 @@ description:
  No default levels are set. Upper levels for clients and open network sockets
  are configurable.
 
-inventory:
+discovery:
  One service is created.

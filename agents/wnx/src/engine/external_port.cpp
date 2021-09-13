@@ -142,7 +142,7 @@ void AsioSession::do_write(const void *data_block, std::size_t data_length,
                 // suboptimal method, but one additional packet pro 1 minute
                 // means for TCP nothing. Still candidate to optimize
                 if (static_cast<const void *>(data) == data_block)
-                    WriteStringToSocket(socket_, cma::rt::kPlainHeader);
+                    WriteStringToSocket(socket_, cma::rt::kEncryptedHeader);
 
                 written_bytes = WriteDataToSocket(socket_, buf, len);
 

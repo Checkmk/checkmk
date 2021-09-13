@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 AWSCostAndUageMetrics = [
     ("Unblended", "UnblendedCost", "unblended"),
 ]
@@ -17,18 +18,19 @@ AWSCostAndUageMetrics = [
 def parse_aws_costs_and_usage(info):
     parsed = {}
     for row in parse_aws(info):
-        timeperiod = row['TimePeriod']['Start']
-        for group in row.get('Groups', []):
-            service_name = " ".join(group['Keys'])
-            for metric_name, metrics in group['Metrics'].items():
+        timeperiod = row["TimePeriod"]["Start"]
+        for group in row.get("Groups", []):
+            service_name = " ".join(group["Keys"])
+            for metric_name, metrics in group["Metrics"].items():
                 try:
-                    costs = float(metrics['Amount'])
-                    unit = metrics['Unit']
+                    costs = float(metrics["Amount"])
+                    unit = metrics["Unit"]
                 except (KeyError, ValueError):
                     continue
                 else:
-                    parsed.setdefault((timeperiod, service_name), {})\
-                          .setdefault(metric_name, (costs, unit))
+                    parsed.setdefault((timeperiod, service_name), {}).setdefault(
+                        metric_name, (costs, unit)
+                    )
     return parsed
 
 
@@ -50,27 +52,33 @@ def inventory_aws_costs_and_usage_summary(parsed):
 def check_aws_costs_and_usage_summary(item, params, parsed):
     amounts_by_metrics = collections.defaultdict(float)
     for (timeperiod, _service_name), metrics in parsed.items():
-        for title, metric_name, key, in AWSCostAndUageMetrics:
+        for (
+            title,
+            metric_name,
+            key,
+        ) in AWSCostAndUageMetrics:
             costs, unit = metrics[metric_name]
             amounts_by_metrics[(timeperiod, title, unit, key)] += costs
 
     for (timeperiod, title, unit, key), costs in amounts_by_metrics.items():
-        yield check_levels(costs,
-                           "aws_costs_%s" % key,
-                           params.get('levels_%s' % key, (None, None)),
-                           infoname="(%s) Total %s %s" % (timeperiod, title, unit))
+        yield check_levels(
+            costs,
+            "aws_costs_%s" % key,
+            params.get("levels_%s" % key, (None, None)),
+            infoname="(%s) Total %s %s" % (timeperiod, title, unit),
+        )
 
 
-check_info['aws_costs_and_usage'] = {
-    'parse_function': parse_aws_costs_and_usage,
-    'inventory_function': inventory_aws_costs_and_usage_summary,
-    'check_function': check_aws_costs_and_usage_summary,
-    'service_description': 'AWS/CE %s',
-    'group': 'aws_costs_and_usage',
-    'has_perfdata': True,
+check_info["aws_costs_and_usage"] = {
+    "parse_function": parse_aws_costs_and_usage,
+    "inventory_function": inventory_aws_costs_and_usage_summary,
+    "check_function": check_aws_costs_and_usage_summary,
+    "service_description": "AWS/CE %s",
+    "group": "aws_costs_and_usage",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--per service---------------------------------------------------------.
 #   |                                                _                     |
 #   |          _ __   ___ _ __   ___  ___ _ ____   _(_) ___ ___            |
@@ -98,16 +106,18 @@ def check_aws_costs_and_usage_per_service(item, params, parsed):
 
     for title, metric_name, key in AWSCostAndUageMetrics:
         costs, unit = data[metric_name]
-        yield check_levels(costs,
-                           "aws_costs_%s" % key,
-                           params.get('levels_%s' % key, (None, None)),
-                           infoname="(%s) %s %s" % (timeperiod, title, unit))
+        yield check_levels(
+            costs,
+            "aws_costs_%s" % key,
+            params.get("levels_%s" % key, (None, None)),
+            infoname="(%s) %s %s" % (timeperiod, title, unit),
+        )
 
 
-check_info['aws_costs_and_usage.per_service'] = {
-    'inventory_function': inventory_aws_costs_and_usage_per_service,
-    'check_function': check_aws_costs_and_usage_per_service,
-    'service_description': 'AWS/CE %s',
-    'group': 'aws_costs_and_usage',
-    'has_perfdata': True,
+check_info["aws_costs_and_usage.per_service"] = {
+    "inventory_function": inventory_aws_costs_and_usage_per_service,
+    "check_function": check_aws_costs_and_usage_per_service,
+    "service_description": "AWS/CE %s",
+    "group": "aws_costs_and_usage",
+    "has_perfdata": True,
 }

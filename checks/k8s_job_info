@@ -14,11 +14,13 @@ def check_k8s_job_info(_no_item, params, parsed):
     active, failed, succeeded = parsed["active"], parsed["failed"], parsed["succeeded"]
     total = sum((active, failed, succeeded))
 
-    infotext = ", ".join((
-        "Running: %d/%d" % (active, total),
-        "Failed: %d" % failed,
-        "Succeeded: %d" % succeeded,
-    ))
+    infotext = ", ".join(
+        (
+            "Running: %d/%d" % (active, total),
+            "Failed: %d" % failed,
+            "Succeeded: %d" % succeeded,
+        )
+    )
     yield 0 if not failed else 2, infotext
 
 

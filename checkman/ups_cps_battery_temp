@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  The check monitors the battery temperature of CPS UPS devices.
 
-inventory:
+discovery:
  One service is created for each device.
 
 item:

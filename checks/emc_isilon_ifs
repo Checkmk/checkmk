@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.df import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.size_trend import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # do need this, the params field can't be None
 factory_settings["emc_isilon_ifs"] = {}
 
@@ -24,7 +26,7 @@ def inventory_emc_isilon_ifs(info):
 
 
 def check_emc_isilon_ifs(item, params, info):
-    ONE_MB = 1024**2
+    ONE_MB = 1024 ** 2
     for total, avail in info:
         size_mb = int(total) // ONE_MB
         avail_mb = int(avail) // ONE_MB

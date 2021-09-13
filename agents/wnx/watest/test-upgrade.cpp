@@ -15,6 +15,8 @@
 #include "tools/_tgt.h"
 #include "upgrade.h"
 
+namespace fs = std::filesystem;
+
 namespace cma::cfg::upgrade {
 
 extern std::filesystem::path G_LegacyAgentPresetPath;
@@ -43,9 +45,7 @@ TEST(UpgradeTest, GetHash) {
 }
 
 TEST(UpgradeTest, GetDefaHash) {
-    namespace fs = std::filesystem;
-    fs::path dir = cma::cfg::GetUserDir();
-    auto dat = dir / dat_defa_name;
+    auto dat = tst::MakePathToUnitTestFiles() / dat_defa_name;
     auto new_hash = GetNewHash(dat);
     ASSERT_TRUE(new_hash.empty());
     ASSERT_NO_THROW(GetNewHash("<GTEST>"));
@@ -53,74 +53,39 @@ TEST(UpgradeTest, GetDefaHash) {
     ASSERT_TRUE(new_weird_hash.empty());
 }
 
-TEST(UpgradeTest, Integration) {
+TEST(UpgradeTest, PatchOldFilesWithDatHash) {
     ASSERT_TRUE(G_LegacyAgentPresetPath.empty());
-    tst::SafeCleanTempDir();
+
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
     auto [legacy, target] = tst::CreateInOut();
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir(););
     SetLegacyAgentPath(legacy);
     ON_OUT_OF_SCOPE(SetLegacyAgentPath(""););
 
-    namespace fs = std::filesystem;
-    std::error_code ec;
     auto state_dir = legacy / dirs::kAuStateLocation;
-    fs::create_directories(state_dir, ec);
-    ASSERT_EQ(ec.value(), 0);
-    fs::path dir = cma::cfg::GetUserDir();
+    fs::create_directories(state_dir);
+    fs::path dir = tst::MakePathToUnitTestFiles();
     auto ini = dir / ini_name;
     fs::copy_file(ini, legacy / files::kIniFile,
-                  fs::copy_options::overwrite_existing, ec);
+                  fs::copy_options::overwrite_existing);
     auto state = dir / state_name;
     fs::copy_file(state, legacy / dirs::kAuStateLocation / files::kAuStateFile,
-                  fs::copy_options::overwrite_existing, ec);
+                  fs::copy_options::overwrite_existing);
 
-    // complicated preparation to testing
-    auto dat = FindOwnDatFile();
     auto expected_dat_file = ConstructDatFileName();
-    auto dat_save = dat.u8string() + ".sav";
-    ON_OUT_OF_SCOPE({
-        if (dat.empty())
-            fs::remove(expected_dat_file, ec);
-        else
-            fs::rename(dat_save, dat);
-    });
-    fs::path test_dat = cma::cfg::GetUserDir();
-    if (dat.empty()) {
-        // create file
-        fs::copy_file(test_dat / dat_name, expected_dat_file,
-                      fs::copy_options::overwrite_existing, ec);
-
-    } else {
-        // backup
-        fs::copy_file(dat, dat_save, fs::copy_options::overwrite_existing, ec);
-        // overwrite
-        fs::copy_file(test_dat / dat_name, dat,
-                      fs::copy_options::overwrite_existing, ec);
-    }
-
-#if 0
-    fs::path install_ini = cma::cfg::GetFileInstallDir();
-    std::error_code ec;
-    fs::create_directories(install_ini, ec);
-    install_ini /= files::kIniFile;
-
-    auto backup_file = install_ini;
-    backup_file.replace_extension("in_");
-    fs::remove(backup_file, ec);
-    fs::copy_file(install_ini, backup_file, ec);
-    ON_OUT_OF_SCOPE(fs::rename(backup_file, install_ini, ec);)
-#endif
+    fs::create_directories(expected_dat_file.parent_path());
+    // create file
+    fs::copy_file(tst::MakePathToUnitTestFiles() / dat_name, expected_dat_file,
+                  fs::copy_options::overwrite_existing);
 
     ASSERT_TRUE(PatchOldFilesWithDatHash());
-    {
-        auto state_hash = GetOldHashFromState(legacy / dirs::kAuStateLocation /
-                                              files::kAuStateFile);
-        EXPECT_EQ(state_hash, new_expected);
-    }
-    {
-        auto ini_hash = GetOldHashFromIni(legacy / files::kIniFile);
-        EXPECT_EQ(ini_hash, new_expected);
-    }
+
+    auto state_hash = GetOldHashFromState(legacy / dirs::kAuStateLocation /
+                                          files::kAuStateFile);
+    EXPECT_EQ(state_hash, new_expected);
+
+    auto ini_hash = GetOldHashFromIni(legacy / files::kIniFile);
+    EXPECT_EQ(ini_hash, new_expected);
 }
 
 TEST(UpgradeTest, PatchIniHash) {
@@ -1034,7 +999,7 @@ TEST(UpgradeTest, TopLevelApi_Long) {
     EXPECT_TRUE(FindStopDeactivateLegacyAgent());
 }
 
-TEST(UpgradeTest, StopStartStopOhm) {
+TEST(UpgradeTest, StopStartStopOhmIntegration) {
     namespace fs = std::filesystem;
     auto lwa_path = FindLegacyAgent();
     ASSERT_TRUE(!lwa_path.empty())

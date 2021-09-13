@@ -12,7 +12,7 @@ description:
  The check will get warning if a host or VM is powered off or suspended. But
  this can be configured via a check parameter.
 
-inventory:
+discovery:
  One service is created for each ESX Host System and
  one service is created for each Virtual Machine.
 

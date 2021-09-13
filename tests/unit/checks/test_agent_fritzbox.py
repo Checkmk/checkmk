@@ -4,20 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import SpecialAgent  # type: ignore[import]
+import pytest
+
+from tests.testlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('params,expected_args', [
-    ({}, ["address"]),
-    ({
-        "timeout": 10,
-    }, ["--timeout", "10", "address"]),
-])
+@pytest.mark.parametrize(
+    "params,expected_args",
+    [
+        ({}, ["address"]),
+        (
+            {
+                "timeout": 10,
+            },
+            ["--timeout", "10", "address"],
+        ),
+    ],
+)
 def test_fritzbox_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_fritzbox')
+    agent = SpecialAgent("agent_fritzbox")
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

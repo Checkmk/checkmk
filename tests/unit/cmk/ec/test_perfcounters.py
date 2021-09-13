@@ -5,7 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import pytest  # type: ignore[import]
+
+import pytest
 
 from cmk.ec.main import Perfcounters
 
@@ -89,10 +90,14 @@ def test_perfcounters_column_default_values():
             assert default_value == 0.0
 
         elif column_name.startswith("status_"):
-            assert isinstance(default_value,
-                              int), "Wrong column type %r: %s" % (column_name, type(default_value))
-            assert default_value == 0, "Wrong column default value %r: %d" % (column_name,
-                                                                              default_value)
+            assert isinstance(default_value, int), "Wrong column type %r: %s" % (
+                column_name,
+                type(default_value),
+            )
+            assert default_value == 0, "Wrong column default value %r: %d" % (
+                column_name,
+                default_value,
+            )
 
 
 def test_perfcounters_correct_status_values():
@@ -126,7 +131,9 @@ def test_perfcounters_correct_status_values():
         elif column_name.startswith("status_"):
             counter_name = "_".join(column_name.split("_")[1:])
             assert column_value == c._counters[counter_name], "Invalid value %r: %r" % (
-                column_name, c._counters[counter_name])
+                column_name,
+                c._counters[counter_name],
+            )
 
         else:
             raise NotImplementedError()

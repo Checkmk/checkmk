@@ -9,18 +9,20 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.bvip import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 bvip_util_default_levels = (90, 95)
 
 
 def inventory_bvip_util(info):
     if info:
         for name in ["Total", "Coder", "VCA"]:
-            yield name, 'bvip_util_default_levels'
+            yield name, "bvip_util_default_levels"
 
 
 def check_bvip_util(item, params, info):

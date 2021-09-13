@@ -5,15 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics import graph_info, indexed_color, MAX_CORES, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-    indexed_color,
-    MAX_CORES,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -127,17 +121,21 @@ metric_info["threads_busy"] = {
 
 metric_info["vol_context_switches"] = {
     "title": _("Voluntary context switches"),
-    "help": _("A voluntary context switch occurs when a thread blocks "
-              "because it requires a resource that is unavailable"),
+    "help": _(
+        "A voluntary context switch occurs when a thread blocks "
+        "because it requires a resource that is unavailable"
+    ),
     "unit": "count",
     "color": "36/a",
 }
 
 metric_info["invol_context_switches"] = {
     "title": _("Involuntary context switches"),
-    "help": _("An involuntary context switch takes place when a thread "
-              "executes for the duration of its time slice or when the "
-              "system identifies a higher-priority thread to run"),
+    "help": _(
+        "An involuntary context switch takes place when a thread "
+        "executes for the duration of its time slice or when the "
+        "system identifies a higher-priority thread to run"
+    ),
     "unit": "count",
     "color": "45/b",
 }
@@ -401,7 +399,7 @@ metric_info["cpu_total_in_millis"] = {
     "color": "26/a",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -420,8 +418,11 @@ graph_info["used_cpu_time"] = {
         ("children_user_time", "stack"),
         ("system_time", "stack"),
         ("children_system_time", "stack"),
-        ("user_time,children_user_time,system_time,children_system_time,+,+,+#888888", "line",
-         _("Total")),
+        (
+            "user_time,children_user_time,system_time,children_system_time,+,+,+#888888",
+            "line",
+            _("Total"),
+        ),
     ],
     "omit_zero_metrics": True,
     "conflicting_metrics": ["cmk_time_agent", "cmk_time_snmp", "cmk_time_ds"],
@@ -459,16 +460,18 @@ graph_info["tapes_utilization"] = {
     "scalars": [
         "tapes_free:warn",
         "tapes_free:crit",
-    ]
+    ],
 }
 
 graph_info["storage_processor_utilization"] = {
     "title": _("Storage Processor utilization"),
-    "metrics": [("storage_processor_util", "area"),],
+    "metrics": [
+        ("storage_processor_util", "area"),
+    ],
     "scalars": [
         "storage_processor_util:warn",
         "storage_processor_util:crit",
-    ]
+    ],
 }
 
 graph_info["cpu_load"] = {
@@ -479,8 +482,8 @@ graph_info["cpu_load"] = {
         ("load15", "line"),
     ],
     "scalars": [
-        "load1:warn",
-        "load1:crit",
+        "load15:warn",
+        "load15:crit",
     ],
     "optional_metrics": [
         "load5",
@@ -490,7 +493,9 @@ graph_info["cpu_load"] = {
 
 graph_info["fgpa_utilization"] = {
     "title": _("FGPA utilization"),
-    "metrics": [("fpga_util", "area"),],
+    "metrics": [
+        ("fpga_util", "area"),
+    ],
     "scalars": [
         "fpga_util:warn",
         "fpga_util:crit",
@@ -556,7 +561,7 @@ graph_info["cpu_utilization_simple"] = {
     "range": (0, 100),
 }
 
-#TODO which warn,crit?
+# TODO which warn,crit?
 graph_info["cpu_utilization_3"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -568,7 +573,7 @@ graph_info["cpu_utilization_3"] = {
     "range": (0, 100),
 }
 
-#TODO which warn,crit?
+# TODO which warn,crit?
 graph_info["cpu_utilization_4"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -584,7 +589,7 @@ graph_info["cpu_utilization_4"] = {
 # If possible, we display the "util" metric,
 # otherwise we display the sum of the present metrics.
 
-#TODO which warn,crit?
+# TODO which warn,crit?
 graph_info["cpu_utilization_5"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -621,7 +626,7 @@ graph_info["cpu_utilization_5_util"] = {
     "range": (0, 100),
 }
 
-#TODO which warn,crit?
+# TODO which warn,crit?
 graph_info["cpu_utilization_6_steal"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -652,11 +657,13 @@ graph_info["cpu_utilization_6_steal_util"] = {
         "util:warn",
         "util:crit",
     ],
-    "conflicting_metrics": ["cpu_util_guest",],
+    "conflicting_metrics": [
+        "cpu_util_guest",
+    ],
     "omit_zero_metrics": True,
     "range": (0, 100),
 }
-#TODO which warn,crit?
+# TODO which warn,crit?
 graph_info["cpu_utilization_6_guest"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -687,12 +694,14 @@ graph_info["cpu_utilization_6_guest_util"] = {
         "util:warn",
         "util:crit",
     ],
-    "conflicting_metrics": ["cpu_util_steal",],
+    "conflicting_metrics": [
+        "cpu_util_steal",
+    ],
     "omit_zero_metrics": True,
     "range": (0, 100),
 }
 
-#TODO which warn,crit?
+# TODO which warn,crit?
 graph_info["cpu_utilization_7"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -703,7 +712,9 @@ graph_info["cpu_utilization_7"] = {
         ("cpu_util_steal", "stack"),
         ("user,system,io_wait,cpu_util_guest,cpu_util_steal,+,+,+,+#004080", "line", _("Total")),
     ],
-    "conflicting_metrics": ["util",],
+    "conflicting_metrics": [
+        "util",
+    ],
     "omit_zero_metrics": True,
     "range": (0, 100),
 }
@@ -728,7 +739,7 @@ graph_info["cpu_utilization_7_util"] = {
 
 # ^-- last eight graphs go pairwise together (see above)
 
-#TODO which warn,crit?
+# TODO which warn,crit?
 graph_info["cpu_utilization_8"] = {
     "title": _("CPU utilization"),
     "metrics": [
@@ -741,7 +752,9 @@ graph_info["cpu_utilization_8"] = {
 
 graph_info["util_fallback"] = {
     "title": _("CPU utilization"),
-    "metrics": [("util", "area"),],
+    "metrics": [
+        ("util", "area"),
+    ],
     "scalars": [
         "util:warn",
         "util:crit",
@@ -762,7 +775,7 @@ graph_info["per_core_utilization"] = {
     "title": _("Per Core utilization"),
     "metrics": [("cpu_core_util_%d" % num, "line") for num in range(MAX_CORES)],
     "range": (0, 100),
-    "optional_metrics": ["cpu_core_util_%d" % num for num in range(2, MAX_CORES)]
+    "optional_metrics": ["cpu_core_util_%d" % num for num in range(2, MAX_CORES)],
 }
 
 graph_info["per_core_utilization_average"] = {
@@ -791,7 +804,9 @@ graph_info["threads"] = {
 
 graph_info["thread_usage"] = {
     "title": _("Thread usage"),
-    "metrics": [("thread_usage", "area"),],
+    "metrics": [
+        ("thread_usage", "area"),
+    ],
     "scalars": ["thread_usage:warn", "thread_usage:crit"],
     "range": (0, 100),
 }

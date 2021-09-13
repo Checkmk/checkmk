@@ -246,7 +246,7 @@ inline void sendStringToStdio(const char* String,
 namespace XLOG {
 
 namespace setup {
-void DuplicateOnStdio(bool On);
+void DuplicateOnStdio(bool on);
 void ColoredOutputOnStdio(bool On);
 void SetContext(std::string_view context);
 
@@ -306,8 +306,9 @@ class Emitter {
 public:
     enum { kConstructedValue = 0xFFA1B2C0 };
 
-    Emitter(XLOG::LogType t,
-            bool Breakpoint = false)  // future use
+    explicit Emitter(XLOG::LogType t) : Emitter(t, false) {}
+
+    Emitter(XLOG::LogType t, bool breakpoint)
         : type_(t), copy_(false), mods_(Mods::kCopy) {
         // setting up parameters for print in log_param_
         switch (t) {
@@ -315,19 +316,16 @@ public:
                 log_param_.type_ = xlog::Type::kLogOut;
                 log_param_.directions_ = xlog::Directions::kDebuggerPrint |
                                          xlog::Directions::kFilePrint;
-                // other
                 break;
             case LogType::trace:
                 log_param_.type_ = xlog::Type::kVerboseOut;
                 log_param_.directions_ = xlog::Directions::kDebuggerPrint;
-                // other
                 break;
             case LogType::debug:
                 log_param_.type_ = xlog::Type::kDebugOut;
                 log_param_.directions_ = xlog::Directions::kDebuggerPrint;
-                // other
                 break;
-            case LogType::stdio: {
+            case LogType::stdio:
                 log_param_.type_ = xlog::Type::kVerboseOut;
                 log_param_.mark_ = xlog::Marker::kTraceMark;
                 log_param_.directions_ = xlog::Directions::kStdioPrint;
@@ -336,33 +334,36 @@ public:
 
                 log_param_.setFileName(nullptr);
                 log_param_.initPrefix(nullptr);
-            } break;
+                break;
             default:
                 log_param_.type_ = xlog::Type::kDebugOut;
         }
-        if (Breakpoint) mods_ |= Mods::kBp;
+        if (breakpoint) {
+            mods_ |= Mods::kBp;
+        }
         constructed_ = kConstructedValue;
     }
 
     Emitter operator=(const Emitter& Rhs) = delete;
 
     ~Emitter() {
-        if (copy_) flush();
+        if (copy_) {
+            flush();
+        }
     }
 
     // *****************************
     // STREAM OUTPUT
     template <typename T>
-    std::ostream& operator<<(const T& Value) {
-        return (os_ << Value);
+    std::ostream& operator<<(const T& value) {
+        return (os_ << value);
     }
 
     template <>
-    std::ostream& operator<<(const std::wstring& Value) {
-        auto s_wide = fmt::format(L"{}", Value);
-        auto s = wtools::ToUtf8(Value);
+    std::ostream& operator<<(const std::wstring& value) {
+        auto s = wtools::ToUtf8(value);
         if (!constructed()) {
-            auto _ = xlog::l("Attempt to log too early '%s'", s.c_str());
+            xlog::l("Attempt to log too early '%s'", s.c_str());
             return os_;
         }
 
@@ -370,11 +371,10 @@ public:
         return (os_ << s);
     }
 
-    std::ostream& operator<<(const wchar_t* Value) {
-        auto s_wide = fmt::format(L"{}", Value);
-        auto s = wtools::ToUtf8(Value);
+    std::ostream& operator<<(const wchar_t* value) {
+        auto s = wtools::ToUtf8(value);
         if (!constructed()) {
-            auto _ = xlog::l("Attempt to log too early '%s'", s.c_str());
+            xlog::l("Attempt to log too early '%s'", s.c_str());
             return os_;
         }
         std::lock_guard lk(lock_);
@@ -384,17 +384,15 @@ public:
 
     inline std::string SafePrintToDebuggerAndEventLog(
         const std::string& text) noexcept {
-        std::string s;
         try {
-            s = fmt::format(
+            return fmt::format(
                 "[ERROR] [CRITICAL] Invalid parameters for log string \"{}\"\n",
                 text);
-            return s;
         } catch (...) {
-            s = "[ERROR] [CRITICAL] Failed Print\n";
+            xlog::internal_PrintStringDebugger(
+                "[ERROR] [CRITICAL] Failed Print\n");
         }
-        xlog::internal_PrintStringDebugger(s.c_str());
-        return s;
+        return "";
     }
 
     // **********************************
@@ -466,7 +464,9 @@ public:
         try {
             auto s = fmt::format(format, std::forward<Args>(args)...);
             // check construction
-            if (!this->constructed_) return s;
+            if (!this->constructed_) {
+                return s;
+            }
             auto e = *this;
             e.mods_ |= modifications;
             e.postProcessAndPrint(s);
@@ -564,44 +564,52 @@ public:
     }
 #pragma warning(pop)
     // set filename to log
-    void configFile(const std::string& LogFile) {
-        if (LogFile.empty()) {
+    void configFile(const std::string& log_file) {
+        if (log_file.empty()) {
             log_param_.setFileName(nullptr);
         } else {
-            log_param_.setFileName(LogFile.c_str());
+            log_param_.setFileName(log_file.c_str());
         }
     }
 
-    void configPrefix(const std::wstring& Prefix) {
-        if (Prefix.empty()) {
+    void configPrefix(const std::wstring& prefix) {
+        if (prefix.empty()) {
             log_param_.initPrefix(nullptr);
         } else {
-            log_param_.initPrefix(Prefix.c_str());
+            log_param_.initPrefix(prefix.c_str());
         }
     }
 
-    void enableFileLog(bool Enable) {
-        if (Enable)
+    void enableFileLog(bool enable) {
+        if (enable)
             log_param_.directions_ |= xlog::Directions::kFilePrint;
         else
             log_param_.directions_ &= ~xlog::Directions::kFilePrint;
     }
 
-    void enableEventLog(bool Enable) {
+    void enableEventLog(bool enable) {
         if (type_ == LogType::log) {
             // only kLog has right to create event log entries
-            if (Enable)
+            if (enable)
                 log_param_.directions_ |= xlog::Directions::kEventPrint;
             else
                 log_param_.directions_ &= ~xlog::Directions::kEventPrint;
         }
     }
 
-    void enableWinDbg(bool Enable) {
-        if (Enable)
+    void enableWinDbg(bool enable) {
+        if (enable)
             log_param_.directions_ |= xlog::Directions::kDebuggerPrint;
         else
             log_param_.directions_ &= ~xlog::Directions::kDebuggerPrint;
+    }
+
+    bool isWinDbg() const {
+        return (log_param_.directions_ | xlog::Directions::kDebuggerPrint) != 0;
+    }
+
+    bool isFileDbg() const {
+        return (log_param_.directions_ | xlog::Directions::kFilePrint) != 0;
     }
 
     const xlog::LogParam& getLogParam() const noexcept { return log_param_; }
@@ -617,13 +625,13 @@ public:
 private:
     uint32_t constructed_;  // filled during construction
     // private, can be called only from operator ()
-    Emitter(const Emitter& Rhs) {
+    Emitter(const Emitter& rhs) {
         {
-            std::lock_guard lk(Rhs.lock_);
-            log_param_ = Rhs.log_param_;
-            type_ = Rhs.type_;
-            mods_ = Rhs.mods_;
-            constructed_ = Rhs.constructed_;
+            std::lock_guard lk(rhs.lock_);
+            log_param_ = rhs.log_param_;
+            type_ = rhs.type_;
+            mods_ = rhs.mods_;
+            constructed_ = rhs.constructed_;
         }
         copy_ = true;
     }
@@ -634,16 +642,16 @@ private:
         std::lock_guard lk(lock_);
         if (!os_.str().empty()) {
             postProcessAndPrint(os_.str());
-            os_.str() = "";
+            os_.clear();
         }
     }
 
-    void postProcessAndPrint(const std::string& String);
+    void postProcessAndPrint(const std::string& text);
 
     mutable std::mutex lock_;
     xlog::LogParam log_param_;  // this is fixed base
-    std::atomic<int> backup_log_max_count_ = cma::cfg::kBackupLogMaxCount;
-    std::atomic<size_t> backup_log_max_size_ = cma::cfg::kBackupLogMaxSize;
+    std::atomic<int> backup_log_max_count_{cma::cfg::kBackupLogMaxCount};
+    std::atomic<size_t> backup_log_max_size_{cma::cfg::kBackupLogMaxSize};
     std::ostringstream os_;  // stream storage
     XLOG::LogType type_;
 
@@ -668,38 +676,37 @@ extern XLOG::Emitter stdio;  // only print
 // API:
 //
 
-// bad example of engineering.
 // #TODO fix this make one entry point(Global Object)
 namespace setup {
 
 // YOU DO NOT NEED ANYTHING EXCEPT THIS CALL
 void ReConfigure();
 
-void Configure(std::string LogFileName, int DebugLevel, bool WinDbg,
-               bool EventLog);
+void Configure(const std::string& log_file_name, int debug_level, bool windbg,
+               bool event_log);
 
-// switch d to send output into the file
-void EnableDebugLog(bool Enable);
+/// \brief switch d to send output into the file
+void EnableDebugLog(bool enable);
 
-// switch t to send output into the file
-void EnableTraceLog(bool Enable);
+/// \brief switch t to send output into the file
+void EnableTraceLog(bool enable);
 
-// change file name for all loggers
-void ChangeLogFileName(const std::string& Filename);
+/// \brief change file name for all loggers
+void ChangeLogFileName(const std::string& log_file_name);
 
-// change file name for all loggers
-void ChangeDebugLogLevel(int Level);
+/// \brief change debug level
+void ChangeDebugLogLevel(int level);
 
-// disable enable windbg for all loggers
-void EnableWinDbg(bool Enable);
+/// \brief disable enable windbg for all loggers
+void EnableWinDbg(bool enable);
 
-// disable enable event log GLOBALLY
+/// \brief reports log status
 bool IsEventLogEnabled();
 
 }  // namespace setup
 
 namespace internal {
-int Type2Marker(xlog::Type Lt) noexcept;
+int Type2Marker(xlog::Type log_type) noexcept;
 uint32_t Mods2Directions(const xlog::LogParam& lp, uint32_t mods) noexcept;
 }  // namespace internal
 

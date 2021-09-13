@@ -8,9 +8,30 @@ set -e -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 . "${SCRIPT_DIR}/build_lib.sh"
 
+failure() {
+    echo "$(basename $0):" "$@" >&2
+    exit 1
+}
+
+# read optional command line argument
+if [ "$#" -eq 1 ]; then
+    PYTHON_VERSION=$1
+else
+    cd "${SCRIPT_DIR}"
+    while true; do
+        if [ -e defines.make ]; then
+            PYTHON_VERSION=$(make --no-print-directory --file=defines.make print-PYTHON_VERSION)
+            break
+        elif [ "$PWD" == / ]; then
+            failure "could not determine Python version"
+        else
+            cd ..
+        fi
+    done
+fi
+
 OPENSSL_VERSION=1.1.1d
 OPENSSL_PATH="/opt/openssl-${OPENSSL_VERSION}"
-PYTHON_VERSION=3.8.7
 DIR_NAME=Python-${PYTHON_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tgz
 TARGET_DIR=/opt

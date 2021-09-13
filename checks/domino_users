@@ -9,12 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.domino import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 domino_users_default_levels = (1000, 1500)
 
 
 def inventory_domino_users(info):
     if info:
-        yield None, 'domino_users_default_levels'
+        yield None, "domino_users_default_levels"
 
 
 def check_domino_users(_no_item, params, info):

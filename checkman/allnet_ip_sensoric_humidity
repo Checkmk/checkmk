@@ -17,6 +17,6 @@ item:
  If a name is reported for the sensor by the device: The name and the
  sensor ID. Otherwise the sensor ID only.
 
-inventory:
+discovery:
  One service is created for every humidity sensor (function = 2).
 

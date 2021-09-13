@@ -10,7 +10,7 @@ def inv_ibm_mq_channels(parsed, inventory_tree, status_data_tree):
     inv_node = inventory_tree.get_list(path)
     status_node = status_data_tree.get_list(path)
     for item in sorted(parsed):
-        if ':' not in item:
+        if ":" not in item:
             # Do not show queue manager in inventory
             continue
         attrs = parsed[item]
@@ -27,7 +27,7 @@ def inv_ibm_mq_channels(parsed, inventory_tree, status_data_tree):
         status_node.append(data)
 
 
-inv_info['ibm_mq_channels'] = {
-    'inv_function': inv_ibm_mq_channels,
-    'has_status_data': True,
+inv_info["ibm_mq_channels"] = {
+    "inv_function": inv_ibm_mq_channels,
+    "has_status_data": True,
 }

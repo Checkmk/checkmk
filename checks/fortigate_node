@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fortigate_sessions import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #
 # monitoring of cluster members (nodes) in fortigate high availability tree
 #
@@ -63,11 +65,14 @@ def parse_fortigate_node(info):
             item_name = "Node %s" % oid_end
 
         parsed.setdefault("nodes", {})
-        parsed["nodes"].setdefault(item_name, {
-            "cpu": float(cpu_str),
-            "memory": int(memory_str),
-            "sessions": int(sessions_str),
-        })
+        parsed["nodes"].setdefault(
+            item_name,
+            {
+                "cpu": float(cpu_str),
+                "memory": int(memory_str),
+                "sessions": int(sessions_str),
+            },
+        )
 
     return parsed
 
@@ -101,7 +106,8 @@ check_info["fortigate_node"] = {
             [
                 1,  # fgHaSystemMode
                 7,  # fgHaGroupName
-            ]),
+            ],
+        ),
         (
             ".1.3.6.1.4.1.12356.101.13.2.1.1",
             [
@@ -109,12 +115,13 @@ check_info["fortigate_node"] = {
                 3,  # fgHaStatsCpuUsage
                 4,  # fgHaStatsMemUsage
                 6,  # fgHaStatsSesCount
-                OID_END
-            ])
+                OID_END,
+            ],
+        ),
     ],
 }
 
-#.
+# .
 #   .--CPU-----------------------------------------------------------------.
 #   |                           ____ ____  _   _                           |
 #   |                          / ___|  _ \| | | |                          |
@@ -144,7 +151,7 @@ check_info["fortigate_node.cpu"] = {
     "has_perfdata": True,
 }
 
-#.
+# .
 #   .--Sessions------------------------------------------------------------.
 #   |                ____                _                                 |
 #   |               / ___|  ___  ___ ___(_) ___  _ __  ___                 |

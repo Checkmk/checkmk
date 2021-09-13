@@ -5,22 +5,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Common module request related stuff"""
 
-from typing import (
-    Optional,
-    Any,
-    Dict,
-    Union,
-    TypedDict,
-)
 import abc
-import os
 import base64
 import json
+import os
 import ssl
-import urllib
-
-from http.client import HTTPConnection, HTTPSConnection, HTTPResponse
+from functools import reduce
+from http.client import HTTPConnection, HTTPResponse, HTTPSConnection
+from typing import Any, Dict, Optional, TypedDict, Union
 from urllib.request import build_opener, HTTPSHandler, Request
+
 from requests import Session
 
 StringMap = Dict[str, str]  # should be Mapping[] but we're not ready yet..
@@ -81,9 +75,9 @@ class HTTPSAuthHandler(HTTPSHandler):
         super().__init__()
         self.__ca_file = ca_file
 
-    def https_open(self, request: Request) -> HTTPResponse:  # pylint: disable=arguments-differ
+    def https_open(self, req: Request) -> HTTPResponse:  # pylint: disable=arguments-differ
         # TODO: Slightly interesting things in the typeshed here, investigate...
-        return self.do_open(self.get_connection, request)  # type: ignore[arg-type]
+        return self.do_open(self.get_connection, req)  # type: ignore[arg-type]
 
     # Hmmm, this should be a HTTPConnectionProtocol...
     def get_connection(self, host: str, timeout: float) -> HTTPSConnection:
@@ -100,8 +94,8 @@ class HTTPSAuthRequester(Requester):
         password: str,
     ) -> None:
         self._req_headers = {
-            'Authorization': "Basic " + base64.encodebytes(
-                ("%s:%s" % (username, password)).encode()).strip().decode()
+            "Authorization": "Basic "
+            + base64.encodebytes(("%s:%s" % (username, password)).encode()).strip().decode()
         }
         self._base_url = "https://%s:%d/%s" % (server, port, base_url)
         self._opener = build_opener(HTTPSAuthHandler(HTTPSConfigurableConnection.IGNORE))
@@ -120,7 +114,8 @@ def create_api_connect_session(
     api_url: str,
     no_cert_check: bool = False,
     auth: Any = None,
-) -> 'ApiSession':
+    token: Optional[str] = None,
+) -> "ApiSession":
     """Create a custom requests Session
 
     Args:
@@ -134,15 +129,19 @@ def create_api_connect_session(
         auth:
             authentication option (either username & password or OAuth1 object)
 
+        token:
+            token for Bearer token request
     """
     ssl_verify = None
     if not no_cert_check:
-        ssl_verify = os.environ.get('REQUEST_CA_BUNDLE')
+        ssl_verify = os.environ.get("REQUEST_CA_BUNDLE")
 
     session = ApiSession(api_url, ssl_verify)
 
     if auth:
         session.auth = auth
+    elif token:
+        session.headers.update({"Authorization": "Bearer " + token})
 
     return session
 
@@ -150,20 +149,21 @@ def create_api_connect_session(
 class ApiSession(Session):
     """Adjusted requests.session class with a focus on multiple API calls
 
-        ApiSession behaves similar to the requests.session
-        with the exception that a base url is provided and persisted
-        all requests forms use the base url and append the actual request
+    ApiSession behaves similar to the requests.session
+    with the exception that a base url is provided and persisted
+    all requests forms use the base url and append the actual request
 
     """
-    def __init__(self,
-                 base_url: Optional[str] = None,
-                 ssl_verify: Optional[Union[str, bool]] = None):
+
+    def __init__(
+        self, base_url: Optional[str] = None, ssl_verify: Optional[Union[str, bool]] = None
+    ):
         super().__init__()
         self._base_url = base_url if base_url else ""
         self.ssl_verify = ssl_verify if ssl_verify else False
 
     def request(self, method, url, **kwargs):  # pylint: disable=arguments-differ
-        url = urllib.parse.urljoin(self._base_url, url)
+        url = urljoin(self._base_url, url)
         return super().request(method, url, verify=self.ssl_verify, **kwargs)
 
 
@@ -251,3 +251,22 @@ def parse_api_custom_url(
 
     """
     return f"{protocol}://{url_custom}/{api_path}"
+
+
+def urljoin(*args):
+    """Join two urls without stripping away any parts
+
+    >>> urljoin("http://127.0.0.1:8080", "api/v2")
+    'http://127.0.0.1:8080/api/v2'
+
+    >>> urljoin("http://127.0.0.1:8080/prometheus", "api/v2")
+    'http://127.0.0.1:8080/prometheus/api/v2'
+
+    >>> urljoin("http://127.0.0.1:8080/", "api/v2/")
+    'http://127.0.0.1:8080/api/v2/'
+    """
+
+    def join_slash(base, part):
+        return base.rstrip("/") + "/" + part.lstrip("/")
+
+    return reduce(join_slash, args) if args else ""

@@ -4,16 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import getopt
 import os
 import sys
 import time
-import getopt
 
 import livestatus
 
 
 def usage():
-    sys.stderr.write("""check_notify_count
+    sys.stderr.write(
+        """check_notify_count
 
 USAGE: check_notify_count
        check_notify_count -h
@@ -30,10 +31,11 @@ OPTIONS:
                 timerange to raise a CRITICAL state.
                 Disabled by default.
 
-""")
+"""
+    )
 
 
-short_options = 'hr:w:c:l:'
+short_options = "hr:w:c:l:"
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options)
@@ -41,41 +43,43 @@ except getopt.GetoptError as err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-socket_path = ''
+socket_path = ""
 timerange = 60
 warn, crit = None, None
 
 for o, a in opts:
-    if o == '-h':
+    if o == "-h":
         usage()
         sys.exit(0)
-    elif o == '-r':
+    elif o == "-r":
         timerange = int(a)
-    elif o == '-w':
+    elif o == "-w":
         warn = int(a)
-    elif o == '-c':
+    elif o == "-c":
         crit = int(a)
-    elif o == '-l':
+    elif o == "-l":
         socket_path = a
 
 if len(args) == 1:
-    sys.stderr.write('ERROR: No service pattern given.\n')
+    sys.stderr.write("ERROR: No service pattern given.\n")
     sys.exit(1)
 
-if not socket_path and 'OMD_ROOT' in os.environ:
-    socket_path = os.environ['OMD_ROOT'] + '/tmp/run/live'
+if not socket_path and "OMD_ROOT" in os.environ:
+    socket_path = os.environ["OMD_ROOT"] + "/tmp/run/live"
 
 if not os.path.exists(socket_path):
-    sys.stderr.write('ERROR: Livestatus socket (%s) does not exist\n' % socket_path)
+    sys.stderr.write("ERROR: Livestatus socket (%s) does not exist\n" % socket_path)
     sys.exit(1)
 
-query = ('GET log\n'
-         'Columns: log_contact_name\n'
-         'Filter: log_time >= %d\n'
-         'Filter: class = 3\n'
-         'Stats: state != 999\n') % (int(time.time() - (timerange * 60)))
+query = (
+    "GET log\n"
+    "Columns: log_contact_name\n"
+    "Filter: log_time >= %d\n"
+    "Filter: class = 3\n"
+    "Stats: state != 999\n"
+) % (int(time.time() - (timerange * 60)))
 
-c = livestatus.SingleSiteConnection('unix:' + socket_path)
+c = livestatus.SingleSiteConnection("unix:" + socket_path)
 
 total_num = 0
 perfdata = []
@@ -92,14 +96,16 @@ for contact_name, num in c.query_table(query):
 
         if crit is not None and num > crit:
             state = max(state, 2)
-            details.append('%s got %d (> %d)(!!)' % (contact_name, num, crit))
+            details.append("%s got %d (> %d)(!!)" % (contact_name, num, crit))
 
         elif warn is not None and num > warn:
             state = max(state, 1)
-            details.append('%s got %d (> %d)(!)' % (contact_name, num, warn))
+            details.append("%s got %d (> %d)(!)" % (contact_name, num, warn))
 
-    perfdata.append('%s_num=%d' % (contact_name, num))
+    perfdata.append("%s_num=%d" % (contact_name, num))
 
-detail_txt = ' (%s)' % ', '.join(details) if details else ''
-sys.stdout.write('%d raw notifications, %d user notifications within last %d minutes%s | %s\n' %
-                 (raw_notifications, total_num, timerange, detail_txt, ' '.join(perfdata)))
+detail_txt = " (%s)" % ", ".join(details) if details else ""
+sys.stdout.write(
+    "%d raw notifications, %d user notifications within last %d minutes%s | %s\n"
+    % (raw_notifications, total_num, timerange, detail_txt, " ".join(perfdata))
+)

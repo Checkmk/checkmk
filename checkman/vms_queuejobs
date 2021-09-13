@@ -9,6 +9,6 @@ description:
  prints the number of jobs in the queue and the total
  CPU usage of the jobs that consumed the most CPU since.
 
-inventory:
+discovery:
  One service is created for each OpenVMS host.
 

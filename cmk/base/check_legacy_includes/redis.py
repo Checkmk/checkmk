@@ -14,10 +14,13 @@ def parse_redis_info(info):
     for line in info:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             name, host, port = line[0][3:-3].split("|")
-            instance = parsed.setdefault(name, {
-                "host": host,
-                "port": port,
-            })
+            instance = parsed.setdefault(
+                name.replace(";", ":"),
+                {
+                    "host": host,
+                    "port": port,
+                },
+            )
             continue
 
         if not instance:

@@ -17,13 +17,20 @@ details.
 
 ## Getting started
 
-Please have a look at the [official
-handbook](https://checkmk.com/cms_intro.html) on how to get
+Please have a look at the [beginners
+guide](https://docs.checkmk.com/master/en/intro.html) on how to get
 started with Checkmk.
 
 ## Want to contribute?
 
-Nice! Have a look at our [contribution guidelines](CONTRIBUTING.md).
+**Thank you for your interest in contributing to Checkmk! Unfortunately, due to our current work
+load, we can at the moment only consider pure bugfixes, sorry for that. Thus, any new pull request
+which is not a pure bugfix will be closed. Instead of creating a PR, please consider sharing new
+check plugins, agent plugins, special agents or notification plugins via the
+[Checkmk Exchange](https://exchange.checkmk.com/).**
+
+For pure bugfixes, have a look at our [contribution guidelines](CONTRIBUTING.md).
+<!-- Nice! Have a look at our [contribution guidelines](CONTRIBUTING.md). -->
 
 ## Building on your own packages
 

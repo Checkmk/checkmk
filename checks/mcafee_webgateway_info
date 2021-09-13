@@ -21,15 +21,16 @@ def check_mcafee_webgateway_info(_no_item, _no_params, info):
     return 0, "Product version: %s, Revision: %s" % (version, revision)
 
 
-check_info['mcafee_webgateway_info'] = {
-    'inventory_function': inventory_mcafee_webgateway_info,
-    'check_function': check_mcafee_webgateway_info,
-    'service_description': 'Web gateway info',
-    'snmp_info': (
-        '.1.3.6.1.4.1.1230.2.7.1',
+check_info["mcafee_webgateway_info"] = {
+    "inventory_function": inventory_mcafee_webgateway_info,
+    "check_function": check_mcafee_webgateway_info,
+    "service_description": "Web gateway info",
+    "snmp_info": (
+        ".1.3.6.1.4.1.1230.2.7.1",
         [
             "3",  # MCAFEE-MWG-MIB::kProductVersion
             "9",  # MCAFEE-MWG-MIB::kRevision
-        ]),
-    'snmp_scan_function': scan_mcafee_webgateway,
+        ],
+    ),
+    "snmp_scan_function": scan_mcafee_webgateway,
 }

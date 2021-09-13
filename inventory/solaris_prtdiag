@@ -68,7 +68,7 @@
 
 def inv_solaris_prtdiag(info):
     for line in info:
-        if line[0].startswith('OBP'):
+        if line[0].startswith("OBP"):
             node = inv_tree("software.bios.")
             bios_info = line[0].split()
             node["version"] = "%s %s" % (bios_info[0], bios_info[1])
@@ -78,7 +78,7 @@ def inv_solaris_prtdiag(info):
 
         elif line[0].startswith("SerialNumber:"):
             node = inv_tree("hardware.system.")
-            node["serial"] = line[0].split(':')[1]
+            node["serial"] = line[0].split(":")[1]
 
         elif line[0].startswith("System Configuration:"):
             # 'System Configuration:  Oracle Corporation  sun4v SPARC T4-1'
@@ -91,8 +91,9 @@ def inv_solaris_prtdiag(info):
             # 'System Configuration: SUN MICROSYSTEMS SUN FIRE X4270 SERVER'
             # 'System Configuration: Sun Microsystems SUN FIRE X4450'
             node = inv_tree("hardware.system.")
-            system_info = line[0].split(":", 1)[1].strip().replace("SERVER",
-                                                                   "").replace("Server", "")
+            system_info = (
+                line[0].split(":", 1)[1].strip().replace("SERVER", "").replace("Server", "")
+            )
 
             if "sun microsystems" in system_info.lower():
                 vendor = "Sun Microsystems"
@@ -118,8 +119,7 @@ def inv_solaris_prtdiag(info):
 
             if "sun fire" in system_info.lower():
                 index = 3
-            elif "sun4u" in system_info.lower() or \
-                 "proliant" in system_info.lower():
+            elif "sun4u" in system_info.lower() or "proliant" in system_info.lower():
                 index = 2
             elif "vmware" in system_info.lower():
                 index = 3
@@ -133,6 +133,6 @@ def inv_solaris_prtdiag(info):
                 node["family"] = "%s-series" % family[0].upper()
 
 
-inv_info['solaris_prtdiag'] = {
+inv_info["solaris_prtdiag"] = {
     "inv_function": inv_solaris_prtdiag,
 }

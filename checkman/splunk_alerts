@@ -7,6 +7,6 @@ description:
  This check monitors the number of alerts fired by splunk.
  You can set levels on the alerts count.
 
-inventory:
+discovery:
  One service is created.
 

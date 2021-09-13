@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Agent output:
 # <<<netapp_api_snapshots:sep(9)>>>
 # volume_snapshot volch150    percent-reserved 22 blocks-reserved 3322    size-total 12122 ...
@@ -57,21 +58,26 @@ def check_netapp_api_snapshots(item, params, parsed):
     extra_info = ("(Levels at %d%%/%d%%)" % (warn, crit)) if state else ""
 
     yield state, "Reserve used: %.1f%% (%s)%s" % (
-        used_percent, get_bytes_human_readable(snapshot_total), extra_info)
+        used_percent,
+        get_bytes_human_readable(snapshot_total),
+        extra_info,
+    )
 
-    yield 0, "Total Reserve: %s%% (%s) of %s" % (data[0]["snapshot-percent-reserved"],
-                                                 get_bytes_human_readable(reserved_bytes),
-                                                 get_bytes_human_readable(volume_total)),\
-                                                 [("bytes", snapshot_total, 0, 0, 0, reserved_bytes)]
+    yield 0, "Total Reserve: %s%% (%s) of %s" % (
+        data[0]["snapshot-percent-reserved"],
+        get_bytes_human_readable(reserved_bytes),
+        get_bytes_human_readable(volume_total),
+    ), [("bytes", snapshot_total, 0, 0, 0, reserved_bytes)]
 
 
 check_info["netapp_api_snapshots"] = {
-    'parse_function': lambda info: netapp_api_parse_lines(
-        info, custom_keys=["volume_snapshot"], as_dict_list=True),
-    'check_function': check_netapp_api_snapshots,
-    'inventory_function': inventory_netapp_api_snapshots,
+    "parse_function": lambda info: netapp_api_parse_lines(
+        info, custom_keys=["volume_snapshot"], as_dict_list=True
+    ),
+    "check_function": check_netapp_api_snapshots,
+    "inventory_function": inventory_netapp_api_snapshots,
     "default_levels_variable": "netapp_api_snapshots_default_levels",
-    'service_description': 'Snapshots Volume %s',
-    'group': "netapp_snapshots",
-    'has_perfdata': True,
+    "service_description": "Snapshots Volume %s",
+    "group": "netapp_snapshots",
+    "has_perfdata": True,
 }

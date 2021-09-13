@@ -4,26 +4,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
 import time
+from pathlib import Path
 from typing import Union
 
-import cmk.utils.version as cmk_version
 import cmk.utils.paths
 import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 
-import cmk.gui.utils as utils
 import cmk.gui.i18n
 import cmk.gui.pages
-import cmk.gui.config as config
-from cmk.gui.globals import html
-from cmk.gui.log import logger
+import cmk.gui.utils as utils
 from cmk.gui.exceptions import MKGeneralException
+from cmk.gui.globals import response
+from cmk.gui.log import logger
 
 # Things imported here are used by pre legacy (pre 1.6) cron plugins
 from cmk.gui.plugins.cron import (  # noqa: F401 # pylint: disable=unused-import
-    multisite_cronjobs, register_job,
+    multisite_cronjobs,
+    register_job,
 )
+from cmk.gui.utils.logged_in import SuperUserContext
 
 if not cmk_version.is_raw_edition():
     import cmk.gui.cee.plugins.cron  # pylint: disable=no-name-in-module
@@ -67,14 +68,12 @@ def page_run_cron() -> None:
     with lock_file.open("wb"):
         pass  # touches the file
 
-    with store.locked(lock_file):
-        # The cron page is accessed unauthenticated. After leaving the page_run_cron area
-        # into the job functions we always want to have a user context initialized to keep
-        # the code free from special cases (if no user logged in, then...).
-        # The jobs need to be run in privileged mode in general. Some jobs, like the network
-        # scan, switch the user context to a specific other user during execution.
-        config.set_super_user()
-
+    # The cron page is accessed unauthenticated. After leaving the page_run_cron area
+    # into the job functions we always want to have a user context initialized to keep
+    # the code free from special cases (if no user logged in, then...).
+    # The jobs need to be run in privileged mode in general. Some jobs, like the network
+    # scan, switch the user context to a specific other user during execution.
+    with store.locked(lock_file), SuperUserContext():
         logger.debug("Starting cron jobs")
 
         for cron_job in multisite_cronjobs:
@@ -85,8 +84,8 @@ def page_run_cron() -> None:
                 cron_job()
                 logger.debug("Finished [%s]", job_name)
             except Exception:
-                html.write("An exception occured. Take a look at the web.log.\n")
+                response.set_data("An exception occured. Take a look at the web.log.\n")
                 logger.exception("Exception in cron job [%s]", job_name)
 
         logger.debug("Finished all cron jobs")
-        html.write("OK\n")
+        response.set_data("OK\n")

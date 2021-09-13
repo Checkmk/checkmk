@@ -8,5 +8,5 @@ description:
  This Check monitors the total state of the device (also shown as error code on the device display).
  It reports the global state as number and detailed information with the name of affected components.
 
-inventory:
+discovery:
  One service is created.

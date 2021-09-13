@@ -10,7 +10,7 @@ description:
 item:
  The name of the resource.
 
-inventory:
+discovery:
  One service is created for each database if all required metrics
  (average_connection_successful, average_connection_failed) are given.
 

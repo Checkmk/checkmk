@@ -8,5 +8,5 @@ description:
  The information includes connection errors, missing data from sites and
  missing aggregations, because of missing data.
 
-inventory:
+discovery:
  One service is created for each connection

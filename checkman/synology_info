@@ -7,6 +7,6 @@ description:
  This check always is in {OK} state. It only outputs Model and Serial Number
 
 
-inventory:
+discovery:
  One service is created.
 

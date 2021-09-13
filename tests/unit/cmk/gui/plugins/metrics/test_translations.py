@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.check_utils import maincheckify
+
 from cmk.gui.plugins.metrics import check_metrics
 
 

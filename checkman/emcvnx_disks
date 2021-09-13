@@ -28,5 +28,5 @@ item:
  Consists of bus ID, enclosure ID and disk ID as returned by the agent.
  E. g. "1/1 Disk 9"
 
-inventory:
+discovery:
  One service is created for each disk listed in the agent output.

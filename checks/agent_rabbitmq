@@ -37,7 +37,7 @@ def agent_rabbitmq_arguments(params, hostname, ipaddress):
         "-P",
         params["protocol"],
         "-m",
-        ','.join(params["sections"]),
+        ",".join(params["sections"]),
         "-u",
         params["user"],
         "-s",
@@ -58,4 +58,4 @@ def agent_rabbitmq_arguments(params, hostname, ipaddress):
     return args
 
 
-special_agent_info['rabbitmq'] = agent_rabbitmq_arguments
+special_agent_info["rabbitmq"] = agent_rabbitmq_arguments

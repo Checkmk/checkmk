@@ -16,17 +16,19 @@ def discover_msexch_availability(parsed):
 
 
 def check_msexch_availability(item, params, parsed):
-    yield wmi_yield_raw_persec(parsed[""],
-                               item,
-                               "AvailabilityRequestssec",
-                               infoname="Requests/sec",
-                               perfvar="requests_per_sec")
+    yield wmi_yield_raw_persec(
+        parsed[""],
+        item,
+        "AvailabilityRequestssec",
+        infoname="Requests/sec",
+        perfvar="requests_per_sec",
+    )
 
 
-check_info['msexch_availability'] = {
-    'inventory_function': discover_msexch_availability,
-    'check_function': check_msexch_availability,
-    'parse_function': parse_wmi_table,
-    'has_perfdata': True,
-    'service_description': "Exchange Availability Service",
+check_info["msexch_availability"] = {
+    "inventory_function": discover_msexch_availability,
+    "check_function": check_msexch_availability,
+    "parse_function": parse_wmi_table,
+    "has_perfdata": True,
+    "service_description": "Exchange Availability Service",
 }

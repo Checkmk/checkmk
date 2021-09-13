@@ -9,14 +9,15 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fsc import *  # pylint: disable=wildcard-import,unused-wildcard-import
-#.1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.3.1.1 "PSU1"
-#.1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.3.1.2 "PSU2"
-#.1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.5.1.1 3
-#.1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.5.1.2 3
-#.1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.6.1.1 52
-#.1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.6.1.2 40
-#.1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.7.1.1 448
-#.1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.7.1.2 448
+
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.3.1.1 "PSU1"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.3.1.2 "PSU2"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.5.1.1 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.5.1.2 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.6.1.1 52
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.6.1.2 40
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.7.1.1 448
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.7.1.2 448
 
 
 def inventory_fsc_sc2_psu(info):
@@ -27,45 +28,46 @@ def inventory_fsc_sc2_psu(info):
 
 def check_fsc_sc2_psu(item, _no_params, info):
     psu_status = {
-        '1': (3, 'Status is unknown'),
-        '2': (1, 'Status is not-present'),
-        '3': (0, 'Status is ok'),
-        '4': (2, 'Status is failed'),
-        '5': (2, 'Status is ac-fail'),
-        '6': (2, 'Status is dc-fail'),
-        '7': (2, 'Status is critical-temperature'),
-        '8': (1, 'Status is not-manageable'),
-        '9': (1, 'Status is fan-failure-predicted'),
-        '10': (2, 'Status is fan-failure'),
-        '11': (1, 'Status is power-safe-mode'),
-        '12': (1, 'Status is non-redundant-dc-fail'),
-        '13': (1, 'Status is non-redundant-ac-fail')
+        "1": (3, "Status is unknown"),
+        "2": (1, "Status is not-present"),
+        "3": (0, "Status is ok"),
+        "4": (2, "Status is failed"),
+        "5": (2, "Status is ac-fail"),
+        "6": (2, "Status is dc-fail"),
+        "7": (2, "Status is critical-temperature"),
+        "8": (1, "Status is not-manageable"),
+        "9": (1, "Status is fan-failure-predicted"),
+        "10": (2, "Status is fan-failure"),
+        "11": (1, "Status is power-safe-mode"),
+        "12": (1, "Status is non-redundant-dc-fail"),
+        "13": (1, "Status is non-redundant-ac-fail"),
     }
 
     for designation, status, load, nominal in info:
         if designation == item:
-            yield psu_status.get(status, (3, 'Status is unknown'))
+            yield psu_status.get(status, (3, "Status is unknown"))
             if nominal and load:
-                infotext = 'Nominal load: %s W, Actual load: %s W' % (nominal, load)
-                perfdata = [('power', int(load))]
+                infotext = "Nominal load: %s W, Actual load: %s W" % (nominal, load)
+                perfdata = [("power", int(load))]
             else:
-                infotext = 'Did not receive load data'
+                infotext = "Did not receive load data"
                 perfdata = []
             yield 0, infotext, perfdata
 
 
 check_info["fsc_sc2_psu"] = {
-    'inventory_function': inventory_fsc_sc2_psu,
-    'check_function': check_fsc_sc2_psu,
-    'service_description': 'FSC %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.231.2.10.2.2.10.6.2.1',
+    "inventory_function": inventory_fsc_sc2_psu,
+    "check_function": check_fsc_sc2_psu,
+    "service_description": "FSC %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.231.2.10.2.2.10.6.2.1",
         [
-            '3',  #sc2PowerSupplyDesignation
-            '5',  #sc2PowerSupplyStatus
-            '6',  #sc2psPowerSupplyLoad
-            '7',  #sc2psPowerSupplyNominal
-        ]),
-    'snmp_scan_function': is_fsc_sc2,
-    'has_perfdata': True,
+            "3",  # sc2PowerSupplyDesignation
+            "5",  # sc2PowerSupplyStatus
+            "6",  # sc2psPowerSupplyLoad
+            "7",  # sc2psPowerSupplyNominal
+        ],
+    ),
+    "snmp_scan_function": is_fsc_sc2,
+    "has_perfdata": True,
 }

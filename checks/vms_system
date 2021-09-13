@@ -21,8 +21,11 @@ def inventory_vms_system(info):
 
 def check_vms_system_ios(_no_item, _no_params, info):
     direct_ios, buffered_ios = map(float, info[0][:2])
-    return (0, "Direct IOs: %.2f/sec, Buffered IOs: %.2f/sec" % (direct_ios, buffered_ios),
-            [("direct", direct_ios), ("buffered", buffered_ios)])
+    return (
+        0,
+        "Direct IOs: %.2f/sec, Buffered IOs: %.2f/sec" % (direct_ios, buffered_ios),
+        [("direct", direct_ios), ("buffered", buffered_ios)],
+    )
 
 
 check_info["vms_system.ios"] = {
@@ -35,11 +38,11 @@ check_info["vms_system.ios"] = {
 
 def check_vms_system_procs(_no_item, params, info):
     procs = int(float(info[0][2]))
-    perfdata = [('procs', procs, None, None, 0)]
+    perfdata = [("procs", procs, None, None, 0)]
 
     if params:
         warn, crit = params
-        perfdata = [('procs', procs, warn, crit, 0)]
+        perfdata = [("procs", procs, warn, crit, 0)]
         if procs >= crit:
             return (2, "%d processes (critical at %d)" % (procs, crit), perfdata)
         elif procs >= warn:

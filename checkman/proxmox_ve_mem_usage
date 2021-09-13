@@ -7,5 +7,5 @@ description:
  This check is OK when memory usage is below a configurable set of levels or if no levels have
  been set. It shows the available and used memory.
 
-inventory:
+discovery:
  One service per system is created.

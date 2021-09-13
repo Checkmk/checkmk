@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.netapp_api import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # consideration of health status and port speed availability status quo
 discovery_netapp_api_ports_ignored = []
 
@@ -41,12 +42,14 @@ def check_netapp_api_port(item, params, data):
     health_state = data.get("health-status", "unknown")
     status = {"healthy": 0, "unknown": 3}.get(health_state, 2)
     yield status, "Health status: %s, Operational speed: %s" % (
-        health_state, data.get("operational-speed", "undetermined"))
+        health_state,
+        data.get("operational-speed", "undetermined"),
+    )
 
 
 check_info["netapp_api_ports"] = {
-    'check_function': check_netapp_api_port,
-    'inventory_function': discovery_netapp_api_port,
-    'parse_function': parse_netapp_ports,
-    'service_description': '%s',
+    "check_function": check_netapp_api_port,
+    "inventory_function": discovery_netapp_api_port,
+    "parse_function": parse_netapp_ports,
+    "service_description": "%s",
 }

@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.pandacom_temp import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.3652.3.3.3.1.1.2.2 2 --> SPEED-DUALLINE-FC::speedDuallineFCMSlot.2
 # .1.3.6.1.4.1.3652.3.3.3.1.1.2.3 3 --> SPEED-DUALLINE-FC::speedDuallineFCMSlot.3
 # .1.3.6.1.4.1.3652.3.3.3.1.1.7.2 31  --> SPEED-DUALLINE-FC::speedDuallineFCMTemperature.2
@@ -23,22 +25,23 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 # .1.3.6.1.4.1.3652.3.3.3.2.1.14.2 60 --> SPEED-DUALLINE-FC::speedDuallineFCMTempAlarmLevel.2
 # .1.3.6.1.4.1.3652.3.3.3.2.1.14.3 60 --> SPEED-DUALLINE-FC::speedDuallineFCMTempAlarmLevel.3
 
-factory_settings['pandacom_temp_default_levels'] = PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS
+factory_settings["pandacom_temp_default_levels"] = PANDACOM_TEMP_CHECK_DEFAULT_PARAMETERS
 
-check_info['pandacom_fc_temp'] = {
-    'inventory_function': inventory_pandacom_module_temp,
-    'check_function': check_pandacom_module_temp,
-    'service_description': 'Temperature FC Module %s',
-    'has_perfdata': True,
-    'snmp_info': (
+check_info["pandacom_fc_temp"] = {
+    "inventory_function": inventory_pandacom_module_temp,
+    "check_function": check_pandacom_module_temp,
+    "service_description": "Temperature FC Module %s",
+    "has_perfdata": True,
+    "snmp_info": (
         ".1.3.6.1.4.1.3652.3.3.3",
         [
             "1.1.2",  # FCMSlot
             "1.1.7",  # FCMTemperature
             "2.1.13",  # FCMTempWarningLevel
             "2.1.14",  # FCMTempAlarmLevel
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3652.3",
-    'default_levels_variable': "pandacom_temp_default_levels",
-    'group': 'temperature',
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.3652.3",
+    "default_levels_variable": "pandacom_temp_default_levels",
+    "group": "temperature",
 }

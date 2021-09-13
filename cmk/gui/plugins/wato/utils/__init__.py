@@ -7,102 +7,202 @@
 
 # TODO: More feature related splitting up would be better
 
-import os
 import abc
 import json
+import os
 import re
 import subprocess
-from typing import Callable, List, Mapping, Type, Optional as _Optional, Tuple as _Tuple
+from contextlib import nullcontext
+from typing import Callable, cast, ContextManager, Dict, List, Mapping
+from typing import Optional as _Optional
+from typing import Tuple as _Tuple
+from typing import Type
 
 from six import ensure_str
+
+from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.plugin_registry
 from cmk.utils.type_defs import CheckPluginName
 
-import cmk.gui.mkeventd
-import cmk.gui.config as config
-from cmk.gui.config import SiteId, SiteConfiguration, SiteConfigurations
-import cmk.gui.userdb as userdb
 import cmk.gui.backup as backup
+import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
-import cmk.gui.weblib as weblib
-from cmk.gui.pages import page_registry
-from cmk.gui.i18n import _u, _
-from cmk.gui.globals import html, g
-from cmk.gui.utils.html import HTML
-from cmk.gui.type_defs import Choices
-from cmk.gui.exceptions import MKUserError, MKGeneralException
-from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
-from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
-from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
-    ABCPageListOfMultipleGetChoice, Alternative, CascadingDropdown, Checkbox, Dictionary,
-    DocumentationURL, DropdownChoice, DualListChoice, ElementSelection, FixedValue, Float, Integer,
-    Labels, ListChoice, ListOf, ListOfMultiple, ListOfStrings, MonitoredHostname,
-    OptionalDropdownChoice, Password, Percentage, RegExp, RegExpUnicode, RuleComment, TextAscii,
-    TextAsciiAutocomplete, TextUnicode, Transform, Tuple, Url, ValueSpec, ValueSpecHelp,
-    rule_option_elements, SingleLabel,
-)
-from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
-    ActionResult, WatoMode, mode_registry, mode_url, redirect,
-)
-from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: disable=unused-import
-    SimpleEditMode, SimpleListMode, SimpleModeType,
-)
-from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: disable=unused-import
-    search_form,)
-from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disable=unused-import
-    MainMenu, ABCMainModule, MenuItem, WatoModule, main_module_registry, register_modules,
-    MainModuleTopic, MainModuleTopicHosts, MainModuleTopicServices, MainModuleTopicBI,
-    MainModuleTopicAgents, MainModuleTopicEvents, MainModuleTopicUsers, MainModuleTopicGeneral,
-    MainModuleTopicMaintenance, MainModuleTopicCustom,
-)
+import cmk.gui.mkeventd
+import cmk.gui.userdb as userdb
 import cmk.gui.watolib as watolib
-from cmk.gui.watolib.password_store import PasswordStore
-from cmk.gui.watolib.timeperiods import TimeperiodSelection  # noqa: F401 # pylint: disable=unused-import
-from cmk.gui.watolib.users import notification_script_title
+import cmk.gui.weblib as weblib
+from cmk.gui.exceptions import MKGeneralException, MKUserError
+from cmk.gui.globals import config, g, html, request, transactions, user
 from cmk.gui.groups import (
     load_contact_group_information,
     load_host_group_information,
     load_service_group_information,
 )
-from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-import
-    BinaryHostRulespec, BinaryServiceRulespec, CheckParameterRulespecWithItem,
-    CheckParameterRulespecWithoutItem, HostRulespec, ManualCheckParameterRulespec, Rulespec,
-    RulespecGroup, RulespecGroupEnforcedServicesApplications,
-    RulespecGroupEnforcedServicesEnvironment, RulespecGroupEnforcedServicesHardware,
-    RulespecGroupEnforcedServicesNetworking, RulespecGroupEnforcedServicesOperatingSystem,
-    RulespecGroupEnforcedServicesStorage, RulespecGroupEnforcedServicesVirtualization,
-    RulespecSubGroup, ServiceRulespec, TimeperiodValuespec, rulespec_group_registry,
-    rulespec_registry,
+from cmk.gui.htmllib import foldable_container, HTML
+from cmk.gui.i18n import _, _u
+from cmk.gui.pages import page_registry
+from cmk.gui.permissions import permission_section_registry, PermissionSection
+from cmk.gui.plugins.wato.utils.base_modes import (  # noqa: F401 # pylint: disable=unused-import
+    ActionResult,
+    mode_registry,
+    mode_url,
+    redirect,
+    WatoMode,
 )
-from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=unused-import
-    ABCHostAttributeNagiosText, ABCHostAttributeValueSpec, HostAttributeTopicAddress,
-    HostAttributeTopicBasicSettings, HostAttributeTopicCustomAttributes,
-    HostAttributeTopicDataSources, HostAttributeTopicHostTags, HostAttributeTopicManagementBoard,
-    HostAttributeTopicMetaData, HostAttributeTopicNetworkScan, host_attribute_registry,
-    host_attribute_topic_registry,
+from cmk.gui.plugins.wato.utils.html_elements import (  # noqa: F401 # pylint: disable=unused-import
+    search_form,
+)
+from cmk.gui.plugins.wato.utils.main_menu import (  # noqa: F401 # pylint: disable=unused-import
+    ABCMainModule,
+    main_module_registry,
+    MainMenu,
+    MainModuleTopic,
+    MainModuleTopicAgents,
+    MainModuleTopicBI,
+    MainModuleTopicCustom,
+    MainModuleTopicEvents,
+    MainModuleTopicGeneral,
+    MainModuleTopicHosts,
+    MainModuleTopicMaintenance,
+    MainModuleTopicServices,
+    MainModuleTopicUsers,
+    MenuItem,
+    register_modules,
+    WatoModule,
+)
+from cmk.gui.plugins.wato.utils.simple_modes import (  # noqa: F401 # pylint: disable=unused-import
+    SimpleEditMode,
+    SimpleListMode,
+    SimpleModeType,
+)
+from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
+    register_configvar,
+    sample_config_generator_registry,
+    SampleConfigGenerator,
+)
+from cmk.gui.sites import get_activation_site_choices, get_site_config
+from cmk.gui.type_defs import Choices
+from cmk.gui.utils.escaping import escape_html
+from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.utils.urls import make_confirm_link  # noqa: F401 # pylint: disable=unused-import
+from cmk.gui.valuespec import (  # noqa: F401 # pylint: disable=unused-import
+    ABCPageListOfMultipleGetChoice,
+    AjaxDropdownChoice,
+    Alternative,
+    autocompleter_registry,
+    CascadingDropdown,
+    Checkbox,
+    Dictionary,
+    DocumentationURL,
+    DropdownChoice,
+    DualListChoice,
+    ElementSelection,
+    FixedValue,
+    Float,
+    Integer,
+    Labels,
+    ListChoice,
+    ListOf,
+    ListOfMultiple,
+    ListOfStrings,
+    MonitoredHostname,
+    OptionalDropdownChoice,
+    Password,
+    Percentage,
+    RegExp,
+    rule_option_elements,
+    RuleComment,
+    SingleLabel,
+    TextInput,
+    Transform,
+    Tuple,
+    Url,
+    ValueSpec,
+    ValueSpecHelp,
 )
 from cmk.gui.watolib import (  # noqa: F401 # pylint: disable=unused-import
-    ABCConfigDomain, ACResult, ACResultCRIT, ACResultOK, ACResultWARN, ACTest, ACTestCategories,
-    ConfigDomainCACertificates, ConfigDomainCore, ConfigDomainEventConsole, ConfigDomainGUI,
-    ConfigDomainOMD, LivestatusViaTCP, ac_test_registry, add_change, add_replication_paths,
-    config_domain_registry, folder_preserving_link, get_rulegroup, is_wato_slave_site, log_audit,
-    make_action_link, multisite_dir, register_rule, site_neutral_path, user_script_choices,
-    user_script_title, wato_fileheader, wato_root_dir, make_diff_text,
+    ABCConfigDomain,
+    ac_test_registry,
+    ACResult,
+    ACResultCRIT,
+    ACResultOK,
+    ACResultWARN,
+    ACTest,
+    ACTestCategories,
+    add_change,
+    add_replication_paths,
+    config_domain_registry,
+    ConfigDomainCACertificates,
+    ConfigDomainCore,
+    ConfigDomainEventConsole,
+    ConfigDomainGUI,
+    ConfigDomainOMD,
+    folder_preserving_link,
+    get_rulegroup,
+    is_wato_slave_site,
+    LivestatusViaTCP,
+    log_audit,
+    make_action_link,
+    make_diff_text,
+    multisite_dir,
+    register_rule,
+    site_neutral_path,
+    user_script_choices,
+    user_script_title,
+    wato_fileheader,
+    wato_root_dir,
 )
 from cmk.gui.watolib.config_sync import (  # noqa: F401 # pylint: disable=unused-import
-    ReplicationPath,)
-from cmk.gui.plugins.watolib.utils import (  # noqa: F401 # pylint: disable=unused-import
-    ConfigVariable, ConfigVariableGroup, SampleConfigGenerator, config_variable_group_registry,
-    config_variable_registry, register_configvar, sample_config_generator_registry,
+    ReplicationPath,
 )
-
-from cmk.gui.watolib.wato_background_job import WatoBackgroundJob  # noqa: F401 # pylint: disable=unused-import
-
-import cmk.gui.forms as forms
-from cmk.gui.permissions import (
-    PermissionSection,
-    permission_section_registry,
+from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=unused-import
+    ABCHostAttributeNagiosText,
+    ABCHostAttributeValueSpec,
+    host_attribute_registry,
+    host_attribute_topic_registry,
+    HostAttributeTopicAddress,
+    HostAttributeTopicBasicSettings,
+    HostAttributeTopicCustomAttributes,
+    HostAttributeTopicDataSources,
+    HostAttributeTopicHostTags,
+    HostAttributeTopicManagementBoard,
+    HostAttributeTopicMetaData,
+    HostAttributeTopicNetworkScan,
+)
+from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.watolib.rulespecs import (  # noqa: F401 # pylint: disable=unused-import
+    BinaryHostRulespec,
+    BinaryServiceRulespec,
+    CheckParameterRulespecWithItem,
+    CheckParameterRulespecWithoutItem,
+    HostRulespec,
+    ManualCheckParameterRulespec,
+    Rulespec,
+    rulespec_group_registry,
+    rulespec_registry,
+    RulespecGroup,
+    RulespecGroupEnforcedServicesApplications,
+    RulespecGroupEnforcedServicesEnvironment,
+    RulespecGroupEnforcedServicesHardware,
+    RulespecGroupEnforcedServicesNetworking,
+    RulespecGroupEnforcedServicesOperatingSystem,
+    RulespecGroupEnforcedServicesStorage,
+    RulespecGroupEnforcedServicesVirtualization,
+    RulespecSubGroup,
+    ServiceRulespec,
+    TimeperiodValuespec,
+)
+from cmk.gui.watolib.timeperiods import (  # noqa: F401 # pylint: disable=unused-import
+    TimeperiodSelection,
+)
+from cmk.gui.watolib.users import notification_script_title
+from cmk.gui.watolib.wato_background_job import (  # noqa: F401 # pylint: disable=unused-import
+    WatoBackgroundJob,
 )
 
 
@@ -114,23 +214,25 @@ class PermissionSectionWATO(PermissionSection):
 
     @property
     def title(self):
-        return _("WATO - Checkmk's Web Administration Tool")
+        return _("Setup")
 
 
 def PluginCommandLine():
     def _validate_custom_check_command_line(value, varprefix):
         if "--pwstore=" in value:
             raise MKUserError(
-                varprefix, _("You are not allowed to use passwords from the password store here."))
+                varprefix, _("You are not allowed to use passwords from the password store here.")
+            )
 
-    return TextAscii(
+    return TextInput(
         title=_("Command line"),
-        help=
-        _("Please enter the complete shell command including path name and arguments to execute. "
-          "If the plugin you like to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
-          "or <tt>~/lib/nagios/plugins</tt> within your site directory, you can strip the path name and "
-          "just configure the plugin file name as command <tt>check_foobar</tt>.") +
-        monitoring_macro_help(),
+        help=_(
+            "Please enter the complete shell command including path name and arguments to execute. "
+            "If the plugin you like to execute is located in either <tt>~/local/lib/nagios/plugins</tt> "
+            "or <tt>~/lib/nagios/plugins</tt> within your site directory, you can strip the path name and "
+            "just configure the plugin file name as command <tt>check_foobar</tt>."
+        )
+        + monitoring_macro_help(),
         size="max",
         validate=_validate_custom_check_command_line,
     )
@@ -150,19 +252,24 @@ def monitoring_macro_help():
         "All custom attributes defined for the host are available as <tt>$_HOST[VARNAME]$</tt>. "
         "Replace <tt>[VARNAME]</tt> with the <i>upper case</i> name of your variable. "
         "For example, a host attribute named <tt>foo</tt> with the value <tt>bar</tt> would result in "
-        "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> ")
+        "the macro <tt>$_HOSTFOO$</tt> being replaced with <tt>bar</tt> "
+    )
 
 
 def UserIconOrAction(title: str, help: str) -> DropdownChoice:  # pylint: disable=redefined-builtin
-    empty_text = _("In order to be able to choose actions here, you need to "
-                   "<a href=\"%s\">define your own actions</a>.") % \
-                      "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
+    empty_text = (
+        _(
+            "In order to be able to choose actions here, you need to "
+            '<a href="%s">define your own actions</a>.'
+        )
+        % "wato.py?mode=edit_configvar&varname=user_icons_and_actions"
+    )
 
     return DropdownChoice(
         title=title,
         choices=_list_user_icons_and_actions,
         empty_text=empty_text,
-        help=help + ' ' + empty_text,
+        help=help + " " + empty_text,
     )
 
 
@@ -170,22 +277,23 @@ def _list_user_icons_and_actions():
     choices = []
     for key, action in config.user_icons_and_actions.items():
         label = key
-        if 'title' in action:
-            label += ' - ' + action['title']
-        if 'url' in action:
-            label += ' (' + action['url'][0] + ')'
+        if "title" in action:
+            label += " - " + action["title"]
+        if "url" in action:
+            label += " (" + action["url"][0] + ")"
 
         choices.append((key, label))
     return sorted(choices, key=lambda x: x[1])
 
 
 def SNMPCredentials(  # pylint: disable=redefined-builtin
-        title: _Optional[str] = None,
-        help: _Optional[ValueSpecHelp] = None,
-        only_v3: bool = False,
-        default_value: _Optional[str] = "public",
-        allow_none: bool = False,
-        for_ec: bool = False) -> Alternative:
+    title: _Optional[str] = None,
+    help: _Optional[ValueSpecHelp] = None,
+    only_v3: bool = False,
+    default_value: _Optional[str] = "public",
+    allow_none: bool = False,
+    for_ec: bool = False,
+) -> Alternative:
     def alternative_match(x):
         if only_v3:
             # NOTE: Indices are shifted by 1 due to a only_v3 hack below!!
@@ -214,12 +322,14 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
         match = alternative_match
         elements = []
 
-    elements.extend([
-        _snmpv1_v2_credentials_element(),
-        _snmpv3_no_auth_no_priv_credentials_element(),
-        _snmpv3_auth_no_priv_credentials_element(),
-        _snmpv3_auth_priv_credentials_element(for_ec=for_ec),
-    ])
+    elements.extend(
+        [
+            _snmpv1_v2_credentials_element(),
+            _snmpv3_no_auth_no_priv_credentials_element(),
+            _snmpv3_auth_no_priv_credentials_element(),
+            _snmpv3_auth_priv_credentials_element(for_ec=for_ec),
+        ]
+    )
 
     if only_v3:
         # HACK: This shifts the indices in alternative_match above!!
@@ -263,7 +373,7 @@ def _snmpv3_no_auth_no_priv_credentials_element() -> ValueSpec:
                     title=_("Security Level"),
                     totext=_("No authentication, no privacy"),
                 ),
-                TextAscii(title=_("Security name"), attrencode=True, allow_empty=False),
+                TextInput(title=_("Security name"), allow_empty=False),
             ],
         ),
         forth=lambda x: x if (x and len(x) == 2) else ("noAuthNoPriv", ""),
@@ -279,7 +389,8 @@ def _snmpv3_auth_no_priv_credentials_element() -> ValueSpec:
                 title=_("Security Level"),
                 totext=_("authentication but no privacy"),
             ),
-        ] + _snmpv3_auth_protocol_elements(),
+        ]
+        + _snmpv3_auth_protocol_elements(),
     )
 
 
@@ -292,13 +403,15 @@ def _snmpv3_auth_priv_credentials_element(for_ec: bool = False) -> ValueSpec:
         # TODO Remove this var once we use pysnmp in all places
         # EC uses pysnmp which supports these protocols
         # netsnmp/inline + classic does not support these protocols
-        priv_protocol_choices.extend([
-            ("3DES-EDE", _("3DES-EDE")),
-            ("AES-192", _("AES-192")),
-            ("AES-256", _("AES-256")),
-            ("AES-192-Blumenthal", _("AES-192-Blumenthal")),
-            ("AES-256-Blumenthal", _("AES-256-Blumenthal")),
-        ])
+        priv_protocol_choices.extend(
+            [
+                ("3DES-EDE", _("3DES-EDE")),
+                ("AES-192", _("AES-192")),
+                ("AES-256", _("AES-256")),
+                ("AES-192-Blumenthal", _("AES-192-Blumenthal")),
+                ("AES-256-Blumenthal", _("AES-256-Blumenthal")),
+            ]
+        )
 
     return Tuple(
         title=_("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
@@ -308,7 +421,9 @@ def _snmpv3_auth_priv_credentials_element(for_ec: bool = False) -> ValueSpec:
                 title=_("Security Level"),
                 totext=_("authentication and encryption"),
             ),
-        ] + _snmpv3_auth_protocol_elements() + [
+        ]
+        + _snmpv3_auth_protocol_elements()
+        + [
             DropdownChoice(
                 choices=priv_protocol_choices,
                 title=_("Privacy protocol"),
@@ -334,14 +449,13 @@ def _snmpv3_auth_protocol_elements():
             ],
             title=_("Authentication protocol"),
         ),
-        TextAscii(
+        TextInput(
             title=_("Security name"),
-            attrencode=True,
         ),
         Password(
             title=_("Authentication password"),
             minlen=8,
-        )
+        ),
     ]
 
 
@@ -349,14 +463,20 @@ def IPMIParameters() -> Dictionary:
     return Dictionary(
         title=_("IPMI credentials"),
         elements=[
-            ("username", TextAscii(
-                title=_("Username"),
-                allow_empty=False,
-            )),
-            ("password", Password(
-                title=_("Password"),
-                allow_empty=False,
-            )),
+            (
+                "username",
+                TextInput(
+                    title=_("Username"),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "password",
+                Password(
+                    title=_("Password"),
+                    allow_empty=False,
+                ),
+            ),
         ],
         optional_keys=[],
     )
@@ -370,13 +490,19 @@ def HostnameTranslation(**kwargs):
         title=title,
         help=help_txt,
         elements=[
-            ("drop_domain",
-             FixedValue(
-                 True,
-                 title=_("Convert FQHN"),
-                 totext=_("Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"),
-             )),
-        ] + _translation_elements("host"))
+            (
+                "drop_domain",
+                FixedValue(
+                    True,
+                    title=_("Convert FQHN"),
+                    totext=_(
+                        "Drop domain part (<tt>host123.foobar.de</tt> &#8594; <tt>host123</tt>)"
+                    ),
+                ),
+            ),
+        ]
+        + _translation_elements("host"),
+    )
 
 
 def ServiceDescriptionTranslation(**kwargs):
@@ -402,80 +528,89 @@ def _translation_elements(what):
         raise MKGeneralException("No translations found for %s." % what)
 
     return [
-        ("case",
-         DropdownChoice(title=_("Case translation"),
-                        choices=[
-                            (None, _("Do not convert case")),
-                            ("upper", _("Convert %s to upper case") % plural),
-                            ("lower", _("Convert %s to lower case") % plural),
-                        ])),
-        ("regex",
-         Transform(
-             ListOf(
-                 Tuple(
-                     orientation="horizontal",
-                     elements=[
-                         RegExpUnicode(
-                             title=_("Regular expression"),
-                             help=_("Must contain at least one subgroup <tt>(...)</tt>"),
-                             mingroups=0,
-                             maxgroups=9,
-                             size=30,
-                             allow_empty=False,
-                             mode=RegExp.prefix,
-                             case_sensitive=False,
-                         ),
-                         TextUnicode(
-                             title=_("Replacement"),
-                             help=_(
-                                 "Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"
-                             ),
-                             size=30,
-                             allow_empty=False,
-                         )
-                     ],
-                 ),
-                 title=_("Multiple regular expressions"),
-                 help=
-                 _("You can add any number of expressions here which are executed succesively until the first match. "
-                   "Please specify a regular expression in the first field. This expression should at "
-                   "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
-                   "In the second field you specify the translated %s and can refer to the first matched "
-                   "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>. "
-                   "") % singular,
-                 add_label=_("Add expression"),
-                 movable=False,
-             ),
-             forth=lambda x: isinstance(x, tuple) and [x] or x,
-         )),
-        ("mapping",
-         ListOf(
-             Tuple(
-                 orientation="horizontal",
-                 elements=[
-                     TextUnicode(
-                         title=_("Original %s") % singular,
-                         size=30,
-                         allow_empty=False,
-                         attrencode=True,
-                     ),
-                     TextUnicode(
-                         title=_("Translated %s") % singular,
-                         size=30,
-                         allow_empty=False,
-                         attrencode=True,
-                     ),
-                 ],
-             ),
-             title=_("Explicit %s mapping") % singular,
-             help=_(
-                 "If case conversion and regular expression do not work for all cases then you can "
-                 "specify explicity pairs of origin {0} and translated {0} here. This "
-                 "mapping is being applied <b>after</b> the case conversion and <b>after</b> a regular "
-                 "expression conversion (if that matches).").format(singular),
-             add_label=_("Add new mapping"),
-             movable=False,
-         )),
+        (
+            "case",
+            DropdownChoice(
+                title=_("Case translation"),
+                choices=[
+                    (None, _("Do not convert case")),
+                    ("upper", _("Convert %s to upper case") % plural),
+                    ("lower", _("Convert %s to lower case") % plural),
+                ],
+            ),
+        ),
+        (
+            "regex",
+            Transform(
+                ListOf(
+                    Tuple(
+                        orientation="horizontal",
+                        elements=[
+                            RegExp(
+                                title=_("Regular expression"),
+                                help=_("Must contain at least one subgroup <tt>(...)</tt>"),
+                                mingroups=0,
+                                maxgroups=9,
+                                size=30,
+                                allow_empty=False,
+                                mode=RegExp.prefix,
+                                case_sensitive=False,
+                            ),
+                            TextInput(
+                                title=_("Replacement"),
+                                help=_(
+                                    "Use <tt>\\1</tt>, <tt>\\2</tt> etc. to replace matched subgroups"
+                                ),
+                                size=30,
+                                allow_empty=False,
+                            ),
+                        ],
+                    ),
+                    title=_("Multiple regular expressions"),
+                    help=_(
+                        "You can add any number of expressions here which are executed succesively until the first match. "
+                        "Please specify a regular expression in the first field. This expression should at "
+                        "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
+                        "In the second field you specify the translated %s and can refer to the first matched "
+                        "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>. "
+                        ""
+                    )
+                    % singular,
+                    add_label=_("Add expression"),
+                    movable=False,
+                ),
+                forth=lambda x: isinstance(x, tuple) and [x] or x,
+            ),
+        ),
+        (
+            "mapping",
+            ListOf(
+                Tuple(
+                    orientation="horizontal",
+                    elements=[
+                        TextInput(
+                            title=_("Original %s") % singular,
+                            size=30,
+                            allow_empty=False,
+                        ),
+                        TextInput(
+                            title=_("Translated %s") % singular,
+                            size=30,
+                            allow_empty=False,
+                        ),
+                    ],
+                ),
+                title=_("Explicit %s mapping") % singular,
+                help=_(
+                    "If case conversion and regular expression do not work for all cases then you can "
+                    "specify explicity pairs of origin {0} and translated {0} here. This "
+                    "mapping is being applied <b>after</b> the case conversion and <b>after</b> a regular "
+                    "expression conversion (if that matches)."
+                ).format(singular),
+                add_label=_("Add new mapping"),
+                movable=False,
+            ),
+        ),
     ]
 
 
@@ -484,10 +619,14 @@ def _translation_elements(what):
 class _GroupSelection(ElementSelection):
     def __init__(self, what, choices, no_selection=None, **kwargs):
         kwargs.setdefault(
-            'empty_text',
-            _('You have not defined any %s group yet. Please '
-              '<a href="wato.py?mode=edit_%s_group">create</a> at least one first.') % (what, what))
-        super(_GroupSelection, self).__init__(**kwargs)
+            "empty_text",
+            _(
+                "You have not defined any %s group yet. Please "
+                '<a href="wato.py?mode=edit_%s_group">create</a> at least one first.'
+            )
+            % (what, what),
+        )
+        super().__init__(**kwargs)
         self._what = what
         self._choices = choices
         self._no_selection = no_selection
@@ -497,7 +636,7 @@ class _GroupSelection(ElementSelection):
         if self._no_selection:
             # Beware: ElementSelection currently can only handle string
             # keys, so we cannot take 'None' as a value.
-            elements.append(('', self._no_selection))
+            elements.append(("", self._no_selection))
         return dict(elements)
 
 
@@ -532,35 +671,36 @@ def HostGroupChoice(**kwargs):
 
 
 def _sorted_contact_group_choices():
-    cache_id = "sorted_contact_group_choices"
-    if cache_id not in g:
-        g.cache_id = _group_choices(load_contact_group_information())
-    return g.cache_id
+    if "sorted_contact_group_choices" not in g:
+        g.sorted_contact_group_choices = _group_choices(load_contact_group_information())
+    return g.sorted_contact_group_choices
 
 
 def _sorted_service_group_choices():
-    cache_id = "sorted_service_group_choices"
-    if cache_id not in g:
-        g.cache_id = _group_choices(load_service_group_information())
-    return g.cache_id
+    if "sorted_service_group_choices" not in g:
+        g.sorted_service_group_choices = _group_choices(load_service_group_information())
+    return g.sorted_service_group_choices
 
 
 def _sorted_host_group_choices():
-    cache_id = "sorted_host_group_choices"
-    if cache_id not in g:
-        g.cache_id = _group_choices(load_host_group_information())
-    return g.cache_id
+    if "sorted_host_group_choices" not in g:
+        g.sorted_host_group_choices = _group_choices(load_host_group_information())
+    return g.sorted_host_group_choices
 
 
 def _group_choices(group_information):
-    return sorted([(k, t['alias'] and t['alias'] or k) for (k, t) in group_information.items()],
-                  key=lambda x: x[1].lower())
+    return sorted(
+        [(k, t["alias"] and t["alias"] or k) for (k, t) in group_information.items()],
+        key=lambda x: x[1].lower(),
+    )
 
 
 def passwordstore_choices():
     pw_store = PasswordStore()
-    return [(ident, pw["title"])
-            for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading()).items()]
+    return [
+        (ident, pw["title"])
+        for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading()).items()
+    ]
 
 
 def PasswordFromStore(  # pylint: disable=redefined-builtin
@@ -573,20 +713,29 @@ def PasswordFromStore(  # pylint: disable=redefined-builtin
         title=title,
         help=help,
         choices=[
-            ("password", _("Explicit"), Password(
-                allow_empty=allow_empty,
-                size=size,
-            )),
-            ("store", _("From password store"),
-             DropdownChoice(
-                 choices=passwordstore_choices,
-                 sorted=True,
-                 invalid_choice="complain",
-                 invalid_choice_title=_("Password does not exist or using not permitted"),
-                 invalid_choice_error=_("The configured password has either be removed or you "
-                                        "are not permitted to use this password. Please choose "
-                                        "another one."),
-             )),
+            (
+                "password",
+                _("Explicit"),
+                Password(
+                    allow_empty=allow_empty,
+                    size=size,
+                ),
+            ),
+            (
+                "store",
+                _("From password store"),
+                DropdownChoice(
+                    choices=passwordstore_choices,
+                    sorted=True,
+                    invalid_choice="complain",
+                    invalid_choice_title=_("Password does not exist or using not permitted"),
+                    invalid_choice_error=_(
+                        "The configured password has either be removed or you "
+                        "are not permitted to use this password. Please choose "
+                        "another one."
+                    ),
+                ),
+            ),
         ],
         orientation="horizontal",
     )
@@ -612,6 +761,7 @@ def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
 def HTTPProxyReference():
     """Use this valuespec in case you want the user to configure a HTTP proxy
     The configured value is is used for preparing requests to work in a proxied environment."""
+
     def _global_proxy_choices():
         settings = watolib.ConfigDomainCore().load()
         return [(p["ident"], p["title"]) for p in settings.get("http_proxies", {}).values()]
@@ -620,29 +770,40 @@ def HTTPProxyReference():
         title=_("HTTP proxy"),
         default_value=("environment", "environment"),
         choices=[
-            ("environment", _("Use from environment"),
-             FixedValue(
-                 "environment",
-                 help=
-                 _("Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
-                   "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
-                   "Have a look at the python requests module documentation for further information. Note "
-                   "that these variables must be defined as a site-user in ~/etc/environment and that "
-                   "this might affect other notification methods which also use the requests module."
-                  ),
-                 totext=_("Use proxy settings from the process environment"),
-             )),
-            ("no_proxy", _("Connect without proxy"),
-             FixedValue(
-                 None,
-                 totext=_("Connect directly to the destination instead of using a proxy. "
-                          "This is the default."),
-             )),
-            ("global", _("Use globally configured proxy"),
-             DropdownChoice(
-                 choices=_global_proxy_choices,
-                 sorted=True,
-             )),
+            (
+                "environment",
+                _("Use from environment"),
+                FixedValue(
+                    "environment",
+                    help=_(
+                        "Use the proxy settings from the environment variables. The variables <tt>NO_PROXY</tt>, "
+                        "<tt>HTTP_PROXY</tt> and <tt>HTTPS_PROXY</tt> are taken into account during execution. "
+                        "Have a look at the python requests module documentation for further information. Note "
+                        "that these variables must be defined as a site-user in ~/etc/environment and that "
+                        "this might affect other notification methods which also use the requests module."
+                    ),
+                    totext=_("Use proxy settings from the process environment"),
+                ),
+            ),
+            (
+                "no_proxy",
+                _("Connect without proxy"),
+                FixedValue(
+                    None,
+                    totext=_(
+                        "Connect directly to the destination instead of using a proxy. "
+                        "This is the default."
+                    ),
+                ),
+            ),
+            (
+                "global",
+                _("Use globally configured proxy"),
+                DropdownChoice(
+                    choices=_global_proxy_choices,
+                    sorted=True,
+                ),
+            ),
             ("url", _("Use explicit proxy settings"), HTTPProxyInput()),
         ],
         sorted=False,
@@ -658,20 +819,23 @@ def HTTPProxyInput():
     )
 
 
-def register_check_parameters(subgroup,
-                              checkgroup,
-                              title,
-                              valuespec,
-                              itemspec,
-                              match_type,
-                              has_inventory=True,
-                              register_static_check=True,
-                              deprecated=False):
+def register_check_parameters(
+    subgroup,
+    checkgroup,
+    title,
+    valuespec,
+    itemspec,
+    match_type,
+    has_inventory=True,
+    register_static_check=True,
+    deprecated=False,
+):
     """Legacy registration of check parameters"""
     if valuespec and isinstance(valuespec, Dictionary) and match_type != "dict":
         raise MKGeneralException(
-            "Check parameter definition for %s has type Dictionary, but match_type %s" %
-            (checkgroup, match_type))
+            "Check parameter definition for %s has type Dictionary, but match_type %s"
+            % (checkgroup, match_type)
+        )
 
     if not valuespec:
         raise NotImplementedError()
@@ -696,15 +860,21 @@ def register_check_parameters(subgroup,
         if itemspec:
             kwargs["item_spec"] = lambda: itemspec
 
-        base_class = CheckParameterRulespecWithItem if itemspec is not None else CheckParameterRulespecWithoutItem
+        base_class = (
+            CheckParameterRulespecWithItem
+            if itemspec is not None
+            else CheckParameterRulespecWithoutItem
+        )
 
         rulespec_registry.register(base_class(**kwargs))
 
     if not (valuespec and has_inventory) and register_static_check:
-        raise MKGeneralException("Sorry, registering manual check parameters without discovery "
-                                 "check parameters is not supported anymore using the old API. "
-                                 "Please register the manual check rulespec using the new API. "
-                                 "Checkgroup: %s" % checkgroup)
+        raise MKGeneralException(
+            "Sorry, registering manual check parameters without discovery "
+            "check parameters is not supported anymore using the old API. "
+            "Please register the manual check rulespec using the new API. "
+            "Checkgroup: %s" % checkgroup
+        )
 
 
 @rulespec_group_registry.register
@@ -719,10 +889,12 @@ class RulespecGroupMonitoringConfiguration(RulespecGroup):
 
     @property
     def help(self):
-        return _("Rules to configure existing services in the monitoring. For "
-                 "example, threshold values can be set, the execution time for "
-                 "active checks can be configured or attributes such as labels "
-                 "or tags can be assigned to the services.")
+        return _(
+            "Rules to configure existing services in the monitoring. For "
+            "example, threshold values can be set, the execution time for "
+            "active checks can be configured or attributes such as labels "
+            "or tags can be assigned to the services."
+        )
 
 
 @rulespec_group_registry.register
@@ -737,12 +909,14 @@ class RulespecGroupDiscoveryCheckParameters(RulespecGroup):
 
     @property
     def help(self):
-        return _("Rules that influence the discovery of services. These rules "
-                 "allow, for example, the execution of a periodic service "
-                 "discovery or the deactivation of check plugins and services. "
-                 "Additionally, the discovery of individual check plugins like "
-                 "for example the interface check plugin can "
-                 "be customized.")
+        return _(
+            "Rules that influence the discovery of services. These rules "
+            "allow, for example, the execution of a periodic service "
+            "discovery or the deactivation of check plugins and services. "
+            "Additionally, the discovery of individual check plugins like "
+            "for example the interface check plugin can "
+            "be customized."
+        )
 
 
 @rulespec_group_registry.register
@@ -891,108 +1065,191 @@ def PredictiveLevels(**args):
     return Dictionary(
         title=_("Predictive Levels (only on CMC)"),
         optional_keys=[
-            "weight", "levels_upper", "levels_upper_min", "levels_lower", "levels_lower_max"
+            "weight",
+            "levels_upper",
+            "levels_upper_min",
+            "levels_lower",
+            "levels_lower_max",
         ],
         default_keys=["levels_upper"],
         columns=1,
         elements=[
-            ("period",
-             DropdownChoice(title=_("Base prediction on"),
-                            choices=[
-                                ("wday", _("Day of the week (1-7, 1 is Monday)")),
-                                ("day", _("Day of the month (1-31)")),
-                                ("hour", _("Hour of the day (0-23)")),
-                                ("minute", _("Minute of the hour (0-59)")),
-                            ])),
-            ("horizon",
-             Integer(
-                 title=_("Time horizon"),
-                 unit=_("days"),
-                 minvalue=1,
-                 default_value=90,
-             )),
+            (
+                "period",
+                DropdownChoice(
+                    title=_("Base prediction on"),
+                    choices=[
+                        ("wday", _("Day of the week (1-7, 1 is Monday)")),
+                        ("day", _("Day of the month (1-31)")),
+                        ("hour", _("Hour of the day (0-23)")),
+                        ("minute", _("Minute of the hour (0-59)")),
+                    ],
+                ),
+            ),
+            (
+                "horizon",
+                Integer(
+                    title=_("Time horizon"),
+                    unit=_("days"),
+                    minvalue=1,
+                    default_value=90,
+                ),
+            ),
             # ( "weight",
             #   Percentage(
             #       title = _("Raise weight of recent time"),
             #       label = _("by"),
             #       default_value = 0,
             # )),
-            ("levels_upper",
-             CascadingDropdown(
-                 title=_("Dynamic levels - upper bound"),
-                 choices=[
-                     ("absolute", _("Absolute difference from prediction"),
-                      Tuple(elements=[
-                          Float(title=_("Warning at"),
-                                unit=unitname + _("above predicted value"),
-                                default_value=dif[0]),
-                          Float(title=_("Critical at"),
-                                unit=unitname + _("above predicted value"),
-                                default_value=dif[1]),
-                      ])),
-                     ("relative", _("Relative difference from prediction"),
-                      Tuple(elements=[
-                          Percentage(title=_("Warning at"),
-                                     unit=_("% above predicted value"),
-                                     default_value=10),
-                          Percentage(title=_("Critical at"),
-                                     unit=_("% above predicted value"),
-                                     default_value=20),
-                      ])),
-                     ("stdev", _("In relation to standard deviation"),
-                      Tuple(elements=[
-                          Float(title=_("Warning at"),
-                                unit=_("times the standard deviation above the predicted value"),
-                                default_value=2.0),
-                          Float(title=_("Critical at"),
-                                unit=_("times the standard deviation above the predicted value"),
-                                default_value=4.0),
-                      ])),
-                 ])),
-            ("levels_upper_min",
-             Tuple(
-                 title=_("Limit for upper bound dynamic levels"),
-                 help=_(
-                     "Regardless of how the dynamic levels upper bound are computed according to the prediction: "
-                     "the will never be set below the following limits. This avoids false alarms "
-                     "during times where the predicted levels would be very low."),
-                 elements=[
-                     Float(title=_("Warning level is at least"), unit=unitname),
-                     Float(title=_("Critical level is at least"), unit=unitname),
-                 ])),
-            ("levels_lower",
-             CascadingDropdown(
-                 title=_("Dynamic levels - lower bound"),
-                 choices=[
-                     ("absolute", _("Absolute difference from prediction"),
-                      Tuple(elements=[
-                          Float(title=_("Warning at"),
-                                unit=unitname + _("below predicted value"),
-                                default_value=2.0),
-                          Float(title=_("Critical at"),
-                                unit=unitname + _("below predicted value"),
-                                default_value=4.0),
-                      ])),
-                     ("relative", _("Relative difference from prediction"),
-                      Tuple(elements=[
-                          Percentage(title=_("Warning at"),
-                                     unit=_("% below predicted value"),
-                                     default_value=10),
-                          Percentage(title=_("Critical at"),
-                                     unit=_("% below predicted value"),
-                                     default_value=20),
-                      ])),
-                     ("stdev", _("In relation to standard deviation"),
-                      Tuple(elements=[
-                          Float(title=_("Warning at"),
-                                unit=_("times the standard deviation below the predicted value"),
-                                default_value=2.0),
-                          Float(title=_("Critical at"),
-                                unit=_("times the standard deviation below the predicted value"),
-                                default_value=4.0),
-                      ])),
-                 ])),
-        ])
+            (
+                "levels_upper",
+                CascadingDropdown(
+                    title=_("Dynamic levels - upper bound"),
+                    choices=[
+                        (
+                            "absolute",
+                            _("Absolute difference from prediction"),
+                            Tuple(
+                                elements=[
+                                    Float(
+                                        title=_("Warning at"),
+                                        unit=unitname + _("above predicted value"),
+                                        default_value=dif[0],
+                                    ),
+                                    Float(
+                                        title=_("Critical at"),
+                                        unit=unitname + _("above predicted value"),
+                                        default_value=dif[1],
+                                    ),
+                                ]
+                            ),
+                        ),
+                        (
+                            "relative",
+                            _("Relative difference from prediction"),
+                            Tuple(
+                                elements=[
+                                    Percentage(
+                                        title=_("Warning at"),
+                                        unit=_("% above predicted value"),
+                                        default_value=10,
+                                    ),
+                                    Percentage(
+                                        title=_("Critical at"),
+                                        unit=_("% above predicted value"),
+                                        default_value=20,
+                                    ),
+                                ]
+                            ),
+                        ),
+                        (
+                            "stdev",
+                            _("In relation to standard deviation"),
+                            Tuple(
+                                elements=[
+                                    Float(
+                                        title=_("Warning at"),
+                                        unit=_(
+                                            "times the standard deviation above the predicted value"
+                                        ),
+                                        default_value=2.0,
+                                    ),
+                                    Float(
+                                        title=_("Critical at"),
+                                        unit=_(
+                                            "times the standard deviation above the predicted value"
+                                        ),
+                                        default_value=4.0,
+                                    ),
+                                ]
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "levels_upper_min",
+                Tuple(
+                    title=_("Limit for upper bound dynamic levels"),
+                    help=_(
+                        "Regardless of how the dynamic levels upper bound are computed according to the prediction: "
+                        "the will never be set below the following limits. This avoids false alarms "
+                        "during times where the predicted levels would be very low."
+                    ),
+                    elements=[
+                        Float(title=_("Warning level is at least"), unit=unitname),
+                        Float(title=_("Critical level is at least"), unit=unitname),
+                    ],
+                ),
+            ),
+            (
+                "levels_lower",
+                CascadingDropdown(
+                    title=_("Dynamic levels - lower bound"),
+                    choices=[
+                        (
+                            "absolute",
+                            _("Absolute difference from prediction"),
+                            Tuple(
+                                elements=[
+                                    Float(
+                                        title=_("Warning at"),
+                                        unit=unitname + _("below predicted value"),
+                                        default_value=2.0,
+                                    ),
+                                    Float(
+                                        title=_("Critical at"),
+                                        unit=unitname + _("below predicted value"),
+                                        default_value=4.0,
+                                    ),
+                                ]
+                            ),
+                        ),
+                        (
+                            "relative",
+                            _("Relative difference from prediction"),
+                            Tuple(
+                                elements=[
+                                    Percentage(
+                                        title=_("Warning at"),
+                                        unit=_("% below predicted value"),
+                                        default_value=10,
+                                    ),
+                                    Percentage(
+                                        title=_("Critical at"),
+                                        unit=_("% below predicted value"),
+                                        default_value=20,
+                                    ),
+                                ]
+                            ),
+                        ),
+                        (
+                            "stdev",
+                            _("In relation to standard deviation"),
+                            Tuple(
+                                elements=[
+                                    Float(
+                                        title=_("Warning at"),
+                                        unit=_(
+                                            "times the standard deviation below the predicted value"
+                                        ),
+                                        default_value=2.0,
+                                    ),
+                                    Float(
+                                        title=_("Critical at"),
+                                        unit=_(
+                                            "times the standard deviation below the predicted value"
+                                        ),
+                                        default_value=4.0,
+                                    ),
+                                ]
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+        ],
+    )
 
 
 # To be used as ValueSpec for levels on numeric values, with
@@ -1040,7 +1297,9 @@ def Levels(**kwargs):
                     ),
                 ],
             ),
-            PredictiveLevels(default_difference=default_difference,),
+            PredictiveLevels(
+                default_difference=default_difference,
+            ),
         ],
         match=match_levels_alternative,
         default_value=default_value,
@@ -1064,10 +1323,12 @@ def valuespec_check_plugin_selection(
         ),
         # omit empty mgmt key
         forth=lambda list_: {
-            k: v for k, v in (
+            k: v
+            for k, v in (
                 ("host", [name for name in list_ if not name.startswith("mgmt_")]),
                 ("mgmt", [name[5:] for name in list_ if name.startswith("mgmt_")]),
-            ) if v or k == "host"
+            )
+            if v or k == "host"
         },
         back=lambda dict_: dict_["host"] + [f"mgmt_{n}" for n in dict_.get("mgmt", ())],
     )
@@ -1093,37 +1354,39 @@ class _CheckTypeMgmtSelection(DualListChoice):
 
     def get_elements(self):
         checks = get_check_information()
-        return [(str(cn.create_basic_name()), (str(cn) + " - " + ensure_str(c["title"]))[:60])
-                for (cn, c) in checks.items()]
+        return [
+            (str(cn.create_basic_name()), (str(cn) + " - " + ensure_str(c["title"]))[:60])
+            for (cn, c) in checks.items()
+        ]
 
 
-class ConfigHostname(TextAsciiAutocomplete):
+@autocompleter_registry.register
+class ConfigHostname(AjaxDropdownChoice):
     """Hostname input with dropdown completion
 
     Renders an input field for entering a host name while providing an auto completion dropdown field.
     Fetching the choices from the current WATO config"""
+
     ident = "config_hostname"
 
-    def __init__(self, **kwargs):
-        super(ConfigHostname, self).__init__(completion_ident=self.ident,
-                                             completion_params={},
-                                             **kwargs)
-
     @classmethod
-    def autocomplete_choices(cls, value, params):
+    def autocomplete_choices(cls, value: str, params: Dict) -> Choices:
         """Return the matching list of dropdown choices
         Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-        all_hosts = watolib.Host.all()
+        all_hosts: Dict[str, watolib.CREHost] = watolib.Host.all()
         match_pattern = re.compile(value, re.IGNORECASE)
-        match_list = []
+        match_list: Choices = []
         for host_name, host_object in all_hosts.items():
             if match_pattern.search(host_name) is not None and host_object.may("read"):
-                match_list.append(tuple((host_name, host_name)))
+                match_list.append((host_name, host_name))
+
+        if not any(x[0] == value for x in match_list):
+            match_list.insert(0, (value, value))  # User is allowed to enter anything they want
 
         return match_list
 
 
-class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
+class ABCEventsMode(WatoMode, abc.ABC):
     @classmethod
     @abc.abstractmethod
     def _rule_match_conditions(cls):
@@ -1134,178 +1397,224 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
     def _event_rule_match_conditions(cls, flavour):
         if flavour == "notify":
             add_choices = [
-                ('f', _("Start or end of flapping state")),
-                ('s', _("Start or end of a scheduled downtime")),
-                ('x', _("Acknowledgement of problem")),
-                ('as', _("Alert handler execution, successful")),
-                ('af', _("Alert handler execution, failed")),
+                ("f", _("Start or end of flapping state")),
+                ("s", _("Start or end of a scheduled downtime")),
+                ("x", _("Acknowledgement of problem")),
+                ("as", _("Alert handler execution, successful")),
+                ("af", _("Alert handler execution, failed")),
             ]
-            add_default = ['f', 's', 'x', 'as', 'af']
+            add_default = ["f", "s", "x", "as", "af"]
         else:
             add_choices = []
             add_default = []
 
         return [
-            ("match_host_event",
-             ListChoice(
-                 title=_("Match host event type"),
-                 help=
-                 (_("Select the host event types and transitions this rule should handle.<br>"
-                    "Note: If you activate this option and do <b>not</b> also specify service event "
-                    "types then this rule will never hold for service notifications!<br>"
-                    "Note: You can only match on event types <a href=\"%s\">created by the core</a>."
-                   ) % "wato.py?mode=edit_ruleset&varname=extra_host_conf%3Anotification_options"),
-                 choices=[
-                     ('rd', _("UP") + u" ➤ " + _("DOWN")),
-                     ('ru', _("UP") + u" ➤ " + _("UNREACHABLE")),
-                     ('dr', _("DOWN") + u" ➤ " + _("UP")),
-                     ('du', _("DOWN") + u" ➤ " + _("UNREACHABLE")),
-                     ('ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
-                     ('ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
-                     ('?r', _("any") + u" ➤ " + _("UP")),
-                     ('?d', _("any") + u" ➤ " + _("DOWN")),
-                     ('?u', _("any") + u" ➤ " + _("UNREACHABLE")),
-                 ] + add_choices,
-                 default_value=[
-                     'rd',
-                     'dr',
-                 ] + add_default,
-             )),
-            ("match_service_event",
-             ListChoice(
-                 title=_("Match service event type"),
-                 help=(_(
-                     "Select the service event types and transitions this rule should handle.<br>"
-                     "Note: If you activate this option and do <b>not</b> also specify host event "
-                     "types then this rule will never hold for host notifications!<br>"
-                     "Note: You can only match on event types <a href=\"%s\">created by the core</a>."
-                 ) % "wato.py?mode=edit_ruleset&varname=extra_service_conf%3Anotification_options"),
-                 choices=[
-                     ('rw', _("OK") + u" ➤ " + _("WARN")),
-                     ('rr', _("OK") + u" ➤ " + _("OK")),
-                     ('rc', _("OK") + u" ➤ " + _("CRIT")),
-                     ('ru', _("OK") + u" ➤ " + _("UNKNOWN")),
-                     ('wr', _("WARN") + u" ➤ " + _("OK")),
-                     ('wc', _("WARN") + u" ➤ " + _("CRIT")),
-                     ('wu', _("WARN") + u" ➤ " + _("UNKNOWN")),
-                     ('cr', _("CRIT") + u" ➤ " + _("OK")),
-                     ('cw', _("CRIT") + u" ➤ " + _("WARN")),
-                     ('cu', _("CRIT") + u" ➤ " + _("UNKNOWN")),
-                     ('ur', _("UNKNOWN") + u" ➤ " + _("OK")),
-                     ('uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
-                     ('uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
-                     ('?r', _("any") + u" ➤ " + _("OK")),
-                     ('?w', _("any") + u" ➤ " + _("WARN")),
-                     ('?c', _("any") + u" ➤ " + _("CRIT")),
-                     ('?u', _("any") + u" ➤ " + _("UNKNOWN")),
-                 ] + add_choices,
-                 default_value=[
-                     'rw',
-                     'rc',
-                     'ru',
-                     'wc',
-                     'wu',
-                     'uc',
-                 ] + add_default,
-             )),
+            (
+                "match_host_event",
+                ListChoice(
+                    title=_("Match host event type"),
+                    help=(
+                        _(
+                            "Select the host event types and transitions this rule should handle.<br>"
+                            "Note: If you activate this option and do <b>not</b> also specify service event "
+                            "types then this rule will never hold for service notifications!<br>"
+                            'Note: You can only match on event types <a href="%s">created by the core</a>.'
+                        )
+                        % "wato.py?mode=edit_ruleset&varname=extra_host_conf%3Anotification_options"
+                    ),
+                    choices=[
+                        ("rd", _("UP") + " ➤ " + _("DOWN")),
+                        ("ru", _("UP") + " ➤ " + _("UNREACHABLE")),
+                        ("dr", _("DOWN") + " ➤ " + _("UP")),
+                        ("du", _("DOWN") + " ➤ " + _("UNREACHABLE")),
+                        ("ud", _("UNREACHABLE") + " ➤ " + _("DOWN")),
+                        ("ur", _("UNREACHABLE") + " ➤ " + _("UP")),
+                        ("?r", _("any") + " ➤ " + _("UP")),
+                        ("?d", _("any") + " ➤ " + _("DOWN")),
+                        ("?u", _("any") + " ➤ " + _("UNREACHABLE")),
+                    ]
+                    + add_choices,
+                    default_value=[
+                        "rd",
+                        "dr",
+                    ]
+                    + add_default,
+                ),
+            ),
+            (
+                "match_service_event",
+                ListChoice(
+                    title=_("Match service event type"),
+                    help=(
+                        _(
+                            "Select the service event types and transitions this rule should handle.<br>"
+                            "Note: If you activate this option and do <b>not</b> also specify host event "
+                            "types then this rule will never hold for host notifications!<br>"
+                            'Note: You can only match on event types <a href="%s">created by the core</a>.'
+                        )
+                        % "wato.py?mode=edit_ruleset&varname=extra_service_conf%3Anotification_options"
+                    ),
+                    choices=[
+                        ("rw", _("OK") + " ➤ " + _("WARN")),
+                        ("rr", _("OK") + " ➤ " + _("OK")),
+                        ("rc", _("OK") + " ➤ " + _("CRIT")),
+                        ("ru", _("OK") + " ➤ " + _("UNKNOWN")),
+                        ("wr", _("WARN") + " ➤ " + _("OK")),
+                        ("wc", _("WARN") + " ➤ " + _("CRIT")),
+                        ("wu", _("WARN") + " ➤ " + _("UNKNOWN")),
+                        ("cr", _("CRIT") + " ➤ " + _("OK")),
+                        ("cw", _("CRIT") + " ➤ " + _("WARN")),
+                        ("cu", _("CRIT") + " ➤ " + _("UNKNOWN")),
+                        ("ur", _("UNKNOWN") + " ➤ " + _("OK")),
+                        ("uw", _("UNKNOWN") + " ➤ " + _("WARN")),
+                        ("uc", _("UNKNOWN") + " ➤ " + _("CRIT")),
+                        ("?r", _("any") + " ➤ " + _("OK")),
+                        ("?w", _("any") + " ➤ " + _("WARN")),
+                        ("?c", _("any") + " ➤ " + _("CRIT")),
+                        ("?u", _("any") + " ➤ " + _("UNKNOWN")),
+                    ]
+                    + add_choices,
+                    default_value=[
+                        "rw",
+                        "rc",
+                        "ru",
+                        "wc",
+                        "wu",
+                        "uc",
+                    ]
+                    + add_default,
+                ),
+            ),
         ]
 
     @classmethod
     def _generic_rule_match_conditions(cls):
         return _simple_host_rule_match_conditions() + [
-            ("match_servicelabels",
-             Labels(
-                 Labels.World.CORE,
-                 title=_("Match service labels"),
-                 help=_(
-                     "Use this condition to select hosts based on the configured service labels."),
-             )),
-            ("match_servicegroups",
-             ServiceGroupChoice(
-                 title=_("Match service groups"),
-                 help=_(
-                     "The service must be in one of the selected service groups. For host events this condition "
-                     "never matches as soon as at least one group is selected."),
-                 allow_empty=False,
-             )),
-            ("match_exclude_servicegroups",
-             ServiceGroupChoice(
-                 title=_("Exclude service groups"),
-                 help=_(
-                     "The service must not be in one of the selected service groups. For host events this condition "
-                     "is simply ignored."),
-                 allow_empty=False,
-             )),
-            ("match_servicegroups_regex",
-             Tuple(
-                 title=_("Match service groups (regex)"),
-                 elements=[
-                     DropdownChoice(choices=[("match_id", _("Match the internal identifier")),
-                                             ("match_alias", _("Match the alias"))],
-                                    default_value="match_id"),
-                     ListOfStrings(
-                         help=
-                         _("The service group alias must match one of the following regular expressions."
-                           " For host events this condition never matches as soon as at least one group is selected."
-                          ),
-                         valuespec=RegExpUnicode(
-                             size=32,
-                             mode=RegExpUnicode.infix,
-                         ),
-                         orientation="horizontal",
-                     )
-                 ])),
-            ("match_exclude_servicegroups_regex",
-             Tuple(
-                 title=_("Exclude service groups (regex)"),
-                 elements=[
-                     DropdownChoice(choices=[("match_id", _("Match the internal identifier")),
-                                             ("match_alias", _("Match the alias"))],
-                                    default_value="match_id"),
-                     ListOfStrings(
-                         help=_(
-                             "The service group alias must not match one of the following regular expressions. "
-                             "For host events this condition is simply ignored."),
-                         valuespec=RegExpUnicode(
-                             size=32,
-                             mode=RegExpUnicode.infix,
-                         ),
-                         orientation="horizontal",
-                     )
-                 ])),
-            ("match_services",
-             ListOfStrings(
-                 title=_("Match services"),
-                 help=
-                 _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
-                   "service name in order for the rule to match. Note: Host notifications never match this "
-                   "rule if this option is being used."),
-                 valuespec=RegExpUnicode(
-                     size=32,
-                     mode=RegExpUnicode.prefix,
-                 ),
-                 orientation="horizontal",
-                 allow_empty=False,
-                 empty_text=
-                 _("Please specify at least one service regex. Disable the option if you want to allow all services."
-                  ),
-             )),
-            ("match_exclude_services",
-             ListOfStrings(
-                 title=_("Exclude services"),
-                 valuespec=RegExpUnicode(
-                     size=32,
-                     mode=RegExpUnicode.prefix,
-                 ),
-                 orientation="horizontal",
-             )),
-            ("match_checktype",
-             valuespec_check_plugin_selection(
-                 title=_("Match check types"),
-                 help_=
-                 _("Only apply the rule if the notification originates from certain types of check plugins. "
-                   "Note: Host notifications never match this rule if this option is being used."),
-             )),
+            (
+                "match_servicelabels",
+                Labels(
+                    Labels.World.CORE,
+                    title=_("Match service labels"),
+                    help=_(
+                        "Use this condition to select hosts based on the configured service labels."
+                    ),
+                ),
+            ),
+            (
+                "match_servicegroups",
+                ServiceGroupChoice(
+                    title=_("Match service groups"),
+                    help=_(
+                        "The service must be in one of the selected service groups. For host events this condition "
+                        "never matches as soon as at least one group is selected."
+                    ),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "match_exclude_servicegroups",
+                ServiceGroupChoice(
+                    title=_("Exclude service groups"),
+                    help=_(
+                        "The service must not be in one of the selected service groups. For host events this condition "
+                        "is simply ignored."
+                    ),
+                    allow_empty=False,
+                ),
+            ),
+            (
+                "match_servicegroups_regex",
+                Tuple(
+                    title=_("Match service groups (regex)"),
+                    elements=[
+                        DropdownChoice(
+                            choices=[
+                                ("match_id", _("Match the internal identifier")),
+                                ("match_alias", _("Match the alias")),
+                            ],
+                            default_value="match_id",
+                        ),
+                        ListOfStrings(
+                            help=_(
+                                "The service group alias must match one of the following regular expressions."
+                                " For host events this condition never matches as soon as at least one group is selected."
+                            ),
+                            valuespec=RegExp(
+                                size=32,
+                                mode=RegExp.infix,
+                            ),
+                            orientation="horizontal",
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "match_exclude_servicegroups_regex",
+                Tuple(
+                    title=_("Exclude service groups (regex)"),
+                    elements=[
+                        DropdownChoice(
+                            choices=[
+                                ("match_id", _("Match the internal identifier")),
+                                ("match_alias", _("Match the alias")),
+                            ],
+                            default_value="match_id",
+                        ),
+                        ListOfStrings(
+                            help=_(
+                                "The service group alias must not match one of the following regular expressions. "
+                                "For host events this condition is simply ignored."
+                            ),
+                            valuespec=RegExp(
+                                size=32,
+                                mode=RegExp.infix,
+                            ),
+                            orientation="horizontal",
+                        ),
+                    ],
+                ),
+            ),
+            (
+                "match_services",
+                ListOfStrings(
+                    title=_("Match services"),
+                    help=_(
+                        "Specify a list of regular expressions that must match the <b>beginning</b> of the "
+                        "service name in order for the rule to match. Note: Host notifications never match this "
+                        "rule if this option is being used."
+                    ),
+                    valuespec=RegExp(
+                        size=32,
+                        mode=RegExp.prefix,
+                    ),
+                    orientation="horizontal",
+                    allow_empty=False,
+                    empty_text=_(
+                        "Please specify at least one service regex. Disable the option if you want to allow all services."
+                    ),
+                ),
+            ),
+            (
+                "match_exclude_services",
+                ListOfStrings(
+                    title=_("Exclude services"),
+                    valuespec=RegExp(
+                        size=32,
+                        mode=RegExp.prefix,
+                    ),
+                    orientation="horizontal",
+                ),
+            ),
+            (
+                "match_checktype",
+                valuespec_check_plugin_selection(
+                    title=_("Match check types"),
+                    help_=_(
+                        "Only apply the rule if the notification originates from certain types of check plugins. "
+                        "Note: Host notifications never match this rule if this option is being used."
+                    ),
+                ),
+            ),
             (
                 "match_plugin_output",
                 RegExp(
@@ -1314,26 +1623,31 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                         "This text is a regular expression that is being searched in the output "
                         "of the check plugins that produced the alert. It is not a prefix but an infix match."
                     ),
-                    mode=RegExpUnicode.prefix,
+                    mode=RegExp.prefix,
                 ),
             ),
-            ("match_contacts",
-             ListOf(
-                 userdb.UserSelection(only_contacts=True),
-                 title=_("Match contacts"),
-                 help=_("The host/service must have one of the selected contacts."),
-                 movable=False,
-                 allow_empty=False,
-                 add_label=_("Add contact"),
-             )),
-            ("match_contactgroups",
-             ContactGroupChoice(
-                 title=_("Match contact groups"),
-                 help=_(
-                     "The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. "
-                     "If you don't use the CMC that filter will not apply"),
-                 allow_empty=False,
-             )),
+            (
+                "match_contacts",
+                ListOf(
+                    userdb.UserSelection(only_contacts=True),
+                    title=_("Match contacts"),
+                    help=_("The host/service must have one of the selected contacts."),
+                    movable=False,
+                    allow_empty=False,
+                    add_label=_("Add contact"),
+                ),
+            ),
+            (
+                "match_contactgroups",
+                ContactGroupChoice(
+                    title=_("Match contact groups"),
+                    help=_(
+                        "The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. "
+                        "If you don't use the CMC that filter will not apply"
+                    ),
+                    allow_empty=False,
+                ),
+            ),
             (
                 "match_sl",
                 Tuple(
@@ -1344,12 +1658,16 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                     orientation="horizontal",
                     show_titles=False,
                     elements=[
-                        DropdownChoice(label=_("from:"),
-                                       choices=cmk.gui.mkeventd.service_levels,
-                                       prefix_values=True),
-                        DropdownChoice(label=_(" to:"),
-                                       choices=cmk.gui.mkeventd.service_levels,
-                                       prefix_values=True),
+                        DropdownChoice(
+                            label=_("from:"),
+                            choices=cmk.gui.mkeventd.service_levels,
+                            prefix_values=True,
+                        ),
+                        DropdownChoice(
+                            label=_(" to:"),
+                            choices=cmk.gui.mkeventd.service_levels,
+                            prefix_values=True,
+                        ),
                     ],
                 ),
             ),
@@ -1359,7 +1677,8 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
                     title=_("Match only during timeperiod"),
                     help=_(
                         "Match this rule only during times where the selected timeperiod from the monitoring "
-                        "system is active."),
+                        "system is active."
+                    ),
                     no_preselect=True,
                     no_preselect_title=_("Select a timeperiod"),
                 ),
@@ -1371,29 +1690,31 @@ class ABCEventsMode(WatoMode, metaclass=abc.ABCMeta):
         raise NotImplementedError()
 
     def _generic_rule_list_actions(self, rules, what, what_title, save_rules) -> None:
-        if html.request.has_var("_delete"):
-            nr = html.request.get_integer_input_mandatory("_delete")
+        if request.has_var("_delete"):
+            nr = request.get_integer_input_mandatory("_delete")
             self._add_change(what + "-delete-rule", _("Deleted %s %d") % (what_title, nr))
             del rules[nr]
             save_rules(rules)
 
-        elif html.request.has_var("_move"):
-            if html.check_transaction():
-                from_pos = html.request.get_integer_input_mandatory("_move")
-                to_pos = html.request.get_integer_input_mandatory("_index")
+        elif request.has_var("_move"):
+            if transactions.check_transaction():
+                from_pos = request.get_integer_input_mandatory("_move")
+                to_pos = request.get_integer_input_mandatory("_index")
                 rule = rules[from_pos]
                 del rules[from_pos]  # make to_pos now match!
                 rules[to_pos:to_pos] = [rule]
                 save_rules(rules)
-                self._add_change(what + "-move-rule",
-                                 _("Changed position of %s %d") % (what_title, from_pos))
+                self._add_change(
+                    what + "-move-rule", _("Changed position of %s %d") % (what_title, from_pos)
+                )
 
 
 def sort_sites(sites: SiteConfigurations) -> List[_Tuple[SiteId, SiteConfiguration]]:
     """Sort given sites argument by local, followed by remote sites"""
-    return sorted(sites.items(),
-                  key=lambda sid_s:
-                  (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]))
+    return sorted(
+        sites.items(),
+        key=lambda sid_s: (sid_s[1].get("replication") or "", sid_s[1].get("alias", ""), sid_s[0]),
+    )
 
 
 # Show HTML form for editing attributes.
@@ -1413,14 +1734,16 @@ def sort_sites(sites: SiteConfigurations) -> List[_Tuple[SiteId, SiteConfigurati
 # is related to these HTTP variables and so on is SearchFolder.
 #
 # TODO: Wow, this function REALLY has to be cleaned up
-def configure_attributes(new,
-                         hosts,
-                         for_what,
-                         parent,
-                         myself=None,
-                         without_attributes=None,
-                         varprefix="",
-                         basic_attributes=None):
+def configure_attributes(
+    new,
+    hosts,
+    for_what,
+    parent,
+    myself=None,
+    without_attributes=None,
+    varprefix="",
+    basic_attributes=None,
+):
     if without_attributes is None:
         without_attributes = []
     if basic_attributes is None:
@@ -1436,7 +1759,7 @@ def configure_attributes(new,
     hide_attributes = []
     show_more_mode: bool = False
 
-    show_more_mode = config.user.show_mode != "default_show_less"
+    show_more_mode = user.show_mode != "default_show_less"
 
     for topic_id, topic_title in watolib.get_sorted_host_attribute_topics(for_what, new):
         topic_is_volatile = True  # assume topic is sometimes hidden due to dependencies
@@ -1444,7 +1767,7 @@ def configure_attributes(new,
 
         forms.header(
             topic_title,
-            isopen=topic_id in ["basic", "address", "data_sources"],
+            isopen=topic_id in ["basic", "address", "monitoring_agents"],
             table_id=topic_id,
             show_more_toggle=any(attribute.is_show_more() for attribute in topic_attributes),
             show_more_mode=show_more_mode,
@@ -1513,7 +1836,7 @@ def configure_attributes(new,
             # Collect information about attribute values inherited from folder.
             # This information is just needed for informational display to the user.
             # This does not apply in "host_search" mode.
-            inherited_from = None
+            inherited_from: _Optional[HTML] = None
             inherited_value = None
             has_inherited = False
             container = None
@@ -1526,8 +1849,9 @@ def configure_attributes(new,
                 while container:
                     if attrname in container.attributes():
                         url = container.edit_url()
-                        inherited_from = _("Inherited from ") + str(
-                            html.render_a(container.title(), href=url))
+                        inherited_from = escape_html(_("Inherited from ")) + html.render_a(
+                            container.title(), href=url
+                        )
 
                         inherited_value = container.attributes()[attrname]
                         has_inherited = True
@@ -1538,7 +1862,7 @@ def configure_attributes(new,
                     container = container.parent()
 
             if not container:  # We are the root folder - we inherit the default values
-                inherited_from = _("Default value")
+                inherited_from = escape_html(_("Default value"))
                 inherited_value = attr.default_value()
                 # Also add the default values to the inherited values dict
                 if attr.is_tag_attribute:
@@ -1566,10 +1890,13 @@ def configure_attributes(new,
             disabled = False
 
             # first handle mandatory cases
-            if for_what == "folder" and attr.is_mandatory() \
-                and myself \
-                and some_host_hasnt_set(myself, attrname) \
-                and not has_inherited:
+            if (
+                for_what == "folder"
+                and attr.is_mandatory()
+                and myself
+                and some_host_hasnt_set(myself, attrname)
+                and not has_inherited
+            ):
                 force_entry = True
                 active = True
             elif for_what in ["host", "cluster"] and attr.is_mandatory() and not has_inherited:
@@ -1597,26 +1924,31 @@ def configure_attributes(new,
                 else:
                     disabled = True
 
-            if (for_what in ["host", "cluster"] and
-                    parent.locked_hosts()) or (for_what == "folder" and myself and myself.locked()):
+            if (for_what in ["host", "cluster"] and parent.locked_hosts()) or (
+                for_what == "folder" and myself and myself.locked()
+            ):
                 checkbox_code = None
             elif force_entry:
-                checkbox_code = html.render_checkbox("ignored_" + checkbox_name,
-                                                     disabled="disabled")
+                checkbox_code = html.render_checkbox(
+                    "ignored_" + checkbox_name, disabled="disabled"
+                )
                 checkbox_code += html.render_hidden_field(checkbox_name, "on")
             else:
-                onclick = "cmk.wato.fix_visibility(); cmk.wato.toggle_attribute(this, '%s');" % attrname
+                onclick = (
+                    "cmk.wato.fix_visibility(); cmk.wato.toggle_attribute(this, '%s');" % attrname
+                )
                 checkbox_kwargs = {"disabled": "disabled"} if disabled else {}
-                checkbox_code = html.render_checkbox(checkbox_name,
-                                                     active,
-                                                     onclick=onclick,
-                                                     **checkbox_kwargs)
+                checkbox_code = html.render_checkbox(
+                    checkbox_name, active, onclick=onclick, **checkbox_kwargs
+                )
 
-            forms.section(_u(attr.title()),
-                          checkbox=checkbox_code,
-                          section_id="attr_" + attrname,
-                          is_show_more=attr.is_show_more(),
-                          is_changed=active)
+            forms.section(
+                _u(attr.title()),
+                checkbox=checkbox_code,
+                section_id="attr_" + attrname,
+                is_show_more=attr.is_show_more(),
+                is_changed=active,
+            )
             html.help(attr.help())
 
             if len(values) == 1:
@@ -1640,27 +1972,31 @@ def configure_attributes(new,
                 # as two DIV elements, one of which is visible at one time.
 
                 # DIV with the input elements
-                html.open_div(id_="attr_entry_%s" % attrname,
-                              style="display: none;" if not active else None)
+                html.open_div(
+                    id_="attr_entry_%s" % attrname, style="display: none;" if not active else None
+                )
                 attr.render_input(varprefix, defvalue)
                 html.close_div()
 
-                html.open_div(class_="inherited",
-                              id_="attr_default_%s" % attrname,
-                              style="display: none;" if active else None)
+                html.open_div(
+                    class_="inherited",
+                    id_="attr_default_%s" % attrname,
+                    style="display: none;" if active else None,
+                )
 
             #
             # DIV with actual / inherited / default value
             #
 
             # in bulk mode we show inheritance only if *all* hosts inherit
-            explanation = u""
+            explanation: HTML = HTML("")
             if for_what == "bulk":
                 if num_haveit == 0:
-                    explanation = u" (%s)" % inherited_from
+                    assert inherited_from is not None
+                    explanation = HTML(" (") + inherited_from + HTML(")")
                     value = inherited_value
                 elif not unique:
-                    explanation = _("This value differs between the selected hosts.")
+                    explanation = escape_html(_("This value differs between the selected hosts."))
                 else:
                     value = values[0]
 
@@ -1682,7 +2018,7 @@ def configure_attributes(new,
                     html.write_text(content)
                     html.close_b()
                 elif isinstance(attr, str):
-                    html.b(_u(content))
+                    html.b(_u(cast(str, content)))
                 else:
                     html.b(content)
 
@@ -1697,17 +2033,21 @@ def configure_attributes(new,
     dialog_properties = {
         "inherited_tags": inherited_tags,
         "check_attributes": list(
-            set(dependency_mapping_tags.keys()) | set(dependency_mapping_roles.keys()) |
-            set(hide_attributes)),
+            set(dependency_mapping_tags.keys())
+            | set(dependency_mapping_roles.keys())
+            | set(hide_attributes)
+        ),
         "aux_tags_by_tag": config.tags.get_aux_tags_by_tag(),
         "depends_on_tags": dependency_mapping_tags,
         "depends_on_roles": dependency_mapping_roles,
         "volatile_topics": volatile_topics,
-        "user_roles": config.user.role_ids,
+        "user_roles": user.role_ids,
         "hide_attributes": hide_attributes,
     }
-    html.javascript("cmk.wato.prepare_edit_dialog(%s);"
-                    "cmk.wato.fix_visibility();" % json.dumps(dialog_properties))
+    html.javascript(
+        "cmk.wato.prepare_edit_dialog(%s);"
+        "cmk.wato.fix_visibility();" % json.dumps(dialog_properties)
+    )
 
 
 # Check if at least one host in a folder (or its subfolders)
@@ -1718,8 +2058,7 @@ def some_host_hasnt_set(folder, attrname):
     for subfolder in folder.subfolders():
         # If the attribute is not set in the subfolder, we need
         # to check all hosts and that folder.
-        if attrname not in subfolder.attributes() \
-            and some_host_hasnt_set(subfolder, attrname):
+        if attrname not in subfolder.attributes() and some_host_hasnt_set(subfolder, attrname):
             return True
 
     # Check hosts in this folder
@@ -1732,15 +2071,17 @@ def some_host_hasnt_set(folder, attrname):
 
 class SiteBackupJobs(backup.Jobs):
     def __init__(self):
-        super(SiteBackupJobs, self).__init__(backup.site_config_path())
+        super().__init__(backup.site_config_path())
 
     def _apply_cron_config(self):
-        p = subprocess.Popen(["omd", "restart", "crontab"],
-                             close_fds=True,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.STDOUT,
-                             encoding="utf-8",
-                             stdin=open(os.devnull))
+        p = subprocess.Popen(
+            ["omd", "restart", "crontab"],
+            close_fds=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            stdin=open(os.devnull),
+        )
         if p.wait() != 0:
             out = "Huh???" if p.stdout is None else p.stdout.read()
             raise MKGeneralException(_("Failed to apply the cronjob config: %s") % out)
@@ -1751,18 +2092,21 @@ def register_hook(name, func):
     hooks.register_from_plugin(name, func)
 
 
-class NotificationParameter(metaclass=abc.ABCMeta):
-    @abc.abstractproperty
+class NotificationParameter(abc.ABC):
+    @property
+    @abc.abstractmethod
     def ident(self) -> str:
         raise NotImplementedError()
 
-    @abc.abstractproperty
+    @property
+    @abc.abstractmethod
     def spec(self) -> Dictionary:
         raise NotImplementedError()
 
 
-class NotificationParameterRegistry(cmk.utils.plugin_registry.Registry[Type[NotificationParameter]]
-                                   ):
+class NotificationParameterRegistry(
+    cmk.utils.plugin_registry.Registry[Type[NotificationParameter]]
+):
     def plugin_name(self, instance):
         return instance().ident
 
@@ -1775,12 +2119,14 @@ class NotificationParameterRegistry(cmk.utils.plugin_registry.Registry[Type[Noti
         # TODO: Cleanup this hack
         valuespec._title = _("Call with the following parameters:")
 
-        register_rule(rulespec_group_registry["monconf/notifications"],
-                      "notification_parameters:" + plugin.ident,
-                      valuespec,
-                      _("Parameters for %s") % script_title,
-                      itemtype=None,
-                      match="dict")
+        register_rule(
+            rulespec_group_registry["monconf/notifications"],
+            "notification_parameters:" + plugin.ident,
+            valuespec,
+            _("Parameters for %s") % script_title,
+            itemtype=None,
+            match="dict",
+        )
 
 
 notification_parameter_registry = NotificationParameterRegistry()
@@ -1801,7 +2147,7 @@ def register_notification_parameters(scriptname, valuespec):
 
 class DictHostTagCondition(Transform):
     def __init__(self, title, help_txt):
-        super(DictHostTagCondition, self).__init__(
+        super().__init__(
             ListOfMultiple(
                 title=title,
                 help=help_txt,
@@ -1888,20 +2234,25 @@ class DictHostTagCondition(Transform):
         tag_choices = tag_group.get_tag_choices()
 
         if len(tag_choices) == 1:
-            return self._single_tag_choice(tag_group_id=tag_group.id,
-                                           choice_title=tag_group.choice_title,
-                                           tag_id=tag_group.tags[0].id,
-                                           title=tag_group.tags[0].title)
+            return self._single_tag_choice(
+                tag_group_id=tag_group.id,
+                choice_title=tag_group.choice_title,
+                tag_id=tag_group.tags[0].id,
+                title=tag_group.tags[0].title,
+            )
 
         tag_id_choice = ListOf(
-            valuespec=DropdownChoice(choices=tag_choices,),
+            valuespec=DropdownChoice(
+                choices=tag_choices,
+            ),
             style=ListOf.Style.FLOATING,
             add_label=_("Add tag"),
             del_label=_("Remove tag"),
             magic="@@#!#@@",
             movable=False,
-            validate=lambda value, varprefix: self._validate_tag_list(value, varprefix, tag_choices
-                                                                     ),
+            validate=lambda value, varprefix: self._validate_tag_list(
+                value, varprefix, tag_choices
+            ),
         )
 
         return (
@@ -1926,15 +2277,18 @@ class DictHostTagCondition(Transform):
             if tag_id in seen:
                 raise MKUserError(
                     varprefix,
-                    _("The tag '%s' is selected multiple times. A tag may be selected only once.") %
-                    dict(tag_choices)[tag_id])
+                    _("The tag '%s' is selected multiple times. A tag may be selected only once.")
+                    % dict(tag_choices)[tag_id],
+                )
             seen.add(tag_id)
 
     def _get_aux_tag_choice(self, aux_tag):
-        return self._single_tag_choice(tag_group_id=aux_tag.id,
-                                       choice_title=aux_tag.choice_title,
-                                       tag_id=aux_tag.id,
-                                       title=aux_tag.title)
+        return self._single_tag_choice(
+            tag_group_id=aux_tag.id,
+            choice_title=aux_tag.choice_title,
+            tag_id=aux_tag.id,
+            title=aux_tag.title,
+        )
 
     def _single_tag_choice(self, tag_group_id, choice_title, tag_id, title):
         return (
@@ -1942,12 +2296,14 @@ class DictHostTagCondition(Transform):
             Tuple(
                 title=choice_title,
                 elements=[
-                    self._is_or_is_not(label=choice_title + " ",),
+                    self._is_or_is_not(
+                        label=choice_title + " ",
+                    ),
                     FixedValue(
                         tag_id,
                         title=_u(title),
                         totext=_u(title),
-                    )
+                    ),
                 ],
                 show_titles=False,
                 orientation="horizontal",
@@ -1966,14 +2322,18 @@ class DictHostTagCondition(Transform):
         )
 
     def _is_or_is_not(self, **kwargs):
-        return DropdownChoice(choices=[
-            ("is", _("is")),
-            ("is_not", _("is not")),
-        ], **kwargs)
+        return DropdownChoice(
+            choices=[
+                ("is", _("is")),
+                ("is_not", _("is not")),
+            ],
+            **kwargs,
+        )
 
 
 class HostTagCondition(ValueSpec):
     """ValueSpec for editing a tag-condition"""
+
     def render_input(self, varprefix, value):
         self._render_condition_editor(varprefix, value)
 
@@ -1991,9 +2351,9 @@ class HostTagCondition(ValueSpec):
             if tag_group.is_checkbox_tag_group:
                 tagvalue = tag_group.default_value
             else:
-                tagvalue = html.request.var(varprefix + "tagvalue_" + tag_group.id)
+                tagvalue = request.var(varprefix + "tagvalue_" + tag_group.id)
 
-            mode = html.request.var(varprefix + "tag_" + tag_group.id)
+            mode = request.var(varprefix + "tag_" + tag_group.id)
             if mode == "is":
                 tag_list.append(tagvalue)
             elif mode == "isnot":
@@ -2001,7 +2361,7 @@ class HostTagCondition(ValueSpec):
 
         # Auxiliary tags
         for aux_tag in config.tags.aux_tag_list.get_tags():
-            mode = html.request.var(varprefix + "auxtag_" + aux_tag.id)
+            mode = request.var(varprefix + "auxtag_" + aux_tag.id)
             if mode == "is":
                 tag_list.append(aux_tag.id)
             elif mode == "isnot":
@@ -2012,20 +2372,21 @@ class HostTagCondition(ValueSpec):
     def canonical_value(self):
         return []
 
-    def value_to_text(self, value):
+    def value_to_text(self, value) -> str:
         return "|".join(value)
 
     def validate_datatype(self, value, varprefix):
         if not isinstance(value, list):
-            raise MKUserError(varprefix,
-                              _("The list of host tags must be a list, but "
-                                "is %r") % type(value))
+            raise MKUserError(
+                varprefix, _("The list of host tags must be a list, but " "is %r") % type(value)
+            )
         for x in value:
             if not isinstance(x, str):
                 raise MKUserError(
                     varprefix,
-                    _("The list of host tags must only contain strings "
-                      "but also contains %r") % x)
+                    _("The list of host tags must only contain strings " "but also contains %r")
+                    % x,
+                )
 
     def _render_condition_editor(self, varprefix, tag_specs):
         """Render HTML input fields for editing a tag based condition"""
@@ -2033,7 +2394,7 @@ class HostTagCondition(ValueSpec):
             varprefix += "_"
 
         if not config.tags.get_tag_ids():
-            html.write(_("You have not configured any <a href=\"wato.py?mode=tags\">tags</a>."))
+            html.write_text(_('You have not configured any <a href="wato.py?mode=tags">tags</a>.'))
             return
 
         tag_groups_by_topic = dict(config.tags.get_tag_groups_by_topic())
@@ -2043,54 +2404,59 @@ class HostTagCondition(ValueSpec):
         make_foldable = len(all_topics) > 1
 
         for topic_id, topic_title in all_topics:
-            if make_foldable:
-                html.begin_foldable_container("topic", varprefix + topic_title, True,
-                                              HTML("<b>%s</b>" % (_u(topic_title))))
-            html.open_table(class_=["hosttags"])
+            container: ContextManager[bool] = (
+                foldable_container(
+                    treename="topic",
+                    id_=varprefix + topic_title,
+                    isopen=True,
+                    title=_u(topic_title),
+                )
+                if make_foldable
+                else nullcontext(False)
+            )
+            with container:
+                html.open_table(class_=["hosttags"])
 
-            for tag_group in tag_groups_by_topic.get(topic_id, []):
-                html.open_tr()
-                html.open_td(class_="title")
-                html.write("%s: &nbsp;" % _u(tag_group.title))
-                html.close_td()
+                for tag_group in tag_groups_by_topic.get(topic_id, []):
+                    html.open_tr()
+                    html.td("%s: &nbsp;" % _u(tag_group.title), class_="title")
 
-                choices = tag_group.get_tag_choices()
-                default_tag, deflt = self._current_tag_setting(choices, tag_specs)
-                self._tag_condition_dropdown(varprefix, "tag", deflt, tag_group.id)
-                if tag_group.is_checkbox_tag_group:
+                    choices = tag_group.get_tag_choices()
+                    default_tag, deflt = self._current_tag_setting(choices, tag_specs)
+                    self._tag_condition_dropdown(varprefix, "tag", deflt, tag_group.id)
+                    if tag_group.is_checkbox_tag_group:
+                        html.write_text(" " + _("set"))
+                    else:
+                        html.dropdown(
+                            varprefix + "tagvalue_" + tag_group.id,
+                            [(t[0], _u(t[1])) for t in choices if t[0] is not None],
+                            deflt=default_tag,
+                        )
+
+                    html.close_div()
+                    html.close_td()
+                    html.close_tr()
+
+                for aux_tag in aux_tags_by_topic.get(topic_id, []):
+                    html.open_tr()
+                    html.td("%s: &nbsp;" % _u(aux_tag.title), class_="title")
+                    default_tag, deflt = self._current_tag_setting(
+                        [(aux_tag.id, _u(aux_tag.title))], tag_specs
+                    )
+                    self._tag_condition_dropdown(varprefix, "auxtag", deflt, aux_tag.id)
                     html.write_text(" " + _("set"))
-                else:
-                    html.dropdown(varprefix + "tagvalue_" + tag_group.id,
-                                  [(t[0], _u(t[1])) for t in choices if t[0] is not None],
-                                  deflt=default_tag)
+                    html.close_div()
+                    html.close_td()
+                    html.close_tr()
 
-                html.close_div()
-                html.close_td()
-                html.close_tr()
-
-            for aux_tag in aux_tags_by_topic.get(topic_id, []):
-                html.open_tr()
-                html.open_td(class_="title")
-                html.write("%s: &nbsp;" % _u(aux_tag.title))
-                html.close_td()
-                default_tag, deflt = self._current_tag_setting([(aux_tag.id, _u(aux_tag.title))],
-                                                               tag_specs)
-                self._tag_condition_dropdown(varprefix, "auxtag", deflt, aux_tag.id)
-                html.write_text(" " + _("set"))
-                html.close_div()
-                html.close_td()
-                html.close_tr()
-
-            html.close_table()
-            if make_foldable:
-                html.end_foldable_container()
+                html.close_table()
 
     def _current_tag_setting(self, choices, tag_specs):
         """Determine current (default) setting of tag by looking into tag_specs (e.g. [ "snmp", "!tcp", "test" ] )"""
         default_tag = None
         ignore = True
         for t in tag_specs:
-            if t[0] == '!':
+            if t[0] == "!":
                 n = True
                 t = t[1:]
             else:
@@ -2122,25 +2488,31 @@ class HostTagCondition(ValueSpec):
 
         html.open_td(class_="tag_sel")
         if html.form_submitted():
-            div_is_open = html.request.var(dropdown_id, "ignore") != "ignore"
+            div_is_open = request.var(dropdown_id, "ignore") != "ignore"
         else:
             div_is_open = deflt != "ignore"
-        html.open_div(id_="%stag_sel_%s" % (varprefix, id_),
-                      style="display: none;" if not div_is_open else None)
+        html.open_div(
+            id_="%stag_sel_%s" % (varprefix, id_),
+            style="display: none;" if not div_is_open else None,
+        )
 
 
 class LabelCondition(Transform):
     def __init__(self, title, help_txt):
-        super(LabelCondition, self).__init__(
+        super().__init__(
             ListOf(
                 Tuple(
                     orientation="horizontal",
                     elements=[
-                        DropdownChoice(choices=[
-                            ("is", _("has")),
-                            ("is_not", _("has not")),
-                        ],),
-                        SingleLabel(world=Labels.World.CONFIG,),
+                        DropdownChoice(
+                            choices=[
+                                ("is", _("has")),
+                                ("is_not", _("has not")),
+                            ],
+                        ),
+                        SingleLabel(
+                            world=Labels.World.CONFIG,
+                        ),
                     ],
                     show_titles=False,
                 ),
@@ -2174,7 +2546,8 @@ class LabelCondition(Transform):
             if label:
                 label_id, label_value = list(label.items())[0]
                 label_conditions[label_id] = self._single_label_from_valuespec(
-                    operator, label_value)
+                    operator, label_value
+                )
         return label_conditions
 
     def _single_label_from_valuespec(self, operator, label_value):
@@ -2187,7 +2560,7 @@ class LabelCondition(Transform):
 
 @page_registry.register_page("ajax_dict_host_tag_condition_get_choice")
 class PageAjaxDictHostTagConditionGetChoice(ABCPageListOfMultipleGetChoice):
-    def _get_choices(self, request):
+    def _get_choices(self, api_request):
         condition = DictHostTagCondition("Dummy title", "Dummy help")
         return condition._get_tag_group_choices()
 
@@ -2199,13 +2572,17 @@ def transform_simple_to_multi_host_rule_match_conditions(value):
 
 
 def _simple_host_rule_match_conditions():
-    return [_site_rule_match_condition(),
-            _single_folder_rule_match_condition()] + _common_host_rule_match_conditions()
+    return [
+        _site_rule_match_condition(),
+        _single_folder_rule_match_condition(),
+    ] + _common_host_rule_match_conditions()
 
 
 def multifolder_host_rule_match_conditions():
-    return [_site_rule_match_condition(),
-            _multi_folder_rule_match_condition()] + _common_host_rule_match_conditions()
+    return [
+        _site_rule_match_condition(),
+        _multi_folder_rule_match_condition(),
+    ] + _common_host_rule_match_conditions()
 
 
 def _site_rule_match_condition():
@@ -2213,9 +2590,8 @@ def _site_rule_match_condition():
         "match_site",
         DualListChoice(
             title=_("Match sites"),
-            help=_("This condition makes the rule match only hosts of "
-                   "the selected sites."),
-            choices=config.get_activation_site_choices,
+            help=_("This condition makes the rule match only hosts of " "the selected sites."),
+            choices=get_activation_site_choices,
         ),
     )
 
@@ -2223,51 +2599,63 @@ def _site_rule_match_condition():
 def _multi_folder_rule_match_condition():
     return (
         "match_folders",
-        ListOf(FullPathFolderChoice(
-            title=_("Folder"),
-            help=_("This condition makes the rule match only hosts that are managed "
-                   "via WATO and that are contained in this folder - either directly "
-                   "or in one of its subfolders."),
+        ListOf(
+            FullPathFolderChoice(
+                title=_("Folder"),
+                help=_(
+                    "This condition makes the rule match only hosts that are managed "
+                    "via WATO and that are contained in this folder - either directly "
+                    "or in one of its subfolders."
+                ),
+            ),
+            add_label=_("Add additional folder"),
+            title=_("Match folders"),
+            movable=False,
         ),
-               add_label=_("Add additional folder"),
-               title=_("Match folders"),
-               movable=False),
     )
 
 
 def _common_host_rule_match_conditions():
     return [
         ("match_hosttags", HostTagCondition(title=_("Match host tags"))),
-        ("match_hostlabels",
-         Labels(
-             Labels.World.CORE,
-             title=_("Match host labels"),
-             help=_("Use this condition to select hosts based on the configured host labels."),
-         )),
-        ("match_hostgroups",
-         HostGroupChoice(
-             title=_("Match host groups"),
-             help=_("The host must be in one of the selected host groups"),
-             allow_empty=False,
-         )),
-        ("match_hosts",
-         ListOfStrings(
-             valuespec=MonitoredHostname(),
-             title=_("Match hosts"),
-             size=24,
-             orientation="horizontal",
-             allow_empty=False,
-             empty_text=
-             _("Please specify at least one host. Disable the option if you want to allow all hosts."
-              ),
-         )),
-        ("match_exclude_hosts",
-         ListOfStrings(
-             valuespec=MonitoredHostname(),
-             title=_("Exclude hosts"),
-             size=24,
-             orientation="horizontal",
-         ))
+        (
+            "match_hostlabels",
+            Labels(
+                Labels.World.CORE,
+                title=_("Match host labels"),
+                help=_("Use this condition to select hosts based on the configured host labels."),
+            ),
+        ),
+        (
+            "match_hostgroups",
+            HostGroupChoice(
+                title=_("Match host groups"),
+                help=_("The host must be in one of the selected host groups"),
+                allow_empty=False,
+            ),
+        ),
+        (
+            "match_hosts",
+            ListOfStrings(
+                valuespec=MonitoredHostname(),
+                title=_("Match hosts"),
+                size=24,
+                orientation="horizontal",
+                allow_empty=False,
+                empty_text=_(
+                    "Please specify at least one host. Disable the option if you want to allow all hosts."
+                ),
+            ),
+        ),
+        (
+            "match_exclude_hosts",
+            ListOfStrings(
+                valuespec=MonitoredHostname(),
+                title=_("Exclude hosts"),
+                size=24,
+                orientation="horizontal",
+            ),
+        ),
     ]
 
 
@@ -2276,35 +2664,61 @@ def _single_folder_rule_match_condition():
         "match_folder",
         FolderChoice(
             title=_("Match folder"),
-            help=_("This condition makes the rule match only hosts that are managed "
-                   "via WATO and that are contained in this folder - either directly "
-                   "or in one of its subfolders."),
+            help=_(
+                "This condition makes the rule match only hosts that are managed "
+                "via WATO and that are contained in this folder - either directly "
+                "or in one of its subfolders."
+            ),
         ),
     )
 
 
 def get_search_expression():
-    search = html.request.get_unicode_input("search")
+    search = request.get_unicode_input("search")
     if search is not None:
         search = search.strip().lower()
     return search
 
 
-def get_hostnames_from_checkboxes(filterfunc: _Optional[Callable] = None,
-                                  deflt: bool = False) -> List[str]:
+def get_hostnames_from_checkboxes(
+    filterfunc: _Optional[Callable] = None, deflt: bool = False
+) -> List[str]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    selected = config.user.get_rowselection(weblib.selection_id(),
-                                            'wato-folder-/' + watolib.Folder.current().path())
-    search_text = html.request.var("search")
+    selected = user.get_rowselection(
+        weblib.selection_id(), "wato-folder-/" + watolib.Folder.current().path()
+    )
+    search_text = request.var("search")
 
-    selected_host_names = []
+    selected_host_names: List[str] = []
     for host_name, host in sorted(watolib.Folder.current().hosts().items()):
-        if ((not search_text or (search_text.lower() in host_name.lower())) and
-            ('_c_' + host_name) in selected):
+        if (
+            not search_text
+            or _search_text_matches(host, search_text)
+            and ("_c_" + host_name) in selected
+        ):
             if filterfunc is None or filterfunc(host):
                 selected_host_names.append(host_name)
     return selected_host_names
+
+
+def _search_text_matches(
+    host: watolib.CREHost,
+    search_text: str,
+) -> bool:
+
+    match_regex = re.compile(search_text, re.IGNORECASE)
+    for pattern in [
+        host.name(),
+        host.effective_attributes().get("ipaddress"),
+        host.site_id(),
+        get_site_config(host.site_id())["alias"],
+        str(host.tag_groups()),
+        str(host.labels()),
+    ]:
+        if match_regex.search(pattern):
+            return True
+    return False
 
 
 def get_hosts_from_checkboxes(filterfunc=None):
@@ -2329,7 +2743,7 @@ class FolderChoice(DropdownChoice):
 
 
 def get_check_information() -> Mapping[CheckPluginName, Mapping[str, str]]:
-    if 'automation_get_check_information' not in g:
+    if "automation_get_check_information" not in g:
         raw_check_dict = watolib.check_mk_local_automation("get-check-information")
         g.automation_get_check_information = {
             CheckPluginName(name): info for name, info in sorted(raw_check_dict.items())
@@ -2339,8 +2753,9 @@ def get_check_information() -> Mapping[CheckPluginName, Mapping[str, str]]:
 
 
 def get_section_information():
-    if 'automation_get_section_information' not in g:
+    if "automation_get_section_information" not in g:
         g.automation_get_section_information = watolib.check_mk_local_automation(
-            "get-section-information")
+            "get-section-information"
+        )
 
     return g.automation_get_section_information

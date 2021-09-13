@@ -21,41 +21,58 @@ MSSQL_VEEAMSQL2012:Databases|data_file(s)_size_(kb)|tempdb|164928
 MSSQL_VEEAMSQL2012:Databases|log_file(s)_size_(kb)|tempdb|13624
 """
 
-from typing import Sequence
 from contextlib import suppress
 from datetime import datetime, timezone
+from typing import Sequence
 
 from .agent_based_api.v1 import register
 from .agent_based_api.v1.type_defs import StringTable
-
 from .utils.mssql_counters import Section
 
 
 def to_timestamp(values: Sequence[str]) -> float:
-    """
+    """Translate time stamps given in formats known to be used for @utc_time to Unix time
     >>> to_timestamp(('31.08.2017', '16:13:43'))
     1504196023.0
     >>> to_timestamp(('08/31/2017', '04:13:43', 'PM'))
+    1504196023.0
+    >>> to_timestamp(('2017/08/31', '04:13:43', 'PM'))
     1504196023.0
     >>> to_timestamp(('31/08/2017', '16:13:43'))
     1504196023.0
     >>> to_timestamp(('31-08-2017', '16:13:43'))
     1504196023.0
-    >>> to_timestamp(('2017-08-31', '16:13:43.123'))
+    >>> to_timestamp(('2017-08-31', '16:13:43.123'))     # allow micro/nanoseconds
+    1504196023.0
+    >>> to_timestamp(('31.8.2017', '16.13.43'))          # allow dots in time string
+    1504196023.0
+    >>> to_timestamp(('31.', '8.', '2017', '16:13:43'))  # allow space padded numbers
+    1504196023.0
+    >>> to_timestamp(('31/08/2017', '4:13:43', 'p.m.'))  # allow "a.m."/"p.m." instead of "AM/PM"
     1504196023.0
     """
+
     def to_datetime(values: Sequence[str]) -> datetime:
         with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%d.%m.%Y %H:%M:%S')
+            return datetime.strptime(" ".join(values).replace(". ", "."), "%d.%m.%Y %H:%M:%S")
         with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%m/%d/%Y %I:%M:%S %p')
+            return datetime.strptime(" ".join(values), "%m/%d/%Y %I:%M:%S %p")
         with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%d/%m/%Y %H:%M:%S')
+            return datetime.strptime(" ".join(values), "%Y/%m/%d %I:%M:%S %p")
         with suppress(ValueError):
-            return datetime.strptime(' '.join(values), '%d-%m-%Y %H:%M:%S')
+            return datetime.strptime(" ".join(values), "%d/%m/%Y %H:%M:%S")
         with suppress(ValueError):
-            return datetime.strptime(" ".join(values).split(".")[0], "%Y-%m-%d %H:%M:%S")
-        raise ValueError('Time string %r does not match any known pattern' % ' '.join(values))
+            return datetime.strptime(" ".join(values), "%d-%m-%Y %H:%M:%S")
+        with suppress(ValueError):
+            return datetime.strptime(" ".join(values).split(".", 1)[0], "%Y-%m-%d %H:%M:%S")
+        with suppress(ValueError):
+            return datetime.strptime(" ".join(values), "%d.%m.%Y %H.%M.%S")
+        with suppress(ValueError):
+            return datetime.strptime(
+                " ".join(values).replace("a.m.", "AM").replace("p.m.", "PM"),
+                "%d/%m/%Y %I:%M:%S %p",
+            )
+        raise ValueError(f'Time string {" ".join(values)} does not match any known pattern')
 
     return to_datetime(values).replace(tzinfo=timezone.utc).timestamp()
 
@@ -78,7 +95,7 @@ def parse_mssql_counters(string_table: StringTable) -> Section:
     parsed: Section = {}
     for obj, counter, instance, *values in valid_rows:
         value = to_timestamp(values) if counter == "utc_time" else int(values[0])
-        obj_id = obj[:-10] if obj.endswith(':Databases') else obj
+        obj_id = obj[:-10] if obj.endswith(":Databases") else obj
         parsed.setdefault((obj_id, instance), {}).setdefault(counter, value)
     return parsed
 

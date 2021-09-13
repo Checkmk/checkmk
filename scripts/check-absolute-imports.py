@@ -8,8 +8,8 @@
 import os
 import re
 import sys
-from typing import List
 from pathlib import PurePosixPath
+from typing import List
 
 WHITELIST = ("cmk/gui",)
 

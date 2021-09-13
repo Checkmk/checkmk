@@ -7,6 +7,6 @@ description:
  This check returns {CRIT} if neither the Power or the System status is {OK}.
 
 
-inventory:
+discovery:
  One service is created.
 

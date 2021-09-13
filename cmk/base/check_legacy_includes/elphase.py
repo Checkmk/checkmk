@@ -3,13 +3,20 @@
 # Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+# type: ignore[attr-defined]  # TODO: see which are needed in this file
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+from cmk.base.check_api import check_levels, get_percent_human_readable
 
-
-def inventory_elphase(parsed):
-    for item in parsed:
-        yield item, {}
+_RENDER_FUNCTION_AND_UNIT = {
+    "%": (
+        get_percent_human_readable,
+        "",
+    ),
+    "mA": (
+        lambda current: f"{(current * 1000):.1f}",
+        "mA",
+    ),
+}
 
 
 # Parsed has the following form:
@@ -20,14 +27,15 @@ def inventory_elphase(parsed):
 #        "current" : 12.0,                                # without device state
 #     }
 # }
+# ==================================================================================================
+# ==================================================================================================
+# THIS FUNCTION HAS BEEN MIGRATED TO THE NEW CHECK API (OR IS IN THE PROCESS), PLEASE DO NOT TOUCH
+# IT. INSTEAD, MODIFY THE MIGRATED VERSION.
+# ==================================================================================================
+# ==================================================================================================
 def check_elphase(item, params, parsed):
     if item not in parsed:
         return  # Item not found in SNMP data
-
-    def tostring(value):
-        if isinstance(value, int):
-            return "%d" % value
-        return "%.1f" % value
 
     class Bounds:
         Lower, Upper, Both = range(3)
@@ -50,15 +58,15 @@ def check_elphase(item, params, parsed):
         yield state, "Device status: %s(%s)" % (device_state_readable, device_state)
 
     for what, title, unit, bound, factor in [
-        ("voltage", "Voltage", " V", Bounds.Lower, 1),
-        ("current", "Current", " A", Bounds.Upper, 1),
+        ("voltage", "Voltage", "V", Bounds.Lower, 1),
+        ("current", "Current", "A", Bounds.Upper, 1),
         ("output_load", "Load", "%", Bounds.Upper, 1),
-        ("power", "Power", " W", Bounds.Upper, 1),
-        ("appower", "Apparent Power", " VA", Bounds.Upper, 1),
-        ("energy", "Energy", " Wh", Bounds.Upper, 1),
-        ("frequency", "Frequency", " hz", Bounds.Both, 1),
-        ("differential_current_ac", "Differential current AC", " mA", Bounds.Upper, 0.001),
-        ("differential_current_dc", "Differential current DC", " mA", Bounds.Upper, 0.001),
+        ("power", "Power", "W", Bounds.Upper, 1),
+        ("appower", "Apparent Power", "VA", Bounds.Upper, 1),
+        ("energy", "Energy", "Wh", Bounds.Upper, 1),
+        ("frequency", "Frequency", "hz", Bounds.Both, 1),
+        ("differential_current_ac", "Differential current AC", "mA", Bounds.Upper, 0.001),
+        ("differential_current_dc", "Differential current DC", "mA", Bounds.Upper, 0.001),
     ]:
 
         if what in parsed[item]:
@@ -69,42 +77,31 @@ def check_elphase(item, params, parsed):
                 value = entry  # 12.0
                 state_info = None
 
-            infotext = "%s: %s%s" % (title, tostring(value), unit)
-            status = 0
-            perfdata = [(what, value * factor)]
-
+            levels = [None] * 4
             if what in params:
-                warn_lower = crit_lower = warn = crit = None
                 if bound == Bounds.Both:
-                    warn_lower, crit_lower, warn, crit = params[what]
+                    levels = params[what]
                 elif bound == Bounds.Upper:
-                    warn, crit = params[what]
+                    levels[:2] = params[what]
                 else:  # Bounds.Lower
-                    warn_lower, crit_lower = params[what]
+                    levels[2:] = params[what]
 
-                if warn_lower:
-                    levelstext = " (warn/crit below %s/%s%s)" %\
-                        (tostring(warn_lower), tostring(crit_lower), unit)
-                    if value < crit_lower:
-                        status = 2
-                        infotext += levelstext
-                    elif value < warn_lower:
-                        status = max(status, 1)
-                        infotext += levelstext
+            render_func, unit = _RENDER_FUNCTION_AND_UNIT.get(
+                unit,
+                (
+                    lambda v: f"{v:.1f}",
+                    unit,
+                ),
+            )
 
-                if warn:
-                    levelstext = " (warn/crit at %s/%s%s)" %\
-                        (tostring(warn), tostring(crit), unit)
-                    if value > crit:
-                        status = 2
-                        infotext += levelstext
-                    elif value > warn:
-                        status = max(status, 1)
-                        infotext += levelstext
-
-                    perfdata = [(what, value * factor, warn * factor, crit * factor)]
-
-            yield status, infotext, perfdata
+            yield check_levels(
+                value * factor,
+                what,
+                tuple(level if level is None else level * factor for level in levels),
+                unit=unit,
+                human_readable_func=render_func,
+                infoname=title,
+            )
 
             if state_info:
                 yield state_info

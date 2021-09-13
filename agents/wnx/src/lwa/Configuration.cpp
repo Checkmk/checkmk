@@ -19,7 +19,11 @@
 
 #include "Configurable.h"
 #include "Logger.h"
+#define memmove MemMove
+void MemMove(void *dst, const void *src, size_t count);
 #include "SimpleIni.h"
+#undef memmove
+
 #include "cfg.h"
 #include "cvt.h"
 #include "stringutil.h"
@@ -128,7 +132,7 @@ bool feedSection(const std::string &hostname, ConfigurableMap &configurables,
 
 }  // namespace
 
-bool Configuration::ReadSettings(std::filesystem::path Path,
+bool Configuration::ReadSettings(const std::filesystem::path &Path,
                                  bool Local) noexcept {
     try {
         for (const auto &cfg : _configurables) {
@@ -855,7 +859,7 @@ void Parser::prepare() {
     pi_ = new ParserImplementation;
 }
 
-bool Parser::readIni(std::filesystem::path Path, bool) {
+bool Parser::readIni(const std::filesystem::path &Path, bool) {
     if (!pi_) return false;
     return pi_->parser.ReadSettings(Path, false);
 }
@@ -1053,3 +1057,17 @@ YAML::Node Parser::emitYaml() noexcept {
 }  // namespace cma::cfg::cvt
 
 }  // namespace cma::cfg::cvt
+
+/// \brief - memmove replacer for SimpleIni.h
+///
+/// asan  gives false positive when MSVC optimizer which replaces memmove with
+/// memcpy we don't want either to disable optimization or disable asan
+/// Not tested.
+void MemMove(void *dst, const void *src, size_t count) {
+    if (dst == nullptr || src == nullptr || count == 0) {
+        return;
+    }
+    for (size_t i = 0; i < count; ++i) {
+        static_cast<char *>(dst)[i] = static_cast<const char *>(dst)[i];
+    }
+}

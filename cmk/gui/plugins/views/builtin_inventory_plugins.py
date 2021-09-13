@@ -11,18 +11,16 @@
 # each_dict_entry_on_separate_line=False
 
 import cmk.gui.utils
-from cmk.gui.plugins.views import (
-    inventory_displayhints,)
 from cmk.gui.i18n import _
-
+from cmk.gui.plugins.views import inventory_displayhints
 from cmk.gui.plugins.visuals.inventory import (
-    FilterInvtableVersion,
-    FilterInvtableIDRange,
-    FilterInvtableOperStatus,
     FilterInvtableAdminStatus,
     FilterInvtableAvailable,
+    FilterInvtableIDRange,
     FilterInvtableInterfaceType,
+    FilterInvtableOperStatus,
     FilterInvtableTimestampAsAge,
+    FilterInvtableVersion,
 )
 
 # yapf: disable

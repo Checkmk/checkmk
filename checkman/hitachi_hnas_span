@@ -12,6 +12,6 @@ description:
 item:
  The ID of a Span plus it's label, separated by a space, e. g. 3 SP_91
 
-inventory:
+discovery:
  One service is created for each Span.
 

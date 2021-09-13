@@ -9,15 +9,17 @@
 #include <cstddef>
 #include <iomanip>
 #include <string_view>
+#include <utility>
 
 #include "Logger.h"
 #include "POSIXUtils.h"
 
 using namespace std::chrono_literals;
 
-OutputBuffer::OutputBuffer(int fd, const bool &termination_flag, Logger *logger)
+OutputBuffer::OutputBuffer(int fd, std::function<bool()> should_terminate,
+                           Logger *logger)
     : _fd(fd)
-    , _termination_flag(termination_flag)
+    , should_terminate_{std::move(should_terminate)}
     , _logger(logger)
     // TODO(sp) This is really the wrong default because it hides some early
     // errors, e.g. an unknown command. But we can't change this easily because

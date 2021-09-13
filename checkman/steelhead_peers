@@ -12,5 +12,5 @@ description:
 item:
  The name of the host
 
-inventory:
+discovery:
  One service is created for each peer.

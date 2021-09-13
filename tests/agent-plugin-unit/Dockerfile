@@ -21,4 +21,9 @@ RUN \
     fi && \
     python3 -c "import urllib.request ; urllib.request.urlretrieve('$GET_PIP_URL', '/get-pip.py')" && \
     python$PYTHON_VERSION /get-pip.py && \
-    pip$PYTHON_VERSION install pytest pytest-mock mock requests "$PYMONGO"
+    pip$PYTHON_VERSION install pytest pytest-mock mock requests "$PYMONGO" && \
+    # In python 3.4, it seemes we need to have typing installed in order to run pytest
+    # As typing is ignored during run-time, this should not introduce a dependencies for the host envs
+    if [ "$PYTHON_VERSION" = "3.4" ]; then \
+        pip$PYTHON_VERSION install typing; \
+    fi \

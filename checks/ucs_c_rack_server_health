@@ -19,8 +19,13 @@ def parse_ucs_c_rack_server_health(info):
     """
     parsed = {}
     for _, dn, _id, health in info:
-        rack_storage_board = dn.replace("dn sys/", "").replace("rack-unit-", "Rack unit ").replace(
-            "/board/storage-", " Storage ").replace("-", " ").replace("/", " ")
+        rack_storage_board = (
+            dn.replace("dn sys/", "")
+            .replace("rack-unit-", "Rack unit ")
+            .replace("/board/storage-", " Storage ")
+            .replace("-", " ")
+            .replace("/", " ")
+        )
         parsed[rack_storage_board] = health.replace("health ", "").lower()
     return parsed
 
@@ -49,7 +54,7 @@ def check_ucs_c_rack_server_health(item, params, health):
     # "Good" is the only value known from exemplary data output. Pre-process the
     # data to lowercase only chars.
     health_to_status_mapping = {
-        'good': 0,
+        "good": 0,
     }
 
     try:
@@ -62,8 +67,8 @@ def check_ucs_c_rack_server_health(item, params, health):
 
 
 check_info["ucs_c_rack_server_health"] = {
-    'parse_function': parse_ucs_c_rack_server_health,
-    'inventory_function': inventory_ucs_c_rack_server_health,
-    'check_function': check_ucs_c_rack_server_health,
-    'service_description': 'Health %s',
+    "parse_function": parse_ucs_c_rack_server_health,
+    "inventory_function": inventory_ucs_c_rack_server_health,
+    "check_function": check_ucs_c_rack_server_health,
+    "service_description": "Health %s",
 }

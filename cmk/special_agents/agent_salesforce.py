@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+
 import cmk.special_agents.utils as utils
 
 

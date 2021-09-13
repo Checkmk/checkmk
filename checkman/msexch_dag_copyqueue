@@ -14,7 +14,7 @@ description:
  Warning and critical levels for the queue length can be configured and
  the state of the check is determined according to these levels.
 
-inventory:
+discovery:
  One service is created for each database on the Mailbox Server.
 
 item:

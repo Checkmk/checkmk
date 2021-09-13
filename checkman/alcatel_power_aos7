@@ -48,6 +48,6 @@ description:
 item:
  The ID of the power supply as output from the SNMP agent.
 
-inventory:
+discovery:
  One service is created for each present power supply.
 

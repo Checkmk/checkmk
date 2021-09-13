@@ -9,11 +9,12 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 knuerr_rms_humidity_default_levels = (30, 40, 70, 75)
 
 
 def inventory_knuerr_rms_humidity(info):
-    return [(None, 'knuerr_rms_humidity_default_levels')]
+    return [(None, "knuerr_rms_humidity_default_levels")]
 
 
 def check_knuerr_rms_humidity(_no_item, params, info):

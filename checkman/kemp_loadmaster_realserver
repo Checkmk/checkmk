@@ -11,6 +11,6 @@ description:
 item:
  IP address of the realserver
 
-inventory:
+discovery:
  One service is created for each backend server if it is not disabled.
  Each one is defined by its ID.

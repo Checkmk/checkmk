@@ -4,12 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-
+import pytest
 from apispec import APISpec  # type: ignore[import]
-from marshmallow import Schema, fields, post_load
+from marshmallow import fields, post_load, Schema
 
-from cmk.gui.plugins.openapi.plugins import ValueTypedDictSchema, ValueTypedDictMarshmallowPlugin
+from cmk.gui.plugins.openapi.plugins import ValueTypedDictMarshmallowPlugin, ValueTypedDictSchema
 
 
 class Movie:
@@ -23,26 +22,20 @@ class Movie:
         return "<Movie %r>" % (self.kw,)
 
     def __lt__(self, other):
-        return self.kw['year'] > other.kw['year']
+        return self.kw["year"] > other.kw["year"]
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.value == other.value
 
 
 MOVIES = {
-    'Solyaris': {
-        'director': 'Andrei Tarkovsky',
-        'year': 1972
-    },
-    'Stalker': {
-        'director': 'Andrei Tarkovsky',
-        'year': 1979
-    },
+    "Solyaris": {"director": "Andrei Tarkovsky", "year": 1972},
+    "Stalker": {"director": "Andrei Tarkovsky", "year": 1979},
 }
 
 EXPECTED_MOVIES = [
-    Movie(director='Andrei Tarkovsky', year=1972, title='Solyaris'),
-    Movie(director='Andrei Tarkovsky', year=1979, title='Stalker'),
+    Movie(director="Andrei Tarkovsky", year=1972, title="Solyaris"),
+    Movie(director="Andrei Tarkovsky", year=1979, title="Stalker"),
 ]
 
 
@@ -57,36 +50,36 @@ class MovieSchema(Schema):
 
 
 class MoviesSchema(ValueTypedDictSchema):
-    key_name = 'title'
+    key_name = "title"
     keep_key = False
     value_type = MovieSchema
 
 
 @pytest.fixture(name="spec")
 def spec_fixture():
-    return APISpec(title='Sensationalist Witty Title',
-                   version='1.0.0',
-                   openapi_version='3.0.0',
-                   plugins=[
-                       ValueTypedDictMarshmallowPlugin(),
-                   ])
+    return APISpec(
+        title="Sensationalist Witty Title",
+        version="1.0.0",
+        openapi_version="3.0.0",
+        plugins=[
+            ValueTypedDictMarshmallowPlugin(),
+        ],
+    )
 
 
 def test_apispec_plugin_parameters(spec):
     # Different code paths are executed here. We need to make sure our plugin handles this.
-    spec.components.parameter('var', 'path', {'description': "Some path variable"})
+    spec.components.parameter("var", "path", {"description": "Some path variable"})
 
 
 def test_apispec_plugin_value_typed_dict(spec):
     # Schema suffix of schemas gets stripped by library
-    spec.components.schema('Movies', schema=MoviesSchema)
+    spec.components.schema("Movies", schema=MoviesSchema)
 
-    schemas = spec.to_dict()['components']['schemas']
-    assert schemas['Movies'] == {
-        u'type': u'object',
-        u'additionalProperties': {
-            '$ref': '#/components/schemas/Movie'
-        }
+    schemas = spec.to_dict()["components"]["schemas"]
+    assert schemas["Movies"] == {
+        "type": "object",
+        "additionalProperties": {"$ref": "#/components/schemas/Movie"},
     }
 
 

@@ -22,11 +22,11 @@ def _parameter_valuespec_fortimail_disk_usage():
                     [
                         Percentage(
                             title=_("Warning at"),
-                            default_value=80.,
+                            default_value=80.0,
                         ),
                         Percentage(
                             title=_("Critical at"),
-                            default_value=90.,
+                            default_value=90.0,
                         ),
                     ],
                     title=_("Levels for disk usage"),
@@ -44,4 +44,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersStorage,
         parameter_valuespec=_parameter_valuespec_fortimail_disk_usage,
         title=lambda: _("Fortinet FortiMail disk usage"),
-    ))
+    )
+)

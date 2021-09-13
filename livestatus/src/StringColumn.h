@@ -84,9 +84,7 @@ private:
 
 class StringColumn::Constant : public StringColumn {
 public:
-    // NOTE: clangd-11 and cppcheck disagree, shut up cppcheck >:-)
     Constant(const std::string& name, const std::string& description,
-             // cppcheck-suppress passedByValue
              std::string x)
         : StringColumn{name, description, {}}, x_{std::move(x)} {}
     ~Constant() override = default;

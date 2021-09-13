@@ -1,25 +1,25 @@
 #!/usr/bin/env python3
 
+import glob
 import os
+import random
+import subprocess
 import sys
 import time
-import random
-import glob
 import traceback
-import subprocess
 
 from cmk.utils.render import fmt_bytes
 
-opt_verbose = '-v' in sys.argv
-opt_force = '-f' in sys.argv
+opt_verbose = "-v" in sys.argv
+opt_force = "-f" in sys.argv
 
-omd_site = os.environ['OMD_SITE']
-omd_root = os.environ['OMD_ROOT']
+omd_site = os.environ["OMD_SITE"]
+omd_root = os.environ["OMD_ROOT"]
 
-config_file = omd_root + '/etc/diskspace.conf'
-plugin_dir = omd_root + '/share/diskspace'
-plugin_dir_local = omd_root + '/local/share/diskspace'
-check_mk_var_dir = omd_root + '/var/check_mk'
+config_file = omd_root + "/etc/diskspace.conf"
+plugin_dir = omd_root + "/share/diskspace"
+plugin_dir_local = omd_root + "/local/share/diskspace"
+check_mk_var_dir = omd_root + "/var/check_mk"
 
 # Configuration variables
 min_free_bytes = None
@@ -36,7 +36,7 @@ plugins: dict = {}
 
 
 def error(s):
-    sys.stderr.write('ERROR: %s\n' % s)
+    sys.stderr.write("ERROR: %s\n" % s)
 
 
 def terminate(s):
@@ -45,7 +45,7 @@ def terminate(s):
 
 
 def log(s):
-    sys.stdout.write('%s\n' % s)
+    sys.stdout.write("%s\n" % s)
 
 
 def verbose(s):
@@ -61,7 +61,7 @@ def read_config():
     except IOError:
         pass  # ignore non existant config
     except Exception as e:
-        terminate('Invalid configuration: %s' % e)
+        terminate("Invalid configuration: %s" % e)
 
 
 def print_config():
@@ -69,8 +69,10 @@ def print_config():
     if cleanup_abandoned_host_files is None:
         verbose("  Not cleaning up abandoned host files.")
     else:
-        verbose("  Cleaning up abandoned host files older than %d seconds." %
-                cleanup_abandoned_host_files)
+        verbose(
+            "  Cleaning up abandoned host files older than %d seconds."
+            % cleanup_abandoned_host_files
+        )
 
     if max_file_age is None:
         verbose("  Not cleaning up files by age.")
@@ -80,26 +82,28 @@ def print_config():
     if min_free_bytes is None or min_file_age is None:
         verbose("  Not cleaning up files by free space left.")
     else:
-        verbose("  Cleanup files till %s are free while not deleting files "
-                "older than %d seconds" % (fmt_bytes(min_free_bytes), min_file_age or 0))
+        verbose(
+            "  Cleanup files till %s are free while not deleting files "
+            "older than %d seconds" % (fmt_bytes(min_free_bytes), min_file_age or 0)
+        )
 
 
 def resolve_paths():
     for plugin in plugins.values():
         resolved = []
-        for path in plugin.get('cleanup_paths', []):
+        for path in plugin.get("cleanup_paths", []):
             # Make relative paths absolute ones
-            if path[0] != '/':
-                path = omd_root + '/' + path
+            if path[0] != "/":
+                path = omd_root + "/" + path
 
             # This resolves given path patterns to really existing files.
             # It also ensures that the files in the resolved list do really exist.
             resolved += glob.glob(path)
 
         if resolved:
-            plugin['cleanup_paths'] = resolved
-        elif 'cleanup_paths' in plugin:
-            del plugin['cleanup_paths']
+            plugin["cleanup_paths"] = resolved
+        elif "cleanup_paths" in plugin:
+            del plugin["cleanup_paths"]
 
 
 def load_plugins():
@@ -112,13 +116,13 @@ def load_plugins():
 
     for base_dir, file_list in [(plugin_dir, plugin_files), (plugin_dir_local, local_plugins)]:
         for f in file_list:
-            if f[0] == '.':
+            if f[0] == ".":
                 continue
 
             plugins[f] = {}
 
-            path = base_dir + '/' + f
-            verbose('Loading plugin: %s' % path)
+            path = base_dir + "/" + f
+            verbose("Loading plugin: %s" % path)
             try:
                 exec(open(path).read(), plugins[f], plugins[f])
             except Exception as e:
@@ -130,15 +134,15 @@ def load_plugins():
 
 def collect_file_infos():
     for plugin in plugins.values():
-        for path in plugin.get('cleanup_paths', []):
+        for path in plugin.get("cleanup_paths", []):
             result = os.stat(path)
-            plugin.setdefault('file_infos', {})[path] = (result.st_size, result.st_mtime)
+            plugin.setdefault("file_infos", {})[path] = (result.st_size, result.st_mtime)
 
 
 def get_free_space():
     # FIXME: Take possible root reserved space into account
-    for l in subprocess.check_output(['df', '-P', '-B1', omd_root], encoding="utf-8").split("\n"):
-        if l[0] == '/':
+    for l in subprocess.check_output(["df", "-P", "-B1", omd_root], encoding="utf-8").split("\n"):
+        if l[0] == "/":
             _vol, _size_bytes, _used_bytes, free_bytes, _used_perc, _mp = l.split()
             return int(free_bytes)
 
@@ -149,19 +153,19 @@ def above_threshold(b):
 
 def delete_file(path, reason):
     try:
-        log('Deleting file (%s): %s' % (reason, path))
+        log("Deleting file (%s): %s" % (reason, path))
         os.unlink(path)
 
         # Also delete any .info files which are connected to the rrd file
         if path.endswith(".rrd"):
             path = "%sinfo" % path[:-3]
             if os.path.exists(path):
-                log('Deleting file (%s): %s' % (reason, path))
+                log("Deleting file (%s): %s" % (reason, path))
                 os.unlink(path)
 
         return True
     except Exception as e:
-        error('Error while deleting %s: %s' % (path, e))
+        error("Error while deleting %s: %s" % (path, e))
     return False
 
 
@@ -169,13 +173,13 @@ def delete_file(path, reason):
 # (not recursing into sub directories. Failing instead)
 def delete_files_and_base_directory(path, reason):
     try:
-        log('Deleting directory and files (%s): %s' % (reason, path))
+        log("Deleting directory and files (%s): %s" % (reason, path))
         for f in os.listdir(path):
             os.unlink(path + "/" + f)
         os.rmdir(path)
         return True
     except Exception as e:
-        error('Error while deleting %s: %s' % (path, e))
+        error("Error while deleting %s: %s" % (path, e))
     return False
 
 
@@ -183,20 +187,20 @@ def delete_files_and_base_directory(path, reason):
 # max_age. Simply remove all of them.
 def cleanup_aged():
     if max_file_age is None:
-        verbose('Not cleaning up too old files (not enabled)')
+        verbose("Not cleaning up too old files (not enabled)")
         return
     max_age = time.time() - max_file_age
 
     for plugin in plugins.values():
-        for path, (_size, mtime) in plugin.get('file_infos', {}).items():
+        for path, (_size, mtime) in list(plugin.get("file_infos", {}).items()):
             if mtime < max_age:
-                if delete_file(path, 'too old'):
-                    del plugin['file_infos'][path]
+                if delete_file(path, "too old"):
+                    del plugin["file_infos"][path]
             else:
-                verbose('Not deleting %s' % path)
+                verbose("Not deleting %s" % path)
 
     bytes_free = get_free_space()
-    verbose('Free space (after file age cleanup): %s' % fmt_bytes(bytes_free))
+    verbose("Free space (after file age cleanup): %s" % fmt_bytes(bytes_free))
 
 
 def oldest_candidate(file_infos):
@@ -211,32 +215,33 @@ def oldest_candidate(file_infos):
 
 def cleanup_oldest_files():
     if min_free_bytes is None or min_file_age is None:
-        verbose('Not cleaning up oldest files of plugins (not enabled)')
+        verbose("Not cleaning up oldest files of plugins (not enabled)")
         return
 
     # check diskspace against configuration
     bytes_free = get_free_space()
     if not opt_force and above_threshold(bytes_free):
-        verbose('Free space is above threshold of %s. Nothing to be done.' %
-                fmt_bytes(min_free_bytes))
+        verbose(
+            "Free space is above threshold of %s. Nothing to be done." % fmt_bytes(min_free_bytes)
+        )
         return
 
     # the scheduling of the cleanup job is supposed to be equal for
     # all sites. To ensure that not only one single site is always
     # cleaning up, we add a a random wait before cleanup.
     sleep_sec = float(random.randint(0, 10000)) / 1000
-    verbose('Sleeping for %0.3f seconds' % sleep_sec)
+    verbose("Sleeping for %0.3f seconds" % sleep_sec)
     time.sleep(sleep_sec)
 
     # Loop all cleanup plugins to find the oldest candidate per plugin
     # which is older than min_age and delete this file.
     for plugin_name, plugin in plugins.items():
-        oldest = oldest_candidate(plugin.get('file_infos', {}))
+        oldest = oldest_candidate(plugin.get("file_infos", {}))
         if oldest:
-            delete_file(oldest, plugin_name + ': my oldest')
+            delete_file(oldest, plugin_name + ": my oldest")
 
     bytes_free = get_free_space()
-    verbose('Free space (after min free space space cleanup): %s' % fmt_bytes(bytes_free))
+    verbose("Free space (after min free space space cleanup): %s" % fmt_bytes(bytes_free))
 
 
 # The mechanism is like this:
@@ -275,11 +280,13 @@ def do_cleanup_abandoned_host_files():
     # cleaned up abandoned files for.
     if cleaned_up_hosts:
         command = ["check_mk", "--automation", "delete-hosts"] + list(cleaned_up_hosts)
-        verbose("Calling \"%s\"" % " ".join(command))
+        verbose('Calling "%s"' % " ".join(command))
         p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if p.wait() != 0:
-            error("Failed to execute \"%s\" to cleanup the host files. Exit-Code: %d, Output: %s" %
-                  (" ".join(command), p.returncode, p.stdout.read()))
+            error(
+                'Failed to execute "%s" to cleanup the host files. Exit-Code: %d, Output: %s'
+                % (" ".join(command), p.returncode, p.stdout.read())
+            )
 
 
 def cleanup_host_directory(site_hosts, base_path):
@@ -328,13 +335,16 @@ def get_configured_hosts():
 
     if file_vars.get("is_wato_slave_site", False):
         host_names.update(
-            subprocess.check_output(["check_mk", "--list-hosts", "--include-offline"],
-                                    encoding="utf-8").splitlines())
+            subprocess.check_output(
+                ["check_mk", "--list-hosts", "--include-offline"], encoding="utf-8"
+            ).splitlines()
+        )
     else:
         host_names.update(
             subprocess.check_output(
-                ["check_mk", "--list-hosts", "--all-sites", "--include-offline"],
-                encoding="utf-8").splitlines())
+                ["check_mk", "--list-hosts", "--all-sites", "--include-offline"], encoding="utf-8"
+            ).splitlines()
+        )
 
     return host_names
 
@@ -348,7 +358,7 @@ def main():
 
     # get used diskspace of the sites volume
     bytes_free = get_free_space()
-    verbose('Free space: %s' % fmt_bytes(bytes_free))
+    verbose("Free space: %s" % fmt_bytes(bytes_free))
 
     cleanup_aged()
     cleanup_oldest_files()
@@ -364,4 +374,4 @@ if __name__ == "__main__":
     except SystemExit:  # pylint: disable=try-except-raise
         raise
     except Exception:
-        terminate('Unexpected exception: %s' % traceback.format_exc())
+        terminate("Unexpected exception: %s" % traceback.format_exc())

@@ -30,7 +30,7 @@ description:
 item:
  The fixed statement {{Ambient}}
 
-inventory:
+discovery:
  One service is created for the Temperature sensor if the MIB
  defined above is supported on the switch.
 

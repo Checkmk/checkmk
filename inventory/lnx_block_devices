@@ -66,7 +66,7 @@ def _parse_lnx_block_devices(info):
     # translate list of encoded lines into list of key-value-pairs
     lines = (line for li in info for line in (_pairify(li),) if line)
     # create a list of chunks of key-value-pairs preceded by a `fsnode` entry
-    it = iter([list(pairs) for _, pairs in groupby(lines, lambda pair: pair[0] == 'fsnode')])
+    it = iter([list(pairs) for _, pairs in groupby(lines, lambda pair: pair[0] == "fsnode")])
     # return a list of dicts created from the chunks
     return [dict((name, *attrs)) for (*_, name), attrs in zip(it, it)]
 
@@ -76,6 +76,6 @@ def inv_lnx_block_devices(info, inventory_tree):
     inventory_tree.get_list("hardware.storage.disks:").extend(_parse_lnx_block_devices(info))
 
 
-inv_info['lnx_block_devices'] = {
+inv_info["lnx_block_devices"] = {
     "inv_function": inv_lnx_block_devices,
 }

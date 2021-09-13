@@ -9,6 +9,6 @@ description:
  Returns {OK} if all configured nodes are listed as online nodes
  and {CRIT} otherwise.
 
-inventory:
+discovery:
  One service is created for each EMC Isilon System, named Nodes.
 

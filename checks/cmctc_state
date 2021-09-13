@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cmctc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.2606.4.2.1.0 2
 # .1.3.6.1.4.1.2606.4.2.2.0 1
 
@@ -18,17 +19,17 @@ def inventory_cmctc_state(info):
 
 
 def check_cmctc_state(_no_item, _no_params, info):
-    status_map = {'1': 'failed', '2': 'ok'}
+    status_map = {"1": "failed", "2": "ok"}
 
     status_code, units = info[0]
-    status = status_map.get(status_code, 'unknown[%s]' % status_code)
+    status = status_map.get(status_code, "unknown[%s]" % status_code)
 
-    state = 0 if status == 'ok' else 2
-    infotext = 'Status: %s, Units connected: %s' % (status, units)
+    state = 0 if status == "ok" else 2
+    infotext = "Status: %s, Units connected: %s" % (status, units)
     return state, infotext
 
 
-check_info['cmctc_state'] = {
+check_info["cmctc_state"] = {
     "inventory_function": inventory_cmctc_state,
     "check_function": check_cmctc_state,
     "service_description": "TC unit state",
@@ -38,5 +39,6 @@ check_info['cmctc_state'] = {
         [  # RITTAL-CMC-TC-MIB
             "1",  # cmcTcStatusDeviceCMC
             "2",  # cmcTcUnitsConnected
-        ]),
+        ],
+    ),
 }

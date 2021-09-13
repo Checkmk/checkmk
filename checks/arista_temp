@@ -9,24 +9,25 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Check originally developed for:
 # Arista Networks EOS version 4.20.9M running on an Arista Networks DCS-7280QR-C36
 
-#.1.3.6.1.2.1.47.1.1.1.1.2.100006001 Cpu temp sensor --> ENTITY-MIB::entPhysicalDescr.100006001
-#.1.3.6.1.2.1.47.1.1.1.1.2.100006002 Cpu board temp sensor --> ENTITY-MIB::entPhysicalDescr.100006002
-#.1.3.6.1.2.1.47.1.1.1.1.2.100006003 Back-panel temp sensor --> ENTITY-MIB::entPhysicalDescr.100006003
-#.1.3.6.1.2.1.47.1.1.1.1.2.100006005 Front-panel temp sensor --> ENTITY-MIB::entPhysicalDescr.100006005
+# .1.3.6.1.2.1.47.1.1.1.1.2.100006001 Cpu temp sensor --> ENTITY-MIB::entPhysicalDescr.100006001
+# .1.3.6.1.2.1.47.1.1.1.1.2.100006002 Cpu board temp sensor --> ENTITY-MIB::entPhysicalDescr.100006002
+# .1.3.6.1.2.1.47.1.1.1.1.2.100006003 Back-panel temp sensor --> ENTITY-MIB::entPhysicalDescr.100006003
+# .1.3.6.1.2.1.47.1.1.1.1.2.100006005 Front-panel temp sensor --> ENTITY-MIB::entPhysicalDescr.100006005
 
-#.1.3.6.1.2.1.99.1.1.1.3.100006001 1 --> ENTITY-SENSOR-MIB::entPhySensorPrecision.100006001
-#.1.3.6.1.2.1.99.1.1.1.3.100006002 1 --> ENTITY-SENSOR-MIB::entPhySensorPrecision.100006002
-#.1.3.6.1.2.1.99.1.1.1.3.100006003 1 --> ENTITY-SENSOR-MIB::entPhySensorPrecision.100006003
-#.1.3.6.1.2.1.99.1.1.1.3.100006005 1 --> ENTITY-SENSOR-MIB::entPhySensorPrecision.100006005
+# .1.3.6.1.2.1.99.1.1.1.3.100006001 1 --> ENTITY-SENSOR-MIB::entPhySensorPrecision.100006001
+# .1.3.6.1.2.1.99.1.1.1.3.100006002 1 --> ENTITY-SENSOR-MIB::entPhySensorPrecision.100006002
+# .1.3.6.1.2.1.99.1.1.1.3.100006003 1 --> ENTITY-SENSOR-MIB::entPhySensorPrecision.100006003
+# .1.3.6.1.2.1.99.1.1.1.3.100006005 1 --> ENTITY-SENSOR-MIB::entPhySensorPrecision.100006005
 
-#.1.3.6.1.2.1.99.1.1.1.4.100006001 568 --> ENTITY-SENSOR-MIB::entPhySensorValue.100006001
-#.1.3.6.1.2.1.99.1.1.1.4.100006002 470 --> ENTITY-SENSOR-MIB::entPhySensorValue.100006002
-#.1.3.6.1.2.1.99.1.1.1.4.100006003 450 --> ENTITY-SENSOR-MIB::entPhySensorValue.100006003
-#.1.3.6.1.2.1.99.1.1.1.4.100006004 390 --> ENTITY-SENSOR-MIB::entPhySensorValue.100006004
-#.1.3.6.1.2.1.99.1.1.1.4.100006006 570 --> ENTITY-SENSOR-MIB::entPhySensorValue.100006006
+# .1.3.6.1.2.1.99.1.1.1.4.100006001 568 --> ENTITY-SENSOR-MIB::entPhySensorValue.100006001
+# .1.3.6.1.2.1.99.1.1.1.4.100006002 470 --> ENTITY-SENSOR-MIB::entPhySensorValue.100006002
+# .1.3.6.1.2.1.99.1.1.1.4.100006003 450 --> ENTITY-SENSOR-MIB::entPhySensorValue.100006003
+# .1.3.6.1.2.1.99.1.1.1.4.100006004 390 --> ENTITY-SENSOR-MIB::entPhySensorValue.100006004
+# .1.3.6.1.2.1.99.1.1.1.4.100006006 570 --> ENTITY-SENSOR-MIB::entPhySensorValue.100006006
 
 
 def parse_arista_temp(info):
@@ -46,11 +47,11 @@ def check_arista_temp(item, params, value):
 
 
 def arista_temp_scan_function(oid):
-    return oid('.1.3.6.1.2.1.1.1.0').lower().startswith("arista networks")
+    return oid(".1.3.6.1.2.1.1.1.0").lower().startswith("arista networks")
 
 
 check_info["arista_temp"] = {
-    'parse_function': parse_arista_temp,
+    "parse_function": parse_arista_temp,
     "check_function": check_arista_temp,
     "inventory_function": discover(),
     "service_description": "Temperature %s",
@@ -61,7 +62,8 @@ check_info["arista_temp"] = {
             "47.1.1.1.1.2",  # ENTITY-MIB::entPhysicalDescr
             "99.1.1.1.3",  # ENTITY-SENSOR-MIB::entPhySensorPrecision
             "99.1.1.1.4",  # ENTITY-SENSOR-MIB::entPhySensorValue
-        ]),
+        ],
+    ),
     "snmp_scan_function": arista_temp_scan_function,
     "group": "temperature",
 }

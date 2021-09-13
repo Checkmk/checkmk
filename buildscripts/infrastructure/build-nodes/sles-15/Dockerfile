@@ -1,4 +1,6 @@
-FROM registry.suse.com/suse/sle15:15.0
+ARG IMAGE_SLES_15
+# hadolint ignore=DL3006
+FROM ${IMAGE_SLES_15}
 
 SHELL ["/bin/bash", "-c"]
 ENV LC_ALL=C.UTF-8 LANG=C.UTF-8 PATH="/opt/bin:${PATH}"
@@ -10,6 +12,7 @@ RUN zypper addrepo -G ${ARTIFACT_STORAGE}/repository/sles15 sles15 \
     apache2-devel \
     bind-utils \
     curl \
+    cyrus-sasl-devel \
     flex \
     freeradius-client-devel \
     freetype2-devel \
@@ -79,6 +82,7 @@ ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NE
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
 RUN /opt/install-cmake.sh
+RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python2.sh
 RUN /opt/install-python.sh

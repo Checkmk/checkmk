@@ -15,5 +15,5 @@ item:
  The stack member number, followed by slash (/), followed by a consecutive number for each
  PSU of this member.
 
-inventory:
+discovery:
  One service is created for each PSU of each stack member.

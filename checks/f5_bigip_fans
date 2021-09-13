@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.f5_bigip import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Agent / MIB output
 # see 1.3.6.1.4.1.3375.2.1.3.2.1.1.0
 # F5-BIGIP-SYSTEM-MIB::sysChassisFanIndex.1   .1.3.6.1.4.1.3375.2.1.3.2.1.1.1 = 1
@@ -34,7 +36,7 @@ f5_bigip_fans_default_levels = (2000, 500)
 
 
 def parse_f5_bigip_fans(info):
-    fantyp = ['Chassis', 'Processor']
+    fantyp = ["Chassis", "Processor"]
     fanchoice = 0
     parsed = {}
 
@@ -52,15 +54,16 @@ def parse_f5_bigip_fans(info):
 
 
 def inventory_f5_bigip_fans(parsed):
-    inventory = []
     for item in parsed.keys():
         yield item, "f5_bigip_fans_default_levels"
 
 
 def check_f5_bigip_fans(item, params, parsed):
     fanspeed = parsed.get(item)
-    if not fanspeed:
-        yield 3, "could not detect speed"
+    if fanspeed is None:
+        # do not change this to if not fanspeed! fanspeed could be 0.
+        yield 3, "Could not detect speed"
+        return
 
     yield check_fan(fanspeed, params)
 
@@ -68,12 +71,14 @@ def check_f5_bigip_fans(item, params, parsed):
 # Get ID and Speed from the CPU and chassis fan tables
 
 check_info["f5_bigip_fans"] = {
-    'check_function': check_f5_bigip_fans,
-    'inventory_function': inventory_f5_bigip_fans,
-    'parse_function': parse_f5_bigip_fans,
-    'service_description': 'FAN %s',
-    'group': 'hw_fans',
-    'snmp_info': [('.1.3.6.1.4.1.3375.2.1.3.2.1.2.1', [1, 3]),
-                  ('.1.3.6.1.4.1.3375.2.1.3.6.2.1', [4, 3])],
-    'snmp_scan_function': scan_f5_bigip,
+    "check_function": check_f5_bigip_fans,
+    "inventory_function": inventory_f5_bigip_fans,
+    "parse_function": parse_f5_bigip_fans,
+    "service_description": "FAN %s",
+    "group": "hw_fans",
+    "snmp_info": [
+        (".1.3.6.1.4.1.3375.2.1.3.2.1.2.1", [1, 3]),
+        (".1.3.6.1.4.1.3375.2.1.3.6.2.1", [4, 3]),
+    ],
+    "snmp_scan_function": scan_f5_bigip,
 }

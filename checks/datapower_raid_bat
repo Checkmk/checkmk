@@ -47,12 +47,16 @@ def check_datapower_raid_bat(item, _no_params, info):
         if item == controller_id:
             state, state_txt = datapower_raid_bat_status[status]
             type_txt = datapower_raid_bat_type[bat_type]
-            infotext = "Status: %s, Name: %s, Type: %s, Serial: %s" \
-                    % (state_txt, name, type_txt, serial)
+            infotext = "Status: %s, Name: %s, Type: %s, Serial: %s" % (
+                state_txt,
+                name,
+                type_txt,
+                serial,
+            )
             return state, infotext
 
 
-check_info['datapower_raid_bat'] = {
+check_info["datapower_raid_bat"] = {
     "inventory_function": inventory_datapower_raid_bat,
     "check_function": check_datapower_raid_bat,
     "service_description": "Raid Battery %s",
@@ -64,6 +68,7 @@ check_info['datapower_raid_bat'] = {
             "3",  # dpStatusRaidBatteryBackUpStatusSerial
             "4",  # dpStatusRaidBatteryBackUpStatusName
             "5",  # dpStatusRaidBatteryBackUpStatusStatus
-        ]),
+        ],
+    ),
     "snmp_scan_function": scan_datapower,
 }

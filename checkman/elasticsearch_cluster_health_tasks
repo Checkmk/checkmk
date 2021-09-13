@@ -7,6 +7,6 @@ description:
  This check shows informations about tasks of an elasticsearch cluster.
  Available Informations: Pending tasks, Timed out, Task max waiting
 
-inventory:
+discovery:
  One service is created.
 

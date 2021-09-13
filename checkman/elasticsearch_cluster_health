@@ -10,6 +10,6 @@ description:
  It also shows informations about the cluster name, nodes (count)
  and data nodes (count).
 
-inventory:
+discovery:
  One service is created.
 

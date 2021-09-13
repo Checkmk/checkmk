@@ -4,33 +4,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import (
-    List,
-    Mapping,
-    Tuple,
-)
-from .agent_based_api.v1 import (
-    SNMPTree,
-    Service,
-    check_levels,
-    register,
-)
-from .agent_based_api.v1.type_defs import (
-    DiscoveryResult,
-    CheckResult,
-    StringTable,
-)
+from typing import List, Mapping, Optional, Tuple
+
+from .agent_based_api.v1 import check_levels, register, Service, SNMPTree
+from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.fortinet import DETECT_FORTIAUTHENTICATOR
 
 Section = Mapping[str, int]
 
 
-def parse_fortiauthenticator_auth_fail(string_table: List[StringTable]) -> Section:
+def parse_fortiauthenticator_auth_fail(string_table: List[StringTable]) -> Optional[Section]:
     """
     >>> parse_fortiauthenticator_auth_fail([[['3']]])
     {'auth_fails': 3}
     """
-    return {"auth_fails": int(string_table[0][0][0])}
+    return {"auth_fails": int(string_table[0][0][0])} if all(string_table) else None
 
 
 def discover_fortiauthenticator_auth_fail(section: Section) -> DiscoveryResult:
@@ -66,9 +54,9 @@ register.snmp_section(
     detect=DETECT_FORTIAUTHENTICATOR,
     fetch=[
         SNMPTree(
-            base='.1.3.6.1.4.1.12356.113.1.202',
+            base=".1.3.6.1.4.1.12356.113.1.202",
             oids=[
-                '23',  # facAuthFailures5Min
+                "23",  # facAuthFailures5Min
             ],
         ),
     ],

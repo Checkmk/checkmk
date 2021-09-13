@@ -7,7 +7,7 @@
 # For legacy reasons
 blade_bx_fan_default_error_levels = (20, 10)  # percentages or errors!
 
-factory_settings['blade_bx_powerfan_default_levels'] = {
+factory_settings["blade_bx_powerfan_default_levels"] = {
     "levels_lower": (20, 10),
     "levels": (80, 90),
 }
@@ -21,7 +21,7 @@ blade_bx_status = {
     "6": "redundant-fan-failed",
     "7": "not-manageable",
     "8": "not-present",
-    "9": "not-available"
+    "9": "not-available",
 }
 
 
@@ -33,8 +33,8 @@ def inventory_blade_bx_powerfan(info):
 
 def check_blade_bx_powerfan(item, params, info):
     if isinstance(params, dict):
-        warn_perc_lower, crit_perc_lower = params['levels_lower']
-        warn_perc, crit_perc = params['levels']
+        warn_perc_lower, crit_perc_lower = params["levels_lower"]
+        warn_perc, crit_perc = params["levels"]
     else:
         warn_perc_lower, crit_perc_lower = params
         warn_perc, crit_perc = None, None
@@ -42,8 +42,10 @@ def check_blade_bx_powerfan(item, params, info):
     for status, descr, rpm, max_speed, _speed, ctrlstate in info:
         if descr == item:
             speed_perc = float(rpm) * 100 / float(max_speed)
-            perfdata = [('perc', speed_perc, warn_perc_lower, crit_perc_lower, "0", "100"),
-                        ('rpm', rpm)]
+            perfdata = [
+                ("perc", speed_perc, warn_perc_lower, crit_perc_lower, "0", "100"),
+                ("rpm", rpm),
+            ]
 
             if ctrlstate != "2":
                 return 2, "Fan not present or poweroff", perfdata
@@ -55,22 +57,24 @@ def check_blade_bx_powerfan(item, params, info):
                 levels_text = ""
                 if speed_perc < crit_perc_lower:
                     state = 2
-                    levels_text = " (warn/crit below %.1f%%/%.1f%%)" % \
-                                    (warn_perc_lower, crit_perc_lower)
+                    levels_text = " (warn/crit below %.1f%%/%.1f%%)" % (
+                        warn_perc_lower,
+                        crit_perc_lower,
+                    )
                 elif speed_perc < warn_perc_lower:
                     state = 1
-                    levels_text = " (warn/crit below %.1f%%/%.1f%%)" % \
-                                    (warn_perc_lower, crit_perc_lower)
+                    levels_text = " (warn/crit below %.1f%%/%.1f%%)" % (
+                        warn_perc_lower,
+                        crit_perc_lower,
+                    )
 
                 if warn_perc:
                     if speed_perc >= crit_perc:
                         state = 2
-                        levels_text = " (warn/crit at %.1f%%/%.1f%%)" % \
-                                        (warn_perc, crit_perc)
+                        levels_text = " (warn/crit at %.1f%%/%.1f%%)" % (warn_perc, crit_perc)
                     elif speed_perc >= warn_perc:
                         state = 1
-                        levels_text = " (warn/crit at %.1f%%/%.1f%%)" % \
-                                        (warn_perc, crit_perc)
+                        levels_text = " (warn/crit at %.1f%%/%.1f%%)" % (warn_perc, crit_perc)
 
                 if state > 0:
                     infotext += levels_text
@@ -78,21 +82,24 @@ def check_blade_bx_powerfan(item, params, info):
                 return state, infotext, perfdata
 
 
-check_info['blade_bx_powerfan'] = {
-    "check_function"          : check_blade_bx_powerfan,
-    "inventory_function"      : inventory_blade_bx_powerfan,
-    "service_description"     : "Blade Cooling %s",
-    "has_perfdata"            : True,
-    "group"                   : "hw_fans_perc",
-    "default_levels_variable" : "blade_bx_powerfan_default_levels",
-    "snmp_info"               : (".1.3.6.1.4.1.7244.1.1.1.3.3.1.1", [
-                                    "2", #status
-                                    "3", #desc
-                                    "4", #rpm
-                                    "5", #max_speed
-                                    "6", #speed
-                                    "7", # ctrlstate
-   ]),
-   "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0") \
-                            or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1",
+check_info["blade_bx_powerfan"] = {
+    "check_function": check_blade_bx_powerfan,
+    "inventory_function": inventory_blade_bx_powerfan,
+    "service_description": "Blade Cooling %s",
+    "has_perfdata": True,
+    "group": "hw_fans_perc",
+    "default_levels_variable": "blade_bx_powerfan_default_levels",
+    "snmp_info": (
+        ".1.3.6.1.4.1.7244.1.1.1.3.3.1.1",
+        [
+            "2",  # status
+            "3",  # desc
+            "4",  # rpm
+            "5",  # max_speed
+            "6",  # speed
+            "7",  # ctrlstate
+        ],
+    ),
+    "snmp_scan_function": lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0")
+    or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1",
 }

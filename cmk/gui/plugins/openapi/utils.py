@@ -4,17 +4,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
-from typing import Literal, Optional, Dict, Any, cast
+from typing import Any, cast, Dict, Literal, Optional
 from urllib.parse import quote_plus
-
-from marshmallow import Schema
 
 import docstring_parser  # type: ignore[import]
 from werkzeug.exceptions import HTTPException
 
-from cmk.gui.http import Response
-from cmk.gui.plugins.openapi.livestatus_helpers.queries import Query
 from livestatus import SiteId
+
+from cmk.utils.livestatus_helpers.queries import Query
+
+from cmk.gui.http import Response
 
 
 def problem(
@@ -25,19 +25,19 @@ def problem(
     ext: Optional[Dict[str, Any]] = None,
 ):
     problem_dict = {
-        'title': title,
-        'status': status,
+        "title": title,
+        "status": status,
     }
     if detail is not None:
-        problem_dict['detail'] = detail
+        problem_dict["detail"] = detail
     if type_ is not None:
-        problem_dict['type'] = type_
+        problem_dict["type"] = type_
 
     if isinstance(ext, dict):
         problem_dict.update(ext)
     else:
         if ext:
-            problem_dict['ext'] = ext
+            problem_dict["ext"] = ext
 
     response = Response()
     response.status_code = status
@@ -81,17 +81,10 @@ class ProblemException(HTTPException):
         )
 
 
-class BaseSchema(Schema):
-    """The Base Schema for all request and response schemas."""
-    class Meta:
-        """Holds configuration for marshmallow"""
-        ordered = True  # we want to have documentation in definition-order
-
-
 def param_description(
     string: Optional[str],
     param_name: str,
-    errors: Literal['raise', 'ignore'] = 'raise',
+    errors: Literal["raise", "ignore"] = "raise",
 ) -> Optional[str]:
     """Get a param description of a docstring.
 
@@ -137,7 +130,7 @@ def param_description(
 
     """
     if string is None:
-        if errors == 'raise':
+        if errors == "raise":
             raise ValueError("No docstring was given.")
         return None
 
@@ -145,7 +138,7 @@ def param_description(
     for param in docstring.params:
         if param.arg_name == param_name:
             return param.description.replace("\n", " ")
-    if errors == 'raise':
+    if errors == "raise":
         raise ValueError(f"Parameter {param_name!r} not found in docstring.")
     return None
 
@@ -157,7 +150,7 @@ def create_url(site: SiteId, query: Query) -> str:
 
         >>> create_url('heute',
         ...            Query.from_string("GET hosts\\nColumns: name\\nFilter: name = heute"))
-        '/heute/check_mk/api/v0/domain-types/host/collections/all?query=%7B%22op%22%3A+%22%3D%22%2C+%22left%22%3A+%22hosts.name%22%2C+%22right%22%3A+%22heute%22%7D'
+        '/heute/check_mk/api/1.0/domain-types/host/collections/all?query=%7B%22op%22%3A+%22%3D%22%2C+%22left%22%3A+%22hosts.name%22%2C+%22right%22%3A+%22heute%22%7D'
 
     Args:
         site:
@@ -176,12 +169,12 @@ def create_url(site: SiteId, query: Query) -> str:
     table = cast(str, query.table.__tablename__)
     try:
         domain_type = {
-            'hosts': 'host',
-            'services': 'service',
+            "hosts": "host",
+            "services": "service",
         }[table]
     except KeyError:
         raise ValueError(f"Could not find a domain-type for table {table}.")
-    url = f"/{site}/check_mk/api/v0/domain-types/{domain_type}/collections/all"
+    url = f"/{site}/check_mk/api/1.0/domain-types/{domain_type}/collections/all"
     query_dict = query.dict_repr()
     if query_dict:
         query_string_value = quote_plus(json.dumps(query_dict))

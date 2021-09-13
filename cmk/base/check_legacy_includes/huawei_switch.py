@@ -4,9 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
+from typing import Dict, List, NamedTuple, Optional
+
 from cmk.base.check_api import OID_END
-import collections
 
 
 def huawei_switch_scan_function(oid):
@@ -20,17 +20,20 @@ def huawei_entity_specific_snmp_info(snmp_info):
     """
     return [
         (
-            '.1.3.6.1.2.1.47.1.1.1.1',
+            ".1.3.6.1.2.1.47.1.1.1.1",
             [OID_END, "7"],
         ),  # retrieve list of [entPhysicalIndex, entPhysicalName]
         snmp_info,
     ]
 
 
-huawei_mpu_board_name_start = 'mpu board'
+huawei_mpu_board_name_start = "mpu board"
 
-HuaweiPhysicalEntityValue = collections.namedtuple("HuaweiPhysicalEntityValue",
-                                                   "physical_index stack_member value")
+
+class HuaweiPhysicalEntityValue(NamedTuple):
+    physical_index: str
+    stack_member: int
+    value: Optional[str]
 
 
 def parse_huawei_physical_entity_values(info, entity_name_start=huawei_mpu_board_name_start):
@@ -86,7 +89,8 @@ def parse_huawei_physical_entity_values(info, entity_name_start=huawei_mpu_board
     """
     entities_info, values_info = info
     stack_member_number = 0
-    entities_per_member = {}  # groups entities per stack member
+    # groups entities per stack member
+    entities_per_member: Dict[int, List[HuaweiPhysicalEntityValue]] = {}
 
     for entity_line in entities_info:
         lower_entity_name = entity_line[1].lower()
@@ -108,9 +112,10 @@ def parse_huawei_physical_entity_values(info, entity_name_start=huawei_mpu_board
                     physical_index=ent_physical_index,
                     stack_member=stack_member_number,
                     value=value,
-                ))
+                )
+            )
 
-    multiple_entities_per_member = (entity_name_start != huawei_mpu_board_name_start)
+    multiple_entities_per_member = entity_name_start != huawei_mpu_board_name_start
     return huawei_item_dict_from_entities(entities_per_member, multiple_entities_per_member)
 
 

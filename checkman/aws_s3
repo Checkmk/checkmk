@@ -21,7 +21,7 @@ description:
 item:
  Name of the instance
 
-inventory:
+discovery:
  One service is created for each bucket if all required metrics
  (BucketSizeBytes, NumberOfObjects) are given.
 

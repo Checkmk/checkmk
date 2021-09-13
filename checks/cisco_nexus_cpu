@@ -9,15 +9,17 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cisco_cpu_scan_functions import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.9.9.305.1.1.1.0 1 --> CISCO-SYSTEM-EXT-MIB::cseSysCPUUtilization.0
 
 factory_settings["cisco_nexus_cpu_default_levels"] = {
-    'util': (80.0, 90.0),
+    "util": (80.0, 90.0),
 }
 
 
@@ -34,13 +36,13 @@ def check_cisco_nexus_cpu(_no_item, params, info):
 # tplink_cpu, hr_cpu, cisco_nexus_cpu, bintec_cpu, winperf_processor,
 # lxc_container_cpu, docker_container_cpu.
 # Migration via cmk/update_config.py!
-check_info['cisco_nexus_cpu'] = {
-    'inventory_function': inventory_cisco_nexus_cpu,
-    'check_function': check_cisco_nexus_cpu,
-    'service_description': 'CPU utilization',
-    'has_perfdata': True,
-    'snmp_info': (".1.3.6.1.4.1.9.9.305.1.1.1.0", [""]),
-    'snmp_scan_function': snmp_scan_cisco_nexus_cpu,
-    'group': "cpu_utilization_os",
-    'default_levels_variable': "cisco_nexus_cpu_default_levels",
+check_info["cisco_nexus_cpu"] = {
+    "inventory_function": inventory_cisco_nexus_cpu,
+    "check_function": check_cisco_nexus_cpu,
+    "service_description": "CPU utilization",
+    "has_perfdata": True,
+    "snmp_info": (".1.3.6.1.4.1.9.9.305.1.1.1.0", [""]),
+    "snmp_scan_function": snmp_scan_cisco_nexus_cpu,
+    "group": "cpu_utilization_os",
+    "default_levels_variable": "cisco_nexus_cpu_default_levels",
 }

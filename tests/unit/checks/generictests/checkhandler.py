@@ -7,6 +7,7 @@
 
 class CheckHandler:
     """Collect the info on all checks"""
+
     def __init__(self):
         self.cache = {}
 
@@ -14,7 +15,7 @@ class CheckHandler:
         """get a list of names of all (sub)checks that apply"""
         if checkname in self.cache:
             return self.cache[checkname]
-        found = [s for s in check_info.keys() if s.split('.')[0] == checkname]
+        found = [s for s in check_info.keys() if s.split(".")[0] == checkname]
         return self.cache.setdefault(checkname, found)
 
 

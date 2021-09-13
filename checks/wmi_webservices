@@ -12,17 +12,17 @@ from cmk.base.check_legacy_includes.wmi import *  # pylint: disable=wildcard-imp
 
 
 def check_wmi_webservices(item, params, parsed):
-    yield wmi_yield_raw_persec(parsed[""],
-                               item,
-                               "CurrentConnections",
-                               infoname="Connections",
-                               perfvar="connections")
+    yield wmi_yield_raw_persec(
+        parsed[""], item, "CurrentConnections", infoname="Connections", perfvar="connections"
+    )
 
 
-check_info['wmi_webservices'] = {
-    'inventory_function': lambda p: inventory_wmi_table_instances(p),  # pylint: disable=unnecessary-lambda
-    'check_function': check_wmi_webservices,
-    'parse_function': parse_wmi_table,
-    'has_perfdata': True,
-    'service_description': "Web Service %s",
+check_info["wmi_webservices"] = {
+    "inventory_function": lambda p: inventory_wmi_table_instances(  # pylint: disable=unnecessary-lambda
+        p
+    ),
+    "check_function": check_wmi_webservices,
+    "parse_function": parse_wmi_table,
+    "has_perfdata": True,
+    "service_description": "Web Service %s",
 }

@@ -9,6 +9,6 @@ description:
  It currently monitors the frequency of incomplete calls and the latency
  of conference allocation and creation.
 
-inventory:
+discovery:
  One service is created.
 

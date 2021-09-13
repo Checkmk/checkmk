@@ -8,12 +8,16 @@
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
+import json
+
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
@@ -50,8 +54,6 @@ from cmk.base.check_legacy_includes.uptime import *  # pylint: disable=wildcard-
 # 1556846120, "io_file_handle_open_attempt_count": 11, "node_links":
 # []}
 
-import json
-
 
 def parse_rabbitmq_nodes(info):
     parsed = {}
@@ -67,8 +69,9 @@ def parse_rabbitmq_nodes(info):
                     "fd_used": node.get("fd_used"),
                     "fd_total": node.get("fd_total"),
                     "fd_open": node.get("io_file_handle_open_attempt_count"),
-                    "fd_open_rate": node.get("io_file_handle_open_attempt_count_details",
-                                             {}).get("rate"),
+                    "fd_open_rate": node.get("io_file_handle_open_attempt_count_details", {}).get(
+                        "rate"
+                    ),
                 }
 
                 sockets = {
@@ -90,15 +93,17 @@ def parse_rabbitmq_nodes(info):
                     "gc_num": node.get("gc_num"),
                     "gc_num_rate": node.get("gc_num_details", {}).get("rate"),
                     "gc_bytes_reclaimed": node.get("gc_bytes_reclaimed"),
-                    "gc_bytes_reclaimed_rate": node.get("gc_bytes_reclaimed_details",
-                                                        {}).get("rate"),
+                    "gc_bytes_reclaimed_rate": node.get("gc_bytes_reclaimed_details", {}).get(
+                        "rate"
+                    ),
                     "run_queue": node.get("run_queue"),
                 }
 
                 uptime = {"uptime": node.get("uptime")}
 
                 parsed.setdefault(
-                    node_name, {
+                    node_name,
+                    {
                         "type": node.get("type"),
                         "state": node.get("running"),
                         "disk_free_alarm": node.get("disk_free_alarm"),
@@ -109,7 +114,8 @@ def parse_rabbitmq_nodes(info):
                         "mem": mem,
                         "gc": gc_stats,
                         "uptime": uptime,
-                    })
+                    },
+                )
 
     return parsed
 
@@ -136,7 +142,8 @@ def check_rabbitmq_nodes(item, params, parsed):
         if not node_state:
             state = params.get("state")
         yield state, "Is running: %s" % str(node_state).replace("True", "yes").replace(
-            "False", "no")
+            "False", "no"
+        )
 
     for alarm_key, alarm_infotext in [
         ("disk_free_alarm", "Disk alarm in effect"),
@@ -151,8 +158,10 @@ def check_rabbitmq_nodes(item, params, parsed):
         if alarm_value:
             alarm_state = params.get(alarm_key)
 
-            yield alarm_state, "%s: %s" % (alarm_infotext, str(alarm_value).replace(
-                "True", "yes").replace("False", "no"))
+            yield alarm_state, "%s: %s" % (
+                alarm_infotext,
+                str(alarm_value).replace("True", "yes").replace("False", "no"),
+            )
 
 
 check_info["rabbitmq_nodes"] = {
@@ -184,7 +193,7 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
     open_fd = fd_data.get("fd_open")
     if open_fd is not None:
 
-        levels_upper = params.get('fd_open_upper', (None, None))
+        levels_upper = params.get("fd_open_upper", (None, None))
 
         yield check_levels(
             open_fd,
@@ -197,8 +206,8 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
     open_fd_rate = fd_data.get("fd_open_rate")
     if open_fd_rate is not None:
 
-        levels_upper = params.get('fd_open_rate_upper', (None, None))
-        levels_lower = params.get('fd_open_rate_lower', (None, None))
+        levels_upper = params.get("fd_open_rate_upper", (None, None))
+        levels_lower = params.get("fd_open_rate_lower", (None, None))
 
         yield check_levels(
             open_fd_rate,
@@ -212,7 +221,7 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
 
 check_info["rabbitmq_nodes.filedesc"] = {
     "check_function": check_rabbitmq_nodes_filedesc,
-    "inventory_function": discover(lambda k, values: 'fd' in values),
+    "inventory_function": discover(lambda k, values: "fd" in values),
     "service_description": "RabbitMQ Node %s Filedesc",
     "has_perfdata": True,
     "group": "rabbitmq_nodes_filedesc",
@@ -237,7 +246,7 @@ def check_rabbitmq_nodes_sockets(item, params, parsed):
 
 check_info["rabbitmq_nodes.sockets"] = {
     "check_function": check_rabbitmq_nodes_sockets,
-    "inventory_function": discover(lambda k, values: 'sockets' in values),
+    "inventory_function": discover(lambda k, values: "sockets" in values),
     "service_description": "RabbitMQ Node %s Sockets",
     "has_perfdata": True,
     "group": "rabbitmq_nodes_sockets",
@@ -262,7 +271,7 @@ def check_rabbitmq_nodes_proc(item, params, parsed):
 
 check_info["rabbitmq_nodes.proc"] = {
     "check_function": check_rabbitmq_nodes_proc,
-    "inventory_function": discover(lambda k, values: 'proc' in values),
+    "inventory_function": discover(lambda k, values: "proc" in values),
     "service_description": "RabbitMQ Node %s Processes",
     "has_perfdata": True,
     "group": "rabbitmq_nodes_proc",
@@ -297,7 +306,7 @@ def check_rabbitmq_nodes_mem(item, params, parsed):
 
 check_info["rabbitmq_nodes.mem"] = {
     "check_function": check_rabbitmq_nodes_mem,
-    "inventory_function": discover(lambda k, values: 'mem' in values),
+    "inventory_function": discover(lambda k, values: "mem" in values),
     "service_description": "RabbitMQ Node %s Memory",
     "has_perfdata": True,
     "group": "memory_multiitem",
@@ -325,8 +334,8 @@ def check_rabbitmq_nodes_gc(item, params, parsed):
         if "rate" in key:
             unit = "1/s"
 
-        levels_upper = params.get('%s_upper' % key, (None, None))
-        levels_lower = params.get('%s_lower' % key, (None, None))
+        levels_upper = params.get("%s_upper" % key, (None, None))
+        levels_lower = params.get("%s_lower" % key, (None, None))
 
         yield check_levels(
             value,
@@ -352,7 +361,7 @@ def check_rabbitmq_nodes_uptime(item, params, parsed):
 
 check_info["rabbitmq_nodes.uptime"] = {
     "check_function": check_rabbitmq_nodes_uptime,
-    "inventory_function": discover(lambda k, values: 'uptime' in values),
+    "inventory_function": discover(lambda k, values: "uptime" in values),
     "service_description": "RabbitMQ Node %s Uptime",
     "has_perfdata": True,
     "group": "rabbitmq_nodes_uptime",
@@ -372,8 +381,10 @@ def _handle_output(params, value, total, info_text, perf_key):
         value_check = perc_value
         warn_abs = int((warn / 100.0) * total)
         crit_abs = int((crit / 100.0) * total)
-        level_msg = " (warn/crit at %s/%s)" % (get_percent_human_readable(warn),
-                                               get_percent_human_readable(crit))
+        level_msg = " (warn/crit at %s/%s)" % (
+            get_percent_human_readable(warn),
+            get_percent_human_readable(crit),
+        )
     else:
         value_check = value
         warn_abs = warn
@@ -402,7 +413,7 @@ def _handle_output(params, value, total, info_text, perf_key):
 
 check_info["rabbitmq_nodes.gc"] = {
     "check_function": check_rabbitmq_nodes_gc,
-    "inventory_function": discover(lambda k, values: 'gc' in values),
+    "inventory_function": discover(lambda k, values: "gc" in values),
     "service_description": "RabbitMQ Node %s GC",
     "has_perfdata": True,
     "group": "rabbitmq_nodes_gc",

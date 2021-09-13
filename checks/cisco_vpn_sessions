@@ -13,51 +13,51 @@ def _scan_cisco_vpn_sessions(_oid):
 def check_cisco_vpn_sessions(item, params, data):
 
     yield check_levels(
-        data['active_sessions'],
-        'active_sessions',
-        params.get('active_sessions'),
-        infoname='Active sessions',
+        data["active_sessions"],
+        "active_sessions",
+        params.get("active_sessions"),
+        infoname="Active sessions",
         human_readable_func=int,
     )
 
-    if item != 'Summary':
+    if item != "Summary":
         yield check_levels(
-            data['peak_sessions'],
-            'active_sessions_peak',
+            data["peak_sessions"],
+            "active_sessions_peak",
             None,
-            infoname='Peak count',
+            infoname="Peak count",
             human_readable_func=int,
         )
 
-    if 'maximum_sessions' in data:
-        yield 0, 'Overall system maximum: %s' % data['maximum_sessions']
+    if "maximum_sessions" in data:
+        yield 0, "Overall system maximum: %s" % data["maximum_sessions"]
 
-    yield 0, 'Cumulative count: %s' % data['cumulative_sessions']
+    yield 0, "Cumulative count: %s" % data["cumulative_sessions"]
 
 
-check_info['cisco_vpn_sessions'] = {
-    'inventory_function': discover(),
-    'check_function': check_cisco_vpn_sessions,
-    'service_description': 'VPN Sessions %s',
-    'has_perfdata': True,
-    'group': 'cisco_vpn_sessions',
-    'snmp_scan_function': _scan_cisco_vpn_sessions,
-    'snmp_info': (
-        '.1.3.6.1.4.1.9.9.392.1',
+check_info["cisco_vpn_sessions"] = {
+    "inventory_function": discover(),
+    "check_function": check_cisco_vpn_sessions,
+    "service_description": "VPN Sessions %s",
+    "has_perfdata": True,
+    "group": "cisco_vpn_sessions",
+    "snmp_scan_function": _scan_cisco_vpn_sessions,
+    "snmp_info": (
+        ".1.3.6.1.4.1.9.9.392.1",
         [
-            '3.26',  # crasIPSecNumSessions
-            '3.27',  # crasIPSecCumulateSessions
-            '3.28',  # crasIPSecPeakConcurrentSessions
-            '3.29',  # crasL2LNumSessions
-            '3.30',  # crasL2LCumulateSessions
-            '3.31',  # crasL2LPeakConcurrentSessions
-            '3.35',  # crasSVCNumSessions
-            '3.36',  # crasSVCCumulateSessions
-            '3.37',  # crasSVCPeakConcurrentSessions
-            '3.38',  # crasWebvpnNumSessions
-            '3.39',  # crasWebvpnCumulateSessions
-            '3.40',  # crasWebvpnPeakConcurrentSessions
-            '1.1',  # crasMaxSessionsSupportable
+            "3.26",  # crasIPSecNumSessions
+            "3.27",  # crasIPSecCumulateSessions
+            "3.28",  # crasIPSecPeakConcurrentSessions
+            "3.29",  # crasL2LNumSessions
+            "3.30",  # crasL2LCumulateSessions
+            "3.31",  # crasL2LPeakConcurrentSessions
+            "3.35",  # crasSVCNumSessions
+            "3.36",  # crasSVCCumulateSessions
+            "3.37",  # crasSVCPeakConcurrentSessions
+            "3.38",  # crasWebvpnNumSessions
+            "3.39",  # crasWebvpnCumulateSessions
+            "3.40",  # crasWebvpnPeakConcurrentSessions
+            "1.1",  # crasMaxSessionsSupportable
         ],
     ),
 }

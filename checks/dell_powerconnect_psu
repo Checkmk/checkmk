@@ -32,29 +32,29 @@
 
 # GENERAL MAPS:
 dell_powerconnect_psu_status_map = {
-    '1': 'normal',
-    '2': 'warning',
-    '3': 'critical',
-    '4': 'shutdown',
-    '5': 'notPresent',
-    '6': 'notFunctioning',
+    "1": "normal",
+    "2": "warning",
+    "3": "critical",
+    "4": "shutdown",
+    "5": "notPresent",
+    "6": "notFunctioning",
 }
 
 dell_powerconnect_psu_supply_map = {
-    '1': 'Unknown',
-    '2': 'Alternating Current',
-    '3': 'Direct Current',
-    '4': 'External Power Supply',
-    '5': 'Internal Redundant',
+    "1": "Unknown",
+    "2": "Alternating Current",
+    "3": "Direct Current",
+    "4": "External Power Supply",
+    "5": "Internal Redundant",
 }
 
 dell_powerconnect_psu_status2nagios_map = {
-    'normal': 0,
-    'warning': 1,
-    'critical': 2,
-    'shutdown': 3,
-    'notPresent': 1,
-    'notFunctioning': 2,
+    "normal": 0,
+    "warning": 1,
+    "critical": 2,
+    "shutdown": 3,
+    "notPresent": 1,
+    "notFunctioning": 2,
 }
 
 
@@ -67,8 +67,9 @@ def inventory_dell_powerconnect_psu(info):
         # M6220 are blade switches which report valid values only for the "Main"
         # sensor. The other one is reported as notFunctioning, but this is wrong.
         # Simply ignore the "System" sensor for those devices.
-        if dell_powerconnect_psu_status_map[state] != 'notPresent' \
-           and ('M6220' not in hw_ident or name != 'System'):
+        if dell_powerconnect_psu_status_map[state] != "notPresent" and (
+            "M6220" not in hw_ident or name != "System"
+        ):
             inventory.append((name, None))
     return inventory
 
@@ -79,22 +80,30 @@ def check_dell_powerconnect_psu(item, _not_used, info):
             dell_powerconnect_status = dell_powerconnect_psu_status_map[state]
             status = dell_powerconnect_psu_status2nagios_map[dell_powerconnect_status]
 
-            return status, 'Condition is %s, with source %s' % \
-                      (dell_powerconnect_status, dell_powerconnect_psu_supply_map[supply])
+            return status, "Condition is %s, with source %s" % (
+                dell_powerconnect_status,
+                dell_powerconnect_psu_supply_map[supply],
+            )
 
     return (3, "item not found in snmp data")
 
+
 check_info["dell_powerconnect_psu"] = {
-    'check_function':          check_dell_powerconnect_psu,
-    'inventory_function':      inventory_dell_powerconnect_psu,
-    'service_description':     'Sensor %s',
-    'snmp_info':               [('.1.3.6.1.4.1.674.10895.3000.1.2.100.1', ['0']), #productIdentificationDisplayName
-                                ('.1.3.6.1.4.1.674.10895.3000.1.2.110.7.2.1', [
-                                   '1', # envMonSupplyStatusIndex
-                                   '2', # envMonSupplyStatusDescr
-                                   '3', # envMonSupplyState
-                                   '4', # envMonSupplySource
-                               ])],
-    'snmp_scan_function':      lambda oid: ".1.3.6.1.4.1.674.10895" in oid(".1.3.6.1.2.1.1.2.0") or \
-                                           ".1.3.6.1.4.1.6027.1.3.22" in oid(".1.3.6.1.2.1.1.2.0"),
+    "check_function": check_dell_powerconnect_psu,
+    "inventory_function": inventory_dell_powerconnect_psu,
+    "service_description": "Sensor %s",
+    "snmp_info": [
+        (".1.3.6.1.4.1.674.10895.3000.1.2.100.1", ["0"]),  # productIdentificationDisplayName
+        (
+            ".1.3.6.1.4.1.674.10895.3000.1.2.110.7.2.1",
+            [
+                "1",  # envMonSupplyStatusIndex
+                "2",  # envMonSupplyStatusDescr
+                "3",  # envMonSupplyState
+                "4",  # envMonSupplySource
+            ],
+        ),
+    ],
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.674.10895" in oid(".1.3.6.1.2.1.1.2.0")
+    or ".1.3.6.1.4.1.6027.1.3.22" in oid(".1.3.6.1.2.1.1.2.0"),
 }

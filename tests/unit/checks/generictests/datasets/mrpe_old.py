@@ -8,11 +8,12 @@
 # type: ignore
 
 
+from cmk.base.plugins.agent_based.mrpe import parse_mrpe
 
 checkname = 'mrpe'
 
 
-info = [
+parsed = parse_mrpe([
     ['Foo_Application', '0', 'OK', '-', 'Foo', 'server', 'up', 'and', 'running'],
     ['Bar_Extender', '1', 'WARN', '-', 'Bar', 'extender', 'overload', '6.012|bar_load=6.012'],
     ['Mutliliner', u'§$%', u'MÖÖP', '-',
@@ -20,7 +21,7 @@ info = [
      'output|the_bar=42\x01the_gee=23',
      'output|the_bad=U;0;;0;1',
     ],
-]
+])
 
 
 discovery = {

@@ -13,7 +13,7 @@ description:
 
  No limits can be defined for this check,
 
-inventory:
+discovery:
  One service is created for every fan on each gateway.
 
 item:

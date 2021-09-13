@@ -12,6 +12,6 @@ description:
  applications. You need the plugin {citrix_license.vbs} to be installed
  on your windows agent.
 
-inventory:
+discovery:
  One service is created for each license type.
 

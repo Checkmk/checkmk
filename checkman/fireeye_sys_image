@@ -10,5 +10,5 @@ description:
  The check is OK if the system image is the latest,
  oherwise it goes WARN.
 
-inventory:
+discovery:
  One service is created.

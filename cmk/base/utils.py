@@ -12,17 +12,7 @@ from typing import NoReturn, Optional
 
 from cmk.utils.exceptions import MKTerminate
 
-# TODO: Try to find a better place for them.
-
-
-def worst_service_state(*states: int) -> int:
-    """Aggregates several monitoring states to the worst state"""
-    if 2 in states:
-        return 2
-    return max(states)
-
-
-#.
+# .
 #   .--Ctrl-C--------------------------------------------------------------.
 #   |                     ____ _        _        ____                      |
 #   |                    / ___| |_ _ __| |      / ___|                     |

@@ -13,6 +13,6 @@ description:
 item:
  The ID of the PNode.
 
-inventory:
+discovery:
  One service is created for each PNode.
 

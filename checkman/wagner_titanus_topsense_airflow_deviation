@@ -12,7 +12,7 @@ description:
  Returns {WARN} or {CRIT} if the value is out of the given ranges and
  {OK} otherwise.
 
-inventory:
+discovery:
  Two services are created for each device.
  One service for every detector on each device.
 

@@ -14,8 +14,10 @@ description:
 
  If there are no startet threads the check goes CRIT.
 
+ This check is also cluster-aware.
+
 item:
  The sid instance name
 
-inventory:
+discovery:
  One service is created for each instance.

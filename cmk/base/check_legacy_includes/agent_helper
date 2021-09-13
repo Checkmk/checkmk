@@ -26,13 +26,14 @@ def parse_connection_arguments(params, hostname, ipaddress):
         else:  # custom URL
             connection_args.extend(["--url-custom", connection_option[1]["url_address"]])
 
-    for param in ('port', 'protocol', 'no-cert-check', 'token'):
+    for param in ("port", "protocol", "no-cert-check", "token"):
         if param in params:
-            connection_args.extend([f'--{param}', f'{params[param]}'])
+            connection_args.extend([f"--{param}", f"{params[param]}"])
 
     if "auth_basic" in params:
         auth_info = params["auth_basic"]
         connection_args.extend(
-            ["--username", f"{auth_info['username']}", "--password", f"{auth_info['password'][1]}"])
+            ["--username", f"{auth_info['username']}", "--password", f"{auth_info['password'][1]}"]
+        )
 
     return connection_args

@@ -40,7 +40,7 @@ description:
  - {UNKNOWN} in case the voltage status is one of:
    unknown
 
-inventory:
+discovery:
  One service is created for each server rack included in the agent plugin output.
 
 item:

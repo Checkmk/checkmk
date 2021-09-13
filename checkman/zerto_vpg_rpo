@@ -13,5 +13,5 @@ description:
 item:
  The name of the VPG
 
-inventory:
+discovery:
  One service is created for each VPG.

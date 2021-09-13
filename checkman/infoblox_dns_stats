@@ -7,5 +7,5 @@ description:
  This check displays the DNS statistics of Infoblox devices which
  support the IB-DNSONE MIB.
 
-inventory:
+discovery:
  One service is created.

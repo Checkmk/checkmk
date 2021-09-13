@@ -11,15 +11,15 @@ from typing import Optional
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import userdb
-from cmk.gui.config import clear_user_login, set_user_by_id
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.login import set_auth_type, verify_automation_secret
+from cmk.gui.utils.logged_in import UserContext
 from cmk.gui.wsgi.type_defs import AuthType, RFC7662
 
 
 def automation_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
     if verify_automation_secret(user_id, secret):
-        return rfc7662_subject(user_id, 'automation')
+        return rfc7662_subject(user_id, "automation")
 
     return None
 
@@ -27,7 +27,7 @@ def automation_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
 def gui_user_auth(user_id: UserId, secret: str) -> Optional[RFC7662]:
     try:
         if userdb.check_credentials(user_id, secret):
-            return rfc7662_subject(user_id, 'cookie')
+            return rfc7662_subject(user_id, "cookie")
     except MKUserError:
         # This is the case of "Automation user rejected". We don't care about that in the REST API
         # because every type of user is allowed in.
@@ -49,15 +49,14 @@ def rfc7662_subject(user_id: UserId, auth_type: AuthType) -> RFC7662:
     Returns:
         The filled out dictionary.
     """
-    return {'sub': user_id, 'iat': int(time.time()), 'active': True, 'scope': auth_type}
+    return {"sub": user_id, "iat": int(time.time()), "active": True, "scope": auth_type}
 
 
 @contextlib.contextmanager
 def set_user_context(user_id: UserId, token_info: RFC7662):
-    if user_id and token_info and user_id == token_info.get('sub'):
-        set_user_by_id(user_id)
-        set_auth_type(token_info['scope'])
-        yield
-        clear_user_login()
+    if user_id and token_info and user_id == token_info.get("sub"):
+        with UserContext(user_id):
+            set_auth_type(token_info["scope"])
+            yield
     else:
         raise MKAuthException("Unauthorized by verify_user")

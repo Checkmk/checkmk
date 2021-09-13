@@ -7,5 +7,5 @@ description:
  This check monitors how full the log file is
  (in percent) for Pulse Secure appliances.
 
-inventory:
+discovery:
  One service is created.

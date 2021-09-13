@@ -7,16 +7,17 @@
 __version__ = "2.1.0i1"
 
 import os
+import signal
 import sys
 import time
-import signal
+
 try:
     import configparser
 except ImportError:  # Python 2
     import ConfigParser as configparser  # type: ignore
 
 try:
-    from typing import Dict, List, Any, Set
+    from typing import Any, Dict, List, Set
 except ImportError:
     pass
 
@@ -129,7 +130,7 @@ if not opt_foreground:
 
     # Save pid of working process.
     open(pid_filename, "w").write("%d" % os.getpid())
-#.
+# .
 #   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
@@ -189,8 +190,10 @@ def do_output(what, event):
         return  # Only monitor files
 
     if len(output) > max_messages_per_interval:
-        last_message = "warning\tMaximum messages reached: %d per %d seconds" % \
-                    (max_messages_per_interval, write_interval)
+        last_message = "warning\tMaximum messages reached: %d per %d seconds" % (
+            max_messages_per_interval,
+            write_interval,
+        )
         if output[-1] != last_message:
             output.append(last_message)
         return
@@ -201,8 +204,7 @@ def do_output(what, event):
         return  # shouldn't happen, maybe on subfolders (not supported)
 
     filename = os.path.basename(event.pathname)
-    if what in path_config["monitor_all"] or\
-       filename in path_config["monitor_files"].get(what, []):
+    if what in path_config["monitor_all"] or filename in path_config["monitor_files"].get(what, []):
         line = "%d\t%s\t%s" % (time.time(), what, event.pathname)
         if map_events[what][1]:  # Check if filestats are enabled
             try:
@@ -237,11 +239,12 @@ class NotifyEventHandler(pyinotify.ProcessEvent):
 
     def process_IN_MOVE_SELF(self, event):
         do_output("moveself", event)
-#    def process_IN_CLOSE_NOWRITE(self, event):
-#        print "CLOSE_NOWRITE event:", event.pathname
-#
-#    def process_IN_CLOSE_WRITE(self, event):
-#        print "CLOSE_WRITE event:", event.pathname
+
+    #    def process_IN_CLOSE_NOWRITE(self, event):
+    #        print "CLOSE_NOWRITE event:", event.pathname
+    #
+    #    def process_IN_CLOSE_WRITE(self, event):
+    #        print "CLOSE_WRITE event:", event.pathname
 
     def process_IN_CREATE(self, event):
         do_output("create", event)
@@ -279,12 +282,10 @@ def main():
         section_tokens = section.split("|")
 
         folder = section_tokens[0]
-        folder_configs.setdefault(folder, {
-            "add_modes": {},
-            "del_modes": {},
-            "all_add_modes": set([]),
-            "all_del_modes": set([])
-        })
+        folder_configs.setdefault(
+            folder,
+            {"add_modes": {}, "del_modes": {}, "all_add_modes": set([]), "all_del_modes": set([])},
+        )
 
         files = None
         if len(section_tokens) > 1:
@@ -340,6 +341,7 @@ def main():
     update_watched_folders()
     if opt_foreground:
         import pprint
+
         sys.stdout.write(pprint.pformat(folder_configs))
 
     # Save monitored file/folder information specified in mk_inotify.cfg
@@ -356,5 +358,5 @@ def main():
     notifier.loop()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

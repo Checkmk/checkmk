@@ -8,6 +8,6 @@ description:
  {ok},{ok-with-suppressed},{degraded},{unreachable}. Both {ok} values are considered as {OK},
  whereas the other two values result in a {CRIT}.
 
-inventory:
+discovery:
  One service is created.
 

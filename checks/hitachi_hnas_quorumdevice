@@ -17,8 +17,16 @@ def inventory_hitachi_hnas_quorumdevice(info):
 
 def check_hitachi_hnas_quorumdevice(item, _no_params, info):
     status = int(info[0][0])
-    statusmap = ("unknown", "unconfigured", "offLine", "owned", "configured", "granted",
-                 "clusterNodeNotUp", "misconfigured")
+    statusmap = (
+        "unknown",
+        "unconfigured",
+        "offLine",
+        "owned",
+        "configured",
+        "granted",
+        "clusterNodeNotUp",
+        "misconfigured",
+    )
     if status >= len(statusmap):
         return 3, "Quorum Device reports unidentified status %s" % status
     else:

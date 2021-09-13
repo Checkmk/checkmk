@@ -1,0 +1,210 @@
+#!/usr/bin/env ansible-playbook
+# doc for modules:
+# https://docs.ansible.com/ansible/latest/modules/ec2_module.html
+# https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_ami_module.html
+- name: "Create VMs in Amazon EC2"
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  vars_files:
+    - group_vars/vars.yml
+
+  tasks:
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var AWS_ACCESS_KEY_ID not defined or empty."
+      when: ec2_access_key | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var AWS_SECRET_ACCESS_KEY not defined or empty."
+      when: ec2_secret_key | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var EC2_KEY not defined or empty."
+      when: ec2_key | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var ANSIBLE_SSH_PRIVATE_KEY_FILE not defined or empty."
+      when: ansible_ssh_private_key_file | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var CMKADMIN_PASS not defined or empty."
+      when: cmkadmin_pass | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var EDITION not defined or empty."
+      when: cmk_edition | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var CMK_VERS not defined or empty."
+      when: cmk_version | length == 0
+    - name: Validate env vars
+      fail:
+        msg: "Error: env var PACKAGE_DIR not defined or empty."
+      when: package_dir | length == 0
+
+    - name: Ensure a security group for VMs servers is in place
+      ec2_group:
+        name: "{{ ec2_security_group_vms }}"
+        description: Security Group for my VMs servers
+        region: "{{ ec2_region }}"
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        rules:
+          - proto: tcp
+            from_port: 22
+            to_port: 22
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 80
+            to_port: 80
+            cidr_ip: 0.0.0.0/0
+          - proto: tcp
+            from_port: 443
+            to_port: 443
+            cidr_ip: 0.0.0.0/0
+        rules_egress:
+          - proto: all
+            cidr_ip: 0.0.0.0/0
+
+    - name: Provision VMs on Amazon
+      ec2:
+        spot_price: "0.02"
+        spot_wait_timeout: 600
+        instance_initiated_shutdown_behavior: terminate
+        aws_access_key: "{{ ec2_access_key }}"
+        aws_secret_key: "{{ ec2_secret_key }}"
+        key_name: "{{ ec2_key }}"
+        region: "{{ ec2_region }}"
+        group: "{{ ec2_security_group_vms }}"
+        instance_type: "{{ item.value.instance_type }}"
+        image: "{{ ami_id }}"
+        wait: true
+        volumes:
+          - device_name: /dev/sda1
+            volume_type: gp2
+            volume_size: "{{ item.value.disk_volume }}"
+            delete_on_termination: true
+        exact_count: "{{ item.value.count }}"
+        vpc_subnet_id: "{{ item.value.vpc_subnet_id }}"
+        count_tag:
+          Name: "{{ cmk_edition }} - {{ item.key }}"
+        instance_tags:
+          Name: "{{ cmk_edition }} - {{ item.key }}"
+          role: "{{ item.key }}"
+          cmk_site: "{{ item.value.cmk_site }}"
+      with_dict: "{{ servers }}"
+      register: ec2_instance
+
+    - name: setting facts
+      set_fact:
+        ec2_instance: "{{ ec2_instance.results | map(attribute='tagged_instances') | list }}"
+      when:
+        - ec2_instance is defined
+    - debug: msg="{{ ec2_instance }}"
+
+    - name: Add VM instance public IPs to host group
+      add_host:
+        instance_id: "{{ item.id }}"
+        hostname: "{{ item.public_ip }}"
+        groups: "{{ item.tags.role }}"
+        public_ip: "{{ item.public_ip }}"
+        privat_ip: "{{ item.private_ip }}"
+        cmk_site: "{{ item.tags.cmk_site }}"
+        ec2_access_key: "{{ ec2_access_key }}"
+        ec2_secret_key: "{{ ec2_secret_key }}"
+        ansible_ssh_user: "{{ ansible_ssh_user }}"
+        ec2_auto_shutdown: "{{ ec2_auto_shutdown }}"
+        ansible_ssh_private_key_file: "{{ ansible_ssh_private_key_file }}"
+        ansible_ssh_port: 22
+      with_items: "{{ ec2_instance }}"
+      when:
+        - ec2_instance is defined
+
+    - name: Wait for SSH to come up
+      wait_for:
+        host: "{{ item.public_ip }}"
+        port: 22
+        delay: 30
+        timeout: 120
+        state: started
+      with_items: "{{ ec2_instance }}"
+      when:
+        - ec2_instance is defined
+
+- hosts: checkmk
+  gather_facts: false
+  vars_files:
+    - group_vars/vars.yml
+  become: true
+  roles:
+    - install-cmk
+
+- hosts: checkmk
+  gather_facts: false
+  vars_files:
+    - group_vars/vars.yml
+  become: true
+  roles:
+    - configure-apache
+
+- hosts: checkmk
+  gather_facts: false
+  vars_files:
+    - group_vars/vars.yml
+  become: true
+  roles:
+    - add-localhost
+
+- hosts: checkmk
+  gather_facts: false
+  vars_files:
+    - group_vars/vars.yml
+  become: true
+  roles:
+    - change-motd
+
+- hosts: checkmk
+  gather_facts: false
+  vars_files:
+    - group_vars/vars.yml
+  become: true
+  tasks:
+    - name: Reboot ec2 instance
+      reboot:
+
+- name: debug var
+  gather_facts: False
+  hosts: localhost
+  tasks:
+    - debug: msg="content of ec2_instance {{ ec2_instance[0][0] }}"
+
+- name: create AMI from EC2 instance
+  gather_facts: False
+  vars_files:
+      - group_vars/vars.yml
+  hosts: localhost
+  tasks:
+    - name: gather facts about an AMI with name "checkmk {{ cmk_edition }} {{ cmk_version }}"
+      ec2_ami_info:
+        region: "{{ ec2_region }}"
+        filters:
+          name: "checkmk {{ cmk_edition }} {{ cmk_version }}"
+      register: ami_image_ids
+    - debug: msg="content of ami_image_ids {{ ami_image_ids }}"
+    - name: Deregister old AMI (delete associated snapshots too)
+      ec2_ami:
+        image_id: '{{ ami_image_ids["images"][0]["image_id"] }}'
+        region: "{{ ec2_region }}"
+        delete_snapshot: True
+        state: absent
+      when: ami_image_ids["images"]|length>0
+    - ec2_ami:
+        instance_id: "{{ ec2_instance[0][0].id }}"
+        region: "{{ ec2_region }}"
+        wait: yes
+        name: "checkmk {{ cmk_edition }} {{ cmk_version }}"
+        description: "This EC2 instance contains a running checkmk installation."
+        tags:
+          Name: "{{ cmk_edition }} {{ cmk_version }}"
+          Service: checkmk

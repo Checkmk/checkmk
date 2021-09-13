@@ -87,7 +87,7 @@ test_mk_oracle_default_config () {
     assertEquals "asm_diskgroup" "$ASYNC_ASM_SECTIONS"
     assertEquals "600" "$CACHE_MAXAGE"
     assertEquals "/etc/oracle/olr.loc" "$OLRLOC"
-    assertEquals "1" $MAX_TASKS
+    assertEquals "1" "$MAX_TASKS"
 }
 
 
@@ -111,7 +111,7 @@ EOF
     assertEquals "asm_diskgroup" "$ASYNC_ASM_SECTIONS"
     assertEquals "300" "$CACHE_MAXAGE"
     assertEquals "/other/path" "$OLRLOC"
-    assertEquals "5" $MAX_TASKS
+    assertEquals "5" "$MAX_TASKS"
 }
 
 test_mk_oracle_load_config_custom_all_sids () {

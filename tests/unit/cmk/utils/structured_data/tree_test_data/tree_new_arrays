@@ -1,1 +1,1 @@
-{'hardware': {'memory': {'arrays': [{'use': 'what ever', 'location': 'foobar', 'devices': [{'index': '1', 'name': 'Device 1'}, {'index': '2', 'name': 'Device 2'}, {'index': '3', 'name': 'Device 3'}]}, {'others': [{'index': '1', 'name': 'Other 1'},]}]}}}
+{'hardware': {'memory': {'arrays': [{'use': 'what ever', 'location': 'foobar', 'devices': [{'index': '1', 'name': 'Device 1'}, {'index': '2', 'name': 'Device 2'}, {'index': '3', 'name': 'Device 3'}]}, {'others': [{'index': '1', 'name': 'Other 1'}]}]}}}

@@ -5,15 +5,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Basic functions for cmk_figures"""
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 FigureResponse = Dict[str, Any]
 
 
 def create_figures_response(data, context=None) -> FigureResponse:
-    """ Any data for a figure is always wrapped into a dictionary
-        This makes future extensions (meta_data, etc.) easier, preventing
-        intermingling of dictionary keys """
+    """Any data for a figure is always wrapped into a dictionary
+    This makes future extensions (meta_data, etc.) easier, preventing
+    intermingling of dictionary keys"""
     response = {"figure_response": data}
     if context:
         response["context"] = context
@@ -21,27 +21,28 @@ def create_figures_response(data, context=None) -> FigureResponse:
 
 
 class TableFigureDataCreator:
-    """ Helps to create the data shown in a table_figure.js figure
-        The javascript TableFigure supports partial data updates and the integration of dc.js pie charts within cells
-        {
-          "classes": ["classes", "for", "table"],              // classes for this table
-          "rows": [
-             [ {                                               // Dict, representing a row
-                 "classes": ["classes", "for", "row"],         // classes for this row
-                 "cells": [ {                                  // Dict, representing a cell. All keys are optional
-                   "text": "Text to display",
-                   "html": "HTML to to display",               // overrules "text" key
-                   "cell_type": "td"                           // supports td and th
-                   "classes": ["classes", "for", "cell"],      // classes for this cell
-                   "rowspan": 1,
-                   "colspan": 3,
-                   "figure_config": {figure_definition}        // cell with figure config, including data
-                 } ]
-             ], ...
-             }
-          ]
-        }
+    """Helps to create the data shown in a table_figure.js figure
+    The javascript TableFigure supports partial data updates and the integration of dc.js pie charts within cells
+    {
+      "classes": ["classes", "for", "table"],              // classes for this table
+      "rows": [
+         [ {                                               // Dict, representing a row
+             "classes": ["classes", "for", "row"],         // classes for this row
+             "cells": [ {                                  // Dict, representing a cell. All keys are optional
+               "text": "Text to display",
+               "html": "HTML to to display",               // overrules "text" key
+               "cell_type": "td"                           // supports td and th
+               "classes": ["classes", "for", "cell"],      // classes for this cell
+               "rowspan": 1,
+               "colspan": 3,
+               "figure_config": {figure_definition}        // cell with figure config, including data
+             } ]
+         ], ...
+         }
+      ]
+    }
     """
+
     @classmethod
     def get_header_cell(cls, text, attrs=None, classes=None):
         cell = {"text": text}
@@ -96,12 +97,12 @@ class TableFigureDataCreator:
 
     @classmethod
     def get_pie_chart_config(cls, attr_id, data, title=None):
-        """ Generates the configuration for a pie chart diagram
-            The actual percentage values are calculated in js
-            [
-              {"label1": "test", "value": 23},
-              {"label2": "test2, "value": 42}
-                ....
-            ]
+        """Generates the configuration for a pie chart diagram
+        The actual percentage values are calculated in js
+        [
+          {"label1": "test", "value": 23},
+          {"label2": "test2, "value": 42}
+            ....
+        ]
         """
         return {"id": attr_id, "type": "pie_chart", "title": title, "data": data}

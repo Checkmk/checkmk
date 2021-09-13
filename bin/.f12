@@ -18,6 +18,7 @@ mkevent \
 mkbackup \
 mkbench \
 cmk-update-config \
+post-rename-site \
 init-redis \
 $ROOT/bin/
 sudo ln -sf check_mk $ROOT/bin/cmk

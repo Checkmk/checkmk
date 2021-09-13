@@ -9,5 +9,5 @@ description:
 
  Default lower levels are set to 70, 60 percent. These levels are configurable.
 
-inventory:
+discovery:
  One service is created.

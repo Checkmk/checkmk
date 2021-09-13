@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.liebert import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # example output
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5266.1 Compressor Head Pressure
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.10.1.2.1.5266.2 Compressor Head Pressure
@@ -23,29 +24,30 @@ from cmk.base.check_legacy_includes.liebert import *  # pylint: disable=wildcard
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5266.3 bar
 # .1.3.6.1.4.1.476.1.42.3.9.20.1.30.1.2.1.5266.4 bar
 
-factory_settings['liebert_compressor_default_levels'] = {
-    'levels': (8, 12),
+factory_settings["liebert_compressor_default_levels"] = {
+    "levels": (8, 12),
 }
 
 
 @get_parsed_item_data
 def check_liebert_compressor(item, params, data):
-    yield check_levels(data[0], None, params['levels'], unit=data[1], infoname="Head pressure")
+    yield check_levels(data[0], None, params["levels"], unit=data[1], infoname="Head pressure")
 
 
-check_info['liebert_compressor'] = {
-    'parse_function': parse_liebert_wrapper,
-    'inventory_function': discover(),
-    'check_function': check_liebert_compressor,
-    'service_description': '%s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.476.1.42.3.9.20.1',
+check_info["liebert_compressor"] = {
+    "parse_function": parse_liebert_wrapper,
+    "inventory_function": discover(),
+    "check_function": check_liebert_compressor,
+    "service_description": "%s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.476.1.42.3.9.20.1",
         [
-            '10.1.2.1.5266',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
-            '20.1.2.1.5266',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
-            '30.1.2.1.5266',  #LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
-        ]),
-    'snmp_scan_function': scan_liebert,
-    'has_perfdata': True,
-    'default_levels_variable': 'liebert_compressor_default_levels'
+            "10.1.2.1.5266",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryDataLabel
+            "20.1.2.1.5266",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryValue
+            "30.1.2.1.5266",  # LIEBERT-GP-FLExible-MIB: lgpFlexibleEntryUnitsOfMeasure
+        ],
+    ),
+    "snmp_scan_function": scan_liebert,
+    "has_perfdata": True,
+    "default_levels_variable": "liebert_compressor_default_levels",
 }

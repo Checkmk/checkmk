@@ -40,9 +40,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
         [](const Comment &r) { return r._id; }));
     addColumn(std::make_unique<TimeColumn::Callback<Comment>>(
         "entry_time", "The time the entry was made as UNIX timestamp", offsets,
-        [](const Comment &r) {
-            return std::chrono::system_clock::from_time_t(r._entry_time);
-        }));
+        [](const Comment &r) { return r._entry_time; }));
     addColumn(std::make_unique<IntColumn::Callback<Comment>>(
         "type", "The type of the comment: 1 is host, 2 is service", offsets,
         [](const Comment &r) { return r._type; }));
@@ -66,9 +64,7 @@ TableComments::TableComments(MonitoringCore *mc) : Table(mc) {
         [](const Comment &r) { return r._expires; }));
     addColumn(std::make_unique<TimeColumn::Callback<Comment>>(
         "expire_time", "The time of expiry of this comment as a UNIX timestamp",
-        offsets, [](const Comment &r) {
-            return std::chrono::system_clock::from_time_t(r._expire_time);
-        }));
+        offsets, [](const Comment &r) { return r._expire_time; }));
 
     TableHosts::addColumns(this, "host_", offsets.add([](Row r) {
         return r.rawData<Comment>()->_host;
@@ -93,6 +89,8 @@ void TableComments::answerQuery(Query *query) {
 
 bool TableComments::isAuthorized(Row row, const contact *ctc) const {
     const auto *co = rowData<Comment>(row);
-    return is_authorized_for(core()->serviceAuthorization(), ctc, co->_host,
-                             co->_service);
+    return co->_service == nullptr
+               ? is_authorized_for_hst(ctc, co->_host)
+               : is_authorized_for_svc(core()->serviceAuthorization(), ctc,
+                                       co->_service);
 }

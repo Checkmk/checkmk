@@ -43,39 +43,42 @@
 
 
 def inventory_cisco_stackpower(info):
-    return [("%s %s" % (oid.split(".")[0], port_name), None)
-            for oid, port_oper_status, _port_link_status, port_name in info
-            if port_oper_status == '1']
+    return [
+        ("%s %s" % (oid.split(".")[0], port_name), None)
+        for oid, port_oper_status, _port_link_status, port_name in info
+        if port_oper_status == "1"
+    ]
 
 
 def check_cisco_stackpower(item, params, info):
     map_oper_status = {
-        '1': (0, 'Port enabled'),
-        '2': (2, 'Port disabled'),
+        "1": (0, "Port enabled"),
+        "2": (2, "Port disabled"),
     }
 
     map_status = {
-        '1': (0, 'Status: connected and operational'),
-        '2': (2, 'Status: forced down or not connected'),
+        "1": (0, "Status: connected and operational"),
+        "2": (2, "Status: forced down or not connected"),
     }
 
     for oid, port_oper_status, port_link_status, port_name in info:
-        if item == '%s %s' % (oid.split(".")[0], port_name):
+        if item == "%s %s" % (oid.split(".")[0], port_name):
             yield map_oper_status[port_oper_status]
             yield map_status[port_link_status]
 
 
-check_info['cisco_stackpower'] = {
-    'inventory_function': inventory_cisco_stackpower,
-    'check_function': check_cisco_stackpower,
-    'service_description': 'Stackpower Interface %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.9.9.500.1.3.2.1',
+check_info["cisco_stackpower"] = {
+    "inventory_function": inventory_cisco_stackpower,
+    "check_function": check_cisco_stackpower,
+    "service_description": "Stackpower Interface %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.9.9.500.1.3.2.1",
         [
             OID_END,
-            '2',  # cswStackPowerPortOperStatus
-            '5',  # cswStackPowerPortLinkStatus
-            '7',  # cswStackPowerPortName
-        ]),
-    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.9.1.516'),
+            "2",  # cswStackPowerPortOperStatus
+            "5",  # cswStackPowerPortLinkStatus
+            "7",  # cswStackPowerPortName
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.9.1.516"),
 }

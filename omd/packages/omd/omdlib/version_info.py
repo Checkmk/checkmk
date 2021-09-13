@@ -25,11 +25,13 @@
 
 import os
 from typing import Dict
+
 import omdlib
 
 
 class VersionInfo:
     """Provides OMD version/platform specific infos"""
+
     def __init__(self, version: str) -> None:
         self._version = version
 
@@ -59,12 +61,12 @@ class VersionInfo:
                     try:
                         line = line.strip()
                         # Skip comment and empty lines
-                        if line.startswith('#') or line == '':
+                        if line.startswith("#") or line == "":
                             continue
                         # Remove everything after the first comment sign
-                        if '#' in line:
-                            line = line[:line.index('#')].strip()
-                        var, value = line.split('=')
+                        if "#" in line:
+                            line = line[: line.index("#")].strip()
+                        var, value = line.split("=")
                         value = value.strip()
                         if var.endswith("+"):
                             var = var[:-1]  # remove +
@@ -72,6 +74,7 @@ class VersionInfo:
                         else:
                             info[var.strip()] = value
                     except Exception:
-                        raise Exception('Unable to parse line "%s" in file "%s"' %
-                                        (line, info_dir + "/" + f))
+                        raise Exception(
+                            'Unable to parse line "%s" in file "%s"' % (line, info_dir + "/" + f)
+                        )
         return info

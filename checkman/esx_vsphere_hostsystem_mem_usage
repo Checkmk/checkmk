@@ -7,6 +7,8 @@ description:
  This check measures the current usage of physical RAM by
  an ESX host system.
 
-inventory:
+discovery:
  One service is created for each ESX Host System.
 
+cluster:
+ This check measures the total physical RAM usage for a cluster of hosts.

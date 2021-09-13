@@ -8,7 +8,7 @@
 
 import io
 
-import pytest  # type: ignore[import]
+import pytest
 
 import cmk.base.obsolete_output as out
 

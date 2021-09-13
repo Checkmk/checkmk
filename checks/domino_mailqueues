@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.domino import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["domino_mailqueues_defaults"] = {"queue_length": (300, 350)}
 
 MAILQUEUES_LABEL = (
@@ -25,8 +26,7 @@ def parse_domino_mailqueues(info):
         return {}
 
     return {
-        item: (label, int(raw_value))
-        for (item, label), raw_value in zip(MAILQUEUES_LABEL, info[0])
+        item: (label, int(raw_value)) for (item, label), raw_value in zip(MAILQUEUES_LABEL, info[0])
     }
 
 
@@ -35,7 +35,7 @@ def check_domino_mailqueues(_item, params, data):
     label, value = data
     yield check_levels(
         value,
-        'mails',
+        "mails",
         params.get("queue_length"),
         infoname=label,
         human_readable_func=lambda d: "%d" % int(d),
@@ -53,11 +53,12 @@ check_info["domino_mailqueues"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.334.72.1.1.4",
         [
-            '1',  # lnDeadMail
-            '6',  # lnWaitingMail
-            '21',  # lnMailHold
-            '31',  # lnMailTotalPending
-            '34',  # InMailWaitingforDNS
-        ]),
+            "1",  # lnDeadMail
+            "6",  # lnWaitingMail
+            "21",  # lnMailHold
+            "31",  # lnMailTotalPending
+            "34",  # InMailWaitingforDNS
+        ],
+    ),
     "group": "domino_mailqueues",
 }

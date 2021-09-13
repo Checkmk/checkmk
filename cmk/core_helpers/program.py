@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import copy
 import logging
 import os
 import signal
 import subprocess
 from contextlib import suppress
-from typing import Any, Dict, Final, Optional, Union
+from typing import Any, Final, Mapping, Optional, Union
 
 from six import ensure_binary, ensure_str
 
@@ -29,20 +30,38 @@ class ProgramFetcher(AgentFetcher):
         stdin: Optional[str],
         is_cmc: bool,
     ) -> None:
-        super().__init__(file_cache, logging.getLogger("cmk.helper.program"))
+        super().__init__(
+            file_cache,
+            logging.getLogger("cmk.helper.program"),
+        )
         self.cmdline: Final = cmdline
         self.stdin: Final = stdin
         self.is_cmc: Final = is_cmc
         self._process: Optional[subprocess.Popen] = None
 
-    @classmethod
-    def _from_json(cls, serialized: Dict[str, Any]) -> "ProgramFetcher":
-        return cls(
-            DefaultAgentFileCache.from_json(serialized.pop("file_cache")),
-            **serialized,
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__name__}("
+            + ", ".join(
+                (
+                    f"{type(self.file_cache).__name__}",
+                    f"cmdline={self.cmdline!r}",
+                    f"stdin={self.stdin!r}",
+                    f"is_cmc={self.is_cmc!r}",
+                )
+            )
+            + ")"
         )
 
-    def to_json(self) -> Dict[str, Any]:
+    @classmethod
+    def _from_json(cls, serialized: Mapping[str, Any]) -> "ProgramFetcher":
+        serialized_ = copy.deepcopy(dict(serialized))
+        return cls(
+            DefaultAgentFileCache.from_json(serialized_.pop("file_cache")),
+            **serialized_,
+        )
+
+    def to_json(self) -> Mapping[str, Any]:
         return {
             "file_cache": self.file_cache.to_json(),
             "cmdline": self.cmdline,
@@ -121,21 +140,18 @@ class ProgramFetcher(AgentFetcher):
         self._process.stderr.close()
         self._process = None
 
-    def _is_cache_read_enabled(self, mode: Mode) -> bool:
-        return mode not in (Mode.CHECKING, Mode.FORCE_SECTIONS)
-
-    def _is_cache_write_enabled(self, mode: Mode) -> bool:
-        return True
-
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         if self._process is None:
             raise MKFetcherError("No process")
         stdout, stderr = self._process.communicate(
-            input=ensure_binary(self.stdin) if self.stdin else None)
+            input=ensure_binary(self.stdin) if self.stdin else None
+        )
         if self._process.returncode == 127:
             exepath = self.cmdline.split()[0]  # for error message, hide options!
             raise MKFetcherError("Program '%s' not found (exit code 127)" % ensure_str(exepath))
         if self._process.returncode:
-            raise MKFetcherError("Agent exited with code %d: %s" %
-                                 (self._process.returncode, ensure_str(stderr).strip()))
+            raise MKFetcherError(
+                "Agent exited with code %d: %s"
+                % (self._process.returncode, ensure_str(stderr).strip())
+            )
         return stdout

@@ -4,8 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import TypedDict, Dict, List
 import json
+from dataclasses import dataclass
+from typing import Dict, List, TypedDict
 
 from ..agent_based_api.v1.type_defs import StringTable
 
@@ -61,3 +62,27 @@ class Section(TypedDict):
     filesystem: Dict[str, List[Filesystem]]
     interfaces: Dict[str, List[Interface]]
     timestamp: float
+
+
+@dataclass
+class Address:
+    # k8s_endpoint_info
+    hostname: str
+    ip: str
+    node_name: str
+
+
+@dataclass
+class Port:
+    # k8s_endpoint_info
+    name: str
+    port: int
+    protocol: str
+
+
+@dataclass
+class Subset:
+    # k8s_endpoint_info
+    addresses: List[Address]
+    not_ready_addresses: List[Address]
+    ports: List[Port]

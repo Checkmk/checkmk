@@ -9,5 +9,5 @@ description:
 
  The check is always in state {OK}.
 
-inventory:
+discovery:
  One service is created.

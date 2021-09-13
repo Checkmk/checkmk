@@ -8,5 +8,5 @@ description:
  DAT version of McAfee Email gateways which support the MCAFEE-MEG MIB.
  The check is always CRIT if status is deactivated, otherwise OK.
 
-inventory:
+discovery:
  One service is created.

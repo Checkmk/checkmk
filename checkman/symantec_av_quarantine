@@ -8,5 +8,5 @@ description:
  A Critical State will be triggert if the quarantine queue isn'd empty.
  You just need to install the plugin {symantec_av} into the {plugins} directory of your agent.
 
-inventory:
+discovery:
  One service is created for each system.

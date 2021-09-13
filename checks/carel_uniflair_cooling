@@ -30,10 +30,12 @@ def check_carel_uniflair_cooling(item, _no_params, info):
 
     output = ""
     output = output + ("Global Status: %s" % (err_global_status and "Error(!!), " or "OK, "))
-    output = output + ("Emergency Operation: %s" %
-                       (err_emergency_op and "Active(!!), " or "Inactive, "))
-    output = output + ("Humidifier: %s" %
-                       (err_waterloss and "Water Loss(!!), " or "No Water Loss, "))
+    output = output + (
+        "Emergency Operation: %s" % (err_emergency_op and "Active(!!), " or "Inactive, ")
+    )
+    output = output + (
+        "Humidifier: %s" % (err_waterloss and "Water Loss(!!), " or "No Water Loss, ")
+    )
     output = output + "Humidity: %3.1f%%" % humidity
 
     perfdata = [("humidity", humidity)]
@@ -50,7 +52,7 @@ check_info["carel_uniflair_cooling"] = {
     # All the OIDs of this checks seems to be wrong for the current version
     # of this device, so the scan function is disbaled until we have better information
     "snmp_scan_function": lambda oid: False,
-    #"snmp_scan_function"   : lambda oid: ("pCO" in oid(".1.3.6.1.2.1.1.1.0")
+    # "snmp_scan_function"   : lambda oid: ("pCO" in oid(".1.3.6.1.2.1.1.1.0")
     #                                      or "Linux" in oid(".1.3.6.1.2.1.1.1.0")) \
     #                                     and oid(".1.3.6.1.4.1.9839.1.2.0"),
     "snmp_info": (
@@ -60,5 +62,6 @@ check_info["carel_uniflair_cooling"] = {
             "1.51.0",  # Global
             "1.67.0",  # Unit in Emergency operation
             "2.6.0",  # Relative Humidity
-        ]),
+        ],
+    ),
 }

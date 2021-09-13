@@ -38,7 +38,7 @@
 # .1.3.6.1.4.1.10876.2.2 0
 # .1.3.6.1.4.1.10876.2.3 No problem.
 
-#.
+# .
 #   .--Health--------------------------------------------------------------.
 #   |                    _   _            _ _   _                          |
 #   |                   | | | | ___  __ _| | |_| |__                       |
@@ -58,14 +58,16 @@ def check_supermicro_health(_no_item, _no_params, info):
     return int(info[1][0][0]), info[1][0][1]
 
 
-check_info['supermicro'] = {
-    'check_function': check_supermicro_health,
-    'inventory_function': inventory_supermicro_health,
-    'service_description': "Overall Hardware Health",
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2" or\
-                          ("linux" in oid(".1.3.6.1.2.1.1.1.0").lower() and
-                           oid(".1.3.6.1.4.1.10876.2.1.1.1.1.2.1") is not None),
-    'snmp_info': [
+check_info["supermicro"] = {
+    "check_function": check_supermicro_health,
+    "inventory_function": inventory_supermicro_health,
+    "service_description": "Overall Hardware Health",
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2"
+    or (
+        "linux" in oid(".1.3.6.1.2.1.1.1.0").lower()
+        and oid(".1.3.6.1.4.1.10876.2.1.1.1.1.2.1") is not None
+    ),
+    "snmp_info": [
         (
             ".1.3.6.1.4.1.10876.2.1.1.1.1",
             [
@@ -76,24 +78,23 @@ check_info['supermicro'] = {
                 6,  # smHealthMonitorLowLimit
                 11,  # smHealthMonitorReadingUnit
                 12,  # smHealthMonitorStatus
-            ]),
+            ],
+        ),
         (
             ".1.3.6.1.4.1.10876.2",
             [
                 2,  # smHealthAllinoneStatus
                 3,  # smHealthAllinoneMsg
-            ]),
+            ],
+        ),
         (
             ".1.3.6.1.4.1.10876.100.1.4.1",
-            [
-                1,  # diskSerialNumber
-                2,  # diskName
-                4
-            ]),  # diskSmartStatus
-    ]
+            [1, 2, 4],  # diskSerialNumber  # diskName
+        ),  # diskSmartStatus
+    ],
 }
 
-#.
+# .
 #   .--Sensors-------------------------------------------------------------.
 #   |                 ____                                                 |
 #   |                / ___|  ___ _ __  ___  ___  _ __ ___                  |
@@ -111,7 +112,7 @@ def inventory_supermicro_sensors(info):
 
 def check_supermicro_sensors(item, _no_params, info):
     class Type(object):
-        Fan, Voltage, Temperature, Status = ('0', '1', '2', '3')
+        Fan, Voltage, Temperature, Status = ("0", "1", "2", "3")
 
     def worst_status(*args):
         order = [0, 1, 3, 2]
@@ -119,7 +120,8 @@ def check_supermicro_sensors(item, _no_params, info):
 
     def expect_order(*args):
         return max(
-            [abs(x[0] - x[1][0]) for x in enumerate(sorted(enumerate(args), key=lambda x: x[1]))])
+            [abs(x[0] - x[1][0]) for x in enumerate(sorted(enumerate(args), key=lambda x: x[1]))]
+        )
 
     for name, sensor_type, reading, high, low, unit, dev_status in info[0]:
         if name == item:
@@ -141,12 +143,13 @@ def check_supermicro_sensors(item, _no_params, info):
 
             # normalize values depending on sensor type
             if sensor_type == Type.Temperature:
-                unit = u"°%s" % unit
+                unit = "°%s" % unit
                 perfvar = "temp"
             elif sensor_type == Type.Voltage:
                 if unit == "mV":
-                    reading, warn_upper, crit_upper =\
-                        [x / 1000.0 for x in (reading, warn_upper, crit_upper)]
+                    reading, warn_upper, crit_upper = [
+                        x / 1000.0 for x in (reading, warn_upper, crit_upper)
+                    ]
                     unit = "V"
                 perfvar = "voltage"
             elif sensor_type == Type.Status:
@@ -161,18 +164,21 @@ def check_supermicro_sensors(item, _no_params, info):
                 else:
                     perfdata = [(perfvar, reading)]
 
-            return (worst_status(status_high, status_low,
-                                 dev_status), "%s%s" % (reading, unit), perfdata)
+            return (
+                worst_status(status_high, status_low, dev_status),
+                "%s%s" % (reading, unit),
+                perfdata,
+            )
 
 
-check_info['supermicro.sensors'] = {
-    'check_function': check_supermicro_sensors,
-    'inventory_function': inventory_supermicro_sensors,
-    'service_description': "Sensor %s",
-    'has_perfdata': True,
+check_info["supermicro.sensors"] = {
+    "check_function": check_supermicro_sensors,
+    "inventory_function": inventory_supermicro_sensors,
+    "service_description": "Sensor %s",
+    "has_perfdata": True,
 }
 
-#.
+# .
 #   .--SMART---------------------------------------------------------------.
 #   |                   ____  __  __    _    ____ _____                    |
 #   |                  / ___||  \/  |  / \  |  _ \_   _|                   |
@@ -203,9 +209,9 @@ def check_supermicro_smart(item, _no_params, info):
             return int(status), "(S/N %s) %s" % (serial, status_map[status])
 
 
-check_info['supermicro.smart'] = {
-    'check_function': check_supermicro_smart,
-    'inventory_function': inventory_supermicro_smart,
-    'service_description': "SMART Health %s",
-    'has_perfdata': True,
+check_info["supermicro.smart"] = {
+    "check_function": check_supermicro_smart,
+    "inventory_function": inventory_supermicro_smart,
+    "service_description": "SMART Health %s",
+    "has_perfdata": True,
 }

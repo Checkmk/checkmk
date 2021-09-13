@@ -13,5 +13,5 @@ description:
 item:
  The index of the powerbank
 
-inventory:
+discovery:
  One service is created for each powerbank.

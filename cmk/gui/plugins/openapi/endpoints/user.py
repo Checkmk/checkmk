@@ -9,11 +9,11 @@ from cmk.gui.globals import user
 
 def search(*args, **kw):
     return {
-        'userName': user.id,
-        'email': user.email,
-        'roles': user.role_ids,
-        'extensions': {
-            'language': user.language,
-            'contact_groups': user.contact_groups,
-        }
+        "userName": user.id,
+        "email": user.email,
+        "roles": user.role_ids,
+        "extensions": {
+            "language": user.language,
+            "contact_groups": user.contact_groups,
+        },
     }

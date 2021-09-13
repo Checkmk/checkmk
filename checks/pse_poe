@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.poe import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # We fetch the following columns from SNMP:
 # 2 pethMainPsePower (The nominal power of the PSE expressed in Watts)
 # 3 pethMainPseOperStatus (The operational status of the main PSE) (on(1), off(2), faulty(3))
@@ -30,10 +31,12 @@ def parse_pse_poe(info):
     """
     poe_dict = {}
     for oid_end, poe_max, pse_op_status, poe_used in info:
-        poe_dict[str(oid_end)] = PoeValues(poe_max=int(poe_max),
-                                           poe_used=int(poe_used),
-                                           poe_status=int(pse_op_status),
-                                           poe_status_detail=None)
+        poe_dict[str(oid_end)] = PoeValues(
+            poe_max=int(poe_max),
+            poe_used=int(poe_used),
+            poe_status=int(pse_op_status),
+            poe_status_detail=None,
+        )
     return poe_dict
 
 

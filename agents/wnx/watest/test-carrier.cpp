@@ -123,7 +123,7 @@ TEST_F(CarrierTestFixture, EstablishShutdown) {
 
 TEST_F(CarrierTestFixture, MailSlotIntegration) {
     auto summary_output = tools::ReadFileInVector(
-        (tst::G_TestPath / L"summary.output").wstring().c_str());
+        (tst::GetUnitTestFilesRoot() / L"summary.output").wstring().c_str());
 
     ASSERT_TRUE(cc_.establishCommunication(internal_port_));
 

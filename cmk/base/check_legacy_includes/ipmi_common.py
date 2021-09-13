@@ -11,7 +11,9 @@
 
 # pylint: disable=no-else-return
 
+import cmk.base.plugins.agent_based.utils.ipmi as ipmi
 from cmk.base.check_api import check_levels
+
 # ==================================================================================================
 # ==================================================================================================
 # THE VARIABLES AND FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
@@ -21,9 +23,7 @@ from cmk.base.check_api import check_levels
 # ==================================================================================================
 # ==================================================================================================
 
-import cmk.base.plugins.agent_based.utils.ipmi as ipmi
-
-#TODO Cleanup the whole status text mapping in
+# TODO Cleanup the whole status text mapping in
 # ipmi_common.include, ipmi_sensors.include, ipmi
 
 
@@ -44,7 +44,7 @@ def check_ipmi_common(item, params, parsed, what, status_txt_mapping):
 def ipmi_common_check_levels(sensorname, val, params, unit=""):
     for this_sensorname, levels in params.get("numerical_sensor_levels", []):
         if this_sensorname == sensorname and levels:
-            levels_tuple = levels.get('upper', (None, None)) + levels.get('lower', (None, None))
+            levels_tuple = levels.get("upper", (None, None)) + levels.get("lower", (None, None))
             yield check_levels(val, None, levels_tuple, unit=unit, infoname=sensorname)
             break
 
@@ -58,8 +58,13 @@ def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
     warn_high = data["warn_high"]
     crit_high = data["crit_high"]
 
-    # stay compatible with older versions
-    yield status_txt_mapping(status_txt), "Status: %s" % status_txt
+    status = status_txt_mapping(status_txt)
+    for wato_status_txt, wato_status in params.get("sensor_states", []):
+        if status_txt.startswith(wato_status_txt):
+            status = wato_status
+            break
+
+    yield status, "Status: %s" % status_txt
 
     perfdata = []
     if val is not None:
@@ -67,24 +72,21 @@ def check_ipmi_common_detailed(item, params, data, what, status_txt_mapping):
             old_perf_val = str(val) + unit
             perfdata = [(item, old_perf_val, warn_high, crit_high)]
 
-        elif what == "freeipmi" and \
-             ("temperature" in item.lower() or "temp" in item.lower() or unit == 'C'):
+        elif what == "freeipmi" and (
+            "temperature" in item.lower() or "temp" in item.lower() or unit == "C"
+        ):
             # Do not save performance data for FANs. This produces
             # much data and is - in my opinion - useless.
             perfdata = [("value", val, None, crit_high)]
 
-        status, infotext, _ = check_levels(val, None, (warn_high, crit_high, warn_low, crit_low),
-                                           unit)
+        status, infotext, _ = check_levels(
+            val, None, (warn_high, crit_high, warn_low, crit_low), unit
+        )
         yield status, infotext, perfdata
         yield from ipmi_common_check_levels(item, val, params, unit)
 
-    for wato_status_txt, wato_status in params.get("sensor_states", []):
-        if status_txt.startswith(wato_status_txt):
-            yield wato_status, ""
-            break
-
     # Sensor reports 'nc' ('non critical'), so we set the state to WARNING
-    if status_txt.startswith('nc'):
+    if status_txt.startswith("nc"):
         yield 1, ""
 
 
@@ -103,8 +105,9 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
         status_txt = data["status_txt"]
 
         # Skip datasets which have no valid data (zero value, no unit and state nc)
-        if ipmi_ignore_entry(sensorname, status_txt, params) or \
-           (val == '0.000' and unit is None and status_txt.startswith('nc')):
+        if ipmi_ignore_entry(sensorname, status_txt, params) or (
+            val == "0.000" and unit is None and status_txt.startswith("nc")
+        ):
             skipped_texts.append("%s (%s)" % (sensorname, status_txt))
             continue
 
@@ -139,10 +142,12 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
         perfdata = []
 
     infotexts = ["%d sensors" % len(parsed)]
-    for title, texts, extrainfo, text_state in [("OK", ok_texts, "", 0),
-                                                ("WARN", warn_texts, "(!)", 1),
-                                                ("CRIT", crit_texts, "(!!)", 2),
-                                                ("skipped", skipped_texts, "", 0)]:
+    for title, texts, extrainfo, text_state in [
+        ("OK", ok_texts, "", 0),
+        ("WARN", warn_texts, "(!)", 1),
+        ("CRIT", crit_texts, "(!!)", 2),
+        ("skipped", skipped_texts, "", 0),
+    ]:
         if len(parsed) == len(texts):
             # Everything OK
             infotext = "%d sensors %s" % (len(parsed), title)
@@ -160,4 +165,4 @@ def check_ipmi_common_summarized(params, parsed, status_txt_mapping):
             if text_state:
                 states.append(text_state)
 
-    return max(states), ' - '.join(infotexts), perfdata
+    return max(states), " - ".join(infotexts), perfdata

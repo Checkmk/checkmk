@@ -30,5 +30,6 @@ check_info["juniper_screenos_vpn"] = {
         [
             4,  # VPN Name
             23,  # VPN Ike 2 Status
-        ])
+        ],
+    ),
 }

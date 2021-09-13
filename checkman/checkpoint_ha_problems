@@ -15,6 +15,6 @@ description:
  In the devices observed so far the problem categories were called
  "Filter", "Synchronization", "cphad" and "fwd".
 
-inventory:
+discovery:
  One service is created for each problem category.
 

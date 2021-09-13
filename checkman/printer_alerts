@@ -14,6 +14,6 @@ description:
  the alert code and the state of the check. This table is hardcoded. If you find
  any possible improvements or shortcomings of the table, feel free to contact us.
 
-inventory:
+discovery:
  One service is created for each device.
 

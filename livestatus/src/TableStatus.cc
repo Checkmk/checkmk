@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <sstream>
 
 #include "Average.h"
 #include "BlobColumn.h"
@@ -144,13 +145,13 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         "The time of the last check for a command as UNIX timestamp (placeholder)",
         offsets, [](const TableStatus & /*r*/) {
             // TODO: check if this data is available in nagios_squeue
-            return std::chrono::system_clock::from_time_t(0);
+            return std::chrono::system_clock::time_point{};
         }));
 #endif  // NAGIOS4
     addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
         "last_log_rotation", "Time time of the last log file rotation", offsets,
-        [](const TableStatus & /*r*/) {
-            return std::chrono::system_clock::from_time_t(last_log_rotation);
+        [mc](const TableStatus & /*r*/) {
+            return mc->last_logfile_rotation();
         }));
     addColumn(std::make_unique<IntColumn::Reference>(
         "interval_length", "The default interval length from nagios.cfg",
@@ -279,12 +280,11 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
         }));
 
     // Special stuff for Check_MK
-    addColumn(std::make_unique<IntColumn::Callback<TableStatus>>(
+    addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
         "mk_inventory_last",
         "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
         offsets, [mc](const TableStatus & /*r*/) {
-            return static_cast<int32_t>(
-                mk_inventory_last(mc->mkInventoryPath() / ".last"));
+            return mk_inventory_last(mc->mkInventoryPath() / ".last");
         }));
     addColumn(std::make_unique<IntColumn::Callback<TableStatus>>(
         "num_queued_notifications",
@@ -313,7 +313,7 @@ TableStatus::TableStatus(MonitoringCore *mc) : Table(mc) {
     addColumn(std::make_unique<TimeColumn::Callback<TableStatus>>(
         "state_file_created", "The time when state file had been created",
         offsets, [](const TableStatus & /*r*/) {
-            return std::chrono::system_clock::from_time_t(0);
+            return std::chrono::system_clock::time_point{};
         }));
 }
 

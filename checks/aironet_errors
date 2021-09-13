@@ -8,7 +8,7 @@ aironet_default_error_levels = (1.0, 10.0)  # per second
 
 
 def inventory_aironet_errors(info):
-    yield from ((line[0], 'aironet_default_error_levels') for line in info)
+    yield from ((line[0], "aironet_default_error_levels") for line in info)
 
 
 def check_aironet_errors(item, params, info):
@@ -21,22 +21,21 @@ def check_aironet_errors(item, params, info):
             perfdata = [("errors", persec, None, None, warn, crit)]
             infotxt = "%.2f errors/s" % persec
             return (
-                2 if persec >= crit else  #
-                1 if persec >= warn else  #
-                0,
+                2 if persec >= crit else 1 if persec >= warn else 0,  #  #
                 infotxt,
                 perfdata,
             )
 
 
 check_info["aironet_errors"] = {
-    'check_function': check_aironet_errors,
-    'inventory_function': inventory_aironet_errors,
-    'service_description': 'MAC CRC errors radio %s',
-    'has_perfdata': True,
+    "check_function": check_aironet_errors,
+    "inventory_function": inventory_aironet_errors,
+    "service_description": "MAC CRC errors radio %s",
+    "has_perfdata": True,
     # CISCO-DOT11-IF-MIB::cd11IfRecFrameMacCrcErrors
-    'snmp_info': ('.1.3.6.1.4.1.9.9.272.1.2.1.1.1', [0, 2]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [
+    "snmp_info": (".1.3.6.1.4.1.9.9.272.1.2.1.1.1", [0, 2]),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0")
+    in [
         ".1.3.6.1.4.1.9.1.525",
         ".1.3.6.1.4.1.9.1.618",
         ".1.3.6.1.4.1.9.1.685",

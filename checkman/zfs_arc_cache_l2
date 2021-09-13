@@ -8,6 +8,6 @@ description:
 
  This check is only for reporting and always returns {OK}.
 
-inventory:
+discovery:
  One service is created on every machine having an L2 cache,
  that means reporting an l2_size greater than 0.

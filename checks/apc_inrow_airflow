@@ -27,7 +27,7 @@ def check_apc_inrow_airflow(_no_item, params, info):
     state = 0
     message = ""
 
-    warn, crit = params['level_low']
+    warn, crit = params["level_low"]
     if flow < crit:
         state = 2
         message = "too low"
@@ -35,7 +35,7 @@ def check_apc_inrow_airflow(_no_item, params, info):
         state = 1
         message = "too low"
 
-    warn, crit = params['level_high']
+    warn, crit = params["level_high"]
     if flow >= crit:
         state = 2
         message = "too high"

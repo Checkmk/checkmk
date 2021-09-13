@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #'TargetGroups': [
 #        {
 #            'TargetGroupArn': 'string',
@@ -45,9 +46,9 @@ from cmk.base.check_legacy_includes.aws import *  # pylint: disable=wildcard-imp
 def parse_aws_elbv2_target_groups(info):
     application_target_groups, network_target_groups = [], []
     for load_balancer_type, target_groups in parse_aws(info):
-        if load_balancer_type == 'application':
+        if load_balancer_type == "application":
             application_target_groups.extend(target_groups)
-        elif load_balancer_type == 'network':
+        elif load_balancer_type == "network":
             network_target_groups.extend(target_groups)
     return application_target_groups, network_target_groups
 
@@ -59,19 +60,19 @@ def check_aws_elbv2_target_groups(item, params, target_groups):
 
     target_groups_by_state = {}
     for target_group in target_groups:
-        for target_health in target_group.get('TargetHealthDescriptions', []):
+        for target_health in target_group.get("TargetHealthDescriptions", []):
             target_groups_by_state.setdefault(
-                target_health.get('TargetHealth', {}).get('State', 'unknown'),
-                []).append(target_group)
+                target_health.get("TargetHealth", {}).get("State", "unknown"), []
+            ).append(target_group)
 
     for state_readable, groups in target_groups_by_state.items():
-        if state_readable in ['initial', 'healthy', 'unused', 'draining', 'unavailable']:
+        if state_readable in ["initial", "healthy", "unused", "draining", "unavailable"]:
             state = 0
-        elif state_readable in ['unhealthy']:
+        elif state_readable in ["unhealthy"]:
             state = 2
         else:
             state = 3
-        yield state, '%s (%s)' % (state_readable, len(groups))
+        yield state, "%s (%s)" % (state_readable, len(groups))
 
 
 def inventory_aws_application_elb_target_groups(parsed):
@@ -85,11 +86,11 @@ def check_aws_application_elb_target_groups(item, params, parsed):
     return check_aws_elbv2_target_groups(item, params, application_target_groups)
 
 
-check_info['aws_elbv2_target_groups'] = {
-    'parse_function': parse_aws_elbv2_target_groups,
-    'inventory_function': inventory_aws_application_elb_target_groups,
-    'check_function': check_aws_application_elb_target_groups,
-    'service_description': 'AWS/ApplicationELB Target Groups',
+check_info["aws_elbv2_target_groups"] = {
+    "parse_function": parse_aws_elbv2_target_groups,
+    "inventory_function": inventory_aws_application_elb_target_groups,
+    "check_function": check_aws_application_elb_target_groups,
+    "service_description": "AWS/ApplicationELB Target Groups",
 }
 
 
@@ -104,8 +105,8 @@ def check_aws_network_elb_target_groups(item, params, parsed):
     return check_aws_elbv2_target_groups(item, params, network_target_groups)
 
 
-check_info['aws_elbv2_target_groups.network'] = {
-    'inventory_function': inventory_aws_network_elb_target_groups,
-    'check_function': check_aws_network_elb_target_groups,
-    'service_description': 'AWS/NetworkELB Target Groups',
+check_info["aws_elbv2_target_groups.network"] = {
+    "inventory_function": inventory_aws_network_elb_target_groups,
+    "check_function": check_aws_network_elb_target_groups,
+    "service_description": "AWS/NetworkELB Target Groups",
 }

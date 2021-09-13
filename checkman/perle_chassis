@@ -13,5 +13,5 @@ description:
  Moreover if the devices reports at least one alarm the check also goes
  CRIT. Otherwise it's OK.
 
-inventory:
+discovery:
  One service is created.

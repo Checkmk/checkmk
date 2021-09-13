@@ -4,26 +4,41 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import SpecialAgent  # type: ignore[import]
+import pytest
+
+from tests.testlib import SpecialAgent
 
 pytestmark = pytest.mark.checks
 
 
-@pytest.mark.parametrize('params,expected_args', [
-    ({
-        'username': 'user',
-        'password': 'password',
-        'skip_elements': []
-    }, ["-u", "user", "-s", "password", "address"]),
-    ({
-        'username': 'user',
-        'password': 'password',
-        'skip_elements': ['ctr_volumes']
-    }, ['-u', 'user', '-s', 'password', '--nocounters volumes', 'address']),
-])
+@pytest.mark.parametrize(
+    "params, expected_args",
+    [
+        pytest.param(
+            {"username": "user", "password": "password", "skip_elements": []},
+            [
+                "address",
+                "user",
+                "password",
+                "--no_counters",
+            ],
+            id="no elements to skip",
+        ),
+        pytest.param(
+            {"username": "user", "password": "password", "skip_elements": ["ctr_volumes"]},
+            [
+                "address",
+                "user",
+                "password",
+                "--no_counters",
+                "volumes",
+            ],
+            id="skip volumes",
+        ),
+    ],
+)
 def test_netapp_argument_parsing(params, expected_args):
     """Tests if all required arguments are present."""
-    agent = SpecialAgent('agent_netapp')
+    agent = SpecialAgent("agent_netapp")
     arguments = agent.argument_func(params, "host", "address")
     assert arguments == expected_args

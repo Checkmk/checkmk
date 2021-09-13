@@ -78,8 +78,8 @@ def check_mounts(item, targetopts, info):
 
 
 check_info["mounts"] = {
-    'check_function': check_mounts,
-    'inventory_function': discovery_mounts,
-    'service_description': 'Mount options of %s',
-    'group': 'fs_mount_options',
+    "check_function": check_mounts,
+    "inventory_function": discovery_mounts,
+    "service_description": "Mount options of %s",
+    "group": "fs_mount_options",
 }

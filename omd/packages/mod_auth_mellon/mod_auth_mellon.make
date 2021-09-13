@@ -15,15 +15,16 @@ $(MOD_AUTH_MELLON): $(MOD_AUTH_MELLON_BUILD)
 $(MOD_AUTH_MELLON)-unpack: $(MOD_AUTH_MELLON_UNPACK)
 
 ifeq ($(filter $(DISTRO_CODE),sles15 sles12sp3 sles12sp4),)
-$(MOD_AUTH_MELLON_BUILD): $(MOD_AUTH_MELLON_UNPACK) $(LASSO_INTERMEDIATE_INSTALL)
+$(MOD_AUTH_MELLON_BUILD): $(MOD_AUTH_MELLON_UNPACK) $(LASSO_CACHE_PKG_PROCESS)
 	export LASSO_DIR="$(LASSO_DIR)" \
-	&& sed -i "s|^prefix=$(OMD_ROOT)$$|prefix=$(INTERMEDIATE_INSTALL_BASE)/$(LASSO_DIR)/$(OMD_ROOT)|" $(INTERMEDIATE_INSTALL_BASE)/$(LASSO_DIR)/$(OMD_ROOT)/lib/pkgconfig/lasso.pc
+	&& sed -i "s|^prefix=$$|prefix=$(LASSO_INSTALL_DIR)|" $(LASSO_INSTALL_DIR)/lib/pkgconfig/lasso.pc
 	cd $(MOD_AUTH_MELLON_BUILD_DIR) \
 	&& echo $(MOD_AUTH_MELLON_VERS) > .tarball-version \
-      	&& export PKG_CONFIG_PATH="$(INTERMEDIATE_INSTALL_BASE)/$(LASSO_DIR)/$(OMD_ROOT)/lib/pkgconfig" \
+      	&& export PKG_CONFIG_PATH="$(LASSO_INSTALL_DIR)/lib/pkgconfig" \
         && ./autogen.sh noconfig \
         && ./configure \
-	&& $(MAKE)
+	&& $(MAKE) \
+	&& sed -i "s|^prefix=$(LASSO_INSTALL_DIR)$$|prefix=|" $(LASSO_INSTALL_DIR)/lib/pkgconfig/lasso.pc
 	$(TOUCH) $@
 else
 $(MOD_AUTH_MELLON_BUILD):

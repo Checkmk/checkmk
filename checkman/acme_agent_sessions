@@ -29,5 +29,5 @@ description:
 item:
  Name of the host.
 
-inventory:
+discovery:
  One service is created for each hostname.

@@ -46,16 +46,17 @@ std::pair<uint64_t, uint64_t> GetSpacesByVolumeId(std::string_view volume_id) {
     ULARGE_INTEGER free{.QuadPart = 0};
     int ret = ::GetDiskFreeSpaceExA(volume_id.data(), &avail, &total, &free);
     if (ret == FALSE) {
-        XLOG::d("GetDiskFreeSpaceExA is failed with error [{}]",
-                ::GetLastError());
+        XLOG::d("GetDiskFreeSpaceExA for volume '{}' is failed with error [{}]",
+                volume_id, ::GetLastError());
         return {0, 0};
     }
     return {avail.QuadPart, total.QuadPart};
 }
 
 uint64_t CalcUsage(uint64_t avail, uint64_t total) {
-    if (avail > total) return 0;
-    if (total == 0) return 0;
+    if (avail > total || total == 0) {
+        return 0;
+    }
 
     return 100 - (100 * avail) / total;
 }
@@ -66,7 +67,7 @@ std::string ProduceFileSystemOutput(std::string_view volume_id) {
 
     auto usage = CalcUsage(avail, total);
 
-    if (volume_name.empty())  // have a volume name
+    if (volume_name.empty())
         volume_name = volume_id;
     else
         std::replace(volume_name.begin(), volume_name.end(), ' ', '_');
@@ -88,7 +89,7 @@ public:
     VolumeMountData(const VolumeMountData&&) = delete;
     VolumeMountData& operator=(VolumeMountData&&) = delete;
 
-    VolumeMountData(std::string_view volume_id)
+    explicit VolumeMountData(std::string_view volume_id)
         : storage_{std::make_unique<char[]>(sz_)}
         , volume_id_{volume_id}
         , handle_{::FindFirstVolumeMountPointA(volume_id.data(), storage_.get(),
@@ -107,7 +108,6 @@ public:
             ::FindNextVolumeMountPointA(handle_, storage_.get(), sz_) == TRUE;
 
         if (ret == FALSE) {
-            // we should report if something is going really wrong
             auto error = ::GetLastError();
             if (error != ERROR_NO_MORE_FILES)
                 XLOG::l("Error [{}] looking for volume '{}'", error,
@@ -117,12 +117,12 @@ public:
         return ret;
     }
 
-    bool exists() const { return !wtools::IsBadHandle(handle_); }
+    [[nodiscard]] bool exists() const { return !wtools::IsBadHandle(handle_); }
 
-    std::string result() const { return storage_.get(); }
+    [[nodiscard]] std::string result() const { return storage_.get(); }
 
 private:
-    static inline int sz_{2048};
+    constexpr static int sz_{2048};
     std::unique_ptr<char[]> storage_;
     std::string volume_id_;
     HANDLE handle_{nullptr};
@@ -150,8 +150,11 @@ std::string ProduceMountPointsOutput(std::string_view volume_id) {
     VolumeMountData vmd(volume_id);
 
     if (!vmd.exists()) {
-        XLOG::d("Failed FindFirstVolumeMountPointA, error is [{}]",
-                ::GetLastError());
+        if (::GetLastError() != ERROR_NO_MORE_FILES) {
+            XLOG::d(
+                "Failed FindFirstVolumeMountPointA at volume '{}', error is [{}]",
+                volume_id, ::GetLastError());
+        }
         return {};
     }
 

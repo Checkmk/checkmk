@@ -9,7 +9,8 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.azure import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['levels_azure_storageaccounts'] = {}
+
+factory_settings["levels_azure_storageaccounts"] = {}
 # metrics description:
 # https://docs.microsoft.com/en-US/azure/monitoring-and-diagnostics/monitoring-supported-metrics#microsoftstoragestorageaccounts
 # 'ingress_levels': tuple [B]
@@ -28,7 +29,7 @@ factory_settings['levels_azure_storageaccounts'] = {}
 
 @get_data_or_go_stale
 def check_azure_storageaccounts(_item, params, resource):
-    iter_attrs = azure_iter_informative_attrs(resource, include_keys=('kind', 'location'))
+    iter_attrs = azure_iter_informative_attrs(resource, include_keys=("kind", "location"))
     # kind first
     try:
         yield 0, "%s: %s" % next(iter_attrs)
@@ -36,11 +37,9 @@ def check_azure_storageaccounts(_item, params, resource):
         pass
 
     levels = params.get("used_capacity_levels", (None, None))
-    mcheck = check_azure_metric(resource,
-                                'total_UsedCapacity',
-                                'used_space',
-                                'Used capacity',
-                                levels=levels)
+    mcheck = check_azure_metric(
+        resource, "total_UsedCapacity", "used_space", "Used capacity", levels=levels
+    )
     if mcheck:
         yield mcheck
 
@@ -48,20 +47,20 @@ def check_azure_storageaccounts(_item, params, resource):
         yield 0, "%s: %s" % kv_pair
 
 
-check_info['azure_storageaccounts'] = {
-    'parse_function': parse_azure,
-    'inventory_function': discover(),
-    'check_function': check_azure_storageaccounts,
-    'service_description': "Storage %s account",
-    'has_perfdata': True,
-    'default_levels_variable': 'levels_azure_storageaccounts',
-    'group': 'azure_storageaccounts',
+check_info["azure_storageaccounts"] = {
+    "parse_function": parse_azure,
+    "inventory_function": discover(),
+    "check_function": check_azure_storageaccounts,
+    "service_description": "Storage %s account",
+    "has_perfdata": True,
+    "default_levels_variable": "levels_azure_storageaccounts",
+    "group": "azure_storageaccounts",
 }
 
 
 @get_data_or_go_stale
 def check_azure_storageaccounts_flow(_item, params, resource):
-    for metric_key in ('total_Ingress', 'total_Egress', 'total_Transactions'):
+    for metric_key in ("total_Ingress", "total_Egress", "total_Transactions"):
         cmk_key = metric_key[6:].lower()
         displ = cmk_key.title()
         levels = params.get("%s_levels" % cmk_key, (None, None))
@@ -70,14 +69,15 @@ def check_azure_storageaccounts_flow(_item, params, resource):
             yield mcheck
 
 
-check_info['azure_storageaccounts.flow'] = {
-    'inventory_function': discover_azure_by_metrics('total_Ingress', 'total_Egress',
-                                                    'total_Transactions'),
-    'check_function': check_azure_storageaccounts_flow,
-    'service_description': "Storage %s flow",
-    'has_perfdata': True,
-    'default_levels_variable': 'levels_azure_storageaccounts',
-    'group': 'azure_storageaccounts',
+check_info["azure_storageaccounts.flow"] = {
+    "inventory_function": discover_azure_by_metrics(
+        "total_Ingress", "total_Egress", "total_Transactions"
+    ),
+    "check_function": check_azure_storageaccounts_flow,
+    "service_description": "Storage %s flow",
+    "has_perfdata": True,
+    "default_levels_variable": "levels_azure_storageaccounts",
+    "group": "azure_storageaccounts",
 }
 
 
@@ -85,9 +85,9 @@ check_info['azure_storageaccounts.flow'] = {
 def check_azure_storageaccounts_performance(_item, params, resource):
 
     for key, cmk_key, displ in (
-        ('total_SuccessServerLatency', 'server_latency', 'Success server latency'),
-        ('total_SuccessE2ELatency', 'e2e_latency', 'End-to-end server latency'),
-        ('total_Availability', 'availability', 'Availability'),
+        ("total_SuccessServerLatency", "server_latency", "Success server latency"),
+        ("total_SuccessE2ELatency", "e2e_latency", "End-to-end server latency"),
+        ("total_Availability", "availability", "Availability"),
     ):
         levels = params.get("%s_levels" % cmk_key, (None, None))
         mcheck = check_azure_metric(resource, key, cmk_key, displ, levels=levels)
@@ -95,13 +95,13 @@ def check_azure_storageaccounts_performance(_item, params, resource):
             yield mcheck
 
 
-check_info['azure_storageaccounts.performance'] = {
-    'inventory_function': discover_azure_by_metrics('total_SuccessServerLatency',
-                                                    'total_SuccessE2ELatency',
-                                                    'total_Availability'),
-    'check_function': check_azure_storageaccounts_performance,
-    'service_description': "Storage %s performance",
-    'has_perfdata': True,
-    'default_levels_variable': 'levels_azure_storageaccounts',
-    'group': 'azure_storageaccounts',
+check_info["azure_storageaccounts.performance"] = {
+    "inventory_function": discover_azure_by_metrics(
+        "total_SuccessServerLatency", "total_SuccessE2ELatency", "total_Availability"
+    ),
+    "check_function": check_azure_storageaccounts_performance,
+    "service_description": "Storage %s performance",
+    "has_perfdata": True,
+    "default_levels_variable": "levels_azure_storageaccounts",
+    "group": "azure_storageaccounts",
 }

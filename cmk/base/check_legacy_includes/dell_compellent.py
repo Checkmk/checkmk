@@ -8,10 +8,9 @@ from typing import Callable, Mapping, Tuple
 
 
 def scan(oid: Callable[[str], str]) -> str:
-    return (  #
-        oid(".1.3.6.1.4.1.674.*") and
-        oid(".1.3.6.1.4.1.674.11000.2000.500.1.2.1.0")  # shared with dell_hw_info (performance!)
-    )
+    return oid(".1.3.6.1.4.1.674.*") and oid(  #
+        ".1.3.6.1.4.1.674.11000.2000.500.1.2.1.0"
+    )  # shared with dell_hw_info (performance!)
 
 
 def discover(info):
@@ -27,4 +26,4 @@ _STATE_MAP: Mapping[str, Tuple[int, str]] = {
 
 
 def dev_state_map(orig_dev_state: str) -> Tuple[int, str]:
-    return _STATE_MAP.get(orig_dev_state, (3, f'unknown[{orig_dev_state}]'))
+    return _STATE_MAP.get(orig_dev_state, (3, f"unknown[{orig_dev_state}]"))

@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.stormshield import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
@@ -24,19 +25,20 @@ def inventory_stormshield_cpu_temp(info):
 def check_stormshield_cpu_temp(item, params, info):
     for index, temp in info:
         if item == index:
-            return check_temperature(int(temp), params, 'stormshield_cpu_temp_%s' % index)
+            return check_temperature(int(temp), params, "stormshield_cpu_temp_%s" % index)
 
 
-check_info['stormshield_cpu_temp'] = {
-    'inventory_function': inventory_stormshield_cpu_temp,
-    'check_function': check_stormshield_cpu_temp,
-    'service_description': 'CPU Temp %s',
-    'has_perfdata': True,
-    'snmp_info': (
-        '.1.3.6.1.4.1.11256.1.10.7.1',
+check_info["stormshield_cpu_temp"] = {
+    "inventory_function": inventory_stormshield_cpu_temp,
+    "check_function": check_stormshield_cpu_temp,
+    "service_description": "CPU Temp %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.11256.1.10.7.1",
         [
-            '1',  # snsCpuIndex
-            '2',  # snsCpuTemp
-        ]),
-    'snmp_scan_function': stormshield_scan_function,
+            "1",  # snsCpuIndex
+            "2",  # snsCpuTemp
+        ],
+    ),
+    "snmp_scan_function": stormshield_scan_function,
 }

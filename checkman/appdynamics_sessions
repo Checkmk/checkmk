@@ -15,5 +15,5 @@ description:
 item:
  Name of the disk and either {{Heap}} or {{Non-Heap}}
 
-inventory:
+discovery:
  One service for each per application.

@@ -21,19 +21,22 @@ discovery = {
         (
             'C:/',
             {
-                'include_volume_name': False
+                "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
         (
             'E:/',
             {
-                'include_volume_name': False
+                "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
         (
             'F:/',
             {
-                'include_volume_name': False
+                "item_appearance": "mountpoint",
+                "mountpoint_for_block_devices": "volume_name",
             },
         ),
     ]
@@ -131,7 +134,6 @@ checks = {
             'inodes_levels': (10.0, 5.0),
             'show_inodes': 'onlow',
             'show_reserved': False,
-            'include_volume_name': False
         }, [
             (
                 2,
@@ -153,7 +155,6 @@ checks = {
             'inodes_levels': (10.0, 5.0),
             'show_inodes': 'onlow',
             'show_reserved': False,
-            'include_volume_name': False
         }, [
             (
                 0,
@@ -175,7 +176,6 @@ checks = {
             'inodes_levels': (10.0, 5.0),
             'show_inodes': 'onlow',
             'show_reserved': False,
-            'include_volume_name': False
         }, [
             (
                 0,

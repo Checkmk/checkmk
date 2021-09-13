@@ -13,7 +13,7 @@ linux_nic_check = "lnx_if"
 def inventory_netif_link(info):
     if linux_nic_check != "legacy":
         return []
-    return [(i[0], i[4] == 'yes', i[4] == 'yes') for i in info if len(i) == 5]
+    return [(i[0], i[4] == "yes", i[4] == "yes") for i in info if len(i) == 5]
 
 
 def check_netif_link(item, targetstate, info):
@@ -22,9 +22,9 @@ def check_netif_link(item, targetstate, info):
         return (2, "unknown network device")
     elif len(links) != 1:
         return (3, "network devices listed more than once")
-    if links[0] == 'yes':
+    if links[0] == "yes":
         link = True
-    elif links[0] == 'no':
+    elif links[0] == "no":
         link = False
     else:
         return (3, "invalid link state '%s'" % link)
@@ -42,7 +42,7 @@ def check_netif_link(item, targetstate, info):
 def inventory_netif_params(info):
     if linux_nic_check != "legacy":
         return []
-    return [(i[0], '', tuple(i[1:4])) for i in info if len(i) == 5]
+    return [(i[0], "", tuple(i[1:4])) for i in info if len(i) == 5]
 
 
 def check_netif_params(item, params, info):
@@ -58,13 +58,13 @@ def check_netif_params(item, params, info):
 
 
 check_info["netif.params"] = {
-    'check_function': check_netif_params,
-    'inventory_function': inventory_netif_params,
-    'service_description': 'NIC %s parameter',
+    "check_function": check_netif_params,
+    "inventory_function": inventory_netif_params,
+    "service_description": "NIC %s parameter",
 }
 
 check_info["netif.link"] = {
-    'check_function': check_netif_link,
-    'inventory_function': inventory_netif_link,
-    'service_description': 'NIC %s link',
+    "check_function": check_netif_link,
+    "inventory_function": inventory_netif_link,
+    "service_description": "NIC %s link",
 }

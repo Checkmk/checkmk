@@ -12,6 +12,6 @@ description:
 
  This check uses the PEAKFLOW-SP-MIB.
 
-inventory:
+discovery:
  One service is created.
 

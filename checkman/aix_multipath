@@ -28,7 +28,7 @@ description:
 item:
  The WWID of the LUN.
 
-inventory:
+discovery:
  One service is created for each LUN that is reported by
  the lspath utility if the device starts with {"hdisk"}
 

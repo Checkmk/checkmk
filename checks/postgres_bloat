@@ -27,8 +27,8 @@ from cmk.base.plugins.agent_based.utils import postgres
 # ...
 
 factory_settings["postgres_bloat_default_levels"] = {
-    'table_bloat_perc': (180.0, 200.0),  # WARN at 180%, CRIT at 200%
-    'index_bloat_perc': (180.0, 200.0)
+    "table_bloat_perc": (180.0, 200.0),  # WARN at 180%, CRIT at 200%
+    "index_bloat_perc": (180.0, 200.0),
 }
 
 
@@ -86,46 +86,67 @@ def check_postgres_bloat(item, params, parsed):
                 warn, crit = params["%s_bloat_abs" % what]
                 if wasted >= crit:
                     yield 2, "%s wasted %s bytes: %s (too high)" % (
-                        line["tablename"], what, get_bytes_human_readable(wasted))
+                        line["tablename"],
+                        what,
+                        get_bytes_human_readable(wasted),
+                    )
                     show_levels = True
                 elif wasted >= warn:
                     yield 1, "%s wasted %s bytes: %s (too high)" % (
-                        line["tablename"], what, get_bytes_human_readable(wasted))
+                        line["tablename"],
+                        what,
+                        get_bytes_human_readable(wasted),
+                    )
                     show_levels = True
 
     if show_levels:
         levels_info = ["Levels:"]
         for what in ["table", "index"]:
             if "%s_bloat_perc" % what in params:
-                levels_info.append("%s Perc (%.0f%%/%.0f%%)" %
-                                   ((what.title(),) + params["%s_bloat_perc" % what]))
+                levels_info.append(
+                    "%s Perc (%.0f%%/%.0f%%)" % ((what.title(),) + params["%s_bloat_perc" % what])
+                )
             if "%s_bloat_abs" % what in params:
-                levels_info.append("%s Abs (%s/%s)" % ((what.title(),) + \
-                    tuple(get_bytes_human_readable(int(x)) for x in params["%s_bloat_abs" % what])))
+                levels_info.append(
+                    "%s Abs (%s/%s)"
+                    % (
+                        (what.title(),)
+                        + tuple(
+                            get_bytes_human_readable(int(x)) for x in params["%s_bloat_abs" % what]
+                        )
+                    )
+                )
         yield 0, " ".join(levels_info)
     else:
         # No errors. Show some general information
-        for what, perc_max, abs_max in [("table", table_perc_max, table_abs_max),
-                                        ("index", index_perc_max, index_abs_max)]:
-            yield 0, "Maximum %s bloat at %s: %s" % (what, perc_max["tablename"],
-                                                     get_percent_human_readable(
-                                                         float(perc_max["%sbloat" % what[0]])))
+        for what, perc_max, abs_max in [
+            ("table", table_perc_max, table_abs_max),
+            ("index", index_perc_max, index_abs_max),
+        ]:
+            yield 0, "Maximum %s bloat at %s: %s" % (
+                what,
+                perc_max["tablename"],
+                get_percent_human_readable(float(perc_max["%sbloat" % what[0]])),
+            )
             yield 0, "Maximum wasted %sspace at %s: %s" % (
-                what, abs_max["tablename"],
+                what,
+                abs_max["tablename"],
                 get_bytes_human_readable(
-                    int(abs_max["wasted%sbytes" % (what == "index" and "i" or "")])))
+                    int(abs_max["wasted%sbytes" % (what == "index" and "i" or "")])
+                ),
+            )
 
     # Summary information
     for what, total_value in [("table", table_abs_total), ("index", index_abs_total)]:
         yield (
             0,
-            "Summary of top %d wasted %sspace: %s" %
-            (len(database), what, get_bytes_human_readable(total_value)),
+            "Summary of top %d wasted %sspace: %s"
+            % (len(database), what, get_bytes_human_readable(total_value)),
             [("%sspace_wasted" % what, total_value)],
         )
 
 
-check_info['postgres_bloat'] = {
+check_info["postgres_bloat"] = {
     "parse_function": postgres.parse_dbs,
     "check_function": check_postgres_bloat,
     "inventory_function": inventory_postgres_bloat,

@@ -25,13 +25,18 @@ else
 MANAGED            := no
 endif
 
+# Will be set to "yes" by cmk build system when building a free edition
+FREE               := no
+
+ifeq (yes,$(FREE))
+EDITION            := free
+EDITION_SHORT      := cfe
+endif
+
 VERSION            := 2.1.0i1
-# Will be set to ".demo" by cmk build system when building a demo package
-DEMO_SUFFIX        :=
-OMD_VERSION        := $(VERSION).$(EDITION_SHORT)$(DEMO_SUFFIX)
+OMD_VERSION        := $(VERSION).$(EDITION_SHORT)
 # Do not use the the ".c?e" EDITION_SHORT suffix, the edition is part of the package name
-# But keep the ".demo" suffix. Somehow inconsistent, but this is our scheme.
-PKG_VERSION        := $(VERSION)$(DEMO_SUFFIX)
+PKG_VERSION        := $(VERSION)
 
 # Currently only used for the OMD package build cache. We did not want to use
 # the branch name, because we want to re-use a single cache also for derived sandbox
@@ -48,5 +53,21 @@ BRANCH_VERSION     := 2.1.0
 #endif
 
 SHELL              := /bin/bash
-# TODO: Be more strict - Add this:
-#SHELL              := /bin/bash -e -o pipefail
+CLANG_VERSION      := 12
+PYTHON2_VERSION	   := 2.7.17
+
+# When you update the Python version, you have to update the test expectations
+# in test_03_python_interpreter_version and test_03_pip_interpreter_version.
+# Update omd/Licenses.csv, too.
+PYTHON_VERSION	   := 3.8.11
+
+# convenience stuff derived from PYTHON_VERSION
+PY_ARRAY	       := $(subst ., ,$(PYTHON_VERSION))
+PYTHON_VERSION_MAJOR   := $(word 1,$(PY_ARRAY))
+PYTHON_VERSION_MINOR   := $(word 2,$(PY_ARRAY))
+PYTHON_VERSION_PATCH   := $(word 3,$(PY_ARRAY))
+PYTHON_MAJOR_MINOR     := $(PYTHON_VERSION_MAJOR)$(PYTHON_VERSION_MINOR)
+PYTHON_MAJOR_DOT_MINOR := $(PYTHON_VERSION_MAJOR).$(PYTHON_VERSION_MINOR)
+
+print-%:
+	@echo '$($*)'

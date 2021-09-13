@@ -10,5 +10,5 @@ description:
 item:
  The SDS id
 
-inventory:
+discovery:
  One service is created for each SDS.

@@ -5,12 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # type: ignore[list-item,import,assignment,misc,operator]  # TODO: see which are needed in this file
-from cmk.base.check_api import RAISE
+
 import time
-from cmk.base.check_api import get_average
-from cmk.base.check_api import get_rate
-from cmk.base.check_api import check_levels
-from cmk.base.check_api import get_parsed_item_data
+from typing import Any, List
+
+from cmk.base.check_api import check_levels, get_average, get_parsed_item_data, get_rate, RAISE
 
 
 @get_parsed_item_data
@@ -27,18 +26,22 @@ def check_firewall_if(item, params, data):
 
         if params.get("averaging"):
             backlog_minutes = params["averaging"]
-            avgrate = get_average("firewall_if-%s.%s" % (what, item), this_time, rate,
-                                  backlog_minutes)
+            avgrate = get_average(
+                "firewall_if-%s.%s" % (what, item), this_time, rate, backlog_minutes
+            )
             check_against = avgrate
         else:
             check_against = rate
 
-        status, infotext, extraperf = check_levels(check_against,
-                                                   what,
-                                                   params.get(what),
-                                                   human_readable_func=lambda x: "%.2f pkts/s" % x,
-                                                   infoname=infotext_names[what])
+        status, infotext, extraperf = check_levels(
+            check_against,
+            what,
+            params.get(what),
+            human_readable_func=lambda x: "%.2f pkts/s" % x,
+            infoname=infotext_names[what],
+        )
 
-        perfdata = [(what, rate)] + extraperf[:1]
+        perfdata: List[Any]
+        perfdata = [(what, rate)] + extraperf[:1]  # type: ignore[operator]
 
         yield status, infotext, perfdata

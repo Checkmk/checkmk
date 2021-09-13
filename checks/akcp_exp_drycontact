@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.akcp_sensor import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Example for contents of info
 #           description            state  online  critical_desc  normal_desc
 # ["Diesel1 Generatorbetrieb",      "2",   "1",        "An",         "Aus"]]
@@ -26,5 +27,6 @@ check_info["akcp_exp_drycontact"] = {
             46,  # SPAGENT-MIB::sensorDryContactCriticalDesc
             48,  # SPAGENT-MIB::sensorDryContactNormalDesc
             8,  # SPAGENT-MIB::sensorDryContactGoOffline
-        ]),
+        ],
+    ),
 }

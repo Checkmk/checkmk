@@ -9,16 +9,16 @@ def inv_suseconnect(parsed, params):
     node = inv_tree("software.os.")
 
     items = [
-        ('starts_at', 'License Begin'),
-        ('expires_at', 'License Expiration'),
-        ('regcode', 'Registration Code'),
-        ('status', 'Registration Status'),
-        ('subscription_status', 'Subscription Status'),
-        ('type', 'Subscription Type'),
+        ("starts_at", "License Begin"),
+        ("expires_at", "License Expiration"),
+        ("regcode", "Registration Code"),
+        ("status", "Registration Status"),
+        ("subscription_status", "Subscription Status"),
+        ("type", "Subscription Type"),
     ]
 
     for key, description in items:
-        node[description] = parsed.get(key, 'Unknown')
+        node[description] = parsed.get(key, "Unknown")
 
 
-inv_info['suseconnect'] = {'inv_function': inv_suseconnect}
+inv_info["suseconnect"] = {"inv_function": inv_suseconnect}

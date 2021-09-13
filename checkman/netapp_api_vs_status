@@ -19,6 +19,6 @@ description:
 item:
  Name of the virtual server
 
-inventory:
+discovery:
  One service is created for each vServer.
 

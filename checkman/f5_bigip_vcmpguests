@@ -8,8 +8,5 @@ description:
  the failover status of every vCMP guest running on a vCMP host.
  The service is informational, no parameters are used or configurable.
 
-inventory:
+discovery:
  One service is created.
-
-cluster:
-  On a cluster the service will assume the worst of the encountered states.

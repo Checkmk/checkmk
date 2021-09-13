@@ -51,8 +51,10 @@ static void SetEnabledFlag(bool flag) {
 }
 
 TEST(Cma, Commander) {
-    using namespace std::chrono;
+    using namespace std::chrono_literals;
     //
+    auto temp_cfg = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_cfg->loadFactoryConfig());
     auto yaml = cma::cfg::GetLoadedConfig();
     auto yaml_global = yaml[cma::cfg::groups::kGlobal];
     EXPECT_TRUE(yaml_global[cma::cfg::vars::kEnabled].IsScalar());
@@ -361,25 +363,46 @@ TEST(CmaToolsDetails, FindRootByExePath) {
 
 }  // namespace details
 
-TEST(Cma, OnStart) {
-    {
-        auto [r, d] = cma::FindAlternateDirs(L"");
-        EXPECT_TRUE(r.empty());
-        EXPECT_TRUE(d.empty());
+TEST(Cma, FindAlternateDirs) {
+    for (auto app_type :
+         {AppType::exe, AppType::automatic, AppType::failed, AppType::srv}) {
+        auto [r, d] = cma::FindAlternateDirs(app_type);
+        EXPECT_EQ(r, "");
+        EXPECT_EQ(d, "");
     }
-    {
-        auto [r, d] = cma::FindAlternateDirs(kRemoteMachine);
-        EXPECT_EQ(r, cma::tools::win::GetEnv(kRemoteMachine));
-        EXPECT_EQ(d,
-                  cma::tools::win::GetEnv(kRemoteMachine) + L"\\ProgramData");
+
+    auto expected = tools::win::GetEnv(env::test_root);
+    auto [r, d] = cma::FindAlternateDirs(AppType::test);
+    EXPECT_TRUE(r.wstring().find(expected) != std::wstring::npos);
+    EXPECT_TRUE(d.wstring().find(expected) != std::wstring::npos);
+}
+
+class CmaFixture : public ::testing::Test {
+public:
+    void SetUp() override {
+        expected_ = tst::MakeTempFolderInTempPath(L"special_dir");
+        fs::create_directories(expected_ / "test" / "root");
+        fs::create_directories(expected_ / "test" / "data");
+        tools::win::SetEnv(std::wstring{env::test_integration_root},
+                           expected_.wstring());
     }
+    void TearDown() override {
+        tools::win::SetEnv(std::wstring{env::test_integration_root}, {});
+        fs::remove_all(expected_);
+    }
+    fs::path expected_;
+};
+TEST_F(CmaFixture, FindAlternateDirsExeEnvVar) {
+    auto [r, d] = cma::FindAlternateDirs(AppType::exe);
+    EXPECT_TRUE(r.wstring().find(expected_) != std::wstring::npos);
+    EXPECT_TRUE(d.wstring().find(expected_) != std::wstring::npos);
 }
 
 TEST(CmaCfg, ReloadCfg) {
     cma::OnStartTest();
     auto id = GetCfg().uniqId();
     EXPECT_TRUE(id > 0);
-    cma::LoadConfig(AppType::test, {});
+    cma::LoadConfigFull({});
     auto id2 = GetCfg().uniqId();
     EXPECT_TRUE(id2 > id);
 }
@@ -442,9 +465,9 @@ namespace cma::cfg {
 TEST(CmaCfg, ConfigManagement) {
     auto node = CreateNode("test");
     ASSERT_TRUE(node);
-    node->setLogFileDir(L"test");
+    node->setConfiguredLogFileDir(L"test");
     auto node2 = GetNode("test");
-    EXPECT_EQ(node2->getLogFileDir(), L"test");
+    EXPECT_EQ(node2->getConfiguredLogFileDir(), L"test");
     ASSERT_TRUE(node2);
     RemoveNode("test");
     auto node3 = GetNode("test");
@@ -471,24 +494,17 @@ namespace cma::cfg {
 class CmaCfg_F : public ::testing::Test {
 protected:
     void SetUp() override {
-        cma::OnStartTest();
-        tst::SafeCleanTempDir();
-        cap_base_ = cma::cfg::GetUserDir();
-        cap_base_ /= "plugins.test.cap";
+        temp_fs_ = tst::TempCfgFs::Create();
+        ASSERT_TRUE(temp_fs_->loadFactoryConfig());
+        cap_base_ = tst::MakePathToCapTestFiles() / "plugins.test.cap";
 
-        auto [r, u] = tst::CreateInOut();
-        root_ = r.wstring();
-        user_ = u.wstring();
-        GetCfg().pushFolders(root_, user_);
+        root_ = temp_fs_->root().wstring();
+        user_ = temp_fs_->data().wstring();
     }
 
-    void TearDown() override {
-        GetCfg().popFolders();
-        tst::SafeCleanTempDir();
-    }
+    void TearDown() override {}
 
     auto prepareAll() {
-        namespace fs = std::filesystem;
         fs::path pd = GetUserDir();
         details::CreateTree(pd);
         auto table = details::AllDirTable();
@@ -506,10 +522,11 @@ protected:
     std::wstring user_;
     std::filesystem::path cap_base_;
     size_t user_folders_count_ = 0;
+
+    tst::TempCfgFs::ptr temp_fs_;
 };
 
 TEST_F(CmaCfg_F, CreateTree) {
-    namespace fs = std::filesystem;
     ASSERT_TRUE(GetRootDir() == root_);
     ASSERT_TRUE(GetUserDir() == user_);
     fs::path pd = GetUserDir();
@@ -521,8 +538,6 @@ TEST_F(CmaCfg_F, CreateTree) {
 }
 
 TEST_F(CmaCfg_F, CleanInstallOnInvalidFolder) {
-    namespace fs = std::filesystem;
-
     // prepare damaged folder
     fs::path user_dir = cma::cfg::GetUserDir();
     fs::remove_all(user_dir / dirs::kBakery);
@@ -534,9 +549,6 @@ TEST_F(CmaCfg_F, CleanInstallOnInvalidFolder) {
 }
 
 TEST_F(CmaCfg_F, CleanDataFolderNoneAllSmartEmpty) {
-    namespace fs = std::filesystem;
-    ASSERT_TRUE(GetRootDir() == root_);
-    ASSERT_TRUE(GetUserDir() == user_);
     auto [pd, table, table_removed] = prepareAll();
 
     ASSERT_TRUE(details::CleanDataFolder(details::CleanMode::none));
@@ -561,14 +573,15 @@ TEST_F(CmaCfg_F, CleanDataFolderNoneAllSmartEmpty) {
     details::CleanDataFolder(details::CleanMode::smart);
 
     for (auto& n : table) {
-        EXPECT_EQ(fs::exists(pd / n), !details::g_remove_dirs_on_clean);
+        if (n == dirs::kLog) {
+            continue;
+        }
+        EXPECT_EQ(fs::exists(pd / n), !details::g_remove_dirs_on_clean)
+            << (pd / n).string();
     }
 }
 
 TEST_F(CmaCfg_F, CleanDataFolderSmart) {
-    namespace fs = std::filesystem;
-    ASSERT_TRUE(GetRootDir() == root_);
-    ASSERT_TRUE(GetUserDir() == user_);
     auto [pd, table, table_removed] = prepareAll();
 
     // test additional preparation

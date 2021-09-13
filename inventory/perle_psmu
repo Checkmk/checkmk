@@ -23,14 +23,16 @@
 def inv_perle_psmu(parsed):
     node = inv_tree_list("hardware.components.psus:")
     for psu_index, data in parsed.items():
-        node.append({
-            "index": psu_index,
-            "description": data["descr"],
-            "model": data["model"],
-            "serial": data["serial"]
-        })
+        node.append(
+            {
+                "index": psu_index,
+                "description": data["descr"],
+                "model": data["model"],
+                "serial": data["serial"],
+            }
+        )
 
 
-inv_info['perle_psmu'] = {
-    'inv_function': inv_perle_psmu,
+inv_info["perle_psmu"] = {
+    "inv_function": inv_perle_psmu,
 }

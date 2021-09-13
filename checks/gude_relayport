@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.elphase import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.28507.38.1.3.1.2.1.2.1 TWTA 2 --> GUDEADS-EPC822X-MIB::epc822XPortName.1
 # .1.3.6.1.4.1.28507.38.1.3.1.2.1.3.1 0 --> GUDEADS-EPC822X-MIB::epc822XPortState.1
 # .1.3.6.1.4.1.28507.38.1.5.1.2.1.4.1 0 --> GUDEADS-EPC822X-MIB::epc822XPowerActive.1
@@ -25,15 +26,14 @@ factory_settings["gude_relayport_default_levels"] = {
 
 def parse_gude_relayport(info):
     parsed = {}
-    for portname, portstate, active_power_str, \
-        current_str, volt_str, freq_str, appower_str in info:
+    for portname, portstate, active_power_str, current_str, volt_str, freq_str, appower_str in info:
 
-        parsed.setdefault(portname, {
-            "device_state": {
-                "0": (2, "off"),
-                "1": (0, "on")
-            }[portstate],
-        })
+        parsed.setdefault(
+            portname,
+            {
+                "device_state": {"0": (2, "off"), "1": (0, "on")}[portstate],
+            },
+        )
 
         for what, key, factor in [
             (active_power_str, "power", 1.0),
@@ -47,14 +47,14 @@ def parse_gude_relayport(info):
     return parsed
 
 
-check_info['gude_relayport'] = {
-    'parse_function': parse_gude_relayport,
-    'inventory_function': inventory_elphase,
-    'check_function': check_elphase,
-    'service_description': 'Relay port %s',
-    'has_perfdata': True,
-    'snmp_info': (
-        '.1.3.6.1.4.1.28507.38',
+check_info["gude_relayport"] = {
+    "parse_function": parse_gude_relayport,
+    "inventory_function": discover(),
+    "check_function": check_elphase,
+    "service_description": "Relay port %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.28507.38",
         [
             "1.3.1.2.1.2",  # GUDEADS-EPC822X-MIB::epc822XPortName
             "1.3.1.2.1.3",  # GUDEADS-EPC822X-MIB::epc822XPortState
@@ -63,8 +63,9 @@ check_info['gude_relayport'] = {
             "1.5.5.2.1.6",  # GUDEADS-EPC822X-MIB::epc822XVoltage.1
             "1.5.5.2.1.7",  # GUDEADS-EPC822X-MIB::epc822XFrequency.1
             "1.5.5.2.1.10",  # GUDEADS-EPC822X-MIB::epc822XPowerApparent.1
-        ]),
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.38"),
-    'default_levels_variable': 'gude_relayport_default_levels',
-    'group': 'el_inphase',
+        ],
+    ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.28507.38"),
+    "default_levels_variable": "gude_relayport_default_levels",
+    "group": "el_inphase",
 }

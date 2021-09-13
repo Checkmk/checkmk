@@ -9,6 +9,10 @@
 #include "common/wtools.h"
 #include "test_tools.h"
 
+using namespace std::string_literals;
+using namespace std::chrono_literals;
+namespace fs = std::filesystem;
+
 namespace cma::details {
 extern bool g_is_service;
 extern bool g_is_test;
@@ -18,35 +22,21 @@ namespace wtools {  // to become friendly for cma::cfg classes
 
 class WtoolsKillProcFixture : public ::testing::Test {
 protected:
-    static constexpr std::string_view expectedName() {
-        return tgt::Is64bit() ? "watest64.exe" : "watest32.exe";
-    }
-
-    static std::wstring GetCurrentProcessPath() {
-        auto current_process_id = ::GetCurrentProcessId();
-        return wtools::GetProcessPath(current_process_id);
-    }
+    static constexpr std::wstring_view dirToUse() { return L"kill_dir"; }
+    static constexpr std::wstring_view nameToUse() { return L"kill_proc.exe"; }
 
     static void KillTmpProcesses() {
         // kill process
         wtools::ScanProcessList([](const PROCESSENTRY32& entry) -> auto {
-            auto fname = wtools::ToUtf8(entry.szExeFile);
-            if (fname == expectedName()) {
+            if (std::wstring{entry.szExeFile} == nameToUse()) {
                 wtools::KillProcess(entry.th32ProcessID, 99);
             }
-            return true;
+            return true;  // continue scan
         });
     }
 
-    // #TODO copy to temporary folder before start
-    static int RunMeAgain(int requested) {
-        std::filesystem::path exe{GetCurrentProcessPath()};
-
-        if (exe.filename().u8string() != expectedName()) {
-            return 0;
-        }
-
-        auto cmd = fmt::format("{} wait", exe);
+    int RunProcesses(int requested) const {
+        const auto cmd = fmt::format("{} -t 8.8.8.8", test_exe_);
 
         int count = 0;
         for (int i = 0; i < requested; i++) {
@@ -62,9 +52,8 @@ protected:
         uint32_t pid = 0;
         std::wstring path;
         ScanProcessList([&path, &pid ](const PROCESSENTRY32& entry) -> auto {
-            auto fname = wtools::ToUtf8(entry.szExeFile);
-            if (fname != WtoolsKillProcFixture::expectedName()) {
-                return true;
+            if (std::wstring{entry.szExeFile} != nameToUse()) {
+                return true;  // continue scan
             }
 
             path = GetProcessPath(entry.th32ProcessID);
@@ -76,15 +65,22 @@ protected:
     }
 
     void SetUp() override {
-        auto killed =
-            KillProcessesByDir(std::filesystem::path{GetCurrentProcessPath()}
-                                   .parent_path()
-                                   .parent_path());
-        XLOG::l("Killed {}", killed);
-        RunMeAgain(1);
+        test_dir_ = tst::MakeTempFolderInTempPath(dirToUse());
+        test_exe_ = test_dir_ / nameToUse();
+        fs::create_directories(test_dir_);
+        fs::path ping(R"(c:\windows\system32\ping.exe)");
+        ASSERT_TRUE(fs::copy_file(ping, test_exe_));
+        RunProcesses(1);
     }
 
-    void TearDown() override { KillTmpProcesses(); }
+    void TearDown() override {
+        KillTmpProcesses();
+        ASSERT_NE(test_dir_.wstring().find(dirToUse()), std::wstring::npos);
+        fs::remove_all(test_dir_);
+    }
+
+    fs::path test_dir_;
+    fs::path test_exe_;
 };
 
 TEST_F(WtoolsKillProcFixture, KillProcByPid) {
@@ -93,28 +89,26 @@ TEST_F(WtoolsKillProcFixture, KillProcByPid) {
     ASSERT_NE(pid, 0);
 
     EXPECT_TRUE(wtools::KillProcess(pid, 1));
+    cma::tools::sleep(500ms);
 
     auto [path_empty, pid_null] = FindExpectedProcess();
     EXPECT_TRUE(path_empty.empty());
-    EXPECT_TRUE(pid_null == 0);
+    EXPECT_EQ(pid_null, 0);
 
     EXPECT_FALSE(wtools::KillProcess(pid, 1));
 }
 
 TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
-    namespace fs = std::filesystem;
-    ASSERT_TRUE(RunMeAgain(1));  // additional process
+    ASSERT_EQ(RunProcesses(1), 1);  // additional process
 
-    auto cur_proc_path = fs::path{GetCurrentProcessPath()};
-    auto killed = KillProcessesByDir(cur_proc_path.parent_path().parent_path());
-    EXPECT_EQ(killed, 2);
+    EXPECT_EQ(KillProcessesByDir(test_dir_), 2);
+    cma::tools::sleep(500ms);
 
     auto [path, pid] = FindExpectedProcess();
     EXPECT_TRUE(path.empty());
     EXPECT_EQ(pid, 0);
 
-    killed = KillProcessesByDir(cur_proc_path.parent_path().parent_path());
-    EXPECT_EQ(killed, 0);
+    EXPECT_EQ(KillProcessesByDir(test_dir_), 0);
 }
 
 class WtoolsKillProcessTreeFixture : public ::testing::Test {
@@ -140,8 +134,8 @@ protected:
         }
 
         // check that we do not have own process
-        EXPECT_FALSE(cma::tools::find(names, std::string("watest32.exe")));
-        EXPECT_FALSE(cma::tools::find(names, std::string("watest64.exe")));
+        EXPECT_FALSE(cma::tools::find(
+            names, tgt::Is64bit() ? "watest64.exe"s : "watest32.exe"s));
         EXPECT_TRUE(cma::tools::find(names, std::string("svchost.exe")));
     }
 
@@ -310,7 +304,8 @@ std::vector<int> TsValues = {
     8154,  // windows 10, dev machine
     2066,  // windows server, build machine
     5090,  // windows 10, dev machine, late build
-    6324   // windows 10, 20h2
+    6324,  // windows 10, 20h2
+    8868,  // windows server build machine
 };
 
 TEST(Wtools, Perf) {

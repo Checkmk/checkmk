@@ -9,48 +9,46 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.stormshield import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['stormshield_updates'] = {
-    'Not Available': 1,
-    'Broken': 2,
-    'Uptodate': 0,
-    'Disabled': 1,
-    'Never started': 0,
-    'Running': 0,
-    'Failed': 2,
+
+factory_settings["stormshield_updates"] = {
+    "Not Available": 1,
+    "Broken": 2,
+    "Uptodate": 0,
+    "Disabled": 1,
+    "Never started": 0,
+    "Running": 0,
+    "Failed": 2,
 }
 
 
 def inventory_stormshield_updates(info):
     for subsystem, state, lastrun in info:
-        if state == 'Failed' and lastrun == '':
+        if state == "Failed" and lastrun == "":
             pass
-        elif not state in ['Not Available', 'Never started']:
+        elif not state in ["Not Available", "Never started"]:
             yield subsystem, {}
 
 
 def check_stormshield_updates(item, params, info):
     for subsystem, state, lastrun in info:
         if item == subsystem:
-            if lastrun == '':
-                lastrun = 'Never'
-            infotext = 'Subsystem %s is %s, last update: %s' % (subsystem, state, lastrun)
+            if lastrun == "":
+                lastrun = "Never"
+            infotext = "Subsystem %s is %s, last update: %s" % (subsystem, state, lastrun)
             monitoringstate = params.get(state, 3)
             yield monitoringstate, infotext
 
 
-check_info['stormshield_updates'] = {
-    'inventory_function': inventory_stormshield_updates,
-    'check_function': check_stormshield_updates,
-    'default_levels_variable': 'stormshield_updates',
-    'service_description': 'Autoupdate %s',
-    'has_perfdata': False,
-    'snmp_info': (
-        '.1.3.6.1.4.1.11256.1.9.1.1',
-        [
-            '2',  # SubSystem
-            '3',  # State
-            '4'  # LastUpdate
-        ]),
-    'group': 'stormshield_updates',
-    'snmp_scan_function': stormshield_scan_function,
+check_info["stormshield_updates"] = {
+    "inventory_function": inventory_stormshield_updates,
+    "check_function": check_stormshield_updates,
+    "default_levels_variable": "stormshield_updates",
+    "service_description": "Autoupdate %s",
+    "has_perfdata": False,
+    "snmp_info": (
+        ".1.3.6.1.4.1.11256.1.9.1.1",
+        ["2", "3", "4"],  # SubSystem  # State  # LastUpdate
+    ),
+    "group": "stormshield_updates",
+    "snmp_scan_function": stormshield_scan_function,
 }

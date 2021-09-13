@@ -4,11 +4,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.base.plugins.agent_based.utils.db
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # No used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
 # These Types of Tablespaces are ignored in this plugin.
@@ -28,9 +31,9 @@ from cmk.base.check_legacy_includes.db2 import *  # pylint: disable=wildcard-imp
 # MYTMPSPACE SMS NORMAL 64 64 64 959659392
 # SYSTOOLSTMPSPACE SMS NORMAL 32 32 32 959659392
 
-import cmk.base.plugins.agent_based.utils.db
-
-db_get_tablespace_levels_in_bytes = cmk.base.plugins.agent_based.utils.db.get_tablespace_levels_in_bytes
+db_get_tablespace_levels_in_bytes = (
+    cmk.base.plugins.agent_based.utils.db.get_tablespace_levels_in_bytes
+)
 
 factory_settings["db2_tablespaces_default_levels"] = {
     "levels": (10.0, 5.0),
@@ -46,9 +49,9 @@ def inventory_db2_tablespaces(parsed):
 
 def check_db2_tablespaces(item, params, parsed):
     try:
-        instance, tbsname = item.split('.')
+        instance, tbsname = item.split(".")
     except ValueError:
-        yield 3, 'Invalid check item given (must be <instance>.<tablespace>)'
+        yield 3, "Invalid check item given (must be <instance>.<tablespace>)"
         return
 
     db = parsed[1].get(instance)
@@ -76,9 +79,11 @@ def check_db2_tablespaces(item, params, parsed):
     warn, crit, levels_text, as_perc = db_get_tablespace_levels_in_bytes(usable, params)
 
     infotext = "%s of %s used" % (get_bytes_human_readable(used), get_bytes_human_readable(usable))
-    perfdata = [("tablespace_size", usable, max(0,
-                                                total - (warn or 0)), max(0, total - (crit or 0))),
-                ("tablespace_used", used), ("tablespace_max_size", total)]
+    perfdata = [
+        ("tablespace_size", usable, max(0, total - (warn or 0)), max(0, total - (crit or 0))),
+        ("tablespace_used", used),
+        ("tablespace_max_size", total),
+    ]
     yield 0, infotext, perfdata
 
     perc_free = 100.0 - used / usable * 100.0
@@ -102,7 +107,7 @@ def check_db2_tablespaces(item, params, parsed):
     yield 0, "Type: %s" % tbsp_type
 
 
-check_info['db2_tablespaces'] = {
+check_info["db2_tablespaces"] = {
     "parse_function": parse_db2_dbs,
     "service_description": "DB2 Tablespace %s",
     "check_function": check_db2_tablespaces,

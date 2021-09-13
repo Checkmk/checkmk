@@ -12,6 +12,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Mapping,
     NamedTuple,
     Optional,
     Text,
@@ -20,6 +21,7 @@ from typing import (
     Union,
 )
 
+from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.type_defs import UserId
 
 HTTPVariables = List[Tuple[str, Union[None, int, str]]]
@@ -27,26 +29,35 @@ LivestatusQuery = str
 PermissionName = str
 RoleName = str
 CSSSpec = Union[None, str, List[str], List[Optional[str]], str]
-Choices = List[Tuple[Optional[str], str]]
-ChoiceGroup = NamedTuple("ChoiceGroup", [
-    ("title", Text),
-    ("choices", Choices),
-])
+ChoiceText = str
+ChoiceId = Optional[str]
+Choice = Tuple[ChoiceId, ChoiceText]
+Choices = List[Choice]
+
+
+class ChoiceGroup(NamedTuple):
+    title: Text
+    choices: Choices
+
+
 GroupedChoices = List[ChoiceGroup]
+UserSpec = Dict[str, Any]  # TODO: Improve this type
 
 # Visual specific
 FilterName = str
-FilterHTTPVariables = Dict[str, str]
+FilterHTTPVariables = Mapping[str, str]
 Visual = Dict[str, Any]
 VisualName = str
 VisualTypeName = str
-VisualContext = Dict[FilterName, Union[str, FilterHTTPVariables]]
+VisualContext = Mapping[FilterName, FilterHTTPVariables]
 InfoName = str
 SingleInfos = List[InfoName]
-VisualLinkSpec = NamedTuple("VisualLinkSpec", [
-    ("type_name", VisualTypeName),
-    ("name", VisualName),
-])
+
+
+class VisualLinkSpec(NamedTuple):
+    type_name: VisualTypeName
+    name: VisualName
+
 
 # View specific
 Row = Dict[str, Any]  # TODO: Improve this type
@@ -60,13 +71,17 @@ PainterNameSpec = Union[PainterName, Tuple[PainterName, PainterParameters]]
 
 
 class PainterSpec(
-        NamedTuple('PainterSpec', [
-            ('painter_name', PainterNameSpec),
-            ('link_spec', Optional[VisualLinkSpec]),
-            ('tooltip', Optional[ColumnName]),
-            ('join_index', Optional[ColumnName]),
-            ('column_title', Optional[str]),
-        ])):
+    NamedTuple(
+        "PainterSpec",
+        [
+            ("painter_name", PainterNameSpec),
+            ("link_spec", Optional[VisualLinkSpec]),
+            ("tooltip", Optional[ColumnName]),
+            ("join_index", Optional[ColumnName]),
+            ("column_title", Optional[str]),
+        ],
+    )
+):
     def __new__(cls, *value):
         # Some legacy views have optional fields like "tooltip" set to "" instead of None
         # in their definitions. Consolidate this case to None.
@@ -80,18 +95,19 @@ class PainterSpec(
         elif isinstance(value[1], tuple):
             value = (value[0], VisualLinkSpec(*value[1])) + value[2:]
 
-        return super(PainterSpec, cls).__new__(cls, *value)
+        return super().__new__(cls, *value)
 
     def __repr__(self):
-        return str((self.painter_name, tuple(self.link_spec) if self.link_spec else None) +
-                   tuple(self)[2:])
+        return str(
+            (self.painter_name, tuple(self.link_spec) if self.link_spec else None) + tuple(self)[2:]
+        )
 
 
 ViewSpec = Dict[str, Any]
 AllViewSpecs = Dict[Tuple[UserId, ViewName], ViewSpec]
 PermittedViewSpecs = Dict[ViewName, ViewSpec]
 SorterFunction = Callable[[ColumnName, Row, Row], int]
-FilterHeaders = str
+FilterHeader = str
 
 # Configuration related
 ConfigDomainName = str
@@ -113,6 +129,7 @@ class SetOnceDict(dict):
         ValueError: key 'foo' already set
 
     """
+
     def __setitem__(self, key, value):
         if key in self:
             raise ValueError("key %r already set" % (key,))
@@ -124,6 +141,7 @@ class SetOnceDict(dict):
 
 class ABCMegaMenuSearch(ABC):
     """Abstract base class for search fields in mega menus"""
+
     def __init__(self, name: str) -> None:
         self._name = name
 
@@ -184,8 +202,10 @@ SearchQuery = str
 @dataclass
 class SearchResult:
     """Representation of a single result"""
+
     title: str
     url: str
+    context: str = ""
 
 
 SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
@@ -193,6 +213,12 @@ SearchResultsByTopic = Iterable[Tuple[str, Iterable[SearchResult]]]
 # Metric & graph specific
 GraphIdentifier = Tuple[str, Any]
 RenderingExpression = Tuple[Any, ...]
+TranslatedMetrics = Dict[str, Dict[str, Any]]
+PerfometerSpec = Dict[str, Any]
+PerfdataTuple = Tuple[
+    str, float, str, Optional[float], Optional[float], Optional[float], Optional[float]
+]
+Perfdata = List[PerfdataTuple]
 
 
 class RenderableRecipe(NamedTuple):
@@ -201,3 +227,13 @@ class RenderableRecipe(NamedTuple):
     color: str
     line_type: str
     visible: bool
+
+
+@dataclass
+class ViewProcessTracking:
+    amount_unfiltered_rows: int = 0
+    amount_filtered_rows: int = 0
+    amount_rows_after_limit: int = 0
+    duration_fetch_rows: Snapshot = Snapshot.null()
+    duration_filter_rows: Snapshot = Snapshot.null()
+    duration_view_render: Snapshot = Snapshot.null()

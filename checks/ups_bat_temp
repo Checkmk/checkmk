@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ups_generic import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["ups_bat_temp_default"] = {
     "levels": (40, 50),
 }
@@ -36,13 +38,14 @@ def check_ups_bat_temp(item, params, info):
     for line in info:
         name = format_item_ups_bat_temp(line[0], "Battery" in item)
         if name == item:
-            status, infotext, perfdata = check_temperature(int(line[1]), params,
-                                                           "ups_bat_temp_%s" % item)
+            status, infotext, perfdata = check_temperature(
+                int(line[1]), params, "ups_bat_temp_%s" % item
+            )
             perfdatanew = [perfdata[0] + (80,)]
             return status, infotext, perfdatanew
 
 
-check_info['ups_bat_temp'] = {
+check_info["ups_bat_temp"] = {
     "inventory_function": inventory_ups_bat_temp,
     "check_function": check_ups_bat_temp,
     "default_levels_variable": "ups_bat_temp_default",
@@ -54,6 +57,7 @@ check_info['ups_bat_temp'] = {
         [
             "1.5",  # upsIdentName
             "2.7",  # upsBatteryTemperature
-        ]),
+        ],
+    ),
     "snmp_scan_function": ups_generic_scan_function,
 }

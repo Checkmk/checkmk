@@ -48,9 +48,11 @@ def _parse_prod_version(entry):
 def parse_mssql_instance(info):
     parsed = {}
     for line in info:
-        if line[0].startswith("ERROR:") or len(line) < 2 or line[1] not in [
-                "config", "state", "details"
-        ]:
+        if (
+            line[0].startswith("ERROR:")
+            or len(line) < 2
+            or line[1] not in ["config", "state", "details"]
+        ):
             continue
         elif line[0][:6] == "MSSQL_":
             # Remove the MSSQL_ prefix from the ID for this check
@@ -64,25 +66,32 @@ def parse_mssql_instance(info):
                 # it may happen that the state line is missing, add some fallback as default here
                 "state": "0",
                 "error_msg": "Unable to connect to database (Agent reported no state)",
-            })
+            },
+        )
 
         if line[1] == "config":
-            instance.update({
-                "version_info": "%s - %s" % (line[2], line[3]),
-                "cluster_name": line[4],
-            })
+            instance.update(
+                {
+                    "version_info": "%s - %s" % (line[2], line[3]),
+                    "cluster_name": line[4],
+                }
+            )
         elif line[1] == "state":
-            instance.update({
-                "state": line[2],
-                "error_msg": "|".join(line[3:]),
-            })
+            instance.update(
+                {
+                    "state": line[2],
+                    "error_msg": "|".join(line[3:]),
+                }
+            )
 
         elif line[1] == "details":
             _parse_prod_version(line[2])
-            instance.update({
-                "prod_version_info": "%s (%s) (%s) - %s" %
-                                     (_parse_prod_version(line[2]), line[3], line[2], line[4])
-            })
+            instance.update(
+                {
+                    "prod_version_info": "%s (%s) (%s) - %s"
+                    % (_parse_prod_version(line[2]), line[3], line[2], line[4])
+                }
+            )
 
     return parsed
 
@@ -98,8 +107,7 @@ def check_mssql_instance(item, params, parsed):
         return
 
     state = 2
-    if params is not None and \
-       params.get("map_connection_state") is not None:
+    if params is not None and params.get("map_connection_state") is not None:
         state = params["map_connection_state"]
 
     if instance["state"] == "0":
@@ -111,9 +119,9 @@ def check_mssql_instance(item, params, parsed):
 
 
 check_info["mssql_instance"] = {
-    'parse_function': parse_mssql_instance,
-    'check_function': check_mssql_instance,
-    'inventory_function': inventory_mssql_instance,
-    'service_description': 'MSSQL %s Instance',
-    'group': 'mssql_instance',
+    "parse_function": parse_mssql_instance,
+    "check_function": check_mssql_instance,
+    "inventory_function": inventory_mssql_instance,
+    "service_description": "MSSQL %s Instance",
+    "group": "mssql_instance",
 }

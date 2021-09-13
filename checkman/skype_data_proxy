@@ -10,6 +10,6 @@ description:
  in addition it will report the current number of server connections
  being throttled.
 
-inventory:
+discovery:
  One service is created for each server.
 

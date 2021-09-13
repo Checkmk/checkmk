@@ -9,6 +9,8 @@ CHECK_MK_PATCHING := $(BUILD_HELPER_DIR)/$(CHECK_MK_DIR)-patching
 CHECK_MK_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MK_DIR)
 #CHECK_MK_WORK_DIR := $(PACKAGE_WORK_DIR)/$(CHECK_MK_DIR)
 
+CHECK_MK_LANGUAGES := de ro nl fr it ja pt_PT es
+
 # This step creates a tar archive containing the sources
 # which are need for the build step
 $(REPO_PATH)/$(CHECK_MK_DIR).tar.gz:
@@ -78,8 +80,8 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON3_CACHE_PKG_PROCESS)
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/__init__.py \
 	    $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk/base/plugins/agent_based/utils/__init__.py
-	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON3_LD_LIBRARY_PATH)" ; \
-	    $(PACKAGE_PYTHON3_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
+	export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH)" ; \
+	    $(PACKAGE_PYTHON_EXECUTABLE) -m compileall $(DESTDIR)$(OMD_ROOT)/lib/python3/cmk
 
 	# Provide the externally documented paths for Checkmk plugins
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib
@@ -102,12 +104,12 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON3_CACHE_PKG_PROCESS)
 	$(RM) $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*.cc
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/lib/nagios/plugins/*
 
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de/LC_MESSAGES
-	install -m 644 $(REPO_PATH)/locale/de/LC_MESSAGES/multisite.mo $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de/LC_MESSAGES
-	install -m 644 $(REPO_PATH)/locale/de/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/de
-	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/ro/LC_MESSAGES
-	install -m 644 $(REPO_PATH)/locale/ro/LC_MESSAGES/multisite.mo $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/ro/LC_MESSAGES
-	install -m 644 $(REPO_PATH)/locale/ro/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/ro
+	# Install localizations
+	for lang in $(CHECK_MK_LANGUAGES) ; do \
+		$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/$$lang/LC_MESSAGES ; \
+		install -m 644 $(REPO_PATH)/locale/$$lang/LC_MESSAGES/multisite.mo $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/$$lang/LC_MESSAGES ; \
+		install -m 644 $(REPO_PATH)/locale/$$lang/alias $(DESTDIR)$(OMD_ROOT)/share/check_mk/locale/$$lang ; \
+	done
 
 	# Install hooks
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks
@@ -119,7 +121,13 @@ $(CHECK_MK_INSTALL): $(CHECK_MK_BUILD) $(PYTHON3_CACHE_PKG_PROCESS)
 	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/MULTISITE_COOKIE_AUTH $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/update-pre-hooks/01_mkp-disable-outdated $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks/
-	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/update-pre-hooks/02_cmk-update-config $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/01_mkp-disable-outdated $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks/
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/update-pre-hooks/02_cmk-update-config $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/update-pre-hooks/
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-mv
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-mv/01_cmk-post-rename-site $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-mv/
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-cp
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-cp/01_cmk-post-rename-site $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-cp/
+	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-restore
+	install -m 755 $(PACKAGE_DIR)/$(CHECK_MK)/scripts/post-restore/01_cmk-post-rename-site $(DESTDIR)$(OMD_ROOT)/lib/omd/scripts/post-restore/
 
 	$(TOUCH) $@

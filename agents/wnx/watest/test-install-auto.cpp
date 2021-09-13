@@ -12,6 +12,7 @@
 #include "test_tools.h"
 
 namespace fs = std::filesystem;
+using namespace std::chrono_literals;
 
 namespace cma::install {
 
@@ -72,13 +73,13 @@ public:
             fmt::format(L"\\cmk_update_agent_{}\\", ::GetCurrentProcessId());
 
         eu_ = std::make_unique<ExecuteUpdate>();
-        eu_->prepare(L"msi exec", L"x x x", false);
+        eu_->prepare(L"msi exec", L"x x x", L"x x x.recover", false);
         msi_log_file_ = eu_->getLogFileName();
         temp_script_file_ = eu_->getTempScriptFile();
         expected_cmd_line_ = fmt::format(
-            LR"("{}" "msi exec" "/i x x x /qn REBOOT=ReallySuppress /L*V {}" "{}")",
+            LR"("{}" "msi exec" "/qn REBOOT=ReallySuppress /L*V {}" "{}" "{}" "{}")",
             temp_script_file_.wstring(), msi_log_file_,
-            script_log_file_.wstring());
+            script_log_file_.wstring(), L"x x x", L"x x x.recover");
     }
 
     // ***************************************************
@@ -119,7 +120,7 @@ protected:
         fs_ = tst::TempCfgFs::Create();
         eu_ = std::make_unique<ExecuteUpdate>();
         ASSERT_TRUE(fs_->loadConfig(tst::GetFabricYml()));
-        eu_->prepare(L"msi", L"x x x", true);
+        eu_->prepare(L"msi", L"x x x", L"x x x.recover", true);
 
         tst::CreateWorkFile(eu_->getLogFileName(), "This is log");
 
@@ -157,7 +158,7 @@ TEST(InstallAuto, PrepareExecutionLegacy) {
     EXPECT_EQ(GetInstallMode(), InstallMode::normal);
 
     ExecuteUpdate eu;
-    eu.prepare(L"msi-exec", L"xx.msi", false);
+    eu.prepare(L"msi-exec", L"xx.msi", L"xx.msi.recover", false);
     EXPECT_EQ(
         eu.getCommand(),
         fmt::format(LR"(msi-exec /i xx.msi /qn REBOOT=ReallySuppress /L*V {})",
@@ -173,7 +174,7 @@ TEST(InstallAuto, PrepareExecutionFallback) {
     EXPECT_EQ(GetInstallMode(), InstallMode::normal);
 
     ExecuteUpdate eu;
-    eu.prepare(L"msi-exec", L"xx.msi", true);
+    eu.prepare(L"msi-exec", L"xx.msi", L"xx.msi.recover", true);
     auto msi_log_file = eu.getLogFileName();
     auto command = eu.getCommand();
     EXPECT_EQ(
@@ -217,7 +218,6 @@ TEST(InstallAuto, CheckForUpdateFileIntegration) {
             name, in.wstring(), UpdateProcess::skip, out.wstring());
         EXPECT_TRUE(result);
 
-        EXPECT_TRUE(fs::exists(out / name, ec));
         EXPECT_TRUE(!fs::exists(path, ec));
 
         EXPECT_EQ(command.find(cfg::files::kExecuteUpdateFile),
@@ -234,11 +234,34 @@ TEST(InstallAuto, CheckForUpdateFileIntegration) {
             name, in.wstring(), UpdateProcess::skip, out.wstring());
         EXPECT_TRUE(result);
 
-        EXPECT_TRUE(fs::exists(out / name, ec));
         EXPECT_TRUE(!fs::exists(path, ec));
 
         EXPECT_NE(command.find(cfg::files::kExecuteUpdateFile),
                   std::string::npos);
     }
 }
+
+TEST(InstallAuto, FindAgentMsiSkippable) {
+    auto agent_msi = FindProductMsi(install::kAgentProductName);
+    if (!agent_msi) {
+        GTEST_SKIP();
+    }
+    ASSERT_TRUE(fs::exists(*agent_msi));
+}
+
+TEST(InstallAuto, FindProductMsi) {
+    auto msi = FindProductMsi(L"MSI Development Tools");
+    ASSERT_TRUE(msi);
+    ASSERT_TRUE(fs::exists(*msi));
+}
+
+TEST(InstallAuto, LastInstallFailReason) {
+    auto temp_fs = tst::TempCfgFs::Create();
+    EXPECT_FALSE(GetLastInstallFailReason());
+    tst::misc::CopyFailedPythonLogFileToLog(temp_fs->data());
+    auto result = GetLastInstallFailReason();
+    EXPECT_TRUE(result);
+    EXPECT_NE(result->find(L"This version supports only"), std::wstring::npos);
+}
+
 }  // namespace cma::install

@@ -9,20 +9,22 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.scaleio import *  # pylint: disable=wildcard-import,unused-wildcard-import
-#<<<scaleio_volume>>>
-#VOLUME f6a9425800000002:
+
+# <<<scaleio_volume>>>
+# VOLUME f6a9425800000002:
 #        ID                                                 f6a9425800000002
 #        NAME                                               SEASIOCF1001
 #        SIZE                                               8.0 TB (8192 GB)
 #        USER_DATA_READ_BWC                                 0 IOPS 0 Bytes per-second
 #        USER_DATA_WRITE_BWC                                0 IOPS 0 Bytes per-second
 #
-#VOLUME f6a9425900000003:
+# VOLUME f6a9425900000003:
 #        ID                                                 f6a9425900000003
 #        NAME                                               SEASIOCF2001
 #        SIZE                                               5.0 TB (5120 GB)
@@ -64,11 +66,11 @@ def check_scaleio_volume(item, params, parsed):
         yield io_type
 
 
-check_info['scaleio_volume'] = {
-    'parse_function': lambda info: parse_scaleio(info, "VOLUME"),
-    'inventory_function': inventory_scaleio_volume,
-    'check_function': check_scaleio_volume,
-    'service_description': 'ScaleIO Volume %s',
-    'has_perfdata': True,
-    'group': 'diskstat',
+check_info["scaleio_volume"] = {
+    "parse_function": lambda info: parse_scaleio(info, "VOLUME"),
+    "inventory_function": inventory_scaleio_volume,
+    "check_function": check_scaleio_volume,
+    "service_description": "ScaleIO Volume %s",
+    "has_perfdata": True,
+    "group": "diskstat",
 }

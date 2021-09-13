@@ -12,5 +12,5 @@ description:
 
  The check uses the RAPID-CITY-MIB.
 
-inventory:
+discovery:
  One service is created for each CPU.

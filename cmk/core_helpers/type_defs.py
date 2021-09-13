@@ -6,11 +6,11 @@
 """Package containing the fetchers to the data sources."""
 
 import enum
-from typing import Dict, Final, List, Set, Tuple, Union
+from typing import Final, List, Sequence, Set, Union
 
 from cmk.utils.type_defs import SectionName
 
-__all__ = ["Mode", "NO_SELECTION", "SectionCacheInfo", "SectionNameCollection"]
+__all__ = ["Mode", "NO_SELECTION", "SectionNameCollection"]
 
 
 class Mode(enum.Enum):
@@ -35,8 +35,7 @@ class Mode(enum.Enum):
 # analogous to SNMPRawData = Mapping[SectionName, SNMPRawDataSection],
 # that would generalize to `Mapping[SectionName, TRawDataContent]` or
 # `Mapping[SectionName, TRawData]` depending on which name we keep.
-AgentRawDataSection = List[List[str]]
-SectionCacheInfo = Dict[SectionName, Tuple[int, int]]
+AgentRawDataSection = List[Sequence[str]]
 
 
 class SelectionType(enum.Enum):

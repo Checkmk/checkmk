@@ -11,6 +11,7 @@ from cmk.base.api.agent_based.register.section_plugins import (
     create_agent_section_plugin,
     create_snmp_section_plugin,
 )
+from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
@@ -18,9 +19,8 @@ from cmk.base.api.agent_based.type_defs import (
     SNMPSectionPlugin,
     StringTable,
 )
-from cmk.base.api.agent_based.section_classes import SNMPTree
 
-from .convert_scan_functions import create_detect_spec
+from .convert_scan_functions import create_detect_spec  # type: ignore[attr-defined]
 
 LayoutRecoverSuboids = List[Tuple[str]]
 
@@ -30,7 +30,8 @@ def get_section_name(check_plugin_name: str) -> str:
 
 
 def _create_agent_parse_function(
-    original_parse_function: Optional[Callable],) -> AgentParseFunction:
+    original_parse_function: Optional[Callable],
+) -> AgentParseFunction:
     """Wrap parse function to comply to signature requirement"""
 
     if original_parse_function is None:
@@ -71,30 +72,31 @@ def _create_layout_recover_function(suboids_list: List[Optional[LayoutRecoverSub
 
 
 def _extract_conmmon_part(oids: list) -> Tuple[str, list]:
-    common = ''
+    common = ""
 
     def _get_head(oids):
         for oid in oids:
             if isinstance(oid, int):
                 continue
-            oid = str(oid).strip('.')
-            if '.' in oid:
-                return oid.split('.', 1)[0]
+            oid = str(oid).strip(".")
+            if "." in oid:
+                return oid.split(".", 1)[0]
         return None
 
     head = _get_head(oids)
-    while (head is not None and all('.' in str(o) and str(o).split('.')[0] == head
-                                    for o in oids
-                                    if not isinstance(o, int))):
-        oids = [o if isinstance(o, int) else type(o)(str(o).split('.', 1)[1]) for o in oids]
+    while head is not None and all(
+        "." in str(o) and str(o).split(".", 1)[0] == head for o in oids if not isinstance(o, int)
+    ):
+        oids = [o if isinstance(o, int) else type(o)(str(o).split(".", 1)[1]) for o in oids]
         common = "%s.%s" % (common, head)
         head = _get_head(oids)
 
-    return common.strip('.'), oids
+    return common.strip("."), oids
 
 
 def _create_snmp_trees_from_tuple(
-        snmp_info_element: tuple) -> Tuple[List[SNMPTree], Optional[LayoutRecoverSuboids]]:
+    snmp_info_element: tuple,
+) -> Tuple[List[SNMPTree], Optional[LayoutRecoverSuboids]]:
     """Create a SNMPTrees from (part of) a legacy definition
 
     Legacy definition *elements* can be 2-tuple or 3-tuple.
@@ -105,22 +107,24 @@ def _create_snmp_trees_from_tuple(
     """
     assert isinstance(snmp_info_element, tuple)
     assert len(snmp_info_element) in (2, 3)
-    base = snmp_info_element[0].rstrip('.')
+    base = snmp_info_element[0].rstrip(".")
 
     # "Triple"-case: recursively return a list
     if len(snmp_info_element) == 3:
         tmp_base, suboids, oids = snmp_info_element
-        base_list = [("%s.%s" % (tmp_base, str(i).strip('.'))) for i in suboids]
-        return sum((_create_snmp_trees_from_tuple((base, oids))[0] for base in base_list),
-                   []), suboids
+        base_list = [("%s.%s" % (tmp_base, str(i).strip("."))) for i in suboids]
+        return (
+            sum((_create_snmp_trees_from_tuple((base, oids))[0] for base in base_list), []),
+            suboids,
+        )
 
     # this fixes 7 weird cases:
     oids = ["%d" % oid if isinstance(oid, int) and oid > 0 else oid for oid in snmp_info_element[1]]
 
-    if '' in oids:  # this fixes 19 cases
-        base, tail = str(base).rsplit('.', 1)
+    if "" in oids:  # this fixes 19 cases
+        base, tail = str(base).rsplit(".", 1)
         oids = [
-            o if isinstance(o, int) else type(o)(("%s.%s" % (tail, o)).strip('.')) for o in oids
+            o if isinstance(o, int) else type(o)(("%s.%s" % (tail, o)).strip(".")) for o in oids
         ]
     else:  # this fixes 21 cases
         common, oids = _extract_conmmon_part(oids)
@@ -160,6 +164,7 @@ def _create_snmp_trees(snmp_info: Any) -> Tuple[List[SNMPTree], Callable]:
 def _create_snmp_parse_function(
     original_parse_function: Optional[Callable],
     recover_layout_function: Callable,
+    handle_empty_info: bool,
 ) -> SNMPParseFunction:
     """Wrap parse function to comply to new API
 
@@ -176,6 +181,9 @@ def _create_snmp_parse_function(
 
     # do not use functools.wraps, the point is the new argument name!
     def parse_function(string_table) -> Any:
+
+        if not handle_empty_info and not any(string_table):
+            return None
 
         relayouted_string_table = recover_layout_function(string_table)
 
@@ -202,7 +210,9 @@ def create_agent_section_plugin_from_legacy(
         # Affected Plugins must be migrated manually after CMK-4240 is done.
         raise NotImplementedError("cannot auto-migrate cluster aware plugins")
 
-    parse_function = _create_agent_parse_function(check_info_dict.get('parse_function'),)
+    parse_function = _create_agent_parse_function(
+        check_info_dict.get("parse_function"),
+    )
 
     return create_agent_section_plugin(
         name=get_section_name(check_plugin_name),
@@ -228,8 +238,9 @@ def create_snmp_section_plugin_from_legacy(
     trees, recover_layout_function = _create_snmp_trees(snmp_info)
 
     parse_function = _create_snmp_parse_function(
-        check_info_dict.get('parse_function'),
+        check_info_dict.get("parse_function"),
         recover_layout_function,
+        handle_empty_info=bool(check_info_dict.get("handle_empty_info")),
     )
 
     detect_spec = create_detect_spec(

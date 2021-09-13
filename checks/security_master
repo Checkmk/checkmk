@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 #
 # SNMP Infos
 # .1.3.6.1.2.1.1 System description
@@ -88,7 +90,7 @@ def parse_security_master(info):
 
         for oid_second, sensor_second in info[0]:
             if num + ".1.0" == oid_second:
-                sensor_id = saveint(sensor_second[0].encode('utf-8').hex())
+                sensor_id = saveint(sensor_second[0].encode("utf-8").hex())
             elif num + ".2.0" == oid_second:
                 try:
                     value = float(sensor_second)
@@ -100,22 +102,22 @@ def parse_security_master(info):
                 except ValueError:
                     alarm = -1
             elif num + ".7.0" == oid_second:
-                crit_low = savefloat(saveint(sensor_second) / 1000.)
+                crit_low = savefloat(saveint(sensor_second) / 1000.0)
             elif num + ".8.0" == oid_second:
-                warn_low = savefloat(saveint(sensor_second) / 1000.)
+                warn_low = savefloat(saveint(sensor_second) / 1000.0)
             elif num + ".9.0" == oid_second:
-                warn_high = savefloat(saveint(sensor_second) / 1000.)
+                warn_high = savefloat(saveint(sensor_second) / 1000.0)
             elif num + ".10.0" == oid_second:
-                crit_high = savefloat(saveint(sensor_second) / 1000.)
+                crit_high = savefloat(saveint(sensor_second) / 1000.0)
 
         if sensor_id in supported_sensors:
             parsed[supported_sensors[sensor_id]][service_name] = {
-                'name': sensor,
-                'value': value,
-                'id': sensor_id,
-                'levels_low': (warn_low, crit_low),
-                'levels': (warn_high, crit_high),
-                'alarm': alarm,
+                "name": sensor,
+                "value": value,
+                "id": sensor_id,
+                "levels_low": (warn_low, crit_low),
+                "levels": (warn_high, crit_high),
+                "alarm": alarm,
             }
 
     return parsed
@@ -127,14 +129,14 @@ def inventory_security_master_sensors(parsed, sensor_type):
 
 
 def check_security_master(item, _no_params, parsed):
-    sensor = parsed['smoke'].get(item)
+    sensor = parsed["smoke"].get(item)
     if not sensor:
         return 3, "Sensor no found in SNMP output"
 
-    if sensor['alarm'] == 99:
+    if sensor["alarm"] == 99:
         return 3, "Smoke Sensor is not ready or bus element removed"
 
-    value = sensor['value']
+    value = sensor["value"]
     if value == 0:
         status, msg = 0, "No Smoke"
     elif value == 1:
@@ -146,13 +148,15 @@ def check_security_master(item, _no_params, parsed):
 
 
 check_info["security_master"] = {
-    'parse_function': parse_security_master,
-    'check_function': check_security_master,
-    'inventory_function': lambda parsed: inventory_security_master_sensors(parsed, "smoke"),
-    'service_description': 'Sensor %s',
-    'snmp_info': [('.1.3.6.1.4.1.35491.30', [OID_END, '3']),],
-    'snmp_scan_function': lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith("1.3.6.1.4.1.35491"),
-    'has_perfdata': False,
+    "parse_function": parse_security_master,
+    "check_function": check_security_master,
+    "inventory_function": lambda parsed: inventory_security_master_sensors(parsed, "smoke"),
+    "service_description": "Sensor %s",
+    "snmp_info": [
+        (".1.3.6.1.4.1.35491.30", [OID_END, "3"]),
+    ],
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith("1.3.6.1.4.1.35491"),
+    "has_perfdata": False,
 }
 
 #   .--humidity------------------------------------------------------------.
@@ -166,26 +170,26 @@ check_info["security_master"] = {
 
 
 def check_security_master_humidity(item, params, parsed):
-    sensor = parsed['humidity'].get(item)
+    sensor = parsed["humidity"].get(item)
     if not sensor:
         return 3, "Sensor not found in SNMP output"
 
-    if sensor['alarm'] is not None and sensor['alarm'] > -1:
+    if sensor["alarm"] is not None and sensor["alarm"] > -1:
         if not params.get("levels"):
-            params['levels'] = sensor.get('levels')
+            params["levels"] = sensor.get("levels")
 
         if not params.get("levels_lower"):
-            params['levels_lower'] = sensor.get('levels_low')
+            params["levels_lower"] = sensor.get("levels_low")
 
-    return check_humidity(sensor['value'], params)
+    return check_humidity(sensor["value"], params)
 
 
 check_info["security_master.humidity"] = {
-    'inventory_function': lambda parsed: inventory_security_master_sensors(parsed, "humidity"),
-    'check_function': check_security_master_humidity,
-    'service_description': 'Sensor %s',
-    'has_perfdata': True,
-    'group': 'humidity',
+    "inventory_function": lambda parsed: inventory_security_master_sensors(parsed, "humidity"),
+    "check_function": check_security_master_humidity,
+    "service_description": "Sensor %s",
+    "has_perfdata": True,
+    "group": "humidity",
 }
 
 #   .--temp----------------------------------------------------------------.
@@ -197,7 +201,7 @@ check_info["security_master.humidity"] = {
 #   |                                        |_|                           |
 #   '----------------------------------------------------------------------'
 
-factory_settings['security_master_temp_default_levels'] = {
+factory_settings["security_master_temp_default_levels"] = {
     "device_levels_handling": "worst",  # this variable is required, in order to define,
     # which status limits are used, also 'levels' are
     # added via WATO, if needed
@@ -205,27 +209,29 @@ factory_settings['security_master_temp_default_levels'] = {
 
 
 def check_security_master_temperature(item, params, parsed):
-    sensor = parsed['temp'].get(item)
+    sensor = parsed["temp"].get(item)
     if not sensor:
         return 3, "Sensor not found in SNMP output"
 
-    sensor_value = sensor['value']
+    sensor_value = sensor["value"]
     if sensor_value is None:
         return 3, "Sensor value is not in SNMP-WALK"
 
-    return check_temperature(reading=sensor_value,
-                             unique_name=item,
-                             params=params,
-                             dev_unit="c",
-                             dev_levels=sensor['levels'],
-                             dev_levels_lower=sensor['levels_low'])
+    return check_temperature(
+        reading=sensor_value,
+        unique_name=item,
+        params=params,
+        dev_unit="c",
+        dev_levels=sensor["levels"],
+        dev_levels_lower=sensor["levels_low"],
+    )
 
 
-check_info['security_master.temp'] = {
-    'inventory_function': lambda parsed: inventory_security_master_sensors(parsed, "temp"),
-    'check_function': check_security_master_temperature,
-    'service_description': 'Sensor %s',
-    'has_perfdata': True,
-    'group': 'temperature',
-    'default_levels_variable': 'security_master_temp_default_levels',
+check_info["security_master.temp"] = {
+    "inventory_function": lambda parsed: inventory_security_master_sensors(parsed, "temp"),
+    "check_function": check_security_master_temperature,
+    "service_description": "Sensor %s",
+    "has_perfdata": True,
+    "group": "temperature",
+    "default_levels_variable": "security_master_temp_default_levels",
 }

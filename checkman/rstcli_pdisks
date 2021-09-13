@@ -20,5 +20,5 @@ description:
 item:
  The name of the raid volume and the drive ID seperated by a {{/}}
 
-inventory:
+discovery:
  One service is created for each disk.

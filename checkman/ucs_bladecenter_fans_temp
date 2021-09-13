@@ -14,6 +14,6 @@ description:
 item:
  Location of the fans prefixed by {{Ambient}} and suffixed by {{FAN}}
 
-inventory:
+discovery:
  One summary service is created for each component.
 

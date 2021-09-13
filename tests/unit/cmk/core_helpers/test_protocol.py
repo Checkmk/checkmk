@@ -9,7 +9,7 @@ import socket
 from itertools import repeat
 
 import pyghmi.exceptions  # type: ignore[import]
-import pytest  # type: ignore[import]
+import pytest
 
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.exceptions import (
@@ -29,13 +29,13 @@ from cmk.core_helpers import FetcherType
 from cmk.core_helpers.protocol import (
     AgentResultMessage,
     CMCHeader,
-    CMCMessage,
     CMCLogLevel,
+    CMCMessage,
     ErrorResultMessage,
     FetcherHeader,
     FetcherMessage,
-    ResultStats,
     PayloadType,
+    ResultStats,
     SNMPResultMessage,
 )
 
@@ -103,7 +103,7 @@ class TestCMCHeader:
         assert len(header) == len(bytes(header))
 
     def test_critical_constants(self):
-        """ ATTENTION: Changing of those constants may require changing of C++ code"""
+        """ATTENTION: Changing of those constants may require changing of C++ code"""
         assert CMCHeader.length == 32
         assert CMCHeader.State.LOG.value == "LOG    "
         assert CMCHeader.State.RESULT.value == "RESULT "
@@ -212,26 +212,28 @@ class TestSNMPResultMessage:
 
 
 class TestErrorResultMessage:
-    @pytest.fixture(params=[
-        # Our special exceptions.
-        MKException,
-        MKGeneralException,
-        MKTerminate,
-        MKBailOut,
-        MKTimeout,
-        MKSNMPError,
-        MKIPAddressLookupError,
-        # Python exceptions
-        KeyError,
-        LookupError,
-        SyntaxError,
-        ValueError,
-        # Nested Python exceptions
-        socket.herror,
-        socket.timeout,
-        # Third-party exceptions
-        pyghmi.exceptions.IpmiException,
-    ])
+    @pytest.fixture(
+        params=[
+            # Our special exceptions.
+            MKException,
+            MKGeneralException,
+            MKTerminate,
+            MKBailOut,
+            MKTimeout,
+            MKSNMPError,
+            MKIPAddressLookupError,
+            # Python exceptions
+            KeyError,
+            LookupError,
+            SyntaxError,
+            ValueError,
+            # Nested Python exceptions
+            socket.herror,
+            socket.timeout,
+            # Third-party exceptions
+            pyghmi.exceptions.IpmiException,
+        ]
+    )
     def exception(self, request):
         try:
             raise request.param("some helpful message")
@@ -398,8 +400,8 @@ class TestFetcherHeaderEq:
         assert isinstance(message, bytes)
         assert len(message) == len(header) + len(payload)
         assert FetcherHeader.from_bytes(message) == header
-        assert FetcherHeader.from_bytes(message[:len(header)]) == header
-        assert message[len(header):] == payload
+        assert FetcherHeader.from_bytes(message[: len(header)]) == header
+        assert message[len(header) :] == payload
 
 
 class TestResultStats:
@@ -441,7 +443,7 @@ class TestFetcherMessage:
     @pytest.fixture
     def snmp_raw_data(self):
         table: SNMPTable = [[[6500337, 11822045]]]
-        return {SectionName('snmp_uptime'): table}
+        return {SectionName("snmp_uptime"): table}
 
     @pytest.fixture
     def agent_raw_data(self):

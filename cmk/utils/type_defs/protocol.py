@@ -20,6 +20,7 @@ class Protocol(abc.ABC):
         This should be usable as a type. Do not add any
         concrete implementation here.
     """
+
     def __eq__(self, other: Any) -> bool:
         with suppress(TypeError):
             return bytes(self) == bytes(other)

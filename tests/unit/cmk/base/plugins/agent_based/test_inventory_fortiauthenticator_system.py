@@ -4,22 +4,26 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.plugins.agent_based.inventory_fortiauthenticator_system import (
-    inventory_fortiauthenticator_system,)
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
+from cmk.base.plugins.agent_based.inventory_fortiauthenticator_system import (
+    inventory_fortiauthenticator_system,  # yapf: disable
+)
 
 
 def test_inventory_fortiauthenticator_system():
     assert list(
-        inventory_fortiauthenticator_system({
-            'model': 'FACVM',
-            'serial': 'FAC-VMTM18000123',
-        })) == [
-            Attributes(
-                path=['hardware', 'system'],
-                inventory_attributes={
-                    'Model': 'FACVM',
-                    'Serial number': 'FAC-VMTM18000123',
-                },
-            ),
-        ]
+        inventory_fortiauthenticator_system(
+            {
+                "model": "FACVM",
+                "serial": "FAC-VMTM18000123",
+            }
+        )
+    ) == [
+        Attributes(
+            path=["hardware", "system"],
+            inventory_attributes={
+                "Model": "FACVM",
+                "Serial number": "FAC-VMTM18000123",
+            },
+        ),
+    ]

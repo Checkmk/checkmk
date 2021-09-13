@@ -7,18 +7,9 @@
 emc_isilon_info = [
     (
         ".1.3.6.1.4.1.12124.1.1",
-        [
-            1,  # clusterName
-            2,  # clusterHealth
-            5,  # configuredNodes
-            6
-        ]),  # onlineNodes
-    (
-        ".1.3.6.1.4.1.12124.2.1",
-        [
-            1,  # nodeName
-            2
-        ]),  # nodeHealth
+        [1, 2, 5, 6],  # clusterName  # clusterHealth  # configuredNodes
+    ),  # onlineNodes
+    (".1.3.6.1.4.1.12124.2.1", [1, 2]),  # nodeName  # nodeHealth
 ]
 
 
@@ -51,10 +42,10 @@ check_info["emc_isilon.clusterhealth"] = {
     "inventory_function": inventory_emc_isilon_clusterhealth,
     "service_description": "Cluster Health",
     "snmp_info": emc_isilon_info,
-    "snmp_scan_function": emc_isilon_scan
+    "snmp_scan_function": emc_isilon_scan,
 }
 
-#.
+# .
 #   .--NodeHealth------------------------------------------------------.
 
 
@@ -81,10 +72,10 @@ check_info["emc_isilon.nodehealth"] = {
     "inventory_function": inventory_emc_isilon_nodehealth,
     "service_description": "Node Health",
     "snmp_info": emc_isilon_info,
-    "snmp_scan_function": emc_isilon_scan
+    "snmp_scan_function": emc_isilon_scan,
 }
 
-#.
+# .
 #   .--Nodes------------------------------------------------------.
 
 
@@ -106,10 +97,10 @@ check_info["emc_isilon.nodes"] = {
     "inventory_function": inventory_emc_isilon_nodes,
     "service_description": "Nodes",
     "snmp_info": emc_isilon_info,
-    "snmp_scan_function": emc_isilon_scan
+    "snmp_scan_function": emc_isilon_scan,
 }
 
-#.
+# .
 #   .--Cluster- and Node Name-------------------------------------------.
 
 
@@ -126,7 +117,7 @@ check_info["emc_isilon.names"] = {
     "inventory_function": inventory_emc_isilon_names,
     "service_description": "Isilon Info",
     "snmp_info": emc_isilon_info,
-    "snmp_scan_function": emc_isilon_scan
+    "snmp_scan_function": emc_isilon_scan,
 }
 
-#.
+# .

@@ -5,8 +5,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from typing import List, Dict, Any
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List
 
 LicenseUsageHistoryDumpVersion = "1.1"
 
@@ -19,7 +19,7 @@ class LicenseUsageExtensions:
         return _serialize(self)
 
     @classmethod
-    def deserialize(cls, raw_extensions: bytes) -> 'LicenseUsageExtensions':
+    def deserialize(cls, raw_extensions: bytes) -> "LicenseUsageExtensions":
         extensions = _migrate_extensions(_deserialize(raw_extensions))
         return cls(**extensions)
 
@@ -51,13 +51,12 @@ class LicenseUsageHistoryDump:
         return _serialize(self)
 
     @classmethod
-    def deserialize(cls, raw_history_dump: bytes) -> 'LicenseUsageHistoryDump':
+    def deserialize(cls, raw_history_dump: bytes) -> "LicenseUsageHistoryDump":
         history_dump = _deserialize(raw_history_dump)
         return cls(
             VERSION=LicenseUsageHistoryDumpVersion,
             history=[
-                _migrate_sample(history_dump["VERSION"], s)
-                for s in history_dump.get("history", [])
+                _migrate_sample(history_dump["VERSION"], s) for s in history_dump.get("history", [])
             ],
         )
 
@@ -80,6 +79,9 @@ def _migrate_sample(prev_dump_version: str, sample: Dict) -> LicenseUsageSample:
     if prev_dump_version == "1.0":
         sample.setdefault("num_hosts_excluded", 0)
         sample.setdefault("num_services_excluded", 0)
+
+    # Restrict platform string to 50 chars due to the restriction of the license DB field.
+    sample["platform"] = sample["platform"][:50]
 
     migrated_extensions = _migrate_extensions(sample.get("extensions", {}))
     sample["extensions"] = LicenseUsageExtensions(**migrated_extensions)

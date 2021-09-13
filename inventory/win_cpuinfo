@@ -81,7 +81,7 @@ def inv_win_cpuinfo(info):
             node["voltage"] = win_cpuinfo_parse_voltage(value)
         elif varname == "MaxClockSpeed":
             node["max_speed"] = win_cpuinfo_parse_speed(value)
-        #elif varname == "AddressWidth":
+        # elif varname == "AddressWidth":
         #    if value == "64":
         #        node["arch"] = "x86_64"
         #    else:
@@ -104,6 +104,6 @@ def inv_win_cpuinfo(info):
         node["threads"] = num_procs * node["threads_per_cpu"]
 
 
-inv_info['win_cpuinfo'] = {
+inv_info["win_cpuinfo"] = {
     "inv_function": inv_win_cpuinfo,
 }

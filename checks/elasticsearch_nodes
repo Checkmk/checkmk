@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<elasticsearch_nodes>>>
 # mynode1 open_file_descriptors 434
 # mynode1 max_file_descriptors 4096
@@ -22,11 +23,11 @@ from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcar
 # mynode2 mem_total_virtual_in_bytes 7107313664
 
 nodes_info = {
-    'open_file_descriptors': 'Open file descriptors',
-    'max_file_descriptors': 'Max file descriptors',
-    'cpu_percent': 'CPU used',
-    'cpu_total_in_millis': 'CPU total in ms',
-    'mem_total_virtual_in_bytes': 'Total virtual memory'
+    "open_file_descriptors": "Open file descriptors",
+    "max_file_descriptors": "Max file descriptors",
+    "cpu_percent": "CPU used",
+    "cpu_total_in_millis": "CPU total in ms",
+    "mem_total_virtual_in_bytes": "Total virtual memory",
 }
 
 
@@ -35,7 +36,7 @@ def parse_elasticsearch_nodes(info):
 
     for name, desc, value_str in info:
         try:
-            if desc == 'cpu_percent':
+            if desc == "cpu_percent":
                 value = float(value_str)
             else:
                 value = int(value_str)
@@ -54,19 +55,17 @@ factory_settings["elasticsearch_nodes"] = {"cpu_levels": (75.0, 90.0)}
 @get_parsed_item_data
 def check_elasticsearch_nodes(item, params, item_data):
     for key, hr_func in [
-        ('cpu_percent', get_percent_human_readable),
-        ('cpu_total_in_millis', int),
-        ('mem_total_virtual_in_bytes', get_bytes_human_readable),
-        ('open_file_descriptors', int),
-        ('max_file_descriptors', int),
+        ("cpu_percent", get_percent_human_readable),
+        ("cpu_total_in_millis", int),
+        ("mem_total_virtual_in_bytes", get_bytes_human_readable),
+        ("open_file_descriptors", int),
+        ("max_file_descriptors", int),
     ]:
         value, infotext = item_data[key]
 
-        yield check_levels(value,
-                           key,
-                           params.get(key),
-                           human_readable_func=hr_func,
-                           infoname=infotext)
+        yield check_levels(
+            value, key, params.get(key), human_readable_func=hr_func, infoname=infotext
+        )
 
 
 check_info["elasticsearch_nodes"] = {

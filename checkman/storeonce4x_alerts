@@ -10,5 +10,5 @@ description:
 item:
  The fixed statement {{Alerts}}.
 
-inventory:
+discovery:
  One service is created.

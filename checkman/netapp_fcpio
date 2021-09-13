@@ -10,6 +10,6 @@ description:
  set levels, the check only reports measured numbers and returns always {OK}
  status.
 
-inventory:
+discovery:
  One service is created on each filer.
 

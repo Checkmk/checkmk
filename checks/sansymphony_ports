@@ -27,7 +27,7 @@ def check_sansymphony_ports(item, _no_params, info):
             return 2, "%s Port %s is down" % (porttype, portname)
 
 
-check_info['sansymphony_ports'] = {
+check_info["sansymphony_ports"] = {
     "check_function": check_sansymphony_ports,
     "inventory_function": inventory_sansymphony_ports,
     "service_description": "sansymphony Port %s",

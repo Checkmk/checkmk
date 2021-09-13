@@ -61,15 +61,7 @@
     <Error Text="The WiX Toolset v3.11 (or newer) build tools must be installed to build this project. To download the WiX Toolset, see http://wixtoolset.org/releases/" />
   </Target>
   <PropertyGroup>
-    <PostBuildEvent>%40echo off
-if "$(VS_DEPLOY)" == "YES" goto copy_all
-if "$(VS_DEPLOY_MSI)" == "YES" goto copy_msi
-goto end
-:copy_all
-copy   "$(TargetPath)"     $(LOCAL_IMAGES_EXE) 1&gt; nul || exit 2
-:copy_msi
-copy   "$(TargetPath)"    $(REMOTE_MACHINE) 1&gt; nul || exit 3
-:end</PostBuildEvent>
+    <PostBuildEvent />
   </PropertyGroup>
   <!--
 	To modify your build process, add your task inside one of the targets below and uncomment it.

@@ -43,8 +43,9 @@ def read_skel_permissions() -> Permissions:
 
     _skel_permissions = load_skel_permissions(omdlib.__version__)
     if not _skel_permissions:
-        raise Exception("%s is missing or currupted." %
-                        skel_permissions_file_path(omdlib.__version__))
+        raise Exception(
+            "%s is missing or currupted." % skel_permissions_file_path(omdlib.__version__)
+        )
     return _skel_permissions
 
 

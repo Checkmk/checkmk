@@ -54,16 +54,16 @@ void TableHostGroups::addColumns(Table *table, const std::string &prefix,
         offsets, [](const hostgroup &r) {
             return r.action_url == nullptr ? "" : r.action_url;
         }));
-    auto *mc = table->core();
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "members",
         "A list of all host names that are members of the hostgroup",
-        offsets_members, mc, false));
+        offsets_members, HostListRenderer{HostListRenderer::verbosity::none}));
     table->addColumn(std::make_unique<HostListColumn>(
         prefix + "members_with_state",
         "A list of all host names that are members of the hostgroup together with state and has_been_checked",
-        offsets_members, mc, true));
+        offsets_members, HostListRenderer{HostListRenderer::verbosity::full}));
 
+    auto *mc = table->core();
     auto get_service_auth = [mc]() { return mc->serviceAuthorization(); };
     table->addColumn(std::make_unique<IntColumn::Callback<hostgroup>>(
         prefix + "worst_host_state",
@@ -199,6 +199,5 @@ Row TableHostGroups::get(const std::string &primary_key) const {
 
 bool TableHostGroups::isAuthorized(Row row, const contact *ctc) const {
     return is_authorized_for_host_group(core()->groupAuthorization(),
-                                        core()->serviceAuthorization(),
                                         rowData<hostgroup>(row), ctc);
 }

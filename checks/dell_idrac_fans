@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 DELL_IDRAC_FANS_STATE_MAP = {
     "1": (3, "OTHER"),
     "2": (3, "UNKNOWN"),
@@ -24,28 +25,24 @@ DELL_IDRAC_FANS_STATE_MAP = {
 
 
 def inventory_dell_idrac_fans(info):
-    for index, state, _value, _name, _warn_upper, _crit_upper, \
-            _warn_lower, _crit_lower in info:
+    for index, state, _value, _name, _warn_upper, _crit_upper, _warn_lower, _crit_lower in info:
         # don't discover fans with a state of other or unknown
         if DELL_IDRAC_FANS_STATE_MAP[state][1] not in ("OTHER", "UNKNOWN"):
             yield index, {}
 
 
 def check_dell_idrac_fans(item, params, info):
-    for index, status, value, name, warn_upper, crit_upper, \
-            warn_lower, crit_lower in info:
+    for index, status, value, name, warn_upper, crit_upper, warn_lower, crit_lower in info:
         if index == item:
             state, state_readable = DELL_IDRAC_FANS_STATE_MAP[status]
-            yield state, "Status: %s, Name: %s" % \
-                            (state_readable, name)
+            yield state, "Status: %s, Name: %s" % (state_readable, name)
             if state_readable in ("OTHER", "UNKNOWN", "FAILED"):
                 return
 
             value = int(value)
             if not params:
-                params = {'lower': (int(warn_lower), int(crit_lower))}
-                if not warn_upper == "" and \
-                       crit_upper == "":
+                params = {"lower": (int(warn_lower), int(crit_lower))}
+                if not warn_upper == "" and crit_upper == "":
                     params["upper"] = (int(warn_upper), int(crit_upper))
 
             yield check_fan(value, params)
@@ -55,8 +52,9 @@ check_info["dell_idrac_fans"] = {
     "inventory_function": inventory_dell_idrac_fans,
     "check_function": check_dell_idrac_fans,
     "service_description": "Fan %s",
-    "snmp_scan_function": lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith(
-        ".1.3.6.1.4.1.674.10892.5"),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.674.10892.5"
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.674.10892.5.4.700.12.1",
         [
@@ -68,7 +66,8 @@ check_info["dell_idrac_fans"] = {
             "11",  # IDRAC-MIB::coolingDeviceUpperCriticalThreshold
             "12",  # IDRAC-MIB::coolingDeviceLowerNonCriticalThreshold
             "13",  # IDRAC-MIB::coolingDeviceLowerCriticalThreshold
-        ]),
+        ],
+    ),
     "has_perfdata": True,
     "group": "hw_fans",
 }

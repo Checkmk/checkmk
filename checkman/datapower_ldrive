@@ -14,7 +14,7 @@ description:
 
  No limits can be defined for this check,
 
-inventory:
+discovery:
  One service is created for each logical drive found.
 
 item:

@@ -12,5 +12,5 @@ description:
 item:
  The name of the container.
 
-inventory:
+discovery:
  One service is created for each storage container.

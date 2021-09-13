@@ -53,10 +53,9 @@ public:
     // deprecated API
     bool setRootEx(const std::wstring& service_name,  // look in registry
                    const std::wstring& preset_root);  // look in disk
-    enum class CreateMode { with_path, direct };
     enum class Protection { no, yes };
     void createDataFolderStructure(const std::wstring& proposed_folder,
-                                   CreateMode mode, Protection protection);
+                                   Protection protection);
 
     // for testing and reloading
     void cleanAll();
@@ -108,6 +107,8 @@ public:
         return data_ / dirs::kPluginConfig;
     }
 
+    inline std::filesystem::path getLog() const { return data_ / dirs::kLog; }
+
     inline std::filesystem::path getBackup() const {
         return data_ / dirs::kBackup;
     }
@@ -127,8 +128,7 @@ private:
     // make [recursive] folder in windows
     // returns path if folder was created successfully
     static std::filesystem::path makeDefaultDataFolder(
-        std::wstring_view AgentDataFolder, CreateMode mode,
-        Protection protection);
+        std::wstring_view AgentDataFolder, Protection protection);
     std::filesystem::path root_;          // where is root
     std::filesystem::path data_;          // ProgramData
     std::filesystem::path public_logs_;   //
@@ -364,6 +364,11 @@ public:
         return folders_.getTemp();
     }
 
+    auto getLogDir() const {
+        std::lock_guard lk(lock_);
+        return folders_.getLog();
+    }
+
     auto getHostName() const {
         std::lock_guard lk(lock_);
         return host_name_;
@@ -374,7 +379,7 @@ public:
         return cwd_;
     }
 
-    auto getLogFileDir() const {
+    auto getConfiguredLogFileDir() const {
         std::lock_guard lk(lock_);
         return logfile_dir_;
     }
@@ -388,7 +393,7 @@ public:
 
     int getBackupLogMaxCount() const noexcept { return backup_log_max_count_; }
 
-    void setLogFileDir(const std::wstring& Path) {
+    void setConfiguredLogFileDir(const std::wstring& Path) {
         std::lock_guard lk(lock_);
         logfile_dir_ = Path;
     }
@@ -436,7 +441,6 @@ private:
 
     std::wstring path_to_msi_exec_;
 
-    // #TODO
     void GenerateDefaultConfig() {}
     mutable std::mutex lock_;
 
@@ -463,9 +467,6 @@ private:
     static std::atomic<uint64_t> g_uniq_id;
 
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
-    friend class StartTest;
-    FRIEND_TEST(StartTest, CheckStatus);
-
     friend class CmaCfg;
     FRIEND_TEST(CmaCfg, LogFileLocation);
     FRIEND_TEST(CmaCfg, InitEnvironment);

@@ -17,19 +17,18 @@ def fireeye_counter_generic(value, what, average):
     # (e.g. 'Infected URL')
     # For the counter variable name, we remove all spaces
     # (e.g. 'fireeye.infected.url')
-    counter = 'fireeye_mail.%s' % what.replace(' ', '.').lower()
+    counter = "fireeye_mail.%s" % what.replace(" ", ".").lower()
     rate = get_rate(counter, this_time, value)
     state = 0
-    if what == 'Bypass' and rate > 0:
+    if what == "Bypass" and rate > 0:
         state = 2
     # The perf-variable also uses the counter description as name
     # (e.g. 'infected_rate')
-    perfdata = [('%s_rate' % what.split(' ')[0].lower(), rate)]
+    perfdata = [("%s_rate" % what.split(" ")[0].lower(), rate)]
     if average:
-        avg = get_average(' %s avg' % counter, this_time, rate, average)
-        return (state, '%s: %.2f mails/%d seconds' % \
-            (what, avg * average, average), perfdata)
-    return (state, '%s: %.2f mails/s' % (what, rate), perfdata)
+        avg = get_average(" %s avg" % counter, this_time, rate, average)
+        return (state, "%s: %.2f mails/%d seconds" % (what, avg * average, average), perfdata)
+    return (state, "%s: %.2f mails/s" % (what, rate), perfdata)
 
 
 #   .--mail----------------------------------------------------------------.
@@ -43,51 +42,52 @@ def fireeye_counter_generic(value, what, average):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-#.1.3.6.1.4.1.25597.13.1.1.0 2560224
-#.1.3.6.1.4.1.25597.13.1.2.0 0
-#.1.3.6.1.4.1.25597.13.1.3.0 2560224
-#.1.3.6.1.4.1.25597.13.1.4.0 2864
-#.1.3.6.1.4.1.25597.13.1.5.0 0
-#.1.3.6.1.4.1.25597.13.1.6.0 2864
-#.1.3.6.1.4.1.25597.13.1.7.0 2134871
-#.1.3.6.1.4.1.25597.13.1.8.0 0
-#.1.3.6.1.4.1.25597.13.1.9.0 2134871
+# .1.3.6.1.4.1.25597.13.1.1.0 2560224
+# .1.3.6.1.4.1.25597.13.1.2.0 0
+# .1.3.6.1.4.1.25597.13.1.3.0 2560224
+# .1.3.6.1.4.1.25597.13.1.4.0 2864
+# .1.3.6.1.4.1.25597.13.1.5.0 0
+# .1.3.6.1.4.1.25597.13.1.6.0 2864
+# .1.3.6.1.4.1.25597.13.1.7.0 2134871
+# .1.3.6.1.4.1.25597.13.1.8.0 0
+# .1.3.6.1.4.1.25597.13.1.9.0 2134871
 
 
 def check_fireeye_mail(_no_item, params, info):
     mail_info = info[0][0:3]
-    average = params.get('interval', 0)
-    for index, mail_type in enumerate(['Total', 'Infected', 'Analyzed']):
+    average = params.get("interval", 0)
+    for index, mail_type in enumerate(["Total", "Infected", "Analyzed"]):
         yield fireeye_counter_generic(int(mail_info[index]), mail_type, average)
 
 
-check_info['fireeye_mail'] = {
-    'inventory_function': lambda info: inventory_fireeye_generic(info, False, True),
-    'check_function': check_fireeye_mail,
-    'service_description': 'Received Mail Rates',
-    'group': 'fireeye_mail',
-    'snmp_info': (
-        '.1.3.6.1.4.1.25597.13.1',
+check_info["fireeye_mail"] = {
+    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "check_function": check_fireeye_mail,
+    "service_description": "Received Mail Rates",
+    "group": "fireeye_mail",
+    "snmp_info": (
+        ".1.3.6.1.4.1.25597.13.1",
         [
-            '1',  # 0  FE-FIREEYE-MIB::feTotalEmailCount
-            '4',  # 1  FE-FIREEYE-MIB::feInfectedEmailCount
-            '7',  # 2  FE-FIREEYE-MIB::feAnalyzedEmailCount
-            '10',  # 3  FE-FIREEYE-MIB::feTotalUrlCount
-            '13',  # 4  FE-FIREEYE-MIB::feInfectedUrlCount
-            '16',  # 5  FE-FIREEYE-MIB::feAnalyzedUrlCount
-            '19',  # 6  FE-FIREEYE-MIB::feTotalAttachmentCount
-            '22',  # 7  FE-FIREEYE-MIB::feInfectedAttachmentCount
-            '25',  # 8  FE-FIREEYE-MIB::feAnalyzedAttachmentCount
-            '28',  # 9  FE-FIREEYE-MIB::feTotalEmailHasAttachment
-            '31',  # 10 FE-FIREEYE-MIB::feTotalEmailHasUrl
-            '34',  # 11 FE-FIREEYE-MIB::feTotalEmailHasBadAttachment
-            '37',  # 12 FE-FIREEYE-MIB::feTotalEmailHasBadUrl
-            '50',  # 13 FE-FIREEYE-MIB::feSamplingEmailStartTime
-            '51',  # 14 FE-FIREEYE-MIB::feSamplingEmailEndTime
-            '52',  # 15 FE-FIREEYE-MIB::feSamplingEmailReceivedRate
-        ]),
-    'snmp_scan_function': scan_fireeye,
-    'has_perfdata': True,
+            "1",  # 0  FE-FIREEYE-MIB::feTotalEmailCount
+            "4",  # 1  FE-FIREEYE-MIB::feInfectedEmailCount
+            "7",  # 2  FE-FIREEYE-MIB::feAnalyzedEmailCount
+            "10",  # 3  FE-FIREEYE-MIB::feTotalUrlCount
+            "13",  # 4  FE-FIREEYE-MIB::feInfectedUrlCount
+            "16",  # 5  FE-FIREEYE-MIB::feAnalyzedUrlCount
+            "19",  # 6  FE-FIREEYE-MIB::feTotalAttachmentCount
+            "22",  # 7  FE-FIREEYE-MIB::feInfectedAttachmentCount
+            "25",  # 8  FE-FIREEYE-MIB::feAnalyzedAttachmentCount
+            "28",  # 9  FE-FIREEYE-MIB::feTotalEmailHasAttachment
+            "31",  # 10 FE-FIREEYE-MIB::feTotalEmailHasUrl
+            "34",  # 11 FE-FIREEYE-MIB::feTotalEmailHasBadAttachment
+            "37",  # 12 FE-FIREEYE-MIB::feTotalEmailHasBadUrl
+            "50",  # 13 FE-FIREEYE-MIB::feSamplingEmailStartTime
+            "51",  # 14 FE-FIREEYE-MIB::feSamplingEmailEndTime
+            "52",  # 15 FE-FIREEYE-MIB::feSamplingEmailReceivedRate
+        ],
+    ),
+    "snmp_scan_function": scan_fireeye,
+    "has_perfdata": True,
 }
 
 #   .--attachment----------------------------------------------------------.
@@ -101,31 +101,32 @@ check_info['fireeye_mail'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-#.1.3.6.1.4.1.25597.13.1.19.0 3415541
-#.1.3.6.1.4.1.25597.13.1.20.0 0
-#.1.3.6.1.4.1.25597.13.1.21.0 3415541
-#.1.3.6.1.4.1.25597.13.1.22.0 896
-#.1.3.6.1.4.1.25597.13.1.23.0 0
-#.1.3.6.1.4.1.25597.13.1.24.0 896
-#.1.3.6.1.4.1.25597.13.1.25.0 1942580
-#.1.3.6.1.4.1.25597.13.1.26.0 0
-#.1.3.6.1.4.1.25597.13.1.27.0 1942580
+# .1.3.6.1.4.1.25597.13.1.19.0 3415541
+# .1.3.6.1.4.1.25597.13.1.20.0 0
+# .1.3.6.1.4.1.25597.13.1.21.0 3415541
+# .1.3.6.1.4.1.25597.13.1.22.0 896
+# .1.3.6.1.4.1.25597.13.1.23.0 0
+# .1.3.6.1.4.1.25597.13.1.24.0 896
+# .1.3.6.1.4.1.25597.13.1.25.0 1942580
+# .1.3.6.1.4.1.25597.13.1.26.0 0
+# .1.3.6.1.4.1.25597.13.1.27.0 1942580
 
 
 def check_fireeye_attachment(_no_item, params, info):
     mail_info = info[0][6:9]
-    average = params.get('interval', 0)
-    for index, attachment_type in enumerate(['Total Attachment', 'Infected Attachment', \
-            'Analyzed Attachment']):
+    average = params.get("interval", 0)
+    for index, attachment_type in enumerate(
+        ["Total Attachment", "Infected Attachment", "Analyzed Attachment"]
+    ):
         yield fireeye_counter_generic(int(mail_info[index]), attachment_type, average)
 
 
-check_info['fireeye_mail.attachment'] = {
-    'inventory_function': lambda info: inventory_fireeye_generic(info, False, True),
-    'check_function': check_fireeye_attachment,
-    'service_description': 'Mails Containing Attachment',
-    'group': 'fireeye_mail',
-    'has_perfdata': True,
+check_info["fireeye_mail.attachment"] = {
+    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "check_function": check_fireeye_attachment,
+    "service_description": "Mails Containing Attachment",
+    "group": "fireeye_mail",
+    "has_perfdata": True,
 }
 
 #   .--url-----------------------------------------------------------------.
@@ -138,30 +139,30 @@ check_info['fireeye_mail.attachment'] = {
 #   |                \____/|_|  \_\______|                                 |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-#.1.3.6.1.4.1.25597.13.1.10.0 34996161
-#.1.3.6.1.4.1.25597.13.1.11.0 0
-#.1.3.6.1.4.1.25597.13.1.12.0 34996161
-#.1.3.6.1.4.1.25597.13.1.13.0 2011
-#.1.3.6.1.4.1.25597.13.1.14.0 0
-#.1.3.6.1.4.1.25597.13.1.15.0 2011
-#.1.3.6.1.4.1.25597.13.1.16.0 5619681
-#.1.3.6.1.4.1.25597.13.1.17.0 0
-#.1.3.6.1.4.1.25597.13.1.18.0 5619681
+# .1.3.6.1.4.1.25597.13.1.10.0 34996161
+# .1.3.6.1.4.1.25597.13.1.11.0 0
+# .1.3.6.1.4.1.25597.13.1.12.0 34996161
+# .1.3.6.1.4.1.25597.13.1.13.0 2011
+# .1.3.6.1.4.1.25597.13.1.14.0 0
+# .1.3.6.1.4.1.25597.13.1.15.0 2011
+# .1.3.6.1.4.1.25597.13.1.16.0 5619681
+# .1.3.6.1.4.1.25597.13.1.17.0 0
+# .1.3.6.1.4.1.25597.13.1.18.0 5619681
 
 
 def check_fireeye_url(_no_item, params, info):
     mail_info = info[0][3:6]
-    average = params.get('interval', 0)
-    for index, url_type in enumerate(['Total URL', 'Infected URL', 'Analyzed URL']):
+    average = params.get("interval", 0)
+    for index, url_type in enumerate(["Total URL", "Infected URL", "Analyzed URL"]):
         yield fireeye_counter_generic(int(mail_info[index]), url_type, average)
 
 
-check_info['fireeye_mail.url'] = {
-    'inventory_function': lambda info: inventory_fireeye_generic(info, False, True),
-    'check_function': check_fireeye_url,
-    'service_description': 'Mails Containing URL',
-    'group': 'fireeye_mail',
-    'has_perfdata': True,
+check_info["fireeye_mail.url"] = {
+    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "check_function": check_fireeye_url,
+    "service_description": "Mails Containing URL",
+    "group": "fireeye_mail",
+    "has_perfdata": True,
 }
 
 #   .--statistics----------------------------------------------------------.
@@ -174,44 +175,52 @@ check_info['fireeye_mail.url'] = {
 #   |         |_____/ \__\__,_|\__|_|___/\__|_|\___|___/                   |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-#.1.3.6.1.4.1.25597.13.1.28.0 1133119
-#.1.3.6.1.4.1.25597.13.1.29.0 0
-#.1.3.6.1.4.1.25597.13.1.30.0 1133119
-#.1.3.6.1.4.1.25597.13.1.31.0 1738052
-#.1.3.6.1.4.1.25597.13.1.32.0 0
-#.1.3.6.1.4.1.25597.13.1.33.0 1738053
-#.1.3.6.1.4.1.25597.13.1.34.0 841
-#.1.3.6.1.4.1.25597.13.1.35.0 0
-#.1.3.6.1.4.1.25597.13.1.36.0 841
-#.1.3.6.1.4.1.25597.13.1.37.0 2007
-#.1.3.6.1.4.1.25597.13.1.38.0 0
-#.1.3.6.1.4.1.25597.13.1.39.0 2007
+# .1.3.6.1.4.1.25597.13.1.28.0 1133119
+# .1.3.6.1.4.1.25597.13.1.29.0 0
+# .1.3.6.1.4.1.25597.13.1.30.0 1133119
+# .1.3.6.1.4.1.25597.13.1.31.0 1738052
+# .1.3.6.1.4.1.25597.13.1.32.0 0
+# .1.3.6.1.4.1.25597.13.1.33.0 1738053
+# .1.3.6.1.4.1.25597.13.1.34.0 841
+# .1.3.6.1.4.1.25597.13.1.35.0 0
+# .1.3.6.1.4.1.25597.13.1.36.0 841
+# .1.3.6.1.4.1.25597.13.1.37.0 2007
+# .1.3.6.1.4.1.25597.13.1.38.0 0
+# .1.3.6.1.4.1.25597.13.1.39.0 2007
 
 
 def check_fireeye_mail_statistics(_no_item, params, info):
     statistics_info = info[0][9:13]
-    average = params.get('interval', 0)
-    for index, mail_containing in enumerate(['Emails containing Attachment', \
-            'Emails containing URL', 'Emails containing malicious Attachment', \
-            'Emails containing malicious URL']):
+    average = params.get("interval", 0)
+    for index, mail_containing in enumerate(
+        [
+            "Emails containing Attachment",
+            "Emails containing URL",
+            "Emails containing malicious Attachment",
+            "Emails containing malicious URL",
+        ]
+    ):
         this_time = time.time()
-        counter = 'fireeye.stat.%s' % ''.join(mail_containing.split(' ')[2:]).lower()
+        counter = "fireeye.stat.%s" % "".join(mail_containing.split(" ")[2:]).lower()
         rate = get_rate(counter, this_time, int(statistics_info[index]))
-        perfdata = [(counter.replace('.', '_'), rate * 60)]
+        perfdata = [(counter.replace(".", "_"), rate * 60)]
         if average:
-            avg = get_average('%s.avg' % counter, this_time, rate, average)
-            yield 0, '%s: %.2f per %d minutes' % \
-                (mail_containing, avg * 60 * average, average), perfdata
+            avg = get_average("%s.avg" % counter, this_time, rate, average)
+            yield 0, "%s: %.2f per %d minutes" % (
+                mail_containing,
+                avg * 60 * average,
+                average,
+            ), perfdata
         else:
-            yield 0, '%s: %.2f per minute' % (mail_containing, rate * 60), perfdata
+            yield 0, "%s: %.2f per minute" % (mail_containing, rate * 60), perfdata
 
 
-check_info['fireeye_mail.statistics'] = {
-    'inventory_function': lambda info: inventory_fireeye_generic(info, False, True),
-    'check_function': check_fireeye_mail_statistics,
-    'service_description': 'Mail Processing Statistics',
-    'group': 'fireeye_mail',
-    'has_perfdata': True,
+check_info["fireeye_mail.statistics"] = {
+    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "check_function": check_fireeye_mail_statistics,
+    "service_description": "Mail Processing Statistics",
+    "group": "fireeye_mail",
+    "has_perfdata": True,
 }
 
 #   .--received------------------------------------------------------------.
@@ -224,26 +233,26 @@ check_info['fireeye_mail.statistics'] = {
 #   |        |_|  \_\___|\___\___|_| \_/ \___|\__,_|                       |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-#.1.3.6.1.4.1.25597.13.1.50.0 04/06/17 12:01:04
-#.1.3.6.1.4.1.25597.13.1.51.0 04/06/17 12:16:03
-#.1.3.6.1.4.1.25597.13.1.52.0 4282
+# .1.3.6.1.4.1.25597.13.1.50.0 04/06/17 12:01:04
+# .1.3.6.1.4.1.25597.13.1.51.0 04/06/17 12:16:03
+# .1.3.6.1.4.1.25597.13.1.52.0 4282
 
-factory_settings['received_levels'] = {'rate': (6000, 7000)}
+factory_settings["received_levels"] = {"rate": (6000, 7000)}
 
 
 def check_fireeye_mail_received(no_item, params, info):
     start, end, received = info[0][13:16]
-    yield 0, 'Mails received between %s and %s: %s' % (start, end, received)
+    yield 0, "Mails received between %s and %s: %s" % (start, end, received)
     start_timestamp = time.mktime(time.strptime(start, "%m/%d/%y %H:%M:%S"))
     end_timestamp = time.mktime(time.strptime(end, "%m/%d/%y %H:%M:%S"))
     rate = float(received) / (end_timestamp - start_timestamp)
-    yield check_levels(rate, 'mail_received_rate', params.get('rate'), unit='/s', infoname='Rate')
+    yield check_levels(rate, "mail_received_rate", params.get("rate"), unit="/s", infoname="Rate")
 
 
-check_info['fireeye_mail.received'] = {
-    'inventory_function': lambda info: inventory_fireeye_generic(info, False, True),
-    'check_function': check_fireeye_mail_received,
-    'service_description': 'Mails Received',
-    'default_levels_variable': 'received_levels',
-    'has_perfdata': True,
+check_info["fireeye_mail.received"] = {
+    "inventory_function": lambda info: inventory_fireeye_generic(info, False, True),
+    "check_function": check_fireeye_mail_received,
+    "service_description": "Mails Received",
+    "default_levels_variable": "received_levels",
+    "has_perfdata": True,
 }

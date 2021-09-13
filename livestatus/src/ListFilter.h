@@ -27,12 +27,12 @@ class RegExp;
 class Logger;
 
 class ListFilter : public ColumnFilter {
-    using column_type = std::vector<std::string>;
-    using f0_t = std::function<column_type(Row)>;
-    using f1_t = std::function<column_type(Row, const contact *)>;
-    using f2_t = std::function<column_type(Row, std::chrono::seconds)>;
+    using value_type = std::vector<std::string>;
+    using f0_t = std::function<value_type(Row)>;
+    using f1_t = std::function<value_type(Row, const contact *)>;
+    using f2_t = std::function<value_type(Row, std::chrono::seconds)>;
     using f3_t =
-        std::function<column_type(Row, const contact *, std::chrono::seconds)>;
+        std::function<value_type(Row, const contact *, std::chrono::seconds)>;
     using function_type = std::variant<f0_t, f1_t, f2_t, f3_t>;
 
 public:
@@ -54,7 +54,7 @@ private:
     template <typename UnaryPredicate>
     bool any(Row row, const contact *auth_user,
              std::chrono::seconds timezone_offset, UnaryPredicate pred) const {
-        auto val = column_type{};
+        auto val = value_type{};
         if (std::holds_alternative<f0_t>(f_)) {
             val = std::get<f0_t>(f_)(row);
         } else if (std::holds_alternative<f1_t>(f_)) {

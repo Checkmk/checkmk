@@ -6,7 +6,7 @@
 
 
 def inventory_apc_mod_pdu_modules(info):
-    return [(x[0], None) for x in info if x[0] != '']
+    return [(x[0], None) for x in info if x[0] != ""]
 
 
 def check_apc_mod_pdu_modules(item, _no_params, info):
@@ -20,8 +20,7 @@ def check_apc_mod_pdu_modules(item, _no_params, info):
         if name == item:
             status = saveint(status)
             current_power = savefloat(current_power) / 100
-            message = "Status %s, current: %.2fkw " % \
-            ( apc_states.get(status, 6), current_power )
+            message = "Status %s, current: %.2fkw " % (apc_states.get(status, 6), current_power)
 
             perf = [("current_power", current_power)]
             if status == 2:
@@ -41,10 +40,11 @@ check_info["apc_mod_pdu_modules"] = {
     "snmp_info": (
         ".1.3.6.1.4.1.318.1.1.22.2.6.1",
         [
-            4,  #isxModularDistModuleOutputName
-            6,  #isxModularDistModuleOutputStatus
-            20,  #isxModularDistModuleOutputTotalPower
-        ]),
+            4,  # isxModularDistModuleOutputName
+            6,  # isxModularDistModuleOutputStatus
+            20,  # isxModularDistModuleOutputTotalPower
+        ],
+    ),
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.318.1.3.24.1",
     "has_perfdata": True,
 }

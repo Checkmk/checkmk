@@ -7,29 +7,22 @@
 
 Some of these are exposed in the API, some are not.
 """
-from collections.abc import Mapping
+import pprint
 from typing import (
     Any,
     Callable,
-    Dict,
     Generator,
     List,
     Literal,
-    MutableMapping,
+    Mapping,
     NamedTuple,
     Optional,
     Sequence,
     Set,
     Union,
 )
-import pprint
 
-from cmk.utils.type_defs import (
-    ParsedSectionName,
-    RuleSetName,
-    SectionName,
-    SNMPDetectBaseType,
-)
+from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName, SNMPDetectBaseType
 
 
 class PluginSuppliedLabel(NamedTuple("_LabelTuple", [("name", str), ("value", str)])):
@@ -38,6 +31,7 @@ class PluginSuppliedLabel(NamedTuple("_LabelTuple", [("name", str), ("value", st
     This is a tiny bit redundant, but it helps decoupling API
     code from internal representations.
     """
+
     def __init__(self, name, value):
         super().__init__()
         if not isinstance(name, str):
@@ -60,8 +54,12 @@ class HostLabel(PluginSuppliedLabel):
     """
 
 
-class Parameters(Mapping):
+ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
+
+
+class Parameters(ParametersTypeAlias):
     """Parameter objects are used to pass parameters to plugin functions"""
+
     def __init__(self, data):
         if not isinstance(data, dict):
             self._data = data  # error handling will try to repr(self).
@@ -88,7 +86,7 @@ class OIDSpecTuple(NamedTuple):
     save_to_cache: bool
 
     # we create a deepcopy in our unit tests, so support it.
-    def __deepcopy__(self, _memo) -> 'OIDSpecTuple':
+    def __deepcopy__(self, _memo) -> "OIDSpecTuple":
         return self
 
 
@@ -123,7 +121,7 @@ class AgentSectionPlugin(NamedTuple):
     parsed_section_name: ParsedSectionName
     parse_function: AgentParseFunction
     host_label_function: HostLabelFunction
-    host_label_default_parameters: Optional[Dict[str, Any]]
+    host_label_default_parameters: Optional[ParametersTypeAlias]
     host_label_ruleset_name: Optional[RuleSetName]
     host_label_ruleset_type: RuleSetTypeName
     supersedes: Set[SectionName]
@@ -135,7 +133,7 @@ class SNMPSectionPlugin(NamedTuple):
     parsed_section_name: ParsedSectionName
     parse_function: SNMPParseFunction
     host_label_function: HostLabelFunction
-    host_label_default_parameters: Optional[Dict[str, Any]]
+    host_label_default_parameters: Optional[ParametersTypeAlias]
     host_label_ruleset_name: Optional[RuleSetName]
     host_label_ruleset_type: RuleSetTypeName
     detect_spec: SNMPDetectBaseType
@@ -145,4 +143,3 @@ class SNMPSectionPlugin(NamedTuple):
 
 
 SectionPlugin = Union[AgentSectionPlugin, SNMPSectionPlugin]
-ValueStore = MutableMapping[str, Any]

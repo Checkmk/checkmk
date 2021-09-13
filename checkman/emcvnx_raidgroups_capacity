@@ -16,5 +16,5 @@ description:
 item:
  The RAID Group ID.
 
-inventory:
+discovery:
  One service is created for each RAID Group listed in the agent output.

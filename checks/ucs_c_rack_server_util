@@ -9,10 +9,11 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # exemplary output of special agent agent_ucs_bladecenter (separator is <TAB> and means tabulator):
 #
-#<<<ucs_c_rack_server_util:sep(9)>>>
-#serverUtilization<TAB>dn sys/rack-unit-1/utilization<TAB>overallUtilization 0<TAB>cpuUtilization 0<TAB>memoryUtilization 0<TAB>ioUtilization 0
+# <<<ucs_c_rack_server_util:sep(9)>>>
+# serverUtilization<TAB>dn sys/rack-unit-1/utilization<TAB>overallUtilization 0<TAB>cpuUtilization 0<TAB>memoryUtilization 0<TAB>ioUtilization 0
 # serverUtilization<TAB>dn sys/rack-unit-2/utilization<TAB>overallUtilization 90<TAB>cpuUtilization 90<TAB>memoryUtilization 90<TAB>ioUtilization 90
 #
 # The format of the XML API v2.0 raw output provided via the agent is not documented.
@@ -32,12 +33,19 @@ def parse_ucs_c_rack_server_util(info):
     # string. Handles invalid values provided by the XML API which cannot be
     # casted by setting corresponding values to None.
     for _, dn, overall_util, cpu_util, memory_util, pci_io_util in info:
-        rack = dn.replace("dn ", "").replace("sys/",
-                                             "").replace("rack-unit-",
-                                                         "Rack unit ").replace("/utilization", "")
+        rack = (
+            dn.replace("dn ", "")
+            .replace("sys/", "")
+            .replace("rack-unit-", "Rack unit ")
+            .replace("/utilization", "")
+        )
 
-        for ds_key, ds in (('overallUtilization', overall_util), ('cpuUtilization', cpu_util),
-                           ('memoryUtilization', memory_util), ('ioUtilization', pci_io_util)):
+        for ds_key, ds in (
+            ("overallUtilization", overall_util),
+            ("cpuUtilization", cpu_util),
+            ("memoryUtilization", memory_util),
+            ("ioUtilization", pci_io_util),
+        ):
             try:
                 value = float(ds.replace(ds_key + " ", ""))
             except ValueError:
@@ -67,20 +75,22 @@ factory_settings["ucs_c_rack_server_util_overall_default_levels"] = {
 @get_parsed_item_data
 def check_ucs_c_rack_server_util(item, params, data):
     # None values passed to check_levels(value, ...) are handled by Checkmk internals appropriatelly.
-    yield check_levels(data['overallUtilization'],
-                       'overall_util',
-                       params['upper_levels'],
-                       human_readable_func=get_percent_human_readable)
+    yield check_levels(
+        data["overallUtilization"],
+        "overall_util",
+        params["upper_levels"],
+        human_readable_func=get_percent_human_readable,
+    )
 
 
 check_info["ucs_c_rack_server_util"] = {
-    'parse_function': parse_ucs_c_rack_server_util,
-    'inventory_function': inventory_ucs_c_rack_server_util,
-    'check_function': check_ucs_c_rack_server_util,
-    'group': 'overall_utilization_multiitem',
-    'service_description': 'Overall Utilization %s',
-    'default_levels_variable': 'ucs_c_rack_server_util_overall_default_levels',
-    'has_perfdata': True,
+    "parse_function": parse_ucs_c_rack_server_util,
+    "inventory_function": inventory_ucs_c_rack_server_util,
+    "check_function": check_ucs_c_rack_server_util,
+    "group": "overall_utilization_multiitem",
+    "service_description": "Overall Utilization %s",
+    "default_levels_variable": "ucs_c_rack_server_util_overall_default_levels",
+    "has_perfdata": True,
 }
 
 ##############################
@@ -95,16 +105,16 @@ factory_settings["ucs_c_rack_server_util_cpu_default_levels"] = {
 @get_parsed_item_data
 def check_ucs_c_rack_server_util_cpu(item, params, data):
     # None values passed to check_levels(value, ...) are handled by Checkmk internals appropriatelly.
-    return check_cpu_util(data['cpuUtilization'], params['upper_levels'])
+    return check_cpu_util(data["cpuUtilization"], params["upper_levels"])
 
 
 check_info["ucs_c_rack_server_util.cpu"] = {
-    'inventory_function': inventory_ucs_c_rack_server_util,
-    'check_function': check_ucs_c_rack_server_util_cpu,
-    'group': 'cpu_utilization_multiitem',
-    'service_description': 'CPU Utilization %s',
-    'default_levels_variable': 'ucs_c_rack_server_util_cpu_default_levels',
-    'has_perfdata': True,
+    "inventory_function": inventory_ucs_c_rack_server_util,
+    "check_function": check_ucs_c_rack_server_util_cpu,
+    "group": "cpu_utilization_multiitem",
+    "service_description": "CPU Utilization %s",
+    "default_levels_variable": "ucs_c_rack_server_util_cpu_default_levels",
+    "has_perfdata": True,
 }
 
 #################################
@@ -118,19 +128,21 @@ factory_settings["ucs_c_rack_server_util_pci_io_default_levels"] = {
 
 @get_parsed_item_data
 def check_ucs_c_rack_server_util_pci_io(item, params, data):
-    yield check_levels(data['ioUtilization'],
-                       'pci_io_util',
-                       params['upper_levels'],
-                       human_readable_func=get_percent_human_readable)
+    yield check_levels(
+        data["ioUtilization"],
+        "pci_io_util",
+        params["upper_levels"],
+        human_readable_func=get_percent_human_readable,
+    )
 
 
 check_info["ucs_c_rack_server_util.pci_io"] = {
-    'inventory_function': inventory_ucs_c_rack_server_util,
-    'check_function': check_ucs_c_rack_server_util_pci_io,
-    'group': 'pci_io_utilization_multiitem',
-    'service_description': 'PCI IO Utilization %s',
-    'default_levels_variable': 'ucs_c_rack_server_util_pci_io_default_levels',
-    'has_perfdata': True,
+    "inventory_function": inventory_ucs_c_rack_server_util,
+    "check_function": check_ucs_c_rack_server_util_pci_io,
+    "group": "pci_io_utilization_multiitem",
+    "service_description": "PCI IO Utilization %s",
+    "default_levels_variable": "ucs_c_rack_server_util_pci_io_default_levels",
+    "has_perfdata": True,
 }
 
 ##############################
@@ -144,17 +156,19 @@ factory_settings["ucs_c_rack_server_util_mem_default_levels"] = {
 
 @get_parsed_item_data
 def check_ucs_c_rack_server_util_mem(item, params, data):
-    yield check_levels(data['memoryUtilization'],
-                       'memory_util',
-                       params['upper_levels'],
-                       human_readable_func=get_percent_human_readable)
+    yield check_levels(
+        data["memoryUtilization"],
+        "memory_util",
+        params["upper_levels"],
+        human_readable_func=get_percent_human_readable,
+    )
 
 
 check_info["ucs_c_rack_server_util.mem"] = {
-    'inventory_function': inventory_ucs_c_rack_server_util,
-    'check_function': check_ucs_c_rack_server_util_mem,
-    'group': 'memory_utilization_multiitem',
-    'service_description': 'Memory Utilization %s',
-    'default_levels_variable': 'ucs_c_rack_server_util_mem_default_levels',
-    'has_perfdata': True,
+    "inventory_function": inventory_ucs_c_rack_server_util,
+    "check_function": check_ucs_c_rack_server_util_mem,
+    "group": "memory_utilization_multiitem",
+    "service_description": "Memory Utilization %s",
+    "default_levels_variable": "ucs_c_rack_server_util_mem_default_levels",
+    "has_perfdata": True,
 }

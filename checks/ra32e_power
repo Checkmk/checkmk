@@ -13,20 +13,17 @@ def inventory_ra32e_power(info):
 def check_ra32e_power(item, params, info):
     power = info[0][0]
 
-    if power == '1':
-        return 0, 'unit is running on AC/Utility power'
-    elif power == '0':
-        return 1, 'unit is running on battery backup power'
-    return 3, 'unknown status'
+    if power == "1":
+        return 0, "unit is running on AC/Utility power"
+    elif power == "0":
+        return 1, "unit is running on battery backup power"
+    return 3, "unknown status"
 
 
 check_info["ra32e_power"] = {
-    'inventory_function': inventory_ra32e_power,
-    'check_function': check_ra32e_power,
-    'service_description': 'Power Supply',
-    'snmp_info': (  # ROOMALERT32E-MIB
-        '.1.3.6.1.4.1.20916.1.8.1.1.3',
-        '1'  # internal-power
-    ),
-    'snmp_scan_function': lambda oid: "1.3.6.1.4.1.20916.1.8" in oid(".1.3.6.1.2.1.1.2.0"),
+    "inventory_function": inventory_ra32e_power,
+    "check_function": check_ra32e_power,
+    "service_description": "Power Supply",
+    "snmp_info": (".1.3.6.1.4.1.20916.1.8.1.1.3", "1"),  # ROOMALERT32E-MIB  # internal-power
+    "snmp_scan_function": lambda oid: "1.3.6.1.4.1.20916.1.8" in oid(".1.3.6.1.2.1.1.2.0"),
 }

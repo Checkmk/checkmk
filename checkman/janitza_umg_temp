@@ -11,6 +11,6 @@ description:
 item:
  Current value of the counter
 
-inventory:
+discovery:
  One service is created for each temperature sensor (up to two).
 

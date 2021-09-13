@@ -15,5 +15,5 @@ description:
 item:
  Target of the replication
 
-inventory:
+discovery:
  One service is created for each replication target.

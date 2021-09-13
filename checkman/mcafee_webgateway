@@ -10,5 +10,5 @@ description:
  No default levels are set. Upper levels for infections and blocked connections
  are configurable.
 
-inventory:
+discovery:
  One service is created.

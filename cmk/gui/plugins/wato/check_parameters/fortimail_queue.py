@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato import (
     rulespec_registry,
     RulespecGroupCheckParametersStorage,
 )
-from cmk.gui.valuespec import Dictionary, Integer, TextAscii, Tuple
+from cmk.gui.valuespec import Dictionary, Integer, TextInput, Tuple
 
 
 def _parameter_valuespec_fortimail_queue():
@@ -44,7 +44,10 @@ rulespec_registry.register(
     CheckParameterRulespecWithItem(
         check_group_name="fortimail_queue",
         group=RulespecGroupCheckParametersStorage,
-        item_spec=lambda: TextAscii(title=_("Queue Name"),),
+        item_spec=lambda: TextInput(
+            title=_("Queue Name"),
+        ),
         parameter_valuespec=_parameter_valuespec_fortimail_queue,
         title=lambda: _("Fortinet FortiMail queue length"),
-    ))
+    )
+)

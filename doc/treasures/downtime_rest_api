@@ -18,28 +18,27 @@ You need to create an automation user - best with the name 'automation'
 for all relevant objects.
 """
 import argparse
+import datetime
 import json
 import logging
 import os
-import datetime
 import sys
 import textwrap
 import traceback
 import urllib.request
 from typing import List, Literal, NamedTuple, Optional
+
 VERBOSITY = {
     0: logging.WARNING,
     1: logging.INFO,
     2: logging.DEBUG,
 }
-ApiSettings = NamedTuple(
-    'ApiSettings',
-    [
-        ('API_URL', str),
-        ('USERNAME', str),
-        ('PASSWORD', str),
-    ],
-)
+
+
+class ApiSettings(NamedTuple):
+    API_URL: str
+    USERNAME: str
+    PASSWORD: str
 DowntimeMode = Literal[
     "host",
     "service",
@@ -300,7 +299,7 @@ def main():
 
 
 def _get_api_settings(username, secret, url) -> ApiSettings:
-    api_url = f"{url}/api/v0"
+    api_url = f"{url}/api/1.0"
     return ApiSettings(
         API_URL=api_url,
         USERNAME=username,

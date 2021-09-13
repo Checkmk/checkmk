@@ -37,6 +37,6 @@ def inv_lnx_video(info):
     node.append(array)
 
 
-inv_info['lnx_video'] = {
+inv_info["lnx_video"] = {
     "inv_function": inv_lnx_video,
 }

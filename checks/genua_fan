@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.fan import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.genua import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["genua_fan_default_levels"] = {
     "lower": (2000, 1000),
     "upper": (8000, 8400),
@@ -57,27 +59,15 @@ def check_genua_fan(item, params, info):
         yield check_fan(rpm, params)
 
 
-check_info['genua_fan'] = {
+check_info["genua_fan"] = {
     "inventory_function": inventory_genua_fan,
     "check_function": check_genua_fan,
     "group": "hw_fans",
     "service_description": "FAN %s",
     "has_perfdata": True,
     "snmp_info": [
-        (
-            ".1.3.6.1.4.1.3717.2.1.1.1.1",
-            [
-                "2",  # "fanName"
-                "3",  # "fanRPM"
-                "4"  # "fanState"
-            ]),
-        (
-            ".1.3.6.1.4.1.3137.2.1.1.1.1",
-            [
-                "2",  # "fanName"
-                "3",  # "fanRPM"
-                "4"  # "fanState"
-            ])
+        (".1.3.6.1.4.1.3717.2.1.1.1.1", ["2", "3", "4"]),  # "fanName"  # "fanRPM"  # "fanState"
+        (".1.3.6.1.4.1.3137.2.1.1.1.1", ["2", "3", "4"]),  # "fanName"  # "fanRPM"  # "fanState"
     ],
     "snmp_scan_function": scan_genua,
     "default_levels_variable": "genua_fan_default_levels",

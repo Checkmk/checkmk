@@ -18,7 +18,7 @@ description:
  Levels can be set for making the check warn/crit if the time difference
  exceeds the configured limits.
 
-inventory:
+discovery:
  One service is created for each host supporting this check.
  Currently this is the windows agent in version 1.1.10 or later.
 

@@ -5,31 +5,31 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """All core related things like direct communication with the running core"""
 
+import enum
 import os
 import subprocess
-from typing import Optional, Iterator
-import enum
 from contextlib import contextmanager
-
-import cmk.utils.paths
-import cmk.utils.cleanup
-import cmk.utils.debug
-import cmk.utils.tty as tty
-import cmk.utils.store as store
-from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.exceptions import MKGeneralException, MKTimeout, MKBailOut
-from cmk.utils.type_defs import TimeperiodName
-
-import cmk.base.obsolete_output as out
-import cmk.base.config as config
-import cmk.base.core_config as core_config
-import cmk.base.nagios_utils
-from cmk.base.core_config import MonitoringCore
+from typing import Iterator, Optional
 
 # suppress "Cannot find module" error from mypy
 import livestatus
 
-#.
+import cmk.utils.cleanup
+import cmk.utils.debug
+import cmk.utils.paths
+import cmk.utils.store as store
+import cmk.utils.tty as tty
+from cmk.utils.caching import config_cache as _config_cache
+from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout
+from cmk.utils.type_defs import TimeperiodName
+
+import cmk.base.config as config
+import cmk.base.core_config as core_config
+import cmk.base.nagios_utils
+import cmk.base.obsolete_output as out
+from cmk.base.core_config import HostsToUpdate, MonitoringCore
+
+# .
 #   .--Control-------------------------------------------------------------.
 #   |                   ____            _             _                    |
 #   |                  / ___|___  _ __ | |_ _ __ ___ | |                   |
@@ -53,10 +53,14 @@ def do_reload(core: MonitoringCore) -> None:
     do_restart(core, action=CoreAction.RELOAD)
 
 
-def do_restart(core: MonitoringCore, action: CoreAction = CoreAction.RESTART) -> None:
+def do_restart(
+    core: MonitoringCore,
+    action: CoreAction = CoreAction.RESTART,
+    hosts_to_update: HostsToUpdate = None,
+) -> None:
     try:
         with activation_lock(mode=config.restart_locking):
-            core_config.do_create_config(core)
+            core_config.do_create_config(core, hosts_to_update=hosts_to_update)
             do_core_action(action)
 
     except Exception as e:
@@ -116,7 +120,7 @@ def do_core_action(action: CoreAction, quiet: bool = False) -> None:
         out.output(tty.ok + "\n")
 
 
-#.
+# .
 #   .--Timeperiods---------------------------------------------------------.
 #   |      _____ _                                _           _            |
 #   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |

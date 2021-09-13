@@ -26,9 +26,9 @@
 # 12 free space in the datafile
 # 13 Tablespace-Type (PERMANENT, UNDO, TEMPORARY)
 
-from .agent_based_api.v1.type_defs import InventoryResult
 from .agent_based_api.v1 import register, TableRow
-from .utils.oracle import SectionTableSpaces, analyze_datafiles
+from .agent_based_api.v1.type_defs import InventoryResult
+from .utils.oracle import analyze_datafiles, SectionTableSpaces
 
 
 def inventory_oracle_tablespaces(section: SectionTableSpaces) -> InventoryResult:
@@ -79,7 +79,7 @@ def inventory_oracle_tablespaces(section: SectionTableSpaces) -> InventoryResult
 
 
 register.inventory_plugin(
-    name='inventory_oracle_tablespaces',
+    name="inventory_oracle_tablespaces",
     inventory_function=inventory_oracle_tablespaces,
     sections=["oracle_tablespaces"],
 )

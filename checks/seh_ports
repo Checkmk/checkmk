@@ -8,8 +8,8 @@
 def parse_seh_ports(info):
     parsed = {}
     for oid_end, tag, status, port_number in info[0]:
-        oid_index = oid_end.split('.')[0]
-        if tag != u"":
+        oid_index = oid_end.split(".")[0]
+        if tag != "":
             parsed.setdefault(oid_index, {}).update(tag=tag)
         if port_number != "0":
             parsed.setdefault(port_number, {}).update(status=status)
@@ -31,18 +31,21 @@ def check_seh_ports(item, params, data):
         yield 1, "Status during discovery: %s" % (params.get("status_at_discovery") or "unknown")
 
 
-check_info['seh_ports'] = {
+check_info["seh_ports"] = {
     "parse_function": parse_seh_ports,
     "inventory_function": inventory_seh_ports,
     "check_function": check_seh_ports,
     "service_description": "Port %s",
-    "snmp_info": [(
-        ".1.3.6.1.4.1.1229.2.50.2.1",
-        [
-            OID_END,
-            "10",  #PortTag
-            "26",  #Connection status
-            "27",  #UTN slot number
-        ])],
-    "snmp_scan_function": lambda oid: '.1.3.6.1.4.1.1229.1.1' in oid(".1.3.6.1.2.1.1.2.0"),
+    "snmp_info": [
+        (
+            ".1.3.6.1.4.1.1229.2.50.2.1",
+            [
+                OID_END,
+                "10",  # PortTag
+                "26",  # Connection status
+                "27",  # UTN slot number
+            ],
+        )
+    ],
+    "snmp_scan_function": lambda oid: ".1.3.6.1.4.1.1229.1.1" in oid(".1.3.6.1.2.1.1.2.0"),
 }

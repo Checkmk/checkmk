@@ -8,5 +8,5 @@ description:
  instance. It outputs the total number of messages and the average rate of
  messages in a given timeframe.
 
-inventory:
+discovery:
  One service is created.

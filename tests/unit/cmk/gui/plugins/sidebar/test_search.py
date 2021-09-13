@@ -5,6 +5,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.sidebar.search import (
     ABCLabelMatchPlugin,
@@ -34,10 +35,13 @@ class TestLabelMatchPlugin:
         assert HostLabelMatchPlugin().get_livestatus_filters("", {}) == ""
 
     def test_get_livestatus_filters_one_filter(self):
-        assert HostLabelMatchPlugin().get_livestatus_filters(
-            "hosts", {"hl": ["x:y"]}) == "Filter: labels = 'x' 'y'"
+        assert (
+            HostLabelMatchPlugin().get_livestatus_filters("hosts", {"hl": ["x:y"]})
+            == "Filter: labels = 'x' 'y'"
+        )
 
     def test_get_livestatus_filters_two_filters(self):
-        assert ServiceLabelMatchPlugin().get_livestatus_filters(
-            "services",
-            {"sl": ["x:y", "a:b"]}) == "Filter: labels = 'x' 'y'\nFilter: labels = 'a' 'b'"
+        assert (
+            ServiceLabelMatchPlugin().get_livestatus_filters("services", {"sl": ["x:y", "a:b"]})
+            == "Filter: labels = 'x' 'y'\nFilter: labels = 'a' 'b'"
+        )

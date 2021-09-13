@@ -4,11 +4,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Any, NamedTuple, List, Dict
+from typing import Any, Dict, List, Mapping, NamedTuple
 
-from .utils.interfaces import saveint
+from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult
-from .agent_based_api.v1 import register, type_defs, Result, Service, State
+from .utils.interfaces import saveint
 
 
 class ZpoolStatus(NamedTuple):
@@ -90,10 +90,12 @@ def parse_zpool_status(string_table: type_defs.StringTable) -> Section:
         elif multiline:
             pool_messages[last_pool].append(" ".join(line))
 
-    return Section(state_messages=state_messages,
-                   error_pools=error_pools,
-                   warning_pools=warning_pools,
-                   pool_messages=pool_messages)
+    return Section(
+        state_messages=state_messages,
+        error_pools=error_pools,
+        warning_pools=warning_pools,
+        pool_messages=pool_messages,
+    )
 
 
 def discover_zpool_status(section: Section) -> type_defs.DiscoveryResult:

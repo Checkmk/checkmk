@@ -24,22 +24,22 @@
 # Boston, MA 02110-1301 USA.
 """Helper functions for dealing with the tmpfs"""
 
+import errno
 import os
 import re
-import sys
-import time
 import shlex
-import errno
-import tarfile
 import subprocess
+import sys
+import tarfile
+import time
 from pathlib import Path
 from typing import Optional
 
-import cmk.utils.tty as tty
-
-from omdlib.utils import is_dockerized, ok, delete_directory_contents
-from omdlib.version_info import VersionInfo
 from omdlib.contexts import SiteContext
+from omdlib.utils import delete_directory_contents, is_dockerized, ok
+from omdlib.version_info import VersionInfo
+
+import cmk.utils.tty as tty
 
 
 # TODO: Use site context?
@@ -51,7 +51,7 @@ def tmpfs_mounted(sitename: str) -> bool:
     for line in open("/proc/mounts"):
         try:
             _device, mp, fstype, _options, _dump, _fsck = line.split()
-            if mp.endswith(path_suffix) and fstype == 'tmpfs':
+            if mp.endswith(path_suffix) and fstype == "tmpfs":
                 return True
         except Exception:
             continue
@@ -83,12 +83,14 @@ def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
         os.mkdir(site.tmp_dir)
 
     mount_options = shlex.split(version_info.MOUNT_OPTIONS)
-    p = subprocess.Popen(["mount"] + mount_options + [site.tmp_dir],
-                         shell=False,
-                         stdin=open(os.devnull),
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT,
-                         encoding="utf-8")
+    p = subprocess.Popen(
+        ["mount"] + mount_options + [site.tmp_dir],
+        shell=False,
+        stdin=open(os.devnull),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        encoding="utf-8",
+    )
     exit_code = p.wait()
     if exit_code == 0:
         ok()
@@ -99,13 +101,17 @@ def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
 
     sys.stdout.write(p.stdout.read())
     if is_dockerized():
-        sys.stdout.write(tty.warn + ": "
-                         "Could not mount tmpfs. You may either start the container in "
-                         "privileged mode or use the \"docker run\" option \"--tmpfs\" to "
-                         "make docker do the tmpfs mount for the site.\n")
+        sys.stdout.write(
+            tty.warn + ": "
+            "Could not mount tmpfs. You may either start the container in "
+            'privileged mode or use the "docker run" option "--tmpfs" to '
+            "make docker do the tmpfs mount for the site.\n"
+        )
 
-    sys.stdout.write(tty.warn + ": You may continue without tmpfs, but the "
-                     "performance of Check_MK may be degraded.\n")
+    sys.stdout.write(
+        tty.warn + ": You may continue without tmpfs, but the "
+        "performance of Check_MK may be degraded.\n"
+    )
 
 
 def mark_tmpfs_initialized(site: SiteContext) -> None:
@@ -114,7 +120,7 @@ def mark_tmpfs_initialized(site: SiteContext) -> None:
     The st_ctime of the file will be used by Checkmk to know when the tmpfs file
     structure was initialized."""
     with Path(site.tmp_dir, "initialized").open("w", encoding="utf-8") as f:
-        f.write(u"")
+        f.write("")
 
 
 def unmount_tmpfs(site: SiteContext, output: bool = True, kill: bool = False) -> bool:
@@ -194,9 +200,9 @@ def _tmpfs_is_managed_by_node(site: SiteContext) -> bool:
     if not tmpfs_mounted(site.name):
         return False
 
-    return subprocess.call(["umount", site.tmp_dir],
-                           stdout=open(os.devnull, "w"),
-                           stderr=subprocess.STDOUT) in [1, 32]
+    return subprocess.call(
+        ["umount", site.tmp_dir], stdout=open(os.devnull, "w"), stderr=subprocess.STDOUT
+    ) in [1, 32]
 
 
 def add_to_fstab(site: SiteContext, tmpfs_size: Optional[str] = None) -> None:
@@ -208,9 +214,9 @@ def add_to_fstab(site: SiteContext, tmpfs_size: Optional[str] = None) -> None:
     sys.stdout.write("Adding %s to %s.\n" % (mountpoint, fstab_path()))
 
     # No size option: using up to 50% of the RAM
-    sizespec = ''
-    if tmpfs_size is not None and re.match('^[0-9]+(G|M|%)$', tmpfs_size):
-        sizespec = ',size=%s' % tmpfs_size
+    sizespec = ""
+    if tmpfs_size is not None and re.match("^[0-9]+(G|M|%)$", tmpfs_size):
+        sizespec = ",size=%s" % tmpfs_size
 
     # Ensure the fstab has a newline char at it's end before appending
     previous_fstab = open(fstab_path()).read()
@@ -220,8 +226,10 @@ def add_to_fstab(site: SiteContext, tmpfs_size: Optional[str] = None) -> None:
         if complete_last_line:
             fstab.write("\n")
 
-        fstab.write("tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n" %
-                    (mountpoint, site.name, site.name, sizespec))
+        fstab.write(
+            "tmpfs  %s tmpfs noauto,user,mode=755,uid=%s,gid=%s%s 0 0\n"
+            % (mountpoint, site.name, site.name, sizespec)
+        )
 
 
 def remove_from_fstab(site: SiteContext) -> None:

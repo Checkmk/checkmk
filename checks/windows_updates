@@ -26,8 +26,8 @@ def check_windows_updates(_no_item, params, info):
     if info and len(info[0]) == 3:
         status = 0
         # Workarround to return errors from the plugin
-        if info[0][0] == 'x':
-            return 2, ' '.join(info[1])
+        if info[0][0] == "x":
+            return 2, " ".join(info[1])
         reboot_required, num_imp, num_opt = map(saveint, info[0])
         imp_warn, imp_crit, opt_warn, opt_crit = params[0:4]
         if len(params) == 7:
@@ -36,19 +36,19 @@ def check_windows_updates(_no_item, params, info):
             force_warn = 604800
             force_crit = 172800
             verbose = True
-        important = ''
-        optional = ''
+        important = ""
+        optional = ""
 
         last = 1
         if num_imp != 0:
-            important = ' '.join(info[1])
+            important = " ".join(info[1])
             last += 1
         if num_opt != 0 and num_imp != 0:
             last += 1
-            optional = ' '.join(info[2])
+            optional = " ".join(info[2])
         elif num_opt != 0:
             last += 1
-            optional = ' '.join(info[1])
+            optional = " ".join(info[1])
 
         # the last element may be the forced_reboot time
         forced_reboot = ""
@@ -58,27 +58,24 @@ def check_windows_updates(_no_item, params, info):
         txt = []
         perfdata = []
         for label, updates, cur, warn, crit in [
-            ('important', important, num_imp, imp_warn, imp_crit),
-            ('optional', optional, num_opt, opt_warn, opt_crit)
+            ("important", important, num_imp, imp_warn, imp_crit),
+            ("optional", optional, num_opt, opt_warn, opt_crit),
         ]:
-            this_txt = '%d %s updates' % (cur, label)
+            this_txt = "%d %s updates" % (cur, label)
             if crit and cur >= crit:
-                this_txt += ' >=%d (!!)' % crit
-                if status < 2:
-                    status = 2
+                this_txt += " >=%d (!!)" % crit
+                status = max(status, 2)
             elif warn and cur >= warn:
-                this_txt += ' >=%d (!)' % warn
-                if status < 1:
-                    status = 1
-            if label == 'important' and cur > 0 and verbose:
-                this_txt += ', (%s) --- ' % updates
+                this_txt += " >=%d (!)" % warn
+                status = max(status, 1)
+            if label == "important" and cur > 0 and verbose:
+                this_txt += ", (%s) --- " % updates
             txt.append(this_txt)
             perfdata.append((label, cur, warn, crit))
 
         if reboot_required == 1:
-            if status < 1:
-                status = 1
-            txt.append('Reboot required to finish updates(!)')
+            status = max(status, 1)
+            txt.append("Reboot required to finish updates(!)")
 
         if forced_reboot != "":
             parsed = time.strptime(" ".join(forced_reboot), "%Y-%m-%d %H:%M:%S")
@@ -95,19 +92,21 @@ def check_windows_updates(_no_item, params, info):
                     sym = "(!)"
                     status = max(status, 1)
 
-                boot_txt = 'Reboot enforced in %s to finish updates%s' % (
-                    get_age_human_readable(delta), sym)
+                boot_txt = "Reboot enforced in %s to finish updates%s" % (
+                    get_age_human_readable(delta),
+                    sym,
+                )
                 txt.append(boot_txt)
 
-        return (status, ', '.join(txt), perfdata)
+        return (status, ", ".join(txt), perfdata)
 
-    return (3, 'No windows update information provided')
+    return (3, "No windows update information provided")
 
 
 check_info["windows_updates"] = {
-    'check_function': check_windows_updates,
-    'inventory_function': inventory_windows_updates,
-    'service_description': 'System Updates',
-    'group': 'windows_updates',
-    'has_perfdata': True,
+    "check_function": check_windows_updates,
+    "inventory_function": inventory_windows_updates,
+    "service_description": "System Updates",
+    "group": "windows_updates",
+    "has_perfdata": True,
 }

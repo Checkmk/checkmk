@@ -19,5 +19,5 @@ description:
 item:
  ID of the library
 
-inventory:
+discovery:
  One service is created for each connected library.

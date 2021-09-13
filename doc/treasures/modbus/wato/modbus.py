@@ -7,13 +7,15 @@
 # Put this file into share/check_mk/web/plugins/wato. It will create a rules
 # for modbus checks and a rule in the configuration of the special agents.
 
+from cmk.gui.plugins.wato.datasource_programs import RulespecGroupDatasourceProgramsHardware
+
 register_check_parameters(
     subgroup_environment, "modbus_value", _("Modbus Performance Values"),
     Tuple(elements=[Integer(title=_("Warning if above")),
-                    Integer(title=_("Critical if above"))]), TextAscii(title=_("Value Name")), None)
+                    Integer(title=_("Critical if above"))]), TextInput(title=_("Value Name")), None)
 
 register_rule(
-    group,
+    RulespecGroupDatasourceProgramsHardware,
     "special_agents:modbus",
     Tuple(title=_("Check Modbus devices"),
           help=_("Configure the Server Address and the ids you want to query from the device"
@@ -33,7 +35,7 @@ register_rule(
                                          ("counter", _("Its a counter value")),
                                          ("gauge", _("Its a gauge value")),
                                      ]),
-                      TextAscii(title=_("Counter Description")),
+                      TextInput(title=_("Counter Description")),
                   ]))
           ]),
     match="first")

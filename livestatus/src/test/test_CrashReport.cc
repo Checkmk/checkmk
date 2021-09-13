@@ -100,7 +100,6 @@ public:
     const std::string header{"component;id\n"};
 
 private:
-    // cppcheck-suppress unusedPrivateFunction
     [[nodiscard]] NagiosPaths paths_() const {
         NagiosPaths p{};
         p._crash_reports_path = basepath;

@@ -5,13 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.i18n import _
+from cmk.gui.plugins.metrics import graph_info, metric_info
 
-from cmk.gui.plugins.metrics import (
-    metric_info,
-    graph_info,
-)
-
-#.
+# .
 #   .--Metrics-------------------------------------------------------------.
 #   |                   __  __      _        _                             |
 #   |                  |  \/  | ___| |_ _ __(_) ___ ___                    |
@@ -47,7 +43,15 @@ metric_info["k8s_pods_allocatable"] = {
 metric_info["k8s_pods_capacity"] = {
     "title": _("Capacity"),
     "unit": "count",
-    "color": "c0c0c0",
+    "color": "#c0c0c0",
+}
+
+metric_info["k8s_pods_pending"] = {"title": _("Pending"), "unit": "count", "color": "#d1d4e8"}
+
+metric_info["k8s_pods_running"] = {
+    "title": _("Running"),
+    "unit": "count",
+    "color": "#93a2ee",
 }
 
 metric_info["k8s_cpu_request"] = {
@@ -170,7 +174,7 @@ metric_info["k8s_daemon_pods_unavailable"] = {
     "color": "14/a",
 }
 
-#.
+# .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
 #   |                   / ___|_ __ __ _ _ __ | |__  ___                    |
@@ -188,6 +192,16 @@ graph_info["k8s_resources.pods"] = {
         ("k8s_pods_capacity", "area"),
         ("k8s_pods_allocatable", "area"),
         ("k8s_pods_request", "area"),
+    ],
+}
+
+graph_info["k8s_resources.pod"] = {
+    "title": _("Pod resources"),
+    "metrics": [
+        ("k8s_pods_allocatable", "line"),
+        ("k8s_pods_capacity", "line"),
+        ("k8s_pods_running", "area"),
+        ("k8s_pods_pending", "stack"),
     ],
 }
 

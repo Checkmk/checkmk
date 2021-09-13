@@ -10,6 +10,6 @@ description:
  for this to work. The check reports OK if and only if the controller
  state is Active.
 
-inventory:
+discovery:
  One service is created for each controller.
 

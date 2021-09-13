@@ -8,6 +8,7 @@
 
 
 def scan_hp(oid):
-    return ("hp" in oid(".1.3.6.1.2.1.1.1.0").lower() and
-            ("5406rzl2" in oid(".1.3.6.1.2.1.1.1.0").lower() or
-             "5412rzl2" in oid(".1.3.6.1.2.1.1.1.0").lower()))
+    return "hp" in oid(".1.3.6.1.2.1.1.1.0").lower() and (
+        "5406rzl2" in oid(".1.3.6.1.2.1.1.1.0").lower()
+        or "5412rzl2" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    )

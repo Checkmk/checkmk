@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # very odd and confusing example outputs:
 
 # version 3.0.0
@@ -35,44 +36,40 @@ from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wild
 
 def _translate_availability(availability):
     return {
-        '0': (2, 'unavailable'),
-        '1': (0, 'available'),
-        '2': (1, 'partially unavailable'),
+        "0": (2, "unavailable"),
+        "1": (0, "available"),
+        "2": (1, "partially unavailable"),
     }[availability]
 
 
 def _parse_legacy_line(line, temp_unit):
-    '''
+    """
     >>> [i for i in _parse_legacy_line(['1', 'blah', '2CD', '1', '30', '20', '8'], 'C')]
     [('general', {'Watchdog 1': {'descr': 'blah', 'availability': (0, 'available')}}), ('temp', {'Temperature 1': ('30', 'C')}), ('humidity', {'Humidity 1': '20'}), ('dew', {'Dew point 1': ('8', 'C')})]
-    '''
+    """
     sensor_id = line[0]
-    yield 'general', {
-        'Watchdog %s' % sensor_id: {
-            'descr': line[1],
-            'availability': _translate_availability(line[3])
-        },
+    yield "general", {
+        "Watchdog %s"
+        % sensor_id: {"descr": line[1], "availability": _translate_availability(line[3])},
     }
-    yield 'temp', {'Temperature %s' % sensor_id: (line[4], temp_unit)}
-    yield 'humidity', {'Humidity %s' % sensor_id: line[5]}
-    yield 'dew', {'Dew point %s' % sensor_id: (line[6], temp_unit)}
+    yield "temp", {"Temperature %s" % sensor_id: (line[4], temp_unit)}
+    yield "humidity", {"Humidity %s" % sensor_id: line[5]}
+    yield "dew", {"Dew point %s" % sensor_id: (line[6], temp_unit)}
 
 
 def _parse_line(line, temp_unit):
-    '''
+    """
     >>> [i for i in _parse_line(['1', 'blah', '1', '30', '20', '8'], 'C')]
     [('general', {'Watchdog 1': {'descr': 'blah', 'availability': (0, 'available')}}), ('temp', {'Temperature 1': ('30', 'C')}), ('humidity', {'Humidity 1': '20'}), ('dew', {'Dew point 1': ('8', 'C')})]
-    '''
+    """
     sensor_id = line[0]
-    yield 'general', {
-        'Watchdog %s' % sensor_id: {
-            'descr': line[1],
-            'availability': _translate_availability(line[2])
-        },
+    yield "general", {
+        "Watchdog %s"
+        % sensor_id: {"descr": line[1], "availability": _translate_availability(line[2])},
     }
-    yield 'temp', {'Temperature %s' % sensor_id: (line[3], temp_unit)}
-    yield 'humidity', {'Humidity %s' % sensor_id: line[4]}
-    yield 'dew', {'Dew point %s' % sensor_id: (line[5], temp_unit)}
+    yield "temp", {"Temperature %s" % sensor_id: (line[3], temp_unit)}
+    yield "humidity", {"Humidity %s" % sensor_id: line[4]}
+    yield "dew", {"Dew point %s" % sensor_id: (line[5], temp_unit)}
 
 
 def parse_watchdog_sensors(info):
@@ -84,12 +81,12 @@ def parse_watchdog_sensors(info):
         return parsed
 
     temp_unit = {
-        '1': 'C',
-        '0': 'F',
-        '': 'C',
+        "1": "C",
+        "0": "F",
+        "": "C",
     }[general[0][1]]
 
-    version = int(general[0][0].replace('.', ''))
+    version = int(general[0][0].replace(".", ""))
 
     if version <= 300:
         line_parser = _parse_legacy_line
@@ -103,7 +100,7 @@ def parse_watchdog_sensors(info):
     return parsed
 
 
-#.
+# .
 #   .--general-------------------------------------------------------------.
 #   |                                                  _                   |
 #   |                   __ _  ___ _ __   ___ _ __ __ _| |                  |
@@ -117,56 +114,57 @@ def parse_watchdog_sensors(info):
 
 
 def inventory_watchdog_sensors(parsed):
-    for key in parsed.get('general', {}):
+    for key in parsed.get("general", {}):
         yield (key, {})
 
 
 def check_watchdog_sensors(item, params, parsed):
 
-    data = parsed.get('general', {}).get(item)
+    data = parsed.get("general", {}).get(item)
 
     if not data:
         return
 
-    descr = data['descr']
-    state, state_readable = data['availability']
+    descr = data["descr"]
+    state, state_readable = data["availability"]
 
     yield state, state_readable
 
-    if not descr == '':
+    if not descr == "":
         yield 0, "Location: %s" % descr
 
 
-check_info['watchdog_sensors'] = {
-    'parse_function': parse_watchdog_sensors,
-    'inventory_function': inventory_watchdog_sensors,
-    'check_function': check_watchdog_sensors,
-    'service_description': '%s',
-    'snmp_info': [
+check_info["watchdog_sensors"] = {
+    "parse_function": parse_watchdog_sensors,
+    "inventory_function": inventory_watchdog_sensors,
+    "check_function": check_watchdog_sensors,
+    "service_description": "%s",
+    "snmp_info": [
         (
-            '.1.3.6.1.4.1.21239.5.1.1',
+            ".1.3.6.1.4.1.21239.5.1.1",
             [
-                '2',  #GEIST-V4-MIB::productVersion
-                '7',  #GEIST-V4-MIB::temperatureUnits
-            ]),
+                "2",  # GEIST-V4-MIB::productVersion
+                "7",  # GEIST-V4-MIB::temperatureUnits
+            ],
+        ),
         (
-            '.1.3.6.1.4.1.21239.5.1.2.1',
+            ".1.3.6.1.4.1.21239.5.1.2.1",
             [
                 OID_END,
-                '3',  #GEIST-V4-MIB::internalName
-                '4',  #GEIST-V4-MIB::internalLabel    but internalAvail    if version 3.2.0
-                '5',  #GEIST-V4-MIB::internalAvail    but internalTemp     if version 3.2.0
-                '6',  #GEIST-V4-MIB::internalTemp     but internalHumidity if version 3.2.0
-                '7',  #GEIST-V4-MIB::internalHumidity but internalDewPoint if version 3.2.0
-                '8',  #GEIST-V4-MIB::internalDewPoint but empty            if version 3.2.0
-            ])
+                "3",  # GEIST-V4-MIB::internalName
+                "4",  # GEIST-V4-MIB::internalLabel    but internalAvail    if version 3.2.0
+                "5",  # GEIST-V4-MIB::internalAvail    but internalTemp     if version 3.2.0
+                "6",  # GEIST-V4-MIB::internalTemp     but internalHumidity if version 3.2.0
+                "7",  # GEIST-V4-MIB::internalHumidity but internalDewPoint if version 3.2.0
+                "8",  # GEIST-V4-MIB::internalDewPoint but empty            if version 3.2.0
+            ],
+        ),
     ],
-    'snmp_scan_function': lambda oid: oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.21239.5.1')
-                          or oid('.1.3.6.1.2.1.1.2.0').startswith('.1.3.6.1.4.1.21239.42.1'
-                                                                 ),  # firmware upgrade
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.21239.5.1")
+    or oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.21239.42.1"),  # firmware upgrade
 }
 
-#.
+# .
 #   .--temp----------------------------------------------------------------.
 #   |                       _                                              |
 #   |                      | |_ ___ _ __ ___  _ __                         |
@@ -180,33 +178,35 @@ check_info['watchdog_sensors'] = {
 
 
 def inventory_watchdog_sensors_temp(parsed):
-    for key in parsed.get('temp', {}):
+    for key in parsed.get("temp", {}):
         yield (key, {})
 
 
 def check_watchdog_sensors_temp(item, params, parsed):
 
-    data = parsed.get('temp', {}).get(item)
+    data = parsed.get("temp", {}).get(item)
 
     if not data:
         return
 
     temperature_str, unit = data
-    return check_temperature(float(temperature_str) / 10.0,
-                             params,
-                             "check_watchdog_sensors.%s" % item,
-                             dev_unit=unit.lower())
+    return check_temperature(
+        float(temperature_str) / 10.0,
+        params,
+        "check_watchdog_sensors.%s" % item,
+        dev_unit=unit.lower(),
+    )
 
 
-check_info['watchdog_sensors.temp'] = {
-    'inventory_function': inventory_watchdog_sensors_temp,
-    'check_function': check_watchdog_sensors_temp,
-    'service_description': '%s ',
-    'has_perfdata': True,
-    'group': 'temperature',
+check_info["watchdog_sensors.temp"] = {
+    "inventory_function": inventory_watchdog_sensors_temp,
+    "check_function": check_watchdog_sensors_temp,
+    "service_description": "%s ",
+    "has_perfdata": True,
+    "group": "temperature",
 }
 
-#.
+# .
 #   .--humidity------------------------------------------------------------.
 #   |              _                     _     _ _ _                       |
 #   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
@@ -218,29 +218,29 @@ check_info['watchdog_sensors.temp'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-factory_settings['watchdog_sensors_humidity_default_levels'] = {
-    'levels': (50, 55),
-    'levels_lower': (10, 15),
+factory_settings["watchdog_sensors_humidity_default_levels"] = {
+    "levels": (50, 55),
+    "levels_lower": (10, 15),
 }
 
 
 def inventory_watchdog_sensors_humidity(parsed):
-    for key in parsed.get('humidity', {}):
+    for key in parsed.get("humidity", {}):
         yield (key, {})
 
 
 def check_watchdog_sensors_humidity(item, params, parsed):
 
-    data = parsed.get('humidity', {}).get(item)
+    data = parsed.get("humidity", {}).get(item)
 
     if not data:
         return
 
     humidity = int(data)
-    warn, crit = params['levels']
-    warn_lower, crit_lower = params['levels_lower']
+    warn, crit = params["levels"]
+    warn_lower, crit_lower = params["levels_lower"]
 
-    yield 0, "%.1f%%" % humidity, [('humidity', humidity, warn, crit)]
+    yield 0, "%.1f%%" % humidity, [("humidity", humidity, warn, crit)]
 
     if humidity >= crit:
         yield 2, "warn/crit at %s/%s" % (warn, crit)
@@ -252,16 +252,16 @@ def check_watchdog_sensors_humidity(item, params, parsed):
         yield 1, "warn/crit below %s/%s" % (warn, crit)
 
 
-check_info['watchdog_sensors.humidity'] = {
-    'inventory_function': inventory_watchdog_sensors_humidity,
-    'check_function': check_watchdog_sensors_humidity,
-    'service_description': '%s',
-    'has_perfdata': True,
-    'group': 'humidity',
-    'default_levels_variable': 'watchdog_sensors_humidity_default_levels',
+check_info["watchdog_sensors.humidity"] = {
+    "inventory_function": inventory_watchdog_sensors_humidity,
+    "check_function": check_watchdog_sensors_humidity,
+    "service_description": "%s",
+    "has_perfdata": True,
+    "group": "humidity",
+    "default_levels_variable": "watchdog_sensors_humidity_default_levels",
 }
 
-#.
+# .
 #   .--dew-----------------------------------------------------------------.
 #   |                             _                                        |
 #   |                          __| | _____      __                         |
@@ -275,13 +275,13 @@ check_info['watchdog_sensors.humidity'] = {
 
 
 def inventory_watchdog_sensors_dew(parsed):
-    for key in parsed.get('dew', {}):
+    for key in parsed.get("dew", {}):
         yield (key, {})
 
 
 def check_watchdog_sensors_dew(item, params, parsed):
 
-    data = parsed.get('dew', {}).get(item)
+    data = parsed.get("dew", {}).get(item)
 
     if not data:
         return
@@ -293,10 +293,10 @@ def check_watchdog_sensors_dew(item, params, parsed):
     yield check_temperature(dew, params, "check_watchdog_sensors.%s" % item)
 
 
-check_info['watchdog_sensors.dew'] = {
-    'inventory_function': inventory_watchdog_sensors_dew,
-    'check_function': check_watchdog_sensors_dew,
-    'service_description': '%s',
-    'has_perfdata': True,
-    'group': 'temperature',
+check_info["watchdog_sensors.dew"] = {
+    "inventory_function": inventory_watchdog_sensors_dew,
+    "check_function": check_watchdog_sensors_dew,
+    "service_description": "%s",
+    "has_perfdata": True,
+    "group": "temperature",
 }

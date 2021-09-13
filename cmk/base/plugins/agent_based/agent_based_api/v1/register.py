@@ -8,17 +8,17 @@ The "register" namespace contains functions to inform Checkmk about plugins.
 
 """
 from cmk.base.api.agent_based.register.export import (
-    RuleSetType,
     agent_section,
     check_plugin,
     inventory_plugin,
+    RuleSetType,
     snmp_section,
 )
 
 __all__ = [
-    'RuleSetType',
-    'agent_section',
-    'check_plugin',
-    'inventory_plugin',
-    'snmp_section',
+    "RuleSetType",
+    "agent_section",
+    "check_plugin",
+    "inventory_plugin",
+    "snmp_section",
 ]

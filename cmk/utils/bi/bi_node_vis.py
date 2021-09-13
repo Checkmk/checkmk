@@ -14,13 +14,8 @@
 #   +----------------------------------------------------------------------+
 
 from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
-from cmk.utils.bi.bi_lib import (
-    ReqConstant,
-    ReqBoolean,
-    ReqInteger,
-    ReqString,
-    ReqNested,
-)
+
+from cmk.utils.bi.bi_lib import ReqBoolean, ReqConstant, ReqInteger, ReqNested, ReqString
 from cmk.utils.bi.bi_schema import Schema
 
 

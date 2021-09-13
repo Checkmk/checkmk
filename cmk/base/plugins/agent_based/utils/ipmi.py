@@ -6,22 +6,11 @@
 
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Mapping,
-    Optional,
-    Sequence,
-    Tuple,
-)
-from ..agent_based_api.v1 import (
-    check_levels,
-    Metric,
-    Result,
-    State as state,
-    type_defs,
-)
+from typing import Any, Callable, Dict, Mapping, Optional, Sequence, Tuple
+
+from ..agent_based_api.v1 import check_levels, Metric, Result
+from ..agent_based_api.v1 import State as state
+from ..agent_based_api.v1 import type_defs
 
 # TODO: Cleanup the whole status text mapping in utils/ipmi.py, ipmi_sensors.include, ipmi.py
 
@@ -74,8 +63,9 @@ def ignore_sensor(
     >>> ignore_sensor("name", "status", {"ignored_sensorstates": ["status"]})
     True
     """
-    return (_check_ignores(sensor_name, ignore_params.get("ignored_sensors", [])) or
-            _check_ignores(status_txt, ignore_params.get("ignored_sensorstates", [])))
+    return _check_ignores(sensor_name, ignore_params.get("ignored_sensors", [])) or _check_ignores(
+        status_txt, ignore_params.get("ignored_sensorstates", [])
+    )
 
 
 def check_ipmi(
@@ -102,7 +92,7 @@ def check_ipmi(
 
 
 def _unit_to_render_func(unit: str) -> Callable[[float], str]:
-    unit_suffix = (unit and 'unspecified' not in unit and " %s" % unit or "")
+    unit_suffix = unit and "unspecified" not in unit and " %s" % unit or ""
     unit_suffix = unit_suffix.replace("percent", "%").replace("%", "%%")
     return lambda x: ("%.2f" + unit_suffix) % x
 
@@ -117,8 +107,8 @@ def _check_numerical_levels(
         if this_sensorname == sensor_name and levels:
             result, *_ = check_levels(
                 val,
-                levels_upper=levels.get('upper', (None, None)),
-                levels_lower=levels.get('lower', (None, None)),
+                levels_upper=levels.get("upper", (None, None)),
+                levels_lower=levels.get("lower", (None, None)),
                 render_func=_unit_to_render_func(unit),
                 label=sensor_name,
             )
@@ -154,14 +144,14 @@ def check_ipmi_detailed(
         metric = None
         if not temperature_metrics_only:
             metric = Metric(
-                item.replace('/', '_'),
+                item.replace("/", "_"),
                 sensor.value,
                 levels=(sensor.warn_high, sensor.crit_high),
             )
 
         # Do not save performance data for FANs. This produces a lot of data and is - in my
         # opinion - useless.
-        elif "temperature" in item.lower() or "temp" in item.lower() or sensor.unit == 'C':
+        elif "temperature" in item.lower() or "temp" in item.lower() or sensor.unit == "C":
             metric = Metric(
                 "value",
                 sensor.value,
@@ -196,7 +186,7 @@ def check_ipmi_detailed(
             break
 
     # Sensor reports 'nc' ('non critical'), so we set the state to WARNING
-    if sensor.status_txt.startswith('nc'):
+    if sensor.status_txt.startswith("nc"):
         yield Result(state=state.WARN, summary="Sensor is non-critical")
 
 
@@ -215,8 +205,9 @@ def check_ipmi_summarized(
 
     for sensor_name, sensor in section.items():
         # Skip datasets which have no valid data (zero value, no unit and state nc)
-        if (ignore_sensor(sensor_name, sensor.status_txt, params) or
-            (sensor.value == 0 and sensor.unit == "" and sensor.status_txt.startswith('nc'))):
+        if ignore_sensor(sensor_name, sensor.status_txt, params) or (
+            sensor.value == 0 and sensor.unit == "" and sensor.status_txt.startswith("nc")
+        ):
             skipped_texts.append("%s (%s)" % (sensor_name, sensor.status_txt))
             continue
 
@@ -278,5 +269,5 @@ def check_ipmi_summarized(
 
     yield Result(
         state=state.worst(*states),
-        summary=' - '.join(infotexts),
+        summary=" - ".join(infotexts),
     )

@@ -14,5 +14,5 @@ description:
 
  No limits are set in the check.
 
-inventory:
+discovery:
  One service is created.

@@ -1103,8 +1103,9 @@ export function update_werks_trigger(werks_count, text, tooltip) {
 }
 
 function create_initial_ids(menu, what, start_url) {
-    const mega_menu_help_div = document.getElementById("popup_trigger_mega_menu_" + menu)
-        .firstChild;
+    const mega_menu_help_div = document.getElementById(
+        "popup_trigger_mega_menu_" + menu
+    ).firstChild;
     const help_div = mega_menu_help_div.childNodes[2];
 
     const l = document.createElement("span");

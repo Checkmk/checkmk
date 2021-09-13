@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cmctc import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # Table columns:
 # 0: index
 # 1: sensor type (30 = Power PSM,)
@@ -32,9 +33,11 @@ check_config_variables.append("cmctc_pcm_m_sensor_types")
 
 
 def inventory_cmctc_psm_m(info):
-    return [(line[7] + " " + line[0], None)
-            for line in info
-            if saveint(line[1]) in cmctc_pcm_m_sensor_types]
+    return [
+        (line[7] + " " + line[0], None)
+        for line in info
+        if saveint(line[1]) in cmctc_pcm_m_sensor_types
+    ]
 
 
 def check_cmctc_psm_m(item, no_params, info):
@@ -54,11 +57,11 @@ def check_cmctc_psm_m(item, no_params, info):
 
 
 check_info["cmctc_psm_m"] = {
-    'check_function': check_cmctc_psm_m,
-    'inventory_function': inventory_cmctc_psm_m,
-    'service_description': 'CMC %s',
-    'has_perfdata': True,
-    'snmp_info': (
+    "check_function": check_cmctc_psm_m,
+    "inventory_function": inventory_cmctc_psm_m,
+    "service_description": "CMC %s",
+    "has_perfdata": True,
+    "snmp_info": (
         # Base to all IO units
         ".1.3.6.1.4.1.2606.4.2",
         # Each of the up to 4 units has its own subtree
@@ -78,8 +81,9 @@ check_info["cmctc_psm_m"] = {
             "5.2.1.7",
             # warn value (used for warning state)
             "5.2.1.8",
-            #Port Desct
+            # Port Desct
             "5.2.1.3",
-        ]),
-    'snmp_scan_function': cmctc_snmp_scan_function,
+        ],
+    ),
+    "snmp_scan_function": cmctc_snmp_scan_function,
 }

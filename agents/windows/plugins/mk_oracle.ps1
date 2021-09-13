@@ -1034,14 +1034,13 @@ Function sql_recovery_status {
                  ||'|'|| dh.RECOVER
                  ||'|'|| dh.FUZZY
                  ||'|'|| dh.CHECKPOINT_CHANGE#
-                 ||'|'|| vb.STATUS
-                 ||'|'|| round((sysdate-vb.TIME)*24*60*60)
+                 ||'|'|| nvl(vb.STATUS, 'unknown')
+                 ||'|'|| nvl2(vb.TIME, round((sysdate-vb.TIME)*24*60*60), 0)
           FROM V$datafile_header dh
           JOIN v$database d on 1=1
           JOIN v$instance i on 1=1
-          JOIN v$backup vb on 1=1
+          LEFT OUTER JOIN v$backup vb on vb.file# = dh.file#
           LEFT OUTER JOIN V$PDBS vp on dh.con_id = vp.con_id
-          WHERE vb.file# = dh.file#
           ORDER BY dh.file#;
 
 '@

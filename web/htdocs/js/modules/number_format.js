@@ -12,7 +12,7 @@ function scale_factor_prefix(value, base, prefixes = ["", "k", "M", "G", "T", "P
     return [factor / base, prefix];
 }
 
-function drop_dotzero(value, digits = 2) {
+export function drop_dotzero(value, digits = 2) {
     return value.toFixed(digits).replace(/\.0+$/, "");
 }
 

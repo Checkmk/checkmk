@@ -9,32 +9,38 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mcafee_gateway import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # TODO params?
 
 
 def check_mcafee_emailgateway_smtp(item, params, info):
     total_connections, total_bytes, kernel_mode_blocked, kernel_mode_active = map(int, info[0])
-    return 0, "Total connections: %s (%s), Kernel blocked: %s, Kernel active: %s" % \
-              (total_connections, get_bytes_human_readable(total_bytes),
-               kernel_mode_blocked, kernel_mode_active)
+    return 0, "Total connections: %s (%s), Kernel blocked: %s, Kernel active: %s" % (
+        total_connections,
+        get_bytes_human_readable(total_bytes),
+        kernel_mode_blocked,
+        kernel_mode_active,
+    )
 
 
-check_info['mcafee_emailgateway_smtp'] = {
-    'inventory_function': inventory_mcafee_gateway_generic,
-    'check_function': check_mcafee_emailgateway_smtp,
-    'service_description': 'SMTP',
-    'snmp_info': (
-        '.1.3.6.1.4.1.1230.2.4.1.2.3.3',
+check_info["mcafee_emailgateway_smtp"] = {
+    "inventory_function": inventory_mcafee_gateway_generic,
+    "check_function": check_mcafee_emailgateway_smtp,
+    "service_description": "SMTP",
+    "snmp_info": (
+        ".1.3.6.1.4.1.1230.2.4.1.2.3.3",
         [
-            '1',  # smtp-total-connections
-            '2',  # smtp-total-bytes
-            '3',  # smtp-kernelmodeblocking-blocked
-            '4',  # smtp-kernelmodeblocking-active
-        ]),
-    'snmp_scan_function': scan_mcafee_emailgateway,
+            "1",  # smtp-total-connections
+            "2",  # smtp-total-bytes
+            "3",  # smtp-kernelmodeblocking-blocked
+            "4",  # smtp-kernelmodeblocking-active
+        ],
+    ),
+    "snmp_scan_function": scan_mcafee_emailgateway,
 }

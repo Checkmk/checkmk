@@ -21,6 +21,6 @@ item:
  'AnyConnect SVC' (SSL VPN Client), 'WebVPN' (clientless) or 'Summary' (summary of the
  previous items).
 
-inventory:
+discovery:
  One service is created for each type of VPN session. Additionally, one summary service
  is created.

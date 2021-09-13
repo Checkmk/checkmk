@@ -82,8 +82,7 @@ const NagiosCore::Contact *NagiosCore::find_contact(const std::string &name) {
 }
 
 bool NagiosCore::host_has_contact(const Host *host, const Contact *contact) {
-    return is_authorized_for(serviceAuthorization(), toImpl(contact),
-                             toImpl(host), nullptr);
+    return is_authorized_for_hst(toImpl(contact), toImpl(host));
 }
 
 bool NagiosCore::is_contact_member_of_contactgroup(const ContactGroup *group,
@@ -125,22 +124,19 @@ std::vector<Command> NagiosCore::commands() const {
     return commands;
 }
 
-std::vector<DowntimeData> NagiosCore::downtimes_for_host(
-    const Host *host) const {
+std::vector<DowntimeData> NagiosCore::downtimes(const Host *host) const {
     return downtimes_for_object(toImpl(host), nullptr);
 }
 
-std::vector<DowntimeData> NagiosCore::downtimes_for_service(
-    const Service *service) const {
+std::vector<DowntimeData> NagiosCore::downtimes(const Service *service) const {
     return downtimes_for_object(toImpl(service)->host_ptr, toImpl(service));
 }
 
-std::vector<CommentData> NagiosCore::comments_for_host(const Host *host) const {
+std::vector<CommentData> NagiosCore::comments(const Host *host) const {
     return comments_for_object(toImpl(host), nullptr);
 }
 
-std::vector<CommentData> NagiosCore::comments_for_service(
-    const Service *service) const {
+std::vector<CommentData> NagiosCore::comments(const Service *service) const {
     return comments_for_object(toImpl(service)->host_ptr, toImpl(service));
 }
 
@@ -191,11 +187,11 @@ Encoding NagiosCore::dataEncoding() { return _data_encoding; }
 size_t NagiosCore::maxResponseSize() { return _limits._max_response_size; }
 size_t NagiosCore::maxCachedMessages() { return _limits._max_cached_messages; }
 
-AuthorizationKind NagiosCore::serviceAuthorization() const {
+ServiceAuthorization NagiosCore::serviceAuthorization() const {
     return _authorization._service;
 }
 
-AuthorizationKind NagiosCore::groupAuthorization() const {
+GroupAuthorization NagiosCore::groupAuthorization() const {
     return _authorization._group;
 }
 
@@ -279,11 +275,11 @@ std::vector<DowntimeData> NagiosCore::downtimes_for_object(
                 dt->_author_name,
                 dt->_comment,
                 false,
-                std::chrono::system_clock::from_time_t(dt->_entry_time),
-                std::chrono::system_clock::from_time_t(dt->_start_time),
-                std::chrono::system_clock::from_time_t(dt->_end_time),
+                dt->_entry_time,
+                dt->_start_time,
+                dt->_end_time,
                 dt->_fixed != 0,
-                std::chrono::seconds(dt->_duration),
+                dt->_duration,
                 0,
                 dt->_type != 0,
             });
@@ -297,10 +293,9 @@ std::vector<CommentData> NagiosCore::comments_for_object(
     std::vector<CommentData> result;
     for (const auto &[id, co] : _comments) {
         if (co->_host == h && co->_service == s) {
-            result.push_back(
-                {co->_id, co->_author_name, co->_comment,
-                 static_cast<uint32_t>(co->_entry_type),
-                 std::chrono::system_clock::from_time_t(co->_entry_time)});
+            result.push_back({co->_id, co->_author_name, co->_comment,
+                              static_cast<uint32_t>(co->_entry_type),
+                              co->_entry_time});
         }
     }
     return result;

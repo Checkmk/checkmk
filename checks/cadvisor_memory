@@ -4,12 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.mem import *  # pylint: disable=wildcard-import,unused-wildcard-import
-import json
 
 
 def parse_cadvisor_memory(info):
@@ -50,25 +51,24 @@ def check_cadvisor_memory(_item, _params, parsed):
         else:
             memory_total = parsed["memory_machine"]
             infotext_extra = " (Available Machine Memory)"
-    status, infotext, perfdata = check_memory_element("Usage",
-                                                      memory_used,
-                                                      memory_total, (None, None),
-                                                      metric_name="mem_used")
+    status, infotext, perfdata = check_memory_element(
+        "Usage", memory_used, memory_total, (None, None), metric_name="mem_used"
+    )
     infotext += infotext_extra
     yield status, infotext, perfdata
 
     # the cAdvisor does not provide available (total) memory of the following
     yield _output_single_memory_stat(parsed["memory_rss"], "Resident size: %s kB")
 
-    yield _output_single_memory_stat(parsed["memory_cache"], "Cache: %s kB", 'mem_lnx_cached')
+    yield _output_single_memory_stat(parsed["memory_cache"], "Cache: %s kB", "mem_lnx_cached")
 
-    yield _output_single_memory_stat(parsed["memory_swap"], "Swap: %s kB", 'swap_used')
+    yield _output_single_memory_stat(parsed["memory_swap"], "Swap: %s kB", "swap_used")
 
 
 check_info["cadvisor_memory"] = {
-    'parse_function': parse_cadvisor_memory,
-    'inventory_function': discover_single,
-    'check_function': check_cadvisor_memory,
-    'service_description': 'Memory',
-    'has_perfdata': True,
+    "parse_function": parse_cadvisor_memory,
+    "inventory_function": discover_single,
+    "check_function": check_cadvisor_memory,
+    "service_description": "Memory",
+    "has_perfdata": True,
 }

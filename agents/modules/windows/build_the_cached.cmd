@@ -6,7 +6,7 @@
 :: rebuild is based on the git hash
 :: If required file exists in cache, then the file will be copied to the artifact folder
 :: otherwise file will be build, uploaded to cache and copied to artifact folder
-:: Name format 'python-<version>.<subversion>_<hash>_<id>.zip
+:: Name format 'python-<version>.<subversion>_<hash>_<id>.cab
 :: where <hash> is pretty formatted output from git log .
 ::       <id> is fixed number(BUILD_NUM)
 ::       <version> is either 3.4 or 3.8
@@ -45,7 +45,7 @@ if "%git_hash%" == "" Powershell Write-Host "Git directory is ABSENT. Using PRED
 rem remove quotes from the result
 set git_hash=%git_hash:'=%
 
-set fname=python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.zip
+set fname=python-%version%.%subversion%_%git_hash%_%BUILD_NUM%.cab
 powershell Write-Host "Downloading %fname% from cache..." -Foreground cyan
 curl -sSf --user %creds% -o %fname%  %url%/%fname% > nul 2>&1
 IF /I "!ERRORLEVEL!" NEQ "0" (
@@ -59,15 +59,15 @@ IF /I "!ERRORLEVEL!" NEQ "0" (
   )
 
   powershell Write-Host "Checking the result of the build..." -Foreground cyan
-  if NOT exist %arti_dir%\python-%version%.zip (
-    powershell -Write-Host "The file %arti_dir%\python-%version%.zip absent, build failed" -Foreground red
+  if NOT exist %arti_dir%\python-%version%.cab (
+    powershell -Write-Host "The file %arti_dir%\python-%version%.cab absent, build failed" -Foreground red
     exit /B 14
   )
   powershell Write-Host "Build successful" -Foreground green
 
   :: UPLOADING to the Nexus Cache:
-  powershell Write-Host "Uploading to cache %arti_dir%\python-%version%.zip ... %fname% ..." -Foreground cyan
-  copy %arti_dir%\python-%version%.zip %fname%
+  echo Uploading to cache %arti_dir%\python-%version%.cab ... %fname% ...
+  copy %arti_dir%\python-%version%.cab %fname%
 
   powershell Write-Host "To be executed: curl -sSf --user creds --upload-file %fname% %url%" -foreground white
   curl -sSf --user %creds% --upload-file %fname% %url%
@@ -81,9 +81,9 @@ IF /I "!ERRORLEVEL!" NEQ "0" (
     exit /B 0
   )
 ) else (
-  :: Most probable case. We have the python zip in the cache, just copy cached file to the artifact folder
+  :: Most probable case. We have the python cab in the cache, just copy cached file to the artifact folder
   powershell Write-Host "The file exists in cache. Moving cached file to artifact" -Foreground green 
-  move /Y %fname% %arti_dir%/python-%version%.zip
+  move /Y %fname% %arti_dir%/python-%version%.cab
   powershell Write-Host "[+] Downloaded successfully" -Foreground green
   exit /b 0
 )

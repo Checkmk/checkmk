@@ -4,15 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 from datetime import datetime, timedelta
+
+import pytest
 
 import cmk.utils.store as store
 from cmk.utils.license_usage.samples import (
-    LicenseUsageSample,
     LicenseUsageExtensions,
     LicenseUsageHistoryDump,
     LicenseUsageHistoryDumpVersion,
+    LicenseUsageSample,
 )
 
 import cmk.base.license_usage as license_usage
@@ -28,7 +29,9 @@ _license_usage_sample_example = LicenseUsageSample(
     num_hosts_excluded=0,
     num_services=1000,
     num_services_excluded=0,
-    extensions=LicenseUsageExtensions(ntop=False,),
+    extensions=LicenseUsageExtensions(
+        ntop=False,
+    ),
 )
 
 
@@ -56,8 +59,10 @@ def test_update_history_de_serialize(monkeypatch):
                 num_hosts_excluded=0,
                 num_services=500,
                 num_services_excluded=0,
-                extensions=LicenseUsageExtensions(ntop=False,),
-            )
+                extensions=LicenseUsageExtensions(
+                    ntop=False,
+                ),
+            ),
         ],
     )
 
@@ -73,10 +78,13 @@ def test_update_history_de_serialize(monkeypatch):
     assert history_dump.history == deserialized_history_dump.history
     assert len(deserialized_history_dump.history) == 2
 
-    for (version, edition, platform, sample_time, num_hosts, num_services), sample in zip([
-        ("", "", "", 150, 100, 1000),
-        ("Foo", "bär", "Test 123 - tßßßzz", 75, 50, 500),
-    ], deserialized_history_dump.history):
+    for (version, edition, platform, sample_time, num_hosts, num_services), sample in zip(
+        [
+            ("", "", "", 150, 100, 1000),
+            ("Foo", "bär", "Test 123 - tßßßzz", 75, 50, 500),
+        ],
+        deserialized_history_dump.history,
+    ):
         assert sample.version == version
         assert sample.edition == edition
         assert sample.platform == platform
@@ -127,7 +135,9 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 num_hosts_excluded=0,
                 num_services=30,
                 num_services_excluded=0,
-                extensions=LicenseUsageExtensions(ntop=False,),
+                extensions=LicenseUsageExtensions(
+                    ntop=False,
+                ),
             ),
             LicenseUsageSample(
                 version="",
@@ -140,7 +150,9 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 num_hosts_excluded=0,
                 num_services=20,
                 num_services_excluded=0,
-                extensions=LicenseUsageExtensions(ntop=False,),
+                extensions=LicenseUsageExtensions(
+                    ntop=False,
+                ),
             ),
             LicenseUsageSample(
                 version="",
@@ -153,7 +165,9 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
                 num_hosts_excluded=0,
                 num_services=10,
                 num_services_excluded=0,
-                extensions=LicenseUsageExtensions(ntop=False,),
+                extensions=LicenseUsageExtensions(
+                    ntop=False,
+                ),
             ),
         ],
     ).serialize()
@@ -168,12 +182,15 @@ def test_update_history__create_or_update_history_dump(monkeypatch):
     assert history_dump.VERSION == "1.1"
     assert len(history_dump.history) == 4
 
-    for (sample_time, num_hosts, num_services), sample in zip([
-        (150, 100, 1000),
-        (3, 3, 30),
-        (2, 2, 20),
-        (1, 1, 10),
-    ], history_dump.history):
+    for (sample_time, num_hosts, num_services), sample in zip(
+        [
+            (150, 100, 1000),
+            (3, 3, 30),
+            (2, 2, 20),
+            (1, 1, 10),
+        ],
+        history_dump.history,
+    ):
         assert sample.version == ""
         assert sample.edition == ""
         assert sample.platform == ""
@@ -189,8 +206,9 @@ def test_update_history__may_update_successful(monkeypatch):
     fake_now = datetime(1970, 1, 2, 12, 0, 0)
     fake_next_run_ts = int((fake_now - timedelta(hours=1)).timestamp())
 
-    monkeypatch.setattr(license_usage, "_last_update_try_ts",
-                        (fake_now - timedelta(hours=1)).timestamp())
+    monkeypatch.setattr(
+        license_usage, "_last_update_try_ts", (fake_now - timedelta(hours=1)).timestamp()
+    )
 
     # Check each condition
     assert not (fake_now.timestamp() - license_usage._last_update_try_ts) < 600
@@ -204,8 +222,9 @@ def test_update_history__may_update_try_not_10min_ago(monkeypatch):
     fake_now = datetime(1970, 1, 2, 12, 0, 0)
     fake_next_run_ts = int((fake_now - timedelta(hours=1)).timestamp())
 
-    monkeypatch.setattr(license_usage, "_last_update_try_ts",
-                        (fake_now - timedelta(minutes=5)).timestamp())
+    monkeypatch.setattr(
+        license_usage, "_last_update_try_ts", (fake_now - timedelta(minutes=5)).timestamp()
+    )
 
     # Check each condition
     assert (fake_now.timestamp() - license_usage._last_update_try_ts) < 600
@@ -219,8 +238,9 @@ def test_update_history__may_update_next_run_not_reached(monkeypatch):
     fake_now = datetime(1970, 1, 2, 12, 0, 0)
     fake_next_run_ts = int((fake_now + timedelta(hours=1)).timestamp())
 
-    monkeypatch.setattr(license_usage, "_last_update_try_ts",
-                        (fake_now - timedelta(hours=1)).timestamp())
+    monkeypatch.setattr(
+        license_usage, "_last_update_try_ts", (fake_now - timedelta(hours=1)).timestamp()
+    )
 
     # Check each condition
     assert not (fake_now.timestamp() - license_usage._last_update_try_ts) < 600
@@ -231,15 +251,18 @@ def test_update_history__may_update_next_run_not_reached(monkeypatch):
 
 
 @pytest.mark.parametrize(
-    "num_hosts, num_hosts_excluded, num_services, num_services_excluded, returns_sample", [
+    "num_hosts, num_hosts_excluded, num_services, num_services_excluded, returns_sample",
+    [
         (0, 0, 0, 0, False),
         (1, 0, 0, 0, True),
         (0, 1, 0, 0, True),
         (0, 0, 1, 0, True),
         (0, 0, 0, 1, True),
-    ])
-def test__create_sample(monkeypatch, num_hosts, num_hosts_excluded, num_services,
-                        num_services_excluded, returns_sample):
+    ],
+)
+def test__create_sample(
+    monkeypatch, num_hosts, num_hosts_excluded, num_services, num_services_excluded, returns_sample
+):
     def _mock_livestatus(query):
         if "GET hosts" in query:
             return num_hosts, num_hosts_excluded

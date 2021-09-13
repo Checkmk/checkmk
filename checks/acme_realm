@@ -26,20 +26,24 @@ def check_acme_realm(item, params, info):
     for name, inbound, outbound, total_inbound, total_outbound, state in info:
         if item == name:
             dev_state, dev_state_readable = map_states[state]
-            return dev_state, "Status: %s, Inbound: %s/%s, Outbound: %s/%s" % \
-                   (dev_state_readable, inbound, total_inbound,
-                    outbound, total_outbound),\
-                   [("inbound",  int(inbound),  None, None, 0, int(total_inbound)),
-                    ("outbound", int(outbound), None, None, 0, int(total_outbound))]
+            return (
+                dev_state,
+                "Status: %s, Inbound: %s/%s, Outbound: %s/%s"
+                % (dev_state_readable, inbound, total_inbound, outbound, total_outbound),
+                [
+                    ("inbound", int(inbound), None, None, 0, int(total_inbound)),
+                    ("outbound", int(outbound), None, None, 0, int(total_outbound)),
+                ],
+            )
 
 
-check_info['acme_realm'] = {
-    'inventory_function': inventory_acme_realm,
-    'check_function': check_acme_realm,
-    'service_description': 'Realm %s',
-    'has_perfdata': True,
-    'snmp_info': (
-        '.1.3.6.1.4.1.9148.3.2.1.2.4.1',
+check_info["acme_realm"] = {
+    "inventory_function": inventory_acme_realm,
+    "check_function": check_acme_realm,
+    "service_description": "Realm %s",
+    "has_perfdata": True,
+    "snmp_info": (
+        ".1.3.6.1.4.1.9148.3.2.1.2.4.1",
         [
             "2",  # APSYSMGMT-MIB::apSigRealmStatsRealmName
             "3",  # APSYSMGMT-MIB::apSigRealmStatsCurrentActiveSessionsInbound
@@ -47,6 +51,7 @@ check_info['acme_realm'] = {
             "7",  # APSYSMGMT-MIB::apSigRealmStatsTotalSessionsInbound
             "11",  # APSYSMGMT-MIB::apSigRealmStatsTotalSessionsOutbound
             "30",  # APSYSMGMT-MIB::apSigRealmStatsRealmStatus
-        ]),
-    'snmp_scan_function': scan_acme,
+        ],
+    ),
+    "snmp_scan_function": scan_acme,
 }

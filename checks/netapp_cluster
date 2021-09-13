@@ -23,8 +23,14 @@
 def inventory_netapp_cluster(info):
     inventory = []
     if info:
-        cfSettings, _cfState, _cfCannotTakeoverCause, _cfPartnerStatus, cfPartnerName, _cfInterconnectStatus = info[
-            0]
+        (
+            cfSettings,
+            _cfState,
+            _cfCannotTakeoverCause,
+            _cfPartnerStatus,
+            cfPartnerName,
+            _cfInterconnectStatus,
+        ) = info[0]
         # only inventorizes clusters that dont have takeover disabled.
         if int(cfSettings) not in [1, 3]:
             # Include the cluster partner name in inventory (value added data)
@@ -34,8 +40,14 @@ def inventory_netapp_cluster(info):
 
 def check_netapp_cluster(item, _no_params, info):
 
-    cfSettings, cfState, cfCannotTakeoverCause, cfPartnerStatus, cfPartnerName, cfInterconnectStatus = info[
-        0]
+    (
+        cfSettings,
+        cfState,
+        cfCannotTakeoverCause,
+        cfPartnerStatus,
+        cfPartnerName,
+        cfInterconnectStatus,
+    ) = info[0]
 
     # first handle all critical states.
     # "dead" and "thisNodeDead"
@@ -58,13 +70,15 @@ def check_netapp_cluster(item, _no_params, info):
 
     # OK - Cluster enabled, Cluster can takeover and the partner is OK and the
     # infiniband interconnect is working.
-    if all((
+    if all(
+        (
             cfSettings == "2",
             cfState == "2",
             cfCannotTakeoverCause == "1",
             cfPartnerStatus == "2",
             cfInterconnectStatus == "4",
-    )):
+        )
+    ):
         return (0, "Cluster Status is OK")
 
     # if we reach here, we hit an unknown case.
@@ -72,21 +86,21 @@ def check_netapp_cluster(item, _no_params, info):
 
 
 check_info["netapp_cluster"] = {
-    'check_function': check_netapp_cluster,
-    'inventory_function': inventory_netapp_cluster,
-    'service_description': 'metrocluster_w_%s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.789.1.2.3',
+    "check_function": check_netapp_cluster,
+    "inventory_function": inventory_netapp_cluster,
+    "service_description": "metrocluster_w_%s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.789.1.2.3",
         [
-            '1',  # cfSettings
-            '2',  # cfState
-            '3',  # cfCannotTakeoverCause
-            '4',  # cfPartnerStatus
-            '6',  # cfPartnerName
-            '8',  # cfInterconnectStatus
-        ]),
+            "1",  # cfSettings
+            "2",  # cfState
+            "3",  # cfCannotTakeoverCause
+            "4",  # cfPartnerStatus
+            "6",  # cfPartnerName
+            "8",  # cfInterconnectStatus
+        ],
+    ),
     # Run inventory only on Data Ontap OS with cluster enabled
-    'snmp_scan_function': lambda oid: "netapp release" in oid(".1.3.6.1.2.1.1.1.0").lower() and \
-                            oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.789"),
-
+    "snmp_scan_function": lambda oid: "netapp release" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    and oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.789"),
 }

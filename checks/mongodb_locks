@@ -35,7 +35,7 @@ def check_mongodb_locks(_no_item, params, info):
         ]
 
 
-check_info['mongodb_locks'] = {
+check_info["mongodb_locks"] = {
     "inventory_function": inventory_mongodb_locks,
     "check_function": check_mongodb_locks,
     "service_description": "MongoDB Locks",

@@ -4,13 +4,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# fmt: off
 # pylint: disable=protected-access,redefined-outer-name
 from __future__ import print_function
+
+import locale
 import os
 import re
 import sys
-import locale
-import pytest  # type: ignore[import]
+
+import pytest
 from utils import import_module
 
 
@@ -517,7 +520,7 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
         (
             __file__,
             [
-                ('W', re.compile(u'^[^u]*W.*I match only myself', re.UNICODE), [], []),
+                ('W', re.compile(u'^[^u]*W.*I mätch önly mysélf 🧚', re.UNICODE), [], []),
                 ('I', re.compile(u'.*', re.UNICODE), [], []),
             ],
             {
@@ -528,7 +531,7 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
             },
             [
                 u"[[[%s]]]\n" % __file__,
-                u"W                 ('W', re.compile(u'^[^u]*W.*I match only myself', re.UNICODE), [], []),\n"
+                u"W                 ('W', re.compile(u'^[^u]*W.*I m\xe4tch \xf6nly mys\xe9lf \U0001f9da', re.UNICODE), [], []),\n"
             ],
         ),
         (
@@ -558,7 +561,7 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
         (
             __file__,
             [
-                ('C', re.compile(u'äöü', re.UNICODE), [], []),
+                ('C', re.compile(u'🐉', re.UNICODE), [], []),
                 ('I', re.compile(u'.*', re.UNICODE), [], []),
             ],
             {
@@ -567,9 +570,9 @@ class MockStdout(object):  # pylint: disable=useless-object-inheritance
             {
                 'offset': 0,
             },
-            [  # match umlauts
+            [
                 u"[[[%s]]]\n" % __file__,
-                u"C                 ('C', re.compile(u'\xe4\xf6\xfc', re.UNICODE), [], []),\n",
+                u"C                 ('C', re.compile(u'\U0001f409', re.UNICODE), [], []),\n",
             ],
         ),
         ('locked door', [], {}, {}, [u"[[[locked door:cannotopen]]]\n"]),
@@ -584,7 +587,6 @@ def test_process_logfile(mk_logwatch, monkeypatch, logfile, patterns, opt_raw, s
     monkeypatch.setattr(sys, 'stdout', MockStdout())
     header, warning_and_errors = mk_logwatch.process_logfile(section, state, False)
     output = [header] + warning_and_errors
-    assert all(isinstance(item, text_type()) for item in output)
     assert output == expected_output
     if len(output) > 1:
         assert isinstance(state['offset'], int)

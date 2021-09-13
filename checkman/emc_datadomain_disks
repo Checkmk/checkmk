@@ -14,5 +14,5 @@ description:
 item:
  "ID of the enclosure" - "ID of the hard disk"
 
-inventory:
+discovery:
  One service is created for each disk found.

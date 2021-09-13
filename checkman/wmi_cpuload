@@ -16,6 +16,6 @@ description:
  the 15 minute average processor queue length has to be 8 processes or
  longer.
 
-inventory:
+discovery:
  One service is created.
 

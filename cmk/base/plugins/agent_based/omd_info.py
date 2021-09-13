@@ -5,8 +5,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Dict, List
-from .agent_based_api.v1 import register, HostLabel
-from .agent_based_api.v1.type_defs import StringTable, HostLabelGenerator
+
+from .agent_based_api.v1 import HostLabel, register
+from .agent_based_api.v1.type_defs import HostLabelGenerator, StringTable
 
 Section = Dict[str, Dict[str, Dict[str, str]]]
 

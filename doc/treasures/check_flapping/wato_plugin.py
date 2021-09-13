@@ -13,7 +13,7 @@ register_rule("activechecks",
                     help=_("Checks wether or not one or several services changed their states "
                            "too often in the given timeperiod."),
                     elements=[
-                        TextUnicode(title=_("Name"),
+                        TextInput(title=_("Name"),
                                     help=_("Will be used in the service description"),
                                     allow_empty=False),
                         ListOfStrings(

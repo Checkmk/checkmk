@@ -15,12 +15,12 @@ def inv_k8s_pod_info(info, inventory_tree, status_data_tree):
     status_node = status_data_tree.get_dict(path)
 
     for key, value in sorted(parsed.items()):
-        if key in {'node', 'host_network', 'dns_policy'}:
+        if key in {"node", "host_network", "dns_policy"}:
             inv_node[key] = value
         else:
             status_node[key] = value
 
 
-inv_info['k8s_pod_info'] = {
-    'inv_function': inv_k8s_pod_info,
+inv_info["k8s_pod_info"] = {
+    "inv_function": inv_k8s_pod_info,
 }

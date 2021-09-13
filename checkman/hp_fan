@@ -11,5 +11,5 @@ description:
 item:
  The tray index and the fan index, e.g. 0/3
 
-inventory:
+discovery:
  One service is created for each fan.

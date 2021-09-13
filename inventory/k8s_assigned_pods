@@ -12,12 +12,14 @@ def inv_k8s_assigned_pods(info, _inventory_tree, status_data_tree):
     path = "software.applications.kubernetes.assigned_pods:"
     status_node = status_data_tree.get_list(path)
 
-    for pod_name in sorted(parsed['names']):
-        status_node.append({
-            'name': pod_name,
-        })
+    for pod_name in sorted(parsed["names"]):
+        status_node.append(
+            {
+                "name": pod_name,
+            }
+        )
 
 
-inv_info['k8s_assigned_pods'] = {
-    'inv_function': inv_k8s_assigned_pods,
+inv_info["k8s_assigned_pods"] = {
+    "inv_function": inv_k8s_assigned_pods,
 }

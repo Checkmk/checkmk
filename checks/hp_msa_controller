@@ -9,16 +9,19 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.cpu_util import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.diskstat import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<hp_msa_controller>>>
 # controller-statistics 1 durable-id controller_A
 # controller-statistics 1 cpu-load 3
@@ -57,8 +60,8 @@ from cmk.base.check_legacy_includes.hp_msa import *  # pylint: disable=wildcard-
 #   |                           main check                                 |
 #   '----------------------------------------------------------------------'
 
-factory_settings['hp_msa_controller'] = {
-    'levels': (80.0, 90.0),
+factory_settings["hp_msa_controller"] = {
+    "levels": (80.0, 90.0),
 }
 
 
@@ -74,16 +77,16 @@ def check_hp_msa_controller_cpu(item, params, parsed):
         return check_cpu_util(float(parsed[item]["cpu-load"]), params)
 
 
-check_info['hp_msa_controller'] = {
-    'parse_function': parse_hp_msa,
-    'inventory_function': inventory_hp_msa_controller_cpu,
-    'check_function': check_hp_msa_controller_cpu,
-    'service_description': 'CPU Utilization %s',
-    'has_perfdata': True,
-    'group': 'cpu_utilization_multiitem',
+check_info["hp_msa_controller"] = {
+    "parse_function": parse_hp_msa,
+    "inventory_function": inventory_hp_msa_controller_cpu,
+    "check_function": check_hp_msa_controller_cpu,
+    "service_description": "CPU Utilization %s",
+    "has_perfdata": True,
+    "group": "cpu_utilization_multiitem",
 }
 
-#.
+# .
 #   .--controller IO-------------------------------------------------------.
 #   |                       _             _ _             ___ ___          |
 #   |        ___ ___  _ __ | |_ _ __ ___ | | | ___ _ __  |_ _/ _ \         |
@@ -93,10 +96,10 @@ check_info['hp_msa_controller'] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-check_info['hp_msa_controller.io'] = {
-    'inventory_function': inventory_hp_msa_io,
-    'check_function': check_hp_msa_io,
-    'service_description': 'Controller IO %s',
-    'has_perfdata': True,
-    'group': 'diskstat',
+check_info["hp_msa_controller.io"] = {
+    "inventory_function": inventory_hp_msa_io,
+    "check_function": check_hp_msa_io,
+    "service_description": "Controller IO %s",
+    "has_perfdata": True,
+    "group": "diskstat",
 }

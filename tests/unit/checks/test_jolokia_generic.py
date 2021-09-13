@@ -4,22 +4,29 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest  # type: ignore[import]
-from testlib import Check  # type: ignore[import]
-from checktestlib import assertDiscoveryResultsEqual, DiscoveryResult
+import pytest
+
+from tests.testlib import Check
+
+from .checktestlib import assertDiscoveryResultsEqual, DiscoveryResult
 
 pytestmark = pytest.mark.checks
 
-info = [[u'PingFederate-CUK-CDI', u'TotalRequests', u'64790', u'number'],
-        [u'PingFederate-CUK-CDI', u'MaxRequestTime', u'2649', u'rate']]
+info = [
+    ["PingFederate-CUK-CDI", "TotalRequests", "64790", "number"],
+    ["PingFederate-CUK-CDI", "MaxRequestTime", "2649", "rate"],
+]
 
 
-@pytest.mark.parametrize("check,lines,expected_result", [
-    ('jolokia_generic', info, [(u'PingFederate-CUK-CDI TotalRequests', {})]),
-    ('jolokia_generic.rate', info, [(u'PingFederate-CUK-CDI MaxRequestTime', {})]),
-])
+@pytest.mark.parametrize(
+    "check,lines,expected_result",
+    [
+        ("jolokia_generic", info, [("PingFederate-CUK-CDI TotalRequests", {})]),
+        ("jolokia_generic.rate", info, [("PingFederate-CUK-CDI MaxRequestTime", {})]),
+    ],
+)
 def test_jolokia_generic_discovery(check, lines, expected_result):
-    parsed = Check('jolokia_generic').run_parse(lines)
+    parsed = Check("jolokia_generic").run_parse(lines)
 
     check = Check(check)
     discovered = check.run_discovery(parsed)

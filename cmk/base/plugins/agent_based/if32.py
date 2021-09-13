@@ -4,13 +4,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import List
-from .agent_based_api.v1 import (
-    exists,
-    OIDBytes,
-    register,
-    SNMPTree,
-    type_defs,
-)
+
+from .agent_based_api.v1 import exists, OIDBytes, register, SNMPTree, type_defs
 from .utils import interfaces
 
 
@@ -44,7 +39,9 @@ def parse_if(string_table: List[type_defs.StringByteTable]) -> interfaces.Sectio
             out_qlen=interfaces.saveint(line[15]),
             alias=str(line[1]),
             phys_address=line[16],
-        ) for line in string_table[0] if interfaces.saveint(line[0]) > 0
+        )
+        for line in string_table[0]
+        if interfaces.saveint(line[0]) > 0
     ]
 
 

@@ -229,7 +229,8 @@ std::pair<std::string, wtools::WmiStatus> GenerateWmiTable(
         XLOG::l.e("WMI can't impersonate '{}'", id());
     }
     auto [ret, status] =
-        wrapper.queryTable(columns_table, wmi_object, separator);
+        wrapper.queryTable(columns_table, wmi_object, separator,
+                           cfg::groups::global.getWmiTimeout());
 
     tl.writeLog(ret.size());
 

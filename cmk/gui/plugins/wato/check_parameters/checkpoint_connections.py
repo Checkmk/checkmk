@@ -20,8 +20,10 @@ def _parameter_valuespec_checkpoint_connections() -> Transform:
                 (
                     "levels",
                     Tuple(
-                        help=_("This rule sets limits to the current number of connections through "
-                               "a Checkpoint firewall."),
+                        help=_(
+                            "This rule sets limits to the current number of connections through "
+                            "a Checkpoint firewall."
+                        ),
                         title=_("Maximum number of firewall connections"),
                         elements=[
                             Integer(
@@ -52,4 +54,5 @@ rulespec_registry.register(
         group=RulespecGroupCheckParametersApplications,
         parameter_valuespec=_parameter_valuespec_checkpoint_connections,
         title=lambda: _("Checkpoint Firewall Connections"),
-    ))
+    )
+)

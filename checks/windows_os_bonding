@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.bonding import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # <<<windows_os_bonding:sep(58)>>>
 # Team Name: LAN
 # Bonding Mode: Dynamic
@@ -29,7 +30,7 @@ from cmk.base.check_legacy_includes.bonding import *  # pylint: disable=wildcard
 # Slave Speed: 10 Gbps
 # Slave MAC address: 18-A9-9B-9F-AD-2A
 
-factory_settings['bonding_default_levels'] = BONDING_CHECK_DEFAULT_PARAMETERS
+factory_settings["bonding_default_levels"] = BONDING_CHECK_DEFAULT_PARAMETERS
 
 
 def parse_windows_os_bonding(info):
@@ -58,7 +59,7 @@ def parse_windows_os_bonding(info):
     return bonds
 
 
-check_info['windows_os_bonding'] = {
+check_info["windows_os_bonding"] = {
     "parse_function": parse_windows_os_bonding,
     "check_function": check_bonding,
     "inventory_function": inventory_bonding,

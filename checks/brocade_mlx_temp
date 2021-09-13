@@ -9,18 +9,21 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.temperature import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 factory_settings["brocade_mlx_temperature_default_levels"] = {"levels": (105, 110)}
 
 
 def parse_brocade_mlx_temp(info):
     parsed = {}
     for temp_descr, temp_value in info:
-        if temp_value and temp_value != '0':
-            item = temp_descr.replace("temperature", "")\
-                    .replace("module", "Module")\
-                    .replace("sensor", "Sensor")\
-                    .replace(",", "")\
-                    .strip()
+        if temp_value and temp_value != "0":
+            item = (
+                temp_descr.replace("temperature", "")
+                .replace("module", "Module")
+                .replace("sensor", "Sensor")
+                .replace(",", "")
+                .strip()
+            )
             parsed[item] = float(temp_value) * 0.5
     return parsed
 
@@ -44,7 +47,7 @@ check_info["brocade_mlx_temp"] = {
     "check_function": check_brocade_mlx_temp,
     "inventory_function": inventory_brocade_mlx_temp,
     "service_description": "Temperature %s",
-    "snmp_info": ('.1.3.6.1.4.1.1991.1.1.2.13.1.1', [3, 4]),  # descr, temperature
+    "snmp_info": (".1.3.6.1.4.1.1991.1.1.2.13.1.1", [3, 4]),  # descr, temperature
     "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1."),
     "has_perfdata": True,
     "default_levels_variable": "brocade_mlx_temperature_default_levels",

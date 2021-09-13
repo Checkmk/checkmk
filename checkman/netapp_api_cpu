@@ -15,6 +15,6 @@ description:
 item:
  The name of the cluster node
 
-inventory:
+discovery:
  One service is created.
 

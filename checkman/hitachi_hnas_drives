@@ -17,6 +17,6 @@ description:
  All stati except "Online" and "Unknown" trigger a {CRIT} state of
  the service.  "Online" triggers {OK} and "Unknown" triggers {UNKNOWN}
 
-inventory:
+discovery:
  One service for each drive.
 

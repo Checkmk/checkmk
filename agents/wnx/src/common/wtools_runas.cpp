@@ -502,14 +502,15 @@ bool GetUserHandlePredefinedUser(HANDLE& user_handle,
     auto logged_in = LogonUser(
         user.data(), domain.empty() ? nullptr : domain.c_str(), password.data(),
         LOGON32_LOGON_INTERACTIVE, LOGON32_PROVIDER_WINNT50, &user_handle);
-    XLOG::l.t("LogonUser {}", ::GetLastError());
     if ((FALSE == logged_in) || wtools::IsBadHandle(user_handle)) {
         XLOG::l("Error logging in as '{}' [{}]", wtools::ToUtf8(user_name),
                 ::GetLastError());
         return false;
     }
 
-    if (!DupeHandle(user_handle)) LogDupeError(XLOG_FLINE + " !!!");
+    if (!DupeHandle(user_handle)) {
+        LogDupeError(XLOG_FLINE + " !!!");
+    }
 
     return true;
 }
@@ -518,9 +519,11 @@ bool LoadProfile(HANDLE user_handle, PROFILEINFO& profile) {
     EnablePrivilege(SE_RESTORE_NAME);
     EnablePrivilege(SE_BACKUP_NAME);
     auto profile_loaded = ::LoadUserProfile(user_handle, &profile);
-    XLOG::t("LoadUserProfile [{}]",
-            profile_loaded == TRUE ? 0 : ::GetLastError());
-    return profile_loaded == TRUE;
+    if (profile_loaded != TRUE) {
+        XLOG::t("LoadUserProfile failed with error [{}]", ::GetLastError());
+        return false;
+    }
+    return true;
 }
 
 bool GetUserHandle(AppSettings& settings, BOOL& profile_loaded,
@@ -681,6 +684,20 @@ static void SetAffinityMask(HANDLE process,
     if (ret == FALSE) XLOG::l.bp(XLOG_FLINE + " hit2!");
 }
 
+namespace {
+std::wstring GetUserHomeDir(HANDLE token) {
+    constexpr size_t len{512};
+    wchar_t buf[len];
+    DWORD sz = len - 1;
+
+    if (::GetUserProfileDirectoryW(token, buf, &sz) == TRUE) {
+        return buf;
+    }
+    XLOG::d("Fail to get user profile [{}]", ::GetLastError());
+    return cma::tools ::win::GetSomeSystemFolder(FOLDERID_Public);
+}
+}  // namespace
+
 bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
     // Launching as one of:
     // 1. System Account
@@ -709,15 +726,21 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
     auto* environment = MakeEnvironment(settings.hUser);
     ON_OUT_OF_SCOPE(if (environment)::DestroyEnvironmentBlock(environment));
 
-    if (nullptr != environment) start_flags |= CREATE_UNICODE_ENVIRONMENT;
-    XLOG::l("CreateEnvironmentBlock [{}]", ::GetLastError());
+    if (nullptr != environment) {
+        start_flags |= CREATE_UNICODE_ENVIRONMENT;
+    }
 
-    if (settings.disable_file_redirection) krnl::DisableFileRedirection();
+    if (settings.disable_file_redirection) {
+        krnl::DisableFileRedirection();
+    }
 
-    if (settings.run_limited && !LimitRights(settings.hUser)) return false;
-
-    if (settings.run_elevated && !ElevateUserToken(settings.hUser))
+    if (settings.run_limited && !LimitRights(settings.hUser)) {
         return false;
+    }
+
+    if (settings.run_elevated && !ElevateUserToken(settings.hUser)) {
+        return false;
+    }
 
     auto [domain, user] = GetDomainUser(settings.user);
 
@@ -752,7 +775,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
 
         if (0 != launch_gle)
             XLOG::t(
-                "Launch (launchGLE={}) params: user=[x{:X}] path=[{}] flags=[x{:X}], pEnv=[{}], dir=[{}], stdin=[x{:X}], stdout=[x{:X}], stderr=[x{:X}]",
+                "Launch (launchGLE={}) params: user=[{}] path=[{}] flags=[x{:X}], pEnv=[{}], dir=[{}], stdin=[{}], stdout=[{}], stderr=[{}]",
                 launch_gle, settings.hUser, wtools::ToUtf8(path), start_flags,
                 environment != nullptr ? "{env}" : "{null}",
                 starting_dir.empty() ? "{null}" : ToUtf8(starting_dir),
@@ -764,6 +787,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
         {
             XLOG::l.t("Exec starting process [{}] as {}", wtools::ToUtf8(path),
                       wtools::ToUtf8(settings.user));
+            starting_dir = GetUserHomeDir(settings.hUser);
 
             if (!settings.run_limited) {
                 launched = CreateProcessWithLogonW(
@@ -779,7 +803,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
                     XLOG::t(
                         "Launch (launchGLE={:X}) params: user=[{}] "
                         "domain=[{}] "
-                        "prof=[x{:X}] ",
+                        "prof=[{}] ",
                         launch_gle, wtools::ToUtf8(user),
                         wtools::ToUtf8(domain),
                         settings.dont_load_profile ? 0 : LOGON_WITH_PROFILE);
@@ -787,7 +811,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
                         "path=[{}] flags=[x{:X}],"
                         " pEnv=[{}],"
                         " dir=[{}],"
-                        " stdin=[x{:X}], stdout=[x{:X}], stderr=[x{:X}]",
+                        " stdin=[{}], stdout=[{}], stderr=x{}]",
                         wtools::ToUtf8(path), start_flags,
                         environment != nullptr ? "{env}" : "{null}",
                         starting_dir.empty() ? "{null}"
@@ -803,15 +827,14 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
             // used. Might as well try for everyone
             if ((launched == FALSE) && !wtools::IsBadHandle(settings.hUser)) {
                 XLOG::t(
-                    "Failed CreateProcessWithLogonW - trying CreateProcessAsUser [{}]",
-                    ::GetLastError());
+                    "Failed CreateProcessWithLogonW - trying CreateProcessAsUser");
 
                 EnablePrivilege(SE_ASSIGNPRIMARYTOKEN_NAME);
                 EnablePrivilege(SE_INCREASE_QUOTA_NAME);
                 EnablePrivilege(SE_IMPERSONATE_NAME);
                 auto impersonated = ::ImpersonateLoggedOnUser(settings.hUser);
                 if (impersonated == FALSE)
-                    XLOG::l.bp("Failed to impersonate [{}]", ::GetLastError());
+                    XLOG::d("Failed to impersonate [{}]", ::GetLastError());
 
                 launched = ::CreateProcessAsUserW(
                     settings.hUser, nullptr, path.data(), nullptr, nullptr,
@@ -824,7 +847,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
                                      // original error
                 if (0 != launch_gle)
                     XLOG::t(
-                        "Launch (launchGLE={}) params: user=[x{:X}] path=[{}] pEnv=[{}], dir=[{}], stdin=[x{:X}], stdout=[x{:X}], stderr=[x{:X}]",
+                        "Launch (launchGLE={}) params: user=[{}] path=[{}] pEnv=[{}], dir=[{}], stdin=[{}], stdout=[{}], stderr=[{}]",
                         launch_gle, settings.hUser, wtools::ToUtf8(path),
                         environment != nullptr ? "{env}" : "{null}",
                         starting_dir.empty() ? "{null}"
@@ -856,7 +879,7 @@ bool StartProcess(AppSettings& settings, HANDLE command_pipe) {
                 launch_gle = 0;
 
             XLOG::d.i(
-                "Launch (launchGLE={}) params: path=[{}] user=[{}], pEnv=[{}], dir=[{}], stdin=[{:X}], stdout=[{:X}], stderr=[{:X}]",
+                "Launch (launchGLE={}) params: path=[{}] user=[{}], pEnv=[{}], dir=[{}], stdin=[{}], stdout=[{}], stderr=[{}]",
                 launch_gle, wtools::ToUtf8(path),
                 settings.hUser != nullptr ? "{non-null}" : "{null}",
                 environment != nullptr ? "{env}" : "{null}",

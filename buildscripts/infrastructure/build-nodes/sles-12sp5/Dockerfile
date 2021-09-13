@@ -1,4 +1,6 @@
-FROM registry.suse.com/suse/sles12sp5
+ARG IMAGE_SLES_12SP5
+# hadolint ignore=DL3006
+FROM ${IMAGE_SLES_12SP5}
 
 SHELL ["/bin/bash", "-c"]
 ENV PATH="/opt/bin:${PATH}"
@@ -32,7 +34,6 @@ RUN zypper ref -s \
     && zypper -n in -y --force-resolution \
     apache2-devel \
     bind-utils \
-    chrpath \
     curl \
     flex \
     freeradius-client-devel \
@@ -43,9 +44,6 @@ RUN zypper ref -s \
     git \
     glib2-devel \
     groff \
-    gtk-doc \
-    iputils \
-    joe \
     krb5-devel \
     libXpm-devel \
     libbz2-devel \
@@ -87,9 +85,13 @@ RUN zypper ref -s \
     tk-devel \
     unzip \
     valgrind \
-    vim \
     wget \
     which \
+    chrpath \
+    joe \
+    gtk-doc \
+    iputils \
+    vim \
     && zypper clean -a
 
 # Install our standard tool chain for building
@@ -107,6 +109,7 @@ ENV NEXUS_ARCHIVES_URL="$NEXUS_ARCHIVES_URL" NEXUS_USERNAME="$NEXUS_USERNAME" NE
 COPY scripts/* /opt/
 RUN /opt/install-gnu-toolchain.sh
 RUN /opt/install-cmake.sh
+RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python2.sh
 RUN /opt/install-python.sh

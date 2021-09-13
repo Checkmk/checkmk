@@ -4,13 +4,13 @@
 ::
 :: 'exec.cmd script PY_VER PY_SUBVER'
 ::
-:: Example: exec.cmd install_legacy.cmd 3.8 7
+:: Example: exec.cmd install_legacy.cmd 3.8 11
 :: Always return back to current dir
 :: *********************************************
 
 @echo off
 
-if "%3" == "" powershell Write-Host "Usage: exec_cmd cmd 3.8 7" -foreground red && exit /b 1
+if "%3" == "" powershell Write-Host "Usage: exec_cmd cmd 3.8 11" -foreground red && exit /b 1
 set PY_VER=%2
 set PY_SUBVER=%3
 
@@ -28,7 +28,7 @@ set p_full_name=python-%PY_VER%.%PY_SUBVER%
 set cur_dir=%cd%
 
 :: msiexec doesn't understand relative paths, we have to normalize
-call :NORMALIZEPATH "%cur_dir%\..\..\..\omd\packages\Python3\windows\python-3.4.4.msi"
+call :NORMALIZEPATH "%cur_dir%\..\..\..\omd\packages\Python\windows\python-3.4.4.msi"
 set legacy_msi=%RETVAL%
 
 set my_tmp=%cd%\tmp\%PY_VER%

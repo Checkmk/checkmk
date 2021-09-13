@@ -121,7 +121,7 @@ private:
 #if defined(GTEST_INCLUDE_GTEST_GTEST_H_)
     friend class WmiProviderTest;
     FRIEND_TEST(WmiProviderTest, SimulationIntegration);
-    FRIEND_TEST(WmiProviderTest, SubSectionSimulateExchange);
+    FRIEND_TEST(WmiProviderTest, SubSectionSimulateExchange_Integration);
 #endif
 };
 

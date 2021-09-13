@@ -34,7 +34,8 @@ check_info["ipr400_in_voltage"] = {
     "service_description": "IN Voltage %s",
     "has_perfdata": True,
     "group": "evolt",
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower().startswith(
-        "ipr voip device ipr400"),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.1.0")
+    .lower()
+    .startswith("ipr voip device ipr400"),
     "snmp_info": (".1.3.6.1.4.1.27053.1.4.5.10", ["0"]),
 }

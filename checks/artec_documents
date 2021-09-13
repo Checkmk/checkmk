@@ -9,6 +9,7 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.artec import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.31560.0.0.3.1.3.1.48 Amount Documents Count --> ARTEC-MIB::artecDocumentsName.1.48
 # .1.3.6.1.4.1.31560.0.0.3.1.3.1.49 Replicate Count        --> ARTEC-MIB::artecDocumentsName.1.49
 # .1.3.6.1.4.1.31560.0.0.3.1.3.1.50 Sign count             --> ARTEC-MIB::artecDocumentsName.1.50
@@ -31,15 +32,16 @@ def check_artec_documents(_no_item, _no_params, info):
             yield 0, "%s: %d (%.2f/s)" % (name, documents, rate)
 
 
-check_info['artec_documents'] = {
-    'inventory_function': inventory_artec_documents,
-    'check_function': check_artec_documents,
-    'service_description': 'Documents',
-    'snmp_info': (
+check_info["artec_documents"] = {
+    "inventory_function": inventory_artec_documents,
+    "check_function": check_artec_documents,
+    "service_description": "Documents",
+    "snmp_info": (
         ".1.3.6.1.4.1.31560.0.0.3.1",
         [
             "3",  # artecDocumentsName
             "1",  # artecDocumentsValues
-        ]),
-    'snmp_scan_function': artec_scan_function,
+        ],
+    ),
+    "snmp_scan_function": artec_scan_function,
 }

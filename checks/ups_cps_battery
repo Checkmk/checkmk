@@ -18,7 +18,7 @@ def parse_ups_cps_battery(info):
         parsed["capacity"] = int(info[0][0])
 
     # The MIB explicitly declares this to be Celsius
-    if info[0][1]:
+    if info[0][1] and info[0][1] != "NULL":
         parsed["temperature"] = int(info[0][1])
 
     # A TimeTick is 1/100 s
@@ -27,7 +27,7 @@ def parse_ups_cps_battery(info):
     return parsed
 
 
-#.
+# .
 #   .--Temperature---------------------------------------------------------.
 #   |     _____                                   _                        |
 #   |    |_   _|__ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
@@ -44,7 +44,8 @@ def inventory_ups_cps_battery_temp(parsed):
 
 
 def check_ups_cps_battery_temp(item, params, parsed):
-    return check_temperature(parsed["temperature"], params, "ups_cps_battery_temp")
+    if "temperature" in parsed:
+        return check_temperature(parsed["temperature"], params, "ups_cps_battery_temp")
 
 
 check_info["ups_cps_battery.temp"] = {
@@ -54,7 +55,7 @@ check_info["ups_cps_battery.temp"] = {
     "group": "temperature",
 }
 
-#.
+# .
 #   .--Capacity------------------------------------------------------------.
 #   |                ____                       _ _                        |
 #   |               / ___|__ _ _ __   __ _  ___(_) |_ _   _                |
@@ -111,14 +112,16 @@ check_info["ups_cps_battery"] = {
     "inventory_function": inventory_ups_cps_battery,
     "check_function": check_ups_cps_battery,
     "service_description": "UPS Battery",
-    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3808.1.1.1"
-                                                                          ),
+    "snmp_scan_function": lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(
+        ".1.3.6.1.4.1.3808.1.1.1"
+    ),
     "snmp_info": (
         ".1.3.6.1.4.1.3808.1.1.1.2.2",
         [
-            "1",  # upsAdvanceBatteryCapacity
-            "3",  # upsAdvanceBatteryTemperature
-            "4",  # upsAdvanceBatteryRunTimeRemaining
-        ]),
+            "1",  # upsAdvanceBatteryCapacity .1.3.6.1.4.1.3808.1.1.1.2.2.1 = Gauge
+            "3",  # upsAdvanceBatteryTemperature .1.3.6.1.4.1.3808.1.1.1.2.2.3 = Gauge, devices also return 'NULL'
+            "4",  # upsAdvanceBatteryRunTimeRemaining .1.3.6.1.4.1.3808.1.1.1.2.2.4 = TimeTicks
+        ],
+    ),
     "group": "ups_capacity",
 }

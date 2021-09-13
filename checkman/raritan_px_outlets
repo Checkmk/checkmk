@@ -13,6 +13,6 @@ description:
 item:
  The fixed statement {{Sensor}} followed by the sensor ID and the name of the sensor
 
-inventory:
+discovery:
  One service is created for each outlet.
 

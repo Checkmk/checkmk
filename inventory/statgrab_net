@@ -9,7 +9,8 @@
 def inv_statgrab_net(info, params, inventory_tree):
     usage_port_types = params.get(
         "usage_port_types",
-        ['6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205', '229'])
+        ["6", "32", "62", "117", "127", "128", "129", "180", "181", "182", "205", "229"],
+    )
     total_ethernet_ports = 0
 
     parsed = {}
@@ -21,7 +22,8 @@ def inv_statgrab_net(info, params, inventory_tree):
             continue
 
         parsed.setdefault(
-            if_descr, {
+            if_descr,
+            {
                 "index": int(if_index),
                 "description": if_descr,
                 "alias": if_alias,
@@ -29,7 +31,8 @@ def inv_statgrab_net(info, params, inventory_tree):
                 "phys_address": if_phys_address,
                 "oper_status": int(if_oper_status),
                 "port_type": int(if_type),
-            })
+            },
+        )
 
     node = inventory_tree.get_list("networking.interfaces:")
     for entry in node:
@@ -51,6 +54,6 @@ def inv_statgrab_net(info, params, inventory_tree):
     node["total_interfaces"] = len(info)
 
 
-inv_info['statgrab_net'] = {
-    'inv_function': inv_statgrab_net,
+inv_info["statgrab_net"] = {
+    "inv_function": inv_statgrab_net,
 }

@@ -20,4 +20,4 @@ ITEM_NOT_FOUND: ServiceCheckResult = (3, "Item not found in monitoring data", []
 
 RECEIVED_NO_DATA: ServiceCheckResult = (3, "Check plugin received no monitoring data", [])
 
-CHECK_NOT_IMPLEMENTED: ServiceCheckResult = (3, 'Check plugin not implemented', [])
+CHECK_NOT_IMPLEMENTED: ServiceCheckResult = (3, "Check plugin not implemented", [])

@@ -23,6 +23,7 @@ ruckus_spot_ap_default_levels = ((None, None), (None, None))
 
 def parse_ruckus_spot_ap(info):
     import json
+
     data = json.loads(info[0][0])
     bands = {}
     for band_info in data:
@@ -52,8 +53,10 @@ def check_ruckus_spot_ap(item, params, parsed):
     perfdata = [("ap_devices_total", len(band))]
 
     extra_info = []
-    for what, ap_state, warn, crit in [("drifted", 2, drift_warn, drift_crit),
-                                       ("not responding", 0, down_warn, down_crit)]:
+    for what, ap_state, warn, crit in [
+        ("drifted", 2, drift_warn, drift_crit),
+        ("not responding", 0, down_warn, down_crit),
+    ]:
         problems = len([x for x in band if x[1] == ap_state])
         if crit and problems >= crit:
             state = 2
@@ -77,5 +80,5 @@ check_info["ruckus_spot_ap"] = {
     "check_function": check_ruckus_spot_ap,
     "service_description": "Ruckus Spot Access Points %s",
     "group": "ruckus_ap",
-    "has_perfdata": True
+    "has_perfdata": True,
 }

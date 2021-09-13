@@ -23,10 +23,22 @@ class Node;
 }
 
 namespace tst {
+std::filesystem::path GetSolutionRoot();
+std::filesystem::path GetProjectRoot();
+std::filesystem::path GetUnitTestFilesRoot();
 
 std::filesystem::path MakePathToUnitTestFiles(const std::wstring& root);
+inline std::filesystem::path MakePathToUnitTestFiles() {
+    return MakePathToUnitTestFiles(GetSolutionRoot());
+}
 std::filesystem::path MakePathToConfigTestFiles(const std::wstring& root);
+inline std::filesystem::path MakePathToConfigTestFiles() {
+    return MakePathToConfigTestFiles(GetSolutionRoot());
+}
 std::filesystem::path MakePathToCapTestFiles(const std::wstring& root);
+inline std::filesystem::path MakePathToCapTestFiles() {
+    return MakePathToCapTestFiles(GetSolutionRoot());
+}
 
 ///  from the TestEnvironment
 [[nodiscard]] std::filesystem::path GetTempDir();
@@ -149,7 +161,6 @@ const std::string_view very_temp = "tmpx";
 
 void SafeCleanTmpxDir();
 
-void PrintNode(YAML::Node node, std::string_view S);
 std::vector<std::string> ReadFileAsTable(const std::string& Name);
 inline std::vector<std::string> ReadFileAsTable(
     const std::filesystem::path& name) {
@@ -167,8 +178,8 @@ inline void CheckYaml(YAML::Node table, const CheckYamlVector& vec) {
     }
 }
 
-constexpr std::string_view zip_to_test = "unzip_test.zip";
-constexpr std::string_view cab_to_test = "uncab_test.zip";  // cab! file
+constexpr std::string_view install_cab_to_test = "install_test.cab";
+constexpr std::string_view cab_to_test = "uncab_test.cab";
 
 std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name);
 std::wstring GenerateRandomFileName() noexcept;
@@ -196,7 +207,8 @@ public:
     TempCfgFs& operator=(TempCfgFs&&) = delete;
 
     [[nodiscard]] bool loadConfig(const std::filesystem::path& yml);
-
+    [[nodiscard]] bool reloadConfig();
+    [[nodiscard]] bool loadFactoryConfig();
     [[nodiscard]] bool loadContent(std::string_view config);
 
     [[nodiscard]] bool createRootFile(const std::filesystem::path& relative_p,
@@ -209,6 +221,8 @@ public:
 
     const std::filesystem::path root() const { return root_; }
     const std::filesystem::path data() const { return data_; }
+
+    void allowUserAccess();
 
 private:
     TempCfgFs(Mode mode);
@@ -224,7 +238,6 @@ private:
     YAML::Node yaml_;
 };
 
-const extern std::filesystem::path G_SolutionPath;
 std::filesystem::path GetFabricYml();
 std::string GetFabricYmlContent();
 
@@ -251,6 +264,11 @@ private:
 };
 
 constexpr inline int TestPort() { return 64531; }
+
+namespace misc {
+void CopyFailedPythonLogFileToLog(const std::filesystem::path& data);
+
+}  // namespace misc
 
 }  // namespace tst
 #endif  // test_tools_h__

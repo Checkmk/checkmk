@@ -6,11 +6,12 @@
 """Module for managing the new rule based notifications"""
 
 from typing import Dict, List
-import cmk.utils.store as store
-from cmk.utils.type_defs import UserId, EventRule
 
-import cmk.gui.config as config
+import cmk.utils.store as store
+from cmk.utils.type_defs import EventRule, UserId
+
 import cmk.gui.userdb as userdb
+from cmk.gui.globals import config
 from cmk.gui.watolib.utils import wato_root_dir
 
 
@@ -31,10 +32,12 @@ def load_notification_rules(lock: bool = False) -> List[Dict]:
 
 def save_notification_rules(rules: List[Dict]) -> None:
     store.mkdir(wato_root_dir())
-    store.save_to_mk_file(wato_root_dir() + "notifications.mk",
-                          "notification_rules",
-                          rules,
-                          pprint_value=config.wato_pprint_config)
+    store.save_to_mk_file(
+        wato_root_dir() + "notifications.mk",
+        "notification_rules",
+        rules,
+        pprint_value=config.wato_pprint_config,
+    )
 
 
 def load_user_notification_rules() -> Dict[UserId, List[EventRule]]:

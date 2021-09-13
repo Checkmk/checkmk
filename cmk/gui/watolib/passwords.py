@@ -4,39 +4,40 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Dict, Optional, List, TypedDict
+from typing import Dict, List, Optional, TypedDict
 
-import cmk.gui.config as config
 import cmk.gui.userdb as userdb
-
-from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.globals import user
 from cmk.gui.plugins.wato import ConfigDomainCore
-from cmk.gui.watolib.groups import load_contact_group_information
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.groups import load_contact_group_information
+from cmk.gui.watolib.password_store import PasswordStore
 
 # Password = Dict[str, Union[Optional[str], List[str]]]
 Password = TypedDict(
-    'Password', {
+    "Password",
+    {
         "title": str,
         "comment": str,
         "docu_url": str,
         "password": str,
         "owned_by": Optional[str],
         "shared_with": List[str],
-    })
+    },
+)
 
 
 def contact_group_choices(only_own=False):
     contact_groups = load_contact_group_information()
 
     if only_own:
-        assert config.user.id is not None
-        user_groups = userdb.contactgroups_of_user(config.user.id)
+        assert user.id is not None
+        user_groups = userdb.contactgroups_of_user(user.id)
     else:
         user_groups = []
 
     entries = [
-        (c, g['alias']) for c, g in contact_groups.items() if not only_own or c in user_groups
+        (c, g["alias"]) for c, g in contact_groups.items() if not only_own or c in user_groups
     ]
     return entries
 

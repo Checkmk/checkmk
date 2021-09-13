@@ -9,11 +9,13 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.humidity import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # NOTE: Careful when replacing the *-import below with a more specific import. This can cause
 # problems because it might remove variables from the check-context which are necessary for
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.ispro import *  # pylint: disable=wildcard-import,unused-wildcard-import
+
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.2.1.2.1 "Humidity-R" --> ISPRO-MIB::isDeviceMonitorHumidityName
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.2.1.3.1 4407 --> ISPRO-MIB::isDeviceMonitorHumidity
 # .1.3.6.1.4.1.19011.1.3.2.1.3.1.2.1.4.1 3 --> ISPRO-MIB::isDeviceMonitorHumidityAlarm
@@ -27,22 +29,23 @@ def check_ispro_sensors_humid(item, params, info):
     for name, reading_str, status in info:
         if item == name:
             devstatus, devstatus_name = ispro_sensors_alarm_states(status)
-            yield devstatus, 'Device status: %s' % devstatus_name
+            yield devstatus, "Device status: %s" % devstatus_name
             yield check_humidity(float(reading_str) / 100.0, params)
 
 
-check_info['ispro_sensors_humid'] = {
-    'inventory_function': inventory_ispro_sensors_humid,
-    'check_function': check_ispro_sensors_humid,
-    'service_description': 'Humidity %s',
-    'snmp_info': (
-        '.1.3.6.1.4.1.19011.1.3.2.1.3',
+check_info["ispro_sensors_humid"] = {
+    "inventory_function": inventory_ispro_sensors_humid,
+    "check_function": check_ispro_sensors_humid,
+    "service_description": "Humidity %s",
+    "snmp_info": (
+        ".1.3.6.1.4.1.19011.1.3.2.1.3",
         [
             "1.2.1.2",  # ISPRO-MIB::isDeviceMonitorHumidityName
             "1.2.1.3",  # ISPRO-MIB::isDeviceMonitorHumidity
             "1.2.1.4",  # ISPRO-MIB::isDeviceMonitorHumidityAlarm
-        ]),
-    'snmp_scan_function': ispro_scan_function,
-    'has_perfdata': True,
-    'group': 'humidity',
+        ],
+    ),
+    "snmp_scan_function": ispro_scan_function,
+    "has_perfdata": True,
+    "group": "humidity",
 }

@@ -23,7 +23,7 @@ def parse_tsm_scratch(info):
         except ValueError:
             continue
 
-        if inst != 'default':
+        if inst != "default":
             item = "%s / %s" % (inst, library)
         else:
             item = library
@@ -45,10 +45,13 @@ def check_tsm_scratch(item, params, parsed):
     num_tapes = parsed.get(item)
     if num_tapes is None:
         return
-    return check_levels(num_tapes,
-                        "tapes_free", (None, None, warn, crit),
-                        human_readable_func=lambda x: "%d" % x,
-                        infoname="Found tapes")
+    return check_levels(
+        num_tapes,
+        "tapes_free",
+        (None, None, warn, crit),
+        human_readable_func=lambda x: "%d" % x,
+        infoname="Found tapes",
+    )
 
 
 check_info["tsm_scratch"] = {

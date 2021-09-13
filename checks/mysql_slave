@@ -15,17 +15,17 @@ from cmk.base.check_legacy_includes.mysql import *  # pylint: disable=wildcard-i
 def parse_mysql_slave(info):
     data = {}
     for line in info:
-        if not line[0].endswith(':'):
+        if not line[0].endswith(":"):
             continue
 
         key = line[0][:-1]
-        val = ' '.join(line[1:])
+        val = " ".join(line[1:])
 
         # Parse some values
         try:
             val = int(val)
         except ValueError:
-            val = {'Yes': True, 'No': False, 'None': None}.get(val, val)
+            val = {"Yes": True, "No": False, "None": None}.get(val, val)
         data[key] = val
 
     return data
@@ -37,43 +37,43 @@ def check_mysql_slave(_no_item, params, data):
     perfdata = []
     output = []
 
-    if data['Slave_IO_Running']:
-        output.append('Slave-IO: running')
+    if data["Slave_IO_Running"]:
+        output.append("Slave-IO: running")
 
-        if data['Relay_Log_Space']:
-            output.append('Relay Log: %s' % get_bytes_human_readable(data['Relay_Log_Space']))
-            perfdata.append(('relay_log_space', data['Relay_Log_Space']))
+        if data["Relay_Log_Space"]:
+            output.append("Relay Log: %s" % get_bytes_human_readable(data["Relay_Log_Space"]))
+            perfdata.append(("relay_log_space", data["Relay_Log_Space"]))
 
     else:
-        output.append('Slave-IO: not running(!!)')
+        output.append("Slave-IO: not running(!!)")
         state = 2
 
-    if data['Slave_SQL_Running']:
-        output.append('Slave-SQL: running')
+    if data["Slave_SQL_Running"]:
+        output.append("Slave-SQL: running")
 
         # Makes only sense to monitor the age when the SQL slave is running
-        if data['Seconds_Behind_Master'] == 'NULL':
-            output.append('Time behind master: NULL (Lost connection?)(!!)')
+        if data["Seconds_Behind_Master"] == "NULL":
+            output.append("Time behind master: NULL (Lost connection?)(!!)")
             state = 2
         else:
-            out = 'Time behind Master: %s' % get_age_human_readable(data['Seconds_Behind_Master'])
-            warn, crit = params.get('seconds_behind_master', (None, None))
-            if crit is not None and data['Seconds_Behind_Master'] > crit:
+            out = "Time behind Master: %s" % get_age_human_readable(data["Seconds_Behind_Master"])
+            warn, crit = params.get("seconds_behind_master", (None, None))
+            if crit is not None and data["Seconds_Behind_Master"] > crit:
                 state = 2
-                out += '(!!)'
-            elif warn is not None and data['Seconds_Behind_Master'] > warn:
+                out += "(!!)"
+            elif warn is not None and data["Seconds_Behind_Master"] > warn:
                 state = max(state, 1)
-                out += '(!)'
+                out += "(!)"
             output.append(out)
-            perfdata.append(('sync_latency', data['Seconds_Behind_Master'], warn, crit))
+            perfdata.append(("sync_latency", data["Seconds_Behind_Master"], warn, crit))
     else:
-        output.append('Slave-SQL: not running(!!)')
+        output.append("Slave-SQL: not running(!!)")
         state = 2
 
-    return state, ', '.join(output), perfdata
+    return state, ", ".join(output), perfdata
 
 
-check_info['mysql_slave'] = {
+check_info["mysql_slave"] = {
     "parse_function": parse_mysql_slave,
     "inventory_function": discover(lambda k, v: bool(v)),
     "check_function": check_mysql_slave,

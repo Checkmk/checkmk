@@ -5,103 +5,136 @@
 
 #include "auth.h"
 
-#include "contact_fwd.h"
+#ifdef CMC
+#include <algorithm>
 
-contact *unknown_auth_user() { return reinterpret_cast<contact *>(0xdeadbeaf); }
+#include "Host.h"         // IWYU pragma: keep
+#include "ObjectGroup.h"  // IWYU pragma: keep
+#include "Service.h"      // IWYU pragma: keep
+#include "cmc.h"
+#endif
 
 namespace {
 bool host_has_contact(const host *hst, const contact *ctc) {
+#ifdef CMC
+    return hst->hasContact(ctc);
+#else
     // Older Nagios headers are not const-correct... :-P
     return is_contact_for_host(const_cast<host *>(hst),
                                const_cast<contact *>(ctc)) != 0 ||
            is_escalated_contact_for_host(const_cast<host *>(hst),
                                          const_cast<contact *>(ctc)) != 0;
+#endif
 }
 
-bool service_has_contact(AuthorizationKind service_auth, const host *hst,
-                         const service *svc, const contact *ctc) {
+bool service_has_contact(const service *svc, const contact *ctc) {
+#ifdef CMC
+    return svc->hasContact(ctc);
+#else
     // Older Nagios headers are not const-correct... :-P
     return is_contact_for_service(const_cast<service *>(svc),
                                   const_cast<contact *>(ctc)) != 0 ||
            is_escalated_contact_for_service(const_cast<service *>(svc),
-                                            const_cast<contact *>(ctc)) != 0 ||
-           (service_auth == AuthorizationKind::loose &&
-            host_has_contact(hst, ctc));
+                                            const_cast<contact *>(ctc)) != 0;
+#endif
+}
+
+const host *host_for_service(const service *svc) {
+#ifdef CMC
+    return svc->host();
+#else
+    return svc->host_ptr;
+#endif
 }
 }  // namespace
 
-bool is_authorized_for(AuthorizationKind service_auth, const contact *ctc,
-                       const host *hst, const service *svc) {
-    return ctc != unknown_auth_user() &&
-           (svc == nullptr ? host_has_contact(hst, ctc)
-                           : service_has_contact(service_auth, hst, svc, ctc));
-}
-
-bool is_authorized_for_host_group(AuthorizationKind group_auth,
-                                  AuthorizationKind service_auth,
-                                  const hostgroup *hg, const contact *ctc) {
-    if (ctc == nullptr) {
+bool is_authorized_for_hst(const contact *ctc, const host *hst) {
+    if (ctc == no_auth_user()) {
         return true;
     }
-    // cppcheck false positive!
-    // cppcheck-suppress knownConditionTrueFalse
     if (ctc == unknown_auth_user()) {
         return false;
     }
+    return host_has_contact(hst, ctc);
+}
 
-    auto has_contact = [=](hostsmember *mem) {
-        return is_authorized_for(service_auth, ctc, mem->host_ptr, nullptr);
+bool is_authorized_for_svc(ServiceAuthorization service_auth,
+                           const contact *ctc, const service *svc) {
+    if (ctc == no_auth_user()) {
+        return true;
+    }
+    if (ctc == unknown_auth_user()) {
+        return false;
+    }
+    return service_has_contact(svc, ctc) ||
+           (service_auth == ServiceAuthorization::loose &&
+            host_has_contact(host_for_service(svc), ctc));
+}
+
+bool is_authorized_for_host_group(GroupAuthorization group_auth,
+                                  const hostgroup *hg, const contact *ctc) {
+    if (ctc == no_auth_user()) {
+        return true;
+    }
+    if (ctc == unknown_auth_user()) {
+        return false;
+    }
+    auto is_authorized_for = [=](const host *hst) {
+        return is_authorized_for_hst(ctc, hst);
     };
-    if (group_auth == AuthorizationKind::loose) {
-        // TODO(sp) Need an iterator here, "loose" means "any_of"
+#ifdef CMC
+    return group_auth == GroupAuthorization::loose
+               ? std::any_of(hg->begin(), hg->end(), is_authorized_for)
+               : std::all_of(hg->begin(), hg->end(), is_authorized_for);
+#else
+    if (group_auth == GroupAuthorization::loose) {
         for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
-            if (has_contact(mem)) {
+            if (is_authorized_for(mem->host_ptr)) {
                 return true;
             }
         }
         return false;
     }
-    // TODO(sp) Need an iterator here, "strict" means "all_of"
     for (hostsmember *mem = hg->members; mem != nullptr; mem = mem->next) {
-        if (!has_contact(mem)) {
+        if (!is_authorized_for(mem->host_ptr)) {
             return false;
         }
     }
     return true;
+#endif
 }
 
-bool is_authorized_for_service_group(AuthorizationKind group_auth,
-                                     AuthorizationKind service_auth,
+bool is_authorized_for_service_group(GroupAuthorization group_auth,
+                                     ServiceAuthorization service_auth,
                                      const servicegroup *sg,
                                      const contact *ctc) {
-    if (ctc == nullptr) {
+    if (ctc == no_auth_user()) {
         return true;
     }
-    // cppcheck false positive!
-    // cppcheck-suppress knownConditionTrueFalse
     if (ctc == unknown_auth_user()) {
         return false;
     }
-
-    auto has_contact = [=](servicesmember *mem) {
-        service *svc = mem->service_ptr;
-        return is_authorized_for(service_auth, ctc, svc->host_ptr, svc);
+    auto is_authorized_for = [=](const service *svc) {
+        return is_authorized_for_svc(service_auth, ctc, svc);
     };
-    if (group_auth == AuthorizationKind::loose) {
-        // TODO(sp) Need an iterator here, "loose" means "any_of"
-        for (servicesmember *mem = sg->members; mem != nullptr;
-             mem = mem->next) {
-            if (has_contact(mem)) {
+#ifdef CMC
+    return group_auth == GroupAuthorization::loose
+               ? std::any_of(sg->begin(), sg->end(), is_authorized_for)
+               : std::all_of(sg->begin(), sg->end(), is_authorized_for);
+#else
+    if (group_auth == GroupAuthorization::loose) {
+        for (const auto *mem = sg->members; mem != nullptr; mem = mem->next) {
+            if (is_authorized_for(mem->service_ptr)) {
                 return true;
             }
         }
         return false;
     }
-    // TODO(sp) Need an iterator here, "strict" means "all_of"
-    for (servicesmember *mem = sg->members; mem != nullptr; mem = mem->next) {
-        if (!has_contact(mem)) {
+    for (const auto *mem = sg->members; mem != nullptr; mem = mem->next) {
+        if (!is_authorized_for(mem->service_ptr)) {
             return false;
         }
     }
     return true;
+#endif
 }

@@ -11,18 +11,15 @@ This registry has multiple jobs:
  2. interlinking between endpoints without having to know the specific URL.
 
 """
-from typing import Dict, List, Iterator, Any, Sequence
+from typing import Any, Dict, Iterator, List, Sequence
 
-from cmk.gui.plugins.openapi.restful_objects.params import (
-    fill_out_path_template,
-    path_parameters,
-)
+from cmk.gui.plugins.openapi.restful_objects.params import fill_out_path_template, path_parameters
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (
-    EndpointKey,
-    ParameterKey,
     EndpointEntry,
+    EndpointKey,
     LinkRelation,
     OpenAPIParameter,
+    ParameterKey,
 )
 
 
@@ -67,6 +64,7 @@ class EndpointRegistry:
         ...     [{'name': 'hostname', 'in': 'query', 'required': True}])
 
     """
+
     def __init__(self):
         self._endpoints: Dict[EndpointKey, Dict[ParameterKey, EndpointEntry]] = {}
         self._endpoint_list: List[EndpointEntry] = []
@@ -105,19 +103,19 @@ class EndpointRegistry:
         except KeyError:
             raise KeyError(f"Key {endpoint_key!r} not in {self._endpoints!r}")
         if parameter_key not in endpoint_entry:
-            raise ValueError(f"Endpoint {endpoint_key} with parameters {parameter_key} not found. "
-                             f"The following parameter combinations are possible: "
-                             f"{list(endpoint_entry.keys())}")
+            raise ValueError(
+                f"Endpoint {endpoint_key} with parameters {parameter_key} not found. "
+                f"The following parameter combinations are possible: "
+                f"{list(endpoint_entry.keys())}"
+            )
 
         examples: Dict[str, OpenAPIParameter] = {
-            key: {
-                'example': value
-            } for key, value in parameter_values.items()
+            key: {"example": value} for key, value in parameter_values.items()
         }
 
         # Needs to fill out path templates!
         entry = endpoint_entry[parameter_key]
-        entry['href'] = fill_out_path_template(entry['href'], examples)
+        entry["href"] = fill_out_path_template(entry["href"], examples)
         return entry
 
     def add_endpoint(
@@ -142,9 +140,12 @@ class EndpointRegistry:
             # We key on _all_ required parameters, regardless their type.
             _param_names = set()
             for _param in _parameters:
-                if 'schema' not in _param and isinstance(_param, dict) and _param.get(
-                        'required', True):
-                    _param_names.add(_param['name'])
+                if (
+                    "schema" not in _param
+                    and isinstance(_param, dict)
+                    and _param.get("required", True)
+                ):
+                    _param_names.add(_param["name"])
             for _param_name in path_parameters(_path):
                 _param_names.add(_param_name)
             return tuple(sorted(_param_names))
@@ -153,15 +154,17 @@ class EndpointRegistry:
         parameter_key = _param_key(endpoint.path, parameters)
         endpoint_entry = self._endpoints.setdefault(endpoint_key, {})
         if parameter_key in endpoint_entry:
-            raise RuntimeError("The endpoint %r has already been set to %r" %
-                               (endpoint_key, endpoint_entry[parameter_key]))
+            raise RuntimeError(
+                "The endpoint %r has already been set to %r"
+                % (endpoint_key, endpoint_entry[parameter_key])
+            )
 
         endpoint_entry[parameter_key] = {
-            'endpoint': endpoint,
-            'href': endpoint.path,  # legacy
-            'method': endpoint.method,  # legacy
-            'rel': endpoint.link_relation,  # legacy
-            'parameters': parameters,
+            "endpoint": endpoint,
+            "href": endpoint.path,  # legacy
+            "method": endpoint.method,  # legacy
+            "rel": endpoint.link_relation,  # legacy
+            "parameters": parameters,
         }
 
 
@@ -225,23 +228,25 @@ def _make_url(
     path_params: Dict[str, OpenAPIParameter] = {}
     qs = []
     for p in param_spec:
-        param_name = p['name']
+        param_name = p["name"]
         if param_name not in param_val:
-            if p.get('required', True):
+            if p.get("required", True):
                 raise ValueError(f"No parameter mapping for required parameter {param_name!r}.")
             # We skip optional parameters, when we don't have values for them.
             continue
 
         param_value = param_val[param_name]
-        if p['in'] == 'query':
+        if p["in"] == "query":
             qs.append(f"{param_name}={param_value}")
-        elif p['in'] == 'path':
+        elif p["in"] == "path":
             if param_name not in path_parameters(path):
-                raise ValueError(f"Parameter {param_name!r} (required path-parameter), "
-                                 f"not found in path {path!r}")
-            path_params[param_name] = {'example': param_value}
+                raise ValueError(
+                    f"Parameter {param_name!r} (required path-parameter), "
+                    f"not found in path {path!r}"
+                )
+            path_params[param_name] = {"example": param_value}
 
-    query_string = '&'.join(qs)
+    query_string = "&".join(qs)
     rv = fill_out_path_template(path, path_params)
     if query_string:
         rv += f"?{query_string}"

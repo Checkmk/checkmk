@@ -14,8 +14,5 @@ description:
 item:
  The service name.
 
-inventory:
+discovery:
  One service is created for each node service.
-
-cluster:
- The best status of all nodes for a given item is shown.

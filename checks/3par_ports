@@ -9,7 +9,8 @@
 # resolving legacy discovery results such as [("SUMMARY", "diskstat_default_levels")]. Furthermore,
 # it might also remove variables needed for accessing discovery rulesets.
 from cmk.base.check_legacy_includes.threepar import *  # pylint: disable=wildcard-import,unused-wildcard-import
-factory_settings['threepar_ports_default_levels'] = {
+
+factory_settings["threepar_ports_default_levels"] = {
     "1_link": 1,
     "2_link": 1,
     "3_link": 1,
@@ -46,14 +47,15 @@ def translate_protocol_3par_ports(number):
 
 
 def inventory_3par_ports(parsed):
-    for entry in parsed.get('members', {}):
+    for entry in parsed.get("members", {}):
         # Only create an item if not "FREE" (type = 3)
-        if not entry.get('type', 3) == 3:
-            item = "%s Node %s Slot %s Port %s" % \
-                        (translate_protocol_3par_ports(entry['protocol']), \
-                                                       entry['portPos']['node'],
-                                                       entry['portPos']['slot'],
-                                                       entry['portPos']['cardPort'])
+        if not entry.get("type", 3) == 3:
+            item = "%s Node %s Slot %s Port %s" % (
+                translate_protocol_3par_ports(entry["protocol"]),
+                entry["portPos"]["node"],
+                entry["portPos"]["slot"],
+                entry["portPos"]["cardPort"],
+            )
             yield (item, {})
 
 
@@ -92,34 +94,36 @@ def check_3par_ports(item, params, parsed):
         4: "PEER",
     }
 
-    for entry in parsed.get('members', {}):
-        if item == "%s Node %s Slot %s Port %s" % (translate_protocol_3par_ports(entry['protocol']), \
-                                                   entry['portPos']['node'],
-                                                   entry['portPos']['slot'],
-                                                   entry['portPos']['cardPort']):
+    for entry in parsed.get("members", {}):
+        if item == "%s Node %s Slot %s Port %s" % (
+            translate_protocol_3par_ports(entry["protocol"]),
+            entry["portPos"]["node"],
+            entry["portPos"]["slot"],
+            entry["portPos"]["cardPort"],
+        ):
             if "label" in entry:
-                yield 0, "Label: %s" % entry['label']
+                yield 0, "Label: %s" % entry["label"]
 
             if "linkState" in entry:
-                state = entry['linkState']
+                state = entry["linkState"]
                 yield params["%s_link" % state], link_translate[state]
 
             if "portWWN" in entry:
-                yield 0, "portWWN: %s" % entry['portWWN']
+                yield 0, "portWWN: %s" % entry["portWWN"]
 
             if "mode" in entry:
-                yield 0, "Mode: %s" % mode_translate[entry['mode']]
+                yield 0, "Mode: %s" % mode_translate[entry["mode"]]
 
             if "failoverState" in entry:
-                state = entry['failoverState']
+                state = entry["failoverState"]
                 yield params["%s_fail" % state], "Failover: %s" % failover_translate[state]
 
 
-check_info['3par_ports'] = {
-    'parse_function': parse_3par,
-    'inventory_function': inventory_3par_ports,
-    'check_function': check_3par_ports,
-    'service_description': "Port %s",
-    'default_levels_variable': "threepar_ports_default_levels",
-    'group': "threepar_ports",
+check_info["3par_ports"] = {
+    "parse_function": parse_3par,
+    "inventory_function": inventory_3par_ports,
+    "check_function": check_3par_ports,
+    "service_description": "Port %s",
+    "default_levels_variable": "threepar_ports_default_levels",
+    "group": "threepar_ports",
 }

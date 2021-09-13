@@ -14,14 +14,12 @@
 #include <iterator>
 #include <string>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include "DynamicRRDColumn.h"
 #include "ListLambdaColumn.h"
 #include "Renderer.h"
 #include "Row.h"
-#include "overload.h"  // IWYU pragma: keep
 #if defined(CMC)
 #include "contact_fwd.h"
 #else
@@ -40,36 +38,19 @@ struct Data {
     time_point end;
     unsigned long step;
     std::vector<double> values;
-
-    [[nodiscard]] auto size() const { return values.size() + 3; }
-    [[nodiscard]] auto cbegin() const { return values.begin(); }
-    [[nodiscard]] auto cend() const { return values.end(); }
 };
 
 class RRDDataMaker {
-    using C = std::chrono::system_clock;
-
 public:
-    using value_type = std::variant<C::time_point, unsigned long, double>;
     RRDDataMaker(MonitoringCore *mc, RRDColumnArgs args)
         : _mc{mc}, _args{std::move(args)} {}
 
     template <class T>
-    [[nodiscard]] std::vector<value_type> operator()(
-        const T &row, std::chrono::seconds timezone_offset) const {
+    [[nodiscard]] Data operator()(const T &row,
+                                  std::chrono::seconds timezone_offset) const {
         const auto data = make(getHostNameServiceDesc(row));
-
-        // We output meta data as first elements in the list. Note: In Python or
-        // JSON we could output nested lists. In CSV mode this is not possible
-        // and we rather stay compatible with CSV mode.
-        std::vector<value_type> v;
-        v.reserve(data.size());
-        v.emplace_back(data.start + timezone_offset);
-        v.emplace_back(data.end + timezone_offset);
-        v.emplace_back(data.step);
-        v.insert(v.end(), data.cbegin(), data.cend());
-
-        return v;
+        return {data.start + timezone_offset, data.end + timezone_offset,
+                data.step, data.values};
     }
 
 private:
@@ -103,10 +84,10 @@ public:
 
 private:
     const detail::RRDDataMaker data_maker_;
-    std::vector<detail::RRDDataMaker::value_type> getRawValue(
-        Row row, std::chrono::seconds timezone_offset) const {
+    detail::Data getRawValue(Row row,
+                             std::chrono::seconds timezone_offset) const {
         return columnData<T>(row) == nullptr
-                   ? std::vector<detail::RRDDataMaker::value_type>{}
+                   ? detail::Data{}
                    : data_maker_(*columnData<T>(row), timezone_offset);
     }
 };
@@ -115,10 +96,16 @@ template <class T>
 void RRDColumn<T>::output(Row row, RowRenderer &r,
                           const contact * /* auth_user */,
                           std::chrono::seconds timezone_offset) const {
+    // We output meta data as first elements in the list. Note: In Python or
+    // JSON we could output nested lists. In CSV mode this is not possible and
+    // we rather stay compatible with CSV mode.
     const auto data = getRawValue(row, timezone_offset);
     ListRenderer l(r);
-    for (const auto &value : data) {
-        std::visit([&l](auto &&x) { l.output(x); }, value);
+    l.output(data.start);
+    l.output(data.end);
+    l.output(data.step);
+    for (const auto &value : data.values) {
+        l.output(value);
     }
 }
 
@@ -127,18 +114,15 @@ std::vector<std::string> RRDColumn<T>::getValue(
     Row row, const contact * /*auth_user*/,
     std::chrono::seconds timezone_offset) const {
     const auto data = getRawValue(row, timezone_offset);
-
-    using C = std::chrono::system_clock;
     std::vector<std::string> strings;
-    std::transform(
-        data.cbegin(), data.cend(), std::back_inserter(strings), [](auto &&e) {
-            return std::visit(
-                mk::overload{[](C::time_point x) {
-                                 return std::to_string(C::to_time_t(x));
-                             },
-                             [](auto &&x) { return std::to_string(x); }},
-                e);
-        });
+    strings.push_back(
+        std::to_string(std::chrono::system_clock::to_time_t(data.start)));
+    strings.push_back(
+        std::to_string(std::chrono::system_clock::to_time_t(data.end)));
+    strings.push_back(std::to_string(data.step));
+    std::transform(data.values.begin(), data.values.end(),
+                   std::back_inserter(strings),
+                   [](const auto &value) { return std::to_string(value); });
     return strings;
 }
 

@@ -208,9 +208,9 @@ def get_current_perfdata(host: HostName, service: str, dsname: str) -> Optional[
 
 # Compute check levels from prediction data and check parameters
 def swap_and_compute_levels(tg_data, tg_info):
-    columns = tg_data["columns"]
+    columns = tg_data.columns
     swapped: Dict[Any, List[Any]] = {c: [] for c in columns}
-    for step in tg_data["points"]:
+    for step in tg_data.points:
         row = dict(zip(columns, step))
         for k, v in row.items():
             swapped[k].append(v)

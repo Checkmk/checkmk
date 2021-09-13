@@ -11,7 +11,6 @@ from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
 
 from cmk.utils.defines import weekday_ids
 from cmk.gui import fields
-from cmk.gui.plugins.openapi import plugins
 from cmk.gui.fields.utils import BaseSchema
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
@@ -211,10 +210,6 @@ class ObjectMember(OneOfSchema):
         'property': ObjectPropertyMember,
         'collection': ObjectCollectionMember,
     }
-
-
-class ObjectMemberDict(plugins.ValueTypedDictSchema):
-    value_type = ObjectMember  # type: ignore[assignment]
 
 
 class ActionResultBase(Linkable):

@@ -314,7 +314,7 @@ import apispec.ext.marshmallow as marshmallow  # type: ignore[import]
 import apispec.utils  # type: ignore[import]
 import apispec_oneofschema  # type: ignore[import]
 
-from cmk.gui.plugins.openapi import plugins
+from cmk.gui.fields.openapi import CheckmkMarshmallowPlugin
 from cmk.gui.plugins.openapi.restful_objects.parameters import ACCEPT_HEADER
 from cmk.gui.plugins.openapi.restful_objects.params import to_openapi
 from cmk.gui.plugins.openapi.restful_objects.documentation import table_definitions
@@ -426,8 +426,8 @@ def make_spec(options: ReDocSpec):
         apispec.utils.OpenAPIVersion("3.0.2"),
         plugins=[
             marshmallow.MarshmallowPlugin(),
-            plugins.ValueTypedDictMarshmallowPlugin(),
             apispec_oneofschema.MarshmallowPlugin(),
+            CheckmkMarshmallowPlugin(),
         ],
         **options,
     )

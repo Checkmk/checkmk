@@ -55,7 +55,7 @@ ETAG_IF_MATCH_HEADER = {
             "by displaying the object it individually. To update this object the currently "
             "stored ETag needs to be the same as the one sent. The content of the ETag can "
             "potentially be anything and should be treated as semantically opaque."),
-        example='a20ceacf346041dc',
+        example='"a20ceacf346041dc"',
     ),
 }
 

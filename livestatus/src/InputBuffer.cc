@@ -11,6 +11,7 @@
 #include <cerrno>
 #include <cstring>
 #include <ostream>
+#include <utility>
 
 #include "Logger.h"
 #include "Poller.h"
@@ -51,11 +52,12 @@ std::ostream &operator<<(std::ostream &os, const InputBuffer::Result &r) {
     return os;  // never reached
 }
 
-InputBuffer::InputBuffer(int fd, const bool &termination_flag, Logger *logger,
+InputBuffer::InputBuffer(int fd, std::function<bool()> should_terminate,
+                         Logger *logger,
                          std::chrono::milliseconds query_timeout,
                          std::chrono::milliseconds idle_timeout)
     : _fd(fd)
-    , _termination_flag(termination_flag)
+    , should_terminate_{std::move(should_terminate)}
     , _query_timeout(query_timeout)
     , _idle_timeout(idle_timeout)
     , _readahead_buffer(initial_buffer_size)
@@ -204,7 +206,7 @@ InputBuffer::Result InputBuffer::readRequest() {
 // _query_timeout msecs.
 InputBuffer::Result InputBuffer::readData() {
     auto start = std::chrono::system_clock::now();
-    while (!_termination_flag) {
+    while (!shouldTerminate()) {
         if (timeout_reached(start, _query_timeout)) {
             return Result::timeout;
         }

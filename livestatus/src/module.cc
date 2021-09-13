@@ -27,6 +27,7 @@
 #include <cstring>
 #include <deque>
 #include <filesystem>
+#include <functional>
 #include <map>
 #include <memory>
 #include <optional>
@@ -181,6 +182,8 @@ void update_status() {
         static_cast<double>(g_livestatus_active_connections) /
         g_livestatus_threads);
 }
+
+bool shouldTerminate() { return fl_should_terminate; }
 }  // namespace
 
 void livestatus_count_fork() { counterIncrement(Counter::forks); }
@@ -263,8 +266,8 @@ void *client_thread(void *data) {
         g_livestatus_active_connections++;
         if (auto cc = fl_client_queue->pop()) {
             Debug(logger) << "accepted client connection on fd " << *cc;
-            InputBuffer input_buffer(*cc, fl_should_terminate, logger,
-                                     fl_query_timeout, fl_idle_timeout);
+            InputBuffer input_buffer{*cc, shouldTerminate, logger,
+                                     fl_query_timeout, fl_idle_timeout};
             bool keepalive = true;
             unsigned requestnr = 0;
             while (keepalive && !fl_should_terminate) {
@@ -273,7 +276,7 @@ void *client_thread(void *data) {
                                   << " on same connection";
                 }
                 counterIncrement(Counter::requests);
-                OutputBuffer output_buffer(*cc, fl_should_terminate, logger);
+                OutputBuffer output_buffer{*cc, shouldTerminate, logger};
                 keepalive = fl_core->answerRequest(input_buffer, output_buffer);
             }
             ::close(*cc);

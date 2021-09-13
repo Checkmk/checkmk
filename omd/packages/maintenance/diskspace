@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 import traceback
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Literal, Optional, Set, Tuple
 
 from cmk.utils.paths import omd_root, var_dir
 from cmk.utils.render import fmt_bytes
@@ -136,6 +136,7 @@ def _collect_file_infos() -> None:
         for path in plugin.get("cleanup_paths", []):
             result: os.stat_result = os.stat(path)
             file_infos_value: Tuple[int, float] = (result.st_size, result.st_mtime)
+            plugin.setdefault("file_infos", {})
             plugin["file_infos"][path] = file_infos_value
 
 
@@ -205,24 +206,51 @@ def _oldest_candidate(file_infos: Dict) -> Optional[str]:
     return None
 
 
-def _cleanup_host_directory(site_hosts: Set[HostName], base_path: str) -> List[HostName]:
+def _cleanup_host_directory_for_local_hosts(
+    cleanup_hosts: Set[HostName], base_path: str
+) -> List[HostName]:
     """
     First find all directories not related to a known host.
-    Then find the latest modified file for each directory. When the latest
-    modified file is older than the threshold, delete all files including
-    the host base directory.
     """
     if not os.path.isdir(base_path):
         return []
 
     unrelated_dirs: List[str] = []
     for host_dir in os.listdir(base_path):
-        if host_dir not in site_hosts:
+        if host_dir not in cleanup_hosts:
             unrelated_dirs.append(host_dir)
 
-    assert cleanup_abandoned_host_files is not None
+    cleaned_up_hosts = _check_threshold_and_delete(unrelated_dirs, base_path)
 
-    cleaned_up_hosts: List[HostName] = []
+    return cleaned_up_hosts
+
+
+def _cleanup_host_directory_for_remote_hosts(cleaned_up_remote_hosts: Set, base_path: str) -> List:
+    """
+    Find all directories existing on the local site and return a list of all
+    matching hosts that are known on remote sites
+    """
+    if not os.path.isdir(base_path):
+        return []
+
+    unrelated_dirs = []
+    for host_dir in os.listdir(base_path):
+        if host_dir in cleaned_up_remote_hosts:
+            unrelated_dirs.append(host_dir)
+
+    cleaned_up_hosts = _check_threshold_and_delete(unrelated_dirs, base_path)
+
+    return cleaned_up_hosts
+
+
+def _check_threshold_and_delete(unrelated_dirs: List[str], base_path: str) -> List:
+    """
+    Find the latest modified file for each directory. When the latest
+    modified file is older than the threshold, delete all files including
+    the host base directory.
+    """
+    assert cleanup_abandoned_host_files is not None
+    cleaned_up_hosts = []
     for unrelated_dir in unrelated_dirs:
         path = "%s/%s" % (base_path, unrelated_dir)
         mtime: float = _newest_modification_time_in_dir(path)
@@ -235,6 +263,22 @@ def _cleanup_host_directory(site_hosts: Set[HostName], base_path: str) -> List[H
     return cleaned_up_hosts
 
 
+def _do_automation_call(
+    hosts_to_cleanup: Set,
+    automation_call: Literal["delete-hosts", "delete-hosts-known-remote"],
+) -> None:
+    """Call automation command"""
+    command: List[str] = ["check_mk", "--automation", automation_call] + list(hosts_to_cleanup)
+    _verbose('Calling "%s"' % " ".join(command))
+    with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
+        if p.wait() != 0:
+            assert p.stdout is not None
+            _error(
+                'Failed to execute "%s" to cleanup the host files. Exit-Code: %d, Output: %r'
+                % (" ".join(command), p.returncode, p.stdout.read())
+            )
+
+
 def _newest_modification_time_in_dir(dir_path: str) -> float:
     mtime: float = 0.0
     for entry in os.listdir(dir_path):
@@ -243,28 +287,36 @@ def _newest_modification_time_in_dir(dir_path: str) -> float:
     return mtime
 
 
-def _get_configured_hosts() -> Set[HostName]:
-    host_names: Set[HostName] = set([])
+def _get_configured_hosts() -> Tuple[Set, Set, bool]:
+    """
+    Get local known hosts for all kind of sites (central and remote).
+    For central sites, get also all known hosts, even the ones that are
+    assigned to remote sites.
+    """
+    local_site_hosts: Set = set([])
+    all_hosts: Set = set([])
+    is_wato_remote_site = True
 
     distr_wato_filepath: str = os.path.expanduser("~/etc/check_mk/conf.d/distributed_wato.mk")
-    file_vars: Dict = {}
+    file_vars: dict = {}
     if os.path.exists(distr_wato_filepath):
         exec(open(distr_wato_filepath).read(), file_vars, file_vars)
 
-    if file_vars.get("is_wato_slave_site", False):
-        host_names.update(
-            subprocess.check_output(
-                ["check_mk", "--list-hosts", "--include-offline"], encoding="utf-8"
-            ).splitlines()
-        )
-    else:
-        host_names.update(
+    if not file_vars.get("is_wato_slave_site", False):
+        is_wato_remote_site = False
+        all_hosts.update(
             subprocess.check_output(
                 ["check_mk", "--list-hosts", "--all-sites", "--include-offline"], encoding="utf-8"
             ).splitlines()
         )
 
-    return host_names
+    local_site_hosts.update(
+        subprocess.check_output(
+            ["check_mk", "--list-hosts", "--include-offline"], encoding="utf-8"
+        ).splitlines()
+    )
+
+    return all_hosts, local_site_hosts, is_wato_remote_site
 
 
 def _do_cleanup_abandoned_host_files() -> None:
@@ -280,14 +332,16 @@ def _do_cleanup_abandoned_host_files() -> None:
         return
 
     try:
-        site_hosts: Set[HostName] = _get_configured_hosts()
+        all_hosts, local_site_hosts, is_wato_remote_site = _get_configured_hosts()
     except subprocess.CalledProcessError as e:
         _verbose("Failed to get site hosts (%s). Skipping abandoned host files cleanup" % e)
         return
 
-    if not site_hosts:
+    if not local_site_hosts:
         _verbose("Found no hosts. Be careful and not cleaning up anything.")
         return
+
+    cleanup_hosts = all_hosts if not is_wato_remote_site else local_site_hosts
 
     # Base directories where each host has a sub-directory below with
     # host related files inside
@@ -297,28 +351,34 @@ def _do_cleanup_abandoned_host_files() -> None:
         "%s/var/pnp4nagios/perfdata" % omd_root,
     ]
 
-    cleaned_up_hosts: Set[HostName] = set([])
+    cleaned_up_local_hosts: Set = set([])
     for base_path in path_patterns:
-        cleaned_up_hosts.update(_cleanup_host_directory(site_hosts, base_path))
+        cleaned_up_local_hosts.update(
+            _cleanup_host_directory_for_local_hosts(
+                cleanup_hosts,
+                base_path,
+            )
+        )
 
     # Now call Check_MK to clean up other files for the hosts which we have
     # cleaned up abandoned files for.
-    if cleaned_up_hosts:
-        command: List[str] = [
-            "check_mk",
-            "--automation",
-            "delete-hosts",
-        ] + [str(hostname) for hostname in cleaned_up_hosts]
+    if cleaned_up_local_hosts:
+        _do_automation_call(cleaned_up_local_hosts, "delete-hosts")
 
-        _verbose('Calling "%s"' % " ".join(command))
-
-        with subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as p:
-            if p.wait() != 0:
-                assert p.stdout is not None
-                _error(
-                    'Failed to execute "%s" to cleanup the host files. Exit-Code: %d, Output: %r'
-                    % (" ".join(command), p.returncode, p.stdout.read())
+    # Now call Check_MK to clean up files for hosts that still have files local
+    # but are only known on remote sites
+    if all_hosts:
+        remote_site_hosts = all_hosts - local_site_hosts
+        cleaned_up_remote_hosts: Set = set([])
+        for base_path in path_patterns:
+            cleaned_up_remote_hosts.update(
+                _cleanup_host_directory_for_remote_hosts(
+                    remote_site_hosts,
+                    base_path,
                 )
+            )
+        if cleaned_up_remote_hosts:
+            _do_automation_call(cleaned_up_remote_hosts, "delete-hosts-known-remote")
 
 
 def _cleanup_aged() -> None:

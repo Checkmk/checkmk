@@ -4,6 +4,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import abc
 import ast
 import errno
 import glob
@@ -825,8 +826,7 @@ class AutomationAnalyseHost(Automation):
 automations.register(AutomationAnalyseHost())
 
 
-class AutomationDeleteHosts(Automation):
-    cmd = "delete-hosts"
+class ABCDeleteHosts:
     needs_config = False
     needs_checks = False
 
@@ -834,27 +834,15 @@ class AutomationDeleteHosts(Automation):
         for hostname_str in args:
             self._delete_host_files(HostName(hostname_str))
 
+    @abc.abstractmethod
+    def _single_file_paths(self, hostname: HostName):
+        raise NotImplementedError()
+
+    @abc.abstractmethod
     def _delete_host_files(self, hostname: HostName) -> None:
+        raise NotImplementedError()
 
-        # The inventory_archive as well as the performance data is kept
-        # we do not want to loose any historic data for accidently deleted hosts.
-        #
-        # These files are cleaned up by the disk space mechanism.
-
-        # single files
-        for path in [
-            "%s/%s" % (precompiled_hostchecks_dir, hostname),
-            "%s/%s.py" % (precompiled_hostchecks_dir, hostname),
-            "%s/%s.mk" % (autochecks_dir, hostname),
-            "%s/%s" % (counters_dir, hostname),
-            "%s/%s" % (tcp_cache_dir, hostname),
-            "%s/persisted/%s" % (var_dir, hostname),
-            "%s/inventory/%s" % (var_dir, hostname),
-            "%s/inventory/%s.gz" % (var_dir, hostname),
-            "%s/agent_deployment/%s" % (var_dir, hostname),
-        ]:
-            self._delete_if_exists(path)
-
+    def _delete_datasource_dirs(self, hostname: HostName) -> None:
         try:
             ds_directories = os.listdir(data_source_cache_dir)
         except OSError as e:
@@ -867,6 +855,7 @@ class AutomationDeleteHosts(Automation):
             filename = "%s/%s/%s" % (data_source_cache_dir, data_source_name, hostname)
             self._delete_if_exists(filename)
 
+    def _delete_baked_agents(self, hostname: HostName) -> None:
         # softlinks for baked agents. obsolete packages are removed upon next bake action
         # TODO: Move to bakery code
         baked_agents_dir = var_dir + "/agents/"
@@ -874,6 +863,7 @@ class AutomationDeleteHosts(Automation):
             for folder in os.listdir(baked_agents_dir):
                 self._delete_if_exists("%s/%s" % (folder, hostname))
 
+    def _delete_logwatch_and_piggyback_dirs(self, hostname: HostName) -> None:
         # logwatch and piggyback folders
         for what_dir in [
             "%s/%s" % (logwatch_dir, hostname),
@@ -894,7 +884,76 @@ class AutomationDeleteHosts(Automation):
                 raise
 
 
+class AutomationDeleteHosts(ABCDeleteHosts, Automation):
+    cmd = "delete-hosts"
+
+    def execute(self, args: List[str]) -> None:
+        for hostname_str in args:
+            self._delete_host_files(HostName(hostname_str))
+
+    def _single_file_paths(self, hostname: HostName):
+        return [
+            "%s/%s" % (precompiled_hostchecks_dir, hostname),
+            "%s/%s.py" % (precompiled_hostchecks_dir, hostname),
+            "%s/%s.mk" % (autochecks_dir, hostname),
+            "%s/%s" % (counters_dir, hostname),
+            "%s/%s" % (tcp_cache_dir, hostname),
+            "%s/persisted/%s" % (var_dir, hostname),
+            "%s/inventory/%s" % (var_dir, hostname),
+            "%s/inventory/%s.gz" % (var_dir, hostname),
+            "%s/agent_deployment/%s" % (var_dir, hostname),
+        ]
+
+    def _delete_host_files(self, hostname: HostName) -> None:
+        """
+        The inventory_archive as well as the performance data is kept
+        we do not want to loose any historic data for accidentally deleted hosts.
+
+        These files are cleaned up by the disk space mechanism.
+        """
+        for path in self._single_file_paths(hostname):
+            self._delete_if_exists(path)
+
+        self._delete_datasource_dirs(hostname)
+        self._delete_baked_agents(hostname)
+        self._delete_logwatch_and_piggyback_dirs(hostname)
+
+
 automations.register(AutomationDeleteHosts())
+
+
+class AutomationDeleteHostsKnownRemote(ABCDeleteHosts, Automation):
+    """Cleanup automation call for hosts that were previously located on the
+    local site and are now handled by a remote site"""
+
+    cmd = "delete-hosts-known-remote"
+
+    def _single_file_paths(self, hostname: HostName):
+        return [
+            "%s/%s" % (precompiled_hostchecks_dir, hostname),
+            "%s/%s.py" % (precompiled_hostchecks_dir, hostname),
+            "%s/%s.mk" % (autochecks_dir, hostname),
+            "%s/%s" % (counters_dir, hostname),
+            "%s/%s" % (tcp_cache_dir, hostname),
+            "%s/persisted/%s" % (var_dir, hostname),
+        ]
+
+    def _delete_host_files(self, hostname: HostName) -> None:
+        """
+        The following locations are skipped on local sites for hosts only known
+        on remote sites:
+        - var/check_mk/inventory
+        - var/check_mk/agent_deployment
+        - var/check_mk/agents
+        """
+        for path in self._single_file_paths(hostname):
+            self._delete_if_exists(path)
+
+        self._delete_datasource_dirs(hostname)
+        self._delete_logwatch_and_piggyback_dirs(hostname)
+
+
+automations.register(AutomationDeleteHostsKnownRemote())
 
 
 class AutomationRestart(Automation):

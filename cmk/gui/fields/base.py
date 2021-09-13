@@ -8,6 +8,7 @@ import typing
 
 from apispec.ext.marshmallow import common  # type: ignore[import]
 from marshmallow import fields, post_dump, post_load, Schema, types, utils, ValidationError
+from marshmallow.decorators import POST_DUMP, POST_LOAD, PRE_DUMP, PRE_LOAD
 from marshmallow.error_store import ErrorStore
 
 
@@ -29,6 +30,82 @@ class BaseSchema(Schema):
         if self.cast_to_dict and isinstance(data, collections.OrderedDict):
             return dict(data)
         return data
+
+
+class ValueTypedDictSchema(BaseSchema):
+    """A schema where you can define the type for a dict's values
+
+    Attributes:
+        value_type:
+            the Schema for the dict's values
+
+    """
+
+    value_type: typing.Union[typing.Type[Schema], typing.Tuple[fields.Field]]
+
+    def _convert_with_schema(self, data, schema_func):
+        result = {}
+        for key, value in data.items():
+            result[key] = schema_func(value)
+        return result
+
+    def _serialize_field(self, data, field: fields.Field):
+        result = {}
+        for key, value in data.items():
+            field._validate(value)
+            try:
+                result[key] = field.serialize(obj=data, attr=key)
+            except ValueError as exc:
+                raise ValidationError(str(exc), field_name=key)
+        return result
+
+    def _deserialize_field(self, data, field: fields.Field):
+        result = {}
+        for key, value in data.items():
+            field._validate(value)
+            result[key] = field.deserialize(value=value, data=data, attr=key)
+        return result
+
+    def load(self, data, *, many=None, partial=None, unknown=None):
+        if self._has_processors(PRE_LOAD):
+            data = self._invoke_load_processors(
+                PRE_LOAD, data, many=many, original_data=data, partial=partial
+            )
+
+        if not isinstance(data, dict):
+            raise ValidationError(f"Data type is invalid: {data}", field_name="_schema")
+
+        try:
+            schema = common.resolve_schema_instance(self.value_type)
+            result = self._convert_with_schema(data, schema_func=schema.load)
+        except ValueError:
+            result = self._serialize_field(data, field=self.value_type[0])  # type: ignore[index]
+
+        if self._has_processors(POST_LOAD):
+            result = self._invoke_load_processors(
+                POST_LOAD,
+                result,
+                many=many,
+                original_data=data,
+                partial=partial,
+            )
+
+        return result
+
+    def dump(self, obj: typing.Any, *, many=None):
+        if self._has_processors(PRE_DUMP):
+            obj = self._invoke_dump_processors(PRE_DUMP, obj, many=many, original_data=obj)
+
+        try:
+            schema = common.resolve_schema_instance(self.value_type)
+            result = self._convert_with_schema(obj, schema_func=schema.dump)
+        except ValueError:
+            result = self._deserialize_field(obj, field=self.value_type[0])  # type: ignore[index]
+
+        if self._has_processors(POST_DUMP):
+            result = self._invoke_dump_processors(POST_DUMP, result, many=many, original_data=obj)
+
+        return result
 
 
 class MultiNested(fields.Field):

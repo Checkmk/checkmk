@@ -13,7 +13,6 @@ from cmk.utils.defines import weekday_ids
 
 from cmk.gui import fields
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.plugins.openapi import plugins
 
 # TODO: Add Enum Field for http methods, action result types and similar fields which can only hold
 #       distinct values
@@ -241,10 +240,6 @@ class ObjectMember(OneOfSchema):
         "property": ObjectPropertyMember,
         "collection": ObjectCollectionMember,
     }
-
-
-class ObjectMemberDict(plugins.ValueTypedDictSchema):
-    value_type = ObjectMember  # type: ignore[assignment]
 
 
 class ActionResultBase(Linkable):

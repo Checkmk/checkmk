@@ -90,7 +90,7 @@ int g_max_fd_ever = 0;
 static NagiosPaths fl_paths;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-static bool fl_should_terminate = false;
+static bool fl_should_terminate;
 
 struct ThreadInfo {
     pthread_t id;
@@ -184,6 +184,7 @@ void update_status() {
 }
 
 bool shouldTerminate() { return fl_should_terminate; }
+void shouldTerminate(bool value) { fl_should_terminate = value; }
 }  // namespace
 
 void livestatus_count_fork() { counterIncrement(Counter::forks); }
@@ -218,7 +219,7 @@ void *main_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
     auto *logger = fl_core->loggerLivestatus();
     auto last_update_status = std::chrono::system_clock::now();
-    while (!fl_should_terminate) {
+    while (!shouldTerminate()) {
         do_statistics();
         auto now = std::chrono::system_clock::now();
         if (now - last_update_status >= 5s) {
@@ -261,22 +262,23 @@ void *main_thread(void *data) {
 void *client_thread(void *data) {
     tl_info = static_cast<ThreadInfo *>(data);
     auto *logger = fl_core->loggerLivestatus();
-    while (!fl_should_terminate) {
+    while (!shouldTerminate()) {
         g_num_queued_connections--;
         g_livestatus_active_connections++;
         if (auto cc = fl_client_queue->pop()) {
             Debug(logger) << "accepted client connection on fd " << *cc;
-            InputBuffer input_buffer{*cc, shouldTerminate, logger,
-                                     fl_query_timeout, fl_idle_timeout};
+            InputBuffer input_buffer{*cc, [] { return shouldTerminate(); },
+                                     logger, fl_query_timeout, fl_idle_timeout};
             bool keepalive = true;
             unsigned requestnr = 0;
-            while (keepalive && !fl_should_terminate) {
+            while (keepalive && !shouldTerminate()) {
                 if (++requestnr > 1) {
                     Debug(logger) << "handling request " << requestnr
                                   << " on same connection";
                 }
                 counterIncrement(Counter::requests);
-                OutputBuffer output_buffer{*cc, shouldTerminate, logger};
+                OutputBuffer output_buffer{
+                    *cc, [] { return shouldTerminate(); }, logger};
                 keepalive = fl_core->answerRequest(input_buffer, output_buffer);
             }
             ::close(*cc);
@@ -329,6 +331,7 @@ void start_threads() {
         return;
     }
 
+    shouldTerminate(false);
     auto *logger = fl_core->loggerLivestatus();
     logger->setLevel(fl_livestatus_log_level);
     logger->setUseParentHandlers(false);
@@ -408,7 +411,7 @@ void start_threads() {
 
 void terminate_threads() {
     if (g_thread_running != 0) {
-        fl_should_terminate = true;
+        shouldTerminate(true);
         Informational(fl_logger_nagios) << "waiting for main to terminate...";
         if (auto result = pthread_join(fl_thread_info[0].id, nullptr);
             result != 0) {
@@ -431,7 +434,7 @@ void terminate_threads() {
             << "main thread + " << g_livestatus_threads
             << " client threads have finished";
         g_thread_running = 0;
-        fl_should_terminate = false;
+        shouldTerminate(false);
     }
 }
 

@@ -15,7 +15,7 @@ import werkzeug.wrappers
 
 # NOTE: 'JSONMixin' is deprecated and will be removed in Werkzeug 2.1. 'Request' now includes the functionality directly.
 import werkzeug.wrappers.json  # type: ignore[import]
-from six import ensure_binary, ensure_str
+from six import ensure_str
 from werkzeug.utils import get_content_type
 
 import cmk.gui.utils as utils
@@ -49,16 +49,9 @@ class LegacyVarsMixin:
         if not isinstance(value, str):
             raise TypeError(_("Only str and unicode values are allowed, got %s") % type(value))
 
-        # Py2: All items in self._vars are encoded at the moment. This should be changed one day,
-        # but for the moment we treat vars set with set_var() equal to the vars received from the
-        # HTTP request.
-        varname = ensure_str(varname)
-        value = ensure_str(value)
-
         self.legacy_vars[varname] = value
 
     def del_var(self, varname: str) -> None:
-        varname = ensure_str(varname)
         self.legacy_vars[varname] = self.DELETED
 
     def del_vars(self, prefix: str = "") -> None:
@@ -85,7 +78,6 @@ class LegacyVarsMixin:
             yield name, val
 
     def has_var(self, varname: str) -> bool:
-        varname = ensure_str(varname)
         if varname in self.legacy_vars:
             return self.legacy_vars[varname] is not self.DELETED
 
@@ -95,7 +87,6 @@ class LegacyVarsMixin:
         return super().has_var(varname)  # type: ignore[misc]
 
     def var(self, varname: str, default: Optional[str] = None) -> Optional[str]:
-        varname = ensure_str(varname)
         legacy_var = self.legacy_vars.get(varname, None)
         if legacy_var is not None:
             if legacy_var is not self.DELETED:
@@ -294,16 +285,7 @@ class Request(
         return self.remote_addr
 
     def get_str_input(self, varname: str, deflt: Optional[str] = None) -> Optional[str]:
-        try:
-            val = self.var(varname, ensure_str(deflt) if deflt is not None else None)
-            if val is None:
-                return None
-            return ensure_str(val)
-        except UnicodeDecodeError:
-            raise MKUserError(
-                varname,
-                _("The given text is wrong encoded. " "You need to provide a UTF-8 encoded text."),
-            )
+        return self.var(varname, deflt)
 
     def get_str_input_mandatory(self, varname: str, deflt: Optional[str] = None) -> str:
         return mandatory_parameter(varname, self.get_str_input(varname, deflt))
@@ -328,10 +310,10 @@ class Request(
         return mandatory_parameter(varname, self.get_str_input_mandatory(varname, deflt))
 
     def get_binary_input(self, varname: str, deflt: Optional[bytes] = None) -> Optional[bytes]:
-        val = self.var(varname, ensure_str(deflt) if deflt is not None else None)
+        val = self.var(varname, deflt.decode() if deflt is not None else None)
         if val is None:
             return None
-        return ensure_binary(val)
+        return val.encode()
 
     def get_binary_input_mandatory(self, varname: str, deflt: Optional[bytes] = None) -> bytes:
         return mandatory_parameter(varname, self.get_binary_input(varname, deflt))
@@ -469,7 +451,7 @@ class Request(
 
         for key, val in self.itervars():
             if key not in ["request", "output_format"] + exclude_vars:
-                request[key] = ensure_str(val) if isinstance(val, bytes) else val
+                request[key] = val
 
         return request
 

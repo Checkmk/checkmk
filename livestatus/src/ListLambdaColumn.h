@@ -66,6 +66,7 @@ struct ListColumn : Column {
 
 template <class U>
 struct ListColumnRenderer {
+    using value_type = U;
     virtual ~ListColumnRenderer() = default;
     virtual void output(ListRenderer& l, const U& value) const = 0;
 };

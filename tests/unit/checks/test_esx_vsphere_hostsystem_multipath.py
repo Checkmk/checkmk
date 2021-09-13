@@ -41,15 +41,12 @@ pytestmark = pytest.mark.checks
                 ],
             ),
         ]),
-        '52436384763283284389549439394844',
+        'bla2:A0:B2:C21',
         [
             0,
-            '4 active, 0 dead, 0 disabled, 0 standby, 0 unknown\n'
+            '0 active, 0 dead, 0 disabled, 0 standby, 0 unknown\n'
             'Included Paths:\n'
-            'bla2:A0:B2:C21\n'
-            'bla4:A0:B0:C21\n'
-            'bla4:A0:B1:C21\n'
-            'bla2:A0:B0:C21',
+            'active',
         ],
     ),
     (

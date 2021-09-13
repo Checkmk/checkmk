@@ -666,7 +666,10 @@ section_postfix() {
 
 section_qmail() {
     # Check status of qmail mailqueue
-    if inpath qmail-qstat; then
+    if [ -x /var/qmail/bin/qmail-qstat ]; then
+        echo "<<<qmail_stats>>>"
+        /var/qmail/bin/qmail-qstat
+    elif inpath qmail-qstat; then
         echo "<<<qmail_stats>>>"
         qmail-qstat
     fi

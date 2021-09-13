@@ -10,6 +10,9 @@ import pytest
 
 from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 
+from cmk.gui.type_defs import CustomAttr
+from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
+
 
 @pytest.mark.usefixtures("with_host")
 def test_openapi_cluster_host(
@@ -157,6 +160,7 @@ def test_openapi_hosts(
     assert list(resp.json["extensions"]["attributes"].items()) >= list(
         {"ipaddress": "127.0.0.1"}.items()
     )
+    assert "alias" not in resp.json["extensions"]["attributes"]
 
     # make sure changes are written to disk:
     resp = wsgi_app.follow_link(
@@ -414,6 +418,81 @@ def test_openapi_bulk_simple(wsgi_app, with_automation_user):
     )
 
 
+@pytest.fixture(name="custom_host_attribute")
+def _custom_host_attribute():
+    try:
+        attr: CustomAttr = {
+            "name": "foo",
+            "title": "bar",
+            "help": "foo",
+            "topic": "topic",
+            "type": "TextAscii",
+            "add_custom_macro": False,
+            "show_in_table": False,
+        }
+        save_custom_attrs_to_mk_file({"host": [attr]})
+        yield
+    finally:
+        save_custom_attrs_to_mk_file({})
+
+
+def test_openapi_host_custom_attributes(
+    wsgi_app,
+    with_automation_user,
+    with_host,
+    custom_host_attribute,
+):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(("Bearer", username + " " + secret))
+    base = "/NO_SITE/check_mk/api/1.0"
+
+    # Known custom attribute
+
+    resp = wsgi_app.call_method(
+        "get",
+        base + "/objects/host_config/example.com",
+        status=200,
+        headers={
+            "Accept": "application/json",
+        },
+    )
+
+    wsgi_app.call_method(
+        "put",
+        base + "/objects/host_config/example.com",
+        status=200,
+        params='{"attributes": {"foo": "bar"}}',
+        headers={
+            "If-Match": resp.headers["ETag"],
+            "Accept": "application/json",
+        },
+        content_type="application/json",
+    )
+
+    # Unknown custom attribute
+
+    resp = wsgi_app.call_method(
+        "get",
+        base + "/objects/host_config/example.com",
+        status=200,
+        headers={
+            "Accept": "application/json",
+        },
+    )
+
+    wsgi_app.call_method(
+        "put",
+        base + "/objects/host_config/example.com",
+        status=400,
+        params='{"attributes": {"foo2": "bar"}}',
+        headers={
+            "If-Match": resp.headers["ETag"],
+            "Accept": "application/json",
+        },
+        content_type="application/json",
+    )
+
+
 def test_openapi_host_collection(
     wsgi_app,
     with_automation_user,
@@ -452,7 +531,6 @@ def test_openapi_host_rename(
 
     username, secret = with_automation_user
     wsgi_app.set_authorization(("Bearer", username + " " + secret))
-
     base = "/NO_SITE/check_mk/api/1.0"
 
     wsgi_app.call_method(

@@ -1244,32 +1244,6 @@ class Timestamp(_fields.DateTime):
         return datetime.timestamp(val)
 
 
-class HostAttributeManagementBoardField(_fields.String):
-    def __init__(self) -> None:
-        super().__init__(
-            description=("The protocol used to connect to the management board.\n\n"
-                         "Valid options are:\n\n"
-                         " * `none` - No management board\n"
-                         " * `snmp` - Connect using SNMP\n"
-                         " * `ipmi` - Connect using IPMI\n"),
-            enum=['none', 'snmp', 'ipmi'],
-        )
-
-    def _deserialize(self, value, attr, data, **kwargs) -> Any:
-        # get value from api, convert it to cmk/python
-        deserialized = super()._deserialize(value, attr, data, **kwargs)
-        if deserialized == 'none':
-            return None
-        return deserialized
-
-    def _serialize(self, value, attr, obj, **kwargs) -> Optional[str]:
-        # get value from cmk/python, convert it to api side
-        serialized = super()._serialize(value, attr, obj, **kwargs)
-        if serialized is None:
-            return 'none'
-        return serialized
-
-
 __all__ = [
     'attributes_field',
     'customer_field',
@@ -1289,5 +1263,4 @@ __all__ = [
     'SiteField',
     'String',
     'Timestamp',
-    'HostAttributeManagementBoardField',
 ]

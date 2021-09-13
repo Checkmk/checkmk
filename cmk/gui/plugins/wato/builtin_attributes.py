@@ -10,8 +10,7 @@ import cmk.gui.config as config
 import cmk.gui.watolib as watolib
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
-from cmk.gui.fields import validators
-from cmk.gui.fields.definitions import HostAttributeManagementBoardField
+import cmk.gui.fields.validators as validators
 from cmk.gui.i18n import _
 from cmk.gui.globals import html
 
@@ -777,7 +776,7 @@ class HostAttributeManagementProtocol(ABCHostAttributeValueSpec):
         )
 
     def openapi_field(self) -> fields.Field:
-        return HostAttributeManagementBoardField()
+        return fields.HostAttributeManagementBoardField()
 
 
 @host_attribute_registry.register

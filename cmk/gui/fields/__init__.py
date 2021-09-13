@@ -47,6 +47,7 @@ from cmk.gui.fields.attributes import (
     NetworkScan,
     NetworkScanResult,
     MetaData,
+    HostAttributeManagementBoardField,
 )
 from cmk.gui.fields.validators import (
     ValidateAnyOfValidators,
@@ -71,6 +72,7 @@ __all__ = [
     'FOLDER_PATTERN',
     'Function',
     'GroupField',
+    'HostAttributeManagementBoardField',
     'HostField',
     'Int',
     'Integer',

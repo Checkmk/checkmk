@@ -709,3 +709,29 @@ class MetaData(BaseSchema):
     created_at = fields.Timestamp(description="When has this object been created.",)
     updated_at = fields.Timestamp(description="When this object was last changed.",)
     created_by = fields.String(description="The user id under which this object has been created.",)
+
+
+class HostAttributeManagementBoardField(_fields.String):
+    def __init__(self) -> None:
+        super().__init__(
+            description=("The protocol used to connect to the management board.\n\n"
+                         "Valid options are:\n\n"
+                         " * `none` - No management board\n"
+                         " * `snmp` - Connect using SNMP\n"
+                         " * `ipmi` - Connect using IPMI\n"),
+            enum=['none', 'snmp', 'ipmi'],
+        )
+
+    def _deserialize(self, value, attr, data, **kwargs) -> typing.Any:
+        # get value from api, convert it to cmk/python
+        deserialized = super()._deserialize(value, attr, data, **kwargs)
+        if deserialized == 'none':
+            return None
+        return deserialized
+
+    def _serialize(self, value, attr, obj, **kwargs) -> typing.Optional[str]:
+        # get value from cmk/python, convert it to api side
+        serialized = super()._serialize(value, attr, obj, **kwargs)
+        if serialized is None:
+            return 'none'
+        return serialized

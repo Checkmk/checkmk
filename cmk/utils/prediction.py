@@ -159,8 +159,8 @@ class TimeSeries:
         **metadata: str,
     ) -> None:
         if timewindow is None:
-            if data[0] is None or data[1] is None or data[2] is None:
-                raise ValueError("timewindow must not contain None")
+            if not data or data[0] is None or data[1] is None or data[2] is None:
+                raise ValueError(data)
 
             timewindow = data[0], data[1], data[2]
             data = data[3:]

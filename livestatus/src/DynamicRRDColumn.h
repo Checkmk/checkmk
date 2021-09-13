@@ -13,20 +13,12 @@
 #include <string>
 
 #include "DynamicColumn.h"
+#include "RRDColumn.h"
 #include "opids.h"
 class Column;
 class ColumnOffsets;
 class Filter;
 class MonitoringCore;
-
-struct RRDColumnArgs {
-    RRDColumnArgs(const std::string &arguments, const std::string &column_name);
-    std::string rpn;
-    long int start_time;
-    long int end_time;
-    int resolution;
-    int max_entries;
-};
 
 template <class T>
 class DynamicRRDColumn : public DynamicColumn {
